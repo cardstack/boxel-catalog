@@ -1,0 +1,20 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Catalog",
+        "module": "./catalog-app/catalog"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": null,
+        "thumbnailURL": null
+      }
+    },
+    "relationships": {}
+  }
+}
