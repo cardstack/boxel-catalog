@@ -1,0 +1,81 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "../catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Chess",
+      "images": [
+        "https://boxel-images.boxel.ai/app-assets/catalog/chess-listing/screenshot_01.png"
+      ],
+      "summary": "♟️ Players:\n\n- White pieces: Bottom (a1–h1, a2–h2)\n- Black pieces: Top (a7–h7, a8–h8)\n\n♟️Game State:\n\n- No moves have been made yet — it’s the very beginning of the game.\n\n♟️ Options:\n\nThe interface has buttons:\n- Prev Move / Next Move (for stepping through a game)\n- Back to Game Position\n- Reset",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": null,
+        "thumbnailURL": "https://boxel-images.boxel.ai/app-assets/catalog/chess-listing/thumbnail.png"
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../Tag/51de249c-516a-4c4d-bd88-76e88274c483"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/chess"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": "../Publisher/8410bd6d-ecbe-4044-ad69-33211f396abf"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../chess/Chess/d2841188-34a0-4a23-af83-cb9365431f8f"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../chess/Chess/immortal-game"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../chess/Chess/game-of-century"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../chess/Chess/opera-game"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../Category/video-games-interactive"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

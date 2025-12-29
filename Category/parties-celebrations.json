@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Category",
+        "module": "../catalog-app/listing/category"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Parties & Celebrations",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": "Party planning, celebrations, special events, social gatherings, birthdays, holidays, and festive occasions.",
+        "thumbnailURL": null
+      }
+    },
+    "relationships": {
+      "sphere": {
+        "links": {
+          "self": "../Sphere/c8f6891d-9570-40c0-9e07-b14c97eedb48"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

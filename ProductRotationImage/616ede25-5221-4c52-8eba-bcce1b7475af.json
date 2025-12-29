@@ -1,0 +1,36 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ProductRotationImage",
+        "module": "../product-rotater/components/product-rotation-image"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "image": {
+        "imageUrl": null
+      },
+      "cardInfo": {
+        "notes": null,
+        "title": "Blue Bottle 1",
+        "description": null,
+        "thumbnailURL": null
+      },
+      "angleLabel": "0° view",
+      "angleDegrees": 0
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "image.imageCard": {
+        "links": {
+          "self": "../CloudflareImage/201e70b6-8cf3-451d-8682-d5589ee39b85"
+        }
+      }
+    }
+  }
+}

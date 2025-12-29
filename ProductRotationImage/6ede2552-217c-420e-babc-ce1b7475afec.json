@@ -1,0 +1,36 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ProductRotationImage",
+        "module": "../product-rotater/components/product-rotation-image"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "image": {
+        "imageUrl": null
+      },
+      "cardInfo": {
+        "notes": null,
+        "title": "Blue Bottle 2",
+        "description": null,
+        "thumbnailURL": null
+      },
+      "angleLabel": "60° view",
+      "angleDegrees": 60
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "image.imageCard": {
+        "links": {
+          "self": "../CloudflareImage/cd5fb423-355e-4df1-a01e-70b68cf3f51d"
+        }
+      }
+    }
+  }
+}

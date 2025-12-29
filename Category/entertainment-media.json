@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Category",
+        "module": "../catalog-app/listing/category"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Entertainment & Media",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": "Movies, TV shows, music playlists, streaming services, entertainment recommendations, and media collection tracking.",
+        "thumbnailURL": null
+      }
+    },
+    "relationships": {
+      "sphere": {
+        "links": {
+          "self": "../Sphere/c8f6891d-9570-40c0-9e07-b14c97eedb48"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ProductRotationImage",
+        "module": "../product-rotater/components/product-rotation-image"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "image": {},
+      "cardInfo": {
+        "notes": null,
+        "title": "Blue Bottle 5",
+        "description": null,
+        "thumbnailURL": null
+      },
+      "angleLabel": "240° view",
+      "angleDegrees": 240
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "image.imageCard": {
+        "links": {
+          "self": "../CloudflareImage/0df1201e-70b6-4cf3-b51d-8682d5589ee3"
+        }
+      }
+    }
+  }
+}
