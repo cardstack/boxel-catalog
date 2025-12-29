@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Category",
+        "module": "../catalog-app/listing/category"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Hardware & IoT",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": "Hardware development, IoT devices, embedded systems, circuit design, and physical computing projects.",
+        "thumbnailURL": null
+      }
+    },
+    "relationships": {
+      "sphere": {
+        "links": {
+          "self": "../Sphere/637767ff-c7a9-40d6-9cd3-93f0b32a8fbb"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

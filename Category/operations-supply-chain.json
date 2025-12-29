@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Category",
+        "module": "../catalog-app/listing/category"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Operations & Supply Chain",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": "Supply chain management, inventory tracking, logistics coordination, vendor management, and operational efficiency tools.",
+        "thumbnailURL": null
+      }
+    },
+    "relationships": {
+      "sphere": {
+        "links": {
+          "self": "../Sphere/20dcc8f6-891d-4570-a0c0-1e07b14c97ee"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

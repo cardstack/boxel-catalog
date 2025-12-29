@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Category",
+        "module": "../catalog-app/listing/category"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Knowledge Management",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": "Knowledge bases, documentation systems, information taxonomies, search strategies, and learning repositories.",
+        "thumbnailURL": null
+      }
+    },
+    "relationships": {
+      "sphere": {
+        "links": {
+          "self": "../Sphere/67ffc7a9-70d6-4cd3-93f0-b32a8fbbd34e"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
