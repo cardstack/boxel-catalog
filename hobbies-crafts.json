@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Category",
+        "module": "../catalog-app/listing/category"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Hobbies & Crafts",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": "DIY projects, creative hobbies, craft supplies, skill development, and hobby community participation.",
+        "thumbnailURL": null
+      }
+    },
+    "relationships": {
+      "sphere": {
+        "links": {
+          "self": "../Sphere/c8f6891d-9570-40c0-9e07-b14c97eedb48"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
