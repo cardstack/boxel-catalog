@@ -58,4 +58,8 @@ jobs:
         if: always()
         run: pnpm run lint
         working-directory: packages/catalog-realm
-     
+
+      - name: Lint Host
+        if: always()
+        run: pnpm run lint
+        working-directory: packages/host
