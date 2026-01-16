@@ -46,9 +46,6 @@ jobs:
           # Copy catalog files
           cp -r boxel-catalog-src/* packages/catalog-realm/
           
-          # Overwrite host tsconfig with catalog-only version
-          cp boxel-catalog-src/tsconfig.json packages/host/tsconfig.json
-          
           echo "Files copied to catalog-realm:"
           ls -la packages/catalog-realm/
 
