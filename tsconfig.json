@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "allowJs": true,
+    "module": "es2022",
+    "moduleResolution": "nodenext",
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noEmitOnError": false,
+    "noEmit": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "baseUrl": ".",
+    "strict": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "paths": {
+      "https://cardstack.com/base/*": ["../base/*"],
+      "@cardstack/catalog/commands/*": ["../catalog-realm/commands/*"],
+      "@cardstack/catalog/*": ["../catalog-realm/catalog-app/*"],
+      "*": ["types/*"]
+    },
+    "types": ["@cardstack/local-types"]
+  },
+  "glint": {
+    "environment": ["ember-loose", "ember-template-imports"]
+  },
+  "include": [
+    "../base/**/*",
+    "../catalog-realm/**/*"
+  ],
+  "exclude": ["../base/**/__boxel/**"]
+}
