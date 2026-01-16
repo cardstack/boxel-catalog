@@ -51,6 +51,19 @@ jobs:
 
       - uses: ./.github/actions/init
 
+
+      # Boxel UI and Boxel Icons need to be built first so that their
+      # linting outputs types are available for projects that depend on them
+      - name: Build Boxel Icons
+        # To faciliate linting of projects that depend on Boxel Icons
+        if: always()
+        run: pnpm run build
+
+      - name: Build Boxel UI
+        # To faciliate linting of projects that depend on Boxel UI
+        if: always()
+        run: pnpm run build
+
       - name: Lint Catalog
         if: always()
         run: pnpm run lint
