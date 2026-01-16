@@ -37,7 +37,7 @@ jobs:
           echo "Files copied to catalog-realm:"
           ls -la boxel/packages/catalog-realm/
 
-      - uses: boxel/.github/actions/init
+      - uses: ./boxel/.github/actions/init
 
       - name: Lint Catalog
         if: always()
