@@ -54,17 +54,9 @@ jobs:
 
       # Boxel UI and Boxel Icons need to be built first so that their
       # linting outputs types are available for projects that depend on them
-      - name: Build Boxel Icons
-        # To faciliate linting of projects that depend on Boxel Icons
+      - name: Build common dependencies
         if: always()
-        run: pnpm run build
-        working-directory: packages/boxel-icons
-
-      - name: Build Boxel UI
-        # To faciliate linting of projects that depend on Boxel UI
-        if: always()
-        run: pnpm run build
-        working-directory: packages/boxel-ui/addon
+        run: pnpm run build-common-deps
 
       - name: Lint Catalog
         if: always()
