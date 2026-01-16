@@ -32,6 +32,18 @@ jobs:
       # Copy catalog files into the monorepo's catalog-realm location
       - name: Copy catalog files into monorepo
         run: |
+          # Remove all files except config files we want to keep
+          cd packages/catalog-realm
+          find . -mindepth 1 \
+            ! -name '.gitignore' \
+            ! -name 'tsconfig.json' \
+            ! -name 'package.json' \
+            ! -name '.realm.json' \
+            ! -name '.' \
+            -exec rm -rf {} + 2>/dev/null || true
+          cd ../..
+          
+          # Copy catalog files
           cp -r boxel-catalog-src/* packages/catalog-realm/
           echo "Files copied to catalog-realm:"
           ls -la packages/catalog-realm/
