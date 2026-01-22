@@ -1,0 +1,66 @@
+name: CI Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  checks: write
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    concurrency:
+      group: lint-${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    steps:
+      # Checkout the boxel monorepo at root to get tooling and init action
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          repository: cardstack/boxel
+
+      # Checkout this catalog repo into a temp location
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          path: boxel-catalog-src
+
+      # Copy catalog files into the monorepo's catalog-realm location
+      - name: Copy catalog files into monorepo
+        run: |
+          # TODO: Simplify this step once catalog-realm content is fully migrated out of the monorepo
+          # Remove all files except config files we want to keep
+          cd packages/catalog-realm
+          find . -mindepth 1 \
+            ! -name '.gitignore' \
+            ! -name 'tsconfig.json' \
+            ! -name 'package.json' \
+            ! -name '.realm.json' \
+            ! -name '.' \
+            -exec rm -rf {} + 2>/dev/null || true
+          cd ../..
+          
+          # Copy catalog files
+          cp -r boxel-catalog-src/* packages/catalog-realm/
+
+      - uses: ./.github/actions/init
+
+      # Boxel UI and Boxel Icons need to be built first so that their
+      # linting outputs types are available for projects that depend on them
+      - name: Build common dependencies
+        if: always()
+        run: pnpm run build-common-deps
+
+      - name: Lint Catalog
+        if: always()
+        run: pnpm run lint
+        working-directory: packages/catalog-realm
+
+      - name: Lint Host
+        if: always()
+        run: pnpm run lint
+        working-directory: packages/host
