@@ -1,221 +1,53 @@
 import { click } from '@ember/test-helpers';
 
-import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import { ensureTrailingSlash } from '@cardstack/runtime-common';
-import type { Loader } from '@cardstack/runtime-common/loader';
-
-import ENV from '@cardstack/host/config/environment';
-
+import { setupBaseRealm } from '../helpers/base-realm';
 import {
-  setupBaseRealm,
-  field,
-  contains,
-  CardDef,
-  Component,
-} from '../helpers/base-realm';
-import { renderCard } from '../helpers/render-component';
+  setupCatalogRealm,
+  CatalogDateField,
+  CatalogDatetimeField,
+  DatetimeStampField,
+  DayField,
+  DateRangeField,
+  MonthDayField,
+  YearField,
+  MonthField,
+  MonthYearField,
+  WeekField,
+  QuarterField,
+  TimeField,
+  TimeRangeField,
+  DurationField,
+  RelativeTimeField,
+  TimePeriodField,
+  RecurringPatternField,
+} from '../helpers/catalog-realm';
+import {
+  renderField,
+  renderConfiguredField,
+  buildField,
+} from '../helpers/field-test-helpers';
 import { setupRenderingTest } from '../helpers/setup';
-
-type FieldFormat = 'embedded' | 'atom' | 'edit';
 
 module('Integration | date-time fields', function (hooks) {
   setupRenderingTest(hooks);
   setupBaseRealm(hooks);
-
-  let loader: Loader;
-  let catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
-
-  let DateFieldClass: any;
-  let TimeFieldClass: any;
-  let DatetimeFieldClass: any;
-  let DatetimeStampFieldClass: any;
-  let DayFieldClass: any;
-  let DateRangeFieldClass: any;
-  let TimeRangeFieldClass: any;
-  let DurationFieldClass: any;
-  let RelativeTimeFieldClass: any;
-  let TimePeriodFieldClass: any;
-  let MonthDayFieldClass: any;
-  let YearFieldClass: any;
-  let MonthFieldClass: any;
-  let MonthYearFieldClass: any;
-  let WeekFieldClass: any;
-  let QuarterFieldClass: any;
-  let RecurringPatternFieldClass: any;
-
-  let catalogFieldsLoaded = false;
-
-  hooks.beforeEach(async function () {
-    loader = getService('loader-service').loader;
-    if (!catalogFieldsLoaded) {
-      await loadCatalogFields();
-      catalogFieldsLoaded = true;
-    }
-  });
-
-  async function loadCatalogFields() {
-    const dateModule: any = await loader.import(
-      `${catalogRealmURL}fields/date`,
-    );
-    DateFieldClass = dateModule.default;
-
-    const timeModule: any = await loader.import(
-      `${catalogRealmURL}fields/time`,
-    );
-    TimeFieldClass = timeModule.default;
-
-    const datetimeModule: any = await loader.import(
-      `${catalogRealmURL}fields/date-time`,
-    );
-    DatetimeFieldClass = datetimeModule.default;
-
-    const datetimeStampModule: any = await loader.import(
-      `${catalogRealmURL}fields/datetime-stamp`,
-    );
-    DatetimeStampFieldClass = datetimeStampModule.default;
-
-    const dayModule: any = await loader.import(
-      `${catalogRealmURL}fields/date/day`,
-    );
-    DayFieldClass = dayModule.default;
-
-    const dateRangeModule: any = await loader.import(
-      `${catalogRealmURL}fields/date/date-range`,
-    );
-    DateRangeFieldClass = dateRangeModule.default;
-
-    const timeRangeModule: any = await loader.import(
-      `${catalogRealmURL}fields/time/time-range`,
-    );
-    TimeRangeFieldClass = timeRangeModule.default;
-
-    const durationModule: any = await loader.import(
-      `${catalogRealmURL}fields/time/duration`,
-    );
-    DurationFieldClass = durationModule.default;
-
-    const relativeModule: any = await loader.import(
-      `${catalogRealmURL}fields/time/relative-time`,
-    );
-    RelativeTimeFieldClass = relativeModule.default;
-
-    const timePeriodModule: any = await loader.import(
-      `${catalogRealmURL}fields/time-period`,
-    );
-    TimePeriodFieldClass = timePeriodModule.default;
-
-    const monthDayModule: any = await loader.import(
-      `${catalogRealmURL}fields/date/month-day`,
-    );
-    MonthDayFieldClass = monthDayModule.default;
-
-    const yearModule: any = await loader.import(
-      `${catalogRealmURL}fields/date/year`,
-    );
-    YearFieldClass = yearModule.default;
-
-    const monthModule: any = await loader.import(
-      `${catalogRealmURL}fields/date/month`,
-    );
-    MonthFieldClass = monthModule.default;
-
-    const monthYearModule: any = await loader.import(
-      `${catalogRealmURL}fields/date/month-year`,
-    );
-    MonthYearFieldClass = monthYearModule.default;
-
-    const weekModule: any = await loader.import(
-      `${catalogRealmURL}fields/date/week`,
-    );
-    WeekFieldClass = weekModule.default;
-
-    const quarterModule: any = await loader.import(
-      `${catalogRealmURL}fields/date/quarter`,
-    );
-    QuarterFieldClass = quarterModule.default;
-
-    const recurringModule: any = await loader.import(
-      `${catalogRealmURL}fields/recurring-pattern`,
-    );
-    RecurringPatternFieldClass = recurringModule.default;
-  }
-
-  async function renderField(
-    FieldClass: any,
-    value: unknown,
-    format: FieldFormat = 'embedded',
-  ) {
-    const fieldFormat = format;
-    const fieldType = FieldClass;
-
-    class TestCard extends CardDef {
-      @field sample = contains(fieldType);
-
-      static isolated = class Isolated extends Component<typeof this> {
-        format: FieldFormat = fieldFormat;
-
-        <template>
-          <div data-test-field-container>
-            <@fields.sample @format={{this.format}} />
-          </div>
-        </template>
-      };
-    }
-
-    let card = new TestCard({ sample: value });
-    await renderCard(loader, card, 'isolated');
-  }
-
-  async function renderConfiguredField(
-    FieldClass: any,
-    value: unknown,
-    presentation: any,
-    extraConfig: Record<any, unknown> = {},
-  ) {
-    const fieldType = FieldClass;
-    const configuration = { presentation, ...extraConfig } as Record<
-      any,
-      unknown
-    >;
-
-    class TestCard extends CardDef {
-      @field sample = contains(fieldType, { configuration });
-
-      static isolated = class Isolated extends Component<typeof this> {
-        <template>
-          <div data-test-field-container>
-            <@fields.sample @format='embedded' />
-          </div>
-        </template>
-      };
-    }
-
-    let card = new TestCard({ sample: value });
-    await renderCard(loader, card, 'isolated');
-  }
-
-  function buildField(FieldClass: any, attrs: Record<any, unknown>) {
-    return new FieldClass(attrs);
-  }
+  setupCatalogRealm(hooks);
 
   test('core date & time fields render their embedded views', async function (assert) {
-    await renderField(DateFieldClass, '2024-05-01');
+    await renderField(CatalogDateField, '2024-05-01');
     assert.dom('[data-test-date-embedded]').exists();
     assert
       .dom('[data-test-date-embedded]')
       .doesNotContainText('No date set', 'date value is displayed');
 
-    await renderField(
-      TimeFieldClass,
-      buildField(TimeFieldClass, { value: '14:00' }),
-    );
+    await renderField(TimeField, buildField(TimeField, { value: '14:00' }));
     assert
       .dom('[data-test-time-embedded]')
       .hasTextContaining('2:00 PM', 'time value is formatted to 12-hour clock');
 
-    await renderField(DatetimeFieldClass, '2024-05-01T14:30:00');
+    await renderField(CatalogDatetimeField, '2024-05-01T14:30:00');
     assert.dom('[data-test-datetime-embedded]').exists();
     assert
       .dom('[data-test-datetime-embedded]')
@@ -224,8 +56,8 @@ module('Integration | date-time fields', function (hooks) {
 
   test('range, duration, and relative fields show formatted summaries', async function (assert) {
     await renderField(
-      DateRangeFieldClass,
-      buildField(DateRangeFieldClass, {
+      DateRangeField,
+      buildField(DateRangeField, {
         start: '2024-05-01',
         end: '2024-05-10',
       }),
@@ -235,17 +67,17 @@ module('Integration | date-time fields', function (hooks) {
       .hasText('May 1, 2024 → May 10, 2024');
 
     await renderField(
-      TimeRangeFieldClass,
-      buildField(TimeRangeFieldClass, {
-        start: buildField(TimeFieldClass, { value: '09:00' }),
-        end: buildField(TimeFieldClass, { value: '17:00' }),
+      TimeRangeField,
+      buildField(TimeRangeField, {
+        start: buildField(TimeField, { value: '09:00' }),
+        end: buildField(TimeField, { value: '17:00' }),
       }),
     );
     assert.dom('[data-test-time-range-embedded]').hasText('09:00 → 17:00');
 
     await renderField(
-      DurationFieldClass,
-      buildField(DurationFieldClass, {
+      DurationField,
+      buildField(DurationField, {
         hours: 1,
         minutes: 30,
         seconds: 0,
@@ -256,14 +88,14 @@ module('Integration | date-time fields', function (hooks) {
       .hasText('1h 30m', 'duration renders in compact notation');
 
     await renderField(
-      RelativeTimeFieldClass,
-      buildField(RelativeTimeFieldClass, { amount: 3, unit: 'hours' }),
+      RelativeTimeField,
+      buildField(RelativeTimeField, { amount: 3, unit: 'hours' }),
     );
     assert.dom('[data-test-relative-time-embedded]').hasText('In 3 hours');
 
     await renderField(
-      RecurringPatternFieldClass,
-      buildField(RecurringPatternFieldClass, {
+      RecurringPatternField,
+      buildField(RecurringPatternField, {
         pattern: 'weekly',
         startDate: '2024-05-01',
         endDate: '2024-06-01',
@@ -279,153 +111,139 @@ module('Integration | date-time fields', function (hooks) {
 
   test('partial calendar fields render friendly labels', async function (assert) {
     await renderField(
-      MonthDayFieldClass,
-      buildField(MonthDayFieldClass, { month: '05', day: '15' }),
+      MonthDayField,
+      buildField(MonthDayField, { month: '05', day: '15' }),
     );
     assert
       .dom('[data-test-month-day-embedded]')
       .hasText('May 15', 'month/day is spelled out');
 
-    await renderField(
-      YearFieldClass,
-      buildField(YearFieldClass, { value: 2025 }),
-    );
+    await renderField(YearField, buildField(YearField, { value: 2025 }));
     assert.dom('[data-test-year-embedded]').hasText('2025');
 
-    await renderField(
-      MonthFieldClass,
-      buildField(MonthFieldClass, { value: 5 }),
-    );
+    await renderField(MonthField, buildField(MonthField, { value: 5 }));
     assert.dom('[data-test-month-embedded]').hasText('May');
 
     await renderField(
-      MonthYearFieldClass,
-      buildField(MonthYearFieldClass, { value: '2025-05' }),
+      MonthYearField,
+      buildField(MonthYearField, { value: '2025-05' }),
     );
     assert.dom('[data-test-month-year-embedded]').hasText('May 2025');
 
-    await renderField(
-      WeekFieldClass,
-      buildField(WeekFieldClass, { value: '2025-W20' }),
-    );
+    await renderField(WeekField, buildField(WeekField, { value: '2025-W20' }));
     assert.dom('[data-test-week-embedded]').hasText('week 20, 2025');
 
     await renderField(
-      QuarterFieldClass,
-      buildField(QuarterFieldClass, { quarter: 2, year: 2025 }),
+      QuarterField,
+      buildField(QuarterField, { quarter: 2, year: 2025 }),
     );
     assert.dom('[data-test-quarter-embedded]').hasText('Q2 2025');
   });
 
   test('presentation modes render their specialized components', async function (assert) {
     // DatetimeField presentations
-    await renderConfiguredField(
-      DatetimeFieldClass,
-      '2025-01-01T00:00:00Z',
-      'countdown',
-      { countdownOptions: { label: 'Launch', showControls: true } },
-    );
+    await renderConfiguredField(CatalogDatetimeField, '2025-01-01T00:00:00Z', {
+      presentation: 'countdown',
+      countdownOptions: { label: 'Launch', showControls: true },
+    });
     assert.dom('[data-test-countdown]').exists();
 
-    await renderConfiguredField(
-      DatetimeFieldClass,
-      '2024-01-01T00:00:00Z',
-      'timeAgo',
-      {
-        timeAgoOptions: { eventLabel: 'Last Activity', updateInterval: 60000 },
-      },
-    );
+    await renderConfiguredField(CatalogDatetimeField, '2024-01-01T00:00:00Z', {
+      presentation: 'timeAgo',
+      timeAgoOptions: { eventLabel: 'Last Activity', updateInterval: 60000 },
+    });
     assert.dom('[data-test-relative-time]').exists();
 
-    await renderConfiguredField(
-      DatetimeFieldClass,
-      '2024-06-01T10:00:00Z',
-      'timeline',
-      { timelineOptions: { eventName: 'Order Placed', status: 'complete' } },
-    );
+    await renderConfiguredField(CatalogDatetimeField, '2024-06-01T10:00:00Z', {
+      presentation: 'timeline',
+      timelineOptions: { eventName: 'Order Placed', status: 'complete' },
+    });
     assert.dom('[data-test-timeline-event]').exists();
 
-    await renderConfiguredField(
-      DatetimeFieldClass,
-      '2025-06-01T10:00:00Z',
-      'expirationWarning',
-      { expirationOptions: { itemName: 'API Token' } },
-    );
+    await renderConfiguredField(CatalogDatetimeField, '2025-06-01T10:00:00Z', {
+      presentation: 'expirationWarning',
+      expirationOptions: { itemName: 'API Token' },
+    });
     assert.dom('[data-test-expiration-warning]').exists();
 
     // DateField presentation: age
-    await renderConfiguredField(DateFieldClass, '1990-05-01', 'age', {
+    await renderConfiguredField(CatalogDateField, '1990-05-01', {
+      presentation: 'age',
       ageOptions: { showNextBirthday: true },
     });
     assert.dom('[data-test-age-calculator]').exists();
 
     // DateRangeField presentation: businessDays (needs instance)
     await renderConfiguredField(
-      DateRangeFieldClass,
-      buildField(DateRangeFieldClass, {
+      DateRangeField,
+      buildField(DateRangeField, {
         start: '2024-05-01',
         end: '2024-05-10',
       }),
-      'businessDays',
+      { presentation: 'businessDays' },
     );
     assert.dom('[data-test-business-days]').exists();
 
     // TimeField presentation: timeSlots (needs instance)
     await renderConfiguredField(
-      TimeFieldClass,
-      buildField(TimeFieldClass, {
+      TimeField,
+      buildField(TimeField, {
         value: '09:00',
       }),
-      'timeSlots',
-      { timeSlotsOptions: { availableSlots: ['09:00', '10:00'] } },
+      {
+        presentation: 'timeSlots',
+        timeSlotsOptions: { availableSlots: ['09:00', '10:00'] },
+      },
     );
     assert.dom('[data-test-time-slots]').exists();
   });
 
   test('missing values render placeholders in embedded and atom modes', async function (assert) {
-    await renderField(DateFieldClass, undefined);
+    await renderField(CatalogDateField, undefined);
     assert.dom('[data-test-date-embedded]').hasText('No date set');
 
-    await renderField(DateFieldClass, undefined, 'atom');
+    await renderField(CatalogDateField, undefined, 'atom');
     assert.dom('[data-test-date-atom]').hasTextContaining('No date');
 
-    await renderField(TimeFieldClass, buildField(TimeFieldClass, {}));
+    await renderField(TimeField, buildField(TimeField, {}));
     assert.dom('[data-test-time-embedded]').hasText('No time set');
 
-    await renderField(TimeFieldClass, buildField(TimeFieldClass, {}), 'atom');
+    await renderField(TimeField, buildField(TimeField, {}), 'atom');
     assert.dom('[data-test-time-atom]').hasTextContaining('No time');
 
-    await renderField(DatetimeFieldClass, undefined);
+    await renderField(CatalogDatetimeField, undefined);
     assert
       .dom('[data-test-datetime-embedded]')
       .hasTextContaining('No date/time set');
 
-    await renderField(DatetimeFieldClass, undefined, 'atom');
+    await renderField(CatalogDatetimeField, undefined, 'atom');
     assert.dom('[data-test-datetime-atom]').hasTextContaining('No date/time');
   });
 
   test('datetime supports custom format and invalid fallback', async function (assert) {
-    await renderConfiguredField(
-      DatetimeFieldClass,
-      '2024-05-01T14:30:00',
-      'standard',
-      { format: 'YYYY-MM-DD HH:mm' },
-    );
+    await renderConfiguredField(CatalogDatetimeField, '2024-05-01T14:30:00', {
+      presentation: 'standard',
+      format: 'YYYY-MM-DD HH:mm',
+    });
     assert
       .dom('[data-test-datetime-embedded]')
       .hasTextContaining('2024-05-01 14:30');
 
-    await renderConfiguredField(DatetimeFieldClass, 'not-a-date', 'standard');
+    await renderConfiguredField(CatalogDatetimeField, 'not-a-date', {
+      presentation: 'standard',
+    });
     assert.dom('[data-test-datetime-embedded]').hasTextContaining('Invalid');
   });
 
   test('date field supports preset and custom format', async function (assert) {
-    await renderConfiguredField(DateFieldClass, '2024-05-01', 'standard', {
+    await renderConfiguredField(CatalogDateField, '2024-05-01', {
+      presentation: 'standard',
       format: 'YYYY/MM/DD',
     });
     assert.dom('[data-test-date-embedded]').hasText('2024/05/01');
 
-    await renderConfiguredField(DateFieldClass, '2024-05-01', 'standard', {
+    await renderConfiguredField(CatalogDateField, '2024-05-01', {
+      presentation: 'standard',
       preset: 'short',
     });
     assert.dom('[data-test-date-embedded]').hasText('5/1/24');
@@ -433,10 +251,13 @@ module('Integration | date-time fields', function (hooks) {
 
   test('time formatting respects hourCycle/timeStyle options', async function (assert) {
     await renderConfiguredField(
-      TimeFieldClass,
-      buildField(TimeFieldClass, { value: '14:00' }),
-      'standard',
-      { hourCycle: 'h24', timeStyle: 'short' },
+      TimeField,
+      buildField(TimeField, { value: '14:00' }),
+      {
+        presentation: 'standard',
+        hourCycle: 'h24',
+        timeStyle: 'short',
+      },
     );
     assert.dom('[data-test-time-embedded]').hasTextContaining('14');
     assert.dom('[data-test-time-embedded]').doesNotContainText('PM');
@@ -444,44 +265,44 @@ module('Integration | date-time fields', function (hooks) {
 
   test('open-ended ranges render friendly phrases (date/time ranges)', async function (assert) {
     await renderField(
-      DateRangeFieldClass,
-      buildField(DateRangeFieldClass, { start: '2024-05-01' }),
+      DateRangeField,
+      buildField(DateRangeField, { start: '2024-05-01' }),
     );
     assert.dom('[data-test-date-range-embedded]').hasText('From May 1, 2024');
 
     await renderField(
-      DateRangeFieldClass,
-      buildField(DateRangeFieldClass, { end: '2024-05-10' }),
+      DateRangeField,
+      buildField(DateRangeField, { end: '2024-05-10' }),
     );
     assert.dom('[data-test-date-range-embedded]').hasText('Until May 10, 2024');
 
-    await renderField(DateRangeFieldClass, buildField(DateRangeFieldClass, {}));
+    await renderField(DateRangeField, buildField(DateRangeField, {}));
     assert.dom('[data-test-date-range-embedded]').hasText('No date range set');
 
     await renderField(
-      TimeRangeFieldClass,
-      buildField(TimeRangeFieldClass, {
-        start: buildField(TimeFieldClass, { value: '09:00' }),
+      TimeRangeField,
+      buildField(TimeRangeField, {
+        start: buildField(TimeField, { value: '09:00' }),
       }),
     );
     assert.dom('[data-test-time-range-embedded]').hasText('From 09:00');
 
     await renderField(
-      TimeRangeFieldClass,
-      buildField(TimeRangeFieldClass, {
-        end: buildField(TimeFieldClass, { value: '17:00' }),
+      TimeRangeField,
+      buildField(TimeRangeField, {
+        end: buildField(TimeField, { value: '17:00' }),
       }),
     );
     assert.dom('[data-test-time-range-embedded]').hasText('Until 17:00');
 
-    await renderField(TimeRangeFieldClass, buildField(TimeRangeFieldClass, {}));
+    await renderField(TimeRangeField, buildField(TimeRangeField, {}));
     assert.dom('[data-test-time-range-embedded]').hasText('No time range set');
   });
 
   test('atom mode renders compact badges', async function (assert) {
     await renderField(
-      DateRangeFieldClass,
-      buildField(DateRangeFieldClass, {
+      DateRangeField,
+      buildField(DateRangeField, {
         start: '2024-05-01',
         end: '2024-05-10',
       }),
@@ -492,8 +313,8 @@ module('Integration | date-time fields', function (hooks) {
       .hasTextContaining('5/1/24 - 5/10/24');
 
     await renderField(
-      DurationFieldClass,
-      buildField(DurationFieldClass, {
+      DurationField,
+      buildField(DurationField, {
         hours: 1,
         minutes: 5,
         seconds: 0,
@@ -503,37 +324,33 @@ module('Integration | date-time fields', function (hooks) {
     assert.dom('[data-test-duration-atom]').hasText('1h 5m');
 
     await renderField(
-      MonthYearFieldClass,
-      buildField(MonthYearFieldClass, {
+      MonthYearField,
+      buildField(MonthYearField, {
         value: '2025-05',
       }),
       'atom',
     );
     assert.dom('[data-test-month-year-atom]').hasTextContaining('May 2025');
 
-    await renderField(WeekFieldClass, buildField(WeekFieldClass, {}), 'atom');
+    await renderField(WeekField, buildField(WeekField, {}), 'atom');
     assert.dom('[data-test-week-atom]').hasTextContaining('No week');
 
-    await renderField(MonthFieldClass, buildField(MonthFieldClass, {}), 'atom');
+    await renderField(MonthField, buildField(MonthField, {}), 'atom');
     assert.dom('[data-test-month-atom]').hasTextContaining('No month');
 
-    await renderField(YearFieldClass, buildField(YearFieldClass, {}), 'atom');
+    await renderField(YearField, buildField(YearField, {}), 'atom');
     assert.dom('[data-test-year-atom]').hasTextContaining('No year');
 
-    await renderField(
-      MonthDayFieldClass,
-      buildField(MonthDayFieldClass, {}),
-      'atom',
-    );
+    await renderField(MonthDayField, buildField(MonthDayField, {}), 'atom');
     assert.dom('[data-test-month-day-atom]').hasTextContaining('No date');
   });
 
   test('edit mode interactions: time range duration and duration validation', async function (assert) {
     await renderField(
-      TimeRangeFieldClass,
-      buildField(TimeRangeFieldClass, {
-        start: buildField(TimeFieldClass, { value: '09:00' }),
-        end: buildField(TimeFieldClass, { value: '10:00' }),
+      TimeRangeField,
+      buildField(TimeRangeField, {
+        start: buildField(TimeField, { value: '09:00' }),
+        end: buildField(TimeField, { value: '10:00' }),
       }),
       'edit',
     );
@@ -543,8 +360,8 @@ module('Integration | date-time fields', function (hooks) {
       .hasTextContaining('Duration: 1 hours');
 
     await renderField(
-      DurationFieldClass,
-      buildField(DurationFieldClass, { hours: 1, minutes: 30, seconds: 0 }),
+      DurationField,
+      buildField(DurationField, { hours: 1, minutes: 30, seconds: 0 }),
       'edit',
     );
     assert.dom('[data-test-field-container]').hasTextContaining('Hours');
@@ -554,8 +371,8 @@ module('Integration | date-time fields', function (hooks) {
 
   test('edit mode interactions: month/day selects update preview', async function (assert) {
     await renderField(
-      MonthDayFieldClass,
-      buildField(MonthDayFieldClass, { month: 5, day: 15 }),
+      MonthDayField,
+      buildField(MonthDayField, { month: 5, day: 15 }),
       'edit',
     );
     assert.dom('[data-test-month-select]').exists();
@@ -563,62 +380,56 @@ module('Integration | date-time fields', function (hooks) {
   });
 
   test('presentation content reflects configuration', async function (assert) {
-    await renderConfiguredField(
-      DatetimeFieldClass,
-      '2999-01-01T00:00:00Z',
-      'countdown',
-      { countdownOptions: { label: 'Launch', showControls: true } },
-    );
+    await renderConfiguredField(CatalogDatetimeField, '2999-01-01T00:00:00Z', {
+      presentation: 'countdown',
+      countdownOptions: { label: 'Launch', showControls: true },
+    });
     assert.dom('[data-test-countdown]').exists();
     assert.dom('[data-test-countdown]').hasTextContaining('Launch');
     assert.dom('[data-test-countdown-toggle]').exists();
     assert.dom('[data-test-countdown-reset]').exists();
 
-    await renderConfiguredField(
-      DatetimeFieldClass,
-      '2020-01-01T00:00:00Z',
-      'timeAgo',
-      { timeAgoOptions: { eventLabel: 'Last Activity' } },
-    );
+    await renderConfiguredField(CatalogDatetimeField, '2020-01-01T00:00:00Z', {
+      presentation: 'timeAgo',
+      timeAgoOptions: { eventLabel: 'Last Activity' },
+    });
     assert.dom('[data-test-relative-time]').exists();
     assert.dom('[data-test-relative-time]').hasTextContaining('Last Activity');
     assert.dom('[data-test-relative-time]').hasTextContaining('ago');
 
-    await renderConfiguredField(
-      DatetimeFieldClass,
-      '2024-06-01T10:00:00Z',
-      'timeline',
-      { timelineOptions: { eventName: 'Order Placed', status: 'complete' } },
-    );
+    await renderConfiguredField(CatalogDatetimeField, '2024-06-01T10:00:00Z', {
+      presentation: 'timeline',
+      timelineOptions: { eventName: 'Order Placed', status: 'complete' },
+    });
     assert.dom('[data-test-timeline-event]').hasTextContaining('Order Placed');
 
-    await renderConfiguredField(
-      DatetimeFieldClass,
-      '2000-01-01T00:00:00Z',
-      'expirationWarning',
-      { expirationOptions: { itemName: 'API Token' } },
-    );
+    await renderConfiguredField(CatalogDatetimeField, '2000-01-01T00:00:00Z', {
+      presentation: 'expirationWarning',
+      expirationOptions: { itemName: 'API Token' },
+    });
     assert.dom('[data-test-expiration-warning]').exists();
     assert.dom('[data-test-expiration-warning]').hasTextContaining('API Token');
     assert.dom('[data-test-expiration-warning]').hasTextContaining('Expired');
 
     await renderConfiguredField(
-      DateRangeFieldClass,
-      buildField(DateRangeFieldClass, {
+      DateRangeField,
+      buildField(DateRangeField, {
         start: '2024-05-06',
         end: '2024-05-10',
       }),
-      'businessDays',
+      { presentation: 'businessDays' },
     );
     assert.dom('[data-test-business-days]').exists();
     assert.dom('[data-test-business-days]').hasTextContaining('Calendar Days:');
     assert.dom('[data-test-business-days]').hasTextContaining('Business Days:');
 
     await renderConfiguredField(
-      TimeFieldClass,
-      buildField(TimeFieldClass, { value: '09:00' }),
-      'timeSlots',
-      { timeSlotsOptions: { availableSlots: ['09:00 AM', '10:00 AM'] } },
+      TimeField,
+      buildField(TimeField, { value: '09:00' }),
+      {
+        presentation: 'timeSlots',
+        timeSlotsOptions: { availableSlots: ['09:00 AM', '10:00 AM'] },
+      },
     );
     assert.dom('[data-test-time-slots]').exists();
     await click('[data-test-slot="10:00 AM"]');
@@ -628,18 +439,18 @@ module('Integration | date-time fields', function (hooks) {
   });
 
   test('datetime-stamp field renders correctly', async function (assert) {
-    await renderField(DatetimeStampFieldClass, '2024-05-01T14:30:00Z');
+    await renderField(DatetimeStampField, '2024-05-01T14:30:00Z');
     assert.dom('[data-test-datetime-stamp-embedded]').exists();
     assert
       .dom('[data-test-datetime-stamp-embedded]')
       .doesNotContainText('No timestamp set', 'timestamp value is displayed');
 
-    await renderField(DatetimeStampFieldClass, undefined);
+    await renderField(DatetimeStampField, undefined);
     assert
       .dom('[data-test-datetime-stamp-embedded]')
       .hasTextContaining('No timestamp set');
 
-    await renderField(DatetimeStampFieldClass, '2024-05-01T14:30:00Z', 'atom');
+    await renderField(DatetimeStampField, '2024-05-01T14:30:00Z', 'atom');
     assert.dom('[data-test-datetime-stamp-atom]').exists();
     assert
       .dom('[data-test-datetime-stamp-atom]')
@@ -647,49 +458,38 @@ module('Integration | date-time fields', function (hooks) {
   });
 
   test('day field renders correctly', async function (assert) {
-    await renderField(DayFieldClass, buildField(DayFieldClass, { value: 15 }));
+    await renderField(DayField, buildField(DayField, { value: 15 }));
     assert.dom('[data-test-day-embedded]').hasText('15th');
 
-    await renderField(DayFieldClass, buildField(DayFieldClass, {}));
+    await renderField(DayField, buildField(DayField, {}));
     assert.dom('[data-test-day-embedded]').hasTextContaining('No day set');
 
-    await renderField(
-      DayFieldClass,
-      buildField(DayFieldClass, { value: 15 }),
-      'atom',
-    );
+    await renderField(DayField, buildField(DayField, { value: 15 }), 'atom');
     assert.dom('[data-test-day-atom]').exists();
     assert.dom('[data-test-day-atom]').hasTextContaining('15');
 
-    await renderField(
-      DayFieldClass,
-      buildField(DayFieldClass, { value: 15 }),
-      'edit',
-    );
+    await renderField(DayField, buildField(DayField, { value: 15 }), 'edit');
     assert.dom('[data-test-field-container]').exists();
   });
 
   test('time-period field renders correctly', async function (assert) {
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Q2 2024',
       }),
     );
     assert.dom('[data-test-time-period-embedded]').exists();
     assert.dom('[data-test-time-period-embedded]').hasTextContaining('Q2 2024');
 
-    await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {}),
-    );
+    await renderField(TimePeriodField, buildField(TimePeriodField, {}));
     assert
       .dom('[data-test-time-period-embedded]')
       .hasTextContaining('No period set');
 
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Q2 2024',
       }),
       'atom',
@@ -700,8 +500,8 @@ module('Integration | date-time fields', function (hooks) {
 
   test('time-period field recognizes calendar year format', async function (assert) {
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: '2024',
       }),
     );
@@ -713,8 +513,8 @@ module('Integration | date-time fields', function (hooks) {
 
   test('time-period field recognizes fiscal year format', async function (assert) {
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: '2023-2024',
       }),
     );
@@ -727,8 +527,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Short format
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: '2023-24',
       }),
     );
@@ -739,8 +539,8 @@ module('Integration | date-time fields', function (hooks) {
 
   test('time-period field recognizes quarter format', async function (assert) {
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Q1 2024',
       }),
     );
@@ -749,8 +549,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Reverse format
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: '2024 Q3',
       }),
     );
@@ -759,8 +559,8 @@ module('Integration | date-time fields', function (hooks) {
 
   test('time-period field recognizes month format', async function (assert) {
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'January 2024',
       }),
     );
@@ -768,8 +568,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Abbreviated
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Jan 2024',
       }),
     );
@@ -777,8 +577,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // With period
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Feb. 2024',
       }),
     );
@@ -787,8 +587,8 @@ module('Integration | date-time fields', function (hooks) {
 
   test('time-period field recognizes week format', async function (assert) {
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Week 12 2025',
       }),
     );
@@ -796,8 +596,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Abbreviated format
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Wk12 2025',
       }),
     );
@@ -805,8 +605,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Reverse format
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: '2025 Wk12',
       }),
     );
@@ -815,24 +615,24 @@ module('Integration | date-time fields', function (hooks) {
 
   test('time-period field recognizes session format', async function (assert) {
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Fall 2024',
       }),
     );
     assert.dom('[data-test-time-period-embedded]').hasTextContaining('Session');
 
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Spring 2025',
       }),
     );
     assert.dom('[data-test-time-period-embedded]').hasTextContaining('Session');
 
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Summer 2024',
       }),
     );
@@ -841,8 +641,8 @@ module('Integration | date-time fields', function (hooks) {
 
   test('time-period field recognizes session week format', async function (assert) {
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Wk4 Spring 2025',
       }),
     );
@@ -856,8 +656,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Quarter without year
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Q1',
       }),
     );
@@ -868,8 +668,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Month without year
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'March',
       }),
     );
@@ -880,8 +680,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Season without year
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Fall',
       }),
     );
@@ -892,8 +692,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Week without year
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Week 12',
       }),
     );
@@ -906,8 +706,8 @@ module('Integration | date-time fields', function (hooks) {
   test('time-period field displays date range for recognized formats', async function (assert) {
     // Quarter shows date range
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Q2 2024',
       }),
     );
@@ -916,8 +716,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Month shows date range
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'May 2024',
       }),
     );
@@ -927,8 +727,8 @@ module('Integration | date-time fields', function (hooks) {
 
   test('time-period field edit mode allows custom input', async function (assert) {
     await renderField(
-      TimePeriodFieldClass,
-      buildField(TimePeriodFieldClass, {
+      TimePeriodField,
+      buildField(TimePeriodField, {
         periodLabel: 'Q3 2024',
       }),
       'edit',
@@ -940,28 +740,28 @@ module('Integration | date-time fields', function (hooks) {
   test('relative time field handles future and past times', async function (assert) {
     // Future time
     await renderField(
-      RelativeTimeFieldClass,
-      buildField(RelativeTimeFieldClass, { amount: 5, unit: 'days' }),
+      RelativeTimeField,
+      buildField(RelativeTimeField, { amount: 5, unit: 'days' }),
     );
     assert.dom('[data-test-relative-time-embedded]').hasText('In 5 days');
 
     // Negative amount
     await renderField(
-      RelativeTimeFieldClass,
-      buildField(RelativeTimeFieldClass, { amount: -3, unit: 'hours' }),
+      RelativeTimeField,
+      buildField(RelativeTimeField, { amount: -3, unit: 'hours' }),
     );
     assert.dom('[data-test-relative-time-embedded]').hasText('In -3 hours');
 
     // Different units
     await renderField(
-      RelativeTimeFieldClass,
-      buildField(RelativeTimeFieldClass, { amount: 2, unit: 'weeks' }),
+      RelativeTimeField,
+      buildField(RelativeTimeField, { amount: 2, unit: 'weeks' }),
     );
     assert.dom('[data-test-relative-time-embedded]').hasText('In 2 weeks');
 
     await renderField(
-      RelativeTimeFieldClass,
-      buildField(RelativeTimeFieldClass, { amount: 30, unit: 'minutes' }),
+      RelativeTimeField,
+      buildField(RelativeTimeField, { amount: 30, unit: 'minutes' }),
     );
     assert.dom('[data-test-relative-time-embedded]').hasText('In 30 minutes');
   });
@@ -969,8 +769,8 @@ module('Integration | date-time fields', function (hooks) {
   test('recurring pattern field displays pattern details', async function (assert) {
     // Daily pattern
     await renderField(
-      RecurringPatternFieldClass,
-      buildField(RecurringPatternFieldClass, {
+      RecurringPatternField,
+      buildField(RecurringPatternField, {
         pattern: 'daily',
         startDate: '2024-05-01',
         endDate: '2024-05-31',
@@ -980,8 +780,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Monthly pattern
     await renderField(
-      RecurringPatternFieldClass,
-      buildField(RecurringPatternFieldClass, {
+      RecurringPatternField,
+      buildField(RecurringPatternField, {
         pattern: 'monthly',
         startDate: '2024-05-01',
       }),
@@ -990,8 +790,8 @@ module('Integration | date-time fields', function (hooks) {
 
     // Custom pattern with interval
     await renderField(
-      RecurringPatternFieldClass,
-      buildField(RecurringPatternFieldClass, {
+      RecurringPatternField,
+      buildField(RecurringPatternField, {
         pattern: 'custom',
         interval: 2,
         unit: 'days',
@@ -1006,32 +806,28 @@ module('Integration | date-time fields', function (hooks) {
   test('edit mode for partial calendar fields renders correctly', async function (assert) {
     // Year field edit mode
     await renderField(
-      YearFieldClass,
-      buildField(YearFieldClass, { value: 2024 }),
+      YearField,
+      buildField(YearField, { value: 2024 }),
       'edit',
     );
     assert.dom('[data-test-field-container]').exists();
 
     // Month field edit mode
-    await renderField(
-      MonthFieldClass,
-      buildField(MonthFieldClass, { value: 5 }),
-      'edit',
-    );
+    await renderField(MonthField, buildField(MonthField, { value: 5 }), 'edit');
     assert.dom('[data-test-month-select]').exists();
 
     // Quarter field edit mode
     await renderField(
-      QuarterFieldClass,
-      buildField(QuarterFieldClass, { quarter: 2, year: 2025 }),
+      QuarterField,
+      buildField(QuarterField, { quarter: 2, year: 2025 }),
       'edit',
     );
     assert.dom('[data-test-field-container]').exists();
 
     // Week field edit mode
     await renderField(
-      WeekFieldClass,
-      buildField(WeekFieldClass, { value: '2025-W20' }),
+      WeekField,
+      buildField(WeekField, { value: '2025-W20' }),
       'edit',
     );
     assert.dom('[data-test-field-container]').exists();

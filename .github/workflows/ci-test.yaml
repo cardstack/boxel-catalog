@@ -49,8 +49,6 @@ jobs:
             ! -path './commands/suggest-avatar.gts' \
             ! -path './utils' \
             ! -path './utils/*' \
-            ! -path './news-feed' \
-            ! -path './news-feed/*' \
             ! -path './resources' \
             ! -path './resources/*' \
             ! -path './catalog-app' \
@@ -66,6 +64,7 @@ jobs:
           rm -rf packages/host/tests/integration
           mkdir -p packages/host/tests/integration
           cp -r boxel-catalog-src/tests/integration/* packages/host/tests/integration
+          cp -r boxel-catalog-src/tests/helpers/* packages/host/tests/helpers
           
       - uses: ./.github/actions/init
 
@@ -117,19 +116,3 @@ jobs:
       - name: Print realm server logs
         if: always()
         run: cat /tmp/server.log
-
-      - name: Upload realm server log
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # 4.6.1
-        if: always()
-        with:
-          name: realm-server-log
-          path: /tmp/server.log
-          retention-days: 30
-
-      - name: Upload icon server log
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # 4.6.1
-        if: always()
-        with:
-          name: icon-server-log
-          path: /tmp/icon-server.log
-          retention-days: 30

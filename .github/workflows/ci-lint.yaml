@@ -50,8 +50,6 @@ jobs:
             ! -path './commands/suggest-avatar.gts' \
             ! -path './utils' \
             ! -path './utils/*' \
-            ! -path './news-feed' \
-            ! -path './news-feed/*' \
             ! -path './resources' \
             ! -path './resources/*' \
             ! -path './catalog-app' \
@@ -67,6 +65,7 @@ jobs:
           rm -rf packages/host/tests/integration
           mkdir -p packages/host/tests/integration
           cp -r boxel-catalog-src/tests/integration/* packages/host/tests/integration
+          cp -r boxel-catalog-src/tests/helpers/* packages/host/tests/helpers
 
       - uses: ./.github/actions/init
 

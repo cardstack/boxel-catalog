@@ -1,64 +1,17 @@
-import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import { ensureTrailingSlash } from '@cardstack/runtime-common';
-import type { Loader } from '@cardstack/runtime-common/loader';
-
-import ENV from '@cardstack/host/config/environment';
-
+import { setupBaseRealm } from '../helpers/base-realm';
 import {
-  setupBaseRealm,
-  field,
-  contains,
-  CardDef,
-  Component,
-} from '../helpers/base-realm';
-import { renderCard } from '../helpers/render-component';
+  setupCatalogRealm,
+  CatalogNumberField,
+} from '../helpers/catalog-realm';
+import { renderConfiguredField } from '../helpers/field-test-helpers';
 import { setupRenderingTest } from '../helpers/setup';
-
-type FieldFormat = 'embedded' | 'atom' | 'edit';
-
-let loader: Loader;
 
 module('Integration | number field configuration', function (hooks) {
   setupRenderingTest(hooks);
   setupBaseRealm(hooks);
-
-  let catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
-  let CatalogNumberFieldClass: any;
-
-  hooks.beforeEach(async function () {
-    loader = getService('loader-service').loader;
-    const numberModule: any = await loader.import(
-      `${catalogRealmURL}fields/number`,
-    );
-    CatalogNumberFieldClass = numberModule.default;
-  });
-
-  async function renderConfiguredField(
-    value: unknown,
-    configuration: any,
-    format: FieldFormat = 'atom',
-  ) {
-    const fieldFormat = format;
-
-    class TestCard extends CardDef {
-      @field sample = contains(CatalogNumberFieldClass, { configuration });
-
-      static isolated = class Isolated extends Component<typeof this> {
-        format: FieldFormat = fieldFormat;
-
-        <template>
-          <div data-test-field-container>
-            <@fields.sample @format={{this.format}} />
-          </div>
-        </template>
-      };
-    }
-
-    let card = new TestCard({ sample: value });
-    await renderCard(loader, card, 'isolated');
-  }
+  setupCatalogRealm(hooks);
 
   // ============================================
   // Presentation Mode Rendering Tests
@@ -81,7 +34,12 @@ module('Integration | number field configuration', function (hooks) {
     ];
 
     for (const { mode, embeddedClass } of presentations) {
-      await renderConfiguredField(50, { presentation: mode }, 'embedded');
+      await renderConfiguredField(
+        CatalogNumberField,
+        50,
+        { presentation: mode },
+        'embedded',
+      );
       assert
         .dom(`[data-test-field-container] ${embeddedClass}`)
         .exists(`${mode} presentation renders correct embedded component`);
@@ -94,6 +52,7 @@ module('Integration | number field configuration', function (hooks) {
 
   test('prefix/suffix/decimals options work correctly', async function (assert) {
     await renderConfiguredField(
+      CatalogNumberField,
       100.5,
       {
         presentation: 'standard',
@@ -113,6 +72,7 @@ module('Integration | number field configuration', function (hooks) {
 
   test('min/max options work in edit mode', async function (assert) {
     await renderConfiguredField(
+      CatalogNumberField,
       200,
       {
         presentation: 'standard',
@@ -132,6 +92,7 @@ module('Integration | number field configuration', function (hooks) {
 
   test('valueFormat percentage with suffix works correctly', async function (assert) {
     await renderConfiguredField(
+      CatalogNumberField,
       75,
       {
         presentation: 'progress-bar',
@@ -153,6 +114,7 @@ module('Integration | number field configuration', function (hooks) {
 
   test('badge-notification respects max option for overflow', async function (assert) {
     await renderConfiguredField(
+      CatalogNumberField,
       150,
       {
         presentation: 'badge-notification',
@@ -174,6 +136,7 @@ module('Integration | number field configuration', function (hooks) {
 
   test('invalid presentation falls back to standard', async function (assert) {
     await renderConfiguredField(
+      CatalogNumberField,
       42,
       {
         presentation: 'nonexistent-presentation',
@@ -194,7 +157,7 @@ module('Integration | number field configuration', function (hooks) {
   });
 
   test('missing presentation defaults to standard', async function (assert) {
-    await renderConfiguredField(42, {}, 'atom');
+    await renderConfiguredField(CatalogNumberField, 42, {}, 'atom');
 
     assert
       .dom('[data-test-field-container] [data-test-number-field-atom]')
@@ -203,6 +166,7 @@ module('Integration | number field configuration', function (hooks) {
 
   test('wrong type in options is ignored gracefully', async function (assert) {
     await renderConfiguredField(
+      CatalogNumberField,
       75,
       {
         presentation: 'stat',
@@ -226,6 +190,7 @@ module('Integration | number field configuration', function (hooks) {
 
   test('null/undefined value is handled gracefully', async function (assert) {
     await renderConfiguredField(
+      CatalogNumberField,
       null,
       {
         presentation: 'stat',
@@ -247,6 +212,7 @@ module('Integration | number field configuration', function (hooks) {
 
   test('edit mode always uses NumberInput regardless of presentation', async function (assert) {
     await renderConfiguredField(
+      CatalogNumberField,
       50,
       {
         presentation: 'stat',
@@ -269,6 +235,7 @@ module('Integration | number field configuration', function (hooks) {
 
   test('edit mode extracts compatible options from any presentation', async function (assert) {
     await renderConfiguredField(
+      CatalogNumberField,
       75,
       {
         presentation: 'progress-bar',

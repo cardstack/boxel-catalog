@@ -1,75 +1,23 @@
-import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import { ensureTrailingSlash } from '@cardstack/runtime-common';
-import type { Loader } from '@cardstack/runtime-common/loader';
-
-import ENV from '@cardstack/host/config/environment';
-
+import { setupBaseRealm } from '../helpers/base-realm';
+import { setupCatalogRealm, CatalogImageField } from '../helpers/catalog-realm';
 import {
-  setupBaseRealm,
-  field,
-  contains,
-  CardDef,
-  Component,
-} from '../helpers/base-realm';
-import { renderCard } from '../helpers/render-component';
+  renderConfiguredField,
+  buildImageField,
+} from '../helpers/field-test-helpers';
 import { setupRenderingTest } from '../helpers/setup';
-
-type FieldFormat = 'embedded' | 'atom' | 'edit';
-
-let loader: Loader;
 
 module('Integration | image field configuration', function (hooks) {
   setupRenderingTest(hooks);
   setupBaseRealm(hooks);
-
-  let catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
-  let CatalogImageFieldClass: any;
-
-  hooks.beforeEach(async function () {
-    loader = getService('loader-service').loader;
-    const imageModule: any = await loader.import(
-      `${catalogRealmURL}fields/image`,
-    );
-    CatalogImageFieldClass = imageModule.default;
-  });
-
-  async function renderConfiguredField(
-    value: any,
-    configuration: any,
-    format: FieldFormat = 'edit',
-  ) {
-    const fieldFormat = format;
-
-    class TestCard extends CardDef {
-      @field sample = contains(CatalogImageFieldClass, { configuration });
-
-      static isolated = class Isolated extends Component<typeof this> {
-        format: FieldFormat = fieldFormat;
-
-        <template>
-          <div data-test-field-container>
-            <@fields.sample @format={{this.format}} />
-          </div>
-        </template>
-      };
-    }
-
-    // Create proper ImageField instance
-    const imageField =
-      value.url || value.uploadUrl
-        ? new CatalogImageFieldClass(value)
-        : new CatalogImageFieldClass();
-
-    let card = new TestCard({ sample: imageField });
-    await renderCard(loader, card, 'isolated');
-  }
+  setupCatalogRealm(hooks);
 
   // ImageField Variant Tests
   test('browse variant renders browse upload component', async function (assert) {
     await renderConfiguredField(
-      {},
+      CatalogImageField,
+      buildImageField({}),
       {
         variant: 'browse',
       },
@@ -87,7 +35,8 @@ module('Integration | image field configuration', function (hooks) {
 
   test('dropzone variant renders dropzone upload component', async function (assert) {
     await renderConfiguredField(
-      {},
+      CatalogImageField,
+      buildImageField({}),
       {
         variant: 'dropzone',
       },
@@ -105,7 +54,8 @@ module('Integration | image field configuration', function (hooks) {
 
   test('avatar variant renders avatar upload component', async function (assert) {
     await renderConfiguredField(
-      {},
+      CatalogImageField,
+      buildImageField({}),
       {
         variant: 'avatar',
       },
@@ -123,7 +73,8 @@ module('Integration | image field configuration', function (hooks) {
 
   test('invalid variant falls back to default browse', async function (assert) {
     await renderConfiguredField(
-      {},
+      CatalogImageField,
+      buildImageField({}),
       {
         variant: 'invalid-variant',
       },
@@ -139,7 +90,8 @@ module('Integration | image field configuration', function (hooks) {
   // ImageField Presentation Tests
   test('image presentation renders image presentation component', async function (assert) {
     await renderConfiguredField(
-      { imageUrl: 'https://example.com/image.jpg' },
+      CatalogImageField,
+      buildImageField({ imageUrl: 'https://example.com/image.jpg' }),
       {
         variant: 'browse',
         presentation: 'image',
@@ -154,7 +106,8 @@ module('Integration | image field configuration', function (hooks) {
 
   test('inline presentation renders inline presentation component', async function (assert) {
     await renderConfiguredField(
-      { imageUrl: 'https://example.com/image.jpg' },
+      CatalogImageField,
+      buildImageField({ imageUrl: 'https://example.com/image.jpg' }),
       {
         variant: 'browse',
         presentation: 'inline',
@@ -169,7 +122,8 @@ module('Integration | image field configuration', function (hooks) {
 
   test('card presentation renders card presentation component', async function (assert) {
     await renderConfiguredField(
-      { imageUrl: 'https://example.com/image.jpg' },
+      CatalogImageField,
+      buildImageField({ imageUrl: 'https://example.com/image.jpg' }),
       {
         variant: 'browse',
         presentation: 'card',
@@ -184,7 +138,8 @@ module('Integration | image field configuration', function (hooks) {
 
   test('invalid presentation falls back to default image', async function (assert) {
     await renderConfiguredField(
-      { imageUrl: 'https://example.com/image.jpg' },
+      CatalogImageField,
+      buildImageField({ imageUrl: 'https://example.com/image.jpg' }),
       {
         variant: 'browse',
         presentation: 'invalid-presentation',
@@ -203,7 +158,8 @@ module('Integration | image field configuration', function (hooks) {
   // ImageField Options Tests
   test('showImageModal option is ignored for avatar variant', async function (assert) {
     await renderConfiguredField(
-      { imageUrl: 'https://example.com/image.jpg' },
+      CatalogImageField,
+      buildImageField({ imageUrl: 'https://example.com/image.jpg' }),
       {
         variant: 'avatar',
         options: {
@@ -228,7 +184,8 @@ module('Integration | image field configuration', function (hooks) {
 
   test('image field ignores irrelevant config properties', async function (assert) {
     await renderConfiguredField(
-      {},
+      CatalogImageField,
+      buildImageField({}),
       {
         variant: 'browse',
         // These properties should be ignored by image field
@@ -249,7 +206,12 @@ module('Integration | image field configuration', function (hooks) {
 
   // Default Config Fallback Tests
   test('image field edit view falls back to default browse variant when config is missing', async function (assert) {
-    await renderConfiguredField({}, {}, 'edit');
+    await renderConfiguredField(
+      CatalogImageField,
+      buildImageField({}),
+      {},
+      'edit',
+    );
 
     assert
       .dom('[data-test-field-container] [data-test-image-field-edit]')
@@ -258,7 +220,8 @@ module('Integration | image field configuration', function (hooks) {
 
   test('image field embedded view falls back to default image presentation when config is missing', async function (assert) {
     await renderConfiguredField(
-      { imageUrl: 'https://example.com/image.jpg' },
+      CatalogImageField,
+      buildImageField({ imageUrl: 'https://example.com/image.jpg' }),
       {},
       'embedded',
     );

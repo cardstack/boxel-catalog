@@ -1,97 +1,40 @@
-import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
 import {
-  ensureTrailingSlash,
   PermissionsContextName,
   type Permissions,
 } from '@cardstack/runtime-common';
-import type { Loader } from '@cardstack/runtime-common/loader';
-
-import ENV from '@cardstack/host/config/environment';
 
 import { provideConsumeContext } from '../helpers';
+import { setupBaseRealm } from '../helpers/base-realm';
 import {
-  setupBaseRealm,
-  field,
-  contains,
-  CardDef,
-  Component,
-} from '../helpers/base-realm';
-import { renderCard } from '../helpers/render-component';
+  setupCatalogRealm,
+  MultipleImageField,
+} from '../helpers/catalog-realm';
+import {
+  renderConfiguredField,
+  buildMultipleImageField,
+} from '../helpers/field-test-helpers';
 import { setupRenderingTest } from '../helpers/setup';
-
-type FieldFormat = 'embedded' | 'atom' | 'edit';
-
-let loader: Loader;
 
 module('Integration | multiple image field configuration', function (hooks) {
   setupRenderingTest(hooks);
   setupBaseRealm(hooks);
-
-  let catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
-  let CatalogMultipleImageFieldClass: any;
-  let CatalogImageFieldClass: any;
+  setupCatalogRealm(hooks);
 
   hooks.beforeEach(async function () {
-    loader = getService('loader-service').loader;
-
-    const multipleImageModule: any = await loader.import(
-      `${catalogRealmURL}fields/multiple-image`,
-    );
-    CatalogMultipleImageFieldClass = multipleImageModule.default;
-
-    const imageModule: any = await loader.import(
-      `${catalogRealmURL}fields/image`,
-    );
-    CatalogImageFieldClass = imageModule.default;
-
     // Set up permissions to allow editing
     const permissions: Permissions = { canWrite: true, canRead: true };
     provideConsumeContext(PermissionsContextName, permissions);
   });
 
-  async function renderConfiguredField(
-    value: any,
-    configuration: any,
-    format: FieldFormat = 'edit',
-  ) {
-    const fieldFormat = format;
-
-    class TestCard extends CardDef {
-      @field sample = contains(CatalogMultipleImageFieldClass, {
-        configuration,
-      });
-
-      static isolated = class Isolated extends Component<typeof this> {
-        format: FieldFormat = fieldFormat;
-
-        <template>
-          <div data-test-field-container>
-            <@fields.sample @format={{this.format}} />
-          </div>
-        </template>
-      };
-    }
-
-    // Create proper MultipleImageField instance with ImageField instances
-    const multipleImageField = new CatalogMultipleImageFieldClass();
-    if (value.images && Array.isArray(value.images)) {
-      multipleImageField.images = value.images.map(
-        (img: any) => new CatalogImageFieldClass(img),
-      );
-    }
-
-    let card = new TestCard({ sample: multipleImageField });
-    await renderCard(loader, card, 'isolated');
-  }
-
   // MultipleImageField Variant Tests
   test('list variant renders list upload component', async function (assert) {
     await renderConfiguredField(
-      {
+      MultipleImageField,
+      buildMultipleImageField({
         images: [{ imageUrl: 'https://example.com/image1.jpg' }],
-      },
+      }),
       {
         variant: 'list',
       },
@@ -109,9 +52,10 @@ module('Integration | multiple image field configuration', function (hooks) {
 
   test('gallery variant renders gallery upload component', async function (assert) {
     await renderConfiguredField(
-      {
+      MultipleImageField,
+      buildMultipleImageField({
         images: [{ imageUrl: 'https://example.com/image1.jpg' }],
-      },
+      }),
       {
         variant: 'gallery',
       },
@@ -129,9 +73,10 @@ module('Integration | multiple image field configuration', function (hooks) {
 
   test('dropzone variant renders dropzone upload component', async function (assert) {
     await renderConfiguredField(
-      {
+      MultipleImageField,
+      buildMultipleImageField({
         images: [{ imageUrl: 'https://example.com/image1.jpg' }],
-      },
+      }),
       {
         variant: 'dropzone',
       },
@@ -149,7 +94,8 @@ module('Integration | multiple image field configuration', function (hooks) {
 
   test('invalid variant falls back to default list', async function (assert) {
     await renderConfiguredField(
-      { images: [] },
+      MultipleImageField,
+      buildMultipleImageField({ images: [] }),
       {
         variant: 'invalid-variant',
       },
@@ -165,12 +111,13 @@ module('Integration | multiple image field configuration', function (hooks) {
   // MultipleImageField Presentation Tests
   test('grid presentation renders grid presentation component', async function (assert) {
     await renderConfiguredField(
-      {
+      MultipleImageField,
+      buildMultipleImageField({
         images: [
           { imageUrl: 'https://example.com/image1.jpg' },
           { imageUrl: 'https://example.com/image2.jpg' },
         ],
-      },
+      }),
       {
         variant: 'list',
         presentation: 'grid',
@@ -185,12 +132,13 @@ module('Integration | multiple image field configuration', function (hooks) {
 
   test('carousel presentation renders carousel presentation component', async function (assert) {
     await renderConfiguredField(
-      {
+      MultipleImageField,
+      buildMultipleImageField({
         images: [
           { imageUrl: 'https://example.com/image1.jpg' },
           { imageUrl: 'https://example.com/image2.jpg' },
         ],
-      },
+      }),
       {
         variant: 'list',
         presentation: 'carousel',
@@ -205,9 +153,10 @@ module('Integration | multiple image field configuration', function (hooks) {
 
   test('invalid presentation falls back to default grid', async function (assert) {
     await renderConfiguredField(
-      {
+      MultipleImageField,
+      buildMultipleImageField({
         images: [{ imageUrl: 'https://example.com/image1.jpg' }],
-      },
+      }),
       {
         variant: 'list',
         presentation: 'invalid-presentation',
@@ -227,9 +176,10 @@ module('Integration | multiple image field configuration', function (hooks) {
   test('allowBatchSelect option controls batch actions visibility', async function (assert) {
     // Test with allowBatchSelect: true
     await renderConfiguredField(
-      {
+      MultipleImageField,
+      buildMultipleImageField({
         images: [{ imageUrl: 'https://example.com/image1.jpg' }],
-      },
+      }),
       {
         variant: 'list',
         options: {
@@ -247,9 +197,10 @@ module('Integration | multiple image field configuration', function (hooks) {
 
     // Test with allowBatchSelect: false
     await renderConfiguredField(
-      {
+      MultipleImageField,
+      buildMultipleImageField({
         images: [{ imageUrl: 'https://example.com/image1.jpg' }],
-      },
+      }),
       {
         variant: 'list',
         options: {
@@ -268,7 +219,8 @@ module('Integration | multiple image field configuration', function (hooks) {
 
   test('multiple image field ignores irrelevant config properties', async function (assert) {
     await renderConfiguredField(
-      { images: [] },
+      MultipleImageField,
+      buildMultipleImageField({ images: [] }),
       {
         variant: 'list',
         // These properties should be ignored by multiple image field
@@ -289,7 +241,12 @@ module('Integration | multiple image field configuration', function (hooks) {
 
   // Default Config Fallback Tests
   test('multiple image field edit view falls back to default list variant when config is missing', async function (assert) {
-    await renderConfiguredField({ images: [] }, {}, 'edit');
+    await renderConfiguredField(
+      MultipleImageField,
+      buildMultipleImageField({ images: [] }),
+      {},
+      'edit',
+    );
 
     assert
       .dom('[data-test-field-container] [data-test-multiple-image-field]')
@@ -300,9 +257,10 @@ module('Integration | multiple image field configuration', function (hooks) {
 
   test('multiple image field embedded view falls back to default grid presentation when config is missing', async function (assert) {
     await renderConfiguredField(
-      {
+      MultipleImageField,
+      buildMultipleImageField({
         images: [{ imageUrl: 'https://example.com/image1.jpg' }],
-      },
+      }),
       {},
       'embedded',
     );

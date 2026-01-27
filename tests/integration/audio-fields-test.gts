@@ -1,101 +1,18 @@
-import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import { ensureTrailingSlash } from '@cardstack/runtime-common';
-import type { Loader } from '@cardstack/runtime-common/loader';
-
-import ENV from '@cardstack/host/config/environment';
-
+import { setupBaseRealm } from '../helpers/base-realm';
+import { setupCatalogRealm, AudioField } from '../helpers/catalog-realm';
 import {
-  setupBaseRealm,
-  field,
-  contains,
-  CardDef,
-  Component,
-} from '../helpers/base-realm';
-import { renderCard } from '../helpers/render-component';
+  renderField,
+  renderConfiguredField,
+  buildField,
+} from '../helpers/field-test-helpers';
 import { setupRenderingTest } from '../helpers/setup';
-
-type FieldFormat = 'embedded' | 'atom' | 'edit' | 'fitted';
 
 module('Integration | audio fields', function (hooks) {
   setupRenderingTest(hooks);
   setupBaseRealm(hooks);
-
-  let loader: Loader;
-  let catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
-
-  let AudioFieldClass: any;
-
-  let catalogFieldsLoaded = false;
-
-  hooks.beforeEach(async function () {
-    loader = getService('loader-service').loader;
-    if (!catalogFieldsLoaded) {
-      await loadCatalogFields();
-      catalogFieldsLoaded = true;
-    }
-  });
-
-  async function loadCatalogFields() {
-    const audioModule: any = await loader.import(
-      `${catalogRealmURL}fields/audio`,
-    );
-    AudioFieldClass = audioModule.default;
-  }
-
-  async function renderField(
-    FieldClass: any,
-    value: unknown,
-    format: FieldFormat = 'embedded',
-  ) {
-    const fieldFormat = format;
-    const fieldType = FieldClass;
-
-    class TestCard extends CardDef {
-      @field sample = contains(fieldType);
-
-      static isolated = class Isolated extends Component<typeof this> {
-        format: FieldFormat = fieldFormat;
-
-        <template>
-          <div data-test-field-container>
-            <@fields.sample @format={{this.format}} />
-          </div>
-        </template>
-      };
-    }
-
-    let card = new TestCard({ sample: value });
-    await renderCard(loader, card, 'isolated');
-  }
-
-  async function renderConfiguredField(
-    FieldClass: any,
-    value: unknown,
-    configuration: Record<string, unknown> = {},
-  ) {
-    const fieldType = FieldClass;
-
-    class TestCard extends CardDef {
-      @field sample = contains(fieldType, { configuration });
-
-      static isolated = class Isolated extends Component<typeof this> {
-        <template>
-          <div data-test-field-container>
-            <@fields.sample @format='embedded' />
-          </div>
-        </template>
-      };
-    }
-
-    let card = new TestCard({ sample: value });
-    await renderCard(loader, card, 'isolated');
-  }
-
-  function buildField(FieldClass: any, attrs: Record<any, unknown>) {
-    return new FieldClass(attrs);
-  }
+  setupCatalogRealm(hooks);
 
   // Sample audio data for tests
   const sampleAudioData = {
@@ -118,10 +35,7 @@ module('Integration | audio fields', function (hooks) {
   // ============================================
 
   test('audio field renders embedded view with valid data', async function (assert) {
-    await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
-    );
+    await renderField(AudioField, buildField(AudioField, sampleAudioData));
 
     assert.dom('[data-test-audio-embedded]').exists('embedded view renders');
     assert
@@ -135,8 +49,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('audio field renders atom view with valid data', async function (assert) {
     await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       'atom',
     );
 
@@ -148,8 +62,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('audio field renders fitted view with valid data', async function (assert) {
     await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       'fitted',
     );
 
@@ -158,8 +72,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('audio field renders edit view with valid data', async function (assert) {
     await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       'edit',
     );
 
@@ -174,7 +88,7 @@ module('Integration | audio fields', function (hooks) {
   // ============================================
 
   test('missing audio renders placeholder in embedded view', async function (assert) {
-    await renderField(AudioFieldClass, buildField(AudioFieldClass, {}));
+    await renderField(AudioField, buildField(AudioField, {}));
 
     assert
       .dom('[data-test-audio-placeholder]')
@@ -185,11 +99,7 @@ module('Integration | audio fields', function (hooks) {
   });
 
   test('missing audio renders placeholder in fitted view', async function (assert) {
-    await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, {}),
-      'fitted',
-    );
+    await renderField(AudioField, buildField(AudioField, {}), 'fitted');
 
     assert
       .dom('[data-test-audio-fitted-placeholder]')
@@ -200,7 +110,7 @@ module('Integration | audio fields', function (hooks) {
   });
 
   test('missing audio shows upload area in edit view', async function (assert) {
-    await renderField(AudioFieldClass, buildField(AudioFieldClass, {}), 'edit');
+    await renderField(AudioField, buildField(AudioField, {}), 'edit');
 
     assert.dom('[data-test-audio-edit]').exists('edit view renders');
     assert
@@ -209,7 +119,7 @@ module('Integration | audio fields', function (hooks) {
   });
 
   test('undefined audio field renders placeholder', async function (assert) {
-    await renderField(AudioFieldClass, undefined);
+    await renderField(AudioField, undefined);
 
     assert
       .dom('[data-test-audio-placeholder]')
@@ -222,8 +132,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('displayTitle shows title when available', async function (assert) {
     await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, {
+      AudioField,
+      buildField(AudioField, {
         ...sampleAudioData,
         cardTitle: 'Custom Title',
       }),
@@ -236,8 +146,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('displayTitle falls back to filename when no title', async function (assert) {
     await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, {
+      AudioField,
+      buildField(AudioField, {
         url: 'http://localhost:4201/does-not-exist/audio.mp3',
         filename: 'my-song.mp3',
       }),
@@ -250,8 +160,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('displayTitle falls back to default when no title or filename', async function (assert) {
     await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, {
+      AudioField,
+      buildField(AudioField, {
         url: 'http://localhost:4201/does-not-exist/audio.mp3',
       }),
     );
@@ -267,8 +177,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('waveform-player presentation renders correctly', async function (assert) {
     await renderConfiguredField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       { presentation: 'waveform-player' },
     );
 
@@ -279,8 +189,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('mini-player presentation renders correctly', async function (assert) {
     await renderConfiguredField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       { presentation: 'mini-player' },
     );
 
@@ -289,8 +199,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('album-cover presentation renders correctly', async function (assert) {
     await renderConfiguredField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       { presentation: 'album-cover' },
     );
 
@@ -301,8 +211,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('trim-editor presentation renders correctly', async function (assert) {
     await renderConfiguredField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       { presentation: 'trim-editor' },
     );
 
@@ -311,8 +221,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('playlist-row presentation renders correctly', async function (assert) {
     await renderConfiguredField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       { presentation: 'playlist-row' },
     );
 
@@ -321,8 +231,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('inline-player (default) presentation renders correctly', async function (assert) {
     await renderConfiguredField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       {}, // Default presentation
     );
 
@@ -337,8 +247,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('showVolume option renders volume control', async function (assert) {
     await renderConfiguredField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       { options: { showVolume: true } },
     );
 
@@ -349,8 +259,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('showSpeedControl option renders speed selector', async function (assert) {
     await renderConfiguredField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       { options: { showSpeedControl: true } },
     );
 
@@ -364,8 +274,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('showLoopControl option renders loop checkbox', async function (assert) {
     await renderConfiguredField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       { options: { showLoopControl: true } },
     );
 
@@ -382,19 +292,13 @@ module('Integration | audio fields', function (hooks) {
   // ============================================
 
   test('audio metadata displays correctly', async function (assert) {
-    await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
-    );
+    await renderField(AudioField, buildField(AudioField, sampleAudioData));
 
     assert.dom('[data-test-audio-metadata]').exists('metadata section exists');
   });
 
   test('minimal audio data still renders', async function (assert) {
-    await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, minimalAudioData),
-    );
+    await renderField(AudioField, buildField(AudioField, minimalAudioData));
 
     assert.dom('[data-test-audio-embedded]').exists('player still renders');
     assert.dom('[data-test-audio-artist]').doesNotExist('no artist shown');
@@ -405,19 +309,13 @@ module('Integration | audio fields', function (hooks) {
   // ============================================
 
   test('play button exists and is clickable', async function (assert) {
-    await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
-    );
+    await renderField(AudioField, buildField(AudioField, sampleAudioData));
 
     assert.dom('[data-test-audio-play-btn]').exists('play button exists');
   });
 
   test('seek bar is hidden when audio has not loaded metadata', async function (assert) {
-    await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
-    );
+    await renderField(AudioField, buildField(AudioField, sampleAudioData));
 
     // The seek bar/controls only appear after audio metadata is loaded
     // With fake URLs, the audio never loads, so controls won't appear
@@ -434,8 +332,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('atom view shows audio icon', async function (assert) {
     await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       'atom',
     );
 
@@ -447,8 +345,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('atom view shows displayTitle fallback', async function (assert) {
     await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, { url: 'test.mp3' }),
+      AudioField,
+      buildField(AudioField, { url: 'test.mp3' }),
       'atom',
     );
 
@@ -463,8 +361,8 @@ module('Integration | audio fields', function (hooks) {
 
   test('edit view shows metadata fields when audio is uploaded', async function (assert) {
     await renderField(
-      AudioFieldClass,
-      buildField(AudioFieldClass, sampleAudioData),
+      AudioField,
+      buildField(AudioField, sampleAudioData),
       'edit',
     );
 
@@ -475,7 +373,7 @@ module('Integration | audio fields', function (hooks) {
   });
 
   test('edit view shows upload prompt when no audio', async function (assert) {
-    await renderField(AudioFieldClass, buildField(AudioFieldClass, {}), 'edit');
+    await renderField(AudioField, buildField(AudioField, {}), 'edit');
 
     assert
       .dom('[data-test-audio-upload-area]')
