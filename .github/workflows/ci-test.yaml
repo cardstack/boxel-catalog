@@ -1,4 +1,4 @@
-name: CI Lint
+name: CI Test
 
 on:
   push:
@@ -12,14 +12,14 @@ permissions:
   pull-requests: write
 
 jobs:
-  lint:
-    name: Lint
+  test:
+    name: Catalog Integration Tests
     runs-on: ubuntu-latest
     concurrency:
-      group: lint-${{ github.head_ref || github.run_id }}
+      group: test-${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
     steps:
-      # Checkout the boxel monorepo at root to get tooling and init action
+      # Checkout the boxel monorepo at root
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
@@ -29,11 +29,10 @@ jobs:
         with:
           path: boxel-catalog-src
 
-      # Copy catalog files into the monorepo's catalog-realm location
+      # Copy catalog files into the monorepo
       - name: Copy catalog files into monorepo
         run: |
-          # TODO: Simplify this step once catalog-realm content is fully migrated out of the monorepo
-          # Remove all files except config files and folders we want to keep from monorepo
+          # Remove existing catalog-realm content (keep config files and folders required by test)
           cd packages/catalog-realm
           find . -mindepth 1 \
             ! -name '.gitignore' \
@@ -66,21 +65,54 @@ jobs:
           mkdir -p packages/host/tests/integration
           cp -r boxel-catalog-src/tests/integration/* packages/host/tests/integration
           cp -r boxel-catalog-src/tests/helpers/* packages/host/tests/helpers
-
+          
       - uses: ./.github/actions/init
 
-      # Boxel UI and Boxel Icons need to be built first so that their
-      # linting outputs types are available for projects that depend on them
       - name: Build common dependencies
-        if: always()
         run: pnpm run build-common-deps
 
-      - name: Lint Catalog
-        if: always()
-        run: pnpm run lint
-        working-directory: packages/catalog-realm
-
-      - name: Lint Host
-        if: always()
-        run: pnpm run lint
+      - name: Build Host for tests
+        run:  NODE_OPTIONS='--max-old-space-size=8192' pnpm build
         working-directory: packages/host
+
+      - name: Serve boxel-icons
+        run: pnpm serve &> /tmp/icon-server.log &
+        working-directory: packages/boxel-icons
+
+      - name: Disable TCP/UDP network offloading
+        run: sudo ethtool -K eth0 tx off rx off
+
+      - name: Serve host dist for realm server
+        uses: JarvusInnovations/background-action@2428e7b970a846423095c79d43f759abf979a635 # 1.0.7
+        with:
+          run: pnpm serve:dist &
+          working-directory: packages/host
+          wait-for: 3m
+          wait-on: http-get://localhost:4200
+
+      - name: Start realm servers
+        run: pnpm start:services-for-host-tests | tee -a /tmp/server.log &
+        working-directory: packages/realm-server
+
+      - name: Create realm users
+        run: pnpm register-realm-users
+        working-directory: packages/matrix
+
+      - name: Install D-Bus helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dbus-x11 upower
+          sudo service dbus restart
+          sudo service upower restart
+
+      - name: Run Catalog Integration Tests
+        run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Integration | "
+        env:
+          PERCY_GZIP: true
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}
+          DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
+        working-directory: packages/host
+
+      - name: Print realm server logs
+        if: always()
+        run: cat /tmp/server.log
