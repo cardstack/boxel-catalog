@@ -8,7 +8,7 @@ import {
 } from '@ember/test-helpers';
 
 import { getService } from '@universal-ember/test-support';
-import { module, skip, test } from 'qunit';
+import { module, test } from 'qunit';
 
 import { ensureTrailingSlash } from '@cardstack/runtime-common';
 
@@ -1251,7 +1251,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
         });
       });
 
-      skip('filters', async function () {
+      module('filters', async function () {
         test('list view is shown if filters are applied', async function (assert) {
           await waitFor('[data-test-filter-search-input]');
           await click('[data-test-filter-search-input]');
@@ -1278,8 +1278,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
             );
         });
 
-        // TOOD: restore in CS-9083
-        skip('should be reset when clicking "Catalog Home" button', async function (assert) {
+        test('should be reset when clicking "Catalog Home" button', async function (assert) {
           await waitFor('[data-test-filter-search-input]');
           await click('[data-test-filter-search-input]');
           await fillIn('[data-test-filter-search-input]', 'Mortgage');
@@ -1313,9 +1312,8 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
             .dom('[data-test-tag-list-pill].selected')
             .doesNotExist('No tag should be selected after reset');
         });
-
-        // TODO: restore in CS-9131
-        skip('should be reset when clicking "All Apps" button', async function (assert) {
+    
+        test('should be reset when clicking "All Apps" button', async function (assert) {
           await selectTab('Apps');
           await waitForGrid();
 
@@ -1355,14 +1353,14 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
             .doesNotExist('No tag should be selected after reset');
         });
 
-        skip('updates the card count correctly when filtering by a sphere group', async function (assert) {
+        test('updates the card count correctly when filtering by a sphere group', async function (assert) {
           await click('[data-test-boxel-filter-list-button="LIFE"]');
           assert
             .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
             .exists({ count: 2 });
         });
 
-        skip('updates the card count correctly when filtering by a category', async function (assert) {
+        test('updates the card count correctly when filtering by a category', async function (assert) {
           await click('[data-test-filter-list-item="LIFE"] .dropdown-toggle');
           await click(
             '[data-test-boxel-filter-list-button="Health & Wellness"]',
@@ -1372,7 +1370,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
             .exists({ count: 1 });
         });
 
-        skip('updates the card count correctly when filtering by a search input', async function (assert) {
+        test('updates the card count correctly when filtering by a search input', async function (assert) {
           await click('[data-test-filter-search-input]');
           await fillIn('[data-test-filter-search-input]', 'Mortgage');
           await waitUntil(() => {
@@ -2266,8 +2264,8 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
           );
       });
     });
-    skip('"use"', async function () {
-      skip('card listing', async function (assert) {
+    module('"use"', async function () {
+      test('card listing', async function (assert) {
         const listingName = 'author';
         const listingId = mockCatalogURL + 'Listing/author.json';
         await executeCommand(
@@ -2485,7 +2483,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
       });
     });
 
-    skip('"use" is successful even if target realm does not have a trailing slash', async function (assert) {
+    test('"use" is successful even if target realm does not have a trailing slash', async function (assert) {
       const listingName = 'author';
       const listingId = mockCatalogURL + 'Listing/author.json';
       await executeCommand(
