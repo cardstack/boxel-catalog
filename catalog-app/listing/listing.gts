@@ -596,7 +596,7 @@ export class Listing extends CardDef {
       return undefined;
     }
     return {
-      label: 'Generate example with AI',
+      label: 'Generate Example with AI',
       action: async () => {
         const command = new ListingGenerateExampleCommand(
           params.commandContext,
@@ -677,7 +677,7 @@ export class Listing extends CardDef {
       label: 'Make a PR',
       action: async () => {
         await new CreateListingPRCommand(commandContext).execute({
-          listing: this,
+          listingId: this.id,
           realm: this[realmURL]!.href,
         });
       },
