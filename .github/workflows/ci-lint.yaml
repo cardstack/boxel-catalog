@@ -63,7 +63,10 @@ jobs:
           
           # Copy catalog integration tests to host tests directory
           rm -rf packages/host/tests/integration
+          rm -rf packages/host/tests/acceptance
           mkdir -p packages/host/tests/integration
+          mkdir -p packages/host/tests/acceptance
+          cp -r boxel-catalog-src/tests/acceptance/* packages/host/tests/acceptance
           cp -r boxel-catalog-src/tests/integration/* packages/host/tests/integration
           cp -r boxel-catalog-src/tests/helpers/* packages/host/tests/helpers
 

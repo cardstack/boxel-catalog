@@ -60,12 +60,19 @@ jobs:
           # Copy catalog source files (exclude config files that should stay from monorepo)
           rsync -av --exclude='tsconfig.json' --exclude='package.json' --exclude='.realm.json' --exclude='.gitignore' --exclude='tests/' boxel-catalog-src/ packages/catalog-realm/
           
-          # Copy catalog integration tests to host tests directory
+          # Copy catalog acceptance and integration tests to host tests directory
           rm -rf packages/host/tests/integration
+          rm -rf packages/host/tests/acceptance
           mkdir -p packages/host/tests/integration
+          mkdir -p packages/host/tests/acceptance
+          cp -r boxel-catalog-src/tests/acceptance/* packages/host/tests/acceptance
           cp -r boxel-catalog-src/tests/integration/* packages/host/tests/integration
           cp -r boxel-catalog-src/tests/helpers/* packages/host/tests/helpers
-          
+
+
+          # Overwrite the test-wait-for-server script to include catalog server start
+          cp boxel-catalog-src/scripts/test-wait-for-servers.sh packages/host/scripts/test-wait-for-servers.sh
+
       - uses: ./.github/actions/init
 
       - name: Build common dependencies
@@ -104,6 +111,14 @@ jobs:
           sudo apt-get install -y dbus-x11 upower
           sudo service dbus restart
           sudo service upower restart
+
+      - name: Run Catalog Acceptance Tests
+        run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Acceptance | "
+        env:
+          PERCY_GZIP: true
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}
+          DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
+        working-directory: packages/host
 
       - name: Run Catalog Integration Tests
         run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Integration | "
