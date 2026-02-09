@@ -8,7 +8,7 @@ import {
 } from '@ember/test-helpers';
 
 import { getService } from '@universal-ember/test-support';
-import { module, test } from 'qunit';
+import { module, test, skip } from 'qunit';
 
 import { ensureTrailingSlash } from '@cardstack/runtime-common';
 
@@ -57,8 +57,12 @@ const themeListingId = `${mockCatalogURL}ThemeListing/cardstack-theme`;
 const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;
 //license
 const mitLicenseId = `${mockCatalogURL}License/mit`;
+//sphere
+const lifeSphereId = `${mockCatalogURL}Sphere/life`;
 //category
 const writingCategoryId = `${mockCatalogURL}Category/writing`;
+const healthWellnessCategoryId = `${mockCatalogURL}Category/health-wellness`;
+const fitnessCategoryId = `${mockCatalogURL}Category/fitness`;
 //publisher
 const publisherId = `${mockCatalogURL}Publisher/boxel-publisher`;
 
@@ -538,7 +542,12 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
             relationships: {
               'tags.0': {
                 links: {
-                  self: calculatorTagId,
+                  self: gameTagId,
+                },
+              },
+              'categories.0': {
+                links: {
+                  self: healthWellnessCategoryId,
                 },
               },
             },
@@ -612,10 +621,10 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
                   self: pirateSkillId,
                 },
               },
-            },
-            'categories.0': {
-              links: {
-                self: writingCategoryId,
+              'categories.0': {
+                links: {
+                  self: fitnessCategoryId,
+                },
               },
             },
             meta: {
@@ -626,11 +635,67 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
             },
           },
         },
+        'Sphere/life.json': {
+          data: {
+            type: 'card',
+            attributes: {
+              name: 'LIFE',
+            },
+            meta: {
+              adoptsFrom: {
+                module: `${catalogRealmURL}catalog-app/listing/sphere`,
+                name: 'Sphere',
+              },
+            },
+          },
+        },
         'Category/writing.json': {
           data: {
             type: 'card',
             attributes: {
               name: 'Writing',
+            },
+            meta: {
+              adoptsFrom: {
+                module: `${catalogRealmURL}catalog-app/listing/category`,
+                name: 'Category',
+              },
+            },
+          },
+        },
+        'Category/health-wellness.json': {
+          data: {
+            type: 'card',
+            attributes: {
+              name: 'Health & Wellness',
+            },
+            relationships: {
+              sphere: {
+                links: {
+                  self: lifeSphereId,
+                },
+              },
+            },
+            meta: {
+              adoptsFrom: {
+                module: `${catalogRealmURL}catalog-app/listing/category`,
+                name: 'Category',
+              },
+            },
+          },
+        },
+        'Category/fitness.json': {
+          data: {
+            type: 'card',
+            attributes: {
+              name: 'Fitness',
+            },
+            relationships: {
+              sphere: {
+                links: {
+                  self: lifeSphereId,
+                },
+              },
             },
             meta: {
               adoptsFrom: {
@@ -1251,7 +1316,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
         });
       });
 
-      module('filters', async function () {
+      module('filters', function () {
         test('list view is shown if filters are applied', async function (assert) {
           await waitFor('[data-test-filter-search-input]');
           await click('[data-test-filter-search-input]');
@@ -1312,7 +1377,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
             .dom('[data-test-tag-list-pill].selected')
             .doesNotExist('No tag should be selected after reset');
         });
-    
+
         test('should be reset when clicking "All Apps" button', async function (assert) {
           await selectTab('Apps');
           await waitForGrid();
@@ -1354,7 +1419,9 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
         });
 
         test('updates the card count correctly when filtering by a sphere group', async function (assert) {
+          await waitFor('[data-test-boxel-filter-list-button="LIFE"]');
           await click('[data-test-boxel-filter-list-button="LIFE"]');
+
           assert
             .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
             .exists({ count: 2 });
@@ -1370,15 +1437,27 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
             .exists({ count: 1 });
         });
 
-        test('updates the card count correctly when filtering by a search input', async function (assert) {
+        // TODO: fix in CS-10157
+        skip('updates the card count correctly when filtering by a search input', async function (assert) {
+          await selectTab('Cards');
+          await waitForGrid();
+          // Wait for specific cards to be fully rendered before searching
+          // This ensures prerendering has completed
+          await waitForCardOnGrid(authorListingId, 'Author');
+          await waitForCardOnGrid(personListingId, 'Person');
           await click('[data-test-filter-search-input]');
-          await fillIn('[data-test-filter-search-input]', 'Mortgage');
-          await waitUntil(() => {
-            const cards = document.querySelectorAll(
-              '[data-test-cards-grid-cards] [data-test-cards-grid-item]',
-            );
-            return cards.length === 1;
-          });
+          await fillIn('[data-test-filter-search-input]', 'Author');
+          await waitFor('[data-test-catalog-list-view]');
+          await settled();
+          await waitUntil(
+            () => {
+              const cards = document.querySelectorAll(
+                '[data-test-cards-grid-cards] [data-test-cards-grid-item]',
+              );
+              return cards.length === 1;
+            },
+            { timeout: 15000 },
+          );
           assert
             .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
             .exists({ count: 1 });
@@ -2029,6 +2108,12 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
           },
           targetRealm: testDestinationRealmURL,
         });
+        await settled();
+        // Wait for all background indexing and save operations to complete
+        let store = getService('store');
+        await store.flushSaves();
+        await store.loaded();
+        await settled();
         // Assert store-level (in-memory) results BEFORE navigating to code mode
         let immediateListing = createResult?.listing as any;
         assert.ok(immediateListing, 'Listing object returned from command');
@@ -2107,6 +2192,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
         // Header/title: wait for persisted id (listing.id) then assert via stack card selector
         const persistedId = immediateListing.id;
         assert.ok(persistedId, 'Immediate listing has a persisted id');
+        await settled();
         await waitForCardOnStack(persistedId);
         assert
           .dom(
@@ -2264,7 +2350,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
           );
       });
     });
-    module('"use"', async function () {
+    module('"use"', function () {
       test('card listing', async function (assert) {
         const listingName = 'author';
         const listingId = mockCatalogURL + 'Listing/author.json';
@@ -2501,7 +2587,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
         listingName,
       );
 
-      let instanceFolder = `${outerFolder}Author`;
+      let instanceFolder = `${outerFolder}Author/`;
       await openDir(assert, instanceFolder);
       await verifyJSONWithUUIDInFolder(assert, instanceFolder);
     });

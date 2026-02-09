@@ -9,7 +9,7 @@ import { ensureTrailingSlash } from '@cardstack/runtime-common';
 import ENV from '@cardstack/host/config/environment';
 import HostModeService from '@cardstack/host/services/host-mode-service';
 
-import { setupLocalIndexing } from '../helpers';
+import { setupLocalIndexing, setupAuthEndpoints } from '../helpers';
 import { setupApplicationTest } from '../helpers/setup';
 
 const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
@@ -30,6 +30,7 @@ module('Acceptance | Catalog | real catalog app', function (hooks) {
   setupLocalIndexing(hooks);
 
   hooks.beforeEach(function () {
+    setupAuthEndpoints();
     getOwner(this)!.register('service:host-mode-service', StubHostModeService);
   });
 
