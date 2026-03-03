@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "NodeNext",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "paths": {
+      "https://cardstack.com/base/*": [".boxel/packages/base/*"],
+      "@cardstack/runtime-common": [".boxel/packages/runtime-common/index.d.ts"],
+      "@cardstack/runtime-common/*": [
+        ".boxel/packages/runtime-common/*.d.ts",
+        ".boxel/packages/runtime-common/*"
+      ],
+      "@cardstack/boxel-ui": [
+        ".boxel/packages/boxel-ui/addon/declarations/components.d.ts"
+      ],
+      "@cardstack/boxel-ui/*": [".boxel/packages/boxel-ui/addon/declarations/*.d.ts"],
+      "@cardstack/boxel-icons/*": [".boxel/packages/boxel-icons/declarations/icons/*.d.ts"]
+    }
+  },
+  "glint": {
+    "environment": ["ember-loose", "ember-template-imports"]
+  },
+  "files": [
+    ".boxel/packages/local-types/index.d.ts",
+    ".boxel/packages/runtime-common/types/@cardstack/boxel-host/index.d.ts"
+  ],
+  "include": ["**/*"],
+  "exclude": [".boxel", "node_modules", ".git"]
+}
