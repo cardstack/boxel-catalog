@@ -17,6 +17,14 @@ import ListingInstallCommand from '@cardstack/host/commands/listing-install';
 import ListingRemixCommand from '@cardstack/host/commands/listing-remix';
 import ListingUseCommand from '@cardstack/host/commands/listing-use';
 
+import * as CatalogModule from '@cardstack/catalog/catalog-app/catalog';
+import * as CategoryModule from '@cardstack/catalog/catalog-app/listing/category';
+import * as LicenseModule from '@cardstack/catalog/catalog-app/listing/license';
+import * as ListingModule from '@cardstack/catalog/catalog-app/listing/listing';
+import * as PublisherModule from '@cardstack/catalog/catalog-app/listing/publisher';
+import * as SphereModule from '@cardstack/catalog/catalog-app/listing/sphere';
+import * as TagModule from '@cardstack/catalog/catalog-app/listing/tag';
+
 import ENV from '@cardstack/host/config/environment';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
@@ -189,6 +197,19 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
     });
     setupUserSubscription();
     setupAuthEndpoints();
+    await setupAcceptanceTestRealm({
+      realmURL: catalogRealmURL,
+      mockMatrixUtils,
+      contents: {
+        'catalog-app/catalog.gts': CatalogModule,
+        'catalog-app/listing/listing.gts': ListingModule,
+        'catalog-app/listing/category.gts': CategoryModule,
+        'catalog-app/listing/license.gts': LicenseModule,
+        'catalog-app/listing/publisher.gts': PublisherModule,
+        'catalog-app/listing/sphere.gts': SphereModule,
+        'catalog-app/listing/tag.gts': TagModule,
+      },
+    });
     // this setup test realm is pretending to be a mock catalog
     await setupAcceptanceTestRealm({
       realmURL: mockCatalogURL,
