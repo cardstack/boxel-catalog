@@ -43,7 +43,9 @@ import { setupApplicationTest } from '../helpers/setup';
 
 import type { CardListing } from '@cardstack/catalog/listing/listing';
 
-const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
+const catalogRealmURL = ensureTrailingSlash(
+  ENV.resolvedCatalogRealmURL ?? 'http://localhost:4201/catalog/',
+);
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing
