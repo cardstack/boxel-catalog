@@ -17,6 +17,14 @@ import ListingInstallCommand from '@cardstack/host/commands/listing-install';
 import ListingRemixCommand from '@cardstack/host/commands/listing-remix';
 import ListingUseCommand from '@cardstack/host/commands/listing-use';
 
+import * as CatalogModule from '@cardstack/catalog/catalog';
+import * as CategoryModule from '@cardstack/catalog/listing/category';
+import * as LicenseModule from '@cardstack/catalog/listing/license';
+import * as ListingModule from '@cardstack/catalog/listing/listing';
+import * as PublisherModule from '@cardstack/catalog/listing/publisher';
+import * as SphereModule from '@cardstack/catalog/listing/sphere';
+import * as TagModule from '@cardstack/catalog/listing/tag';
+
 import ENV from '@cardstack/host/config/environment';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
@@ -189,37 +197,19 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
     });
     setupUserSubscription();
     setupAuthEndpoints();
-    let loader = getService('loader-service').loader;
-    let [
-      catalogModule,
-      listingModule,
-      categoryModule,
-      licenseModule,
-      publisherModule,
-      sphereModule,
-      tagModule,
-    ] = await Promise.all([
-      loader.import('@cardstack/catalog/catalog'),
-      loader.import('@cardstack/catalog/listing/listing'),
-      loader.import('@cardstack/catalog/listing/category'),
-      loader.import('@cardstack/catalog/listing/license'),
-      loader.import('@cardstack/catalog/listing/publisher'),
-      loader.import('@cardstack/catalog/listing/sphere'),
-      loader.import('@cardstack/catalog/listing/tag'),
-    ]);
     // this setup test realm is pretending to be a mock catalog
     await setupAcceptanceTestRealm({
       realmURL: mockCatalogURL,
       mockMatrixUtils,
       contents: {
         ...SYSTEM_CARD_FIXTURE_CONTENTS,
-        'catalog-app/catalog.gts': catalogModule,
-        'catalog-app/listing/listing.gts': listingModule,
-        'catalog-app/listing/category.gts': categoryModule,
-        'catalog-app/listing/license.gts': licenseModule,
-        'catalog-app/listing/publisher.gts': publisherModule,
-        'catalog-app/listing/sphere.gts': sphereModule,
-        'catalog-app/listing/tag.gts': tagModule,
+        'catalog-app/catalog.gts': CatalogModule,
+        'catalog-app/listing/listing.gts': ListingModule,
+        'catalog-app/listing/category.gts': CategoryModule,
+        'catalog-app/listing/license.gts': LicenseModule,
+        'catalog-app/listing/publisher.gts': PublisherModule,
+        'catalog-app/listing/sphere.gts': SphereModule,
+        'catalog-app/listing/tag.gts': TagModule,
         'author/author.gts': authorCardSource,
         'blog-post/blog-post.gts': blogPostCardSource,
         'fields/contact-link.gts': contactLinkFieldSource,
