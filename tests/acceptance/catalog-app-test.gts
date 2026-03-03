@@ -10,22 +10,10 @@ import {
 import { getService } from '@universal-ember/test-support';
 import { module, test, skip } from 'qunit';
 
-import { ensureTrailingSlash } from '@cardstack/runtime-common';
-
 import ListingCreateCommand from '@cardstack/host/commands/listing-create';
 import ListingInstallCommand from '@cardstack/host/commands/listing-install';
 import ListingRemixCommand from '@cardstack/host/commands/listing-remix';
 import ListingUseCommand from '@cardstack/host/commands/listing-use';
-
-import * as CatalogModule from '@cardstack/catalog/catalog';
-import * as CategoryModule from '@cardstack/catalog/listing/category';
-import * as LicenseModule from '@cardstack/catalog/listing/license';
-import * as ListingModule from '@cardstack/catalog/listing/listing';
-import * as PublisherModule from '@cardstack/catalog/listing/publisher';
-import * as SphereModule from '@cardstack/catalog/listing/sphere';
-import * as TagModule from '@cardstack/catalog/listing/tag';
-
-import ENV from '@cardstack/host/config/environment';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 
@@ -51,9 +39,7 @@ import { setupApplicationTest } from '../helpers/setup';
 
 import type { CardListing } from '@cardstack/catalog/listing/listing';
 
-const catalogRealmURL = ensureTrailingSlash(
-  ENV.resolvedCatalogRealmURL ?? mockCatalogURL,
-);
+const catalogRealmURL = 'http://localhost:4201/catalog/';
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing
@@ -203,13 +189,6 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
       mockMatrixUtils,
       contents: {
         ...SYSTEM_CARD_FIXTURE_CONTENTS,
-        'catalog-app/catalog.gts': CatalogModule,
-        'catalog-app/listing/listing.gts': ListingModule,
-        'catalog-app/listing/category.gts': CategoryModule,
-        'catalog-app/listing/license.gts': LicenseModule,
-        'catalog-app/listing/publisher.gts': PublisherModule,
-        'catalog-app/listing/sphere.gts': SphereModule,
-        'catalog-app/listing/tag.gts': TagModule,
         'author/author.gts': authorCardSource,
         'blog-post/blog-post.gts': blogPostCardSource,
         'fields/contact-link.gts': contactLinkFieldSource,
