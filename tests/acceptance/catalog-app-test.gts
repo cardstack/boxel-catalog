@@ -17,14 +17,6 @@ import ListingInstallCommand from '@cardstack/host/commands/listing-install';
 import ListingRemixCommand from '@cardstack/host/commands/listing-remix';
 import ListingUseCommand from '@cardstack/host/commands/listing-use';
 
-import * as CatalogModule from '@cardstack/catalog/catalog-app/catalog';
-import * as CategoryModule from '@cardstack/catalog/catalog-app/listing/category';
-import * as LicenseModule from '@cardstack/catalog/catalog-app/listing/license';
-import * as ListingModule from '@cardstack/catalog/catalog-app/listing/listing';
-import * as PublisherModule from '@cardstack/catalog/catalog-app/listing/publisher';
-import * as SphereModule from '@cardstack/catalog/catalog-app/listing/sphere';
-import * as TagModule from '@cardstack/catalog/catalog-app/listing/tag';
-
 import ENV from '@cardstack/host/config/environment';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
@@ -52,7 +44,7 @@ import { setupApplicationTest } from '../helpers/setup';
 import type { CardListing } from '@cardstack/catalog/listing/listing';
 
 const catalogRealmURL = ensureTrailingSlash(
-  ENV.resolvedCatalogRealmURL ?? 'http://localhost:4201/catalog/',
+  ENV.resolvedCatalogRealmURL ?? mockCatalogURL,
 );
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
@@ -197,25 +189,37 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
     });
     setupUserSubscription();
     setupAuthEndpoints();
-    await setupAcceptanceTestRealm({
-      realmURL: catalogRealmURL,
-      mockMatrixUtils,
-      contents: {
-        'catalog-app/catalog.gts': CatalogModule,
-        'catalog-app/listing/listing.gts': ListingModule,
-        'catalog-app/listing/category.gts': CategoryModule,
-        'catalog-app/listing/license.gts': LicenseModule,
-        'catalog-app/listing/publisher.gts': PublisherModule,
-        'catalog-app/listing/sphere.gts': SphereModule,
-        'catalog-app/listing/tag.gts': TagModule,
-      },
-    });
+    let loader = getService('loader-service').loader;
+    let [
+      catalogModule,
+      listingModule,
+      categoryModule,
+      licenseModule,
+      publisherModule,
+      sphereModule,
+      tagModule,
+    ] = await Promise.all([
+      loader.import('@cardstack/catalog/catalog'),
+      loader.import('@cardstack/catalog/listing/listing'),
+      loader.import('@cardstack/catalog/listing/category'),
+      loader.import('@cardstack/catalog/listing/license'),
+      loader.import('@cardstack/catalog/listing/publisher'),
+      loader.import('@cardstack/catalog/listing/sphere'),
+      loader.import('@cardstack/catalog/listing/tag'),
+    ]);
     // this setup test realm is pretending to be a mock catalog
     await setupAcceptanceTestRealm({
       realmURL: mockCatalogURL,
       mockMatrixUtils,
       contents: {
         ...SYSTEM_CARD_FIXTURE_CONTENTS,
+        'catalog-app/catalog.gts': catalogModule,
+        'catalog-app/listing/listing.gts': listingModule,
+        'catalog-app/listing/category.gts': categoryModule,
+        'catalog-app/listing/license.gts': licenseModule,
+        'catalog-app/listing/publisher.gts': publisherModule,
+        'catalog-app/listing/sphere.gts': sphereModule,
+        'catalog-app/listing/tag.gts': tagModule,
         'author/author.gts': authorCardSource,
         'blog-post/blog-post.gts': blogPostCardSource,
         'fields/contact-link.gts': contactLinkFieldSource,
