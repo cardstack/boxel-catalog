@@ -73,6 +73,10 @@ jobs:
           # Overwrite the test-wait-for-server script to include catalog server start
           cp boxel-catalog-src/scripts/test-wait-for-servers.sh packages/host/scripts/test-wait-for-servers.sh
 
+          # Ensure catalog realm is started for copied catalog acceptance tests
+          # (start-development.sh treats any non-empty SKIP_CATALOG value, including "false", as skip)
+          sed -i 's/^[[:space:]]*SKIP_CATALOG=true \\\\/  SKIP_CATALOG= \\\\/' packages/realm-server/scripts/start-services-for-host-tests.sh
+
       - uses: ./.github/actions/init
 
       - name: Build common dependencies
