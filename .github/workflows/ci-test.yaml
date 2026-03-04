@@ -73,10 +73,6 @@ jobs:
           # Overwrite the test-wait-for-server script to include catalog server start
           cp boxel-catalog-src/scripts/test-wait-for-servers.sh packages/host/scripts/test-wait-for-servers.sh
 
-          # Ensure catalog realm is started for copied catalog acceptance tests
-          # (start-development.sh treats any non-empty SKIP_CATALOG value, including "false", as skip)
-          sed -i 's/^[[:space:]]*SKIP_CATALOG=true \\\\/  SKIP_CATALOG= \\\\/' packages/realm-server/scripts/start-services-for-host-tests.sh
-
       - uses: ./.github/actions/init
 
       - name: Build common dependencies
@@ -119,6 +115,7 @@ jobs:
       - name: Run Catalog Acceptance Tests
         run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Acceptance"
         env:
+          SKIP_CATALOG: true
           PERCY_GZIP: true
           PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}
           DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
@@ -127,6 +124,7 @@ jobs:
       - name: Run Catalog Integration Tests
         run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Integration"
         env:
+          SKIP_CATALOG: true
           PERCY_GZIP: true
           PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}
           DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
