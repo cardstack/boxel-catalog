@@ -99,6 +99,8 @@ jobs:
 
       - name: Start realm servers
         run: pnpm start:services-for-host-tests | tee -a /tmp/server.log &
+        env:
+          SKIP_CATALOG: false
         working-directory: packages/realm-server
 
       - name: Create realm users
@@ -115,7 +117,6 @@ jobs:
       - name: Run Catalog Acceptance Tests
         run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Acceptance"
         env:
-          SKIP_CATALOG: true
           PERCY_GZIP: true
           PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}
           DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
@@ -124,7 +125,6 @@ jobs:
       - name: Run Catalog Integration Tests
         run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Integration"
         env:
-          SKIP_CATALOG: true
           PERCY_GZIP: true
           PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}
           DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
