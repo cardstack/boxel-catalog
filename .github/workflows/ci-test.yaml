@@ -100,8 +100,6 @@ jobs:
 
       - name: Start realm servers
         run: pnpm start:services-for-host-tests | tee -a /tmp/server.log &
-        env:
-          SKIP_CATALOG: false
         working-directory: packages/realm-server
 
       - name: Create realm users
