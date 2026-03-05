@@ -23,7 +23,6 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
-          ref: refs/pull/4109/head
 
       # Checkout this catalog repo into a temp location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
