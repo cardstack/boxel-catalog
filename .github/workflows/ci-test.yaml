@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
+          ref: get-catalog-to-run-test
 
       # Checkout this catalog repo into a temp location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
@@ -68,6 +69,10 @@ jobs:
           cp -r boxel-catalog-src/tests/acceptance/* packages/host/tests/acceptance
           cp -r boxel-catalog-src/tests/integration/* packages/host/tests/integration
           cp -r boxel-catalog-src/tests/helpers/* packages/host/tests/helpers
+          git checkout -- packages/host/tests/integration/catalog/setup.gts
+          git checkout -- packages/host/tests/integration/catalog/catalog-runner-test.gts
+          mkdir -p packages/host/tests/integration/catalog/generated
+          cp boxel-catalog-src/tests/integration/catalog/modules/daily-report-dashboard.module.gts packages/host/tests/integration/catalog/generated/test-module.gts
 
 
           # Overwrite the test-wait-for-server script to include catalog server start
