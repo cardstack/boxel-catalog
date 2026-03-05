@@ -90,17 +90,17 @@ jobs:
 
       - uses: ./.github/actions/init
 
-      - name: Build common dependencies
-        run: pnpm run build-common-deps
-
       - name: Build Host for tests
         run:  NODE_OPTIONS='--max-old-space-size=8192' pnpm build
         working-directory: packages/host
 
       - name: Include daily-report modules in host-test catalog subset
         run: |
-          sed -i 's/KEEP_FOLDERS="fields catalog-app components commands"/KEEP_FOLDERS="fields catalog-app components commands daily-report-dashboard"/' packages/realm-server/scripts/start-services-for-host-tests.sh
-          grep 'KEEP_FOLDERS=' packages/realm-server/scripts/start-services-for-host-tests.sh
+          SERVICE_SCRIPT="packages/realm-server/scripts/start-services-for-host-tests.sh"
+          grep -q '^KEEP_FOLDERS=' "$SERVICE_SCRIPT"
+          LC_ALL=C perl -0pi -e 's/^KEEP_FOLDERS=.*$/KEEP_FOLDERS="fields catalog-app components commands daily-report-dashboard"/m' "$SERVICE_SCRIPT"
+          grep '^KEEP_FOLDERS=' "$SERVICE_SCRIPT"
+          grep -q 'daily-report-dashboard' "$SERVICE_SCRIPT"
 
       - name: Serve boxel-icons
         run: pnpm serve &> /tmp/icon-server.log &
