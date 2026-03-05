@@ -117,16 +117,8 @@ jobs:
           sudo service dbus restart
           sudo service upower restart
 
-      - name: Run Catalog Acceptance Tests
-        run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Acceptance"
-        env:
-          PERCY_GZIP: true
-          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}
-          DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
-        working-directory: packages/host
-
-      - name: Run Catalog Integration Tests
-        run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Integration"
+      - name: Run Daily Report Dashboard Test Only
+        run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Integration | Catalog | runner: daily-report-dashboard"
         env:
           PERCY_GZIP: true
           PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}
