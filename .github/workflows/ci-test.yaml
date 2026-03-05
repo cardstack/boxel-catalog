@@ -97,6 +97,11 @@ jobs:
         run:  NODE_OPTIONS='--max-old-space-size=8192' pnpm build
         working-directory: packages/host
 
+      - name: Include daily-report modules in host-test catalog subset
+        run: |
+          sed -i 's/KEEP_FOLDERS="fields catalog-app components commands"/KEEP_FOLDERS="fields catalog-app components commands daily-report-dashboard"/' packages/realm-server/scripts/start-services-for-host-tests.sh
+          grep 'KEEP_FOLDERS=' packages/realm-server/scripts/start-services-for-host-tests.sh
+
       - name: Serve boxel-icons
         run: pnpm serve &> /tmp/icon-server.log &
         working-directory: packages/boxel-icons
