@@ -82,7 +82,7 @@ while IFS= read -r file; do
   if [[ -f "$source_file" ]]; then
     if ! diff -q "$file" "$source_file" > /dev/null 2>&1; then
       DIFF_FILES+=("$file")
-      ((DIFF_COUNT++))
+      DIFF_COUNT=$((DIFF_COUNT + 1))
     fi
   fi
 done < <(find . "${FIND_EXCLUDES[@]}" -type f -print | sed 's|^\./||')
@@ -111,7 +111,7 @@ for dir in "${TRACKED_DIRS[@]}"; do
     rel_path="${source_file#$BOXEL_CATALOG_REALM/}"
     if [[ ! -e "$CATALOG_DIR/$rel_path" ]]; then
       NEW_FILES+=("$rel_path")
-      ((NEW_COUNT++))
+      NEW_COUNT=$((NEW_COUNT + 1))
     fi
   done < <(find "$BOXEL_CATALOG_REALM/$dir" -type f)
 done
