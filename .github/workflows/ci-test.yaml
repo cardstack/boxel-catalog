@@ -60,6 +60,16 @@ jobs:
           
           # Copy catalog source files (exclude config files that should stay from monorepo)
           rsync -av --exclude='tsconfig.json' --exclude='package.json' --exclude='.realm.json' --exclude='.gitignore' --exclude='tests/' boxel-catalog-src/ packages/catalog-realm/
+
+          # Sanity-check daily report module files exist in source and destination
+          test -f boxel-catalog-src/daily-report-dashboard/daily-report-dashboard.gts
+          test -f boxel-catalog-src/daily-report-dashboard/policy-manual.gts
+          test -f boxel-catalog-src/daily-report-dashboard/activity-log.gts
+          test -f boxel-catalog-src/commands/generate-daily-report.gts
+          test -f packages/catalog-realm/daily-report-dashboard/daily-report-dashboard.gts
+          test -f packages/catalog-realm/daily-report-dashboard/policy-manual.gts
+          test -f packages/catalog-realm/daily-report-dashboard/activity-log.gts
+          test -f packages/catalog-realm/commands/generate-daily-report.gts
           
           # Copy catalog acceptance and integration tests to host tests directory
           rm -rf packages/host/tests/integration
