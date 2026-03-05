@@ -1,0 +1,27 @@
+name: CI Sync Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-check:
+    name: Check catalog-realm sync
+    runs-on: ubuntu-latest
+    concurrency:
+      group: sync-check-${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          repository: cardstack/boxel
+          path: boxel-monorepo
+
+      - name: Check boxel-catalog is in sync with packages/catalog-realm
+        run: ./scripts/sync-catalog-realm.sh --source boxel-monorepo/packages/catalog-realm
