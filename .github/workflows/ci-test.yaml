@@ -113,7 +113,7 @@ jobs:
           sudo service upower restart
 
       - name: Run Catalog Acceptance Tests
-        run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Acceptance | "
+        run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Acceptance"
         env:
           PERCY_GZIP: true
           PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}
@@ -121,7 +121,7 @@ jobs:
         working-directory: packages/host
 
       - name: Run Catalog Integration Tests
-        run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Integration | "
+        run: dbus-run-session -- pnpm exec ember exam --path ./dist --filter="Integration"
         env:
           PERCY_GZIP: true
           PERCY_TOKEN: ${{ secrets.PERCY_TOKEN_HOST }}

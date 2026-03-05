@@ -12,7 +12,9 @@ import HostModeService from '@cardstack/host/services/host-mode-service';
 import { setupLocalIndexing, setupAuthEndpoints } from '../helpers';
 import { setupApplicationTest } from '../helpers/setup';
 
-const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
+const catalogRealmURL = ensureTrailingSlash(
+  ENV.resolvedCatalogRealmURL ?? 'http://localhost:4201/catalog/',
+);
 const CATALOG_READINESS_URL = `${catalogRealmURL}_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson`;
 
 class StubHostModeService extends HostModeService {
