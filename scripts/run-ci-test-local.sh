@@ -13,7 +13,7 @@ Options:
   -h, --help            Show this help
 
 Environment variables:
-  BOXEL_DIR             Monorepo path (default: ./.boxel)
+  BOXEL_DIR             Monorepo path (default: ./boxel)
   BOXEL_REF             Monorepo git ref (default: get-catalog-to-run-test)
   KEEP_RUNNING          true|false (default: false)
 EOF
@@ -46,7 +46,7 @@ run_pnpm() {
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CATALOG_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-BOXEL_DIR="${BOXEL_DIR:-$CATALOG_DIR/.boxel}"
+BOXEL_DIR="${BOXEL_DIR:-$CATALOG_DIR/boxel}"
 BOXEL_REF="${BOXEL_REF:-get-catalog-to-run-test}"
 TEST_FILTER="${TEST_FILTER:-Integration | Catalog | runner}"
 KEEP_RUNNING="${KEEP_RUNNING:-false}"
@@ -77,6 +77,7 @@ done
 require_cmd git
 require_cmd rsync
 require_cmd curl
+require_cmd node
 if ! command -v pnpm >/dev/null 2>&1 && ! command -v volta >/dev/null 2>&1; then
   echo "Missing required command: pnpm (or volta with pnpm support)" >&2
   exit 1
@@ -131,7 +132,7 @@ rsync -a \
   --exclude='package.json' \
   --exclude='.realm.json' \
   --exclude='.gitignore' \
-  --exclude='.boxel/' \
+  --exclude='boxel/' \
   --exclude='.vscode/' \
   --exclude='.claude/' \
   --exclude='.git/' \
@@ -160,11 +161,28 @@ cp \
   "$CATALOG_DIR/scripts/test-wait-for-servers.sh" \
   "$BOXEL_DIR/packages/host/scripts/test-wait-for-servers.sh"
 
+SERVICE_SCRIPT="$BOXEL_DIR/packages/realm-server/scripts/start-services-for-host-tests.sh"
+if [ ! -f "$SERVICE_SCRIPT" ]; then
+  echo "[local-ci] Missing service script: $SERVICE_SCRIPT" >&2
+  exit 1
+fi
+if ! grep -q '^KEEP_FOLDERS=' "$SERVICE_SCRIPT"; then
+  echo "[local-ci] Expected KEEP_FOLDERS in: $SERVICE_SCRIPT" >&2
+  exit 1
+fi
+LC_ALL=C perl -0pi -e 's/^KEEP_FOLDERS=.*$/KEEP_FOLDERS="fields catalog-app components commands daily-report-dashboard"/m' "$SERVICE_SCRIPT"
+if ! grep -q 'daily-report-dashboard' "$SERVICE_SCRIPT"; then
+  echo "[local-ci] Failed to patch KEEP_FOLDERS in: $SERVICE_SCRIPT" >&2
+  exit 1
+fi
+echo "[local-ci] $(grep '^KEEP_FOLDERS=' "$SERVICE_SCRIPT")"
+
 echo "[local-ci] Installing monorepo dependencies"
 run_pnpm -C "$BOXEL_DIR" install --frozen-lockfile
 
 echo "[local-ci] Building common dependencies"
 run_pnpm -C "$BOXEL_DIR" run build-common-deps
+
 echo "[local-ci] Building host"
 (cd "$BOXEL_DIR/packages/host" && NODE_OPTIONS='--max-old-space-size=8192' run_pnpm build)
 

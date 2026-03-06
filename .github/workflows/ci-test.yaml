@@ -90,6 +90,9 @@ jobs:
 
       - uses: ./.github/actions/init
 
+      - name: Build common dependencies
+        run: pnpm run build-common-deps
+
       - name: Build Host for tests
         run:  NODE_OPTIONS='--max-old-space-size=8192' pnpm build
         working-directory: packages/host
