@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "lid": "5513c7e0-6584-4519-82a2-0c670fbfe875",
+    "attributes": {
+      "filesWithContent": [],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "listing": {
+        "links": {
+          "self": "http://localhost:4201/catalog/AppListing/95cbe2c7-9b60-4afd-8a3c-1382b610e316"
+        },
+        "data": {
+          "type": "card",
+          "id": "http://localhost:4201/catalog/AppListing/95cbe2c7-9b60-4afd-8a3c-1382b610e316"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/command",
+        "name": "CreateSubmissionResult"
+      }
+    }
+  }
+}
