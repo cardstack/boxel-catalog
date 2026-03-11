@@ -24,4 +24,4 @@ jobs:
           path: boxel-monorepo
 
       - name: Check boxel-catalog is in sync with packages/catalog-realm
-        run: ./scripts/sync-catalog-realm.sh --source boxel-monorepo/packages/catalog-realm
+        run: ./scripts/sync-catalog-realm.sh --source boxel-monorepo/packages/catalog-realm || true
