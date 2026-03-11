@@ -1,0 +1,79 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AppListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Single-Entry Account Ledger Card Definition",
+      "images": [],
+      "summary": "The SingleEntryAccountLedger component functions as a cash book-style ledger for tracking a single account's financial transactions. Its primary purpose is to display account details—such as name, number, and currency—and to record, visualize, and sum debit and credit entries, providing real-time calculation of the current account balance. It includes features for adding new ledger entries, computing running balances, and summarizing total credits, debits, and available funds, facilitating clear financial management within an app interface.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/c445a77a-a197-4c03-8e18-07857ac9c606"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/9ec445a7-7aa1-47ac-834e-1807857ac9c6"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../SingleEntryAccountLedger/aa991bc8-e9ee-4f53-ba41-53ff9627f52f"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/data-analytics"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/software-development"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
