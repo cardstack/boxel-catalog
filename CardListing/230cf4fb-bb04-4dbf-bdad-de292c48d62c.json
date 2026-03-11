@@ -1,0 +1,139 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Bilingual Blog Post Listing 2",
+      "images": [],
+      "summary": "The BilingualBlog component extends a blog post to include a translation feature. Its primary purpose is to enable storage and display of a complete French translation of the blog post content alongside the original. This field supports multilingual content presentation within a blog context.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "http://localhost:4201/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/10ff567e-37f7-46e6-aebe-ea21a0f88fbc"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/author"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/2c10ff56-7e37-47b6-a6ee-beea21a0f88f"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/blog"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/7e37f7b6-e6ee-4eea-a1a0-f88fbcc48a45"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/37f7b6e6-eebe-4a21-a0f8-8fbcc48a456d"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/blog-post"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/b6e6eebe-ea21-40f8-8fbc-c48a456d3e67"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/e6eebeea-21a0-488f-bcc4-8a456d3e67bf"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/ea21a0f8-8fbc-448a-856d-3e67bf8c9c05"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/8fbcc48a-456d-4e67-bf8c-9c05f23ba516"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/fields/contact-link-field"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/fields/featured-image-field"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/f88fbcc4-8a45-4d3e-a7bf-8c9c05f23ba5"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BilingualBlog/85de4d7a-e9d8-459d-80a7-d9f0508c9ea1"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/38b5d1dc-00d3-4a19-8998-29f0c19081de"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/knowledge-management"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
