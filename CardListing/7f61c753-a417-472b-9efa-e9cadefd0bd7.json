@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Piano",
+      "images": [],
+      "summary": "The exported \"Piano\" component defines a virtual, interactive three-octave piano interface with real-time sound synthesis and notation recording capabilities. Its primary purpose is to enable users to play notes via on-screen keys or keyboard input, record sequences, and visualize or play back notation. The component supports real-time audio output, notation editing, notation-to-keyboard translation, and playback control, facilitating both performance and learning interactions with a musical instrument in a UI setting. It also offers multiple responsive display formats with detailed visualizations and controls for enhanced user experience.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/7d70243c-aec6-4907-9f06-d823b2c15f13"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/70243cae-c669-475f-86d8-23b2c15f1310"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../piano-eaefc064-3329-4af0-8f2e-175aaa9752f8/piano/Piano/20dfd090-15bd-45e3-bd0d-b2fe8c3dcc8d"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
