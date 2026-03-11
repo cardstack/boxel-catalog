@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "firstName": "Mango Mango",
+      "cardThumbnailURL": "./green-mango.png"
+    },
+    "relationships": {
+      "friend": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "./friend",
+        "name": "Friend"
+      }
+    }
+  }
+}
