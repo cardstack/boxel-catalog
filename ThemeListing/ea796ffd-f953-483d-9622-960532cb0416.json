@@ -1,0 +1,79 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ThemeListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Author Profile Card Definition",
+      "images": [],
+      "summary": "The Author card definition provides a structured representation of an individual author, focusing on their identity, biography, and contact information. It includes fields for the author's first and last names, full name, various biography formats, quotes, contact links (such as email and social media), profile image, and associated blog. The component offers different display variations—embedded, atom, and fitted views—optimized for diverse contexts and device sizes, with flexible styling and responsive layouts. Its primary purpose is to facilitate consistent presentation of author profiles across web pages and applications.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "http://localhost:4201/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Author/0b9c06fd-3833-4947-a0b8-ac24b8e71ee7"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../Author/jane-doe"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/38b5d1dc-00d3-4a19-8998-29f0c19081de"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
