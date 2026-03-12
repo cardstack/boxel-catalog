@@ -1,0 +1,84 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AppListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Friend Card Definition",
+      "images": [],
+      "summary": "The Friend catalog listing defines a card type representing a friend entity. Its primary purpose is to model a person's contact information, including their first name, an optional link to another Friend, and related metadata such as a description and thumbnail URL. The card provides fields for capturing and displaying a friend's name and associated imagery, facilitating the organization and presentation of friend records within a Cardstack-based application.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../CatalogEntry/6"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Friend/0af9ca5b-69a4-4e24-b988-3e689de2f124"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../Friend/1b0ec553-ef40-4a3a-988f-1234ee721799"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../Friend/effb6f3b-a208-4ffd-8fcf-6af6916f625d"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../friend-1"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
