@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "accountName": null,
+      "accountNumber": null,
+      "currency": null,
+      "openingBalance": null,
+      "entries": [],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../single-entry-account-ledger",
+        "name": "SingleEntryAccountLedger"
+      }
+    }
+  }
+}
