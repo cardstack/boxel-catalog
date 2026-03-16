@@ -5,8 +5,8 @@ on:
     branches: [main]
 
 env:
-  STAGING_WORKSPACE_URL: https://realms-staging.stack.cards/catalog-new
-  PRODUCTION_WORKSPACE_URL: https://app.boxel.ai/catalog-new
+  STAGING_WORKSPACE_URL: https://realms-staging.stack.cards/external-catalog
+  PRODUCTION_WORKSPACE_URL: https://app.boxel.ai/external-catalog
 
 jobs:
   sync-workspace:
