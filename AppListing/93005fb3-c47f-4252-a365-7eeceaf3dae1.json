@@ -1,0 +1,79 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AppListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Single-Entry Account Ledger Catalog Listing",
+      "images": [],
+      "summary": "The SingleEntryAccountLedger component provides a visual and data structure for tracking and managing a financial account with a single-entry (cash book style) ledger. Its primary purpose is to record, display, and summarize account transactions, including credits and debits, to facilitate easy reconciliation of account balances over time. It supports embedded and full-width formats, allowing it to be integrated into various user interfaces for monitoring account activity, presenting running balances, and adding new ledger entries seamlessly.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/64c751f3-a579-4e28-b257-5be7db15f9e8"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/f3a5793e-2872-475b-a7db-15f9e81a1033"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/software-development"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/web-development"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../SingleEntryAccountLedger/6c93a7ce-ccd0-4c8d-87de-28963ac8ed6b"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
