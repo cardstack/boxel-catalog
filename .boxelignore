@@ -3,3 +3,6 @@ package-lock.json
 .boxelignore
 README.md
 LICENSE
+tests
+.github
+scripts
