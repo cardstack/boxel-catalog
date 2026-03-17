@@ -1,0 +1,96 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "SingleEntryAccountLedger",
+        "module": "../single-entry-account-ledger"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "entries": [
+        {
+          "entryDate": "2026-03-11",
+          "description": "Morning Coffee Sales",
+          "debit": null,
+          "credit": 250,
+          "reference": "Money coming IN from customers",
+          "category": null
+        },
+        {
+          "entryDate": "2026-03-11",
+          "description": "Coffee beans purchase",
+          "debit": 80,
+          "credit": null,
+          "reference": "Money going OUT for supplies",
+          "category": null
+        },
+        {
+          "entryDate": "2026-03-11",
+          "description": "Afternoon sales",
+          "debit": null,
+          "credit": 180,
+          "reference": "More money IN",
+          "category": null
+        },
+        {
+          "entryDate": "2026-03-11",
+          "description": "Electricity bill",
+          "debit": 45,
+          "credit": null,
+          "reference": "Money OUT for utilities",
+          "category": null
+        },
+        {
+          "entryDate": "2026-03-11",
+          "description": "Catering order",
+          "debit": null,
+          "credit": 320,
+          "reference": "Big order = money IN",
+          "category": null
+        },
+        {
+          "entryDate": "2026-03-11",
+          "description": "Staff wages",
+          "debit": 400,
+          "credit": null,
+          "reference": "Paying employees = money OUT",
+          "category": null
+        },
+        {
+          "entryDate": "2026-03-11",
+          "description": "Weekend sales",
+          "debit": null,
+          "credit": 290,
+          "reference": "Weekend rush = money IN",
+          "category": null
+        },
+        {
+          "entryDate": "2026-03-11",
+          "description": "test",
+          "debit": null,
+          "credit": 50,
+          "reference": "a thing",
+          "category": "huh"
+        }
+      ],
+      "cardInfo": {
+        "name": "My Coffee Shop",
+        "notes": "This is ledger for 2025 Coffee Shop Account",
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "currency": "$",
+      "accountName": "Coffee Shop Account",
+      "accountNumber": "8886767676767",
+      "openingBalance": 1000
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
