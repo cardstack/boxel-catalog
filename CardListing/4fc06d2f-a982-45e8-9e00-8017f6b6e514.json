@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Blog App Catalog Listing",
+      "images": [],
+      "summary": "The BlogApp component defines a comprehensive blog management interface within the Cardstack platform. It provides a structured way to display, filter, and organize various blog-related content, including blog posts, author bios, and categories. The app features configurable sorting options for blog posts, dynamic filtering, and multiple view modes such as card, strip, and grid layouts. It incorporates administrative functionalities like viewing metadata (publish date, last updated, word count, status, editors) for blog posts, enabling content management. Designed to facilitate content creation, it includes a \"New\" button for creating posts, authors, or categories directly within the interface. The primary purpose of the BlogApp is to serve as an extensible and interactive dashboard for managing and browsing blog content effectively, supporting both display and administrative operations.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Publisher/ae15f401-5340-4098-ba7f-ab23a3058dff"
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
