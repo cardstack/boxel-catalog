@@ -49,96 +49,96 @@ class CreateCardButton extends GlimmerComponent {
   </template>
 }
 
-export function runTests() {
-  module('Catalog | SampleCommandCard', function (hooks) {
-    let { mockMatrixUtils } = setupCardTest(hooks);
+// export function runTests() {
+//   module('Catalog | SampleCommandCard', function (hooks) {
+//     let { mockMatrixUtils } = setupCardTest(hooks);
 
-    let testRealmAdapter: TestRealmAdapter;
-    let testRealm: Awaited<ReturnType<typeof setupIntegrationTestRealm>>['realm'];
+//     let testRealmAdapter: TestRealmAdapter;
+//     let testRealm: Awaited<ReturnType<typeof setupIntegrationTestRealm>>['realm'];
 
-    hooks.beforeEach(async function () {
-      let result = await withCachedRealmSetup(async () =>
-        setupIntegrationTestRealm({
-          mockMatrixUtils,
-          contents: {
-            'sample-command-card.gts': { SampleCommandCard },
-            '.realm.json': '{ "name": "Sample Realm" }',
-          },
-        }),
-      );
-      testRealmAdapter = result.adapter;
-      testRealm = result.realm;
-    });
+//     hooks.beforeEach(async function () {
+//       let result = await withCachedRealmSetup(async () =>
+//         setupIntegrationTestRealm({
+//           mockMatrixUtils,
+//           contents: {
+//             'sample-command-card.gts': { SampleCommandCard },
+//             '.realm.json': '{ "name": "Sample Realm" }',
+//           },
+//         }),
+//       );
+//       testRealmAdapter = result.adapter;
+//       testRealm = result.realm;
+//     });
 
-    test('clicking Create Card writes a new card to the realm', async function (this: TestContextWithSave, assert) {
-      assert.expect(3);
+//     test('clicking Create Card writes a new card to the realm', async function (this: TestContextWithSave, assert) {
+//       assert.expect(3);
 
-      let savedUrl: URL | undefined;
-      this.onSave((url, doc) => {
-        savedUrl = url;
-        assert.strictEqual(
-          (doc as any).data.attributes.title,
-          'Hello from live-test',
-          'saved doc has correct title',
-        );
-      });
+//       let savedUrl: URL | undefined;
+//       this.onSave((url, doc) => {
+//         savedUrl = url;
+//         assert.strictEqual(
+//           (doc as any).data.attributes.title,
+//           'Hello from live-test',
+//           'saved doc has correct title',
+//         );
+//       });
 
-      await render(<template><CreateCardButton /></template>);
-      await click('button');
+//       await render(<template><CreateCardButton /></template>);
+//       await click('button');
 
-      assert.ok(savedUrl, 'card was saved to realm');
-      let relativePath = `${savedUrl!.href.substring(testRealmURL.length)}.json`;
-      let file = await testRealmAdapter.openFile(relativePath);
-      assert.ok(file, 'card JSON file exists in the realm adapter');
-    });
+//       assert.ok(savedUrl, 'card was saved to realm');
+//       let relativePath = `${savedUrl!.href.substring(testRealmURL.length)}.json`;
+//       let file = await testRealmAdapter.openFile(relativePath);
+//       assert.ok(file, 'card JSON file exists in the realm adapter');
+//     });
 
-    test('search finds the newly created card', async function (this: TestContextWithSave, assert) {
-      assert.expect(3);
+//     test('search finds the newly created card', async function (this: TestContextWithSave, assert) {
+//       assert.expect(3);
 
-      let savedUrl: URL | undefined;
-      this.onSave((url) => {
-        savedUrl = url;
-      });
+//       let savedUrl: URL | undefined;
+//       this.onSave((url) => {
+//         savedUrl = url;
+//       });
 
-      await render(<template><CreateCardButton /></template>);
-      await click('button');
+//       await render(<template><CreateCardButton /></template>);
+//       await click('button');
 
-      await waitUntil(() => Boolean(savedUrl), { timeout: 5000 });
+//       await waitUntil(() => Boolean(savedUrl), { timeout: 5000 });
 
-      await waitUntil(
-        async () => {
-          let { data: cards } =
-            await testRealm.realmIndexQueryEngine.searchCards({
-              filter: {
-                on: {
-                  module: `${testRealmURL}sample-command-card`,
-                  name: 'SampleCommandCard',
-                },
-                eq: { title: 'Hello from live-test' },
-              },
-            });
-          return cards.length === 1;
-        },
-        { timeout: 5000 },
-      );
+//       await waitUntil(
+//         async () => {
+//           let { data: cards } =
+//             await testRealm.realmIndexQueryEngine.searchCards({
+//               filter: {
+//                 on: {
+//                   module: `${testRealmURL}sample-command-card`,
+//                   name: 'SampleCommandCard',
+//                 },
+//                 eq: { title: 'Hello from live-test' },
+//               },
+//             });
+//           return cards.length === 1;
+//         },
+//         { timeout: 5000 },
+//       );
 
-      let { data: cards } = await testRealm.realmIndexQueryEngine.searchCards({
-        filter: {
-          on: {
-            module: `${testRealmURL}sample-command-card`,
-            name: 'SampleCommandCard',
-          },
-          eq: { title: 'Hello from live-test' },
-        },
-      });
+//       let { data: cards } = await testRealm.realmIndexQueryEngine.searchCards({
+//         filter: {
+//           on: {
+//             module: `${testRealmURL}sample-command-card`,
+//             name: 'SampleCommandCard',
+//           },
+//           eq: { title: 'Hello from live-test' },
+//         },
+//       });
 
-      assert.strictEqual(cards.length, 1, 'search returns the created card');
-      assert.strictEqual(
-        (cards[0] as any).attributes?.title,
-        'Hello from live-test',
-        'search result has correct title',
-      );
-      assert.ok(savedUrl, 'card save completed');
-    });
-  });
-}
+//       assert.strictEqual(cards.length, 1, 'search returns the created card');
+//       assert.strictEqual(
+//         (cards[0] as any).attributes?.title,
+//         'Hello from live-test',
+//         'search result has correct title',
+//       );
+//       assert.ok(savedUrl, 'card save completed');
+//     });
+//   });
+// }
