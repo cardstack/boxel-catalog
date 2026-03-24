@@ -131,3 +131,106 @@ jobs:
       - name: Print realm server logs
         if: always()
         run: cat /tmp/server.log
+
+  live-test:
+    name: Live Tests (realm)
+    runs-on: ubuntu-latest
+    concurrency:
+      group: live-test-${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    steps:
+      # Checkout the boxel monorepo at is-live-test branch (has testem-live.js + test:live)
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          repository: cardstack/boxel
+          ref: is-live-test
+
+      # Checkout this catalog repo into a temp location
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          path: boxel-catalog-src
+
+      # Copy catalog files into the monorepo
+      - name: Copy catalog files into monorepo
+        run: |
+          cd packages/catalog-realm
+          find . -mindepth 1 \
+            ! -name '.gitignore' \
+            ! -name 'tsconfig.json' \
+            ! -name 'package.json' \
+            ! -name '.realm.json' \
+            ! -path './Spec' \
+            ! -path './Spec/*' \
+            ! -path './fields' \
+            ! -path './fields/*' \
+            ! -path './components' \
+            ! -path './components/*' \
+            ! -path './commands' \
+            ! -path './commands/suggest-avatar.gts' \
+            ! -path './utils' \
+            ! -path './utils/*' \
+            ! -path './resources' \
+            ! -path './resources/*' \
+            ! -path './catalog-app' \
+            ! -path './catalog-app/*' \
+            ! -name '.' \
+            -exec rm -rf {} + 2>/dev/null || true
+          cd ../..
+          rsync -av --exclude='tsconfig.json' --exclude='package.json' --exclude='.realm.json' --exclude='.gitignore' --exclude='tests/' boxel-catalog-src/ packages/catalog-realm/
+
+      - uses: ./.github/actions/init
+
+      - name: Build common dependencies
+        run: pnpm run build-common-deps
+
+      - name: Build Host for tests
+        run: NODE_OPTIONS='--max-old-space-size=8192' pnpm build
+        working-directory: packages/host
+
+      - name: Serve boxel-icons
+        run: pnpm serve &> /tmp/icon-server.log &
+        working-directory: packages/boxel-icons
+
+      - name: Disable TCP/UDP network offloading
+        run: sudo ethtool -K eth0 tx off rx off
+
+      - name: Serve host dist for realm server
+        uses: JarvusInnovations/background-action@2428e7b970a846423095c79d43f759abf979a635 # 1.0.7
+        with:
+          run: pnpm serve:dist &
+          working-directory: packages/host
+          wait-for: 3m
+          wait-on: http-get://localhost:4200
+
+      - name: Start realm servers
+        run: pnpm start:services-for-host-tests | tee -a /tmp/server.log &
+        working-directory: packages/realm-server
+
+      - name: Create realm users
+        run: pnpm register-realm-users
+        working-directory: packages/matrix
+
+      - name: Install D-Bus helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dbus-x11 upower
+          sudo service dbus restart
+          sudo service upower restart
+
+      - name: Live test suite
+        run: dbus-run-session -- pnpm test:live
+        working-directory: packages/host
+        env:
+          DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
+
+      - name: Upload junit report
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # 4.6.1
+        if: ${{ !cancelled() }}
+        with:
+          name: host-live-test-report
+          path: junit/host-live.xml
+          retention-days: 30
+
+      - name: Print realm server logs
+        if: ${{ !cancelled() }}
+        run: cat /tmp/server.log
