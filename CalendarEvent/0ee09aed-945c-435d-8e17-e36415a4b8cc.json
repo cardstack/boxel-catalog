@@ -1,0 +1,54 @@
+{
+  "data": {
+    "id": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/CalendarEvent/0ee09aed-945c-435d-8e17-e36415a4b8cc",
+    "meta": {
+      "realmURL": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/",
+      "realmInfo": {
+        "name": "local-sync-workspace",
+        "iconURL": "https://boxel-images.boxel.ai/icons/Letter-l.png",
+        "hostHome": null,
+        "visibility": "private",
+        "publishable": true,
+        "realmUserId": "@realm_server:stack.cards",
+        "interactHome": null,
+        "backgroundURL": "https://boxel-images.boxel.ai/background-images/4k-lava-river.jpg",
+        "showAsCatalog": null,
+        "lastPublishedAt": null
+      },
+      "adoptsFrom": {
+        "name": "CalendarEvent",
+        "module": "../calendar-event"
+      },
+      "lastModified": 1773120403,
+      "resourceCreatedAt": 1773120403
+    },
+    "type": "card",
+    "attributes": {
+      "color": null,
+      "notes": null,
+      "endTime": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "location": "s",
+      "cardTitle": "asdsad",
+      "startTime": "2026-03-16T01:00:00.000Z",
+      "eventTitle": "asdsad",
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "links": {
+      "self": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/CalendarEvent/0ee09aed-945c-435d-8e17-e36415a4b8cc"
+    }
+  }
+}

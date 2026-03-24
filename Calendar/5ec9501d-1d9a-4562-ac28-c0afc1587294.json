@@ -1,0 +1,47 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Calendar",
+        "module": "../calendar"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "calendarName": null
+    },
+    "relationships": {
+      "events.0": {
+        "links": {
+          "self": "../CalendarEvent/0ee09aed-945c-435d-8e17-e36415a4b8cc"
+        }
+      },
+      "events.1": {
+        "links": {
+          "self": "../CalendarEvent/f84ceff2-e048-4b53-91f6-76d1b364a364"
+        }
+      },
+      "events.2": {
+        "links": {
+          "self": "../CalendarEvent/063ea5e7-cd2d-41a9-84c5-208c4586bc77"
+        }
+      },
+      "events.3": {
+        "links": {
+          "self": "../CalendarEvent/15225474-c31d-4953-936b-39e556154248"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

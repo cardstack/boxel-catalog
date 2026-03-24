@@ -1,0 +1,32 @@
+{
+  "data": {
+    "attributes": {
+      "eventTitle": "my birthday",
+      "startTime": "2026-03-23T04:01:00.000Z",
+      "endTime": null,
+      "location": "d",
+      "notes": null,
+      "color": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "module": "../calendar-event",
+        "name": "CalendarEvent"
+      }
+    }
+  }
+}
