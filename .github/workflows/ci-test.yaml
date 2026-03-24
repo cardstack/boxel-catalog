@@ -65,13 +65,9 @@ jobs:
           rm -rf packages/host/tests/acceptance
           mkdir -p packages/host/tests/integration
           mkdir -p packages/host/tests/acceptance
-          cp -r boxel-catalog-src/tests/integration/* packages/host/tests/integration/
-          cp -r boxel-catalog-src/tests/acceptance/* packages/host/tests/acceptance/ 2>/dev/null || true
+          cp -r boxel-catalog-src/tests/acceptance/* packages/host/tests/acceptance
+          cp -r boxel-catalog-src/tests/integration/* packages/host/tests/integration
           cp -r boxel-catalog-src/tests/helpers/* packages/host/tests/helpers
-
-          # Copy colocated test files from inside the realm source to host integration tests
-          find boxel-catalog-src -name "*-test.gts" ! -path "*/tests/*" -exec cp {} packages/host/tests/integration/ \;
-
 
           # Overwrite the test-wait-for-server script to include catalog server start
           cp boxel-catalog-src/scripts/test-wait-for-servers.sh packages/host/scripts/test-wait-for-servers.sh
