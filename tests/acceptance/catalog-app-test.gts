@@ -1973,7 +1973,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
         const commandService = getService('command-service');
         const command = new ListingCreateCommand(commandService.commandContext);
         const result = await command.execute({
-          openCardId: cardId,
+          openCardIds: [cardId],
           codeRef: {
             module: `${mockCatalogURL}author/author.gts`,
             name: 'Author',
@@ -2058,7 +2058,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
         const commandService = getService('command-service');
         const command = new ListingCreateCommand(commandService.commandContext);
         await command.execute({
-          openCardId: cardId,
+          openCardIds: [cardId],
           codeRef: {
             module: `${mockCatalogURL}card-with-unrecognised-imports.gts`,
             name: 'UnrecognisedImports',
@@ -2097,7 +2097,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
         const commandService = getService('command-service');
         const command = new ListingCreateCommand(commandService.commandContext);
         const createResult = await command.execute({
-          openCardId: cardId,
+          openCardIds: [cardId],
           codeRef: {
             module: `${mockCatalogURL}blog-app/blog-app.gts`,
             name: 'BlogApp',
@@ -2326,7 +2326,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
         const command = new ListingCreateCommand(commandService.commandContext);
 
         let r = await command.execute({
-          openCardId: cardId,
+          openCardIds: [cardId],
           codeRef: {
             module: `${mockCatalogURL}author/author.gts`,
             name: 'Author',
