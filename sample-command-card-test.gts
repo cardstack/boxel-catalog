@@ -15,7 +15,7 @@ import {
 import { TestRealmAdapter } from '@cardstack/host/tests/helpers/adapter';
 import { renderCard } from '@cardstack/host/tests/helpers/render-component';
 
-import { SampleCommandCard } from '../sample-command-card';
+import { SampleCommandCard } from './sample-command-card';
 
 class CreateCardButton extends GlimmerComponent {
   @service declare store: Store;
