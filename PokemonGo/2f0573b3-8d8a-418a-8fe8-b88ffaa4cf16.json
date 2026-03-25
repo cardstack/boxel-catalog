@@ -1,0 +1,26 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "PokemonGo",
+        "module": "../pokemon-go"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Pokemon Go",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
