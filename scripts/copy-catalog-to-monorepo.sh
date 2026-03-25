@@ -27,6 +27,7 @@ rsync -av \
   --exclude='.realm.json' \
   --exclude='.gitignore' \
   --exclude='tests/' \
+  --exclude='*-test.gts' \
   "$CATALOG_SRC/" "$CATALOG_REALM/"
 
 echo "[copy-catalog] Done."

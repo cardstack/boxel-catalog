@@ -18,13 +18,14 @@ import {
   setupLocalIndexing,
   setupRealmServerEndpoints,
   testRealmURL,
-} from '../helpers';
-import { setupBaseRealm } from '../helpers/base-realm';
-import { setupMockMatrix } from '../helpers/mock-matrix';
-import { setupRenderingTest } from '../helpers/setup';
+} from '@cardstack/host/tests/helpers';
+import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
+import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
+import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 import type { Listing } from '@cardstack/catalog/listing/listing';
 
+export function runTests() {
 module('Integration | commands | listing-update-specs', function (hooks) {
   setupRenderingTest(hooks);
   setupBaseRealm(hooks);
@@ -183,3 +184,4 @@ module('Integration | commands | listing-update-specs', function (hooks) {
     );
   });
 });
+}

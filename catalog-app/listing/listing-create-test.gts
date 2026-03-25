@@ -15,16 +15,16 @@ import {
   setupLocalIndexing,
   testRealmInfo,
   testRealmURL,
-} from '../helpers';
+} from '@cardstack/host/tests/helpers';
 import {
   CardDef,
   contains,
   field,
   setupBaseRealm,
   StringField,
-} from '../helpers/base-realm';
-import { setupMockMatrix } from '../helpers/mock-matrix';
-import { setupRenderingTest } from '../helpers/setup';
+} from '@cardstack/host/tests/helpers/base-realm';
+import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
+import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 class StubRealmService extends RealmService {
   get defaultReadableRealm() {
@@ -35,6 +35,7 @@ class StubRealmService extends RealmService {
   }
 }
 
+export function runTests() {
 module('Integration | commands | create-listing-pr-request', function (hooks) {
   setupRenderingTest(hooks);
   setupLocalIndexing(hooks);
@@ -190,3 +191,4 @@ module('Integration | commands | create-listing-pr-request', function (hooks) {
     );
   });
 });
+}
