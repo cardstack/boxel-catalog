@@ -43,7 +43,6 @@ rsync -av \
   --exclude='tests/' \
   --exclude='scripts/' \
   --exclude='system-card/' \
-  --exclude='*-test.gts' \
   "$CATALOG_SRC/" "$CATALOG_REALM/"
 
 echo "[copy-catalog] Done."
