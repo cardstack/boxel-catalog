@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AppListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Blackjack Game Definition",
+      "images": [],
+      "summary": "The BlackjackGame is a comprehensive app/card/field/skill module that implements the classic blackjack game logic with an interactive user interface. It manages game state, player and dealer hands, deck creation, shuffling, and card drawing. The module tracks player chips, bets, hand scores, and game statistics, providing mechanisms for betting, hitting, standing, doubling down, and starting new games. It dynamically updates visual representations of cards, scores, and game messages. The primary purpose is to deliver an interactive blackjack experience with real-time game progress, score calculations, and persistent state management within a card-based app interface.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
