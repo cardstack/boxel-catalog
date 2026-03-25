@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Event Ticket Card",
+      "images": [],
+      "summary": "The EventTicketCard provides a comprehensive view of an event ticket, including event details, ticket information, and availability status. It displays key information such as event name, artist, venue, date, time, seat section, ticket type, and price. The card features actions for purchasing tickets, sharing the event, and adding the event to a calendar. When a ticket is purchased, it generates and displays a digital QR code for entry, along with a detailed ticket summary. The component emphasizes user engagement through dynamic countdowns, availability indicators, and a visually appealing layout tailored for event organizers or attendees managing tickets.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
