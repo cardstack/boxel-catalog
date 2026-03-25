@@ -36,11 +36,12 @@ cd ../..
 
 echo "[copy-catalog] Syncing catalog source into monorepo..."
 rsync -av \
-  --exclude='tsconfig.json' \
-  --exclude='package.json' \
-  --exclude='.realm.json' \
+  --exclude='.git/' \
+  --exclude='*.json' \
   --exclude='.gitignore' \
   --exclude='tests/' \
+  --exclude='scripts/' \
+  --exclude='system-card/' \
   "$CATALOG_SRC/" "$CATALOG_REALM/"
 
 echo "[copy-catalog] Done."
