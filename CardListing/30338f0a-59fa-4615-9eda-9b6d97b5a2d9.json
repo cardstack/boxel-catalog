@@ -1,0 +1,94 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Soccer Match Panel with Live Score and Events",
+      "images": [],
+      "summary": "The SoccerMatch card defines a comprehensive model for simulating and visualizing a soccer match. It manages match states, including score, time, stamina, possession, and events. The card tracks detailed match events such as goals, shots, fouls, and other in-game occurrences, maintaining a log for commentary. It also provides tools for running automated minute-by-minute simulations, updating match statistics dynamically, and visualizing momentum trends via sparklines. Embedded components offer various presentation formats like full match view, streamlined fixtures, and live commentary, making it suitable for interactive soccer match play, analysis, and storytelling within an application.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/a86ec593-ab4d-4054-ad49-282b69e9a3ee"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/6ec593ab-4d20-44ad-8928-2b69e9a3eecc"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/c593ab4d-2054-4d49-a82b-69e9a3eecc61"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/93ab4d20-54ad-4928-ab69-e9a3eecc6129"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/ab4d2054-ad49-482b-a9e9-a3eecc6129d2"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../SoccerMatch/blue-city-vs-red-united"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../SoccerMatch/431e9ffb-8c9b-4f74-99a2-bc0b7200a57b"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

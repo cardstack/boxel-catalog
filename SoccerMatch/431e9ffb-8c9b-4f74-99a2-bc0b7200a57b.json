@@ -1,0 +1,60 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "SoccerMatch",
+        "module": "../soccer-match"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "score": {
+        "away": null,
+        "home": null
+      },
+      "awayTeam": {
+        "name": null,
+        "color": null,
+        "rating": null,
+        "formation": null
+      },
+      "cardInfo": {
+        "name": "asdad",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "homeTeam": {
+        "name": null,
+        "color": null,
+        "rating": null,
+        "formation": null
+      },
+      "isPaused": false,
+      "matchLog": [],
+      "addedTime": null,
+      "awayShots": {
+        "shots": null,
+        "onTarget": null
+      },
+      "homeShots": {
+        "shots": null,
+        "onTarget": null
+      },
+      "isFinished": false,
+      "possession": null,
+      "awayStamina": null,
+      "homeStamina": null,
+      "isSecondHalf": false,
+      "currentMinute": null,
+      "momentumSeries": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

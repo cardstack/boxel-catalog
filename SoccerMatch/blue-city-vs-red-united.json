@@ -1,0 +1,60 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "SoccerMatch",
+        "module": "../soccer-match"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "score": {
+        "away": 0,
+        "home": 0
+      },
+      "awayTeam": {
+        "name": "Red United",
+        "color": "#dc2626",
+        "rating": 82,
+        "formation": "4-2-3-1"
+      },
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "homeTeam": {
+        "name": "Blue City",
+        "color": "#2563eb",
+        "rating": 84,
+        "formation": "4-3-3"
+      },
+      "isPaused": false,
+      "matchLog": [],
+      "addedTime": 2,
+      "awayShots": {
+        "shots": 0,
+        "onTarget": 0
+      },
+      "homeShots": {
+        "shots": 0,
+        "onTarget": 0
+      },
+      "isFinished": false,
+      "possession": "home",
+      "awayStamina": 100,
+      "homeStamina": 100,
+      "isSecondHalf": false,
+      "currentMinute": 0,
+      "momentumSeries": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
