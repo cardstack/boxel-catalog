@@ -1,0 +1,31 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AdventureScenario",
+        "module": "../adventure-scenario"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "key": "space-station",
+      "tags": [],
+      "cardTitle": "Lost in Space",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "You wake on a silent space station with flickering lights and no memory.",
+      "imageStyles": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

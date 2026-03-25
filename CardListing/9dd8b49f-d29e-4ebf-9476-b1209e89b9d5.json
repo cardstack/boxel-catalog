@@ -1,0 +1,79 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Create Your Own Adventure V4",
+      "images": [],
+      "summary": "The CreateYourOwnAdventureV4 module defines a card-based structure for managing customizable adventure games with a focus on user interface updates. Its core functions include setting up an adventure by linking scenarios or creating a one-shot narrative, managing game state (setup, playing, completed), and facilitating interactive storytelling with turn management. It provides embedded components for displaying adventures compactly and a full UI presentation with scenario selection, story narration, image generation, and chat integration. The primary purpose is to enable users to craft, run, and interact with personalized adventure narratives within a card-based UI, supporting multimedia elements and real-time communication features.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/8398f06e-0fa9-4427-8271-3ce9bd8c5e2f"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/0fa91427-0271-4ce9-bd8c-5e2f30583ef3"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/6e0fa914-2702-413c-a9bd-8c5e2f30583e"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../CreateYourOwnAdventureV4/6afda2db-c1a1-4d42-9b0e-ecac1d10d28a"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../create-your-own-adventure-game-31ffda5d-900b-483c-8a44-b8e7c4a099e1/CreateYourOwnAdventureV4/d43addec-1547-4772-8850-7c7432ec56ac"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
