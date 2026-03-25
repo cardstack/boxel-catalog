@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AppListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Recipe Card Definition",
+      "images": [],
+      "summary": "The RecipeCard defines a comprehensive data structure and presentation format for recipes, including key attributes like name, description, cuisine, difficulty, preparation and cooking times, servings, ingredients, instructions, and tags. Its primary purpose is to serve as a reusable component for capturing and displaying detailed recipe information in various embedded and display formats, supporting multiple view styles such as badges, strips, tiles, and full cards, with responsive styling and layout adaptability. The card facilitates structured data entry and flexible visualization of recipes across contexts.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
