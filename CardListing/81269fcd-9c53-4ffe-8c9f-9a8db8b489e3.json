@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Simple Card Deck",
+      "images": [],
+      "summary": "This catalog listing defines the SimpleCardDeck component, which models a virtual deck of standard playing cards. Its primary purpose is to enable users to draw, view, and reset a shuffled deck through an interactive interface. The component displays the remaining cards in the deck, allows drawing individual cards, and maintains a history of drawn cards. Users can click on specific drawn cards to view detailed information in a modal dialog. The design facilitates card deck simulations, educational demonstrations, or card game interfaces within applications.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/3a34947f-5311-408f-a879-3977de17a0de"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../SimpleCardDeck/de434978-9437-4817-bce9-5ceb55b3768a"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
