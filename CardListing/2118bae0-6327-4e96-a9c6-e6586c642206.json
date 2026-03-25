@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "PokemonGo Card Definition",
+      "images": [],
+      "summary": "The PokemonGo catalog listing defines a card component intended for use within the Cardstack framework. Its primary purpose is to serve as a designated card type related to the Pokémon GO theme, providing a structured template or interface for displaying Pokémon GO related content within applications built on Cardstack. The definition primarily establishes the card's identity and categorization without specifying visual or functional implementation details.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/383eea68-1c6c-4551-9e0c-8c24bbb77e6d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../PokemonGo/2a112f05-73b3-4d8a-a18a-8fe8b88ffaa4"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
