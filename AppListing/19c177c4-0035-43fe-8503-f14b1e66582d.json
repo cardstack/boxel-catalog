@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AppListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Blackjack Game with Card-Based Gameplay and State Management",
+      "images": [],
+      "summary": "The BlackjackGame module defines a comprehensive interactive blackjack card game component built with Cardstack UI elements. It manages game state, player and dealer hands, betting, and scoring, facilitating gameplay with actions like deal, hit, stand, double down, and new game. The module maintains and displays game statistics, ensures state persistence, and provides customizable casino and player information. Its primary purpose is to deliver an engaging blackjack experience with real-time card interactions, score calculations, and game flow control through a combination of card, skill, theme, and field definitions.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
