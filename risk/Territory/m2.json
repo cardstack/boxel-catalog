@@ -1,0 +1,15 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": { "name": "Ironfields", "shortId": "M2", "armies": 1 },
+    "relationships": {
+      "owner": { "links": { "self": "../Player/azul" } },
+      "continent": { "links": { "self": "../Continent/midrealm" } },
+      "neighbors.0": { "links": { "self": "../Territory/n2" } },
+      "neighbors.1": { "links": { "self": "../Territory/m1" } },
+      "neighbors.2": { "links": { "self": "./m3" } },
+      "neighbors.3": { "links": { "self": "../Territory/s2" } }
+    },
+    "meta": { "adoptsFrom": { "module": "../territory", "name": "Territory" } }
+  }
+}

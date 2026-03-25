@@ -1,0 +1,59 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Territory",
+        "module": "../territory"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Redtide",
+      "armies": 1,
+      "shortId": "S2",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../Player/crimson"
+        }
+      },
+      "continent": {
+        "links": {
+          "self": "../Continent/southreach"
+        }
+      },
+      "neighbors.0": {
+        "links": {
+          "self": "./m2"
+        }
+      },
+      "neighbors.1": {
+        "links": {
+          "self": "./s1"
+        }
+      },
+      "neighbors.2": {
+        "links": {
+          "self": "./s3"
+        }
+      },
+      "neighbors.3": {
+        "links": {
+          "self": "./w2"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

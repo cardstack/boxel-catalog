@@ -1,0 +1,54 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Territory",
+        "module": "../territory"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Frostvale",
+      "armies": 1,
+      "shortId": "N2",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../Player/crimson"
+        }
+      },
+      "continent": {
+        "links": {
+          "self": "../Continent/northland"
+        }
+      },
+      "neighbors.0": {
+        "links": {
+          "self": "./n1"
+        }
+      },
+      "neighbors.1": {
+        "links": {
+          "self": "./n3"
+        }
+      },
+      "neighbors.2": {
+        "links": {
+          "self": "./m2"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Continent",
+        "module": "../continent"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Southreach",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "bonusArmies": 4
+    },
+    "relationships": {
+      "territories.0": {
+        "links": {
+          "self": "../Territory/s1"
+        }
+      },
+      "territories.1": {
+        "links": {
+          "self": "../Territory/s2"
+        }
+      },
+      "territories.2": {
+        "links": {
+          "self": "../Territory/s3"
+        }
+      },
+      "territories.3": {
+        "links": {
+          "self": "../Territory/w1"
+        }
+      },
+      "territories.4": {
+        "links": {
+          "self": "../Territory/w2"
+        }
+      },
+      "territories.5": {
+        "links": {
+          "self": "../Territory/w3"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

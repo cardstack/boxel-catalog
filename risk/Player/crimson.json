@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Crimson",
+      "color": "#dc2626",
+      "reserves": 10,
+      "eliminated": ""
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "Player",
+        "module": "../player"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Azul",
+      "color": "#2563eb",
+      "reserves": 10,
+      "eliminated": ""
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "Player",
+        "module": "../player"
+      }
+    }
+  }
+}

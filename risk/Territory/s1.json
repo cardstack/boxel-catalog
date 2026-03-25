@@ -1,0 +1,54 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Territory",
+        "module": "../territory"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Suncove",
+      "armies": 1,
+      "shortId": "S1",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../Player/azul"
+        }
+      },
+      "continent": {
+        "links": {
+          "self": "../Continent/southreach"
+        }
+      },
+      "neighbors.0": {
+        "links": {
+          "self": "./m1"
+        }
+      },
+      "neighbors.1": {
+        "links": {
+          "self": "./s2"
+        }
+      },
+      "neighbors.2": {
+        "links": {
+          "self": "./w1"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
