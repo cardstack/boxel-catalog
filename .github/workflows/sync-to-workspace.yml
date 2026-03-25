@@ -59,33 +59,33 @@ jobs:
           fi
           echo "Staging workspace sync completed successfully!"
 
-      # - name: Sync to production workspace
-      #   id: sync_production
-      #   env:
-      #     MATRIX_URL: https://matrix.boxel.ai
-      #     MATRIX_USERNAME: ${{ secrets.MATRIX_USERNAME }}
-      #     MATRIX_PASSWORD: ${{ secrets.MATRIX_PASSWORD }}
-      #   run: |
-      #     echo "Starting sync to production workspace..."
-      #     echo "Target workspace: ${{ env.PRODUCTION_WORKSPACE_URL }}"
-      #     echo "Commit: ${{ github.sha }}"
-      #     echo ""
-      #
-      #     set +e
-      #     OUTPUT=$(workspace-push . ${{ env.PRODUCTION_WORKSPACE_URL }} --delete 2>&1)
-      #     EXIT_CODE=$?
-      #     set -e
-      #     echo "$OUTPUT"
-      #
-      #     echo "SYNC_OUTPUT<<EOF" >> $GITHUB_OUTPUT
-      #     echo "$OUTPUT" >> $GITHUB_OUTPUT
-      #     echo "EOF" >> $GITHUB_OUTPUT
-      #
-      #     if [ $EXIT_CODE -ne 0 ]; then
-      #       echo "Production workspace sync failed with exit code $EXIT_CODE"
-      #       exit $EXIT_CODE
-      #     fi
-      #     echo "Production workspace sync completed successfully!"
+      - name: Sync to production workspace
+        id: sync_production
+        env:
+          MATRIX_URL: https://matrix.boxel.ai
+          MATRIX_USERNAME: ${{ secrets.MATRIX_USERNAME }}
+          MATRIX_PASSWORD: ${{ secrets.MATRIX_PASSWORD }}
+        run: |
+          echo "Starting sync to production workspace..."
+          echo "Target workspace: ${{ env.PRODUCTION_WORKSPACE_URL }}"
+          echo "Commit: ${{ github.sha }}"
+          echo ""
+
+          set +e
+          OUTPUT=$(workspace-push . ${{ env.PRODUCTION_WORKSPACE_URL }} --delete 2>&1)
+          EXIT_CODE=$?
+          set -e
+          echo "$OUTPUT"
+
+          echo "SYNC_OUTPUT<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "Production workspace sync failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+          echo "Production workspace sync completed successfully!"
 
       - name: Report sync status
         if: success()
