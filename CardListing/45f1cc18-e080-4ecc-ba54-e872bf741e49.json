@@ -1,0 +1,129 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Bilingual Blog Post with Translation Field",
+      "images": [],
+      "summary": "The BilingualBlog card is a specialized blog post component designed to support multilingual content. Its primary feature is the inclusion of a translation field that contains a full French translation of the blog post body. This allows the blog to present content in multiple languages, enhancing accessibility for a bilingual audience. The component extends a standard BlogPost, adding language-specific translation capabilities for a more inclusive reading experience.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/a2c1dd71-0af2-413e-9bb1-f579232542b0"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/author"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/c298792f-9c3a-441b-a2c1-dd710af2a13e"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/blog"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/2f9c3a84-1ba2-41dd-b10a-f2a13e5bb1f5"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/06ed85c4-2020-48bf-9935-014eb894d576"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/blog-post"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/c1dd710a-f2a1-4e5b-b1f5-79232542b038"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/841ba2c1-dd71-4af2-a13e-5bb1f5792325"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/1ba2c1dd-710a-42a1-be5b-b1f579232542"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/0af2a13e-5bb1-4579-a325-42b038889840"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/fields/contact-link-field"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/fields/featured-image-field"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/f2a13e5b-b1f5-4923-a542-b038889840a0"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BilingualBlog/85de4d7a-e9d8-459d-80a7-d9f0508c9ea1"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
