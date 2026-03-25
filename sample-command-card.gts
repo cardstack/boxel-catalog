@@ -5,22 +5,8 @@ import {
   Component,
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
-
-export class SampleCommandCard extends CardDef {
-  static displayName = 'Sample Command Card';
-  @field title = contains(StringField);
-
-  static isolated = class Isolated extends Component<typeof SampleCommandCard> {
-    <template>
-      <h1><@fields.title /></h1>
-      <button type='button'>Create Card</button>
-    </template>
-  };
-}
-
 // ── Tests (imports resolved via loader.shimModule in live-test.js) ────────────
-import { on } from '@ember/modifier';
-import { service } from '@ember/service';
+import { on } from '@ember/modifier'; import { service } from '@ember/service';
 import { click, render, waitUntil } from '@ember/test-helpers';
 import GlimmerComponent from '@glimmer/component';
 import { module, test } from 'qunit';
@@ -34,6 +20,19 @@ import {
   type TestContextWithSave,
 } from '@cardstack/host/tests/helpers';
 import { TestRealmAdapter } from '@cardstack/host/tests/helpers/adapter';
+
+export class SampleCommandCard extends CardDef {
+  static displayName = 'Sample Command Card';
+  @field title = contains(StringField);
+
+  static isolated = class Isolated extends Component<typeof SampleCommandCard> {
+    <template>
+      <h1><@fields.title /></h1>
+      <button type='button'>Create Card</button>
+    </template>
+  };
+}
+
 
 class CreateCardButton extends GlimmerComponent {
   @service declare store: Store;
