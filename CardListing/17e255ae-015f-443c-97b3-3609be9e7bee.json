@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Recipe",
+      "images": [],
+      "summary": "The Recipe listing defines a card type used to manage and display recipe information within the Cardstack system. It serves as a structured data model for recipes, enabling the creation, organization, and presentation of culinary instructions and details in the application.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "http://localhost:4201/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/ffaa9eb0-5293-4856-9cca-a513216634df"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Recipe/08b4d3d8-d26f-4682-baed-aa058ee4bf1b"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
