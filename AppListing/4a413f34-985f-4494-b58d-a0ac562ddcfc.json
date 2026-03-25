@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AppListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Business Card",
+      "images": [],
+      "summary": "This catalog listing defines a Business Card component designed to display personal and professional contact information. Its primary purpose is to present a structured, visually adaptable representation of a person's name, job title, company, department, contact details (email, phone, mobile, website), and physical address. The component supports multiple display formats, including detailed isolated views, embedded compact summaries, and responsive grid layouts that adapt to varying screen sizes. It emphasizes clear organization of identity, contact info, and branding elements such as logo and photo URLs, facilitating consistent and flexible presentation of business contact data.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/3982a9ca-860b-42ae-93b4-0b1bb644e8b1"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/ac3982a9-ca86-4bb2-ae13-b40b1bb644e8"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BusinessCard/jane-doe"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
