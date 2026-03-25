@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Northland",
+      "bonusArmies": 3
+    },
+    "relationships": {
+      "territories.0": { "links": { "self": "../Territory/n1" } },
+      "territories.1": { "links": { "self": "../Territory/n2" } },
+      "territories.2": { "links": { "self": "../Territory/n3" } }
+    },
+  "meta": {
+      "adoptsFrom": {
+        "name": "Continent",
+        "module": "../continent"
+      }
+    }
+  }
+}

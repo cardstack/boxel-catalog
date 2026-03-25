@@ -1,0 +1,125 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Game",
+        "module": "./game"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Mini Risk",
+      "phase": "placement",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "lastRoll": "",
+      "currentPlayerIndex": 0
+    },
+    "relationships": {
+      "pendingTo": {
+        "links": {
+          "self": "./Territory/n2"
+        }
+      },
+      "players.0": {
+        "links": {
+          "self": "./Player/azul"
+        }
+      },
+      "players.1": {
+        "links": {
+          "self": "./Player/crimson"
+        }
+      },
+      "pendingFrom": {
+        "links": {
+          "self": "./Territory/n2"
+        }
+      },
+      "continents.0": {
+        "links": {
+          "self": "./Continent/northland"
+        }
+      },
+      "continents.1": {
+        "links": {
+          "self": "./Continent/midrealm"
+        }
+      },
+      "continents.2": {
+        "links": {
+          "self": "./Continent/southreach"
+        }
+      },
+      "territories.0": {
+        "links": {
+          "self": "./Territory/n1"
+        }
+      },
+      "territories.1": {
+        "links": {
+          "self": "./Territory/n2"
+        }
+      },
+      "territories.2": {
+        "links": {
+          "self": "./Territory/n3"
+        }
+      },
+      "territories.3": {
+        "links": {
+          "self": "./Territory/m1"
+        }
+      },
+      "territories.4": {
+        "links": {
+          "self": "./Territory/m2"
+        }
+      },
+      "territories.5": {
+        "links": {
+          "self": "./Territory/m3"
+        }
+      },
+      "territories.6": {
+        "links": {
+          "self": "./Territory/s1"
+        }
+      },
+      "territories.7": {
+        "links": {
+          "self": "./Territory/s2"
+        }
+      },
+      "territories.8": {
+        "links": {
+          "self": "./Territory/s3"
+        }
+      },
+      "territories.9": {
+        "links": {
+          "self": "./Territory/w1"
+        }
+      },
+      "territories.10": {
+        "links": {
+          "self": "./Territory/w2"
+        }
+      },
+      "territories.11": {
+        "links": {
+          "self": "./Territory/w3"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
