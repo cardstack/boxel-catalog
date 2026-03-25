@@ -1,0 +1,54 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CreateYourOwnAdventureV4",
+        "module": "../create-your-own-adventure-game-31ffda5d-900b-483c-8a44-b8e7c4a099e1/adventure-v4"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "startedAt": "2025-10-12T11:43:39.932Z",
+      "chatRoomId": "!LoYoPYTqKbPvlUDDhb:stack.cards",
+      "gameStatus": "playing",
+      "totalTurns": 1,
+      "completedAt": null,
+      "currentTurn": 1,
+      "oneShotTags": [],
+      "oneShotTitle": "Cyberpunk Malaysia",
+      "lastNarration": "The neon-soaked streets of Kuala Lumpur pulse with electric energy as rain slicks the asphalt. You're walking through a narrow alley behind Jalan Alor when the rumble of modified motorcycles echoes off the concrete walls.\n\nThree riders emerge from the shadows—the local mat rempit crew, their bikes gleaming with illegal neon underglow and quantum-tuned exhausts. Chrome helmets reflect the holographic advertisements floating overhead. The leader revs his engine, a cybernetic arm gripping the handlebars.\n\n\"Eh, stranger,\" he calls out in accented English, visor sliding up to reveal augmented eyes. \"You lost or what? This our territory, lah.\"\n\nThe other two flank you, blocking escape routes. Rain continues to fall, mixing with the smell of engine oil and street food from the nearby hawker stalls.\n\n**What do you do?**\n\n1. **Try to negotiate** - Show respect and explain you're just passing through\n2. **Run for it** - Sprint toward the crowded main street where there's safety in numbers  \n3. **Stand your ground** - Face them directly and see what they really want\n4. **Or tell me your own approach...**",
+      "lastTimestamp": "2025-10-12T11:43:47.493Z",
+      "adventureTitle": null,
+      "lastTurnNumber": 1,
+      "lastImagePrompt": "cyberpunk alley Kuala Lumpur neon motorcycles rain mat rempit crew chrome helmets",
+      "lastIsPlayerTurn": false,
+      "lastPlayerChoice": null,
+      "selectedScenario": {
+        "key": "one-shot",
+        "cardTitle": "Cyberpunk Malaysia",
+        "cardDescription": "You are caught by the local mat rempit group..."
+      },
+      "autoGenerateImages": true,
+      "oneShotDescription": "You are caught by the local mat rempit group...",
+      "oneShotImageStyles": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedScenarios": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

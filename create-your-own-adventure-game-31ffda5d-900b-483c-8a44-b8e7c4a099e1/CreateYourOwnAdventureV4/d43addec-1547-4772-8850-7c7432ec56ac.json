@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CreateYourOwnAdventureV4",
+        "module": "../adventure-v4"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "New Adventure",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "startedAt": "2025-10-12T11:39:37.144Z",
+      "chatRoomId": "!OVtpepPNVyUHZIyhoV:stack.cards",
+      "gameStatus": "playing",
+      "totalTurns": 1,
+      "completedAt": null,
+      "currentTurn": 1,
+      "oneShotTags": [],
+      "oneShotTitle": null,
+      "lastNarration": "# Turn 1: Awakening\n\nYour eyes flutter open to the harsh glare of emergency lighting. The metallic taste of recycled air fills your lungs as you struggle to sit up. Around you, the space station hums with an unsettling quiet—too quiet for a functioning facility.\n\nThe corridor stretches in both directions, its walls lined with dormant control panels. To your left, a faint blue glow emanates from what appears to be the command center. To your right, you hear the distant sound of machinery still running. Behind you, an airlock door bears warning symbols you can't quite remember the meaning of.\n\nYour head throbs as you try to recall how you got here. Your uniform bears no name tag, and your pockets are empty except for a small device blinking red.\n\n**What do you do?**\n\n1. **Head toward the blue glow** - investigate the command center\n2. **Follow the machinery sounds** - check the engineering section  \n3. **Examine the airlock door** - see what lies beyond\n4. **Study the blinking device** - try to understand what it is\n\n*Or describe your own action...*",
+      "lastTimestamp": "2025-10-12T11:39:51.522Z",
+      "adventureTitle": "New Adventure",
+      "lastTurnNumber": 1,
+      "lastImagePrompt": "person awakening in dark space station corridor, emergency lights, metallic walls, blinking control panels",
+      "lastIsPlayerTurn": false,
+      "lastPlayerChoice": null,
+      "selectedScenario": {
+        "key": "space-station",
+        "cardTitle": "Lost in Space",
+        "cardDescription": "You wake on a silent space station with flickering lights and no memory."
+      },
+      "autoGenerateImages": true,
+      "oneShotDescription": null,
+      "oneShotImageStyles": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedScenarios.0": {
+        "links": {
+          "self": "../AdventureScenario/space-station"
+        }
+      },
+      "linkedScenarios.1": {
+        "links": {
+          "self": "../AdventureScenario/time-traveler"
+        }
+      },
+      "linkedScenarios.2": {
+        "links": {
+          "self": "../AdventureScenario/enchanted-forest"
+        }
+      },
+      "linkedScenarios.3": {
+        "links": {
+          "self": "../AdventureScenario/undersea-kingdom"
+        }
+      },
+      "linkedScenarios.4": {
+        "links": {
+          "self": "../AdventureScenario/detective-mystery"
+        }
+      }
+    }
+  }
+}

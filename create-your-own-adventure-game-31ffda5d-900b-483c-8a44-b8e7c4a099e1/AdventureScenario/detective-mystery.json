@@ -1,0 +1,38 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AdventureScenario",
+        "module": "../adventure-scenario"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "key": "detective-mystery",
+      "tags": [
+        "noir",
+        "mystery",
+        "gritty"
+      ],
+      "cardTitle": "The Vanishing Detective",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A famed sleuth disappears in 1947 Manhattan. The fog knows more.",
+      "imageStyles": [
+        "film-noir",
+        "black-and-white"
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
