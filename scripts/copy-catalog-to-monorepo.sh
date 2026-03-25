@@ -16,6 +16,20 @@ find . -mindepth 1 \
   ! -name 'tsconfig.json' \
   ! -name 'package.json' \
   ! -name '.realm.json' \
+  ! -path './Spec' \
+  ! -path './Spec/*' \
+  ! -path './fields' \
+  ! -path './fields/*' \
+  ! -path './components' \
+  ! -path './components/*' \
+  ! -path './commands' \
+  ! -path './commands/suggest-avatar.gts' \
+  ! -path './utils' \
+  ! -path './utils/*' \
+  ! -path './resources' \
+  ! -path './resources/*' \
+  ! -path './catalog-app' \
+  ! -path './catalog-app/*' \
   ! -name '.' \
   -exec rm -rf {} + 2>/dev/null || true
 cd ../..
@@ -27,7 +41,6 @@ rsync -av \
   --exclude='.realm.json' \
   --exclude='.gitignore' \
   --exclude='tests/' \
-  --exclude='*-test.gts' \
   "$CATALOG_SRC/" "$CATALOG_REALM/"
 
 echo "[copy-catalog] Done."
