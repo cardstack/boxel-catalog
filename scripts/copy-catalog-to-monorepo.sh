@@ -37,6 +37,7 @@ cd ../..
 echo "[copy-catalog] Syncing catalog source into monorepo..."
 rsync -av \
   --exclude='.git/' \
+  --include='index.json' \
   --exclude='*.json' \
   --exclude='.gitignore' \
   --exclude='tests/' \
