@@ -164,6 +164,7 @@ const cardWithUnrecognisedImports = `
   }
 `;
 
+export function runTests() {
 module('Acceptance | Catalog | catalog app tests', function (hooks) {
   setupApplicationTest(hooks);
   setupLocalIndexing(hooks);
@@ -2646,6 +2647,7 @@ module('Acceptance | Catalog | catalog app tests', function (hooks) {
     });
   });
 });
+}
 
 function removeTrailingSlash(url: string): string {
   return url.endsWith('/') && url.length > 1 ? url.slice(0, -1) : url;

@@ -27,27 +27,29 @@ class StubHostModeService extends HostModeService {
   }
 }
 
-module('Acceptance | Catalog | real catalog app', function (hooks) {
-  setupApplicationTest(hooks);
-  setupLocalIndexing(hooks);
+export function runTests() {
+  module('Acceptance | Catalog | real catalog app', function (hooks) {
+    setupApplicationTest(hooks);
+    setupLocalIndexing(hooks);
 
-  hooks.beforeEach(function () {
-    setupAuthEndpoints();
-    getOwner(this)!.register('service:host-mode-service', StubHostModeService);
+    hooks.beforeEach(function () {
+      setupAuthEndpoints();
+      getOwner(this)!.register('service:host-mode-service', StubHostModeService);
+    });
+
+    test('visiting /catalog/ renders the catalog index card', async function (assert) {
+      let realmServer = getService('realm-server');
+      await realmServer.ready;
+      await ensureCatalogRealmReady();
+
+      await visit('/catalog/');
+
+      await waitFor('[data-test-catalog-app]', { timeout: 30_000 });
+      assert.dom('[data-test-card-error]').doesNotExist();
+      assert.dom('[data-test-catalog-app]').exists();
+    });
   });
-
-  test('visiting /catalog/ renders the catalog index card', async function (assert) {
-    let realmServer = getService('realm-server');
-    await realmServer.ready;
-    await ensureCatalogRealmReady();
-
-    await visit('/catalog/');
-
-    await waitFor('[data-test-catalog-app]', { timeout: 30_000 });
-    assert.dom('[data-test-card-error]').doesNotExist();
-    assert.dom('[data-test-catalog-app]').exists();
-  });
-});
+}
 
 async function ensureCatalogRealmReady() {
   let network = getService('network');
