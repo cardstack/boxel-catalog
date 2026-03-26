@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "generate-elements2",
+      "images": [],
+      "summary": "The GenerateElements2 component is a web-based tool designed to assist users in generating, converting, and managing HTML elements within a user interface. It provides functionalities for pasting content, manually generating or running scripts, toggling image sizes, converting plain links into clickable hyperlinks, and saving content as HTML files. Additionally, it features options for refreshing media sources and clearing errors, making it a versatile utility for HTML content manipulation and preview.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/1b3a0860-96c2-4692-86f9-b2a1e6445428"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../GenerateElements2/29ea74fa-ca00-4e12-add7-d6e92f88e7dd"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/38b5d1dc-00d3-4a19-8998-29f0c19081de"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
