@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Deck",
+      "images": [],
+      "summary": "The Deck component defines a structured card collection with functionalities for shuffling, drawing, resetting, and viewing the order of cards. Its primary purpose is to manage and interact with a set of cards within a deck, including displaying current status, shuffling the order, and drawing individual cards. It provides an interactive interface for users to simulate card drawing mechanics, track remaining cards, and visualize the deck's order, suitable for applications like games, decision-making tools, or creative prompts.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/162c2200-efc0-4e13-9638-3256659d2083"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/software-development"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/web-development"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Deck/f34a758d-f760-45e5-bf30-14c524d22123"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
