@@ -1,0 +1,53 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "playerName": null,
+      "playerChips": 5000,
+      "currentBet": 5,
+      "gameState": "playerTurn",
+      "gameMessage": "Your turn. Hit or Stand?",
+      "statistics": {
+        "wins": null,
+        "losses": null,
+        "earnings": null
+      },
+      "playerScore": null,
+      "dealerScore": null,
+      "dealerHand": [
+        {
+          "suit": "hearts",
+          "value": "8",
+          "faceUp": true
+        },
+        {
+          "suit": "clubs",
+          "value": "2",
+          "faceUp": false
+        }
+      ],
+      "playerHand": [
+        {
+          "suit": "diamonds",
+          "value": "7",
+          "faceUp": true
+        },
+        {
+          "suit": "clubs",
+          "value": "5",
+          "faceUp": true
+        }
+      ],
+      "casinoName": null,
+      "cardTitle": null,
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blackjack-game-96ec1043-6e3f-480b-878c-07e6c9cd581d/blackjack",
+        "name": "BlackjackGame"
+      }
+    }
+  }
+}
