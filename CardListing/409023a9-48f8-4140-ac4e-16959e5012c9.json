@@ -1,0 +1,114 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Category",
+      "images": [],
+      "summary": "The CategoryCard defines a card type used to represent a food menu category within a business food menu application. Its primary purpose is to categorize menu items, with fields for the category name, an optional description, and an associated image. This card helps organize menu items into logical groups, enhancing browseability and menu structure clarity.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/b701a6ab-a511-4427-884c-08fa8bc895e9"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/56e804be-b701-46ab-a511-3427c84c08fa"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/beb701a6-aba5-4134-a7c8-4c08fa8bc895"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/04beb701-a6ab-4511-b427-c84c08fa8bc8"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/107d3efc-2625-44a3-9f16-922d864adc00"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/a6f756e8-04be-4701-a6ab-a5113427c84c"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/01a6aba5-1134-47c8-8c08-fa8bc895e9ef"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../CatalogEntry/app"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/f756e804-beb7-41a6-aba5-113427c84c08"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../CategoryCard/d3fc3f5c-9ed7-4d0d-a678-483624f00d75"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/business-development"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/professional-services"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

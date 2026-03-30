@@ -1,0 +1,18 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "categoryName": "somecategory",
+      "description": "somecategory",
+      "imageUrl": null,
+      "title": "somecategory",
+      "thumbnailURL": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../AppModules/business-food-menu-1726540662935",
+        "name": "CategoryCard"
+      }
+    }
+  }
+}
