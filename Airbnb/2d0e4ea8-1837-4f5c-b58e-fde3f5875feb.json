@@ -1,0 +1,62 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Airbnb",
+        "module": "../airbnb"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Charming Beachfront Cottage in Santa Monica",
+      "rating": 4.93,
+      "bedrooms": 3,
+      "cardInfo": {
+        "name": "Charming",
+        "notes": null,
+        "summary": "3BR beachfront cottage in Santa Monica · $285/night · ★ 4.93",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=400&q=80"
+      },
+      "imageUrl": "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=1200&q=80",
+      "location": "Santa Monica, California, USA",
+      "amenities": [
+        {
+          "name": "WiFi"
+        },
+        {
+          "name": "Free Parking"
+        },
+        {
+          "name": "Kitchen"
+        },
+        {
+          "name": "Air Conditioning"
+        },
+        {
+          "name": "Washer & Dryer"
+        },
+        {
+          "name": "BBQ Grill"
+        },
+        {
+          "name": "Private Deck"
+        },
+        {
+          "name": "Beach Access"
+        }
+      ],
+      "bathrooms": 2,
+      "maxGuests": 6,
+      "description": "Wake up to stunning ocean views in this beautifully renovated cottage just steps from the beach. Enjoy the California sunshine on your private deck, take a short stroll to the iconic Santa Monica Pier, or explore the vibrant Third Street Promenade.\n\nThe space features an open-plan living area with vaulted ceilings, a fully equipped gourmet kitchen, and three cozy bedrooms decorated in a coastal style. Perfect for families or groups of friends looking for a memorable California getaway.",
+      "isAvailable": true,
+      "pricePerNight": 285
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
