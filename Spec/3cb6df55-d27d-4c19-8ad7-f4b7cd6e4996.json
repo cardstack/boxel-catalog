@@ -1,0 +1,54 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../airbnb",
+              "name": "AmenityField"
+            }
+          }
+        ]
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AmenityField",
+        "module": "../airbnb"
+      },
+      "readMe": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Amenity",
+      "cardDescription": null,
+      "containedExamples": [
+        {
+          "name": null
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
