@@ -1,0 +1,84 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Racing Game",
+      "images": [],
+      "summary": "The RacingGame card provides an interactive 3D racing simulation, allowing users to customize car configurations and control a virtual vehicle on a track. Its primary purpose is to deliver a playful, Mario Kart-style racing experience with real-time physics, camera control, lap timing, and race management features. The card also includes visual HUD elements displaying speed, lap count, and lap times, alongside controls for starting, resetting, and configuring the race and vehicle properties. It integrates a 3D track environment created with Three.js, with options for embedded, fitted, and tile-based visual formats.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/ff8817ad-3574-4700-9170-65865d1e84a9"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/8817ad35-7447-40d1-b065-865d1e84a9bf"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/ec00a908-1cbe-4b7c-a518-a699a703a4c1"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/00a9081c-bebb-4ce5-98a6-99a703a4c108"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/knowledge-management"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../RacingGame/36b40341-87db-44f0-b5bd-f89906edef54"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
