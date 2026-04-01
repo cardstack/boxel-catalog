@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AppListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Invitation Card",
+      "images": [],
+      "summary": "The Invitation card defines a structured data model for event invitations, capturing key details such as event name, date, location, host, guest, message, and RSVP deadline. Its primary purpose is to facilitate the creation, display, and management of invitation information within a card-based application, supporting both data handling and presentation through a dedicated component.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/f663ae62-f4c8-4189-8da7-d6bc55442793"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Invitation/221bb824-0915-4d2e-aab3-4cdcddae6328"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
