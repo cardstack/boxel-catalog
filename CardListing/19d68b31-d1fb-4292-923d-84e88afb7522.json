@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Recipe",
+      "images": [],
+      "summary": "The RecipeCard defines a comprehensive data structure and presentation format for cooking recipes. Its primary purpose is to enable detailed entry, display, and styling of recipes, including fields such as recipe name, description, preparation and cooking times, servings, difficulty, cuisine type, ingredients, instructions, tips, and tags. The card supports multiple display formats—embedded, fitted, isolated, and various responsive layouts—tailored to different interface sizes. It also calculates total time and difficulty-based styling, facilitating flexible rendering of recipe content across diverse contexts, with embedded components for ingredient listing and multiple visual presentation styles for varied use cases.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/f0df451c-49fa-4330-aee7-f50d0bd1d1f9"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/df451c49-fa03-406e-a7f5-0d0bd1d1f9b8"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
