@@ -1,0 +1,114 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "SkillListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Author Profile Component",
+      "images": [],
+      "summary": "The Author component provides a structured representation of an individual author, encapsulating personal details such as first name, last name, bio, full bio in markdown, quote, contact links (including social profiles and email), and a featured image. It offers multiple presentation variants, including embedded, atom, and fitted layouts, optimized for different display contexts and aspect ratios. The primary purpose is to facilitate comprehensive, flexible author profiles for embedding in web pages, articles, or blogs, with support for dynamic styling and responsive design.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "http://localhost:4201/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/15c073e4-49d4-4f95-8586-7eca8eec1293"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/author"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/blog"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/e449d4bf-9545-467e-8a8e-ec1293cdb71f"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/49d4bf95-4586-4eca-8eec-1293cdb71fe8"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/d4bf9545-867e-4a8e-ac12-93cdb71fe8f7"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/bf954586-7eca-4eec-9293-cdb71fe8f76f"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/fields/contact-link-field"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/fields/featured-image-field"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/38b5d1dc-00d3-4a19-8998-29f0c19081de"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/accounting-finance"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
