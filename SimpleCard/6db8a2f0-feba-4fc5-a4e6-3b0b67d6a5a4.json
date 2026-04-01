@@ -1,0 +1,29 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "SimpleCard",
+        "module": "../simple-card"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "date": null,
+      "title": null,
+      "cardInfo": {
+        "name": "Example Card Demo Apr 1",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
