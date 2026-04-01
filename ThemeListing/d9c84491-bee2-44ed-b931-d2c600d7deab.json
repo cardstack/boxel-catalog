@@ -1,0 +1,114 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ThemeListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Author Profile Catalog Listing",
+      "images": [],
+      "summary": "The Author component provides a structured representation of an author profile, including their name, bio, quote, contact links, email, featured image, and associated blog. It supports multiple display formats—such as isolated, embedded, atom, and fitted—each optimized for different viewing contexts and screen sizes. The component enables comprehensive author documentation and presentation, with customizable layouts and responsive styling to adapt to various device aspect ratios and dimensions. Its primary purpose is to facilitate detailed and adaptable author profiles within content-rich applications or websites.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "http://localhost:4201/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/c315116f-b849-4d15-9f65-62251e07578f"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/author"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/blog"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/7917774b-275c-4250-a654-4abfbfc1d264"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/4b275cd2-5026-444a-bfbf-c1d264efd7e3"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/275cd250-2654-4abf-bfc1-d264efd7e31b"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/5026544a-bfbf-41d2-a4ef-d7e31b975595"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/fields/contact-link-field"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/fields/featured-image-field"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/accounting-finance"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/education-courses"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
