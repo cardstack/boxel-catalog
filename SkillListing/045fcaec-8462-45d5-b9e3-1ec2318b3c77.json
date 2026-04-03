@@ -1,0 +1,119 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "SkillListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Author Profile Card Definition",
+      "images": [],
+      "summary": "The Author catalog listing defines a structured representation of an individual author, capturing their personal and professional details. It includes fields for first and last names, full name, biography, full bio in Markdown, a quote, contact links (social media and email), a featured image, and a related blog. The catalog provides multiple presentation components—isolated, embedded, atom, and fitted layouts—to display author information across different contexts and device sizes, focusing on flexible, responsive styling and varied visual formats. Its primary purpose is to enable consistent, customizable author profiles for use in websites, blogs, or author directories.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "http://localhost:4201/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/daf9b3d5-8a00-4d43-85ee-6ea57f5a4af4"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/author"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/blog"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/21ff2b33-4432-40e4-abda-f9b3d58a006d"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/ff2b3344-3280-442b-9af9-b3d58a006d43"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/ce16ca21-ff2b-4344-b280-e42bdaf9b3d5"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/2bdaf9b3-d58a-406d-8345-ee6ea57f5a4a"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/fields/contact-link-field"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/fields/featured-image-field"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/b67cf095-8d4b-4a93-8d82-a856c616a80d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/software-development"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/web-development"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Author/0b9c06fd-3833-4947-a0b8-ac24b8e71ee7"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
