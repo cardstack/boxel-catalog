@@ -1,0 +1,194 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Sprint Planner Card Definition",
+      "images": [],
+      "summary": "The SprintPlanner is a card component designed to visualize and manage tasks within a sprint using a Kanban-style interface. Its primary purpose is to facilitate project planning and tracking by organizing tasks into columns based on their status. The component supports creating, moving, and editing tasks, with filters for status and assignee, integrated with project and realm data sources. It provides an interactive, drag-and-drop task management experience optimized for sprint planning workflows.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../CatalogEntry/sprint-planner"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/2e27144b-2f15-4bca-8ffc-4e7603f080cc"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/4e7603f0-80cc-4f5a-bdc2-d833733c12ee"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/27144b2f-156b-4a0f-bc4e-7603f080cc3f"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/144b2f15-6bca-4ffc-8e76-03f080cc3f5a"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/4b2f156b-ca0f-4c4e-b603-f080cc3f5a3d"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/fc4e7603-f080-4c3f-9a3d-c2d833733c12"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../CatalogEntry/team"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../CatalogEntry/team-member"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/ed8d6431-a8c8-4d81-9212-0e7227498c87"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/ee40ed8d-6431-48c8-ad81-12120e722749"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/40ed8d64-31a8-48ad-8112-120e7227498c"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../CatalogEntry/sprint-task"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../CatalogEntry/tag"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../Spec/8112120e-7227-498c-875e-7b3ec90dffc9"
+        }
+      },
+      "specs.15": {
+        "links": {
+          "self": "../Spec/120e7227-498c-475e-bb3e-c90dffc9ddd4"
+        }
+      },
+      "specs.16": {
+        "links": {
+          "self": "../Spec/7227498c-875e-4b3e-890d-ffc9ddd43e89"
+        }
+      },
+      "specs.17": {
+        "links": {
+          "self": "../Spec/0e722749-8c87-4e7b-bec9-0dffc9ddd43e"
+        }
+      },
+      "specs.18": {
+        "links": {
+          "self": "../CatalogEntry/task"
+        }
+      },
+      "specs.19": {
+        "links": {
+          "self": "../Spec/12120e72-2749-4c87-9e7b-3ec90dffc9dd"
+        }
+      },
+      "specs.20": {
+        "links": {
+          "self": "../Spec/27498c87-5e7b-4ec9-8dff-c9ddd43e899d"
+        }
+      },
+      "specs.21": {
+        "links": {
+          "self": "../CatalogEntry/todo"
+        }
+      },
+      "specs.22": {
+        "links": {
+          "self": "../Spec/99c7dfc6-cd88-4fec-96b0-31208ae6eb78"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/631d1b5d-fcd0-465c-964e-e535fc6bb893"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/b793225c-32f9-404c-b2a9-b4041b93090c"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../SprintPlanner/4b108a8b-eac0-4e64-8c42-c3a0a53c1762"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../SprintPlanner/803476a4-1de3-4c24-9194-1a4650e1077f"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../SprintPlanner/6bacffa6-952f-4c49-b0e3-ad0e5bf4f899"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../SprintPlanner/661fcc09-b5be-4e1f-8d88-c8a743d29b3a"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/project-management"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
