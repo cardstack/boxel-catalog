@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "SprintPlanner",
+        "module": "../sprint-planner"
+      },
+      "readMe": "**Summary**\nThe `SprintPlanner` spec is a card definition that provides a Kanban-style task planner for a given project. It allows users to create, manage, and move tasks within the planner.\n\n**Import**\n```js\nimport { SprintPlanner } from 'https://realms-staging.stack.cards/experiments/sprint-planner';\n```\n\n**Usage as a Field**\nTo use the `SprintPlanner` as a field within a consuming card or field, you can add it as a `linksTo` field:\n\n```gts\n@field sprintPlanner = linksTo(SprintPlanner);\n```\n\nThis will allow you to link a `SprintPlanner` instance to the consuming card.\n\n**Template Usage**\nTo display the `SprintPlanner` within a template, you can use the following:\n\n```hbs\n<@fields.sprintPlanner />\n```\n\nThis will render the `SprintPlanner` card in the isolated format.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "app",
+      "cardTitle": null,
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
