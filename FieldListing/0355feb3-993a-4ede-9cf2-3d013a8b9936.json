@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "PolymorphicFieldExample with TestField</s>",
+      "images": [],
+      "summary": "The TestField component defines a polymorphic custom field used within cards to manage a string value called firstName. It provides multiple variations of its visual representation, including fitted and embedded versions, to adapt to different UI contexts. It serves as a flexible, reusable field type that can be included in other card definitions. The primary purpose of the TestField and its subclasses is to demonstrate customizable, component-based field definitions and their integration within card structures. The PolymorphicFieldExample illustrates how such a field can be embedded within a card, including the ability to dynamically change its subclass, facilitating flexible data modeling and UI rendering within the card system.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/51de249c-516a-4c4d-bd88-76e88274c483"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/b793225c-32f9-404c-b2a9-b4041b93090c"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/fbacf3b7-2ebe-4448-b873-cba8c0ec2014"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/developer-tools-code"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/software-development"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
