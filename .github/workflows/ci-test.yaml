@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
+          ref: 7c588a0239f675e8ad4b3112b040a583c0a8ee17 # remove-colocated-module-test
 
       # Checkout this catalog repo into a temp location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
@@ -74,7 +75,7 @@ jobs:
           sudo service upower restart
 
       - name: Live test suite
-        run: dbus-run-session -- pnpm test:live
+        run: dbus-run-session -- pnpm test:live http://localhost:4201/catalog/
         working-directory: packages/host
         env:
           DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
