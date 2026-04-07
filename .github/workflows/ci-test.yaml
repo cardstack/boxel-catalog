@@ -44,24 +44,11 @@ jobs:
         run: NODE_OPTIONS='--max-old-space-size=8192' pnpm build
         working-directory: packages/host
 
-      - name: Serve boxel-icons
-        run: pnpm serve &> /tmp/icon-server.log &
-        working-directory: packages/boxel-icons
-
       - name: Disable TCP/UDP network offloading
         run: sudo ethtool -K eth0 tx off rx off
 
-      - name: Serve host dist for realm server
-        uses: JarvusInnovations/background-action@2428e7b970a846423095c79d43f759abf979a635 # 1.0.7
-        with:
-          run: pnpm serve:dist &
-          working-directory: packages/host
-          wait-for: 3m
-          wait-on: http-get://localhost:4200
-
-      - name: Start realm servers
-        run: pnpm start:services-for-host-tests | tee -a /tmp/server.log &
-        working-directory: packages/realm-server
+      - name: Start test services (icons + host dist + realm servers)
+        run: mise run test-services:host | tee -a /tmp/server.log &
 
       - name: Create realm users
         run: pnpm register-realm-users
