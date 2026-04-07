@@ -1,10 +1,10 @@
 name: CI Test
 
 on:
-  workflow_dispatch: # temporary manual trigger only
-  # push:
-  #   branches: [main]
-  # pull_request:
+  workflow_dispatch: 
+  push:
+    branches: [main]
+  pull_request:
 
 permissions:
   checks: write
@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
+          ref: 7c588a0239f675e8ad4b3112b040a583c0a8ee17 # remove-colocated-module-test
 
       # Checkout this catalog repo into a temp location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
@@ -43,24 +44,11 @@ jobs:
         run: NODE_OPTIONS='--max-old-space-size=8192' pnpm build
         working-directory: packages/host
 
-      - name: Serve boxel-icons
-        run: pnpm serve &> /tmp/icon-server.log &
-        working-directory: packages/boxel-icons
-
       - name: Disable TCP/UDP network offloading
         run: sudo ethtool -K eth0 tx off rx off
 
-      - name: Serve host dist for realm server
-        uses: JarvusInnovations/background-action@2428e7b970a846423095c79d43f759abf979a635 # 1.0.7
-        with:
-          run: pnpm serve:dist &
-          working-directory: packages/host
-          wait-for: 3m
-          wait-on: http-get://localhost:4200
-
-      - name: Start realm servers
-        run: pnpm start:services-for-host-tests | tee -a /tmp/server.log &
-        working-directory: packages/realm-server
+      - name: Start test services (icons + host dist + realm servers)
+        run: mise run test-services:host | tee -a /tmp/server.log &
 
       - name: Create realm users
         run: pnpm register-realm-users
@@ -74,7 +62,7 @@ jobs:
           sudo service upower restart
 
       - name: Live test suite
-        run: dbus-run-session -- pnpm test:live
+        run: dbus-run-session -- pnpm test:live http://localhost:4201/catalog/
         working-directory: packages/host
         env:
           DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
