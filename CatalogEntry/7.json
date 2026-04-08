@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Booking",
+        "module": "../booking"
+      },
+      "readMe": "# Booking Card\n\n## Summary\nThe `Booking` card represents a booking or event that has a venue, start and end times, hosts, and optional sponsors.\n\n## Import\n```javascript\nimport { Booking } from './booking';\n```\n\n## Usage as a Field\nYou can use the `Booking` card as a field within a consuming card or field:\n\n```javascript\nimport { contains, CardDef, field } from 'https://cardstack.com/base/card-api';\nimport { Booking } from './booking';\n\nexport class Event extends CardDef {\n  @field booking = contains(Booking);\n}\n```\n\n## Template Usage\nInside the template of a consuming card or field, you can display the `Booking` information like this:\n\n```hbs\n<h2><@fields.booking.cardTitle /></h2>\n<div><@fields.booking.startTime /> to <@fields.booking.endTime /></div>\n<div>Hosted by: <@fields.booking.hosts /></div>\n```",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": null,
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

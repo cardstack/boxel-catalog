@@ -1,0 +1,109 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Booking",
+      "images": [],
+      "summary": "The Booking card provides a structured representation of a scheduled event, including details such as the event title, venue, start and end times, and associated hosts and sponsors. It organizes booking information visually and logically to facilitate scheduling, management, and display of event details within the application.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../CatalogEntry/7"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/f5a00cd5-1a13-4b0e-9490-857c5480a93b"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/3f2cf5a0-0cd5-4a13-ab0e-5490857c5480"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/2cf5a00c-d51a-43ab-8e54-90857c5480a9"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../CatalogEntry/1"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/8dd388c8-e608-4404-bf2c-f5a00cd51a13"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/c0c5e569-8284-4dd3-88c8-e60874043f2c"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/a0bd867f-e0fc-46fb-9a0e-c4f5ee2953c6"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../CatalogEntry/2"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/53c0c5e5-6982-448d-9388-c8e60874043f"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/ed5a1a3f-0dbf-47b5-b2a6-d88b0d2a7642"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/events-celebrations"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Booking/1"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
