@@ -34,6 +34,7 @@ jobs:
           find . -name "*.gts" -not -path "*/node_modules/*" | while read f; do
             cp "$f" "${f%.gts}.ts"
             perl -i -0777 -pe 's/<template>.*?<\/template>//gs' "${f%.gts}.ts"
+            perl -i -pe "s/^import\s+.*?\s+from\s+'https?:\/\/[^']*';?\s*\n?//g" "${f%.gts}.ts"
             echo "=== Stripped: ${f%.gts}.ts ==="
             cat "${f%.gts}.ts"
           done
