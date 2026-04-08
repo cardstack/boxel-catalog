@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "To-Do Item Card Definition",
+      "images": [],
+      "summary": "The Todo component provides a structured representation for task management within a card-based system. It captures essential task attributes such as title, description, status, priority, due date, and completion status. The component supports multiple display formats—including embedded, fitted, tile, and card views—to adapt to various UI contexts and responsive layouts. It emphasizes visual cues through labels and icons for status, priority, and completion, facilitating quick comprehension of task states. The primary purpose of this definition is to enable flexible, visually organized task tracking within customizable card interfaces.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/c41b4e4c-f364-4677-a461-80f0c2bb105f"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Todo/design-review"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../Todo/fix-login-bug"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../Todo/update-readme"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
