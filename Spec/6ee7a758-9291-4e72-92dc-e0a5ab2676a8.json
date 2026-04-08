@@ -1,0 +1,63 @@
+{
+  "data": {
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../address",
+              "name": "Address"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Address",
+        "module": "../address"
+      },
+      "title": "Address",
+      "readMe": "# Address Field Definition\n\nThe `Address` field definition provides a reusable way to represent physical addresses within a Boxel application. It allows you to capture various address components such as street, city, state, postal code, and country, and automatically compute a formatted full address string.\n\n## Import\nTo use the `Address` field in your code, import it from the `../address` module:\n\n```javascript\nimport { Address } from '../address';\n```\n\n## Define Field\nYou can define an `Address` field within a card definition using the `contains` method:\n\n```javascript\nexport class MyCard extends CardDef {\n  @field address = contains(Address);\n}\n```\n\n## Invoke Template\nIn your card templates, you can display the address field using the `@fields.address` syntax:\n\n```hbs\n<div class=\"address-section\">\n  <@fields.address />\n</div>\n```\n\n## Dependencies\nThe `Address` field definition has the following dependencies:\n\n- Imports `CountryField` from `./country`\n- Uses `EntityDisplayWithIcon` and `MapPinIcon` components from `./components/entity-icon-display`\n\n## Usage and Examples\nHere's an example of how you might use the `Address` field in your application:\n\n```javascript\nexport class UserProfile extends CardDef {\n  @field address = contains(Address);\n}\n```\n\nIn the template for the `UserProfile` card:\n\n```hbs\n<div class=\"profile-details\">\n  <h2>User Details</h2>\n  <div class=\"address-block\">\n    <h3>Address</h3>\n    <@fields.address />\n  </div>\n</div>\n```\n\nThe `Address` field will automatically compute a formatted full address string based on the individual address components, and display it in the template.",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": null,
+        "thumbnailURL": null
+      },
+      "specType": "field",
+      "description": null,
+      "containedExamples": [
+        {
+          "addressLine1": null,
+          "addressLine2": null,
+          "city": null,
+          "state": null,
+          "postalCode": null,
+          "country": {
+            "name": null,
+            "code": null
+          },
+          "poBoxNumber": null
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
