@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Bucket List Card Definition",
+      "images": [],
+      "summary": "The BucketList component provides an interface for managing a customizable list of items, typically used as a personal or shared bucket list. It displays the list’s name and item count, and allows users to add, edit, or remove items dynamically through an embedded chips-style editor interface. The primary purpose of this component is to facilitate easy creation and modification of a list of goals or milestones in a clear, interactive format.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/ac9fc947-61c2-4e6c-9d5e-025d34cd27b6"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/9fc94761-c2fe-4cdd-9e02-5d34cd27b67c"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/51de249c-516a-4c4d-bd88-76e88274c483"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BucketList/63957fff-4848-46fe-ae46-86e966ead769"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/goals-habits"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
