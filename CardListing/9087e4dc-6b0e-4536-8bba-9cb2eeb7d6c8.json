@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Recipe Card",
+      "images": [],
+      "summary": "The RecipeCard module defines a comprehensive data structure for representing cooking recipes, including fields for recipe name, description, preparation and cooking times, servings, difficulty level, cuisine type, ingredients, instructions, tips, and tags. It offers multiple presentation formats such as embedded, fitted, isolated, badge, strip, tile, and full card views, each with specific styles and layout adaptations for various display sizes. The card integrates visual icons and dynamic computations for total time and difficulty color coding, facilitating rich, adaptable recipe displays in user interfaces.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/df451c49-fa03-406e-a7f5-0d0bd1d1f9b8"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../RecipeCard/chocolate-chip-cookies"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
