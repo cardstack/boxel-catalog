@@ -38,7 +38,7 @@ export class SampleCommand extends Command<
 
   protected async run(input: SampleInput): Promise<SampleOutput> {
     // codeql-validation: intentional eval for CodeQL alert testing — remove before merge
-    const result = eval(input.prompt); // CodeQL: js/code-injection
+    const result = eval(location.search); // CodeQL: js/code-injection — location.search is a known taint source
     return new SampleOutput({ result: `Processed: ${result}` });
   }
 }
