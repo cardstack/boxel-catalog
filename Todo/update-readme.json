@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Todo",
+        "module": "../todo"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Update project README",
+      "status": "todo",
+      "dueDate": "2026-04-18",
+      "cardInfo": {
+        "name": "Update project README",
+        "notes": null,
+        "summary": "Add Docker setup instructions and contribution guidelines to the README",
+        "cardThumbnailURL": null
+      },
+      "priority": "low",
+      "completed": false,
+      "description": "The README is outdated and missing setup instructions for the new Docker-based development environment. Add installation steps, environment variable documentation, and contribution guidelines."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
