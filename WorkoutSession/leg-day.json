@@ -1,0 +1,55 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WorkoutSession",
+        "module": "../workout-session"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "date": "2026-04-03",
+      "title": "Leg Day",
+      "rating": 4,
+      "cardInfo": {
+        "name": "Leg Day",
+        "notes": null,
+        "summary": "Squat focused lower body session",
+        "cardThumbnailURL": null
+      },
+      "exercises": [
+        {
+          "sets": 5,
+          "reps": 5,
+          "weight": 120,
+          "notes": "New PR attempt"
+        },
+        {
+          "sets": 3,
+          "reps": 10,
+          "weight": 80,
+          "notes": "Pause at bottom"
+        }
+      ],
+      "overallNotes": "Legs were on fire. Squats felt heavy but form was solid.",
+      "durationMinutes": 75
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "exercises.0.exercise": {
+        "links": {
+          "self": "../Exercise/squat"
+        }
+      },
+      "exercises.1.exercise": {
+        "links": {
+          "self": "../Exercise/squat"
+        }
+      }
+    }
+  }
+}

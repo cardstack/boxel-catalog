@@ -1,0 +1,55 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WorkoutSession",
+        "module": "../workout-session"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "date": "2026-04-01",
+      "title": "Push Day",
+      "rating": 5,
+      "cardInfo": {
+        "name": "Push Day",
+        "notes": null,
+        "summary": "Chest and triceps session",
+        "cardThumbnailURL": null
+      },
+      "exercises": [
+        {
+          "sets": 4,
+          "reps": 8,
+          "weight": 90,
+          "notes": "Felt strong today"
+        },
+        {
+          "sets": 3,
+          "reps": 12,
+          "weight": 20,
+          "notes": "Superset with tricep dips"
+        }
+      ],
+      "overallNotes": "Great energy today. Increased bench press weight by 5kg.",
+      "durationMinutes": 60
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "exercises.0.exercise": {
+        "links": {
+          "self": "../Exercise/bench-press"
+        }
+      },
+      "exercises.1.exercise": {
+        "links": {
+          "self": "../Exercise/bench-press"
+        }
+      }
+    }
+  }
+}

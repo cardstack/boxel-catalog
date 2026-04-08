@@ -1,0 +1,84 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Workout Listing",
+      "images": [],
+      "summary": "A simple yet easy workout log app",
+      "cardInfo": {
+        "name": "",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/84599e05-ef1d-437f-9c1f-bb019ab8f9ea"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/9e05ef1d-537f-4c1f-bb01-9ab8f9eac8d3"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/05ef1d53-7fdc-4fbb-819a-b8f9eac8d307"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/ca84599e-05ef-4d53-bfdc-1fbb019ab8f9"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/599e05ef-1d53-4fdc-9fbb-019ab8f9eac8"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../WorkoutLog/81914141-a017-4470-9e9a-c14216fbf0e6"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

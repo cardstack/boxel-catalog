@@ -1,0 +1,31 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Exercise",
+        "module": "../exercise"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Back Squat",
+      "notes": "Keep chest up and knees tracking over toes.",
+      "cardInfo": {
+        "name": "Back Squat",
+        "notes": null,
+        "summary": "Compound leg movement with barbell",
+        "cardThumbnailURL": null
+      },
+      "equipment": "Barbell",
+      "muscleGroup": "Legs",
+      "personalRecord": 130
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
