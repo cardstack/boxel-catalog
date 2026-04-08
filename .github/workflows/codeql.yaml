@@ -38,6 +38,14 @@ jobs:
             cat "${f%.gts}.ts"
           done
 
+      - name: Log .ts files available for CodeQL
+        if: matrix.language == 'javascript-typescript'
+        run: |
+          echo "=== All .ts files (excl. node_modules) ==="
+          find . -name "*.ts" -not -path "*/node_modules/*"
+          echo "=== All .gts files (excl. node_modules) ==="
+          find . -name "*.gts" -not -path "*/node_modules/*"
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
