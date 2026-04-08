@@ -28,6 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
 
+      - name: Copy .gts files as .ts for CodeQL
+        if: matrix.language == 'javascript-typescript'
+        run: find . -name "*.gts" -not -path "*/node_modules/*" | while read f; do cp "$f" "${f%.gts}.ts"; done
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
