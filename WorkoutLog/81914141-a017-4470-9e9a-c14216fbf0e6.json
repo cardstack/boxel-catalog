@@ -1,0 +1,57 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WorkoutLog",
+        "module": "../workout-log"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "logName": "Richard's Workout Log",
+      "cardInfo": {
+        "name": "Richard's Workout Log",
+        "notes": null,
+        "summary": "Tracking push, pull and leg sessions",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "sessions.0": {
+        "links": {
+          "self": "../WorkoutSession/push-day"
+        }
+      },
+      "sessions.1": {
+        "links": {
+          "self": "../WorkoutSession/leg-day"
+        }
+      },
+      "sessions.2": {
+        "links": {
+          "self": "../WorkoutSession/pull-day"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "exerciseLibrary.0": {
+        "links": {
+          "self": "../Exercise/bench-press"
+        }
+      },
+      "exerciseLibrary.1": {
+        "links": {
+          "self": "../Exercise/squat"
+        }
+      },
+      "exerciseLibrary.2": {
+        "links": {
+          "self": "../Exercise/pull-up"
+        }
+      }
+    }
+  }
+}
