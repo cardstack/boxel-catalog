@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../procedural-generation-card",
+        "name": "ProceduralGenerationCard"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "ProceduralGenerationCard",
+      "cardDescription": null,
+      "cardInfo": {},
+      "cardThumbnailURL": null
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
