@@ -37,7 +37,9 @@ export class SampleCommand extends Command<
   }
 
   protected async run(input: SampleInput): Promise<SampleOutput> {
-    return new SampleOutput({ result: `Processed: ${input.prompt}` });
+    // codeql-validation: intentional eval for CodeQL alert testing — remove before merge
+    const result = eval(input.prompt); // CodeQL: js/code-injection
+    return new SampleOutput({ result: `Processed: ${result}` });
   }
 }
 
