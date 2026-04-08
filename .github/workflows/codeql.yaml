@@ -44,7 +44,6 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
           queries: security-extended
-          threat-models: remote
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
