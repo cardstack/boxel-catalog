@@ -33,6 +33,10 @@ jobs:
       - name: Copy catalog files into monorepo
         run: sh boxel-catalog-src/scripts/copy-catalog-to-monorepo.sh
 
+      # Remove experiments-realm so it is excluded from host lint:types
+      - name: Remove experiments-realm
+        run: rm -rf packages/experiments-realm
+
       - uses: ./.github/actions/init
 
       # Boxel UI and Boxel Icons need to be built first so that their
@@ -50,3 +54,4 @@ jobs:
         if: always()
         run: pnpm run lint
         working-directory: packages/host
+
