@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Blackjack Game Definition",
+      "images": [],
+      "summary": "The BlackjackGame class defines a comprehensive blackjack card game module, including game state management, player and dealer hands, betting, and game logic. It handles deck creation, shuffling, card drawing, score calculation, blackjack and bust detection, dealer play, and outcome determination. The component manages user interactions such as placing bets, dealing, hitting, standing, doubling down, and starting new games. It also maintains persistent game state and statistics. The embedded template provides a user interface with styled game area, card displays, controls, and game information, supporting interactive gameplay in a web environment.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/9cc995f7-dd27-4ac6-a984-3d1845c5f698"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../blackjack-game-46dda33e-622c-485f-b512-a05db93340c3/BlackjackGame/36670932-79ad-489d-9b00-cfeb38e9ae20"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
