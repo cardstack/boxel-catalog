@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ThemeListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Event",
+      "images": [],
+      "summary": "The Event card definition provides a comprehensive model for representing events within the Cardstack platform. Its primary purpose is to encapsulate all necessary event details—such as event name, description, timing, location, category, and attendance—alongside visual and interaction components suited for various presentation formats. It supports multiple display modes including embedded, isolated, fitted, and card layouts, enabling flexible integration into different UI contexts. The model also facilitates attendee management, status tracking, and dynamic rendering of event information, making it a versatile component for event planning, registration, and presentation within digital applications.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
