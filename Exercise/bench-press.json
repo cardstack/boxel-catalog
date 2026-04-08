@@ -1,0 +1,31 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Exercise",
+        "module": "../exercise"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Bench Press",
+      "notes": "Keep back flat on bench. Control the descent.",
+      "cardInfo": {
+        "name": "Bench Press",
+        "notes": null,
+        "summary": "Classic chest exercise with barbell",
+        "cardThumbnailURL": null
+      },
+      "equipment": "Barbell",
+      "muscleGroup": "Chest",
+      "personalRecord": 100
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

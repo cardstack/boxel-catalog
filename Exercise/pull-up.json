@@ -1,0 +1,31 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Exercise",
+        "module": "../exercise"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Pull-Up",
+      "notes": "Full range of motion. Dead hang to chin over bar.",
+      "cardInfo": {
+        "name": "Pull-Up",
+        "notes": null,
+        "summary": "Bodyweight back and bicep exercise",
+        "cardThumbnailURL": null
+      },
+      "equipment": "Pull-up Bar",
+      "muscleGroup": "Back",
+      "personalRecord": 0
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
