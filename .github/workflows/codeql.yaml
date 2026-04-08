@@ -28,15 +28,41 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
 
+      - name: Copy .gts files as .ts for CodeQL
+        if: matrix.language == 'javascript-typescript'
+        run: |
+          find . -name "*.gts" -not -path "*/node_modules/*" | while read f; do
+            cp "$f" "${f%.gts}.ts"
+            perl -i -0777 -pe 's/<template>.*?<\/template>//gs' "${f%.gts}.ts"
+            perl -i -pe "s/^import\s+.*?\s+from\s+'https?:\/\/[^']*';?\s*\n?//g" "${f%.gts}.ts"
+            echo "=== Stripped: ${f%.gts}.ts ==="
+            cat "${f%.gts}.ts"
+          done
+
+      - name: Log .ts files available for CodeQL
+        if: matrix.language == 'javascript-typescript'
+        run: |
+          echo "=== All .ts files (excl. node_modules) ==="
+          find . -name "*.ts" -not -path "*/node_modules/*"
+          echo "=== All .gts files (excl. node_modules) ==="
+          find . -name "*.gts" -not -path "*/node_modules/*"
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
           queries: security-extended
-          threat-models: remote
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
           category: /language:${{ matrix.language }}
+          output: ${{ runner.temp }}/results
+
+      - name: Upload SARIF for inspection
+        if: matrix.language == 'javascript-typescript'
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-sarif
+          path: ${{ runner.temp }}/results
