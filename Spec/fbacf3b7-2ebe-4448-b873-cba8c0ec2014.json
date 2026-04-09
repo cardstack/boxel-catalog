@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "TestField",
+        "module": "../polymorphic-field-example"
+      },
+      "readMe": "## Usage as a Field\n\nThe `TestField` spec can be used as a field within a consuming card or field. Here's an example:\n\n```json\n{\n  \"data\": {\n    \"type\": \"card\",\n    \"attributes\": {\n      \"firstName\": \"John\"\n    },\n    \"relationships\": {\n      \"specialField\": {\n        \"links\": {\n          \"self\": \"./TestField\"\n        }\n      }\n    },\n    \"meta\": {\n      \"adoptsFrom\": {\n        \"module\": \"https://realms-staging.stack.cards/chuan16/prospective-scallop/polymorphic-field-example\",\n        \"name\": \"TestField\"\n      }\n    }\n  }\n}\n```\n\nIn this example, the `specialField` is using the `TestField` spec.\n\n## Template Usage\n\nTo use the `TestField` spec in a template, you can access its fields like this:\n\n```hbs\n<@fields.specialField @format=\"fitted\" />\n```\n\nThis will render the `fitted` format of the `TestField` spec.\n\n## Summary\n\nThe `TestField` spec is a field definition that can be used within a consuming card or field. It has a `firstName` field of type `StringField`. The spec provides `fitted` and `embedded` formats for rendering the field.\n\n## Import\n\n```gts\nimport { TestField } from 'https://realms-staging.stack.cards/chuan16/prospective-scallop/polymorphic-field-example';\n```",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "TestField",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
