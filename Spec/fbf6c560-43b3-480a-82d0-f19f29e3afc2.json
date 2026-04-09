@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Digimon",
+        "module": "../digimon"
+      },
+      "readMe": "## Summary\n\nThe `Digimon` spec is a card definition that represents a card type for Digimon in the Boxel application.\n\n## Import\n\n```gts\nimport { CardDef } from 'https://cardstack.com/base/card-api';\n```\n\n## Usage as a Field\n\nTo use the `Digimon` spec as a field within a consuming card or field, you can define the field like this:\n\n```gts\n@field digimon = linksTo(Digimon);\n```\n\nThis will create a field that links to a `Digimon` card instance.\n\n## Template Usage\n\nTo display a `Digimon` card within a template, you can use the following code:\n\n```hbs\n<@fields.digimon @format=\"embedded\" />\n```\n\nThis will render the `Digimon` card in the `embedded` format.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "digimon",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
