@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Deck 2",
+      "images": [],
+      "summary": "A component representing a deck of cards with shuffling, drawing, and card management capabilities. It displays the deck name, card count, and unique card types, allowing users to shuffle the deck, draw the top card, and put it back. The UI shows the current state of the deck, the top drawn card (if any), and provides interactive controls for managing the deck. Intended to facilitate gameplay or card arrangement activities within a wider application.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/edd2b602-43ee-42dd-8c4e-743c69421492"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/education-courses"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/software-development"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
