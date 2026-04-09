@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Specification Card Definition and Components Metadata",
+      "images": [],
+      "summary": "The Spec defines the structure and components of a specification card within the Cardstack platform. It includes fields for documentation (readMe), references to code modules, and categorization (type: card, field, component, app). The Spec provides components for displaying and editing its metadata—such as titles, descriptions, and module information—along with sections for linked and contained examples. It also offers functionality to generate sample data and readme content through commands, support for previews, and visual tagging of spec types. The primary purpose is to enable detailed, editable specifications for cards, including metadata, examples, and module info, facilitating creation, display, and management of card definitions within the platform.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/ed5a1a3f-0dbf-47b5-b2a6-d88b0d2a7642"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/e02e74b2-dd89-4f9b-b8e2-33593efa3670"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/product-catalogs"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Spec/e02e74b2-dd89-4f9b-b8e2-33593efa3670"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
