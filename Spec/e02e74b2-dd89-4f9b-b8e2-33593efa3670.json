@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Pet",
+        "module": "../pet"
+      },
+      "readMe": "**Summary**\nThe `Pet` spec is a card definition that represents a pet. It has a static `displayName` property set to \"pet\".\n\n**Import**\n```gts\nimport { CardDef } from 'https://cardstack.com/base/card-api';\n```\n\n**Usage as a Field**\nTo use the `Pet` spec as a field within a consuming card or field, you can define a field that links to the `Pet` card:\n\n```gts\n@field myPet = linksTo(Pet);\n```\n\n**Template Usage**\nWithin a template, you can display the `Pet` card by delegating to its field template:\n\n```hbs\n<@fields.myPet @format=\"embedded\" />\n```\n\nThis will render the `Pet` card in its `embedded` format.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "pet",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
