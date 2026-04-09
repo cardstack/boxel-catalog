@@ -1,0 +1,42 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "title": "Jane Doe - VP of Engineering",
+        "description": "Business card for Jane Doe",
+        "thumbnailURL": null
+      },
+      "fullName": "Jane Doe",
+      "jobTitle": "VP of Engineering",
+      "company": "Acme Technologies",
+      "department": "Engineering",
+      "email": "jane.doe@acmetech.com",
+      "phone": "+1 (555) 123-4567",
+      "mobile": "+1 (555) 987-6543",
+      "website": "https://acmetech.com",
+      "address": {
+        "street": "123 Innovation Drive",
+        "city": "San Francisco",
+        "state": "CA",
+        "postalCode": "94105",
+        "country": "United States"
+      },
+      "logoUrl": null,
+      "photoUrl": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../business-card",
+        "name": "BusinessCard"
+      }
+    }
+  }
+}
