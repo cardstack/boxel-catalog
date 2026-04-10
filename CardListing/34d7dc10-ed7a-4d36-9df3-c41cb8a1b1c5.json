@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Todo",
+      "images": [],
+      "summary": "The Todo component provides a structured representation of tasks for task management applications. It encapsulates attributes such as title, description, status, priority, due date, and completion status, enabling users to create, view, and manage individual to-do items. The component supports multiple display styles—including isolated, embedded, fitted, badge, strip, tile, and card formats—allowing flexible presentation of tasks across various interface contexts. It visually indicates task status and priority through labeled badges with distinct styles, and features an optional due date display. The primary purpose is to facilitate comprehensive and adaptable task tracking within a card-based interface, promoting effective organization and prioritization.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/c41b4e4c-f364-4677-a461-80f0c2bb105f"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Todo/77254bcc-c678-4649-845f-189496460355"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
