@@ -1,0 +1,79 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Calendar Card with Embedded, Fitted, and Isolated Views",
+      "images": [],
+      "summary": "The CalendarCard defines a versatile calendar component for displaying date-based information and events. It supports multiple views (month, week, day) and allows for interaction such as navigating between periods and managing events. The card query fetches associated CalendarEvent items linked to the calendar, enabling dynamic event display across different formats. Embedded and fitted variations provide preconfigured, compact representations suitable for dashboards or snippets, featuring recent or upcoming events preview. The design includes detailed styling and templating to visualize calendar dates, events, and scheduling details, facilitating use cases like event planning, appointment tracking, and schedule management within a customizable interface.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "http://localhost:4201/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/233a92de-c7dd-45ef-9379-9fcbc4aedff2"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/3a92dec7-ddb5-4fd3-b99f-cbc4aedff282"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/38b5d1dc-00d3-4a19-8998-29f0c19081de"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/web-development"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../study-hub-4d8746e6-8dd6-452d-8001-6b574ea1de18/calendar/CalendarCard/2c3c78cd-fa4f-4988-b098-c8d099557fba"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
