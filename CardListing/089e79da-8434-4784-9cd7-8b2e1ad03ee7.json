@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Boom Person",
+      "images": [],
+      "summary": "The BoomPerson card definition represents a \"Person\" entity with a first name field. Its primary purpose is to serve as a data structure for person-related information within the system. It also includes an isolated component that displays a greeting with the person's first name. This definition is used for creating and managing person records in the card-based data framework.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/51de249c-516a-4c4d-bd88-76e88274c483"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/11bad32e-304b-440a-9b77-51ab49a5c79d"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/hardware-iot"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BoomPerson/0c913960-4621-4ae7-a557-28dd19dc343f"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
