@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Brazilian Plant Card",
+      "images": [],
+      "summary": "The BrazilianPlantCard defines a structured schema for representing information about Brazilian plants, including common and scientific names, descriptive details, habitat, conservation status, uses, images, and growth conditions. It serves as a standardized data model for cataloging plant characteristics and related information in a card-based format.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/48dbd34f-c7fb-49a9-b02f-07c0904941ce"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/f21d95da-0728-46a8-8622-6c157716c26c"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BrazilianPlantCard/8f3ddb4d-5afe-44b7-a726-c1a6e311a27e"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/science-discovery"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

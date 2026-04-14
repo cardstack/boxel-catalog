@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BrazilianPlantCard",
+        "module": "../brazilianPlants"
+      },
+      "readMe": "# BrazilianPlantCard\n\n## Summary\nThe `BrazilianPlantCard` is a card definition that represents information about a Brazilian plant. It contains fields for the common name, scientific name, description, habitat, conservation status, uses, images, and growth conditions of the plant.\n\n## Import\n```gts\nimport { BrazilianPlantCard } from 'https://realms-staging.stack.cards/experiments/brazilianPlants';\n```\n\n## Usage as a Field\nYou can use the `BrazilianPlantCard` as a field within a consuming card or field definition:\n\n```gts\n@field brazilianPlant = linksTo(BrazilianPlantCard);\n```\n\n## Template Usage\nTo use the `BrazilianPlantCard` within a template, you can delegate to its fields:\n\n```hbs\n<article>\n  <h2><@fields.commonName /></h2>\n  <p><@fields.scientificName /></p>\n  <@fields.description />\n  <section>\n    <h3>Habitat</h3>\n    <p><@fields.habitat /></p>\n  </section>\n  <section>\n    <h3>Conservation Status</h3>\n    <p><@fields.conservationStatus /></p>\n  </section>\n  <section>\n    <h3>Uses</h3>\n    <@fields.uses />\n  </section>\n  <section>\n    <h3>Growth Conditions</h3>\n    <@fields.growthConditions />\n  </section>\n  <section>\n    <h3>Images</h3>\n    <@fields.images @format=\"embedded\" />\n  </section>\n</article>\n```",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "BrazilianPlantCard",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
