@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Event",
+        "module": "../event"
+      },
+      "readMe": "# Event Card\n\n## Summary\n\nThe `Event` card represents an event with various details such as the subject, location, start and end times, assigned person, and description. It provides templates for different display formats (embedded, atom, edit, isolated) and includes custom logic for computing the card title.\n\n## Import\n\n```js\nimport { Event } from 'https://realms-staging.stack.cards/experiments/event';\n```\n\n## Usage as a Field\n\n```json\n{\n  \"data\": {\n    \"type\": \"card\",\n    \"attributes\": {\n      \"subject\": \"Team Meeting\",\n      \"location\": \"Conference Room A\",\n      \"startDateTime\": \"2023-04-15T10:00:00Z\",\n      \"endDateTime\": \"2023-04-15T11:00:00Z\",\n      \"eventType\": \"Meeting\",\n      \"cardDescription\": \"Discuss quarterly goals and initiatives.\"\n    },\n    \"relationships\": {\n      \"assignee\": {\n        \"links\": {\n          \"self\": \"../Person/john-doe\"\n        }\n      }\n    },\n    \"meta\": {\n      \"adoptsFrom\": {\n        \"module\": \"https://realms-staging.stack.cards/experiments/event\",\n        \"name\": \"Event\"\n      }\n    }\n  }\n}\n```\n\n## Template Usage\n\n```hbs\n<@fields.event @format=\"embedded\" />\n```",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Event form",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
