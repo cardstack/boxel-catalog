@@ -37,9 +37,9 @@ import {
   verifyFileInFileTree,
   verifyJSONWithUUIDInFolder,
   setupRealmServerEndpoints,
-} from '../helpers';
-import { setupMockMatrix } from '../helpers/mock-matrix';
-import { setupApplicationTest } from '../helpers/setup';
+} from '../tests/helpers';
+import { setupMockMatrix } from '../tests/helpers/mock-matrix';
+import { setupApplicationTest } from '../tests/helpers/setup';
 
 import type { CardListing } from '@cardstack/catalog/listing/listing';
 

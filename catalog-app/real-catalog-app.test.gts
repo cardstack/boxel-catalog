@@ -9,8 +9,8 @@ import { ensureTrailingSlash } from '@cardstack/runtime-common';
 import ENV from '@cardstack/host/config/environment';
 import HostModeService from '@cardstack/host/services/host-mode-service';
 
-import { setupLocalIndexing } from '../helpers';
-import { setupApplicationTest } from '../helpers/setup';
+import { setupLocalIndexing } from '../tests/helpers';
+import { setupApplicationTest } from '../tests/helpers/setup';
 
 const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
 const CATALOG_READINESS_URL = `${catalogRealmURL}_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson`;
