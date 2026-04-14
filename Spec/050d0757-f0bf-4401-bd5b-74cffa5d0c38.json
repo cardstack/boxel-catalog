@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BilingualBlog",
+        "module": "../bilingual-blog"
+      },
+      "title": "BilingualBlog",
+      "readMe": "# BilingualBlog\n\nThe BilingualBlog card definition extends the base BlogPost card, adding a `translation` field that contains the blog post content translated to French.\n\n## Import\n\nTo import the BilingualBlog code, use the following:\n\n```js\nimport { BilingualBlog } from 'https://realms-staging.stack.cards/experiments/bilingual-blog/bilingual-blog';\n```\n\n## Define Field\n\nThe `translation` field is defined as a `contains(StringField)` field, which means it is an embedded field within the BilingualBlog card.\n\n```js\n@field translation = contains(StringField, {\n  description: 'A full translation of the blog post body in French'\n});\n```\n\n## Invoke Template\n\nIn templates, you can access the `translation` field using the fields API:\n\n```hbs\n<div class=\"translation\">\n  <@fields.translation />\n</div>\n```\n\n## Dependencies\n\nThe BilingualBlog card definition depends on the following:\n\n- `BlogPost` card definition\n- `StringField` from the Boxel base API\n- `Langugages` icon from the Boxel icon set\n\n## Usage and Examples\n\nThe BilingualBlog card can be used anywhere a BlogPost card would be used, but with the added benefit of having a French translation of the post body available.\n\nHere's an example of how you might use the BilingualBlog card:\n\n```json\n{\n  \"data\": {\n    \"type\": \"card\",\n    \"attributes\": {\n      \"title\": \"Bienvenue sur notre blog!\",\n      \"body\": \"Ceci est le contenu de notre premier article de blog bilingue.\",\n      \"translation\": \"Welcome to our blog!\\nThis is the content of our first bilingual blog post.\"\n    },\n    \"meta\": {\n      \"adoptsFrom\": {\n        \"module\": \"./bilingual-blog\",\n        \"name\": \"BilingualBlog\"\n      }\n    }\n  }\n}\n```\n\nIn this example, the `BilingualBlog` card is used to display a blog post with both the original French content and the English translation.",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": null,
+        "thumbnailURL": null
+      },
+      "specType": "card",
+      "description": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
