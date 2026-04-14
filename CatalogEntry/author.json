@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "what is this going on",
+      "ref": {
+        "name": "Author",
+        "module": "../author"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "title": "Author",
+      "description": "Spec for Author",
+      "thumbnailURL": null
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

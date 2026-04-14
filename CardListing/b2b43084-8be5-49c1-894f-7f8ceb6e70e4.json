@@ -1,0 +1,134 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "BilingualBlog",
+      "images": [],
+      "summary": "The BilingualBlog is a specialized blog post card that extends the standard BlogPost to support content in two languages. It adds a translation field designed to hold a complete French translation of the blog post body. Its primary purpose is to facilitate bilingual content presentation within a card-driven content system.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/050d0757-f0bf-4401-bd5b-74cffa5d0c38"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/98a7b9f4-86d5-448c-a77c-99c7dfc6cd88"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../CatalogEntry/author"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../CatalogEntry/blog"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/d5b48c27-7c99-47df-86cd-88dfec16b031"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/86d5b48c-277c-49c7-9fc6-cd88dfec16b0"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../CatalogEntry/blog-post"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/b48c277c-99c7-4fc6-8d88-dfec16b03120"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/16b03120-8ae6-4b78-9a10-0314e0050563"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/ec16b031-208a-46eb-b81a-100314e00505"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/dfec16b0-3120-4ae6-ab78-1a100314e005"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../CatalogEntry/fields/contact-link-field"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../CatalogEntry/fields/featured-image-field"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/99c7dfc6-cd88-4fec-96b0-31208ae6eb78"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/content-creation"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BilingualBlog/85de4d7a-e9d8-459d-80a7-d9f0508c9ea1"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
