@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BoomPerson",
+        "module": "../boom-pet"
+      },
+      "readMe": "# BoomPerson Card Spec\n\n## Summary\n\nThe `BoomPerson` card spec defines a card that represents a person, with a `firstName` field. It also contains a `BoomField` which is designed to explode when serialized.\n\n## Import\n\n```javascript\nimport { BoomPerson } from 'https://realms-staging.stack.cards/experiments/boom-pet';\n```\n\n## Usage as a Field\n\nTo use the `BoomPerson` card as a field within a consuming card or field, you can add it as a `contains` field:\n\n```javascript\nimport {\n  contains,\n  field,\n  CardDef,\n  FieldDef,\n  StringField,\n} from 'https://cardstack.com/base/card-api';\n\nexport class ConsumingCard extends CardDef {\n  @field boomPerson = contains(BoomPerson);\n}\n```\n\n## Template Usage\n\nTo display a `BoomPerson` card within a template, you can use the `@fields.firstName` helper:\n\n```html\n<template>\n  <h3>Boom Person</h3>\n  <@fields.boomPerson as |person|>\n    <p>Hello, {{person.firstName}}!</p>\n  </@fields.boomPerson>\n</template>\n```",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Boom Person",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
