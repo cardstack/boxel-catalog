@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Recipe Card",
+      "images": [],
+      "summary": "The RecipeCard module defines a comprehensive data structure for representing cooking recipes. It includes fields for core recipe details such as name, description, preparation and cooking times, servings, difficulty level, cuisine type, ingredients, instructions, tips, and tags. The component supports multiple display formats—including embedded, fitted, isolated, badge, strip, tile, and full card views—each optimized for different screen sizes and presentation contexts. It offers computed properties to calculate total preparation time and dynamically adapt presentation styles, especially for mobile or constrained layouts. The card integrates iconography and styling to visually communicate key recipe attributes like difficulty, time, and servings. Overall, the RecipeCard provides a versatile, visually-rich template for capturing and displaying detailed recipe information across various UI formats.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/df451c49-fa03-406e-a7f5-0d0bd1d1f9b8"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../RecipeCard/chocolate-chip-cookies"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
