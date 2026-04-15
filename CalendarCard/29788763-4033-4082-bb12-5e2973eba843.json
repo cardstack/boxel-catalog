@@ -1,0 +1,36 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CalendarCard",
+        "module": "../study-hub-4d8746e6-8dd6-452d-8001-6b574ea1de18/calendar/calendar"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "year": 2026,
+      "month": 4,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "viewMode": "day",
+      "calendarName": null,
+      "selectedDate": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
