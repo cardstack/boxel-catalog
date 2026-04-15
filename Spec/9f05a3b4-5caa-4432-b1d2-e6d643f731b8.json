@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CalendarCard",
+        "module": "http://localhost:4201/richardtan/richy-workspace/study-hub-4d8746e6-8dd6-452d-8001-6b574ea1de18/calendar/calendar"
+      },
+      "readMe": "Here is the README documentation for the CalendarCard spec:\n\n## Summary\nThe CalendarCard is a card definition that represents a calendar view. It allows users to view and manage events for a particular calendar.\n\n## Import\n```javascript\nimport { CalendarCard } from 'http://localhost:4201/richardtan/richy-workspace/study-hub-4d8746e6-8dd6-452d-8001-6b574ea1de18/calendar/calendar';\n```\n\n## Usage as a Field\nTo use the CalendarCard as a field within a consuming card or field, you can do the following:\n\n```typescript\n@field calendar = linksTo(CalendarCard);\n```\n\nThis will allow you to associate a CalendarCard with the consuming entity.\n\n## Template Usage\nTo use the CalendarCard within a template, you can do the following:\n\n```hbs\n<@fields.calendar @format=\"embedded\" />\n```\n\nThis will render the CalendarCard in its embedded format within the consuming template.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Calendar",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
