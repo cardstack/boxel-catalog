@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Simple Drawing Card",
+      "images": [],
+      "summary": "The SimpleDrawing component provides an interactive drawing interface within a card, enabling users to create digital sketches using a customizable brush. It includes features for selecting colors, adjusting brush sizes, erasing, undoing strokes, and exporting the drawing as a PNG image. The component manages drawing state, serializes drawing data, and dynamically updates the artwork's title and visibility settings. Designed for embedded or standalone display, it offers an intuitive canvas with controls for editing, viewing, and exporting user-created artwork.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/140feda8-625b-4a24-9ddb-6f4da891aef2"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/4d0f9ae2-048e-4ce0-b263-7006602ce6a4"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/c555251a-667e-43cc-99bb-77b7f1da27c2"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/software-development"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/web-development"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../SimpleDrawing/7e01c8a3-4142-473c-9631-5ffb7049d4c3"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
