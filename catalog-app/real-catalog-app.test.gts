@@ -3,7 +3,7 @@ import Service from '@ember/service';
 import { visit, waitFor, waitUntil } from '@ember/test-helpers';
 
 import { getService } from '@universal-ember/test-support';
-import { module, skip } from 'qunit';
+import { module, test } from 'qunit';
 
 import { ensureTrailingSlash } from '@cardstack/runtime-common';
 
@@ -36,9 +36,7 @@ export function runTests() {
       getOwner(this)!.register('service:host-mode-service', StubHostModeService);
     });
 
-    // CS-9919 - Skipping this test for now as the catalog realm is now setup only in
-    // part for speed in host tests.
-    skip('visiting /catalog/ renders the catalog index card', async function (assert) {
+    test('visiting /catalog/ renders the catalog index card', async function (assert) {
       let realmServer = getService('realm-server');
       await realmServer.ready;
       await ensureCatalogRealmReady();
