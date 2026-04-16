@@ -1,4 +1,5 @@
 import { getOwner } from '@ember/owner';
+import Service from '@ember/service';
 import { visit, waitFor, waitUntil } from '@ember/test-helpers';
 
 import { getService } from '@universal-ember/test-support';
@@ -7,7 +8,6 @@ import { module, skip } from 'qunit';
 import { ensureTrailingSlash } from '@cardstack/runtime-common';
 
 import ENV from '@cardstack/host/config/environment';
-import HostModeService from '@cardstack/host/services/host-mode-service';
 
 import { setupLocalIndexing } from '@cardstack/host/tests/helpers';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -15,12 +15,12 @@ import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
 const CATALOG_READINESS_URL = `${catalogRealmURL}_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson`;
 
-class StubHostModeService extends HostModeService {
-  override get isActive() {
+class StubHostModeService extends Service {
+  get isActive() {
     return true;
   }
 
-  override get hostModeOrigin() {
+  get hostModeOrigin() {
     return 'http://localhost:4201';
   }
 }
