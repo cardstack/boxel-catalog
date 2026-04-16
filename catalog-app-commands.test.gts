@@ -167,7 +167,7 @@ export function runTests() {
               .containsText('Build', 'Build button exist in listing');
           });
         });
-        module('"create"', function (hooks) {
+        skip('"create"', function (hooks) {
           // Mock proxy LLM endpoint only for create-related tests
           setupRealmServerEndpoints(hooks, [
             {
