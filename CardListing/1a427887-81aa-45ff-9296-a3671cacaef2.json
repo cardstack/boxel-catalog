@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Document Annotation Title",
+      "images": [],
+      "summary": "A comprehensive annotation card definition for PDFs, enabling users to view, create, and manage annotations such as highlights, notes, drawings, and comments on individual document pages. The primary purpose is to facilitate rich, interactive PDF annotation within a card-based interface, supporting functionalities like page navigation, zooming, drawing with variable colors and thickness, and annotation data export. It integrates with PDF.js for rendering pages and text layers, allowing precise text highlighting and annotation overlay. The component provides tools for drawing annotations directly on PDFs, managing annotation states, and displaying associated notes. It is designed for both embedded and isolated (standalone) contexts, with styles optimized for a professional, modern UI, including toolbar controls, annotation overlays, and notes panel, thus enabling dynamic, user-friendly PDF annotation workflows.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/1a32aa1a-433a-4cdc-8f9f-404b1965136e"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../AnnotationCard/35572061-1354-450a-8dd7-2a7ef3e2342d"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../annotation-2f9c8aa5-a258-4390-839d-fc965f5e915e/annotation/AnnotationCard/dsa-textbook-annotations"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/content-creation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

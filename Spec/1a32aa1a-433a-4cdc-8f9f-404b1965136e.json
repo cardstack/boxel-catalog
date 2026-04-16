@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AnnotationCard",
+        "module": "../annotation-2f9c8aa5-a258-4390-839d-fc965f5e915e/annotation/annotation"
+      },
+      "readMe": "Sure, here's the usage documentation for the AnnotationCard spec:\n\n## Summary\nThe AnnotationCard spec is a card component that allows users to annotate PDF documents with various types of annotations such as highlights, notes, drawings, and comments. It provides a rich set of features for interacting with the PDF, managing annotations, and customizing the appearance of the card.\n\n## Import\n```javascript\nimport { AnnotationCard } from 'https://realms-staging.stack.cards/chuan16/catalog-listing-test-11/annotation-2f9c8aa5-a258-4390-839d-fc965f5e915e/annotation/annotation';\n```\n\n## Usage as a Field\nTo use the AnnotationCard as a field within a consuming card or field, you can define it as follows:\n\n```javascript\n@field annotationCard = contains(AnnotationCard);\n```\n\nThis will add an AnnotationCard field to your card or field definition, which can be used to display and interact with the PDF annotation features.\n\n## Template Usage\nWithin your consuming card or field template, you can use the AnnotationCard like this:\n\n```handlebars\n<AnnotationCard @model={{this.annotationCard}} />\n```\n\nThe `@model` argument should be bound to the `annotationCard` field defined in your card or field.\n\nThe AnnotationCard spec provides a rich set of features and customization options, including:\n\n- Annotation types (highlights, notes, drawings, comments)\n- Annotation management (create, update, delete)\n- PDF viewer with zoom, pan, and page navigation\n- Toolbar for selecting annotation tools and settings\n- Sidebar for viewing and managing annotations\n- Exporting and clearing annotations\n- Error handling and retry functionality\n\nRefer to the Boxel Development Guide for more information on how to use and configure the AnnotationCard spec.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Document Annotation",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "documentUrl": null,
+      "documentTitle": null,
+      "annotations": [],
+      "pageNumber": null,
+      "position": null,
+      "annotationType": null,
+      "color": null,
+      "createdAt": null,
+      "annotationData": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../annotation-2f9c8aa5-a258-4390-839d-fc965f5e915e/annotation/annotation",
+        "name": "AnnotationCard"
+      }
+    }
+  }
+}
