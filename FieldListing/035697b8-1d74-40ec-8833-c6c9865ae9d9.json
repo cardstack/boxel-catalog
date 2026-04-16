@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Address字段定义及显示组件",
+      "images": [],
+      "summary": "The Address definition provides a structured representation of mailing addresses, encapsulating common address components such as address lines, city, state, postal code, country, and PO box number. It enables the display of addresses both as a summarized label and as detailed address rows. The primary purpose is to standardize and facilitate the display, storage, and manipulation of address data within applications, offering components for visual presentation with icons and embedded detailed views.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/ed5a1a3f-0dbf-47b5-b2a6-d88b0d2a7642"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/6ee7a758-9291-4e72-92dc-e0a5ab2676a8"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/home-living"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
