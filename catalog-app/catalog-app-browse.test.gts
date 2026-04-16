@@ -22,7 +22,6 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
-  setCatalogRealmURL,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -79,7 +78,6 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
     });
     setupUserSubscription();
     setupAuthEndpoints();
-    setCatalogRealmURL(mockCatalogURL);
     // this setup test realm is pretending to be a mock catalog
     await setupAcceptanceTestRealm({
       realmURL: mockCatalogURL,

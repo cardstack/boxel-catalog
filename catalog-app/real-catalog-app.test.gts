@@ -12,7 +12,9 @@ import ENV from '@cardstack/host/config/environment';
 import { setupLocalIndexing } from '@cardstack/host/tests/helpers';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
-const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
+const catalogRealmURL = ensureTrailingSlash(
+  ENV.resolvedCatalogRealmURL ?? 'http://localhost:4201/catalog/',
+);
 const CATALOG_READINESS_URL = `${catalogRealmURL}_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson`;
 
 class StubHostModeService extends Service {
