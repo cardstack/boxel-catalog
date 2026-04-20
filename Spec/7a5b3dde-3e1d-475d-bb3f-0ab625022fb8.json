@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BucketList",
+        "module": "../bucket-list"
+      },
+      "readMe": "# BucketList Card\n\n## Summary\nThe `BucketList` card is a custom Boxel card that allows users to create and manage a list of items, similar to a bucket list. It includes a header with the list name and the number of items, as well as a reusable `ChipsEditor` component that enables users to add, edit, and remove items in the list.\n\n## Import\n```javascript\nimport { BucketList } from '../bucket-list';\n```\n\n## Usage as a Field\nTo use the `BucketList` card as a field within a consuming card or field, you can include it in the `fields` section of your card definition:\n\n```javascript\nimport { CardDef, field, contains } from '@cardstack/core';\nimport { BucketList } from '../bucket-list';\n\nclass MyCard extends CardDef {\n  @field('bucket-list') bucketList = contains(BucketList);\n}\n```\n\nIn this example, the `BucketList` card is included as a field named `bucket-list` within the `MyCard` definition.\n\n## Template Usage\nTo display the `BucketList` card within a consuming card or field, you can use the following template syntax:\n\n```html\n<@fields.bucket-list />\n```\n\nThis will render the `BucketList` card and its associated `ChipsEditor` component.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Card",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
