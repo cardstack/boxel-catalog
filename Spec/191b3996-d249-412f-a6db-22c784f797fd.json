@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "X",
+        "module": "../x"
+      },
+      "readMe": "# Card Spec Usage\n\n## Summary\nThis spec defines a card with the code ref `(name:X, module:../x)`. It can be used to display a card with a title and other fields.\n\n## Import\n```gts\nimport { X } from '../x';\n```\n\n## Usage as a Field\nTo use the `X` card as a field within a consuming card or field, you can link to it using the `linksTo` field type:\n\n```gts\n@field myCardField = linksTo(X);\n```\n\nThis will allow you to display the `X` card wherever the `myCardField` is used.\n\n## Template Usage\nTo display the `X` card within a template, you can use the `@fields.myCardField` syntax:\n\n```hbs\n<@fields.myCardField @format=\"embedded\" />\n```\n\nThis will render the `X` card in its `embedded` format, which is suitable for inclusion within other cards.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "x",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
