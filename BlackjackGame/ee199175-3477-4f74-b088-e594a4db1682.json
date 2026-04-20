@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "playerName": "im the captain now",
+      "playerChips": null,
+      "currentBet": null,
+      "gameState": null,
+      "gameMessage": null,
+      "statistics": {
+        "wins": 3,
+        "losses": null,
+        "earnings": null
+      },
+      "playerScore": null,
+      "dealerScore": null,
+      "dealerHand": [],
+      "playerHand": [],
+      "casinoName": "look at me",
+      "cardTitle": null,
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blackjack-game",
+        "name": "BlackjackGame"
+      }
+    }
+  }
+}

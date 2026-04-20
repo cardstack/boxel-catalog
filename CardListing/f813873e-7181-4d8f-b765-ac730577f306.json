@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Blackjack Game",
+      "images": [],
+      "summary": "The BlackjackGame definition constructs a comprehensive interactive blackjack game interface, enabling users to place bets, deal, hit, stand, double down, and start new games. It manages game states, player and dealer hands, card drawing, scoring, and game outcomes. The component visually presents dealer and player cards, current scores, game messages, and betting controls within a styled gaming table. It tracks player chips, game statistics, and maintains persistent game state through model synchronization. The component provides an engaging, self-contained blackjack experience with dynamic game flow, score calculation, and game outcome handling. It also includes an editable configuration interface for casino and player details, as well as game statistics.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/fa9b04de-4a00-4d25-a7c8-f0a6420834a0"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/game"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BlackjackGame/ee199175-3477-4f74-b088-e594a4db1682"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/gaming"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

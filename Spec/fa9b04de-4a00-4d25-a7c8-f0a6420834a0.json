@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BlackjackGame",
+        "module": "../blackjack-game"
+      },
+      "readMe": "## Usage Documentation for BlackjackGame Spec\n\n### Summary\nThe `BlackjackGame` spec is a card definition that provides a fully functional Blackjack game. It includes game state management, card dealing and calculation, and a comprehensive user interface with betting controls, player and dealer hands, and game outcome displays.\n\n### Import\n```javascript\nimport { BlackjackGame } from './blackjack-game';\n```\n\n### Usage as a Field\nTo use the `BlackjackGame` spec as a field within a consuming card or field, you can simply add it as a field:\n\n```javascript\n@field blackjackGame = contains(BlackjackGame);\n```\n\nThis will add the Blackjack game as a field to your card or field definition.\n\n### Template Usage\nTo display the `BlackjackGame` spec in a template, you can use the following:\n\n```hbs\n<@fields.blackjackGame />\n```\n\nThis will render the Blackjack game interface within your consuming card or field.\n\nThe `BlackjackGame` spec provides a comprehensive set of features and user interactions, including:\n\n- Placing bets\n- Dealing cards\n- Player actions (hit, stand, double down)\n- Dealer gameplay\n- Handling of game outcomes (win, lose, blackjack, push)\n- Tracking of player chips, wins, losses, and earnings\n- Saving and restoring game state\n\nThe spec also includes a custom edit format that allows configuring the game's initial settings, such as the player's name, starting chips, and casino name.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Blackjack Game",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
