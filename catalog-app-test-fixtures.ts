@@ -87,7 +87,7 @@ export const cardWithUnrecognisedImports = `
 export function makeMockCatalogContents(
   mockCatalogURL: string,
   catalogRealmURL: string,
-): Record<string, unknown> {
+): Record<string, any> {
   const authorCompanyExampleId = `${mockCatalogURL}author/AuthorCompany/example`;
   const authorSpecId = `${mockCatalogURL}Spec/author`;
   const authorExampleId = `${mockCatalogURL}author/Author/example`;
@@ -698,7 +698,7 @@ export function makeMockCatalogContents(
   };
 }
 
-export function makeDestinationRealmContents(): Record<string, unknown> {
+export function makeDestinationRealmContents(): Record<string, any> {
   return {
     'index.json': {
       data: {

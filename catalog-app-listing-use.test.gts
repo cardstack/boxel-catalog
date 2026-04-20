@@ -31,7 +31,7 @@ import {
   makeDestinationRealmContents,
 } from './catalog-app-test-fixtures';
 
-const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
+const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL!);
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 export function runTests() {

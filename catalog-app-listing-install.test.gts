@@ -18,7 +18,6 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
-  verifySubmode,
   openDir,
   verifyFolderWithUUIDInFileTree,
   verifyFileInFileTree,
@@ -32,7 +31,7 @@ import {
   makeDestinationRealmContents,
 } from './catalog-app-test-fixtures';
 
-const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
+const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL!);
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing

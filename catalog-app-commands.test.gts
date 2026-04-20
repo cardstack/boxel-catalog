@@ -35,19 +35,19 @@ import {
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
-import type { CardListing } from '@cardstack/catalog/listing/listing';
+import type { CardListing } from '@cardstack/catalog/catalog-app/listing/listing';
 
 import {
   makeMockCatalogContents,
   makeDestinationRealmContents,
 } from './catalog-app-test-fixtures';
 
-const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL);
+const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL!);
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing
 const authorListingId = `${mockCatalogURL}Listing/author`;
-const pirateSkillListingId = `${mockCatalogURL}SkillListing/pirate-skill`;
+const _pirateSkillListingId = `${mockCatalogURL}SkillListing/pirate-skill`;
 const apiDocumentationStubListingId = `${mockCatalogURL}Listing/api-documentation-stub`;
 const themeListingId = `${mockCatalogURL}ThemeListing/cardstack-theme`;
 const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;
@@ -167,7 +167,7 @@ export function runTests() {
               .containsText('Build', 'Build button exist in listing');
           });
         });
-        skip('"create"', function (hooks) {
+        module('"create"', function (hooks) {
           // Mock proxy LLM endpoint only for create-related tests
           setupRealmServerEndpoints(hooks, [
             {
@@ -286,14 +286,14 @@ export function runTests() {
               },
             },
           ]);
-          test('card listing with single dependency module', async function (assert) {
+          skip('card listing with single dependency module', async function (assert) {
             const cardId = mockCatalogURL + 'author/Author/example';
             const commandService = getService('command-service');
             const command = new ListingCreateCommand(
               commandService.commandContext,
             );
             const result = await command.execute({
-              openCardId: cardId,
+              openCardIds: [cardId],
               codeRef: {
                 module: `${mockCatalogURL}author/author.gts`,
                 name: 'Author',
@@ -341,11 +341,11 @@ export function runTests() {
                 'Listing should have two specs',
               );
               assert.true(
-                listing.specs.some((spec) => spec.ref.name === 'Author'),
+                listing.specs.some((spec: any) => spec.ref.name === 'Author'),
                 'Listing should have an Author spec',
               );
               assert.true(
-                listing.specs.some((spec) => spec.ref.name === 'AuthorCompany'),
+                listing.specs.some((spec: any) => spec.ref.name === 'AuthorCompany'),
                 'Listing should have an AuthorCompany spec',
               );
               // Deterministic autoLink assertions from proxy mock
@@ -378,14 +378,14 @@ export function runTests() {
             }
           });
 
-          test('listing will only create specs with recognised imports from realms it can read from', async function (assert) {
+          skip('listing will only create specs with recognised imports from realms it can read from', async function (assert) {
             const cardId = mockCatalogURL + 'UnrecognisedImports/example';
             const commandService = getService('command-service');
             const command = new ListingCreateCommand(
               commandService.commandContext,
             );
             await command.execute({
-              openCardId: cardId,
+              openCardIds: [cardId],
               codeRef: {
                 module: `${mockCatalogURL}card-with-unrecognised-imports.gts`,
                 name: 'UnrecognisedImports',
@@ -411,7 +411,7 @@ export function runTests() {
               assert.ok(listing, 'Listing should be created');
               assert.true(
                 listing.specs.every(
-                  (spec) =>
+                  (spec: any) =>
                     spec.ref.module !=
                     'https://cdn.jsdelivr.net/npm/chess.js/+esm',
                 ),
@@ -420,14 +420,14 @@ export function runTests() {
             }
           });
 
-          test('app listing', async function (assert) {
+          skip('app listing', async function (assert) {
             const cardId = mockCatalogURL + 'blog-app/BlogApp/example';
             const commandService = getService('command-service');
             const command = new ListingCreateCommand(
               commandService.commandContext,
             );
             const createResult = await command.execute({
-              openCardId: cardId,
+              openCardIds: [cardId],
               codeRef: {
                 module: `${mockCatalogURL}blog-app/blog-app.gts`,
                 name: 'BlogApp',
@@ -582,7 +582,7 @@ export function runTests() {
                 'AppCard',
               ].forEach((specName) => {
                 assert.true(
-                  listing.specs.some((spec) => spec.ref.name === specName),
+                  listing.specs.some((spec: any) => spec.ref.name === specName),
                   `Listing should have a ${specName} spec`,
                 );
               });
@@ -649,7 +649,7 @@ export function runTests() {
             }
           });
 
-          test('after create command, listing card opens on stack in interact mode', async function (assert) {
+          skip('after create command, listing card opens on stack in interact mode', async function (assert) {
             const cardId = mockCatalogURL + 'author/Author/example';
             const commandService = getService('command-service');
             const command = new ListingCreateCommand(
@@ -657,7 +657,7 @@ export function runTests() {
             );
 
             let r = await command.execute({
-              openCardId: cardId,
+              openCardIds: [cardId],
               codeRef: {
                 module: `${mockCatalogURL}author/author.gts`,
                 name: 'Author',
@@ -677,7 +677,7 @@ export function runTests() {
               );
           });
         });
-        skip('"use"', async function () {
+        module('"use"', function () {
           skip('card listing', async function (assert) {
             const listingName = 'author';
             const listingId = mockCatalogURL + 'Listing/author.json';
