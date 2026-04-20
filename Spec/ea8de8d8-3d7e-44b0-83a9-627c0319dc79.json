@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AirbnbListing",
+        "module": "../airbnb-listing/airbnb-listing"
+      },
+      "readMe": "Here is the usage documentation for the AirbnbListing card spec:\n\n## Summary\nThe AirbnbListing card spec represents a listing for an Airbnb property. It includes fields for displaying the property name, location, type, price, rating, review count, guest capacity, bedroom/bed/bathroom counts, photos, amenities, description, host information, and superhost status.\n\n## Import\n```javascript\nimport { AirbnbListing } from '../airbnb-listing/airbnb-listing';\n```\n\n## Usage as a Field\nTo use the AirbnbListing card as a field within a consuming card or field:\n\n```javascript\n@field airbnbListing = linksTo(AirbnbListing);\n```\n\n## Template Usage\nInside a consuming card or field template, you can display the AirbnbListing card using the following patterns:\n\n```hbs\n{{! Isolated format }}\n<@fields.airbnbListing @format=\"isolated\" />\n\n{{! Embedded format }}\n<@fields.airbnbListing @format=\"embedded\" />\n```\n\nThe AirbnbListing card supports the following display formats:\n\n- `isolated`: Provides a detailed view of the listing with all information displayed.\n- `embedded`: Displays a compact preview of the listing, suitable for inclusion in other cards or lists.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Airbnb Listing",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
