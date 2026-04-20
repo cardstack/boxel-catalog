@@ -24,7 +24,8 @@ export function getLoaderService(commandContext: CommandContext): any {
 export function loadCommandModule(
   commandContext: CommandContext,
 ): Promise<typeof BaseCommandModule> {
-  return getLoaderService(commandContext).loader.import<
-    typeof BaseCommandModule
-  >(`${baseRealm.url}command`);
+  const loader = getLoaderService(commandContext).loader as {
+    import<T>(url: string): Promise<T>;
+  };
+  return loader.import<typeof BaseCommandModule>(`${baseRealm.url}command`);
 }
