@@ -2,14 +2,14 @@ import { DEFAULT_REMIX_LLM } from '@cardstack/runtime-common/matrix-constants';
 
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import HostBaseCommand from '../lib/host-base-command';
-import { skillCardURL } from '../lib/utils';
+import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
+import { skillCardURL } from '@cardstack/boxel-host/lib/utils';
 
-import CreateAiAssistantRoomCommand from './create-ai-assistant-room';
-import OpenAiAssistantRoomCommand from './open-ai-assistant-room';
-import SendAiAssistantMessageCommand from './send-ai-assistant-message';
-import SetActiveLLMCommand from './set-active-llm';
-import UpdateRoomSkillsCommand from './update-room-skills';
+import CreateAiAssistantRoomCommand from '@cardstack/boxel-host/commands/create-ai-assistant-room';
+import OpenAiAssistantRoomCommand from '@cardstack/boxel-host/commands/open-ai-assistant-room';
+import SendAiAssistantMessageCommand from '@cardstack/boxel-host/commands/send-ai-assistant-message';
+import SetActiveLLMCommand from '@cardstack/boxel-host/commands/set-active-llm';
+import UpdateRoomSkillsCommand from '@cardstack/boxel-host/commands/update-room-skills';
 
 import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 

@@ -4,7 +4,6 @@ import {
   isResolvedCodeRef,
   loadCardDef,
   generateInstallFolderName,
-  RealmPaths,
 } from '@cardstack/runtime-common';
 
 import type * as CardAPI from 'https://cardstack.com/base/card-api';
@@ -12,11 +11,11 @@ import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
 import type { Skill } from 'https://cardstack.com/base/skill';
 
-import HostBaseCommand from '../lib/host-base-command';
+import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
 
-import CopyCardToRealmCommand from './copy-card';
-import GetAvailableRealmUrlsCommand from './get-available-realm-urls';
-import SaveCardCommand from './save-card';
+import CopyCardToRealmCommand from '@cardstack/boxel-host/commands/copy-card';
+import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
 
 import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
@@ -40,15 +39,9 @@ export default class ListingUseCommand extends HostBaseCommand<
 
     const listing = listingInput as Listing;
 
-    let realmUrl = new RealmPaths(new URL(realm)).url;
-
-    // Make sure realm is valid
-    let { urls: realmUrls } = await new GetAvailableRealmUrlsCommand(
+    let { realmUrl } = await new ValidateRealmCommand(
       this.commandContext,
-    ).execute(undefined);
-    if (!realmUrls.includes(realmUrl)) {
-      throw new Error(`Invalid realm: ${realmUrl}`);
-    }
+    ).execute({ realmUrl: realm });
 
     const specsToCopy = listing.specs ?? [];
     const specsWithoutFields = specsToCopy.filter(

@@ -1,30 +1,29 @@
 import {
   isResolvedCodeRef,
-  RealmPaths,
   type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
 import { DEFAULT_CODING_LLM } from '@cardstack/runtime-common/matrix-constants';
 
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import HostBaseCommand from '../lib/host-base-command';
+import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
 
-import { skillCardURL, devSkillId, envSkillId } from '../lib/utils';
+import { skillCardURL, devSkillId, envSkillId } from '@cardstack/boxel-host/lib/utils';
 
-import UseAiAssistantCommand from './ai-assistant';
-import GetAvailableRealmUrlsCommand from './get-available-realm-urls';
+import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
+import PersistModuleInspectorViewCommand from '@cardstack/boxel-host/commands/persist-module-inspector-view';
+import SwitchSubmodeCommand from '@cardstack/boxel-host/commands/switch-submode';
+import UpdateCodePathWithSelectionCommand from '@cardstack/boxel-host/commands/update-code-path-with-selection';
+import UpdatePlaygroundSelectionCommand from '@cardstack/boxel-host/commands/update-playground-selection';
+import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
+
 import ListingInstallCommand from './listing-install';
-import PersistModuleInspectorViewCommand from './persist-module-inspector-view';
-import SwitchSubmodeCommand from './switch-submode';
-import UpdateCodePathWithSelectionCommand from './update-code-path-with-selection';
-import UpdatePlaygroundSelectionCommand from './update-playground-selection';
 
 import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
 export default class RemixCommand extends HostBaseCommand<
   typeof BaseCommandModule.ListingInstallInput
 > {
-
   static actionVerb = 'Remix';
 
   description =
@@ -76,12 +75,12 @@ export default class RemixCommand extends HostBaseCommand<
           },
         );
 
-        await new PersistModuleInspectorViewCommand(this.commandContext).execute(
-          {
-            codePath: codePath + '.gts',
-            moduleInspectorView: 'preview',
-          },
-        );
+        await new PersistModuleInspectorViewCommand(
+          this.commandContext,
+        ).execute({
+          codePath: codePath + '.gts',
+          moduleInspectorView: 'preview',
+        });
       }
 
       await new UpdateCodePathWithSelectionCommand(this.commandContext).execute(
@@ -111,15 +110,9 @@ export default class RemixCommand extends HostBaseCommand<
     input: BaseCommandModule.ListingInstallInput,
   ): Promise<undefined> {
     let { realm, listing: listingInput } = input;
-    let realmUrl = new RealmPaths(new URL(realm)).url;
-
-    // Make sure realm is valid
-    let { urls: realmUrls } = await new GetAvailableRealmUrlsCommand(
+    let { realmUrl } = await new ValidateRealmCommand(
       this.commandContext,
-    ).execute(undefined);
-    if (!realmUrls.includes(realmUrl)) {
-      throw new Error(`Invalid realm: ${realmUrl}`);
-    }
+    ).execute({ realmUrl: realm });
 
     // this is intentionally to type because base command cannot interpret Listing type from catalog
     const listing = listingInput as Listing;

@@ -4,10 +4,10 @@ import { realmURL } from '@cardstack/runtime-common/constants';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import HostBaseCommand from '../lib/host-base-command';
+import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
 
-import { GenerateExampleCardsOneShotCommand } from './generate-example-cards';
-import GetDefaultWritableRealmCommand from './get-default-writable-realm';
+import { GenerateExampleCardsOneShotCommand } from '@cardstack/boxel-host/commands/generate-example-cards';
+import GetDefaultWritableRealmCommand from '@cardstack/boxel-host/commands/get-default-writable-realm';
 
 export default class ListingGenerateExampleCommand extends HostBaseCommand<
   typeof BaseCommandModule.GenerateListingExampleInput,
@@ -44,10 +44,8 @@ export default class ListingGenerateExampleCommand extends HostBaseCommand<
       );
     }
 
-    const { realmPath: defaultWritableRealmPath } =
-      await new GetDefaultWritableRealmCommand(this.commandContext).execute(
-        undefined,
-      );
+    const { realmUrl: defaultWritableRealmPath } =
+      await new GetDefaultWritableRealmCommand(this.commandContext).execute();
     const targetRealm =
       input.realm ||
       (referenceExample as any)[realmURL]?.href ||

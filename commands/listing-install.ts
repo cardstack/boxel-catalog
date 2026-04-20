@@ -5,7 +5,6 @@ import type {
 } from '@cardstack/runtime-common';
 import {
   type ResolvedCodeRef,
-  RealmPaths,
   join,
   planModuleInstall,
   planInstanceInstall,
@@ -20,14 +19,14 @@ import type { CopyModuleMeta } from '@cardstack/runtime-common/catalog';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import HostBaseCommand from '../lib/host-base-command';
+import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
 
-import ExecuteAtomicOperationsCommand from './execute-atomic-operations';
-import FetchCardJsonCommand from './fetch-card-json';
-import GetAvailableRealmUrlsCommand from './get-available-realm-urls';
-import GetCardCommand from './get-card';
-import ReadSourceCommand from './read-source';
-import SerializeCardCommand from './serialize-card';
+import ExecuteAtomicOperationsCommand from '@cardstack/boxel-host/commands/execute-atomic-operations';
+import FetchCardJsonCommand from '@cardstack/boxel-host/commands/fetch-card-json';
+import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import ReadSourceCommand from '@cardstack/boxel-host/commands/read-source';
+import SerializeCardCommand from '@cardstack/boxel-host/commands/serialize-card';
+import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
 
 import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
@@ -53,14 +52,9 @@ export default class ListingInstallCommand extends HostBaseCommand<
   ): Promise<BaseCommandModule.ListingInstallResult> {
     let { realm, listing: listingInput } = input;
 
-    let realmUrl = new RealmPaths(new URL(realm)).url;
-
-    let { urls: realmUrls } = await new GetAvailableRealmUrlsCommand(
+    let { realmUrl } = await new ValidateRealmCommand(
       this.commandContext,
-    ).execute(undefined);
-    if (!realmUrls.includes(realmUrl)) {
-      throw new Error(`Invalid realm: ${realmUrl}`);
-    }
+    ).execute({ realmUrl: realm });
 
     // this is intentionally to type because base command cannot interpret Listing type from catalog
     const listing = listingInput as Listing;
@@ -125,7 +119,8 @@ export default class ListingInstallCommand extends HostBaseCommand<
         }
         delete (doc as any).data.id;
         delete (doc as any).included;
-        let cardResource: LooseCardResource = (doc as any).data as LooseCardResource;
+        let cardResource: LooseCardResource = (doc as any)
+          .data as LooseCardResource;
         let href = join(realmUrl, copyInstanceMeta.lid) + '.json';
         return { op: 'add' as const, href, data: cardResource };
       }),
@@ -133,13 +128,26 @@ export default class ListingInstallCommand extends HostBaseCommand<
 
     const operations = [...sourceOperations, ...instanceOperations];
 
-    const { results: atomicResults } = await new ExecuteAtomicOperationsCommand(
-      this.commandContext,
-    ).execute({ realmUrl, operations });
+    let atomicResults;
+    try {
+      ({ results: atomicResults } = await new ExecuteAtomicOperationsCommand(
+        this.commandContext,
+      ).execute({ realmUrl, operations }));
+    } catch (e: any) {
+      if (
+        typeof e?.message === 'string' &&
+        e.message.includes('filter refers to a nonexistent type')
+      ) {
+        throw new Error(
+          'Please click "Update Specs" on the listing and make sure all specs are linked.',
+        );
+      }
+      throw e;
+    }
 
-    let writtenFiles = (atomicResults as Array<Record<string, any>>).map(
-      (r) => r.data?.id,
-    );
+    let writtenFiles = (atomicResults as Array<Record<string, any>>)
+      .map((r) => r.data?.id)
+      .filter(Boolean);
     log.debug('=== Final Results ===');
     log.debug(JSON.stringify(writtenFiles, null, 2));
 
