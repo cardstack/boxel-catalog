@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Pokemon",
+        "module": "../pokemon"
+      },
+      "readMe": "## Pokemon Card\n\n### Summary\nThe `Pokemon` card spec defines a card for displaying information about a Pokemon, including its name, type, and other details.\n\n### Import\n```javascript\nimport { Pokemon } from '../pokemon';\n```\n\n### Usage as a Field\nYou can use the `Pokemon` card as a field within a consuming card or field. For example:\n\n```json\n{\n  \"type\": \"card\",\n  \"id\": \"my-card\",\n  \"attributes\": {\n    \"fields\": [\n      {\n        \"name\": \"pokemon\",\n        \"type\": \"pokemon\"\n      }\n    ]\n  }\n}\n```\n\n### Template Usage\nTo display a `Pokemon` card within a template, you can use the `<@fields.pokemon />` syntax:\n\n```handlebars\n<div class=\"my-card\">\n  <@fields.pokemon />\n</div>\n```\n\nThis will render the `Pokemon` card with its default template and styling.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "pokemon",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
