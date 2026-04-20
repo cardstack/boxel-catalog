@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Recipe Card Definition with Multiple Formats",
+      "images": [],
+      "summary": "The RecipeCard module defines a comprehensive data model for a recipe, including fields for recipe name, description, preparation and cooking times, servings, difficulty level, cuisine type, ingredients, instructions, tips, and tags. It provides various presentation formats such as isolated, embedded, fitted, badge, strip, tile, and full card views, each optimized for different display contexts and device sizes. The card includes computed properties for total time, formatted for display, and uses icons and styling to enhance visual representation. Primary purpose is to structure, manage, and visually present detailed recipe information in a flexible, multi-format layout suitable for applications involving recipe management and sharing.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/93365dd7-dc5c-4c39-9657-76ff33dd8572"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/card"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../recipe-card-a2c7af02-92a6-4301-8395-52c47a897b74/RecipeCard/chocolate-chip-cookies"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/food-cooking"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
