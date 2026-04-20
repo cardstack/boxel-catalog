@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Drum Kit and Beat Maker Studio Card",
+      "images": [],
+      "summary": "The BeatMakerCard serves as an interactive drum machine interface, combining pattern sequencing, kit management, and real-time sound synthesis. Its primary purpose is to allow users to create, modify, and playback rhythmic patterns with adjustable BPM, swing, and instrument volumes. The card integrates a 16-step sequencer, pattern library management, and kit selection, enabling dynamic pattern editing and preset loading. It also incorporates advanced sound synthesis using the Web Audio API to generate drum sounds based on selected kit parameters. The component provides controls for pattern visualization, step toggling, pattern clearing, randomization, and pattern saving, supporting a comprehensive studio environment for music pattern creation.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/app"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "http://localhost:4201/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/4e86874e-6e04-40c9-b342-2e4562712698"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/content-creation"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BeatMakerCard/106dc474-910a-40b3-a340-70b1cdfbfda8"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

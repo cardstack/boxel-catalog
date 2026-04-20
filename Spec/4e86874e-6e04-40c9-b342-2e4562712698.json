@@ -1,0 +1,50 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BeatMakerCard",
+        "module": "../beat-maker-studio-ee7489b1-5d8e-4d84-bcba-866f64bc15c6/beat-maker/beat-maker"
+      },
+      "readMe": "# BeatMakerCard\n\n## Summary\nThe `BeatMakerCard` is a powerful card that provides a dynamic drum machine with features like real-time sound synthesis, pattern sequencing, and a library of drum kits and beat patterns.\n\n## Import\n```javascript\nimport { BeatMakerCard } from '../beat-maker-studio-ee7489b1-5d8e-4d84-bcba-866f64bc15c6/beat-maker/beat-maker';\n```\n\n## Usage as a Field\nYou can use the `BeatMakerCard` as a field within a consuming card or field. Here's an example:\n\n```javascript\nimport { CardDef, FieldDef, contains, linksTo } from 'https://cardstack.com/base/card-api';\n\nexport class MyCard extends CardDef {\n  @field beatMaker = contains(BeatMakerCard);\n}\n```\n\nIn this example, the `BeatMakerCard` is used as a field named `beatMaker` within the `MyCard` definition.\n\n## Template Usage\nTo use the `BeatMakerCard` within a template, you can reference the `@fields.beatMaker` property:\n\n```handlebars\n<div class=\"my-card\">\n  <@fields.beatMaker />\n</div>\n```\n\nThis will render the `BeatMakerCard` within the template of the consuming card or field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Beat Maker",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../beat-maker-studio-ee7489b1-5d8e-4d84-bcba-866f64bc15c6/beat-maker/BeatMakerCard/rhythm-studio"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../BeatMakerCard/106dc474-910a-40b3-a340-70b1cdfbfda8"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
