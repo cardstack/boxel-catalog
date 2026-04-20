@@ -17,12 +17,8 @@ export function skillCardURL(skillId: string): string {
 export const devSkillId = `@cardstack/skills/${devSkillLocalPath}`;
 export const envSkillId = `@cardstack/skills/${envSkillLocalPath}`;
 
-export function getLoaderService(commandContext: CommandContext): {
-  loader: { import<T>(url: string): Promise<T> };
-} {
-  return (getOwner(commandContext) as any).lookup(
-    'service:loader-service',
-  ) as { loader: { import<T>(url: string): Promise<T> } };
+export function getLoaderService(commandContext: CommandContext): any {
+  return (getOwner(commandContext) as any).lookup('service:loader-service');
 }
 
 export function loadCommandModule(

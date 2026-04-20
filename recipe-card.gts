@@ -14,9 +14,6 @@ import TextAreaField from 'https://cardstack.com/base/text-area'; // ⁴
 import MarkdownField from 'https://cardstack.com/base/markdown'; // ⁵
 import enumField from 'https://cardstack.com/base/enum'; // ⁶
 import UtensilsIcon from '@cardstack/boxel-icons/utensils'; // ⁷
-import ClockIcon from '@cardstack/boxel-icons/clock'; // ⁸
-import UsersIcon from '@cardstack/boxel-icons/users'; // ⁹
-import ChefHatIcon from '@cardstack/boxel-icons/chef-hat'; // ¹⁰
 
 // ¹¹ Difficulty enum
 const DifficultyField = enumField(StringField, {

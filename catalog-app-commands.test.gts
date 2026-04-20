@@ -47,7 +47,6 @@ const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing
 const authorListingId = `${mockCatalogURL}Listing/author`;
-const _pirateSkillListingId = `${mockCatalogURL}SkillListing/pirate-skill`;
 const apiDocumentationStubListingId = `${mockCatalogURL}Listing/api-documentation-stub`;
 const themeListingId = `${mockCatalogURL}ThemeListing/cardstack-theme`;
 const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;

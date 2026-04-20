@@ -114,7 +114,7 @@ export class Todo extends CardDef {
                 <line x1='3' y1='10' x2='21' y2='10' />
               </svg>
               Due:
-              {{formatDateTime @model.dueDate 'MMMM D, YYYY'}}
+              {{formatDateTime @model.dueDate format='MMMM D, YYYY'}}
             </div>
           {{/if}}
         </header>
@@ -331,7 +331,7 @@ export class Todo extends CardDef {
           {{#if @model.dueDate}}
             <div class='embedded-due'>
               Due:
-              {{formatDateTime @model.dueDate 'MMM D, YYYY'}}
+              {{formatDateTime @model.dueDate format='MMM D, YYYY'}}
             </div>
           {{/if}}
         </div>
@@ -437,6 +437,13 @@ export class Todo extends CardDef {
       return 'To Do';
     }
 
+    get priorityLabel() {
+      const p = this.args.model?.priority;
+      if (p === 'high') return 'High';
+      if (p === 'medium') return 'Medium';
+      return 'Low';
+    }
+
     get priorityClass() {
       const p = this.args.model?.priority;
       if (p === 'high') return 'priority-high';
@@ -485,7 +492,7 @@ export class Todo extends CardDef {
             }}</div>
           {{#if @model.dueDate}}
             <div class='tile-due'>Due:
-              {{formatDateTime @model.dueDate 'MMM D'}}</div>
+              {{formatDateTime @model.dueDate format='MMM D'}}</div>
           {{/if}}
         </div>
 
@@ -520,7 +527,7 @@ export class Todo extends CardDef {
                 <line x1='3' y1='10' x2='21' y2='10' />
               </svg>
               Due:
-              {{formatDateTime @model.dueDate 'MMM D, YYYY'}}
+              {{formatDateTime @model.dueDate format='MMM D, YYYY'}}
             </div>
           {{/if}}
         </div>
