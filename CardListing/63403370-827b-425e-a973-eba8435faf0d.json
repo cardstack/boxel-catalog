@@ -1,0 +1,79 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Calendar Card",
+      "images": [],
+      "summary": "The CalendarCard module defines a versatile calendar component that can be embedded or displayed in various formats such as month, week, or day views. It manages calendar state including current month, year, and selected date, and facilitates querying and displaying associated events, including their start/end times, locations, and types. The component supports interactive features like navigating between months, weeks, and days, and offers the ability to add, edit, and view detailed events. Multiple embedded and fitted variations provide compact, stylized summaries of calendars and upcoming events, with customizable display modes. The primary purpose is to serve as an adaptable, integrated calendar interface for scheduling, event management, and visual overview within applications.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/c4278e54-b86c-4185-84e6-afc0bcb46ef3"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/278e54b8-6cc1-4544-a6af-c0bcb46ef323"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../study-hub-db9fb43a-981b-424d-a016-d3eccd2786fa/calendar/CalendarCard/2c3c78cd-fa4f-4988-b098-c8d099557fba"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/adventure-outdoor-activities"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/api-integration"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
