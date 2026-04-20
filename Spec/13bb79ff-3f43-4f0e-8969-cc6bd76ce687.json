@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Todo",
+        "module": "../to-do-item-management-card-a60c763a-ce20-4528-b503-3836979e5c87/todo"
+      },
+      "readMe": "Sure, here is the usage documentation for the `Todo` card spec:\n\n**Summary**\nThe `Todo` card spec defines a card for managing todo items. It includes fields for the title, description, status, priority, due date, and completion status.\n\n**Import**\n```javascript\nimport { Todo } from '../to-do-item-management-card-a60c763a-ce20-4528-b503-3836979e5c87/todo';\n```\n\n**Usage as a Field**\nTo use the `Todo` card as a field within a consuming card or field, you can define it like this:\n\n```javascript\n@field todoItem = linksTo(Todo);\n```\n\n**Template Usage**\nTo display a `Todo` card within a template, you can use the following:\n\n```hbs\n<@fields.todoItem @format=\"embedded\" />\n```\n\nThis will render the `Todo` card in the `embedded` format.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Todo",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
