@@ -4,6 +4,7 @@ import type {
   LooseCardResource,
 } from '@cardstack/runtime-common';
 import {
+  Command,
   type ResolvedCodeRef,
   join,
   planModuleInstall,
@@ -19,7 +20,7 @@ import type { CopyModuleMeta } from '@cardstack/runtime-common/catalog';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
+import { loadCommandModule } from './utils';
 
 import ExecuteAtomicOperationsCommand from '@cardstack/boxel-host/commands/execute-atomic-operations';
 import FetchCardJsonCommand from '@cardstack/boxel-host/commands/fetch-card-json';
@@ -32,7 +33,7 @@ import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
 const log = logger('catalog:install');
 
-export default class ListingInstallCommand extends HostBaseCommand<
+export default class ListingInstallCommand extends Command<
   typeof BaseCommandModule.ListingInstallInput,
   typeof BaseCommandModule.ListingInstallResult
 > {
@@ -40,7 +41,7 @@ export default class ListingInstallCommand extends HostBaseCommand<
     'Install catalog listing with bringing them to code mode, and then remixing them via AI';
 
   async getInputType() {
-    let commandModule = await this.loadCommandModule();
+    let commandModule = await loadCommandModule(this.commandContext);
     const { ListingInstallInput } = commandModule;
     return ListingInstallInput;
   }
@@ -151,7 +152,7 @@ export default class ListingInstallCommand extends HostBaseCommand<
     log.debug('=== Final Results ===');
     log.debug(JSON.stringify(writtenFiles, null, 2));
 
-    let commandModule = await this.loadCommandModule();
+    let commandModule = await loadCommandModule(this.commandContext);
     const { ListingInstallResult } = commandModule;
     return new ListingInstallResult({
       selectedCodeRef,

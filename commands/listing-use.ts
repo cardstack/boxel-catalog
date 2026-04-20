@@ -1,4 +1,5 @@
 import {
+  Command,
   cardIdToURL,
   codeRefWithAbsoluteURL,
   isResolvedCodeRef,
@@ -11,7 +12,7 @@ import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
 import type { Skill } from 'https://cardstack.com/base/skill';
 
-import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
+import { loadCommandModule, getLoaderService } from './utils';
 
 import CopyCardToRealmCommand from '@cardstack/boxel-host/commands/copy-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
@@ -19,13 +20,13 @@ import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm'
 
 import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
-export default class ListingUseCommand extends HostBaseCommand<
+export default class ListingUseCommand extends Command<
   typeof BaseCommandModule.ListingInstallInput
 > {
   description = 'Catalog listing use command';
 
   async getInputType() {
-    let commandModule = await this.loadCommandModule();
+    let commandModule = await loadCommandModule(this.commandContext);
     const { ListingInstallInput } = commandModule;
     return ListingInstallInput;
   }
@@ -60,7 +61,7 @@ export default class ListingUseCommand extends HostBaseCommand<
         throw new Error('ref is not a resolved code ref');
       }
       let Klass = await loadCardDef(ref, {
-        loader: this.loaderService.loader,
+        loader: getLoaderService(this.commandContext).loader,
       });
       let card = new Klass({}) as CardAPI.CardDef;
       await new SaveCardCommand(this.commandContext).execute({

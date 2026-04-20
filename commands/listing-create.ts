@@ -3,6 +3,7 @@ import type {
   ResolvedCodeRef,
 } from '@cardstack/runtime-common';
 import {
+  Command,
   isCardInstance,
   SupportedMimeType,
   isFieldDef,
@@ -20,7 +21,7 @@ import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
 import type { Spec } from 'https://cardstack.com/base/spec';
 
-import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
+import { loadCommandModule, getLoaderService } from './utils';
 
 import AuthedFetchCommand from '@cardstack/boxel-host/commands/authed-fetch';
 import CreateSpecCommand from '@cardstack/boxel-host/commands/create-specs';
@@ -45,7 +46,7 @@ const listingSubClass: Record<ListingType, string> = {
   field: 'FieldListing',
 };
 
-export default class ListingCreateCommand extends HostBaseCommand<
+export default class ListingCreateCommand extends Command<
   typeof BaseCommandModule.ListingCreateInput,
   typeof BaseCommandModule.ListingCreateResult
 > {
@@ -68,7 +69,7 @@ export default class ListingCreateCommand extends HostBaseCommand<
   }
 
   async getInputType() {
-    let commandModule = await this.loadCommandModule();
+    let commandModule = await loadCommandModule(this.commandContext);
     const { ListingCreateInput } = commandModule;
     return ListingCreateInput;
   }
@@ -126,7 +127,7 @@ export default class ListingCreateCommand extends HostBaseCommand<
       realm: targetRealm,
     });
 
-    const commandModule = await this.loadCommandModule();
+    const commandModule = await loadCommandModule(this.commandContext);
     const listingCard = listing as CardAPI.CardDef;
     const firstOpenCardId = openCardIds?.[0];
 
@@ -186,7 +187,7 @@ export default class ListingCreateCommand extends HostBaseCommand<
     let cardDef;
     try {
       cardDef = await loadCardDef(codeRef, {
-        loader: this.loaderService.loader,
+        loader: getLoaderService(this.commandContext).loader,
       });
     } catch {
       return 'card';

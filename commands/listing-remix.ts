@@ -1,4 +1,5 @@
 import {
+  Command,
   isResolvedCodeRef,
   type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
@@ -6,9 +7,7 @@ import { DEFAULT_CODING_LLM } from '@cardstack/runtime-common/matrix-constants';
 
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
-
-import { skillCardURL, devSkillId, envSkillId } from '@cardstack/boxel-host/lib/utils';
+import { skillCardURL, devSkillId, envSkillId, loadCommandModule } from './utils';
 
 import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
 import PersistModuleInspectorViewCommand from '@cardstack/boxel-host/commands/persist-module-inspector-view';
@@ -21,7 +20,7 @@ import ListingInstallCommand from './listing-install';
 
 import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
-export default class RemixCommand extends HostBaseCommand<
+export default class RemixCommand extends Command<
   typeof BaseCommandModule.ListingInstallInput
 > {
   static actionVerb = 'Remix';
@@ -30,7 +29,7 @@ export default class RemixCommand extends HostBaseCommand<
     'Install catalog listing with bringing them to code mode, and then remixing them via AI';
 
   async getInputType() {
-    let commandModule = await this.loadCommandModule();
+    let commandModule = await loadCommandModule(this.commandContext);
     const { ListingInstallInput } = commandModule;
     return ListingInstallInput;
   }

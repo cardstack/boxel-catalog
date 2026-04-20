@@ -2,8 +2,9 @@ import { DEFAULT_REMIX_LLM } from '@cardstack/runtime-common/matrix-constants';
 
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
-import { skillCardURL } from '@cardstack/boxel-host/lib/utils';
+import { Command } from '@cardstack/runtime-common';
+
+import { skillCardURL, loadCommandModule } from './utils';
 
 import CreateAiAssistantRoomCommand from '@cardstack/boxel-host/commands/create-ai-assistant-room';
 import OpenAiAssistantRoomCommand from '@cardstack/boxel-host/commands/open-ai-assistant-room';
@@ -13,13 +14,13 @@ import UpdateRoomSkillsCommand from '@cardstack/boxel-host/commands/update-room-
 
 import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
-export default class ListingActionInitCommand extends HostBaseCommand<
+export default class ListingActionInitCommand extends Command<
   typeof BaseCommandModule.ListingActionInput
 > {
   description = 'Catalog listing use command';
 
   async getInputType() {
-    let commandModule = await this.loadCommandModule();
+    let commandModule = await loadCommandModule(this.commandContext);
     const { ListingActionInput } = commandModule;
     return ListingActionInput;
   }

@@ -1,15 +1,16 @@
+import { Command } from '@cardstack/runtime-common';
 import { resolveAdoptsFrom } from '@cardstack/runtime-common/code-ref';
 import { realmURL } from '@cardstack/runtime-common/constants';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
+import { loadCommandModule } from './utils';
 
 import { GenerateExampleCardsOneShotCommand } from '@cardstack/boxel-host/commands/generate-example-cards';
 import GetDefaultWritableRealmCommand from '@cardstack/boxel-host/commands/get-default-writable-realm';
 
-export default class ListingGenerateExampleCommand extends HostBaseCommand<
+export default class ListingGenerateExampleCommand extends Command<
   typeof BaseCommandModule.GenerateListingExampleInput,
   typeof BaseCommandModule.CreateInstanceResult
 > {
@@ -19,7 +20,7 @@ export default class ListingGenerateExampleCommand extends HostBaseCommand<
   requireInputFields = ['listing', 'referenceExample'];
 
   async getInputType() {
-    const commandModule = await this.loadCommandModule();
+    const commandModule = await loadCommandModule(this.commandContext);
     const { GenerateListingExampleInput } = commandModule;
     return GenerateListingExampleInput;
   }

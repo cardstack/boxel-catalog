@@ -1,17 +1,17 @@
-import { isCardInstance, SupportedMimeType } from '@cardstack/runtime-common';
+import { Command, isCardInstance, SupportedMimeType } from '@cardstack/runtime-common';
 
 import { realmURL as realmURLSymbol } from '@cardstack/runtime-common';
 
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 import type { Spec } from 'https://cardstack.com/base/spec';
 
-import HostBaseCommand from '@cardstack/boxel-host/lib/host-base-command';
+import { loadCommandModule } from './utils';
 
 import AuthedFetchCommand from '@cardstack/boxel-host/commands/authed-fetch';
 import CreateSpecCommand from '@cardstack/boxel-host/commands/create-specs';
 import SanitizeModuleListCommand from '@cardstack/boxel-host/commands/sanitize-module-list';
 
-export default class ListingUpdateSpecsCommand extends HostBaseCommand<
+export default class ListingUpdateSpecsCommand extends Command<
   typeof BaseCommandModule.ListingUpdateSpecsInput,
   typeof BaseCommandModule.ListingUpdateSpecsResult
 > {
@@ -20,7 +20,7 @@ export default class ListingUpdateSpecsCommand extends HostBaseCommand<
   requireInputFields = ['listing'];
 
   async getInputType() {
-    const commandModule = await this.loadCommandModule();
+    const commandModule = await loadCommandModule(this.commandContext);
     let { ListingUpdateSpecsInput } = commandModule;
     return ListingUpdateSpecsInput;
   }
@@ -83,7 +83,7 @@ export default class ListingUpdateSpecsCommand extends HostBaseCommand<
     }
 
     const sanitizedDeps = await this.sanitizeDeps(deps);
-    const commandModule = await this.loadCommandModule();
+    const commandModule = await loadCommandModule(this.commandContext);
     if (!sanitizedDeps.length) {
       (listing as any).specs = [];
       return new commandModule.ListingUpdateSpecsResult({
