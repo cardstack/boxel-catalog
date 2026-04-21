@@ -1,0 +1,89 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Travel Planner",
+      "images": [],
+      "summary": "The TravelPlanner is a comprehensive trip management card designed to organize and visualize various aspects of travel planning. Its primary purpose is to serve as an all-in-one travel dashboard, enabling users to input trip details, manage itinerary, track expenses, compare budgets, and coordinate bookings. It supports multiple destinations with geographic mapping, itinerary day plans, traveler information, and travel documents. The card facilitates overview, detailed views, and map-based visualization, offering both embedded and isolated formats adaptable for various UI layouts. It helps users plan, monitor, and coordinate all travel-related information in a centralized interface.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/d4f9a60d-7d3e-4035-8100-b65244ca2529"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/d1e2b869-d021-435d-9c1c-1fcdbe36f0ef"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/e2b869d0-2163-4d9c-9c1f-cdbe36f0ef44"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/b869d021-635d-4c1c-9fcd-be36f0ef4444"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/planner"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../TravelPlanner/europe-adventure"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../TravelPlanner/business-tokyo"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/travel-experiences"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

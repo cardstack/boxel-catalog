@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "TravelPlanner",
+        "module": "../travel-planner"
+      },
+      "readMe": "# Travel Planner\n\n## Summary\nThe `TravelPlanner` card definition provides a comprehensive dashboard for managing and tracking details of a user's trip. It includes features for managing destinations, travelers, daily itinerary, flight bookings, expenses, and overall trip budget.\n\n## Import\n```javascript\nimport { TravelPlanner } from '../travel-planner';\n```\n\n## Usage as a Field\nTo use the `TravelPlanner` card as a field within a consuming card or field, you can include it like this:\n\n```json\n{\n  \"type\": \"fields\",\n  \"id\": \"trip-planner\",\n  \"attributes\": {\n    \"field\": {\n      \"type\": \"@cardstack/skills/Skill/boxel-development#TravelPlanner\",\n      \"data\": {\n        \"tripName\": \"Summer Vacation\",\n        \"destination\": \"Paris, France\",\n        \"startDate\": \"2023-06-15\",\n        \"endDate\": \"2023-06-25\",\n        \"totalBudget\": 5000,\n        \"currency\": \"USD\",\n        \"travelers\": [\n          {\n            \"name\": \"John Doe\",\n            \"email\": \"john@example.com\",\n            \"phone\": \"+1 123 456 7890\",\n            \"passportNumber\": \"ABC12345\",\n            \"dateOfBirth\": \"1985-03-15\",\n            \"role\": \"lead\"\n          },\n          {\n            \"name\": \"Jane Doe\",\n            \"email\": \"jane@example.com\",\n            \"phone\": \"+1 987 654 3210\",\n            \"passportNumber\": \"XYZ54321\",\n            \"dateOfBirth\": \"1990-07-20\",\n            \"role\": \"companion\"\n          }\n        ]\n      }\n    }\n  }\n}\n```\n\n## Template Usage\nInside a consuming card or field template, you can display the `TravelPlanner` card like this:\n\n```handlebars\n<@fields.trip-planner @format='isolated' />\n```\n\nThe `@format='isolated'` option will render the full-featured travel planner experience. Alternatively, you can use `@format='embedded'` or `@format='fitted'` to display more compact versions of the travel planner.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Travel Planner",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

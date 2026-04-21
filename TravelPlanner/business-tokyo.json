@@ -1,0 +1,85 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TravelPlanner",
+        "module": "../travel-planner"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "notes": "# Business Conference Trip\n\n## Conference Details\n- **Event**: Asia Pacific Tech Summit 2025\n- **Venue**: Tokyo International Forum\n- **Dates**: April 9-11, 2025\n\n## Objectives\n- Present Q1 product roadmap\n- Meet with Osaka partners\n- Explore expansion opportunities\n\n## Cultural Considerations\n- Business card etiquette\n- Proper meeting protocols\n- Gift giving customs",
+      "endDate": "2025-04-15",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "currency": "USD",
+      "tripName": "Tokyo Business Conference",
+      "tripType": "business",
+      "startDate": "2025-04-08",
+      "travelers": [
+        {
+          "name": "Jordan Kim",
+          "email": "jordan.kim@company.com",
+          "phone": "+1-555-0201",
+          "passportNumber": "N567890123",
+          "dateOfBirth": "1988-03-10",
+          "role": "lead"
+        }
+      ],
+      "tripStatus": "booked",
+      "destination": "Tokyo, Japan",
+      "totalBudget": 3200,
+      "emergencyFund": 300,
+      "passportExpiry": "2027-08-30",
+      "budgetBreakdown": {
+        "food": 500,
+        "shopping": 200,
+        "emergency": 100,
+        "activities": 200,
+        "accommodation": 800,
+        "transportation": 1400
+      },
+      "travelInsurance": "Corporate Travel Protection",
+      "emergencyContact": "Maria Rodriguez +1-555-0189",
+      "primaryDestinationLat": 101,
+      "primaryDestinationLon": 123,
+      "additionalDestinations": [
+        {
+          "name": "askjd",
+          "country": "askjdksa",
+          "lat": 32,
+          "lon": 12,
+          "arrivalDate": "2025-07-30",
+          "departureDate": "2025-07-01",
+          "notes": null
+        }
+      ]
+    },
+    "relationships": {
+      "flights.0": {
+        "links": {
+          "self": "../FlightBooking/business-tokyo-outbound"
+        }
+      },
+      "expenses.0": {
+        "links": {
+          "self": "../Expense/conference-registration"
+        }
+      },
+      "dailySchedule": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

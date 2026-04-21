@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "date": "2025-01-15",
+      "category": "transportation",
+      "cardDescription": "Round-trip flights to Europe",
+      "amount": 1705,
+      "currency": "USD",
+      "convertedAmount": 1705,
+      "paymentMethod": "credit card",
+      "notes": "Early booking discount applied. Includes baggage fees."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../travel-planner",
+        "name": "Expense"
+      }
+    }
+  }
+}

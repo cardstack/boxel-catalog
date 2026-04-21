@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "date": "2025-03-16",
+      "location": "Paris, France",
+      "morningActivities": "Early entry to Louvre Museum (pre-booked 9 AM slot), focus on major highlights",
+      "afternoonActivities": "Lunch at Café Marly, walk through Tuileries Gardens, visit Place Vendôme for shopping",
+      "eveningActivities": "Sunset at Pont Alexandre III, aperitif cruise on Seine River, dinner in Marais district",
+      "weather": "Sunny, 15°C, perfect for walking",
+      "dailyBudget": 180,
+      "notes": "# Full Day Paris Exploration\n\n## Louvre Strategy\n- Pre-purchased tickets: €17 each\n- Focus on: Mona Lisa, Venus de Milo, Winged Victory\n- Allow 3-4 hours maximum\n\n## Dining Reservations\n- Lunch: Café Marly (inside Louvre)\n- Dinner: L'As du Fallafel (Marais) - no reservation needed\n\n## Transportation\n- Walking day - comfortable shoes essential\n- Metro day pass for backup"
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../travel-planner",
+        "name": "DayPlan"
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "airline": "Delta Airlines",
+      "flightNumber": "DL154",
+      "confirmationCode": "DL8N3P",
+      "departureAirport": "FCO",
+      "arrivalAirport": "JFK",
+      "departureTime": "2025-03-28T14:20:00Z",
+      "arrivalTime": "2025-03-28T18:15:00Z",
+      "seatNumber": "23F",
+      "price": 920,
+      "checkinStatus": "not-checked-in"
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../travel-planner",
+        "name": "FlightBooking"
+      }
+    }
+  }
+}

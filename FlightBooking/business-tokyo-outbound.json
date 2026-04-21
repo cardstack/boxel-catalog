@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "airline": "Japan Airlines",
+      "flightNumber": "JL006",
+      "confirmationCode": "JL9R5T",
+      "departureAirport": "SFO",
+      "arrivalAirport": "NRT",
+      "departureTime": "2025-04-08T11:40:00Z",
+      "arrivalTime": "2025-04-09T15:05:00Z",
+      "seatNumber": "6K",
+      "price": 2100,
+      "checkinStatus": "checked-in"
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../travel-planner",
+        "name": "FlightBooking"
+      }
+    }
+  }
+}
