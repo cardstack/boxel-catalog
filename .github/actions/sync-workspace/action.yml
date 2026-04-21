@@ -1,12 +1,12 @@
 name: "Sync to Workspace"
-description: "Sync files to a Boxel workspace using workspace-sync-cli"
+description: "Sync files to a Boxel workspace using boxel-cli"
 
 inputs:
   environment:
     description: "Environment name (e.g. staging, production)"
     required: true
   workspace-url:
-    description: "Target workspace URL"
+    description: "Target workspace URL (e.g. https://app.boxel.ai/external-catalog)"
     required: true
   matrix-url:
     description: "Matrix server URL"
@@ -31,9 +31,9 @@ runs:
       with:
         node-version: "18"
 
-    - name: Install workspace-sync-cli
+    - name: Install boxel-cli
       shell: bash
-      run: npm install -g @cardstack/workspace-sync-cli
+      run: npm install -g @cardstack/boxel-cli
 
     - name: Sync to ${{ inputs.environment }} workspace
       id: sync
@@ -42,6 +42,7 @@ runs:
         MATRIX_URL: ${{ inputs.matrix-url }}
         MATRIX_USERNAME: ${{ inputs.matrix-username }}
         MATRIX_PASSWORD: ${{ inputs.matrix-password }}
+        REALM_SERVER_URL: ${{ inputs.workspace-url }}
       run: |
         echo "Starting sync to ${{ inputs.environment }} workspace..."
         echo "Target workspace: ${{ inputs.workspace-url }}"
@@ -49,7 +50,7 @@ runs:
         echo ""
 
         set +e
-        OUTPUT=$(workspace-push . ${{ inputs.workspace-url }} --delete 2>&1)
+        OUTPUT=$(boxel realm push . ${{ inputs.workspace-url }} --delete 2>&1)
         EXIT_CODE=$?
         set -e
         echo "$OUTPUT"
