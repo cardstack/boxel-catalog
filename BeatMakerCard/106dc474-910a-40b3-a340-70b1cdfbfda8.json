@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "bpm": null,
+      "pattern": null,
+      "instrumentKit": null,
+      "swing": null,
+      "masterVolume": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../beat-maker-studio-ee7489b1-5d8e-4d84-bcba-866f64bc15c6/beat-maker/beat-maker",
+        "name": "BeatMakerCard"
+      }
+    }
+  }
+}
