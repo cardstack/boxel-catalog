@@ -59,8 +59,12 @@ runs:
         echo "Commit: ${{ github.sha }}"
         echo ""
 
+        # Ensure workspace URL ends with trailing slash
+        WORKSPACE_URL="${{ inputs.workspace-url }}"
+        WORKSPACE_URL="${WORKSPACE_URL%/}/"
+
         set +e
-        OUTPUT=$(boxel realm push . ${{ inputs.workspace-url }} --delete 2>&1)
+        OUTPUT=$(boxel realm push . ${WORKSPACE_URL} --delete 2>&1)
         EXIT_CODE=$?
         set -e
         echo "$OUTPUT"
