@@ -1,0 +1,150 @@
+import {
+  Command,
+  isResolvedCodeRef,
+  type ResolvedCodeRef,
+} from '@cardstack/runtime-common';
+import { DEFAULT_CODING_LLM } from '@cardstack/runtime-common/matrix-constants';
+
+import type * as BaseCommandModule from 'https://cardstack.com/base/command';
+
+import { skillCardURL, devSkillId, envSkillId, loadCommandModule } from './utils';
+
+import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
+import PersistModuleInspectorViewCommand from '@cardstack/boxel-host/commands/persist-module-inspector-view';
+import SwitchSubmodeCommand from '@cardstack/boxel-host/commands/switch-submode';
+import UpdateCodePathWithSelectionCommand from '@cardstack/boxel-host/commands/update-code-path-with-selection';
+import UpdatePlaygroundSelectionCommand from '@cardstack/boxel-host/commands/update-playground-selection';
+import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
+
+import ListingInstallCommand from './listing-install';
+
+import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
+
+export default class RemixCommand extends Command<
+  typeof BaseCommandModule.ListingInstallInput
+> {
+  static actionVerb = 'Remix';
+
+  description =
+    'Install catalog listing with bringing them to code mode, and then remixing them via AI';
+
+  async getInputType() {
+    let commandModule = await loadCommandModule(this.commandContext);
+    const { ListingInstallInput } = commandModule;
+    return ListingInstallInput;
+  }
+
+  requireInputFields = ['realm', 'listing'];
+
+  private isThemeListing(listing: Listing): boolean {
+    return listing?.constructor?.name === 'ThemeListing';
+  }
+
+  private async navigateView(options: {
+    listing: Listing;
+    selectedCodeRef?: ResolvedCodeRef;
+    exampleCardId?: string;
+    skillCardId?: string;
+  }) {
+    const { listing, selectedCodeRef, exampleCardId, skillCardId } = options;
+
+    if (this.isThemeListing(listing)) {
+      if (exampleCardId) {
+        await new SwitchSubmodeCommand(this.commandContext).execute({
+          submode: 'code',
+          codePath: `${exampleCardId}.json`,
+        });
+      }
+      return;
+    }
+
+    if (selectedCodeRef && isResolvedCodeRef(selectedCodeRef)) {
+      const codePath = selectedCodeRef.module;
+
+      if (exampleCardId) {
+        const moduleId = [selectedCodeRef.module, selectedCodeRef.name].join(
+          '/',
+        );
+        await new UpdatePlaygroundSelectionCommand(this.commandContext).execute(
+          {
+            moduleId: moduleId,
+            cardId: exampleCardId,
+            format: 'isolated',
+            fieldIndex: undefined,
+          },
+        );
+
+        await new PersistModuleInspectorViewCommand(
+          this.commandContext,
+        ).execute({
+          codePath: codePath + '.gts',
+          moduleInspectorView: 'preview',
+        });
+      }
+
+      await new UpdateCodePathWithSelectionCommand(this.commandContext).execute(
+        {
+          codeRef: selectedCodeRef,
+          localName: selectedCodeRef.name,
+          fieldName: undefined,
+        },
+      );
+      await new SwitchSubmodeCommand(this.commandContext).execute({
+        submode: 'code',
+        codePath: selectedCodeRef.module,
+      });
+    } else if ('skills' in listing) {
+      // A listing can have more than one skill
+      // The most optimum way for remixing is still to display only the first instance
+      if (skillCardId) {
+        await new SwitchSubmodeCommand(this.commandContext).execute({
+          submode: 'code',
+          codePath: skillCardId,
+        });
+      }
+    }
+  }
+
+  protected async run(
+    input: BaseCommandModule.ListingInstallInput,
+  ): Promise<undefined> {
+    let { realm, listing: listingInput } = input;
+    let { realmUrl } = await new ValidateRealmCommand(
+      this.commandContext,
+    ).execute({ realmUrl: realm });
+
+    // this is intentionally to type because base command cannot interpret Listing type from catalog
+    const listing = listingInput as Listing;
+
+    const { selectedCodeRef, exampleCardId, skillCardId } =
+      await new ListingInstallCommand(this.commandContext).execute({
+        realm: realmUrl,
+        listing,
+      });
+    await this.navigateView({
+      listing,
+      selectedCodeRef,
+      exampleCardId,
+      skillCardId,
+    });
+
+    let prompt =
+      'Remix done! Please suggest two example prompts on how to edit this card.';
+
+    const skillCardIds = [
+      devSkillId,
+      envSkillId,
+      skillCardURL('source-code-editing'),
+      skillCardURL('catalog-listing'),
+    ];
+    await new UseAiAssistantCommand(this.commandContext).execute({
+      roomId: 'new',
+      prompt,
+      openRoom: true,
+      roomName: `Remixing ${listing.name ?? 'Listing'}  `,
+      attachedCards: [listing],
+      skillCardIds,
+      llmModel: DEFAULT_CODING_LLM,
+    });
+  }
+}
