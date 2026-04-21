@@ -35,14 +35,24 @@ runs:
       shell: bash
       run: npm install -g @cardstack/boxel-cli
 
+    - name: Create boxel-cli profile
+      shell: bash
+      env:
+        BOXEL_PASSWORD: ${{ inputs.matrix-password }}
+      run: |
+        # Determine domain from matrix URL
+        if echo "${{ inputs.matrix-url }}" | grep -q "boxel.ai"; then
+          DOMAIN="boxel.ai"
+        else
+          DOMAIN="stack.cards"
+        fi
+        MATRIX_ID="@${{ inputs.matrix-username }}:${DOMAIN}"
+        echo "Creating profile for ${MATRIX_ID}"
+        boxel profile add --user "${MATRIX_ID}" --password "${BOXEL_PASSWORD}"
+
     - name: Sync to ${{ inputs.environment }} workspace
       id: sync
       shell: bash
-      env:
-        MATRIX_URL: ${{ inputs.matrix-url }}
-        MATRIX_USERNAME: ${{ inputs.matrix-username }}
-        MATRIX_PASSWORD: ${{ inputs.matrix-password }}
-        REALM_SERVER_URL: ${{ inputs.workspace-url }}
       run: |
         echo "Starting sync to ${{ inputs.environment }} workspace..."
         echo "Target workspace: ${{ inputs.workspace-url }}"
