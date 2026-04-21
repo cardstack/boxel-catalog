@@ -48,6 +48,9 @@ runs:
         fi
         MATRIX_ID="@${{ inputs.matrix-username }}:${DOMAIN}"
         echo "Creating profile for ${MATRIX_ID}"
+        echo "Matrix URL: ${{ inputs.matrix-url }}"
+        echo "Domain: ${DOMAIN}"
+        echo "Workspace URL: ${{ inputs.workspace-url }}"
         boxel profile add --user "${MATRIX_ID}" --password "${BOXEL_PASSWORD}"
 
     - name: Sync to ${{ inputs.environment }} workspace
