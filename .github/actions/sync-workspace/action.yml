@@ -1,0 +1,65 @@
+name: "Sync to Workspace"
+description: "Sync files to a Boxel workspace using workspace-sync-cli"
+
+inputs:
+  environment:
+    description: "Environment name (e.g. staging, production)"
+    required: true
+  workspace-url:
+    description: "Target workspace URL"
+    required: true
+  matrix-url:
+    description: "Matrix server URL"
+    required: true
+  matrix-username:
+    description: "Matrix username"
+    required: true
+  matrix-password:
+    description: "Matrix password"
+    required: true
+
+outputs:
+  sync-output:
+    description: "Output from the sync command"
+    value: ${{ steps.sync.outputs.SYNC_OUTPUT }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "18"
+
+    - name: Install workspace-sync-cli
+      shell: bash
+      run: npm install -g @cardstack/workspace-sync-cli
+
+    - name: Sync to ${{ inputs.environment }} workspace
+      id: sync
+      shell: bash
+      env:
+        MATRIX_URL: ${{ inputs.matrix-url }}
+        MATRIX_USERNAME: ${{ inputs.matrix-username }}
+        MATRIX_PASSWORD: ${{ inputs.matrix-password }}
+      run: |
+        echo "Starting sync to ${{ inputs.environment }} workspace..."
+        echo "Target workspace: ${{ inputs.workspace-url }}"
+        echo "Commit: ${{ github.sha }}"
+        echo ""
+
+        set +e
+        OUTPUT=$(workspace-push . ${{ inputs.workspace-url }} --delete 2>&1)
+        EXIT_CODE=$?
+        set -e
+        echo "$OUTPUT"
+
+        echo "SYNC_OUTPUT<<EOF" >> $GITHUB_OUTPUT
+        echo "$OUTPUT" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+        if [ $EXIT_CODE -ne 0 ]; then
+          echo "${{ inputs.environment }} workspace sync failed with exit code $EXIT_CODE"
+          exit $EXIT_CODE
+        fi
+        echo "${{ inputs.environment }} workspace sync completed successfully!"
