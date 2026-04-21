@@ -31,10 +31,17 @@ jobs:
       - name: Report staging success
         if: success()
         uses: actions/github-script@v7
+        env:
+          SYNC_OUTPUT: ${{ steps.sync.outputs.sync-output }}
+          WORKSPACE_URL: ${{ env.STAGING_WORKSPACE_URL }}
         with:
           script: |
-            const output = `${{ steps.sync.outputs.sync-output }}`;
-            const body = `## Staging Workspace Sync Successful\n\n**Workspace:** ${{ env.STAGING_WORKSPACE_URL }}\n\`\`\`\n${output}\n\`\`\`\n\n**Commit:** [\`${context.sha.substring(0, 7)}\`](https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha})\n**Synced at:** ${new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC`;
+            const output = process.env.SYNC_OUTPUT || '';
+            const workspaceUrl = process.env.WORKSPACE_URL;
+            const shortSha = context.sha.substring(0, 7);
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`;
+            const syncedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            const body = `## Staging Workspace Sync Successful\n\n**Workspace:** ${workspaceUrl}\n\`\`\`\n${output}\n\`\`\`\n\n**Commit:** [\`${shortSha}\`](${commitUrl})\n**Synced at:** ${syncedAt} UTC`;
 
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
@@ -46,10 +53,16 @@ jobs:
       - name: Report staging failure
         if: failure()
         uses: actions/github-script@v7
+        env:
+          SYNC_OUTPUT: ${{ steps.sync.outputs.sync-output }}
+          WORKSPACE_URL: ${{ env.STAGING_WORKSPACE_URL }}
         with:
           script: |
-            const output = `${{ steps.sync.outputs.sync-output }}` || 'No output captured';
-            const body = `## Staging Workspace Sync Failed\n\n**Workspace:** ${{ env.STAGING_WORKSPACE_URL }}\n**Commit:** [\`${context.sha.substring(0, 7)}\`](https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha})\n**Action required:** Please check the workflow logs for details\n\n### Error Output\n\`\`\`\n${output}\n\`\`\`\n\n### Troubleshooting\n- Verify Matrix credentials are correctly set in repository secrets\n- Check workspace permissions and URL\n- Review file filtering rules (.gitignore/.boxelignore)`;
+            const output = process.env.SYNC_OUTPUT || 'No output captured';
+            const workspaceUrl = process.env.WORKSPACE_URL;
+            const shortSha = context.sha.substring(0, 7);
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`;
+            const body = `## Staging Workspace Sync Failed\n\n**Workspace:** ${workspaceUrl}\n**Commit:** [\`${shortSha}\`](${commitUrl})\n**Action required:** Please check the workflow logs for details\n\n### Error Output\n\`\`\`\n${output}\n\`\`\`\n\n### Troubleshooting\n- Verify Matrix credentials are correctly set in repository secrets\n- Check workspace permissions and URL\n- Review file filtering rules (.gitignore/.boxelignore)`;
 
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
@@ -79,10 +92,17 @@ jobs:
       - name: Report production success
         if: success()
         uses: actions/github-script@v7
+        env:
+          SYNC_OUTPUT: ${{ steps.sync.outputs.sync-output }}
+          WORKSPACE_URL: ${{ env.PRODUCTION_WORKSPACE_URL }}
         with:
           script: |
-            const output = `${{ steps.sync.outputs.sync-output }}`;
-            const body = `## Production Workspace Sync Successful\n\n**Workspace:** ${{ env.PRODUCTION_WORKSPACE_URL }}\n\`\`\`\n${output}\n\`\`\`\n\n**Commit:** [\`${context.sha.substring(0, 7)}\`](https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha})\n**Synced at:** ${new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC`;
+            const output = process.env.SYNC_OUTPUT || '';
+            const workspaceUrl = process.env.WORKSPACE_URL;
+            const shortSha = context.sha.substring(0, 7);
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`;
+            const syncedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            const body = `## Production Workspace Sync Successful\n\n**Workspace:** ${workspaceUrl}\n\`\`\`\n${output}\n\`\`\`\n\n**Commit:** [\`${shortSha}\`](${commitUrl})\n**Synced at:** ${syncedAt} UTC`;
 
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
@@ -94,10 +114,16 @@ jobs:
       - name: Report production failure
         if: failure()
         uses: actions/github-script@v7
+        env:
+          SYNC_OUTPUT: ${{ steps.sync.outputs.sync-output }}
+          WORKSPACE_URL: ${{ env.PRODUCTION_WORKSPACE_URL }}
         with:
           script: |
-            const output = `${{ steps.sync.outputs.sync-output }}` || 'No output captured';
-            const body = `## Production Workspace Sync Failed\n\n**Workspace:** ${{ env.PRODUCTION_WORKSPACE_URL }}\n**Commit:** [\`${context.sha.substring(0, 7)}\`](https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha})\n**Action required:** Please check the workflow logs for details\n\n### Error Output\n\`\`\`\n${output}\n\`\`\`\n\n### Troubleshooting\n- Verify Matrix credentials are correctly set in repository secrets\n- Check workspace permissions and URL\n- Review file filtering rules (.gitignore/.boxelignore)`;
+            const output = process.env.SYNC_OUTPUT || 'No output captured';
+            const workspaceUrl = process.env.WORKSPACE_URL;
+            const shortSha = context.sha.substring(0, 7);
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`;
+            const body = `## Production Workspace Sync Failed\n\n**Workspace:** ${workspaceUrl}\n**Commit:** [\`${shortSha}\`](${commitUrl})\n**Action required:** Please check the workflow logs for details\n\n### Error Output\n\`\`\`\n${output}\n\`\`\`\n\n### Troubleshooting\n- Verify Matrix credentials are correctly set in repository secrets\n- Check workspace permissions and URL\n- Review file filtering rules (.gitignore/.boxelignore)`;
 
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
