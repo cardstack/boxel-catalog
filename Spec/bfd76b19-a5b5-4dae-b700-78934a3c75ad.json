@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CalendarClone",
+        "module": "../calendar-clone"
+      },
+      "readMe": "## Usage Documentation for CalendarClone Card\n\n### Summary\nThe `CalendarClone` card is an extension of the `Calendar` card that provides a simplified calendar interface with the ability to create new events.\n\n### Import\n```javascript\nimport { CalendarClone } from '../calendar-clone';\n```\n\n### Usage as a Field\nTo use the `CalendarClone` card as a field within a consuming card or field, you can add the following:\n\n```javascript\n@field calendar = linksTo(CalendarClone);\n```\n\nThis will add a calendar field to your card that displays the `CalendarClone` component.\n\n### Template Usage\nInside your consuming card or field template, you can display the `CalendarClone` component like this:\n\n```handlebars\n<@fields.calendar @format=\"isolated\" />\n```\n\nThis will render the `CalendarClone` component in the isolated format, showing the full calendar view.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Calendar Clone",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

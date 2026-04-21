@@ -1,0 +1,38 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AstralGardens",
+        "module": "../astral-garden/astral-garden"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "tagline": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "location": null,
+      "ticketPrice": null,
+      "cardDescription": null,
+      "nextShowingDate": null,
+      "installationName": null,
+      "experienceDuration": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
