@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "date": "2025-01-20",
+      "category": "insurance",
+      "cardDescription": "World Nomads travel insurance",
+      "amount": 145,
+      "currency": "USD",
+      "convertedAmount": 145,
+      "paymentMethod": "credit card",
+      "notes": "Premium coverage for adventure activities and medical emergencies"
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../travel-planner",
+        "name": "Expense"
+      }
+    }
+  }
+}

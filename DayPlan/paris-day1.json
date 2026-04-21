@@ -1,0 +1,34 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "DayPlan",
+        "module": "../travel-planner"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "date": "2025-03-15",
+      "notes": "# Arrival Day in Paris\n\n## Transportation\n- RER B from CDG to Châtelet (approx 45 mins, €10.30)\n- Consider buying weekly Navigo pass\n\n## Accommodation\n- Hotel check-in after 3 PM\n- Store luggage if arriving early\n\n## Important Notes\n- Download offline maps before arrival\n- Exchange some cash for small purchases\n- Jet lag management - stay awake until evening",
+      "weather": "Partly cloudy, 12°C, light rain possible",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": "https://picsum.photos/200/300"
+      },
+      "location": "Paris, France",
+      "dailyBudget": 150,
+      "eveningActivities": "Dinner at traditional bistro in Latin Quarter, evening stroll along Seine River",
+      "morningActivities": "Arrive at CDG Airport, take RER B to central Paris, check into hotel near Louvre",
+      "afternoonActivities": "Walking tour of Île de la Cité, visit Notre-Dame area, explore Sainte-Chapelle"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

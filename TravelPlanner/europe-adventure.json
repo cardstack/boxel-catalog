@@ -1,0 +1,126 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TravelPlanner",
+        "module": "../travel-planner"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "notes": "# European Adventure\n\nA two-week journey through Western Europe focusing on cultural immersion and outdoor activities.\n\n## Key Highlights\n- French Alps hiking\n- Amsterdam canal tours\n- Swiss mountain railways\n- Italian coastal towns\n\n## Special Notes\n- Travel during shoulder season for better prices\n- Book train passes in advance\n- Pack for variable weather conditions",
+      "endDate": "2025-03-28",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "currency": "USD",
+      "tripName": "European Adventure 2025",
+      "tripType": "adventure",
+      "startDate": "2025-03-15",
+      "travelers": [
+        {
+          "name": "Alex Chen",
+          "email": "alex.chen@email.com",
+          "phone": "+1-555-0145",
+          "passportNumber": "N123456789",
+          "dateOfBirth": "1992-07-15",
+          "role": "lead"
+        },
+        {
+          "name": "Maya Patel",
+          "email": "maya.patel@email.com",
+          "phone": "+1-555-0167",
+          "passportNumber": "N987654321",
+          "dateOfBirth": "1994-11-22",
+          "role": "companion"
+        }
+      ],
+      "tripStatus": "planning",
+      "destination": "Paris, France",
+      "totalBudget": 4500,
+      "emergencyFund": 500,
+      "passportExpiry": "2028-09-12",
+      "budgetBreakdown": {
+        "food": 800,
+        "shopping": 300,
+        "emergency": 100,
+        "activities": 600,
+        "accommodation": 1200,
+        "transportation": 1500
+      },
+      "travelInsurance": "World Nomads - Premium Coverage",
+      "emergencyContact": "Sarah Johnson +1-555-0123",
+      "primaryDestinationLat": null,
+      "primaryDestinationLon": null,
+      "additionalDestinations": [
+        {
+          "name": "Amsterdam",
+          "country": "Netherlands",
+          "lat": null,
+          "lon": null,
+          "arrivalDate": "2025-03-18",
+          "departureDate": "2025-03-21",
+          "notes": "Canal district exploration"
+        },
+        {
+          "name": "Interlaken",
+          "country": "Switzerland",
+          "lat": null,
+          "lon": null,
+          "arrivalDate": "2025-03-21",
+          "departureDate": "2025-03-25",
+          "notes": "Mountain activities base"
+        },
+        {
+          "name": "Cinque Terre",
+          "country": "Italy",
+          "lat": null,
+          "lon": null,
+          "arrivalDate": "2025-03-25",
+          "departureDate": "2025-03-28",
+          "notes": "Coastal hiking trails"
+        }
+      ]
+    },
+    "relationships": {
+      "flights.0": {
+        "links": {
+          "self": "../FlightBooking/outbound-paris"
+        }
+      },
+      "flights.1": {
+        "links": {
+          "self": "../FlightBooking/return-rome"
+        }
+      },
+      "expenses.0": {
+        "links": {
+          "self": "../Expense/flight-booking"
+        }
+      },
+      "expenses.1": {
+        "links": {
+          "self": "../Expense/travel-insurance"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "dailySchedule.0": {
+        "links": {
+          "self": "../DayPlan/paris-day1"
+        }
+      },
+      "dailySchedule.1": {
+        "links": {
+          "self": "../DayPlan/paris-day2"
+        }
+      }
+    }
+  }
+}

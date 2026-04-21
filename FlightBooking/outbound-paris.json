@@ -1,0 +1,36 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FlightBooking",
+        "module": "../travel-planner"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "price": 785,
+      "airline": "Air France",
+      "cardInfo": {
+        "notes": null,
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": "https://picsum.photos/200/300"
+      },
+      "seatNumber": "14A",
+      "arrivalTime": "2025-03-16T11:45:00.000Z",
+      "flightNumber": "AF083",
+      "checkinStatus": "not-checked-in",
+      "departureTime": "2025-03-15T22:30:00.000Z",
+      "arrivalAirport": "CDG",
+      "confirmationCode": "AF7K9M",
+      "departureAirport": "JFK"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
