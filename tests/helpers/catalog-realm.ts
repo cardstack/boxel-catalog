@@ -94,8 +94,8 @@ let MultipleImageField: MultipleImageField;
 type CatalogNumberField = (typeof NumberFieldModule)['default'];
 let CatalogNumberField: CatalogNumberField;
 
-let catalogRealmURL = ensureTrailingSlash(
-  ENV.resolvedCatalogRealmURL ?? 'http://localhost:4201/catalog/',
+export let catalogRealmURL = ensureTrailingSlash(
+  ENV?.resolvedCatalogRealmURL ?? 'http://localhost:4201/catalog/',
 );
 let initialized = false;
 
