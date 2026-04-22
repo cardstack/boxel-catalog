@@ -48,7 +48,7 @@ jobs:
             Post inline comments on each violation explaining why it should be
             a relative URL. Then return structured output.
           claude_args: |
-            --json-schema '{"type":"object","properties":{"has_violations":{"type":"boolean"},"violations":{"type":"array","items":{"type":"object","properties":{"file":{"type":"string"},"field":{"type":"string"},"url":{"type":"string"},"reason":{"type":"string"}},"required":["file","field","url","reason"]}}},"required":["has_violations","violations"]}'
+            --model claude-haiku-4-5-20251001 --json-schema '{"type":"object","properties":{"has_violations":{"type":"boolean"},"violations":{"type":"array","items":{"type":"object","properties":{"file":{"type":"string"},"field":{"type":"string"},"url":{"type":"string"},"reason":{"type":"string"}},"required":["file","field","url","reason"]}}},"required":["has_violations","violations"]}'
 
       - name: Check for violations
         run: |
