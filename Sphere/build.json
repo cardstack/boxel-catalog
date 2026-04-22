@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "BUILD",
+      "cardTitle": null,
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../catalog-app/listing/sphere",
+        "name": "Sphere"
+      }
+    }
+  }
+}
