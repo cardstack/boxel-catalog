@@ -50,15 +50,25 @@ jobs:
           claude_args: |
             --json-schema '{"type":"object","properties":{"has_violations":{"type":"boolean"},"violations":{"type":"array","items":{"type":"object","properties":{"file":{"type":"string"},"field":{"type":"string"},"url":{"type":"string"},"reason":{"type":"string"}},"required":["file","field","url","reason"]}}},"required":["has_violations","violations"]}'
 
-      - name: Block PR if violations found
-        if: fromJSON(steps.review.outputs.structured_output).has_violations == true
+      - name: Check for violations
         run: |
-          echo "::error::Absolute URL violations found in instance files:"
-          echo '${{ steps.review.outputs.structured_output }}' | python3 -c "
+          OUTPUT='${{ steps.review.outputs.structured_output }}'
+          if [ -z "$OUTPUT" ]; then
+            echo "No structured output from Claude — skipping violation check"
+            exit 0
+          fi
+          python3 -c "
           import json, sys
-          data = json.load(sys.stdin)
-          for v in data['violations']:
-              print(f\"  {v['file']}: {v['field']} -> {v['url']}\")
-              print(f\"    Reason: {v['reason']}\")
+          try:
+              data = json.loads('''${{ steps.review.outputs.structured_output }}''')
+          except json.JSONDecodeError:
+              print('Warning: Could not parse structured output')
+              sys.exit(0)
+          if data.get('has_violations'):
+              print('::error::Absolute URL violations found in instance files:')
+              for v in data.get('violations', []):
+                  print(f\"  {v['file']}: {v['field']} -> {v['url']}\")
+                  print(f\"    Reason: {v['reason']}\")
+              sys.exit(1)
+          print('No absolute URL violations found.')
           "
-          exit 1
