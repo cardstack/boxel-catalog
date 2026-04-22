@@ -1,0 +1,21 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Category",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/category"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Test Card With Bad URL"
+    },
+    "relationships": {
+      "category": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/ai-automation"
+        }
+      }
+    }
+  }
+}
