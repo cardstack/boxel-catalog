@@ -1,8 +1,6 @@
-import { DEFAULT_REMIX_LLM } from '@cardstack/runtime-common/matrix-constants';
-
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import { Command } from '@cardstack/runtime-common';
+import { Command, DEFAULT_REMIX_LLM } from '@cardstack/runtime-common';
 
 import { skillCardURL, loadCommandModule } from './utils';
 

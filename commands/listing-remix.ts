@@ -2,8 +2,8 @@ import {
   Command,
   isResolvedCodeRef,
   type ResolvedCodeRef,
+  DEFAULT_CODING_LLM,
 } from '@cardstack/runtime-common';
-import { DEFAULT_CODING_LLM } from '@cardstack/runtime-common/matrix-constants';
 
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 

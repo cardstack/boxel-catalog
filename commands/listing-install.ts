@@ -14,8 +14,7 @@ import {
   type Relationship,
 } from '@cardstack/runtime-common';
 import { logger } from '@cardstack/runtime-common';
-import type { CopyInstanceMeta } from '@cardstack/runtime-common/catalog';
-import type { CopyModuleMeta } from '@cardstack/runtime-common/catalog';
+import type { CopyInstanceMeta, CopyModuleMeta } from '@cardstack/runtime-common';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';

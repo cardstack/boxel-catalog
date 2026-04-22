@@ -1,8 +1,6 @@
-import { DEFAULT_CODING_LLM } from '@cardstack/runtime-common/matrix-constants';
-
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import { Command } from '@cardstack/runtime-common';
+import { Command, DEFAULT_CODING_LLM } from '@cardstack/runtime-common';
 
 import { devSkillId, skillCardURL, loadCommandModule } from './utils';
 
