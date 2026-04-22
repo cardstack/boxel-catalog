@@ -1,6 +1,5 @@
 import {
   CardDef,
-  Component,
   contains,
   containsMany,
   field,
@@ -9,7 +8,6 @@ import {
 import StringField from 'https://cardstack.com/base/string';
 
 import BotIcon from '@cardstack/boxel-icons/bot';
-import FileCodeIcon from '@cardstack/boxel-icons/file-code';
 
 import { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 import { PrCard } from '../pr-card/pr-card';
