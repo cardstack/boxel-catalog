@@ -1,4 +1,4 @@
-name: AI Code Review
+name: CI AI Code Check
 
 on:
   pull_request:
@@ -9,8 +9,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  ai-code-review:
-    name: AI Code Review
+  ai-code-check:
+    name: CI AI Code Check
     runs-on: ubuntu-latest
     concurrency:
       group: ai-review-${{ github.head_ref || github.run_id }}
