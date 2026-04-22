@@ -1,0 +1,124 @@
+name: CI AI Code Check
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai-code-check:
+    name: CI AI Code Check
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ai-review-${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Get changed JSON files
+        id: diff
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.json' ':!.github/' ':!package.json' ':!package-lock.json')
+          if [ -z "$CHANGED" ]; then
+            echo "No JSON files changed"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          # Collect content of changed JSON files only
+          CONTENT=""
+          for f in $CHANGED; do
+            if [ -f "$f" ]; then
+              CONTENT="$CONTENT
+          --- $f ---
+          $(cat "$f")
+          "
+            fi
+          done
+          # Save to file to avoid shell escaping issues
+          echo "$CONTENT" > /tmp/changed-json-files.txt
+
+      - name: Review with Claude API
+        if: steps.diff.outputs.has_changes == 'true'
+        id: review
+        run: |
+          CHANGED_CONTENT=$(cat /tmp/changed-json-files.txt)
+          python3 << 'PYEOF'
+          import json, os, urllib.request, sys
+
+          changed_content = open("/tmp/changed-json-files.txt").read()
+
+          prompt = f"""Review these changed JSON files for absolute URL violations.
+          Any JSON file containing `data.meta.adoptsFrom` is a card instance file.
+
+          STRUCTURAL FIELDS (must be relative or start with https://cardstack.com/base/):
+          - data.meta.adoptsFrom.module
+          - data.attributes.ref.module
+          - data.relationships.*.links.self
+
+          SUSPICIOUS PATTERNS in any attribute value:
+          - http://localhost (any port)
+          - http://127.0.0.1
+          - https://realms-staging.stack.cards
+
+          ALLOWED in attributes (do NOT flag):
+          - https://cardstack.com/base/*
+          - https://imagedelivery.net/*
+          - https://boxel-images.boxel.ai/*
+          - https://app-assets-cardstack.s3.us-east-1.amazonaws.com/*
+
+          Return ONLY valid JSON matching this schema:
+          {{"has_violations": boolean, "violations": [{{"file": string, "field": string, "url": string, "reason": string}}]}}
+
+          Changed files:
+          {changed_content}"""
+
+          body = json.dumps({
+              "model": "claude-haiku-4-5-20251001",
+              "max_tokens": 4096,
+              "messages": [{"role": "user", "content": prompt}]
+          }).encode()
+
+          req = urllib.request.Request(
+              "https://api.anthropic.com/v1/messages",
+              data=body,
+              headers={
+                  "Content-Type": "application/json",
+                  "x-api-key": os.environ["ANTHROPIC_API_KEY"],
+                  "anthropic-version": "2023-06-01"
+              }
+          )
+
+          try:
+              resp = urllib.request.urlopen(req)
+              result = json.loads(resp.read())
+              text = result["content"][0]["text"]
+
+              # Extract JSON from response
+              start = text.find("{")
+              end = text.rfind("}") + 1
+              if start >= 0 and end > start:
+                  data = json.loads(text[start:end])
+              else:
+                  print("No JSON found in response")
+                  sys.exit(0)
+
+              if data.get("has_violations"):
+                  print("::error::Absolute URL violations found:")
+                  for v in data.get("violations", []):
+                      print(f"  {v['file']}: {v['field']} -> {v['url']}")
+                      print(f"    Reason: {v['reason']}")
+                  sys.exit(1)
+
+              print("No absolute URL violations found.")
+          except urllib.error.HTTPError as e:
+              print(f"API error: {e.code} {e.read().decode()}")
+              sys.exit(2)
+          PYEOF
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
