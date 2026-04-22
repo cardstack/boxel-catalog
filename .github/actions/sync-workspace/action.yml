@@ -6,7 +6,7 @@ inputs:
     description: "Environment name (e.g. staging, production)"
     required: true
   workspace-url:
-    description: "Target workspace URL (e.g. https://app.boxel.ai/external-catalog)"
+    description: "Target workspace URL (e.g. https://app.boxel.ai/catalog)"
     required: true
   matrix-url:
     description: "Matrix server URL"
