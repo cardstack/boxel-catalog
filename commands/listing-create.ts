@@ -9,12 +9,10 @@ import {
   isFieldDef,
   isResolvedCodeRef,
   trimExecutableExtension,
-} from '@cardstack/runtime-common';
-import {
   loadCardDef,
   getAncestor,
   identifyCard,
-} from '@cardstack/runtime-common/code-ref';
+} from '@cardstack/runtime-common';
 
 import type * as CardAPI from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';

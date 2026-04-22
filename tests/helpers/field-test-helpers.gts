@@ -1,6 +1,6 @@
 import { getService } from '@universal-ember/test-support';
 
-import type { Loader } from '@cardstack/runtime-common/loader';
+import type { Loader } from '@cardstack/runtime-common';
 
 import { field, contains, CardDef, Component } from './base-realm';
 import { CatalogImageField, MultipleImageField } from './catalog-realm';
