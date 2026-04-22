@@ -1,0 +1,74 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  ai-code-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ai-review-${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+
+      - name: Claude Code Review
+        id: review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review all changed JSON files in this PR for absolute URL violations.
+            Any JSON file containing `data.meta.adoptsFrom` is a card instance file.
+            Check these fields:
+
+            STRUCTURAL (must be relative or start with https://cardstack.com/base/):
+            - data.meta.adoptsFrom.module
+            - data.attributes.ref.module
+            - data.relationships.*.links.self
+
+            SUSPICIOUS PATTERNS in any attribute value:
+            - http://localhost (any port)
+            - http://127.0.0.1
+            - https://realms-staging.stack.cards
+
+            ALLOWED in attributes (do NOT flag):
+            - https://cardstack.com/base/*
+            - https://imagedelivery.net/*
+            - https://boxel-images.boxel.ai/*
+            - https://app-assets-cardstack.s3.us-east-1.amazonaws.com/*
+
+            Post inline comments on each violation explaining why it should be
+            a relative URL. Then return structured output.
+          claude_args: |
+            --json-schema '{"type":"object","properties":{"has_violations":{"type":"boolean"},"violations":{"type":"array","items":{"type":"object","properties":{"file":{"type":"string"},"field":{"type":"string"},"url":{"type":"string"},"reason":{"type":"string"}},"required":["file","field","url","reason"]}}},"required":["has_violations","violations"]}'
+
+      - name: Check for violations
+        run: |
+          OUTPUT='${{ steps.review.outputs.structured_output }}'
+          if [ -z "$OUTPUT" ]; then
+            echo "No structured output from Claude — skipping violation check"
+            exit 0
+          fi
+          python3 -c "
+          import json, sys
+          try:
+              data = json.loads('''${{ steps.review.outputs.structured_output }}''')
+          except json.JSONDecodeError:
+              print('Warning: Could not parse structured output')
+              sys.exit(0)
+          if data.get('has_violations'):
+              print('::error::Absolute URL violations found in instance files:')
+              for v in data.get('violations', []):
+                  print(f\"  {v['file']}: {v['field']} -> {v['url']}\")
+                  print(f\"    Reason: {v['reason']}\")
+              sys.exit(1)
+          print('No absolute URL violations found.')
+          "

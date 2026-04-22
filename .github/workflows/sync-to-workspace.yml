@@ -25,8 +25,8 @@ jobs:
           environment: staging
           workspace-url: ${{ env.STAGING_WORKSPACE_URL }}
           matrix-url: https://matrix-staging.stack.cards
-          matrix-username: ${{ secrets.STAGING_MATRIX_USERNAME }}
-          matrix-password: ${{ secrets.STAGING_MATRIX_PASSWORD }}
+          matrix-username: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_USERNAME }}
+          matrix-password: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_PASSWORD }}
 
       - name: Write staging sync report
         if: always()
@@ -75,8 +75,8 @@ jobs:
           environment: production
           workspace-url: ${{ env.PRODUCTION_WORKSPACE_URL }}
           matrix-url: https://matrix.boxel.ai
-          matrix-username: ${{ secrets.MATRIX_USERNAME }}
-          matrix-password: ${{ secrets.MATRIX_PASSWORD }}
+          matrix-username: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_USERNAME }}
+          matrix-password: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_PASSWORD }}
 
       - name: Write production sync report
         if: always()
