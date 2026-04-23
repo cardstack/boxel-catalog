@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "commonName": [
+        "partial shade 1"
+      ],
+      "scientificName": "Partial Shade 1",
+      "lightRequirement": [
+        {
+          "selectedValue": "Partial Shade"
+        }
+      ],
+      "toxicityForDogs": {
+        "selectedValue": "No Information"
+      },
+      "attracts": [],
+      "height": null,
+      "spacing": "222",
+      "spread": null,
+      "seasonOfInterest": [],
+      "cardTitle": null,
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../plant-info",
+        "name": "PlantInfo"
+      }
+    }
+  }
+}

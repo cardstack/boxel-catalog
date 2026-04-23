@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "PlantInfo",
+        "module": "../plant-info"
+      },
+      "readMe": "## Summary\n\nThe `PlantInfo` spec is a card that provides detailed information about a plant, including its common name, scientific name, light requirements, toxicity, attributes it attracts, and growth characteristics such as height, spacing, and season of interest.\n\n## Import\n\n```javascript\nimport { PlantInfo } from '../plant-info';\n```\n\n## Usage as a Field\n\nThe `PlantInfo` card can be used as a field within a consuming card or field. For example:\n\n```json\n{\n  \"type\": \"card-fields\",\n  \"id\": \"plant-details\",\n  \"attributes\": {\n    \"fields\": [\n      {\n        \"type\": \"PlantInfo\",\n        \"id\": \"plant-info\"\n      }\n    ]\n  }\n}\n```\n\nIn this example, the `PlantInfo` card is included as a field within a larger card or field named \"plant-details\".\n\n## Template Usage\n\nTo display the `PlantInfo` card within a template, you can use the following syntax:\n\n```handlebars\n<@fields.plant-info />\n```\n\nThis will render the `PlantInfo` card within the consuming template.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Plant Info",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
