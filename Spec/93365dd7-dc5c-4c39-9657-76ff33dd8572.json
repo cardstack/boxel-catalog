@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "RecipeCard",
+        "module": "../recipe-card-a2c7af02-92a6-4301-8395-52c47a897b74/recipe-card"
+      },
+      "readMe": "# RecipeCard\n\n## Summary\nThe `RecipeCard` is a Boxel card definition that represents a recipe. It includes fields for the recipe name, description, prep time, cook time, servings, difficulty, cuisine, ingredients, instructions, tips, and tags. The card has several formats (isolated, embedded, and fitted) that display the recipe information in different ways.\n\n## Import\n```gts\nimport { RecipeCard } from '../recipe-card-a2c7af02-92a6-4301-8395-52c47a897b74/recipe-card';\n```\n\n## Usage as a Field\nTo use the `RecipeCard` as a field within a consuming card or field, you can define it as follows:\n\n```gts\n@field recipe = linksTo(RecipeCard);\n```\n\nThis will allow you to link a `RecipeCard` instance to the consuming card or field.\n\n## Template Usage\nTo display a `RecipeCard` instance in a template, you can use the following syntax:\n\n```hbs\n<@fields.recipe @format=\"isolated\" />\n```\n\nThis will render the `RecipeCard` in the isolated format. You can also use the `embedded` or `fitted` formats depending on your needs.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Recipe",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
