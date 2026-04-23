@@ -1,0 +1,329 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "../catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Airbnb Listing",
+      "images": [],
+      "summary": "The AirbnbListing component defines a detailed data card representing an Airbnb property listing, primarily used to display property information in a consistent format. It showcases key details such as property name, location, type, price per night, ratings, review counts, guest capacity, bedroom and bed counts, bathrooms, photos, amenities, host details, listing date, and description. The listing card features embedded and isolated presentation formats, with the embedded version providing a compact preview and the isolated version offering an expanded view with rich styling and interactive elements. Its primary purpose is to serve as a reusable, customizable display of property listings within listings or marketplaces, enabling users to assess and interact with property details efficiently.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "../Tag/app"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/ea8de8d8-3d7e-44b0-83a9-627c0319dc79"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/527c4185-efb2-4d0c-ab59-881ec9d51570"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/20f75ed6-f7d4-4806-98cf-71a2b3471688"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/f75ed6f7-d438-4698-8f71-a2b3471688bf"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/4a63774c-c4e7-4e37-927c-4185efb2dd0c"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/63beeac1-b550-4c21-99ea-0f16ee228250"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/679c9deb-fd7b-43d4-a9ea-ee7e240d653f"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/9c9debfd-7bf3-4429-aaee-7e240d653ff0"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/9debfd7b-f3d4-49ea-ae7e-240d653ff098"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../field-spec/DateFieldSpec/b9c37d53-39d0-4bee-8e98-da21ed6780a4"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/16320d37-fac6-417c-ae20-c583ea0c8a2e"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/2517ea38-f3ba-43d5-920a-fb1936279570"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/067a1da5-01cb-4cdf-a101-8007720f10d0"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/7a1da501-cbbc-4f61-8180-07720f10d079"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../Spec/c3a0d4d5-c206-4a1d-a501-cbbcdf610180"
+        }
+      },
+      "specs.15": {
+        "links": {
+          "self": "../Spec/cbbcdf61-0180-4772-8f10-d0792517ea38"
+        }
+      },
+      "specs.16": {
+        "links": {
+          "self": "../Spec/d5c2067a-1da5-41cb-bcdf-61018007720f"
+        }
+      },
+      "specs.17": {
+        "links": {
+          "self": "../Spec/c2067a1d-a501-4bbc-9f61-018007720f10"
+        }
+      },
+      "specs.18": {
+        "links": {
+          "self": "../Spec/01800772-0f10-4079-a517-ea38f3ba43d5"
+        }
+      },
+      "specs.19": {
+        "links": {
+          "self": "../Spec/61018007-720f-40d0-b925-17ea38f3ba43"
+        }
+      },
+      "specs.20": {
+        "links": {
+          "self": "../Spec/1da501cb-bcdf-4101-8007-720f10d07925"
+        }
+      },
+      "specs.21": {
+        "links": {
+          "self": "../Spec/d4d5c206-7a1d-4501-8bbc-df6101800772"
+        }
+      },
+      "specs.22": {
+        "links": {
+          "self": "../field-spec/MultipleImageFieldSpec/ddd219dc-8efa-4586-b082-e8a4788a795b"
+        }
+      },
+      "specs.23": {
+        "links": {
+          "self": "../Spec/146070b7-f610-4f9a-ab05-ffd6a99e0c3f"
+        }
+      },
+      "specs.24": {
+        "links": {
+          "self": "../Spec/f6107f9a-6b05-4fd6-a99e-0c3f3a062f92"
+        }
+      },
+      "specs.25": {
+        "links": {
+          "self": "../Spec/6070b7f6-107f-4a6b-85ff-d6a99e0c3f3a"
+        }
+      },
+      "specs.26": {
+        "links": {
+          "self": "../Spec/b7f6107f-9a6b-45ff-96a9-9e0c3f3a062f"
+        }
+      },
+      "specs.27": {
+        "links": {
+          "self": "../Spec/70b7f610-7f9a-4b05-bfd6-a99e0c3f3a06"
+        }
+      },
+      "specs.28": {
+        "links": {
+          "self": "../Spec/107f9a6b-05ff-46a9-9e0c-3f3a062f92ef"
+        }
+      },
+      "specs.29": {
+        "links": {
+          "self": "../field-spec/NumberFieldSpec/f8ea8805-8068-481e-953e-2166c21cd1a9"
+        }
+      },
+      "specs.30": {
+        "links": {
+          "self": "../Spec/ffd6a99e-0c3f-4a06-af92-ef7cd91cb7c6"
+        }
+      },
+      "specs.31": {
+        "links": {
+          "self": "../Spec/d6a99e0c-3f3a-462f-92ef-7cd91cb7c6f0"
+        }
+      },
+      "specs.32": {
+        "links": {
+          "self": "../Spec/a99e0c3f-3a06-4f92-af7c-d91cb7c6f086"
+        }
+      },
+      "specs.33": {
+        "links": {
+          "self": "../Spec/9e0c3f3a-062f-42ef-bcd9-1cb7c6f086a5"
+        }
+      },
+      "specs.34": {
+        "links": {
+          "self": "../Spec/3a062f92-ef7c-491c-b7c6-f086a5659480"
+        }
+      },
+      "specs.35": {
+        "links": {
+          "self": "../Spec/062f92ef-7cd9-4cb7-86f0-86a565948077"
+        }
+      },
+      "specs.36": {
+        "links": {
+          "self": "../Spec/0c3f3a06-2f92-4f7c-991c-b7c6f086a565"
+        }
+      },
+      "specs.37": {
+        "links": {
+          "self": "../Spec/3f3a062f-92ef-4cd9-9cb7-c6f086a56594"
+        }
+      },
+      "specs.38": {
+        "links": {
+          "self": "../Spec/ef7cd91c-b7c6-4086-a565-948077a2840d"
+        }
+      },
+      "specs.39": {
+        "links": {
+          "self": "../Spec/2f92ef7c-d91c-47c6-b086-a565948077a2"
+        }
+      },
+      "specs.40": {
+        "links": {
+          "self": "../Spec/92ef7cd9-1cb7-46f0-86a5-65948077a284"
+        }
+      },
+      "specs.41": {
+        "links": {
+          "self": "../Spec/7cd91cb7-c6f0-46a5-a594-8077a2840dd4"
+        }
+      },
+      "specs.42": {
+        "links": {
+          "self": "../Spec/d91cb7c6-f086-4565-9480-77a2840dd4d4"
+        }
+      },
+      "specs.43": {
+        "links": {
+          "self": "../Spec/1cb7c6f0-86a5-4594-8077-a2840dd4d49f"
+        }
+      },
+      "specs.44": {
+        "links": {
+          "self": "../Spec/b7c6f086-a565-4480-b7a2-840dd4d49f46"
+        }
+      },
+      "specs.45": {
+        "links": {
+          "self": "../Spec/c6f086a5-6594-4077-a284-0dd4d49f46a0"
+        }
+      },
+      "specs.46": {
+        "links": {
+          "self": "../Spec/f086a565-9480-47a2-840d-d4d49f46a0f0"
+        }
+      },
+      "specs.47": {
+        "links": {
+          "self": "../Spec/86a56594-8077-4284-8dd4-d49f46a0f084"
+        }
+      },
+      "specs.48": {
+        "links": {
+          "self": "../Spec/a5659480-77a2-440d-94d4-9f46a0f08444"
+        }
+      },
+      "specs.49": {
+        "links": {
+          "self": "../Spec/65948077-a284-4dd4-949f-46a0f084444c"
+        }
+      },
+      "specs.50": {
+        "links": {
+          "self": "../Spec/77a2840d-d4d4-4f46-a0f0-84444c8e470c"
+        }
+      },
+      "specs.51": {
+        "links": {
+          "self": "../Spec/a2840dd4-d49f-46a0-b084-444c8e470c0e"
+        }
+      },
+      "specs.52": {
+        "links": {
+          "self": "../field-spec/RatingFieldSpec/8a795bb2-7590-4d74-a6c2-d571fd42a287"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "../License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../Category/real-estate-property"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../airbnb-listing/AirbnbListing/59ffa0b2-498a-4c7f-a3bf-50a9a07d6d2f"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
