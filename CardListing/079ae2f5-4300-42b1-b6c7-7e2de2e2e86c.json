@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Recipe Card Definition with Embedded, Fitted, and Fitted Formats",
+      "images": [],
+      "summary": "The RecipeCard defines a comprehensive data structure for representing culinary recipes, including fields for recipe name, description, cuisine type, difficulty level, preparation and cooking times, servings, ingredients, instructions, and tags. It supports various presentation formats such as embedded summaries, fitted compact views, tiles, cards, and sub-formats, each tailored for different interface contexts or device sizes. The card incorporates logic for computing total time, dynamic styling based on difficulty, and localized display formats. Its primary purpose is to facilitate the creation, editing, and multi-format presentation of recipe data within an application or catalog system.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
