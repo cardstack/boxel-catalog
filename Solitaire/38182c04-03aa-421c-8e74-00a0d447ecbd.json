@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "gameState": null,
+      "moves": null,
+      "score": null,
+      "timeElapsed": null,
+      "cardTitle": null,
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../solitaire",
+        "name": "Solitaire"
+      }
+    }
+  }
+}
