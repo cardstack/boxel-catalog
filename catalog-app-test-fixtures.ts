@@ -91,7 +91,7 @@ export function makeMockCatalogContents(
   const authorCompanyExampleId = `${mockCatalogURL}author/AuthorCompany/example`;
   const authorSpecId = `${mockCatalogURL}Spec/author`;
   const authorExampleId = `${mockCatalogURL}author/Author/example`;
-  const calculatorTagId = `${mockCatalogURL}Tag/c1fe433a-b3df-41f4-bdcf-d98686ee42d7`;
+  const calculatorTagId = `${mockCatalogURL}Tag/calculator`;
   const writingCategoryId = `${mockCatalogURL}Category/writing`;
   const mitLicenseId = `${mockCatalogURL}License/mit`;
   const publisherId = `${mockCatalogURL}Publisher/boxel-publisher`;
@@ -582,7 +582,7 @@ export function makeMockCatalogContents(
         },
       },
     },
-    'Tag/c1fe433a-b3df-41f4-bdcf-d98686ee42d7.json': {
+    'Tag/calculator.json': {
       data: {
         type: 'card',
         attributes: {
@@ -596,7 +596,7 @@ export function makeMockCatalogContents(
         },
       },
     },
-    'Tag/51de249c-516a-4c4d-bd88-76e88274c483.json': {
+    'Tag/game.json': {
       data: {
         type: 'card',
         attributes: {
