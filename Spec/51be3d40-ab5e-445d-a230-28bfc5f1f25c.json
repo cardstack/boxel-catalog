@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AdventureScenario",
+        "module": "../adventure-00dd63cf-3bdf-431c-910d-1a99d423fd5c/adventure/adventure-scenario"
+      },
+      "readMe": "# AdventureScenario Card Usage\n\n## Summary\nThe `AdventureScenario` card represents a scenario or episode within an adventure narrative. It contains information about the scenario, including a title, description, tags, and visual styling hints.\n\n## Import\n```javascript\nimport { AdventureScenario } from 'http://localhost:4201/richardtan/richy-workspace/adventure-00dd63cf-3bdf-431c-910d-1a99d423fd5c/adventure/adventure-scenario';\n```\n\n## Usage as a Field\nTo use the `AdventureScenario` card as a field within a consuming card or field, you can define it as follows:\n\n```javascript\nimport { CardDef, field, linksTo } from 'https://cardstack.com/base/card-api';\nimport { AdventureScenario } from 'http://localhost:4201/richardtan/richy-workspace/adventure-00dd63cf-3bdf-431c-910d-1a99d423fd5c/adventure/adventure-scenario';\n\nexport class MyCard extends CardDef {\n  @field adventure = linksTo(AdventureScenario);\n}\n```\n\n## Template Usage\nTo display an `AdventureScenario` card within a consuming template, you can use the following:\n\n```handlebars\n{{#if @model.adventure}}\n  <@fields.adventure @format=\"embedded\" />\n{{else}}\n  <div class=\"empty-state\">No adventure scenario selected</div>\n{{/if}}\n```\n\nThis will render the `AdventureScenario` card in its embedded format, or display a placeholder if no scenario is available.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Adventure Scenario",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
