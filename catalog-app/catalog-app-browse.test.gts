@@ -55,8 +55,8 @@ const incompleteSkillListingId = `${mockCatalogURL}Listing/incomplete-skill`;
 const apiDocumentationStubListingId = `${mockCatalogURL}Listing/api-documentation-stub`;
 
 //tags
-const calculatorTagId = `${mockCatalogURL}Tag/c1fe433a-b3df-41f4-bdcf-d98686ee42d7`;
-const gameTagId = `${mockCatalogURL}Tag/51de249c-516a-4c4d-bd88-76e88274c483`;
+const calculatorTagId = `${mockCatalogURL}Tag/calculator`;
+const gameTagId = `${mockCatalogURL}Tag/game`;
 
 export function runTests() {
 module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {

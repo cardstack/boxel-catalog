@@ -45,7 +45,7 @@ const mitLicenseId = `${mockCatalogURL}License/mit`;
 const writingCategoryId = `${mockCatalogURL}Category/writing`;
 
 //tags
-const calculatorTagId = `${mockCatalogURL}Tag/c1fe433a-b3df-41f4-bdcf-d98686ee42d7`;
+const calculatorTagId = `${mockCatalogURL}Tag/calculator`;
 
 export function runTests() {
   module(
