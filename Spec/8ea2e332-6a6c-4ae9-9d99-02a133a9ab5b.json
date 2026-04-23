@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "GolfScorecard",
+        "module": "../golf-scorecard-0ed3ac0e-4b0d-452b-b17d-4cb63cecb223/golf-scorecard"
+      },
+      "readMe": "# Golf Scorecard\n\n## Summary\nThe `GolfScorecard` card definition represents a golf scorecard, including information about the tournament, course, player, and hole-by-hole scores. It provides computed fields for various totals and scoring metrics.\n\n## Import\n```javascript\nimport { GolfScorecard, HoleField } from 'https://realms-staging.stack.cards/chuan16/catalog-listing-test-1/golf-scorecard-0ed3ac0e-4b0d-452b-b17d-4cb63cecb223/golf-scorecard';\n```\n\n## Usage as a Field\nYou can use the `GolfScorecard` card definition as a field within a consuming card or field:\n\n```javascript\nimport { CardDef, FieldDef, field, contains, containsMany } from 'https://cardstack.com/base/card-api';\n\nexport class MyCard extends CardDef {\n  @field golfScorecard = contains(GolfScorecard);\n}\n```\n\n## Template Usage\nInside the template of a consuming card or field, you can access the `GolfScorecard` instance and its fields:\n\n```html\n<div>\n  <h2>{{@model.golfScorecard.tournamentName}}</h2>\n  <p>Player: {{@model.golfScorecard.playerName}}</p>\n  <p>Total Score: {{@model.golfScorecard.totalScore}}</p>\n  <p>Score to Par: {{@model.golfScorecard.scoreToPar}}</p>\n</div>\n```\n\nYou can also use the `Embedded` and `Edit` components provided by the `GolfScorecard` definition to render the scorecard in different views:\n\n```html\n<@model.golfScorecard.Embedded />\n<@model.golfScorecard.Edit />\n```",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Golf Scorecard",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

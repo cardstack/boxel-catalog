@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Golf Scorecard",
+      "images": [],
+      "summary": "The GolfScorecard component provides a structured digital record of a golf round, including details such as tournament, course, player, and date information. It encapsulates the scoring details for 18 holes, tracking strokes, par, yardage, and special scores like hole-in-one or eagle. The component calculates aggregate scores for the front nine, back nine, total strokes, and score relative to par. It offers embedded or isolated views with detailed score breakdowns, including per-hole scores and overall summaries, and includes signature fields for validation. Its primary purpose is to facilitate comprehensive recording and display of golf round scores in a clear, visual format suitable for both digital and print use.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/8ea2e332-6a6c-4ae9-9d99-02a133a9ab5b"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/51de249c-516a-4c4d-bd88-76e88274c483"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../golf-scorecard-0ed3ac0e-4b0d-452b-b17d-4cb63cecb223/GolfScorecard/ee5723a6-256c-4a03-b57e-b542a89553b9"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/sports-fitness"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
