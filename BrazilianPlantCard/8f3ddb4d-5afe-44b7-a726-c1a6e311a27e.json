@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "commonName": null,
+      "scientificName": null,
+      "description": null,
+      "habitat": null,
+      "conservationStatus": null,
+      "uses": null,
+      "images": [],
+      "growthConditions": null,
+      "cardInfo": {
+        "title": null,
+        "description": null,
+        "thumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../brazilianPlants",
+        "name": "BrazilianPlantCard"
+      }
+    }
+  }
+}
