@@ -1,0 +1,35 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "RacingGame",
+        "module": "../racing-game"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "gameName": null,
+      "carConfig": {
+        "color": null,
+        "speed": 30,
+        "handling": 200,
+        "acceleration": 10
+      },
+      "isGameActive": true,
+      "cardDescription": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
