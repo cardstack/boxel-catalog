@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "BucketList Card Definition Catalog",
+      "images": [],
+      "summary": "The BucketList component defines a card that enables users to create and manage a list of items, typically representing personal goals or tasks. It provides an interface with a header displaying the list's name or a default label, and incorporates a chips-style editor for adding, editing, and removing list items interactively. The component supports dynamic updates to its items and name, facilitating customizable and interactive bucket list management within a card-based interface.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/7a5b3dde-3e1d-475d-bb3f-0ab625022fb8"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/3b3f0ab6-2502-4fb8-b559-b348670a5007"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/card"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "http://localhost:4201/catalog/License/4c5a023b-a72c-4f90-930b-da60a1de5b2d"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../BucketList/63957fff-4848-46fe-ae46-86e966ead769"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/goals-habits"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
