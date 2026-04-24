@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Placement Prototype",
+      "images": [],
+      "summary": "The PlacementPrototype defines an interactive drag-and-drop interface for managing card-like payloads within various target zones. It provides a visual workspace with designated targets that accept specific payload types, supporting functionalities such as dragging, dropping, keyboard navigation, dwell-based folder expansion, and asynchronous cross-realm copying. The component maintains a history of placement actions and offers a palette overlay for quick placement. Its primary purpose is to facilitate prototyping of user interactions involving movable, type-dependent cards in a visually guided environment.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/ai"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/5a730d3a-28b1-4a96-9cab-b9ebabe941ad"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../PlacementPrototype/933f07d0-afe1-4988-afe0-747a274350c3"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/prototyping-experiments"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/placementprototype-bae15f25.png"
+        }
+      }
+    }
+  }
+}

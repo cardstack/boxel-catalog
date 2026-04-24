@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "PlacementPrototype",
+        "module": "../testing-1"
+      },
+      "readMe": "# PlacementPrototype\n\n## Summary\nThe `PlacementPrototype` is a card definition that implements an interactive prototype for placing different types of cards (represented as \"payloads\") into various target containers (represented as \"targets\"). It allows users to drag-and-drop payloads onto compatible targets, with the ghost representation of the payload morphing to match the target's format. The prototype also includes features like a palette for quickly placing payloads, an audit trail of all placement actions, and support for asynchronous cross-realm placements.\n\n## Import\n```javascript\nimport { CardDef, Component } from 'https://cardstack.com/base/card-api';\n```\n\n## Usage as a Field\nThe `PlacementPrototype` is a `CardDef`, so it cannot be used as a field within a consuming card or field.\n\n## Template Usage\nTo use the `PlacementPrototype` in a template, you can simply include it as a component:\n\n```hbs\n<PlacementPrototype />\n```\n\nThe prototype will handle all the user interactions and placement logic, providing a fully functional interactive experience.\n\nExample:\n\n```gts\nimport { CardDef, Component } from 'https://cardstack.com/base/card-api';\n\nexport class MyCard extends CardDef {\n  static isolated = class Isolated extends Component<typeof MyCard> {\n    <template>\n      <PlacementPrototype />\n    </template>\n  };\n}\n```",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Placement Prototype",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
