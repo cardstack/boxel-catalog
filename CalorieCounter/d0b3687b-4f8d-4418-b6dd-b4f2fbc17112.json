@@ -1,0 +1,56 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "goalCalories": 2200,
+      "today": {
+        "date": "2025-07-31",
+        "totalCalories": 1847,
+        "goalCalories": 2200,
+        "macros": {
+          "protein": 128,
+          "carbs": 165,
+          "fat": 72
+        },
+        "meals": [
+          {
+            "name": "Greek Yogurt Bowl",
+            "calories": 420,
+            "protein": 32,
+            "carbs": 45,
+            "fat": 12
+          },
+          {
+            "name": "Turkey & Avocado Wrap",
+            "calories": 485,
+            "protein": 28,
+            "carbs": 38,
+            "fat": 24
+          },
+          {
+            "name": "Grilled Salmon & Rice",
+            "calories": 612,
+            "protein": 42,
+            "carbs": 58,
+            "fat": 18
+          },
+          {
+            "name": "Mixed Nuts Snack",
+            "calories": 330,
+            "protein": 26,
+            "carbs": 24,
+            "fat": 18
+          }
+        ]
+      },
+      "description": null,
+      "thumbnailURL": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../calorie-counter",
+        "name": "CalorieCounter"
+      }
+    }
+  }
+}
