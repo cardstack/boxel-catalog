@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "KanbanBoard",
+        "module": "../kanban-board"
+      },
+      "readMe": "## Summary\n\nThe `KanbanBoard` spec defines a card that represents a Kanban board, a visual project management tool used to track the progress of tasks or projects. This card allows users to create and manage columns, add tasks, and move tasks between columns.\n\n## Import\n\n```js\nimport { KanbanBoard } from '../kanban-board';\n```\n\n## Usage as a Field\n\nThe `KanbanBoard` can be used as a field within a consuming card or field. For example:\n\n```js\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport { KanbanBoard } from '../kanban-board';\n\nexport class MyCard extends CardDef {\n  @field kanbanBoard = contains(KanbanBoard);\n}\n```\n\n## Template Usage\n\nTo use the `KanbanBoard` within a template, you can simply include the `KanbanBoard` component:\n\n```hbs\n<KanbanBoard @model={{this.kanbanBoard}} />\n```\n\nThe `@model` argument should be bound to the `kanbanBoard` field from the parent card.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Kanban Board",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
