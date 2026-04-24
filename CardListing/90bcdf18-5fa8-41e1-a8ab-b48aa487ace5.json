@@ -1,0 +1,79 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Kanban Board",
+      "images": [],
+      "summary": "The KanbanBoard is a full interactive Kanban-style project management component that allows users to organize tasks across multiple customizable columns. It provides features for adding columns and tasks, moving tasks between columns, and toggling task completion status. The component offers various views, including embedded, fitted, and isolated modes, to display the board according to different interface needs. It supports initializing with default columns, tracking task and column counts, and user interactions for managing workflow visually within a flexible, styled interface.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/f18d106c-65fe-4520-88e6-290144e087c9"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/0f58f18d-106c-45fe-8520-48e6290144e0"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/58f18d10-6c65-4e85-a048-e6290144e087"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/bundled"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "../License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../KanbanBoard/c16a1086-7b05-42c1-bba6-007866124e53"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/project-management"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
