@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Placement Prototype",
+      "images": [],
+      "summary": "PlacementPrototype is a card-based component that enables interactive drag-and-drop placement of payloads into predefined target zones, supporting both mouse and keyboard interactions. It manages placement state, provides visual and auditory feedback, and includes features such as dwell-open folders, async cross-realm job scheduling, and a place palette overlay. Its primary purpose is to facilitate intuitive spatial placement and organization of items within a prototype interface, with detailed UI elements for source payloads, targets, placement history, and accessibility considerations.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/58a580e0-c155-4495-adbd-d0e272d05cb0"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../PlacementPrototype/5fc215d9-34a3-4067-b188-b631ffeda8f9"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
