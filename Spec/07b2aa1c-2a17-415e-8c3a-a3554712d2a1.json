@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CalorieCounter",
+        "module": "../calorie-counter"
+      },
+      "title": "CalorieCounter",
+      "readMe": "# Calorie Counter\n\nThe Calorie Counter is a versatile card-based component that allows users to track their daily calorie intake and macronutrient breakdown. It provides a comprehensive dashboard view, offering a summary of the user's progress towards their daily calorie goal, as well as detailed information on their meals and macros.\n\n## Import\n\nTo use the Calorie Counter in your Boxel application, import the `CalorieCounter` class from the `../calorie-counter` module:\n\n```javascript\nimport { CalorieCounter } from '../calorie-counter';\n```\n\n## Define Fields\n\nThe Calorie Counter card contains the following fields:\n\n- `goalCalories`: a `NumberField` that stores the user's daily calorie goal.\n- `today`: a `DaySummaryField` that holds the details of the current day's calorie and macro breakdown.\n- `title`: a computed `StringField` that displays the current day's calorie total and goal.\n\n## Invoke Template\n\nThe Calorie Counter card provides two main templates:\n\n1. **Embedded Format**: This is the default view for the card, displaying the current day's summary and allowing the user to add new meals.\n\n```html\n<@fields.CalorieCounter @format='embedded' />\n```\n\n2. **Isolated Format**: This format provides a more detailed, scrollable view of the user's calorie and macro data, as well as tips and quick-add functionality.\n\n```html\n<@fields.CalorieCounter @format='isolated' />\n```\n\n## Dependencies\n\nThe Calorie Counter card relies on the following dependencies:\n\n- **Core Imports**: `CardDef`, `FieldDef`, `Component`, `field`, `contains`, `containsMany` from `'https://cardstack.com/base/card-api'`.\n- **Formatter Helpers**: `formatNumber`, `formatDateTime`, `multiply`, `divide`, `gt`, `or`, `subtract` from `'@cardstack/boxel-ui/helpers'`.\n- **UI Components**: `Button` from `'@cardstack/boxel-ui/components'`.\n- **State Management**: `tracked` from `'@glimmer/tracking'`.\n\n## Usage and Examples\n\nTo use the Calorie Counter card in your Boxel application, simply include it in your template with the desired format:\n\n```html\n{{! Embedded format (default) }}\n<@fields.CalorieCounter @format='embedded' />\n\n{{! Isolated format }}\n<@fields.CalorieCounter @format='isolated' />\n```\n\nThe Calorie Counter card will automatically display the user's daily calorie and macro data, allowing them to track their progress and add new meals.\n\nAdditionally, you can create instances of the `CalorieCounter` card and the supporting `FieldDef` types (e.g., `DaySummaryField`, `MacroBreakdownField`, `MealEntryField`) using the standard Boxel patterns:\n\n```javascript\n// Create a new Calorie Counter card instance\nconst calorieCounter = new CalorieCounter({\n  goalCalories: 2000,\n  today: {\n    date: new Date(),\n    totalCalories: 1500,\n    goalCalories: 2000,\n    macros: new MacroBreakdownField({\n      protein: 80,\n      carbs: 180,\n      fat: 50\n    }),\n    meals: [\n      new MealEntryField({\n        name: 'Breakfast Burrito',\n        calories: 350,\n        protein: 20,\n        carbs: 40,\n        fat: 15\n      }),\n      new MealEntryField({\n        name: 'Salad with Chicken',\n        calories: 450,\n        protein: 30,\n        carbs: 20,\n        fat: 25\n      })\n    ]\n  }\n});\n```\n\nThis will create a new Calorie Counter card instance with sample data, which you can then use in your Boxel application.",
+      "cardInfo": {
+        "notes": null,
+        "title": null,
+        "description": null,
+        "thumbnailURL": null
+      },
+      "specType": "card",
+      "description": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
