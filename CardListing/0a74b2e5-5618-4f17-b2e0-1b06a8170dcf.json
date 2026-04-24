@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Pet",
+      "images": [],
+      "summary": "The Pet card definition models a pet entity with attributes such as first name, favorite toy, favorite treat, cuteness rating, and sleep habits. It includes multiple embedded and display components allowing various visual presentation styles—standard embedded, isolated, and a responsive fitted template—each presenting pet details like name, sleep behavior, and preferences. Its primary purpose is to represent and display comprehensive pet information within a card-based interface, supporting flexible layout and styling options.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/c8adc603-02f7-4eb0-8b1a-a6e4c14b3c00"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/card"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Pet/26be9d18-7a1e-4a74-b2e5-5618bf1772e0"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/family-relationships"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

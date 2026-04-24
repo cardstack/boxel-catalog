@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Pet",
+        "module": "../pet"
+      },
+      "readMe": "Sure, here's the usage documentation for the `Pet` card spec:\n\n## Summary\n\nThe `Pet` card spec represents a card that displays information about a pet, including its name, favorite toy, favorite treat, cuteness rating, and whether it sleeps on the couch.\n\n## Import\n\n```javascript\nimport { Pet } from '../pet';\n```\n\n## Usage as a Field\n\nTo use the `Pet` card as a field within a consuming card or field, you can include it as a `contains` field:\n\n```javascript\nimport { contains, CardDef } from 'https://cardstack.com/base/card-api';\n\nexport class MyCard extends CardDef {\n  @field pet = contains(Pet);\n}\n```\n\n## Template Usage\n\nTo display the `Pet` card within a template, you can use the `@fields.pet` helper:\n\n```html\n<template>\n  <div>\n    <h2>My Pet</h2>\n    <@fields.pet />\n  </div>\n</template>\n```\n\nThe `Pet` card spec provides several template options for displaying the pet information, including an `Embedded` and `Isolated` component:\n\n**Embedded Template**:\n```html\n<template>\n  <GridContainer ...attributes>\n    <h3><@fields.firstName /></h3>\n    <div>Sleeps On the Couch: <@fields.sleepsOnTheCouch /></div>\n  </GridContainer>\n</template>\n```\n\n**Isolated Template**:\n```html\n<template>\n  <GridContainer class='container'>\n    <h2><@fields.cardTitle /></h2>\n    <div>\n      <div>Sleeps On the Couch: <@fields.sleepsOnTheCouch /></div>\n      <div>Favorite Toy: <@fields.favoriteToy /></div>\n      <div>Favorite Treat: <@fields.favoriteTreat /></div>\n      <div>Cuteness Rating: <@fields.cutenessRating /></div>\n    </div>\n  </GridContainer>\n  <style scoped>\n    .container {\n      padding: var(--boxel-sp-xl);\n    }\n  </style>\n</template>\n```\n\nAdditionally, the `Pet` card spec includes a `FittedTemplate` that automatically adjusts the layout based on the available space.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Pet",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
