@@ -9,10 +9,6 @@ import {
 
 import { module, skip, test } from 'qunit';
 
-import { ensureTrailingSlash } from '@cardstack/runtime-common';
-
-import ENV from '@cardstack/host/config/environment';
-
 import {
   setupLocalIndexing,
   setupOnSave,
@@ -31,19 +27,11 @@ import {
   makeDestinationRealmContents,
 } from './catalog-app-test-fixtures';
 
-// The mock listing card instances use adoptsFrom.module paths that point to the
-// real catalog realm so the Boxel runtime can resolve the card class definitions
-// (e.g. CardListing, SkillListing). Without a valid catalog realm URL those
-// modules 404 and the UI never renders.
-//
-// ENV.resolvedCatalogRealmURL is injected by live-test.js when running live
-// tests (local or CI), but is explicitly set to `undefined` in the standard
-// host test environment (packages/host/config/environment.js). The localhost
-// fallback ensures the constant is always a string and matches the default dev
-// server URL.
-const catalogRealmURL = ensureTrailingSlash(
-  ENV.resolvedCatalogRealmURL ?? 'http://localhost:4201/catalog/',
-);
+// The test file is served from the catalog realm, so its own URL tells us
+// where the realm is without needing an env var. This file lives in the
+// catalog-app/ subdirectory, so we go up one level to reach the realm root.
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const catalogRealmURL: string = new URL('../', import.meta.url).href;
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing
