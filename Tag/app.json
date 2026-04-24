@@ -2,12 +2,12 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "Official",
-      "color": "#F97316",
+      "name": "App",
+      "color": "#10B981",
       "cardInfo": {
         "notes": null,
-        "name": "Official",
-        "summary": "Cards and apps officially created and maintained by the Cardstack team. Guaranteed quality, ongoing support, and compatibility with the latest platform updates.",
+        "name": "App",
+        "summary": "Full applications such as news readers, todo apps, CRMs, and other multi-feature tools.",
         "cardThumbnailURL": null
       }
     },

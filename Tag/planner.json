@@ -2,12 +2,12 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "Official",
-      "color": "#F97316",
+      "name": "Planner",
+      "color": "#10B981",
       "cardInfo": {
         "notes": null,
-        "name": "Official",
-        "summary": "Cards and apps officially created and maintained by the Cardstack team. Guaranteed quality, ongoing support, and compatibility with the latest platform updates.",
+        "name": "Planner",
+        "summary": "Meal planners, project planners, schedule cards, and anything focused on planning ahead.",
         "cardThumbnailURL": null
       }
     },
