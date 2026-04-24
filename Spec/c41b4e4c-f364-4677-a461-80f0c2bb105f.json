@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Todo",
+        "module": "../todo"
+      },
+      "readMe": "Here is the usage documentation for the Todo card spec:\n\n## Todo\n\n**Summary**:\nThe Todo card spec defines a card for tracking tasks, including fields for title, description, status, priority, due date, and completion status.\n\n**Import**:\n```gts\nimport { Todo } from '../todo';\n```\n\n**Usage as a Field**:\nTo use the Todo card as a field, import the spec and include it as a `linksTo` field:\n\n```gts\n@field todo = linksTo(Todo);\n```\n\n**Template Usage**:\nTo display a Todo card in a template, use the field name and specify the desired format:\n\n```hbs\n<@fields.todo @format=\"isolated\" />\n```\n\nThis will render the Todo card in the isolated format, which provides a detailed view of the task.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Todo",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
