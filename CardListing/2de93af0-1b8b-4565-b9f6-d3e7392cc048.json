@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Adventure Mod",
+      "images": [],
+      "summary": "The AdventureMod defines a customizable module that extends an adventure game with new mechanics such as NPCs, inventory, spellbook, and quests. It provides metadata including a human-readable name and description, GM instructions for gameplay, and a set of skills associated with the mod. The module also tracks whether it is active, represented with status icons and summaries, and includes embedded and fitted view components for UI display. Its primary purpose is to facilitate the addition and management of various game mechanics within an adventure setting, enabling dynamic gameplay enhancements and streamlined mod integration.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/game"
+        }
+      },
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": "../License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/creative-projects"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
