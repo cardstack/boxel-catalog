@@ -1,4 +1,3 @@
-import { getOwner } from '@ember/-internals/owner';
 import {
   baseRealm,
   devSkillLocalPath,
@@ -17,15 +16,18 @@ export function skillCardURL(skillId: string): string {
 export const devSkillId = `@cardstack/skills/${devSkillLocalPath}`;
 export const envSkillId = `@cardstack/skills/${envSkillLocalPath}`;
 
-export function getLoaderService(commandContext: CommandContext): any {
-  return (getOwner(commandContext) as any).lookup('service:loader-service');
+export function getLoaderService(_commandContext: CommandContext): {
+  loader: { import<T>(url: string): Promise<T> };
+} {
+  // The realm Loader injects itself as `import.meta.loader` into every
+  // evaluated module — see packages/base/card-serialization.ts for the
+  // canonical use of this pattern in realm-served .ts files.
+  return { loader: (import.meta as any).loader };
 }
 
 export function loadCommandModule(
   commandContext: CommandContext,
 ): Promise<typeof BaseCommandModule> {
-  const loader = getLoaderService(commandContext).loader as {
-    import<T>(url: string): Promise<T>;
-  };
+  const loader = getLoaderService(commandContext).loader;
   return loader.import<typeof BaseCommandModule>(`${baseRealm.url}command`);
 }
