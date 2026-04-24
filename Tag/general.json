@@ -2,12 +2,12 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "Official",
+      "name": "General",
       "color": "#F97316",
       "cardInfo": {
         "notes": null,
-        "name": "Official",
-        "summary": "Cards and apps officially created and maintained by the Cardstack team. Guaranteed quality, ongoing support, and compatibility with the latest platform updates.",
+        "name": "General",
+        "summary": "Universal fallback tag for any card or app that does not fit a more specific type.",
         "cardThumbnailURL": null
       }
     },

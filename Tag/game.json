@@ -3,14 +3,25 @@
     "type": "card",
     "attributes": {
       "name": "Game",
-      "color": "#1EDF67",
-      "cardDescription": null,
-      "cardThumbnailURL": null
+      "color": "#10B981",
+      "cardInfo": {
+        "notes": null,
+        "name": "Game",
+        "summary": "Cards and apps for gaming, game tracking, scoreboards, turn management, or any interactive game-related experience.",
+        "cardThumbnailURL": null
+      }
     },
     "meta": {
       "adoptsFrom": {
         "module": "../catalog-app/listing/tag",
         "name": "Tag"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
       }
     }
   }

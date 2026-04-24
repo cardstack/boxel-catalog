@@ -2,12 +2,12 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "Official",
-      "color": "#F97316",
+      "name": "Report",
+      "color": "#10B981",
       "cardInfo": {
         "notes": null,
-        "name": "Official",
-        "summary": "Cards and apps officially created and maintained by the Cardstack team. Guaranteed quality, ongoing support, and compatibility with the latest platform updates.",
+        "name": "Report",
+        "summary": "Generated summaries, financial reports, audit reports, and structured output documents.",
         "cardThumbnailURL": null
       }
     },
