@@ -1,11 +1,7 @@
 import { getService } from '@universal-ember/test-support';
 import { module, skip } from 'qunit';
 
-import { ensureTrailingSlash } from '@cardstack/runtime-common';
-
 import ListingUseCommand from '@cardstack/boxel-host/commands/listing-use';
-
-import ENV from '@cardstack/host/config/environment';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 
@@ -31,7 +27,10 @@ import {
   makeDestinationRealmContents,
 } from './catalog-app-test-fixtures';
 
-const catalogRealmURL = ensureTrailingSlash(ENV.resolvedCatalogRealmURL!);
+// The test file is served from the catalog realm, so its own URL tells us
+// where the realm is without needing an env var.
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const catalogRealmURL: string = new URL('./', import.meta.url).href;
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 export function runTests() {
