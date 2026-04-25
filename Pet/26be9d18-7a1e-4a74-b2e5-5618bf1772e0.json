@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "firstName": null,
+      "favoriteToy": null,
+      "favoriteTreat": null,
+      "cutenessRating": null,
+      "sleepsOnTheCouch": false,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../pet",
+        "name": "Pet"
+      }
+    }
+  }
+}
