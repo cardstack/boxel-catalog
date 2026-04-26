@@ -44,8 +44,8 @@ const SPHERES: SphereConfig[] = [
     Icon: BuildingBank,
     query: {
       filter: {
-        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
         type: {
+          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
           module: new URL('./listing/category', import.meta.url).href,
           name: 'Category',
         },
@@ -59,8 +59,8 @@ const SPHERES: SphereConfig[] = [
     Icon: WorldIcon,
     query: {
       filter: {
-        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
         type: {
+          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
           module: new URL('./listing/category', import.meta.url).href,
           name: 'Category',
         },
@@ -74,8 +74,8 @@ const SPHERES: SphereConfig[] = [
     Icon: HealthRecognition,
     query: {
       filter: {
-        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
         type: {
+          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
           module: new URL('./listing/category', import.meta.url).href,
           name: 'Category',
         },
@@ -89,8 +89,8 @@ const SPHERES: SphereConfig[] = [
     Icon: UsersIcon,
     query: {
       filter: {
-        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
         type: {
+          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
           module: new URL('./listing/category', import.meta.url).href,
           name: 'Category',
         },
@@ -104,8 +104,8 @@ const SPHERES: SphereConfig[] = [
     Icon: BuildingIcon,
     query: {
       filter: {
-        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
         type: {
+          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
           module: new URL('./listing/category', import.meta.url).href,
           name: 'Category',
         },
