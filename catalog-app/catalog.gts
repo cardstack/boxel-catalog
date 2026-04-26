@@ -13,24 +13,22 @@ import {
   linksToMany,
   realmURL,
 } from 'https://cardstack.com/base/card-api';
-import {
-  Query,
-  isCardInstance,
-  AnyFilter,
-  Filter,
-} from '@cardstack/runtime-common';
+import type { Query, AnyFilter, Filter } from '@cardstack/runtime-common';
+import { isCardInstance } from '@cardstack/runtime-common';
 import StringField from 'https://cardstack.com/base/string';
 
 import FilterSidebar, { type FilterItem } from './components/filter-section';
+import CategoryFilterGroup, {
+  type SphereConfig,
+} from './components/category-filter-group';
 import ShowcaseView from './components/showcase-view';
 import ListView from './components/list-view';
+import TagFilterGroup from './components/tag-filter-group';
 
 import CatalogLayout from './layouts/catalog-layout';
 
-import type IconComponent from '@cardstack/boxel-icons/captions';
 import BuildingBank from '@cardstack/boxel-icons/building-bank';
 import BuildingIcon from '@cardstack/boxel-icons/building';
-import CategoryIcon from '@cardstack/boxel-icons/category';
 import HealthRecognition from '@cardstack/boxel-icons/health-recognition';
 import LayoutGridPlusIcon from '@cardstack/boxel-icons/layout-grid-plus';
 import UsersIcon from '@cardstack/boxel-icons/users';
@@ -38,10 +36,84 @@ import WorldIcon from '@cardstack/boxel-icons/world';
 import { TabbedHeader, BoxelInput } from '@cardstack/boxel-ui/components';
 
 import { Listing } from './listing/listing';
-import { Category } from './listing/category';
-import { Tag } from './listing/tag';
 
-type SphereName = 'WORK' | 'PLAY' | 'LIFE' | 'LEARN' | 'BUILD';
+const SPHERES: SphereConfig[] = [
+  {
+    name: 'WORK',
+    id: 'work',
+    Icon: BuildingBank,
+    query: {
+      filter: {
+        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+        type: {
+          module: new URL('./listing/category', import.meta.url).href,
+          name: 'Category',
+        },
+        eq: { 'sphere.name': 'WORK' },
+      },
+    },
+  },
+  {
+    name: 'PLAY',
+    id: 'play',
+    Icon: WorldIcon,
+    query: {
+      filter: {
+        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+        type: {
+          module: new URL('./listing/category', import.meta.url).href,
+          name: 'Category',
+        },
+        eq: { 'sphere.name': 'PLAY' },
+      },
+    },
+  },
+  {
+    name: 'LIFE',
+    id: 'life',
+    Icon: HealthRecognition,
+    query: {
+      filter: {
+        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+        type: {
+          module: new URL('./listing/category', import.meta.url).href,
+          name: 'Category',
+        },
+        eq: { 'sphere.name': 'LIFE' },
+      },
+    },
+  },
+  {
+    name: 'LEARN',
+    id: 'learn',
+    Icon: UsersIcon,
+    query: {
+      filter: {
+        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+        type: {
+          module: new URL('./listing/category', import.meta.url).href,
+          name: 'Category',
+        },
+        eq: { 'sphere.name': 'LEARN' },
+      },
+    },
+  },
+  {
+    name: 'BUILD',
+    id: 'build',
+    Icon: BuildingIcon,
+    query: {
+      filter: {
+        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+        type: {
+          module: new URL('./listing/category', import.meta.url).href,
+          name: 'Category',
+        },
+        eq: { 'sphere.name': 'BUILD' },
+      },
+    },
+  },
+];
 
 // Catalog App
 class Isolated extends Component<typeof Catalog> {
@@ -79,16 +151,14 @@ class Isolated extends Component<typeof Catalog> {
     this.activeTabId = tabId;
   }
 
-  @tracked activeCategoryId: string | undefined =
-    this.activeTabId !== 'showcase' ? 'all' : undefined;
-
-  @tracked activeTags: FilterItem[] = [];
+  @tracked activeTags: string[] = [];
 
   @action
-  handleTagSelect(item: FilterItem) {
-    this.activeTags = this.activeTags.some((t) => t.id === item.id)
-      ? this.activeTags.filter((t) => t.id !== item.id)
-      : [...this.activeTags, item];
+  handleTagSelect(tagUrl: string) {
+    let id = tagUrl.replace(/\.json$/, '');
+    this.activeTags = this.activeTags.includes(id)
+      ? this.activeTags.filter((u) => u !== id)
+      : [...this.activeTags, id];
   }
 
   // Filter Search
@@ -115,156 +185,48 @@ class Isolated extends Component<typeof Catalog> {
               ? 'Listing'
               : `${capitalize(this.activeTabId)}Listing`,
         },
-        every: [this.categoryFilter, this.tagFilter, this.searchFilter].filter(
-          Boolean,
-        ) as Filter[],
+        every: [
+          this.sphereOrCategoryFilter,
+          this.tagFilter,
+          this.searchFilter,
+        ].filter(Boolean) as Filter[],
       },
     };
   }
 
-  // Category filter
-  @tracked activeCategory: FilterItem | undefined = undefined;
-
-  get categoryQuery(): Query {
-    return {
-      filter: {
-        type: {
-          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-          module: new URL('./listing/category', import.meta.url).href,
-          name: 'Category',
-        },
-      },
-    };
-  }
-
-  categorySearch = this.args.context?.getCards(
-    this,
-    () => this.categoryQuery,
-    () => this.realmHrefs,
-    {
-      isLive: true,
-    },
-  );
-
-  // Returns a list of filter items for the category sidebar:
-  // - "All" button (FilterItem)
-  // - SphereFilter containing individual categories
-  get categoryItems(): FilterItem[] {
-    const categoryInstances = (this.categorySearch?.instances ??
-      []) as Category[];
-
-    if (!categoryInstances) {
-      return [];
-    }
-
-    // Define which icon to use for each sphere
-    const sphereIconMap: Record<SphereName, typeof IconComponent> = {
-      WORK: BuildingBank,
-      PLAY: WorldIcon,
-      LIFE: HealthRecognition,
-      LEARN: UsersIcon,
-      BUILD: BuildingIcon,
-    };
-
-    // Define the desired sphere order
-    const sphereOrder: SphereName[] = [
-      'WORK',
-      'PLAY',
-      'LIFE',
-      'LEARN',
-      'BUILD',
-    ];
-
-    // Group categories by their sphere
-    const sphereFilters: Record<string, FilterItem> = {};
-
-    // Loop through each category and organize them by sphere
-    for (const category of categoryInstances) {
-      if (!category.sphere?.name) {
-        continue;
-      }
-
-      const name = category.sphere.name;
-
-      if (!sphereFilters[name]) {
-        sphereFilters[name] = {
-          id: name.toLowerCase(),
-          displayName: name,
-          icon: sphereIconMap[name as SphereName] || CategoryIcon,
-          filters: [],
-        };
-      }
-
-      const categoryFilter: FilterItem = {
-        id: category.id,
-        displayName: category.name,
-        icon: CategoryIcon,
-      };
-
-      sphereFilters[name].filters!.push(categoryFilter);
-    }
-
-    // Create filter items in the desired order
-    const orderedSphereFilters = sphereOrder
-      .filter((sphereName) => sphereFilters[sphereName])
-      .map((sphereName) => sphereFilters[sphereName]);
-
-    const filterItems = [
-      {
-        id: 'all',
-        displayName: 'All',
-        icon: LayoutGridPlusIcon,
-      },
-      ...orderedSphereFilters,
-    ];
-
-    return filterItems;
-  }
+  // Sphere/category filter
+  @tracked activeSphereOrCategory: FilterItem | undefined = undefined;
 
   @action
-  handleCategorySelect(category: FilterItem) {
-    this.activeCategory = category;
+  handleSphereOrCategorySelect(filterItem: FilterItem) {
+    this.activeSphereOrCategory = filterItem;
   }
 
-  get categoryFilter(): AnyFilter | undefined {
-    const isNoFilterSelected =
-      this.activeCategory?.id === 'all' || !this.activeCategory;
-
-    if (isNoFilterSelected) {
-      return;
+  get sphereOrCategoryFilter(): Filter | undefined {
+    if (
+      !this.activeSphereOrCategory ||
+      this.activeSphereOrCategory.kind === 'all'
+    ) {
+      return undefined;
     }
 
-    // Show all items that belong to ANY category within this sphereUser selected a sphere (e.g., "BUILD", "LEARN", etc.)
-    const isSphereSelected =
-      this.activeCategory?.filters && this.activeCategory.filters.length > 0;
-
-    if (isSphereSelected) {
-      const categoryIdsInSphere = this.activeCategory!.filters!.map(
-        (category) => category.id,
-      );
-
-      const sphereFilter = {
-        any: categoryIdsInSphere.map((categoryId) => ({
-          eq: {
-            'categories.id': categoryId,
-          },
-        })),
-      };
-
-      return sphereFilter;
-    } else {
-      const specificCategoryFilter = {
-        any: [
-          {
-            eq: {
-              'categories.id': this.activeCategory!.id,
-            },
-          },
-        ],
-      };
-
-      return specificCategoryFilter;
+    if (this.activeSphereOrCategory.kind === 'sphere') {
+      return this.filterListingsBySphere(this.activeSphereOrCategory.id);
     }
+
+    return this.filterListingsByCategory(this.activeSphereOrCategory.id);
+  }
+
+  private filterListingsBySphere(sphereId: string): Filter {
+    return {
+      eq: { 'categories.sphere.id': sphereId },
+    };
+  }
+
+  private filterListingsByCategory(categoryId: string): Filter {
+    return {
+      eq: { 'categories.id': categoryId },
+    };
   }
 
   get tagQuery(): Query {
@@ -279,34 +241,14 @@ class Isolated extends Component<typeof Catalog> {
     };
   }
 
-  tagSearch = this.args.context?.getCards(
-    this,
-    () => this.tagQuery,
-    () => this.realmHrefs,
-    {
-      isLive: true,
-    },
-  );
-
-  get tagItems(): FilterItem[] {
-    let instances = (this.tagSearch?.instances ?? []) as Tag[];
-    if (!instances) {
-      return [];
-    }
-    return instances.map((instance) => ({
-      id: instance.id,
-      displayName: instance.name,
-    }));
-  }
-
   get tagFilter(): AnyFilter | undefined {
     if (this.activeTags.length === 0) {
-      return;
+      return undefined;
     }
     return {
-      any: this.activeTags.map((tag) => ({
+      any: this.activeTags.map((id) => ({
         eq: {
-          'tags.id': tag.id,
+          'tags.id': id,
         },
       })),
     };
@@ -314,7 +256,7 @@ class Isolated extends Component<typeof Catalog> {
 
   get searchFilter(): AnyFilter | undefined {
     if (!this.searchValue || this.searchValue.length === 0) {
-      return;
+      return undefined;
     }
     return {
       any: [{ contains: { cardTitle: this.searchValue } }],
@@ -323,14 +265,10 @@ class Isolated extends Component<typeof Catalog> {
 
   // end of listing query filter values
 
-  @action clearFiltersAndReset() {
-    this.resetFilters();
-  }
-
   @action resetFilters() {
-    this.activeCategory = undefined;
+    this.activeSphereOrCategory = undefined;
     this.searchValue = undefined;
-    this.activeTags = [];
+    this.activeTags = [] as string[];
   }
 
   get shouldShowTab() {
@@ -341,7 +279,7 @@ class Isolated extends Component<typeof Catalog> {
 
   get hasActiveFilters() {
     return (
-      this.activeCategory !== undefined ||
+      this.activeSphereOrCategory !== undefined ||
       this.searchValue !== undefined ||
       this.activeTags.length > 0
     );
@@ -380,8 +318,6 @@ class Isolated extends Component<typeof Catalog> {
     return this.realms.map((realm) => realm.href);
   }
 
-  getComponent = (card: CardDef) => card.constructor.getComponent(card);
-
   <template>
     <CatalogLayout
       data-test-catalog-app
@@ -412,7 +348,7 @@ class Isolated extends Component<typeof Catalog> {
           <button
             class='navigation-button
               {{if this.hasNoActiveFilters "is-selected"}}'
-            {{on 'click' this.clearFiltersAndReset}}
+            {{on 'click' this.resetFilters}}
             data-test-navigation-reset-button={{this.activeTabId}}
           >
             <img
@@ -423,16 +359,26 @@ class Isolated extends Component<typeof Catalog> {
             <span class='button-text'>{{this.navigationButtonText}}</span>
           </button>
 
-          <FilterSidebar
-            @categoryItems={{this.categoryItems}}
-            @activeCategory={{this.activeCategory}}
-            @onCategorySelect={{this.handleCategorySelect}}
-            @categoryIsLoading={{this.categorySearch.isLoading}}
-            @tagItems={{this.tagItems}}
-            @activeTags={{this.activeTags}}
-            @onTagSelect={{this.handleTagSelect}}
-            @tagIsLoading={{this.tagSearch.isLoading}}
-          />
+          <FilterSidebar>
+            <:categories>
+              <CategoryFilterGroup
+                @activeSphereOrCategory={{this.activeSphereOrCategory}}
+                @onSelect={{this.handleSphereOrCategorySelect}}
+                @realmHrefs={{this.realmHrefs}}
+                @spheres={{SPHERES}}
+                @context={{@context}}
+              />
+            </:categories>
+            <:tags>
+              <TagFilterGroup
+                @activeTags={{this.activeTags}}
+                @onTagSelect={{this.handleTagSelect}}
+                @realmHrefs={{this.realmHrefs}}
+                @tagQuery={{this.tagQuery}}
+                @context={{@context}}
+              />
+            </:tags>
+          </FilterSidebar>
         </div>
       </:sidebar>
       <:content>
@@ -560,15 +506,6 @@ class Isolated extends Component<typeof Catalog> {
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
-      }
-
-      .operator-mode .buried .cards,
-      .operator-mode .buried .add-button {
-        display: none;
-      }
-      .go-to-grid {
-        font-weight: 600;
-        width: 100%;
       }
 
       @container catalog-tab-header (inline-size <= 500px) {
