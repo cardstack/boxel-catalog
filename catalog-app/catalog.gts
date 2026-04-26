@@ -268,7 +268,7 @@ class Isolated extends Component<typeof Catalog> {
   @action resetFilters() {
     this.activeSphereOrCategory = undefined;
     this.searchValue = undefined;
-    this.activeTags = [] as string[];
+    this.activeTags = [];
   }
 
   get shouldShowTab() {

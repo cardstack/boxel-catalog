@@ -45,7 +45,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
   sphereUrl = (sphereId: string) =>
     `${this.args.realmHrefs[0]}Sphere/${sphereId}`;
 
-  categId = (url: string) => url.replace(/\.json$/, '');
+  categoryIdFromUrl = (url: string) => url.replace(/\.json$/, '');
 
   @action toggleSphere(sphereId: string) {
     const next = new Set(this.expandedSpheres);
@@ -72,17 +72,15 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
   @action selectCategory(cat: PrerenderedCardLike) {
     this.args.onSelect({
       id: cat.url.replace(/\.json$/, ''),
-      displayName: '',
+      displayName: displayNameFromUrl(cat.url),
       kind: 'category',
     });
   }
 
   <template>
-    <ul class='filter-list' role='tree'>
+    <ul class='filter-list'>
       <li
         class='filter-list-item'
-        role='treeitem'
-        aria-selected='{{eq @activeSphereOrCategory.id "all"}}'
       >
         <span
           class='list-item-buttons
@@ -119,17 +117,6 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
             <:response as |categories|>
               <li
                 class='filter-list-item'
-                role='treeitem'
-                aria-expanded='{{if
-                  (this.isSphereExpanded sphere.id)
-                  "true"
-                  "false"
-                }}'
-                aria-selected='{{if
-                  (eq @activeSphereOrCategory.id (this.sphereUrl sphere.id))
-                  "true"
-                  "false"
-                }}'
               >
                 <span
                   class='list-item-buttons
@@ -163,13 +150,13 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
                 </span>
                 {{#if (this.isSphereExpanded sphere.id)}}
                   <div class='category-pill-list'>
-                    {{#each categories as |cat|}}
+                    {{#each categories key='url' as |cat|}}
                       <Pill
                         @kind='button'
                         class='category-pill-btn
                           {{if
                             (eq
-                              @activeSphereOrCategory.id (this.categId cat.url)
+                              @activeSphereOrCategory.id (this.categoryIdFromUrl cat.url)
                             )
                             "is-active"
                           }}'
@@ -326,4 +313,9 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
       }
     </style>
   </template>
+}
+
+function displayNameFromUrl(url: string): string {
+  const slug = url.replace(/\.json$/, '').split('/').pop() ?? '';
+  return slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
