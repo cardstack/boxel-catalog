@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "SampleFields",
+        "module": "../sample-fields"
+      },
+      "readMe": "# Sample Fields Card\n\n## Summary\nThe `SampleFields` card definition provides a set of sample fields that can be used within a consuming card. It serves as a reusable building block for creating more complex card structures.\n\n## Import\n```javascript\nimport { SampleFields } from '../sample-fields';\n```\n\n## Usage as a Field\nTo use the `SampleFields` card as a field within a consuming card, you can include it in the `fields` array of the consuming card's definition:\n\n```javascript\nimport { CardDef, containsMany } from '@cardstack/core';\nimport { SampleFields } from '../sample-fields';\n\nexport class MyCard extends CardDef {\n  fields = [\n    containsMany(SampleFields, 'sampleFields')\n  ];\n}\n```\n\n## Template Usage\nInside the consuming card's template, you can display the `SampleFields` card by using the `<@fields.sampleFields />` syntax:\n\n```handlebars\n<div class=\"my-card\">\n  <h2>My Card</h2>\n  <@fields.sampleFields />\n</div>\n```",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "sample-fields",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
