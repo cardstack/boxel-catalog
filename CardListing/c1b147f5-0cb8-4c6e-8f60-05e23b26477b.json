@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Account Ledger",
+      "images": [],
+      "summary": "The AccountLedger defines a data model and interface for tracking financial account information and transaction entries. It manages fields such as account name, number, currency, opening balance, and related ledger entries. It provides views for displaying the current balance, detailed transaction history, and summarized account information. It supports adding new ledger entries with description, amount, type, reference, and category. Its primary purpose is to facilitate comprehensive ledger management and visualization within financial applications.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/app"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "../License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/23328f87-aee3-462a-9da7-9efb585e74d3"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/5b23328f-87ae-43e6-aadd-a79efb585e74"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../AccountLedger/33cd2d66-5306-42aa-9ffc-2cb37d3f4fa5"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/accounting-finance"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/accountledger-09c30398.png"
+        }
+      }
+    }
+  }
+}

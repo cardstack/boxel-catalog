@@ -1,0 +1,161 @@
+{
+  "data": {
+    "id": "./33cd2d66-5306-42aa-9ffc-2cb37d3f4fa5",
+    "meta": {
+      "realmURL": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/",
+      "realmInfo": {
+        "name": "local-sync-workspace",
+        "iconURL": "https://boxel-images.boxel.ai/icons/Letter-l.png",
+        "hostHome": null,
+        "visibility": "private",
+        "publishable": true,
+        "realmUserId": "@realm_server:stack.cards",
+        "interactHome": null,
+        "backgroundURL": "https://boxel-images.boxel.ai/background-images/4k-lava-river.jpg",
+        "showAsCatalog": null,
+        "lastPublishedAt": null
+      },
+      "adoptsFrom": {
+        "name": "AccountLedger",
+        "module": "../account-ledger"
+      },
+      "lastModified": 1773139959,
+      "resourceCreatedAt": 1773121778
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "currency": null,
+      "cardTitle": "Account Ledger",
+      "accountName": null,
+      "accountNumber": null,
+      "openingBalance": null,
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "relationships": {
+      "entries.0": {
+        "links": {
+          "self": "../LedgerEntry/766eea71-6e1f-4f33-8919-dcfe056328d2"
+        },
+        "data": {
+          "type": "card",
+          "id": "../LedgerEntry/766eea71-6e1f-4f33-8919-dcfe056328d2"
+        }
+      },
+      "entries.1": {
+        "links": {
+          "self": "../LedgerEntry/6eea716e-1fdf-4389-99dc-fe056328d2ef"
+        },
+        "data": {
+          "type": "card",
+          "id": "../LedgerEntry/6eea716e-1fdf-4389-99dc-fe056328d2ef"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "links": {
+      "self": "./33cd2d66-5306-42aa-9ffc-2cb37d3f4fa5"
+    }
+  },
+  "included": [
+    {
+      "id": "../LedgerEntry/766eea71-6e1f-4f33-8919-dcfe056328d2",
+      "meta": {
+        "realmURL": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/",
+        "realmInfo": {
+          "name": "local-sync-workspace",
+          "iconURL": "https://boxel-images.boxel.ai/icons/Letter-l.png",
+          "hostHome": null,
+          "visibility": "private",
+          "publishable": true,
+          "realmUserId": "@realm_server:stack.cards",
+          "interactHome": null,
+          "backgroundURL": "https://boxel-images.boxel.ai/background-images/4k-lava-river.jpg",
+          "showAsCatalog": null,
+          "lastPublishedAt": null
+        },
+        "adoptsFrom": {
+          "name": "LedgerEntry",
+          "module": "../ledger-entry"
+        },
+        "lastModified": 1773129009,
+        "resourceCreatedAt": 1773129009
+      },
+      "type": "card",
+      "attributes": {
+        "debit": null,
+        "credit": 1,
+        "category": null,
+        "cardTitle": "a",
+        "entryDate": "2026-03-10",
+        "reference": null,
+        "description": "a"
+      },
+      "links": {
+        "self": "../LedgerEntry/766eea71-6e1f-4f33-8919-dcfe056328d2"
+      }
+    },
+    {
+      "id": "../LedgerEntry/6eea716e-1fdf-4389-99dc-fe056328d2ef",
+      "meta": {
+        "realmURL": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/",
+        "realmInfo": {
+          "name": "local-sync-workspace",
+          "iconURL": "https://boxel-images.boxel.ai/icons/Letter-l.png",
+          "hostHome": null,
+          "visibility": "private",
+          "publishable": true,
+          "realmUserId": "@realm_server:stack.cards",
+          "interactHome": null,
+          "backgroundURL": "https://boxel-images.boxel.ai/background-images/4k-lava-river.jpg",
+          "showAsCatalog": null,
+          "lastPublishedAt": null
+        },
+        "adoptsFrom": {
+          "name": "LedgerEntry",
+          "module": "../ledger-entry"
+        },
+        "lastModified": 1773139959,
+        "resourceCreatedAt": 1773139959
+      },
+      "type": "card",
+      "attributes": {
+        "debit": 2,
+        "credit": null,
+        "cardInfo": {
+          "name": null,
+          "notes": null,
+          "summary": null,
+          "cardThumbnailURL": null
+        },
+        "category": null,
+        "cardTitle": "s",
+        "entryDate": "2026-03-10",
+        "reference": null,
+        "description": "s",
+        "cardDescription": null,
+        "cardThumbnailURL": null
+      },
+      "relationships": {
+        "cardInfo.theme": {
+          "links": {
+            "self": null
+          }
+        }
+      },
+      "links": {
+        "self": "../LedgerEntry/6eea716e-1fdf-4389-99dc-fe056328d2ef"
+      }
+    }
+  ]
+}

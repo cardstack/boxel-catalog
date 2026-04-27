@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AccountLedger",
+        "module": "../account-ledger"
+      },
+      "readMe": "**Summary**\nThe `AccountLedger` spec is a card that displays an account's ledger, including the account name, number, currency, opening balance, and a list of transactions (entries). It allows users to create new entries, view the current balance, and see a summary of total credits, debits, and the number of entries.\n\n**Import**\n```javascript\nimport { AccountLedger } from '../account-ledger';\n```\n\n**Usage as a Field**\nTo use the `AccountLedger` card as a field within a consuming card or field, simply include it as a field:\n\n```javascript\n@field accountLedger = contains(AccountLedger);\n```\n\n**Template Usage**\nTo display the `AccountLedger` card within a template, use the following syntax:\n\n```html\n<AccountLedger @model={{this.accountLedger}} />\n```\n\nThis will render the `AccountLedger` card using the data provided in the `accountLedger` field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Account Ledger",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "data": {
+    "id": "./6eea716e-1fdf-4389-99dc-fe056328d2ef",
+    "meta": {
+      "realmURL": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/",
+      "realmInfo": {
+        "name": "local-sync-workspace",
+        "iconURL": "https://boxel-images.boxel.ai/icons/Letter-l.png",
+        "hostHome": null,
+        "visibility": "private",
+        "publishable": true,
+        "realmUserId": "@realm_server:stack.cards",
+        "interactHome": null,
+        "backgroundURL": "https://boxel-images.boxel.ai/background-images/4k-lava-river.jpg",
+        "showAsCatalog": null,
+        "lastPublishedAt": null
+      },
+      "adoptsFrom": {
+        "name": "LedgerEntry",
+        "module": "../ledger-entry"
+      },
+      "lastModified": 1773139959,
+      "resourceCreatedAt": 1773139959
+    },
+    "type": "card",
+    "attributes": {
+      "debit": 2,
+      "credit": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "category": null,
+      "cardTitle": "s",
+      "entryDate": "2026-03-10",
+      "reference": null,
+      "description": "s",
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "links": {
+      "self": "./6eea716e-1fdf-4389-99dc-fe056328d2ef"
+    }
+  }
+}
