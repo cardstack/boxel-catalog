@@ -75,8 +75,8 @@ jobs:
           environment: production
           workspace-url: ${{ env.PRODUCTION_WORKSPACE_URL }}
           matrix-url: https://matrix.boxel.ai
-          matrix-username: ${{ secrets.MATRIX_USERNAME }}
-          matrix-password: ${{ secrets.MATRIX_PASSWORD }}
+          matrix-username: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_USERNAME }}
+          matrix-password: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_PASSWORD }}
 
       - name: Write production sync report
         if: always()
