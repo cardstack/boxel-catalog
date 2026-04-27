@@ -1,0 +1,109 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Adventure Game Card with Mod Support",
+      "images": [],
+      "summary": "The Adventure module defines a card type representing an interactive adventure experience, supporting setting up, customizing, and engaging in narrative scenarios. It manages multiple scenarios, linked or custom, with attributes for game state, turns, narration, images, and mods. The embedded and isolated components provide user interfaces for selecting scenarios, managing mods, generating scene images via AI, and progressing through story turns. Primary functions include initiating, resetting, and interacting with story scenarios, integrating AI chat, and customizing adventure parameters such as tags and styles. Its purpose is to facilitate building and playing dynamic, customizable adventure games within the card framework.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/game"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/cbbbb23c-8496-4443-80da-8c6477b5464d"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/ade6981b-cf03-4492-a5cf-24b6be9f12f9"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/b5464dfc-fc1f-4ab3-a8fc-614f7bcc96fe"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/464dfcfc-1fba-4328-bc61-4f7bcc96fe6b"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/4dfcfc1f-bab3-48fc-a14f-7bcc96fe6b3a"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/7ad44245-3840-4b00-aadb-1130639983e6"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/ce99c3f8-4ecb-4bb2-bc84-96e443c0da8c"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/99c3f84e-cbbb-423c-8496-e443c0da8c64"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/c3f84ecb-bbb2-4c84-96e4-43c0da8c6477"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Adventure/17f6dfd3-aae0-471d-ba7d-eb6c6d1dd306"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/adventure-outdoor-activities"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Adventure",
+        "module": "../adventure"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "startedAt": null,
+      "chatRoomId": null,
+      "gameStatus": null,
+      "completedAt": null,
+      "currentTurn": null,
+      "lastNarration": null,
+      "lastTimestamp": null,
+      "lastTurnNumber": null,
+      "customAdventure": {
+        "tags": [],
+        "cardTitle": null,
+        "imageStyles": [],
+        "cardDescription": null
+      },
+      "lastImagePrompt": null,
+      "lastIsPlayerTurn": false,
+      "lastPlayerChoice": null,
+      "autoGenerateImages": false
+    },
+    "relationships": {
+      "mods": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedScenarios": {
+        "links": {
+          "self": null
+        }
+      },
+      "selectedScenario": {
+        "links": {
+          "self": null
+        }
+      },
+      "lastChoiceOffered": {
+        "links": {
+          "self": null
+        }
+      },
+      "lastCloudflareImage": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Adventure",
+        "module": "../adventure"
+      },
+      "readMe": "**Summary**:\nThe `Adventure` spec is a card that provides a framework for creating and managing interactive adventures. It allows users to select from pre-built scenarios or create custom adventures, and it integrates with various mods to enhance the gameplay experience.\n\n**Import**:\n```js\nimport { Adventure } from '../adventure';\n```\n\n**Usage as a Field**:\nTo use the `Adventure` spec as a field within a consuming card or field, you can include it as follows:\n\n```js\nclass MyCard extends CardDef {\n  @field adventure = contains(Adventure);\n}\n```\n\n**Template Usage**:\nTo invoke the `Adventure` spec inside a template within a consuming card or field, you can use the following structure:\n\n```hbs\n<Adventure @model={{this.adventure}} @context={{this.context}} />\n```\n\nThis will render the `Adventure` component and pass the necessary model and context data.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Adventure",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
