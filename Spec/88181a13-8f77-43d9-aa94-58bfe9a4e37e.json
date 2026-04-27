@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Booking",
+        "module": "../booking"
+      },
+      "readMe": "# Booking Card\n\n## Summary\nThe `Booking` card spec represents a booking or reservation made by a user. It can be used to display details about a specific booking, such as the booking date, time, and other relevant information.\n\n## Import\n```javascript\nimport { Booking } from '../booking';\n```\n\n## Usage as a Field\nYou can use the `Booking` card spec as a field within a consuming card or field. This allows you to display the booking details in the context of another entity, such as a user profile or an event page.\n\nHere's an example of how to use the `Booking` card as a field:\n\n```json\n{\n  \"type\": \"card\",\n  \"id\": \"my-card\",\n  \"attributes\": {\n    \"fields\": [\n      {\n        \"type\": \"booking\",\n        \"id\": \"my-booking\",\n        \"relationships\": {\n          \"booking\": {\n            \"data\": {\n              \"type\": \"booking\",\n              \"id\": \"123456\"\n            }\n          }\n        }\n      }\n    ]\n  }\n}\n```\n\nIn this example, the `Booking` card is used as a field with the ID `my-booking`. The `relationships` object specifies the booking record that should be displayed, in this case with the ID `123456`.\n\n## Template Usage\nYou can invoke the `Booking` card spec in a template to display its contents. Here's an example:\n\n```handlebars\n<Booking @model={{this.booking}} />\n```\n\nIn this example, the `Booking` component is used in the template, and the `@model` argument is bound to the booking record that should be displayed.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "booking",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
