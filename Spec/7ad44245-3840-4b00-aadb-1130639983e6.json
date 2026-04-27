@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AdventureMod",
+        "module": "../adventure-mod"
+      },
+      "readMe": "Sure, here's the README documentation for the `AdventureMod` spec:\n\n**Summary**\n\nThe `AdventureMod` spec is a base class for defining adventure mods in a card-based application. Adventure mods extend the core adventure game with new mechanics, such as dynamic NPCs, item management, magic systems, and quest tracking. Each mod provides instructions for the GM AI, a list of additional skills, and a status summary for the compact status strip.\n\n**Import**\n\n```javascript\nimport { AdventureMod } from '../adventure-mod';\n```\n\n**Usage as a Field**\n\nTo use the `AdventureMod` spec as a field within a consuming card or field, you can define it like this:\n\n```javascript\nimport {\n  CardDef,\n  field,\n} from 'https://cardstack.com/base/card-api';\n\nexport class MyCard extends CardDef {\n  @field adventureMod = contains(AdventureMod);\n}\n```\n\n**Template Usage**\n\nIn the template of the consuming card or field, you can display the `AdventureMod` using one of the provided component variants:\n\n```handlebars\n<article>\n  <@fields.adventureMod as |mod|>\n    <Mod.Isolated @model={{mod}} />\n  </@fields.adventureMod>\n</article>\n```\n\nThe `Mod.Isolated` component displays the mod in an isolated card layout, showing the mod name, description, GM instructions, and a list of the provided skills.\n\n```handlebars\n<article>\n  <@fields.adventureMod as |mod|>\n    <Mod.Embedded @model={{mod}} />\n  </@fields.adventureMod>\n</article>\n```\n\nThe `Mod.Embedded` component displays the mod in a compact, embedded layout, showing the mod name, status icon, and status summary.\n\n```handlebars\n<article>\n  <@fields.adventureMod as |mod|>\n    <Mod.Fitted @model={{mod}} />\n  </@fields.adventureMod>\n</article>\n```\n\nThe `Mod.Fitted` component displays the mod in a responsive, fitted layout that adjusts the content based on the available space.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Adventure Mod",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

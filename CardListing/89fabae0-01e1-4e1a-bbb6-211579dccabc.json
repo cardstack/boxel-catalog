@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Adventure Mod",
+      "images": [],
+      "summary": "The AdventureMod defines a customizable module for extending an adventure game with new mechanics. It provides a structure for adding features such as dynamic NPCs, inventory management, magic systems, and quest tracking. The mod includes human-readable naming, descriptive text, instructions for game masters, associated skills, and status indicators. It offers multiple visual representations (isolated, embedded, fitted) for flexible integration into different user interfaces, displaying key mod details like name, description, status, and icons. Its primary purpose is to enable modular enhancement and management of adventure game mechanics within a consistent framework.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/7ad44245-3840-4b00-aadb-1130639983e6"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/game"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "../License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../AdventureMod/5f4ff43e-e98c-41c8-934c-49c447806b70"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../AdventureMod/647bc18c-d382-409e-ba37-ef550bb7c226"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/creative-projects"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

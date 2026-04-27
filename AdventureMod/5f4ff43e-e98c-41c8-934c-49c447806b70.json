@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "modName": null,
+      "modDescription": null,
+      "gmInstructions": null,
+      "isEnabled": false,
+      "statusIcon": null,
+      "statusSummary": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../adventure-mod",
+        "name": "AdventureMod"
+      }
+    }
+  }
+}
