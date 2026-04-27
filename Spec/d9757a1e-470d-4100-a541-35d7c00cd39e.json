@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "../spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Airbnb",
+        "module": "../airbnb"
+      },
+      "readMe": "# Airbnb Card\n\n## Summary\nThe Airbnb card provides a summary of information related to an Airbnb listing, including details about the property, pricing, and host.\n\n## Import\n```javascript\nimport { Airbnb } from '../airbnb';\n```\n\n## Usage as a Field\nYou can use the Airbnb card as a field within a consuming card or field definition. For example:\n\n```javascript\nclass MyCard extends CardDef {\n  static fields = {\n    airbnbListing: Airbnb.asField()\n  };\n}\n```\n\n## Template Usage\nTo display the Airbnb card within a template, you can use the following syntax:\n\n```handlebars\n<CardWrapper @card={{this.model.airbnbListing}} />\n```\n\nThis will render the Airbnb card using the data provided in the `airbnbListing` field of the model.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "airbnb",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
