@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Booking",
+        "module": "../booking"
+      },
+      "readMe": "# Booking Card\n\n## Summary\nThe `Booking` card represents a booking or reservation, such as for a hotel, restaurant, or event. It contains information about the booking, including the start and end dates, the number of guests, and potentially other details.\n\n## Import\n```javascript\nimport { Booking } from '../booking';\n```\n\n## Usage as a Field\nYou can use the `Booking` card as a field within a consuming card or field. For example:\n\n```javascript\nimport { CardDef, field } from 'https://cardstack.com/base/card-api';\n\nexport class MyCard extends CardDef {\n  @field(Booking)\n  booking: Booking;\n}\n```\n\nThis defines a `booking` field of type `Booking` within the `MyCard` card definition.\n\n## Template Usage\nWithin the template of a consuming card or field, you can display the details of the `Booking` card like this:\n\n```handlebars\n<div class=\"booking\">\n  <h3>{{@fields.booking.startDate}} - {{@fields.booking.endDate}}</h3>\n  <p>Guests: {{@fields.booking.guests}}</p>\n  {{#if @fields.booking.other}}\n    <p>{{@fields.booking.other}}</p>\n  {{/if}}\n</div>\n```\n\nThis will display the start and end dates, the number of guests, and any other information stored in the `Booking` card.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "booking",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
