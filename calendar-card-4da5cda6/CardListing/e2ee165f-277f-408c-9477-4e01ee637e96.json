@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Calendar Card",
+      "images": [],
+      "summary": "The CalendarCard module defines a flexible calendar component that displays and manages scheduled events. It offers various embedded and fitted formats for compact previews, including mini calendar views, upcoming event summaries, and condensed badge or strip displays. The component supports multiple views such as month, week, and day, and allows navigation between dates and time periods. It facilitates adding, editing, and viewing detailed events, with visual distinctions for all-day events, event types, and location details. The card queries related event data dynamically and provides styling adaptable for embedded or standalone contexts. Its primary purpose is to visualize and interact with calendar events within a customizable, stateful calendar interface.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../CalendarCard/29788763-4033-4082-bb12-5e2973eba843"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/calendarcard-23a7a124.png"
+        }
+      }
+    }
+  }
+}
