@@ -328,7 +328,7 @@ export function buildGithubEventCardRef(
 }
 
 export function searchEventQuery(
-  cardRef: { module: string; name: string },
+  cardRef: { module: RealmResourceIdentifier; name: string },
   branchName: string | null | undefined,
   eventType: string,
 ): Query {
