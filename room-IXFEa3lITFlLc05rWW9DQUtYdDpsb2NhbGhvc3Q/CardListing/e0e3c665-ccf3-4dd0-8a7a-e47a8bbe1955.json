@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "kfc",
+      "images": [],
+      "summary": "The Kfc class defines a card configuration within the Cardstack framework, serving as a structured data entity with potential for defining visual and functional aspects of a card. Its primary purpose is to provide a named card definition called \"kfc\" for use within the application, enabling it to be recognized and rendered according to its schema. The class extends from the base CardDef, indicating it is intended to represent a card-based component or data structure in the system.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/general"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/a27715d6-0cf9-43f5-a0e3-c665ccf35dd0"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Kfc/2d4a33a2-7715-460c-b9a3-f5e0e3c665cc"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/kfc-3fcaa959.png"
+        }
+      }
+    }
+  }
+}
