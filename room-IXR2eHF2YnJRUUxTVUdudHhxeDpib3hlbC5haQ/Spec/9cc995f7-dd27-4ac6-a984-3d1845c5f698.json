@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BlackjackGame",
+        "module": "../blackjack-game-46dda33e-622c-485f-b512-a05db93340c3/blackjack/blackjack"
+      },
+      "readMe": "# BlackjackGame Card\n\n## Summary\n\nThe `BlackjackGame` card provides a complete Blackjack game experience within a Boxel card. Players can place bets, draw cards, and play against the dealer, with the game state and statistics tracked and persisted.\n\n## Import\n\n```gts\nimport { BlackjackGame } from './blackjack/blackjack';\n```\n\n## Usage as a Field\n\nTo use the `BlackjackGame` card as a field within a consuming card or field, you can add it as a `linksTo` field:\n\n```gts\n@field blackjackGame = linksTo(BlackjackGame);\n```\n\nThis allows you to reference the Blackjack game instance from the consuming card.\n\n## Template Usage\n\nTo display the `BlackjackGame` card in a template, you can use the `@fields.blackjackGame` helper to render the card's isolated format:\n\n```hbs\n<@fields.blackjackGame @format=\"isolated\" />\n```\n\nThis will render the full Blackjack game experience within the consuming card or field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Blackjack Game",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
