@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WorkoutTracker",
+        "module": "../workout-tracker"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "notes": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "trackerName": null,
+      "weeklyTargetDays": null,
+      "weeklyTargetMinutes": null
+    },
+    "relationships": {
+      "goals.0": {
+        "links": {
+          "self": "../FitnessGoal/weight-loss-goal"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "recentSessions.0": {
+        "links": {
+          "self": "../WorkoutSession/262d1f71-5032-4b37-9282-711b725e12ba"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

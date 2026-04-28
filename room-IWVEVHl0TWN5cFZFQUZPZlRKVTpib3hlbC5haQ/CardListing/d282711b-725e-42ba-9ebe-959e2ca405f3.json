@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Workout Tracker",
+      "images": [],
+      "summary": "The WorkoutTracker component provides a comprehensive dashboard to monitor workout activities, progress, and goals. It tracks recent workout sessions, including metrics such as total workouts, minutes exercised, calories burned, and active goals. The component offers detailed views of individual sessions and goals through embedded, fitted, and full-list formats. It features visualizations like progress bars, weekly activity stats, and activity history charts. Users can view and manage workout sessions and fitness goals, with sections for detailed session logs, goal progress, and achievements. The primary purpose is to facilitate tracking, visualizing, and managing workout routines and fitness milestones in an organized and user-friendly dashboard.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/tracker"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/e151a8b2-0452-48de-85cb-386caad279b4"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../WorkoutTracker/b008e71c-262d-4f71-9032-5b37d282711b"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/sports-fitness"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/workouttracker-d8ed651d.png"
+        }
+      }
+    }
+  }
+}

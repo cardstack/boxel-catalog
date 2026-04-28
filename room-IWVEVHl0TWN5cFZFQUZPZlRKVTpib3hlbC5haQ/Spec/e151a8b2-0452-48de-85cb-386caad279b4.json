@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WorkoutTracker",
+        "module": "../workout-tracker"
+      },
+      "readMe": "# WorkoutTracker Card\n\n## Summary\nThe `WorkoutTracker` card is a comprehensive dashboard for tracking fitness activities and goals. It provides an overview of total workout sessions, completed sessions, total minutes, calories burned, and active fitness goals. Users can view recent workout sessions, exercise logs, and progress towards their weekly workout targets.\n\n## Import\n```javascript\nimport { WorkoutTracker } from '../workout-tracker';\n```\n\n## Usage as a Field\nTo use the `WorkoutTracker` card as a field within a consuming card or field, you can add it as follows:\n\n```json\n{\n  \"type\": \"linksTo\",\n  \"target\": \"WorkoutTracker\"\n}\n```\n\n## Template Usage\nWithin a consuming card or field, you can display the `WorkoutTracker` card by using the following template:\n\n```handlebars\n<@fields.workoutTracker @format='embedded' />\n```\n\nThis will render the embedded version of the `WorkoutTracker` card.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Workout Tracker",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "workoutType": null,
+      "sessionDate": null,
+      "durationMinutes": null,
+      "caloriesBurned": null,
+      "difficulty": null,
+      "exercises": [],
+      "mood": null,
+      "energyLevel": null,
+      "notes": null,
+      "isCompleted": false,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../workout-tracker",
+        "name": "WorkoutSession"
+      }
+    }
+  }
+}

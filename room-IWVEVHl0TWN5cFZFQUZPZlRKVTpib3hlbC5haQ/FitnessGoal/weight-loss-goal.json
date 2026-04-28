@@ -1,0 +1,39 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FitnessGoal",
+        "module": "../workout-tracker"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "notes": null,
+      "cardInfo": {
+        "name": "Summer Weight Loss",
+        "notes": null,
+        "summary": "Lose 10kg by July 2025",
+        "cardThumbnailURL": null
+      },
+      "deadline": "2025-07-01",
+      "goalType": "Weight Loss",
+      "targetUnit": null,
+      "description": "Lose 10kg by summer",
+      "isCompleted": false,
+      "targetValue": 10,
+      "currentValue": 4
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
