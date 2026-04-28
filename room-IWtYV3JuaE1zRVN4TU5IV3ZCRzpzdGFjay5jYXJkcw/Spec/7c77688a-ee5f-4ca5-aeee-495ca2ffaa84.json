@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ImageBlobStore",
+        "module": "../image-blob-store"
+      },
+      "readMe": "**Summary**\nThe `ImageBlobStore` spec is a card definition that stores base64-encoded images along with additional metadata such as the prompt and the provider model used to generate the image.\n\n**Import**\n```gts\nimport { ImageBlobStore } from '../image-blob-store';\n```\n\n**Usage as a Field**\nYou can use the `ImageBlobStore` spec as a field within a consuming card or field definition:\n\n```gts\n@field imageStore = contains(ImageBlobStore);\n```\n\n**Template Usage**\nTo display the `ImageBlobStore` within a consuming card or field, you can use the following template:\n\n```hbs\n<@fields.imageStore @format=\"embedded\" />\n```\n\nThis will render a preview of the stored image, along with the prompt and provider model information.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Image Blob Store",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

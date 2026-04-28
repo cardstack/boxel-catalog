@@ -1,0 +1,35 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ImageBlobStore",
+        "module": "../image-blob-store"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "image": {
+        "size": null,
+        "width": null,
+        "base64": null,
+        "height": null,
+        "altText": null
+      },
+      "prompt": null,
+      "cardInfo": {
+        "notes": null,
+        "name": "test",
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "providerModel": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

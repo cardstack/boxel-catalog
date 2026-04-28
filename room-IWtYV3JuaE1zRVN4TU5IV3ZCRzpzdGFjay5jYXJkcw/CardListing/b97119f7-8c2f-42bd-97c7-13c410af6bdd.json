@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Image Blob Store",
+      "images": [],
+      "summary": "The ImageBlobStore defines a data structure for storing base64-encoded images along with minimal metadata, such as prompts and provider model information. It facilitates managing and previewing images with associated descriptive data, primarily for applications needing image storage, display, and context metadata.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/card"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/7c77688a-ee5f-4ca5-aeee-495ca2ffaa84"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/477c7768-8aee-4f0c-a5ee-ee495ca2ffaa"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../ImageBlobStore/29299cc7-62d9-4d79-a151-60a0a0e0d1d2"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/developer-tools-code"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/imageblobstore-a45f05c7.png"
+        }
+      }
+    }
+  }
+}
