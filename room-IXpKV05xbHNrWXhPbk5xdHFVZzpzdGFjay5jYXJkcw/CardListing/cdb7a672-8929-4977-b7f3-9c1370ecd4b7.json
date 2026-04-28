@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Spec Definition Catalog",
+      "images": [],
+      "summary": "The Spec class and related components provide a structured way to define, display, and manage specifications for cards, fields, components, apps, and commands within the system. They encapsulate metadata, content, and relationships associated with specifications, offering capabilities for editing, rendering, and generating documentation such as README sections. These components also support features like example generation, linked and contained examples, module reference display, and tagging, facilitating comprehensive specification management and visualization in both editing and presentation modes.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/card"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/477c7768-8aee-4f0c-a5ee-ee495ca2ffaa"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Spec/477c7768-8aee-4f0c-a5ee-ee495ca2ffaa"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/technical-documentation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/spec-f5b24a17.png"
+        }
+      }
+    }
+  }
+}
