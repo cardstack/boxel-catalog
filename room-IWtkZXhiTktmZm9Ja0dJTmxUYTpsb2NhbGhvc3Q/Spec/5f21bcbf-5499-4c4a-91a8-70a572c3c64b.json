@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Mcd",
+        "module": "../mcd"
+      },
+      "readMe": "# Mcd Card\n\n## Summary\nThe `Mcd` card is a custom card definition that can be used within a Boxel application. It provides a reusable card component with specific functionality and data requirements.\n\n## Import\nTo use the `Mcd` card in your Boxel application, import it from the specified module:\n\n```javascript\nimport { Mcd } from '../mcd';\n```\n\n## Usage as a Field\nThe `Mcd` card can be used as a field within a consuming card or field definition. To use it, simply include it as a field in the `fields` section of your card or field definition:\n\n```javascript\nimport { CardDef } from '@cardstack/core/card-api';\n\nexport default class MyCard extends CardDef {\n  fields = {\n    mcdField: { type: Mcd }\n  };\n}\n```\n\n## Template Usage\nWithin the template of the consuming card or field, you can display the `Mcd` card by using the field name you defined:\n\n```handlebars\n<div class=\"my-card\">\n  <h2>My Card</h2>\n  {{mcdField}}\n</div>\n```\n\nThis will render the `Mcd` card inline within the consuming card or field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "mcd",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
