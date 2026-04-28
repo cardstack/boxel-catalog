@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "PhotoCollage",
+        "module": "../photo-collage-minimalist-photography-collection-cd58a3f7-762f-4459-ba33-77ae7c2b8b5b/photo-collage/photo-collage"
+      },
+      "readMe": "**Summary:**\nThe `PhotoCollage` card is a card that displays a collage of photos with captions and supports a dark mode toggle. The card has a title and a grid of photo items, each with a URL, caption, and alt text.\n\n**Import:**\n```\nimport { PhotoCollage } from '../photo-collage-minimalist-photography-collection-cd58a3f7-762f-4459-ba33-77ae7c2b8b5b/photo-collage/photo-collage';\n```\n\n**Usage as a Field:**\nTo use the `PhotoCollage` card as a field within a consuming card or field, you can define a field of type `PhotoCollage` and use the `@fields.photoCollage` syntax to display it:\n\n```gts\n@field photoCollage = contains(PhotoCollage);\n```\n\n**Template Usage:**\nInside a consuming card or field, you can use the `PhotoCollage` card by rendering the `@fields.photoCollage` component and passing in the necessary data:\n\n```hbs\n<@fields.photoCollage\n  @model={{this.photoCollageData}}\n  @format={{this.format}}\n/>\n```\n\nIn this example, `this.photoCollageData` is an instance of the `PhotoCollage` card, and `this.format` specifies the display format (e.g., `isolated`, `embedded`).",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Photo Collage",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://realms-staging.stack.cards/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Photo Collage: Minimalist Photography Collection",
+      "images": [],
+      "summary": "The PhotoCollage card defines a visual presentation for a collection of photos, intended for displaying minimalist photography collections. It organizes multiple PhotoItem entries—each with a URL, caption, and alt text—into a responsive, grid-based layout with customizable title and dark mode options. Its primary purpose is to facilitate creating aesthetically pleasing photo collages within a card interface, supporting configurable formatting and styling.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/card"
+        }
+      },
+      "license": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/chuan16/local-sync-workspace/License/e0f943b7-d3eb-4762-9616-acc417e0ca57"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/2e33eb70-95e3-4986-bf48-6e0e3bbf71a4"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../photo-collage-minimalist-photography-collection-cd58a3f7-762f-4459-ba33-77ae7c2b8b5b/photo-collage/PhotoCollage/a2c50a4a-67ee-4c84-9a53-fe17243bbc24"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/content-creation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/photocollage-1d09e910.png"
+        }
+      }
+    }
+  }
+}
