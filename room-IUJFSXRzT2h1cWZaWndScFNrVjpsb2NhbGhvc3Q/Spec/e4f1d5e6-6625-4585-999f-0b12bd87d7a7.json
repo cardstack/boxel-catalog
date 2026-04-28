@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "TwinTower",
+        "module": "../twin-tower"
+      },
+      "readMe": "## TwinTower Card\n\n### Summary\nThe `TwinTower` card spec represents a card that displays information about a twin tower structure, such as a skyscraper or architectural landmark.\n\n### Import\n```javascript\nimport { TwinTower } from '../twin-tower';\n```\n\n### Usage as a Field\nTo use the `TwinTower` card as a field within a consuming card or field, you can include it as a `linksTo` or `linksToMany` field:\n\n```javascript\nimport { CardDef, field } from '@cardstack/core';\n\nexport default class MyCard extends CardDef {\n  @field('twinTower', { type: TwinTower })\n  twinTower;\n}\n```\n\n### Template Usage\nWithin the template of a consuming card or field, you can display the `TwinTower` card using the `<CardField>` component:\n\n```hbs\n<CardField @field={{this.twinTower}} />\n```\n\nThis will render the `TwinTower` card within the consuming card or field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "twin tower",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
