@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Kfc",
+        "module": "../kfc"
+      },
+      "readMe": "# KFC Card\n\n## Summary\nThe `Kfc` card is a custom card definition that provides a representation of a KFC (Kentucky Fried Chicken) restaurant location. It can be used within a consuming card or field to display information about a specific KFC restaurant.\n\n## Import\nTo use the `Kfc` card in your Boxel application, import it from the specified module:\n\n```typescript\nimport { Kfc } from '../kfc';\n```\n\n## Usage as a Field\nYou can use the `Kfc` card as a field within a consuming card or field. For example:\n\n```typescript\nimport { CardDef, containsMany } from '@cardstack/skills/Skill/boxel-development';\n\nexport class MyCard extends CardDef {\n  @containsMany(Kfc)\n  kfcLocations: Kfc[];\n}\n```\n\nIn this example, the `MyCard` card definition contains a `kfcLocations` field that can hold one or more `Kfc` cards.\n\n## Template Usage\nTo display the `Kfc` card within a template, you can use the following syntax:\n\n```handlebars\n<@fields.kfcLocations as |kfc|>\n  <Kfc @model={{kfc}} />\n</@fields.kfcLocations>\n```\n\nThis will render the `Kfc` card for each item in the `kfcLocations` array.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "kfc",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
