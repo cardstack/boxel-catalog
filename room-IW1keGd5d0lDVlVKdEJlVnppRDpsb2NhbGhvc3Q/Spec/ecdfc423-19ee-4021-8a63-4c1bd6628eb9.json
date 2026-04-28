@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Doraemon",
+        "module": "../doraemon"
+      },
+      "readMe": "# Doraemon\n\n## Summary\nThe `Doraemon` card spec defines a card that represents the iconic anime/manga character Doraemon. This card can be used to display information about Doraemon, such as his appearance, abilities, and relationships with other characters.\n\n## Import\n```javascript\nimport { Doraemon } from '../doraemon';\n```\n\n## Usage as a Field\nTo use the `Doraemon` card as a field within a consuming card or field, you can define it as a `linksTo` field:\n\n```javascript\nimport { CardDef, FieldDef } from '@cardstack/core/card-api';\n\nexport class MyCard extends CardDef {\n  static displayName = 'My Card';\n\n  doraemon = FieldDef.linksTo(Doraemon);\n}\n```\n\n## Template Usage\nWithin the template of a consuming card or field, you can display the `Doraemon` card using the `<@fields.doraemon />` syntax:\n\n```handlebars\n<div class=\"my-card\">\n  <h2>About Doraemon</h2>\n  <@fields.doraemon />\n</div>\n```\n\nThis will render the `Doraemon` card within the consuming card or field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "doraemon",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
