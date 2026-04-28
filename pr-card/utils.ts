@@ -1,4 +1,4 @@
-import type { Query } from '@cardstack/runtime-common';
+import type { Query, RealmResourceIdentifier } from '@cardstack/runtime-common';
 import GitPullRequestIcon from '@cardstack/boxel-icons/git-pull-request';
 import GitPullRequestClosedIcon from '@cardstack/boxel-icons/git-pull-request-closed';
 import GitPullRequestDraftIcon from '@cardstack/boxel-icons/git-pull-request-draft';
@@ -322,13 +322,13 @@ export function buildGithubEventCardRef(
   relativePath = '../github-event/github-event',
 ) {
   return {
-    module: new URL(relativePath, moduleBaseUrl).href,
+    module: new URL(relativePath, moduleBaseUrl).href as RealmResourceIdentifier,
     name: 'GithubEventCard' as const,
   };
 }
 
 export function searchEventQuery(
-  cardRef: { module: string; name: string },
+  cardRef: { module: RealmResourceIdentifier; name: string },
   branchName: string | null | undefined,
   eventType: string,
 ): Query {

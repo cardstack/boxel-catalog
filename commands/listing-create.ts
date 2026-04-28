@@ -12,6 +12,7 @@ import {
   loadCardDef,
   getAncestor,
   identifyCard,
+  rri,
 } from '@cardstack/runtime-common';
 
 import type * as CardAPI from 'https://cardstack.com/base/card-api';
@@ -114,7 +115,7 @@ export default class ListingCreateCommand extends Command<
         relationships,
         meta: {
           adoptsFrom: {
-            module: `${catalogRealm}catalog-app/listing/listing`,
+            module: rri(`${catalogRealm}catalog-app/listing/listing`),
             name: listingSubClass[listingType],
           },
         },

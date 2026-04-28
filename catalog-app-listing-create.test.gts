@@ -5,6 +5,8 @@ import { module, skip, test } from 'qunit';
 
 import ListingCreateCommand from '@cardstack/boxel-host/commands/listing-create';
 
+import { rri } from '@cardstack/runtime-common';
+
 import {
   setupLocalIndexing,
   setupOnSave,
@@ -262,7 +264,7 @@ export function runTests() {
             const result = await command.execute({
               openCardIds: [cardId],
               codeRef: {
-                module: `${mockCatalogURL}author/author.gts`,
+                module: rri(`${mockCatalogURL}author/author.gts`),
                 name: 'Author',
               },
               targetRealm: mockCatalogURL,
@@ -354,7 +356,7 @@ export function runTests() {
             await command.execute({
               openCardIds: [cardId],
               codeRef: {
-                module: `${mockCatalogURL}card-with-unrecognised-imports.gts`,
+                module: rri(`${mockCatalogURL}card-with-unrecognised-imports.gts`),
                 name: 'UnrecognisedImports',
               },
               targetRealm: mockCatalogURL,
@@ -396,7 +398,7 @@ export function runTests() {
             const createResult = await command.execute({
               openCardIds: [cardId],
               codeRef: {
-                module: `${mockCatalogURL}blog-app/blog-app.gts`,
+                module: rri(`${mockCatalogURL}blog-app/blog-app.gts`),
                 name: 'BlogApp',
               },
               targetRealm: testDestinationRealmURL,
@@ -626,7 +628,7 @@ export function runTests() {
             let r = await command.execute({
               openCardIds: [cardId],
               codeRef: {
-                module: `${mockCatalogURL}author/author.gts`,
+                module: rri(`${mockCatalogURL}author/author.gts`),
                 name: 'Author',
               },
               targetRealm: mockCatalogURL,
