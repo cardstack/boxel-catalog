@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Address",
+        "module": "../address"
+      },
+      "readMe": "# Usage Documentation for Address Field Spec\n\n## Summary\nThe `Address` field spec provides a way to represent and display an address within a Boxel card or field.\n\n## Import\n```javascript\nimport { Address } from '../address';\n```\n\n## Usage as a Field\nTo use the `Address` field spec within a consuming card or field, you can add it as a field definition:\n\n```typescript\nexport class MyCard extends CardDef {\n  address = Address.field();\n}\n```\n\nThis will include the `address` field in your card, allowing you to display and interact with address data.\n\n## Template Usage\nWithin the template of your consuming card or field, you can access the `address` field and render its content:\n\n```handlebars\n<div class=\"address\">\n  {{@fields.address.street1}}\n  {{@fields.address.street2}}\n  {{@fields.address.city}}, {{@fields.address.state}} {{@fields.address.zip}}\n</div>\n```\n\nThis will display the various address components (street, city, state, zip) in the template.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "address",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Address Field Definition",
+      "images": [],
+      "summary": "Defines an Address field component for card-based user interfaces, used to capture or display address information within the Cardstack framework.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/card"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/e955e043-c19d-4d2e-94db-46c375dc84ed"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/maps-navigation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/address-f591f2d7.png"
+        }
+      }
+    }
+  }
+}
