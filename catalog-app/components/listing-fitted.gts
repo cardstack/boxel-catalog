@@ -98,6 +98,10 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
       : undefined;
   }
 
+  get isInCatalogRealm(): boolean {
+    return !!this.args.model[realmURL]?.pathname?.includes('/catalog/');
+  }
+
   viewDetails = (event: Event) => {
     event.stopPropagation();
     this.listingActions?.view();
@@ -148,33 +152,39 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
               />
             {{else if this.skillActions}}
               {{#if this.skillActions.remix}}
-                <ChooseRealmAction
-                  @name='Remix'
-                  @writableRealms={{this.writableRealms}}
-                  @onAction={{this.skillActions.remix}}
-                  @context={{@context}}
-                  @size='extra-small'
-                />
+                {{#if this.isInCatalogRealm}}
+                  <ChooseRealmAction
+                    @name='Remix'
+                    @writableRealms={{this.writableRealms}}
+                    @onAction={{this.skillActions.remix}}
+                    @context={{@context}}
+                    @size='extra-small'
+                  />
+                {{/if}}
               {{/if}}
             {{else if this.regularActions}}
               {{#if this.regularActions.remix}}
-                <ChooseRealmAction
-                  @name='Remix'
-                  @writableRealms={{this.writableRealms}}
-                  @onAction={{this.regularActions.remix}}
-                  @context={{@context}}
-                  @size='extra-small'
-                />
+                {{#if this.isInCatalogRealm}}
+                  <ChooseRealmAction
+                    @name='Remix'
+                    @writableRealms={{this.writableRealms}}
+                    @onAction={{this.regularActions.remix}}
+                    @context={{@context}}
+                    @size='extra-small'
+                  />
+                {{/if}}
               {{/if}}
             {{else if this.themeActions}}
               {{#if this.themeActions.remix}}
-                <ChooseRealmAction
-                  @name='Remix'
-                  @writableRealms={{this.writableRealms}}
-                  @onAction={{this.themeActions.remix}}
-                  @context={{@context}}
-                  @size='extra-small'
-                />
+                {{#if this.isInCatalogRealm}}
+                  <ChooseRealmAction
+                    @name='Remix'
+                    @writableRealms={{this.writableRealms}}
+                    @onAction={{this.themeActions.remix}}
+                    @context={{@context}}
+                    @size='extra-small'
+                  />
+                {{/if}}
               {{/if}}
             {{/if}}
           </div>

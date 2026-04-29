@@ -175,6 +175,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       : undefined;
   }
 
+  get isInCatalogRealm(): boolean {
+    return !!this.args.model[realmURL]?.pathname?.includes('/catalog/');
+  }
+
   addSkillsToCurrentRoom = task(async () => {
     this.skillActions?.addSkillsToRoom?.();
   });
@@ -218,19 +222,23 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                 />
               {{else if this.regularActions}}
                 {{#if this.regularActions.remix}}
-                  <ChooseRealmAction
-                    @name='Remix'
-                    @writableRealms={{this.writableRealms}}
-                    @onAction={{this.regularActions.remix}}
-                  />
+                  {{#if this.isInCatalogRealm}}
+                    <ChooseRealmAction
+                      @name='Remix'
+                      @writableRealms={{this.writableRealms}}
+                      @onAction={{this.regularActions.remix}}
+                    />
+                  {{/if}}
                 {{/if}}
               {{else if this.themeActions}}
                 {{#if this.themeActions.remix}}
-                  <ChooseRealmAction
-                    @name='Remix'
-                    @onAction={{this.themeActions.remix}}
-                    @writableRealms={{this.writableRealms}}
-                  />
+                  {{#if this.isInCatalogRealm}}
+                    <ChooseRealmAction
+                      @name='Remix'
+                      @onAction={{this.themeActions.remix}}
+                      @writableRealms={{this.writableRealms}}
+                    />
+                  {{/if}}
                 {{/if}}
               {{/if}}
             </div>
