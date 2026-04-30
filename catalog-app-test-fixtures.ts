@@ -698,7 +698,10 @@ export function makeMockCatalogContents(
   };
 }
 
-export function makeDestinationRealmContents(): Record<string, any> {
+export function makeDestinationRealmContents(
+  catalogRealmURL?: string,
+  mockCatalogURL?: string,
+): Record<string, any> {
   return {
     'index.json': {
       data: {
@@ -717,5 +720,25 @@ export function makeDestinationRealmContents(): Record<string, any> {
         'https://i.postimg.cc/VNvHH93M/pawel-czerwinski-Ly-ZLa-A5jti-Y-unsplash.jpg',
       iconURL: 'https://i.postimg.cc/L8yXRvws/icon.png',
     },
+    ...(catalogRealmURL &&
+      mockCatalogURL && {
+        'Listing/author.json': {
+          data: {
+            type: 'card',
+            attributes: { name: 'Author', cardTitle: 'Author' },
+            relationships: {
+              'specs.0': {
+                links: { self: `${mockCatalogURL}Spec/author` },
+              },
+            },
+            meta: {
+              adoptsFrom: {
+                module: `${catalogRealmURL}catalog-app/listing/listing`,
+                name: 'CardListing',
+              },
+            },
+          },
+        },
+      }),
   };
 }

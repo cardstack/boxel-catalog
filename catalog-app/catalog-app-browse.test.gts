@@ -12,7 +12,6 @@ import { module, skip, test } from 'qunit';
 import {
   setupLocalIndexing,
   setupOnSave,
-  testRealmURL as mockCatalogURL,
   setupAuthEndpoints,
   setupUserSubscription,
   setupAcceptanceTestRealm,
@@ -32,6 +31,8 @@ import {
 // catalog-app/ subdirectory, so we go up one level to reach the realm root.
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const catalogRealmURL: string = new URL('../', import.meta.url).href;
+// Use a URL containing /catalog/ so isInCatalogRealm() returns true for mock listings
+const mockCatalogURL = 'http://test-realm/catalog/';
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing
@@ -41,6 +42,7 @@ const emptyListingId = `${mockCatalogURL}Listing/empty`;
 const pirateSkillListingId = `${mockCatalogURL}SkillListing/pirate-skill`;
 const incompleteSkillListingId = `${mockCatalogURL}Listing/incomplete-skill`;
 const apiDocumentationStubListingId = `${mockCatalogURL}Listing/api-documentation-stub`;
+const nonCatalogListingId = `${testDestinationRealmURL}Listing/author`;
 
 //tags
 const calculatorTagId = `${mockCatalogURL}Tag/calculator`;
@@ -80,7 +82,7 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
       realmURL: testDestinationRealmURL,
       contents: {
         ...SYSTEM_CARD_FIXTURE_CONTENTS,
-        ...makeDestinationRealmContents(),
+        ...makeDestinationRealmContents(catalogRealmURL, mockCatalogURL),
       },
     });
   });
@@ -478,6 +480,25 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
             )
             .doesNotExist();
         }
+      });
+
+      test('remix button does not exist in listing fitted when listing is not in catalog realm', async function (assert) {
+        await visitOperatorMode({
+          stacks: [
+            [
+              {
+                id: `${testDestinationRealmURL}index`,
+                format: 'isolated',
+              },
+            ],
+          ],
+        });
+        await waitFor(`[data-test-cards-grid-item="${nonCatalogListingId}"]`);
+        assert
+          .dom(
+            `[data-test-cards-grid-item="${nonCatalogListingId}"] [data-test-catalog-listing-action="Remix"]`,
+          )
+          .doesNotExist();
       });
     });
 
@@ -980,6 +1001,20 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
       assert
         .dom('[data-test-catalog-listing-embedded-skills-section]')
         .containsText('No Skills Provided');
+      assert.dom('[data-test-catalog-listing-action="Remix"]').doesNotExist();
+    });
+
+    test('remix button does not exist when listing is not in catalog realm', async function (assert) {
+      await visitOperatorMode({
+        stacks: [
+          [
+            {
+              id: nonCatalogListingId,
+              format: 'isolated',
+            },
+          ],
+        ],
+      });
       assert.dom('[data-test-catalog-listing-action="Remix"]').doesNotExist();
     });
 
