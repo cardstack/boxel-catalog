@@ -11,7 +11,6 @@ import ChooseRealmAction from './choose-realm-action';
 import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-realm-metas';
 
 import { listingActions, isReady } from '../resources/listing-actions';
-import { isInCatalogRealm } from '../resources/helpers/catalog-realm-utils';
 
 import { on } from '@ember/modifier';
 import { CatalogImageOverlay } from './catalog-image-overlay';
@@ -97,6 +96,10 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
     return this.listingActions?.type === 'theme'
       ? this.listingActions
       : undefined;
+  }
+
+  get isInCatalogRealm(): boolean {
+    return !!this.args.model[realmURL]?.pathname?.includes('/catalog/');
   }
 
   viewDetails = (event: Event) => {

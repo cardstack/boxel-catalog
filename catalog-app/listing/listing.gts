@@ -41,7 +41,6 @@ import ChooseRealmAction from '../components/choose-realm-action';
 import { ListingFittedTemplate } from '../components/listing-fitted';
 import ListOfPills from '../components/list-of-pills';
 import { listingActions, isReady } from '../resources/listing-actions';
-import { isInCatalogRealm } from '../resources/helpers/catalog-realm-utils';
 
 import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-realm-metas';
 import ListingGenerateExampleCommand from '@cardstack/boxel-host/commands/listing-generate-example';
@@ -177,7 +176,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
   }
 
   get isInCatalogRealm(): boolean {
-    return isInCatalogRealm(this.args.model);
+    return !!this.args.model[realmURL]?.pathname?.includes('/catalog/');
   }
 
   addSkillsToCurrentRoom = task(async () => {
