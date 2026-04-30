@@ -247,6 +247,9 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
             `[data-test-cards-grid-item="${authorListingId}"] [data-test-card-title="Author"]`,
           )
           .containsText('Author', '"Author" exist in listing');
+        await hoverToHydrateCard(
+          `[data-test-cards-grid-item="${authorListingId}"]`,
+        );
         await verifyListingAction(
           assert,
           `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-action="Remix"]`,
@@ -264,6 +267,7 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
         await waitFor(
           `[data-test-cards-grid-item="${listingId}"] [data-test-card-title="Author"]`,
         );
+        await hoverToHydrateCard(`[data-test-cards-grid-item="${listingId}"]`);
         await openMenu(
           `[data-test-cards-grid-item="${listingId}"] [data-test-catalog-listing-action="Remix"]`,
         );
@@ -775,6 +779,7 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
 
     test('after clicking "Remix" button, current realm (particularly catalog realm) is never displayed in realm options', async function (assert) {
       let selector = `[data-test-card="${authorListingId}"] [data-test-catalog-listing-action="Remix"]`;
+      await triggerEvent(`[data-test-card="${authorListingId}"]`, 'mouseenter');
       await openMenu(selector, false);
       assert
         .dom('[data-test-boxel-dropdown-content] [data-test-boxel-menu-item]')
@@ -809,6 +814,7 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
     });
 
     test('after clicking "Remix" button, the ai room is initiated, and prompt is given correctly', async function (assert) {
+      await triggerEvent(`[data-test-card="${authorListingId}"]`, 'mouseenter');
       await verifyListingAction(
         assert,
         `[data-test-card="${authorListingId}"] [data-test-catalog-listing-action="Remix"]`,
