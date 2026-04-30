@@ -43,7 +43,6 @@ import ListOfPills from '../components/list-of-pills';
 import { listingActions, isReady } from '../resources/listing-actions';
 
 import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-realm-metas';
-import GetCatalogRealmUrlsCommand from '@cardstack/boxel-host/commands/get-catalog-realm-urls';
 import ListingGenerateExampleCommand from '@cardstack/boxel-host/commands/listing-generate-example';
 import ListingUpdateSpecsCommand from '@cardstack/boxel-host/commands/listing-update-specs';
 import CreateAndOpenSubmissionWorkflowCardCommand from '@cardstack/boxel-host/commands/create-and-open-submission-workflow-card';
