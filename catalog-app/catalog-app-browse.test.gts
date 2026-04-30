@@ -18,6 +18,7 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setCatalogRealmURL,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -41,6 +42,7 @@ const emptyListingId = `${mockCatalogURL}Listing/empty`;
 const pirateSkillListingId = `${mockCatalogURL}SkillListing/pirate-skill`;
 const incompleteSkillListingId = `${mockCatalogURL}Listing/incomplete-skill`;
 const apiDocumentationStubListingId = `${mockCatalogURL}Listing/api-documentation-stub`;
+const nonCatalogListingId = `${testDestinationRealmURL}Listing/non-catalog-listing`;
 
 //tags
 const calculatorTagId = `${mockCatalogURL}Tag/calculator`;
@@ -66,6 +68,7 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
     });
     setupUserSubscription();
     setupAuthEndpoints();
+    setCatalogRealmURL(mockCatalogURL, catalogRealmURL);
     // this setup test realm is pretending to be a mock catalog
     await setupAcceptanceTestRealm({
       realmURL: mockCatalogURL,
@@ -80,7 +83,7 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
       realmURL: testDestinationRealmURL,
       contents: {
         ...SYSTEM_CARD_FIXTURE_CONTENTS,
-        ...makeDestinationRealmContents(),
+        ...makeDestinationRealmContents(catalogRealmURL, mockCatalogURL),
       },
     });
   });
@@ -1002,6 +1005,25 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
         'Test Workspace B',
         false,
       );
+    });
+
+    test('remix button does not render for a listing not in the catalog realm', async function (assert) {
+      await visitOperatorMode({
+        stacks: [
+          [
+            {
+              id: nonCatalogListingId,
+              format: 'isolated',
+            },
+          ],
+        ],
+      });
+      await waitFor(`[data-test-stack-card="${nonCatalogListingId}"]`);
+      assert
+        .dom('[data-test-catalog-listing-action="Remix"]')
+        .doesNotExist(
+          'Remix button should not be shown for listings outside the catalog realm',
+        );
     });
   });
 });

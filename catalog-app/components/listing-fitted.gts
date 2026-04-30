@@ -1,4 +1,4 @@
-import { Component, realmURL } from 'https://cardstack.com/base/card-api';
+import { Component } from 'https://cardstack.com/base/card-api';
 import { commandData } from 'https://cardstack.com/base/resources/command-data';
 import type {
   GetAllRealmMetasResult,
@@ -11,6 +11,7 @@ import ChooseRealmAction from './choose-realm-action';
 import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-realm-metas';
 
 import { listingActions, isReady } from '../resources/listing-actions';
+import { isInCatalogRealm } from '../resources/helpers/catalog-realm-utils';
 
 import { on } from '@ember/modifier';
 import { CatalogImageOverlay } from './catalog-image-overlay';
@@ -99,7 +100,7 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
   }
 
   get isInCatalogRealm(): boolean {
-    return !!this.args.model[realmURL]?.pathname?.includes('/catalog/');
+    return isInCatalogRealm(this.args.model);
   }
 
   viewDetails = (event: Event) => {
@@ -243,11 +244,16 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
         }
         .card-actions {
           opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
           transition: opacity 0.2s ease-in-out;
           margin-left: auto;
         }
-        .fitted-template:hover .card-actions {
+        .fitted-template:hover .card-actions,
+        .fitted-template:focus-within .card-actions {
           opacity: 1;
+          visibility: visible;
+          pointer-events: auto;
         }
         .card-title {
           display: -webkit-box;
