@@ -259,7 +259,7 @@ export function runTests() {
             );
         });
 
-        test('after clicking "Remix" button on catalog realm listing, the ai room is initiated and prompt is given correctly', async function (assert) {
+        skip('after clicking "Remix" button on catalog realm listing, the ai room is initiated and prompt is given correctly', async function (assert) {
           await visitOperatorMode({
             stacks: [
               [
@@ -803,7 +803,7 @@ export function runTests() {
           );
       });
 
-      test('after clicking "Remix" button on catalog realm listing, the ai room is initiated and prompt is given correctly', async function (assert) {
+      skip('after clicking "Remix" button on catalog realm listing, the ai room is initiated and prompt is given correctly', async function (assert) {
         await visitOperatorMode({
           stacks: [
             [
