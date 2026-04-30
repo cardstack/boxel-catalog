@@ -57,7 +57,11 @@ export function runTests() {
 
     let mockMatrixUtils = setupMockMatrix(hooks, {
       loggedInAs: '@testuser:localhost',
-      activeRealms: [nonCatalogRealmURL, testDestinationRealmURL, catalogRealmMockURL],
+      activeRealms: [
+        nonCatalogRealmURL,
+        testDestinationRealmURL,
+        catalogRealmMockURL,
+      ],
     });
 
     let { getRoomIds, createAndJoinRoom } = mockMatrixUtils;
@@ -221,20 +225,6 @@ export function runTests() {
         .containsText(expectedMessage);
     }
 
-    async function assertDropdownItem(
-      assert: Assert,
-      menuItemText: string,
-      exists = true,
-    ) {
-      let selector = `[data-test-boxel-dropdown-content] [data-test-boxel-menu-item-text="${menuItemText}"]`;
-      if (exists) {
-        await waitFor(selector);
-        assert.dom(selector).exists();
-      } else {
-        assert.dom(selector).doesNotExist();
-      }
-    }
-
     module('catalog index', function (hooks) {
       hooks.beforeEach(async function () {
         await visitOperatorMode({
@@ -304,7 +294,9 @@ export function runTests() {
           await click(
             `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
           );
-          await waitForCardOnStack(`${nonCatalogRealmURL}author/Author/example`);
+          await waitForCardOnStack(
+            `${nonCatalogRealmURL}author/Author/example`,
+          );
           assert
             .dom(
               `[data-test-stack-card="${nonCatalogRealmURL}author/Author/example"] [data-test-boxel-card-header-title]`,
@@ -341,7 +333,9 @@ export function runTests() {
           await click(
             `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
           );
-          await waitForCardOnStack(`${nonCatalogRealmURL}author/Author/example`);
+          await waitForCardOnStack(
+            `${nonCatalogRealmURL}author/Author/example`,
+          );
           assert
             .dom(
               `[data-test-stack-card="${nonCatalogRealmURL}author/Author/example"] [data-test-boxel-card-header-title]`,
@@ -855,7 +849,6 @@ export function runTests() {
           .containsText('Talk Like a Pirate')
           .exists('Skill is attached to the skill menu');
       });
-
 
       test('after clicking "Preview" button, the first example card opens up onto the stack', async function (assert) {
         await click(
