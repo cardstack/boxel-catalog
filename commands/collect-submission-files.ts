@@ -2,6 +2,7 @@ import {
   Command,
   RealmPaths,
   PlanBuilder,
+  baseRealm,
   extractRelationshipIds,
   isCardInstance,
   logger,
@@ -310,11 +311,20 @@ export default class CollectSubmissionFilesCommand extends Command<
     let getCardCommand = new GetCardCommand(this.commandContext);
     let serializeCardCommand = new SerializeCardCommand(this.commandContext);
 
+    const isBaseRealmId = (id: string) => {
+      try {
+        return baseRealm.inRealm(new URL(id));
+      } catch {
+        return false;
+      }
+    };
+
     const instancesById = new Map<string, CardDef>();
     const visited = new Set<string>();
     const queue: string[] = instances
       .map((instance) => instance.id)
-      .filter((id): id is string => typeof id === 'string');
+      .filter((id): id is string => typeof id === 'string')
+      .filter((id) => !isBaseRealmId(id));
 
     while (queue.length > 0) {
       const id = queue.shift();
@@ -344,6 +354,9 @@ export default class CollectSubmissionFilesCommand extends Command<
         for (const relationship of rels) {
           const relatedIds = extractRelationshipIds(relationship, baseUrl);
           for (const relatedId of relatedIds) {
+            if (isBaseRealmId(relatedId)) {
+              continue;
+            }
             if (!visited.has(relatedId)) {
               queue.push(relatedId);
             }
