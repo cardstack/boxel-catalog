@@ -9,7 +9,6 @@ import { type Listing } from '../listing/listing';
 
 import ChooseRealmAction from './choose-realm-action';
 import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-realm-metas';
-import GetCatalogRealmUrlsCommand from '@cardstack/boxel-host/commands/get-catalog-realm-urls';
 
 import { listingActions, isReady } from '../resources/listing-actions';
 
