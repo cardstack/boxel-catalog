@@ -41,6 +41,7 @@ import ChooseRealmAction from '../components/choose-realm-action';
 import { ListingFittedTemplate } from '../components/listing-fitted';
 import ListOfPills from '../components/list-of-pills';
 import { listingActions, isReady } from '../resources/listing-actions';
+import { isInCatalogRealm } from '../resources/helpers/catalog-realm-utils';
 
 import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-realm-metas';
 import ListingGenerateExampleCommand from '@cardstack/boxel-host/commands/listing-generate-example';
@@ -175,6 +176,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       : undefined;
   }
 
+  get isInCatalogRealm(): boolean {
+    return isInCatalogRealm(this.args.model);
+  }
+
   addSkillsToCurrentRoom = task(async () => {
     this.skillActions?.addSkillsToRoom?.();
   });
@@ -218,19 +223,23 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                 />
               {{else if this.regularActions}}
                 {{#if this.regularActions.remix}}
-                  <ChooseRealmAction
-                    @name='Remix'
-                    @writableRealms={{this.writableRealms}}
-                    @onAction={{this.regularActions.remix}}
-                  />
+                  {{#if this.isInCatalogRealm}}
+                    <ChooseRealmAction
+                      @name='Remix'
+                      @writableRealms={{this.writableRealms}}
+                      @onAction={{this.regularActions.remix}}
+                    />
+                  {{/if}}
                 {{/if}}
               {{else if this.themeActions}}
                 {{#if this.themeActions.remix}}
-                  <ChooseRealmAction
-                    @name='Remix'
-                    @onAction={{this.themeActions.remix}}
-                    @writableRealms={{this.writableRealms}}
-                  />
+                  {{#if this.isInCatalogRealm}}
+                    <ChooseRealmAction
+                      @name='Remix'
+                      @onAction={{this.themeActions.remix}}
+                      @writableRealms={{this.writableRealms}}
+                    />
+                  {{/if}}
                 {{/if}}
               {{/if}}
             </div>

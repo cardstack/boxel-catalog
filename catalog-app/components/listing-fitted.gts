@@ -11,6 +11,7 @@ import ChooseRealmAction from './choose-realm-action';
 import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-realm-metas';
 
 import { listingActions, isReady } from '../resources/listing-actions';
+import { isInCatalogRealm } from '../resources/helpers/catalog-realm-utils';
 
 import { on } from '@ember/modifier';
 import { CatalogImageOverlay } from './catalog-image-overlay';
@@ -138,45 +139,54 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
             {{#if this.hasTags}}
               <span class='card-tags'># {{this.firstTagName}}</span>
             {{/if}}
-            {{#if this.stubActions}}
-              <ChooseRealmAction
-                @name='Build'
-                @writableRealms={{this.writableRealms}}
-                @onAction={{this.stubActions.build}}
-                @context={{@context}}
-                @size='extra-small'
-              />
-            {{else if this.skillActions}}
-              {{#if this.skillActions.remix}}
+
+            <div class='card-actions' data-test-card-actions>
+              {{#if this.stubActions}}
                 <ChooseRealmAction
-                  @name='Remix'
+                  @name='Build'
                   @writableRealms={{this.writableRealms}}
-                  @onAction={{this.skillActions.remix}}
+                  @onAction={{this.stubActions.build}}
                   @context={{@context}}
                   @size='extra-small'
                 />
+              {{else if this.skillActions}}
+                {{#if this.skillActions.remix}}
+                  {{#if this.isInCatalogRealm}}
+                    <ChooseRealmAction
+                      @name='Remix'
+                      @writableRealms={{this.writableRealms}}
+                      @onAction={{this.skillActions.remix}}
+                      @context={{@context}}
+                      @size='extra-small'
+                    />
+                  {{/if}}
+                {{/if}}
+              {{else if this.regularActions}}
+                {{#if this.regularActions.remix}}
+                  {{#if this.isInCatalogRealm}}
+                    <ChooseRealmAction
+                      @name='Remix'
+                      @writableRealms={{this.writableRealms}}
+                      @onAction={{this.regularActions.remix}}
+                      @context={{@context}}
+                      @size='extra-small'
+                    />
+                  {{/if}}
+                {{/if}}
+              {{else if this.themeActions}}
+                {{#if this.themeActions.remix}}
+                  {{#if this.isInCatalogRealm}}
+                    <ChooseRealmAction
+                      @name='Remix'
+                      @writableRealms={{this.writableRealms}}
+                      @onAction={{this.themeActions.remix}}
+                      @context={{@context}}
+                      @size='extra-small'
+                    />
+                  {{/if}}
+                {{/if}}
               {{/if}}
-            {{else if this.regularActions}}
-              {{#if this.regularActions.remix}}
-                <ChooseRealmAction
-                  @name='Remix'
-                  @writableRealms={{this.writableRealms}}
-                  @onAction={{this.regularActions.remix}}
-                  @context={{@context}}
-                  @size='extra-small'
-                />
-              {{/if}}
-            {{else if this.themeActions}}
-              {{#if this.themeActions.remix}}
-                <ChooseRealmAction
-                  @name='Remix'
-                  @writableRealms={{this.writableRealms}}
-                  @onAction={{this.themeActions.remix}}
-                  @context={{@context}}
-                  @size='extra-small'
-                />
-              {{/if}}
-            {{/if}}
+            </div>
           </div>
         </div>
 
@@ -268,7 +278,7 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
         }
         .display-section {
           width: 100%;
-          height: 68cqmax;
+          height: 60cqmax;
         }
         .info-section {
           flex-direction: column;
