@@ -13,9 +13,12 @@ import {
   setupLocalIndexing,
   setupOnSave,
   setupAuthEndpoints,
+  testRealmURL as mockCatalogURL,
   setupUserSubscription,
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
+  resetCatalogRealmURL,
+  setCatalogRealmURL,
   visitOperatorMode,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
@@ -31,8 +34,6 @@ import {
 // catalog-app/ subdirectory, so we go up one level to reach the realm root.
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const catalogRealmURL: string = new URL('../', import.meta.url).href;
-// Use a URL containing /catalog/ so isInCatalogRealm() returns true for mock listings
-const mockCatalogURL = 'http://test-realm/catalog/';
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing
@@ -68,6 +69,7 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
     });
     setupUserSubscription();
     setupAuthEndpoints();
+    setCatalogRealmURL(mockCatalogURL, catalogRealmURL);
     // this setup test realm is pretending to be a mock catalog
     await setupAcceptanceTestRealm({
       realmURL: mockCatalogURL,
@@ -85,6 +87,10 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
         ...makeDestinationRealmContents(catalogRealmURL, mockCatalogURL),
       },
     });
+  });
+
+  hooks.afterEach(function () {
+    resetCatalogRealmURL();
   });
 
   /**

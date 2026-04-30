@@ -17,6 +17,7 @@ import { Spec } from 'https://cardstack.com/base/spec';
 import { Skill } from 'https://cardstack.com/base/skill';
 import type {
   GetAllRealmMetasResult,
+  GetCatalogRealmUrlsResult,
   RealmMetaField,
 } from 'https://cardstack.com/base/command';
 
@@ -43,6 +44,7 @@ import ListOfPills from '../components/list-of-pills';
 import { listingActions, isReady } from '../resources/listing-actions';
 
 import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-realm-metas';
+import GetCatalogRealmUrlsCommand from '@cardstack/boxel-host/commands/get-catalog-realm-urls';
 import ListingGenerateExampleCommand from '@cardstack/boxel-host/commands/listing-generate-example';
 import ListingUpdateSpecsCommand from '@cardstack/boxel-host/commands/listing-update-specs';
 import CreateAndOpenSubmissionWorkflowCardCommand from '@cardstack/boxel-host/commands/create-and-open-submission-workflow-card';
@@ -64,6 +66,11 @@ class EmbeddedTemplate extends Component<typeof Listing> {
   allRealmsInfoResource = commandData<typeof GetAllRealmMetasResult>(
     this,
     GetAllRealmMetasCommand,
+  );
+
+  catalogRealmUrlsResource = commandData<typeof GetCatalogRealmUrlsResult>(
+    this,
+    GetCatalogRealmUrlsCommand,
   );
 
   get writableRealms(): { name: string; url: string; iconURL?: string }[] {
@@ -176,7 +183,15 @@ class EmbeddedTemplate extends Component<typeof Listing> {
   }
 
   get isInCatalogRealm(): boolean {
-    return !!this.args.model[realmURL]?.pathname?.includes('/catalog/');
+    let listingRealmURL = this.args.model[realmURL]?.href;
+    let commandResource = this.catalogRealmUrlsResource;
+    if (!listingRealmURL || !commandResource?.isSuccess) {
+      return false;
+    }
+    return (
+      commandResource.cardResult?.urls?.some((url) => url === listingRealmURL) ??
+      false
+    );
   }
 
   addSkillsToCurrentRoom = task(async () => {
