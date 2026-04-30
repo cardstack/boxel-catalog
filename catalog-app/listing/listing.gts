@@ -17,7 +17,6 @@ import { Spec } from 'https://cardstack.com/base/spec';
 import { Skill } from 'https://cardstack.com/base/skill';
 import type {
   GetAllRealmMetasResult,
-  GetCatalogRealmUrlsResult,
   RealmMetaField,
 } from 'https://cardstack.com/base/command';
 
@@ -66,11 +65,6 @@ class EmbeddedTemplate extends Component<typeof Listing> {
   allRealmsInfoResource = commandData<typeof GetAllRealmMetasResult>(
     this,
     GetAllRealmMetasCommand,
-  );
-
-  catalogRealmUrlsResource = commandData<typeof GetCatalogRealmUrlsResult>(
-    this,
-    GetCatalogRealmUrlsCommand,
   );
 
   get writableRealms(): { name: string; url: string; iconURL?: string }[] {
@@ -183,15 +177,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
   }
 
   get isInCatalogRealm(): boolean {
-    let listingRealmURL = this.args.model[realmURL]?.href;
-    let commandResource = this.catalogRealmUrlsResource;
-    if (!listingRealmURL || !commandResource?.isSuccess) {
-      return false;
-    }
-    return (
-      commandResource.cardResult?.urls?.some((url) => url === listingRealmURL) ??
-      false
-    );
+    return !!this.args.model[realmURL]?.pathname?.includes('/catalog/');
   }
 
   addSkillsToCurrentRoom = task(async () => {

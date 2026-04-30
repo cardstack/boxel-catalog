@@ -2,7 +2,6 @@ import { Component, realmURL } from 'https://cardstack.com/base/card-api';
 import { commandData } from 'https://cardstack.com/base/resources/command-data';
 import type {
   GetAllRealmMetasResult,
-  GetCatalogRealmUrlsResult,
   RealmMetaField,
 } from 'https://cardstack.com/base/command';
 
@@ -21,11 +20,6 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
   allRealmsInfoResource = commandData<typeof GetAllRealmMetasResult>(
     this,
     GetAllRealmMetasCommand,
-  );
-
-  catalogRealmUrlsResource = commandData<typeof GetCatalogRealmUrlsResult>(
-    this,
-    GetCatalogRealmUrlsCommand,
   );
 
   get writableRealms(): { name: string; url: string; iconURL?: string }[] {
@@ -106,15 +100,7 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
   }
 
   get isInCatalogRealm(): boolean {
-    let listingRealmURL = this.args.model[realmURL]?.href;
-    let commandResource = this.catalogRealmUrlsResource;
-    if (!listingRealmURL || !commandResource?.isSuccess) {
-      return false;
-    }
-    return (
-      commandResource.cardResult?.urls?.some((url) => url === listingRealmURL) ??
-      false
-    );
+    return !!this.args.model[realmURL]?.pathname?.includes('/catalog/');
   }
 
   viewDetails = (event: Event) => {
