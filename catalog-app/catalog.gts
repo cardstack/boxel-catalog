@@ -259,7 +259,10 @@ class Isolated extends Component<typeof Catalog> {
       return undefined;
     }
     return {
-      any: [{ contains: { cardTitle: this.searchValue } }],
+      any: [
+        { matches: this.searchValue },
+        { contains: { cardTitle: this.searchValue } },
+      ],
     };
   }
 
@@ -336,7 +339,7 @@ class Isolated extends Component<typeof Catalog> {
               @type='search'
               @value={{this.searchValue}}
               @onInput={{this.onSearchInput}}
-              placeholder='Search by Title'
+              placeholder='Search by Keyword'
               data-test-filter-search-input
               class='catalog-search-input'
             />
