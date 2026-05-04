@@ -19,6 +19,7 @@ interface ChooseRealmActionSignature {
     onAction: (realmUrl: string) => Promise<void>;
     context?: CardContext;
     size?: 'extra-small';
+    hide?: boolean;
   };
 }
 
@@ -49,28 +50,30 @@ export default class ChooseRealmAction extends GlimmerComponent<ChooseRealmActio
   });
 
   <template>
-    <BoxelDropdown>
-      <:trigger as |bindings|>
-        <BoxelButton
-          data-test-catalog-listing-action={{@name}}
-          class='card-action-button'
-          @kind='primary'
-          @size={{@size}}
-          @loading={{this.runAction.isRunning}}
-          {{on 'click' this.handleStopPropagation}}
-          {{bindings}}
-        >
-          {{@name}}
-        </BoxelButton>
-      </:trigger>
-      <:content as |dd|>
-        <BoxelMenu
-          class='realm-dropdown-menu'
-          @closeMenu={{dd.close}}
-          @items={{this.realmOptions}}
-        />
-      </:content>
-    </BoxelDropdown>
+    {{#unless @hide}}
+      <BoxelDropdown>
+        <:trigger as |bindings|>
+          <BoxelButton
+            data-test-catalog-listing-action={{@name}}
+            class='card-action-button'
+            @kind='primary'
+            @size={{@size}}
+            @loading={{this.runAction.isRunning}}
+            {{on 'click' this.handleStopPropagation}}
+            {{bindings}}
+          >
+            {{@name}}
+          </BoxelButton>
+        </:trigger>
+        <:content as |dd|>
+          <BoxelMenu
+            class='realm-dropdown-menu'
+            @closeMenu={{dd.close}}
+            @items={{this.realmOptions}}
+          />
+        </:content>
+      </BoxelDropdown>
+    {{/unless}}
 
     <style scoped>
       .realm-dropdown-menu {

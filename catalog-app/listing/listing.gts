@@ -24,6 +24,7 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 import { task } from 'ember-concurrency';
+import { not } from '@cardstack/boxel-ui/helpers';
 
 import {
   Accordion,
@@ -85,6 +86,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       }
     }
     return [];
+  }
+
+  get isInCatalogRealm(): boolean {
+    return this.args.model[realmURL]?.href.endsWith('/catalog/') ?? false;
   }
 
   get hasOneOrMoreSpec() {
@@ -222,6 +227,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                     @name='Remix'
                     @writableRealms={{this.writableRealms}}
                     @onAction={{this.regularActions.remix}}
+                    @hide={{not this.isInCatalogRealm}}
                   />
                 {{/if}}
               {{else if this.themeActions}}
@@ -230,6 +236,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                     @name='Remix'
                     @onAction={{this.themeActions.remix}}
                     @writableRealms={{this.writableRealms}}
+                    @hide={{not this.isInCatalogRealm}}
                   />
                 {{/if}}
               {{/if}}
