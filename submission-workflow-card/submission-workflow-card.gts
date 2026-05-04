@@ -13,9 +13,12 @@ import NumberField from 'https://cardstack.com/base/number';
 import { concat } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { htmlSafe } from '@ember/template';
+import { tracked } from '@glimmer/tracking';
+import { action } from '@ember/object';
 import { BoxelButton } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import SourceCode from '@cardstack/boxel-icons/source-code';
+import RetrySubmissionWorkflowCommand from '@cardstack/boxel-host/commands/retry-submission-workflow';
 import ShowCardCommand from '@cardstack/boxel-host/commands/show-card';
 
 import { Listing } from '../catalog-app/listing/listing';
@@ -69,7 +72,7 @@ const STEP_DEFINITIONS = [
   {
     key: 'create-pr',
     label: 'Create PR',
-    description: 'Create a GitHub pull request',
+    description: 'Create a GitHub pull request for the selected listing',
   },
   {
     key: 'ci-checks',
@@ -104,6 +107,7 @@ function resolveSubmissionWorkflowState(
   lintStatus: string | null,
   lintErrors: string[],
   prCreationError: string | null,
+  failedStep: string | null,
 ): WorkflowState {
   let steps: ResolvedStep[] = [];
   let firstIncomplete = -1;
@@ -127,9 +131,17 @@ function resolveSubmissionWorkflowState(
         } else if (!hasPr && lintStatus === 'failed') {
           blocked = true;
           statusDetail = `${lintErrors.length} unfixable lint error${lintErrors.length === 1 ? '' : 's'}`;
-        } else if (!hasPr && prCreationError) {
+        } else if (!hasPr && (prCreationError || failedStep)) {
           blocked = true;
-          statusDetail = 'PR creation failed';
+          if (failedStep === 'collect-files') {
+            statusDetail = 'Collecting files failed';
+          } else if (failedStep === 'create-pr-card') {
+            statusDetail = 'Creating PR card failed';
+          } else if (failedStep === 'lint') {
+            statusDetail = 'Lint failed';
+          } else {
+            statusDetail = 'PR creation failed';
+          }
         } else if (!hasPr && lintStatus === 'passed') {
           inProgress = true;
           statusDetail = 'Creating PR...';
@@ -288,6 +300,8 @@ export class SubmissionWorkflowCard extends CardDef {
   @field lintFixedCount = contains(NumberField);
 
   @field prCreationError = contains(StringField);
+  // 'collect-files' | 'lint' | 'create-pr-card' | 'github-pr'
+  @field failedStep = contains(StringField);
 
   // ── Participants ──
   @field participants = containsMany(SubmissionParticipantField);
@@ -505,6 +519,7 @@ export class SubmissionWorkflowCard extends CardDef {
         this.args.model.lintStatus ?? null,
         this.args.model.lintErrors ?? [],
         this.args.model.prCreationError ?? null,
+        this.args.model.failedStep ?? null,
       );
     }
 
@@ -545,6 +560,20 @@ export class SubmissionWorkflowCard extends CardDef {
       );
     }
 
+    // ── Retry support ──
+    @tracked isRetrying = false;
+
+    get canRetry(): boolean {
+      return (
+        !!this.args.context?.commandContext &&
+        !!this.args.model.id &&
+        !!this.args.model.roomId &&
+        (!!this.args.model.prCreationError ||
+          this.args.model.lintStatus === 'failed' ||
+          !!this.args.model.failedStep)
+      );
+    }
+
     viewCatalogListing = () => {
       let url = this.catalogListingUrl;
       let commandContext = this.args.context?.commandContext;
@@ -554,6 +583,23 @@ export class SubmissionWorkflowCard extends CardDef {
         format: 'isolated',
       });
     };
+
+    @action
+    async retrySubmission() {
+      let commandContext = this.args.context?.commandContext;
+      let workflowCardId = this.args.model.id;
+      if (!commandContext || !workflowCardId || this.isRetrying) {
+        return;
+      }
+      this.isRetrying = true;
+      try {
+        await new RetrySubmissionWorkflowCommand(commandContext).execute({
+          workflowCardId,
+        });
+      } finally {
+        this.isRetrying = false;
+      }
+    }
 
     <template>
       <div class='sw-layout'>
@@ -668,6 +714,19 @@ export class SubmissionWorkflowCard extends CardDef {
                         <div class='sw-lint-error-line'>
                           {{@model.prCreationError}}
                         </div>
+                      </div>
+                    {{/if}}
+                    {{#if this.canRetry}}
+                      <div class='sw-step-detail sw-retry'>
+                        <BoxelButton
+                          @kind='primary'
+                          @size='small'
+                          @loading={{this.isRetrying}}
+                          @disabled={{this.isRetrying}}
+                          {{on 'click' this.retrySubmission}}
+                        >
+                          {{if this.isRetrying 'Retrying…' 'Retry'}}
+                        </BoxelButton>
                       </div>
                     {{/if}}
                     {{#if (eq @model.lintStatus 'passed')}}
