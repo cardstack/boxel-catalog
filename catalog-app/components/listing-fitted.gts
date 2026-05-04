@@ -13,6 +13,7 @@ import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-real
 import { listingActions, isReady } from '../resources/listing-actions';
 
 import { on } from '@ember/modifier';
+import { not } from '@cardstack/boxel-ui/helpers';
 import { CatalogImageOverlay } from './catalog-image-overlay';
 
 export class ListingFittedTemplate extends Component<typeof Listing> {
@@ -98,6 +99,10 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
       : undefined;
   }
 
+  get isInCatalogRealm(): boolean {
+    return this.args.model[realmURL]?.href.endsWith('/catalog/') ?? false;
+  }
+
   viewDetails = (event: Event) => {
     event.stopPropagation();
     this.listingActions?.view();
@@ -154,6 +159,7 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
                   @onAction={{this.skillActions.remix}}
                   @context={{@context}}
                   @size='extra-small'
+                  @hide={{not this.isInCatalogRealm}}
                 />
               {{/if}}
             {{else if this.regularActions}}
@@ -164,6 +170,7 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
                   @onAction={{this.regularActions.remix}}
                   @context={{@context}}
                   @size='extra-small'
+                  @hide={{not this.isInCatalogRealm}}
                 />
               {{/if}}
             {{else if this.themeActions}}
@@ -174,6 +181,7 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
                   @onAction={{this.themeActions.remix}}
                   @context={{@context}}
                   @size='extra-small'
+                  @hide={{not this.isInCatalogRealm}}
                 />
               {{/if}}
             {{/if}}
