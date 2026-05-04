@@ -115,7 +115,7 @@ const SPHERES: SphereConfig[] = [
   },
 ];
 
-// Catalog App
+// Catalog App - Showcase | Cards | Fields | Skills | Themes
 class Isolated extends Component<typeof Catalog> {
   tabFilterOptions = [
     {
