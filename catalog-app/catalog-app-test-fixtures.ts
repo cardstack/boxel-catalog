@@ -698,7 +698,10 @@ export function makeMockCatalogContents(
   };
 }
 
-export function makeDestinationRealmContents(): Record<string, string | Record<string, unknown>> {
+export function makeDestinationRealmContents(): Record<
+  string,
+  string | Record<string, unknown>
+> {
   return {
     'index.json': {
       data: {

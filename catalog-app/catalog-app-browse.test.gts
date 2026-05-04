@@ -500,18 +500,18 @@ export function runTests() {
         });
       });
 
-    module('navigation', function () {
-      module('show results as per catalog tab selected', function () {
-        test('switch to cards tab', async function (assert) {
-          await selectTab('Cards');
-          await waitForGrid();
-          assert
-            .dom('[data-test-navigation-reset-button="card"]')
-            .exists(`"All Cards" button should exist`)
-            .hasClass('is-selected');
-          assert.dom('[data-test-boxel-radio-option-id="grid"]').exists();
+      module('navigation', function () {
+        module('show results as per catalog tab selected', function () {
+          test('switch to cards tab', async function (assert) {
+            await selectTab('Cards');
+            await waitForGrid();
+            assert
+              .dom('[data-test-navigation-reset-button="card"]')
+              .exists(`"All Cards" button should exist`)
+              .hasClass('is-selected');
+            assert.dom('[data-test-boxel-radio-option-id="grid"]').exists();
+          });
         });
-      });
 
         skip('filters', async function () {
           test('list view is shown if filters are applied', async function (assert) {
@@ -565,16 +565,16 @@ export function runTests() {
                 'Should return to showcase view after clicking Catalog Home',
               );
 
-          assert
-            .dom('[data-test-filter-search-input]')
-            .hasValue('', 'Search input should be cleared');
-          assert
-            .dom('[data-test-filter-list-item].is-selected')
-            .doesNotExist('No category should be selected after reset');
-          assert
-            .dom('[data-test-tag-list-pill].selected')
-            .doesNotExist('No tag should be selected after reset');
-        });
+            assert
+              .dom('[data-test-filter-search-input]')
+              .hasValue('', 'Search input should be cleared');
+            assert
+              .dom('[data-test-filter-list-item].is-selected')
+              .doesNotExist('No category should be selected after reset');
+            assert
+              .dom('[data-test-tag-list-pill].selected')
+              .doesNotExist('No tag should be selected after reset');
+          });
 
           skip('updates the card count correctly when filtering by a sphere group', async function (assert) {
             await click('[data-test-boxel-filter-list-button="LIFE"]');

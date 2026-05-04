@@ -136,11 +136,7 @@ export class ModelConfiguration extends BaseModelConfiguration {
         return this.cardInfo?.name || autoTitle;
       }
 
-      return (
-        this.cardInfo?.name ||
-        this.modelId ||
-        'Model Configuration'
-      );
+      return this.cardInfo?.name || this.modelId || 'Model Configuration';
     },
   });
 
@@ -188,7 +184,6 @@ export class ModelConfiguration extends BaseModelConfiguration {
       return 'recommended';
     },
   });
-
 }
 
 function formatContext(num: number | undefined): string {
@@ -224,20 +219,45 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
   }
 
   get reasoningEffortLabel(): string {
-    return REASONING_EFFORT_LABELS[this.args.model.reasoningEffort ?? ''] ?? 'Not Specified';
+    return (
+      REASONING_EFFORT_LABELS[this.args.model.reasoningEffort ?? ''] ??
+      'Not Specified'
+    );
   }
 
   <template>
     <article class='mc-isolated'>
       <header class='hero'>
         <div class='type-badge'>
-          <svg class='type-badge-icon' width='512' height='512' viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg' fill='currentColor' stroke='currentColor'>
-            <g><path d='M3 248.945C18 248.945 76 236 106 219C136 202 136 202 198 158C276.497 102.293 332 120.945 423 120.945' stroke-width='90' /><path d='M511 121.5L357.25 210.268L357.25 32.7324L511 121.5Z' /><path d='M0 249C15 249 73 261.945 103 278.945C133 295.945 133 295.945 195 339.945C273.497 395.652 329 377 420 377' stroke-width='90' /><path d='M508 376.445L354.25 287.678L354.25 465.213L508 376.445Z' /></g>
+          <svg
+            class='type-badge-icon'
+            width='512'
+            height='512'
+            viewBox='0 0 512 512'
+            xmlns='http://www.w3.org/2000/svg'
+            fill='currentColor'
+            stroke='currentColor'
+          >
+            <g><path
+                d='M3 248.945C18 248.945 76 236 106 219C136 202 136 202 198 158C276.497 102.293 332 120.945 423 120.945'
+                stroke-width='90'
+              /><path
+                d='M511 121.5L357.25 210.268L357.25 32.7324L511 121.5Z'
+              /><path
+                d='M0 249C15 249 73 261.945 103 278.945C133 295.945 133 295.945 195 339.945C273.497 395.652 329 377 420 377'
+                stroke-width='90'
+              /><path
+                d='M508 376.445L354.25 287.678L354.25 465.213L508 376.445Z'
+              /></g>
           </svg>
           MODEL CONFIGURATION
         </div>
 
-        <h1 class='hero-title'>{{if @model.cardTitle @model.cardTitle 'Model Configuration'}}</h1>
+        <h1 class='hero-title'>{{if
+            @model.cardTitle
+            @model.cardTitle
+            'Model Configuration'
+          }}</h1>
 
         {{#if @model.modelId}}
           <code class='model-id-badge'>{{@model.modelId}}</code>
@@ -245,7 +265,8 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
 
         <div class='hero-stats'>
           {{#if @model.contextLength}}
-            <span class='stat-item'>{{formatContext @model.contextLength}} context</span>
+            <span class='stat-item'>{{formatContext @model.contextLength}}
+              context</span>
           {{/if}}
           {{#if @model.toolsSupported}}
             <span class='stat-sep'>&middot;</span>
@@ -264,12 +285,20 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
 
         <div class='hero-badges'>
           {{#if @model.leftBadge}}
-            <span class='hero-badge {{@model.leftBadgeVariant}}'>{{@model.leftBadge}}</span>
+            <span
+              class='hero-badge {{@model.leftBadgeVariant}}'
+            >{{@model.leftBadge}}</span>
           {{/if}}
           {{#if @model.rightBadge}}
             <span class='hero-badge {{@model.rightBadgeVariant}}'>
               {{#if (eq @model.rightBadgeVariant 'recommended')}}
-                <svg class='badge-check-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3'><polyline points='20 6 9 17 4 12'></polyline></svg>
+                <svg
+                  class='badge-check-icon'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  stroke-width='3'
+                ><polyline points='20 6 9 17 4 12'></polyline></svg>
               {{/if}}
               {{@model.rightBadge}}
             </span>
@@ -491,182 +520,111 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
 }
 
 class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
-    get leftBadgeTitle(): string {
-      let variant = this.args.model.leftBadgeVariant;
-      if (variant === 'purpose') {
-        return 'Assigned purpose for this model configuration';
-      }
-      if (variant === 'recommended-badge') {
-        return 'Linked to a verified OpenRouter model';
-      }
-      return '';
+  get leftBadgeTitle(): string {
+    let variant = this.args.model.leftBadgeVariant;
+    if (variant === 'purpose') {
+      return 'Assigned purpose for this model configuration';
     }
-
-    get rightBadgeTitle(): string {
-      if (this.args.model.reasoningEffort) {
-        return 'Reasoning enabled — uses extended thinking';
-      }
-      if (this.args.model.openRouterModel) {
-        return 'Verified — linked to OpenRouter model';
-      }
-      return '';
+    if (variant === 'recommended-badge') {
+      return 'Linked to a verified OpenRouter model';
     }
+    return '';
+  }
 
-    formatContext(num: number | undefined): string {
-      if (!num) return '\u2014';
-      if (num >= 1000000) {
-        return (
-          (num / 1000000).toFixed(1).replace(TRAILING_ZERO_DECIMAL_RE, '') +
-          'M'
-        );
-      }
-      if (num >= 1000) {
-        return (num / 1000).toFixed(0) + 'K';
-      }
-      return num.toLocaleString('en-US');
+  get rightBadgeTitle(): string {
+    if (this.args.model.reasoningEffort) {
+      return 'Reasoning enabled — uses extended thinking';
     }
+    if (this.args.model.openRouterModel) {
+      return 'Verified — linked to OpenRouter model';
+    }
+    return '';
+  }
 
-    <template>
-      <div class='fitted-container'>
-        {{! Badge format (≤150px width, <170px height) }}
-        <div class='badge-format'>
-          <svg
-            class='badge-logo'
-            width='512'
-            height='512'
-            viewBox='0 0 512 512'
-            xmlns='http://www.w3.org/2000/svg'
-            fill='currentColor'
-            stroke='currentColor'
-          >
-            <g clip-path='url(#clip0_205_3)'>
-              <path
-                d='M3 248.945C18 248.945 76 236 106 219C136 202 136 202 198 158C276.497 102.293 332 120.945 423 120.945'
-                stroke-width='90'
-              />
-              <path d='M511 121.5L357.25 210.268L357.25 32.7324L511 121.5Z' />
-              <path
-                d='M0 249C15 249 73 261.945 103 278.945C133 295.945 133 295.945 195 339.945C273.497 395.652 329 377 420 377'
-                stroke-width='90'
-              />
-              <path
-                d='M508 376.445L354.25 287.678L354.25 465.213L508 376.445Z'
-              />
-            </g>
-          </svg>
-        </div>
+  formatContext(num: number | undefined): string {
+    if (!num) return '\u2014';
+    if (num >= 1000000) {
+      return (
+        (num / 1000000).toFixed(1).replace(TRAILING_ZERO_DECIMAL_RE, '') + 'M'
+      );
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(0) + 'K';
+    }
+    return num.toLocaleString('en-US');
+  }
 
-        {{! Strip format (>150px width, <170px height) }}
-        <div class='strip-format'>
-          <div class='strip-content'>
-            <div class='strip-row'>
-              {{#if @model.leftBadge}}
-                <div class='strip-badge {{@model.leftBadgeVariant}}' title={{this.leftBadgeTitle}}>
-                  {{@model.leftBadge}}
-                </div>
-              {{/if}}
-              <div class='strip-main'>
-                <div class='strip-title'>{{if
-                    @model.name
-                    @model.name
-                    (if @model.cardTitle @model.cardTitle 'Model')
-                  }}</div>
-              </div>
-              <div class='strip-spacer'></div>
-              {{#if @model.rightBadge}}
-                <div class='strip-badge {{@model.rightBadgeVariant}}' title={{this.rightBadgeTitle}}>
-                  {{#if (eq @model.rightBadgeVariant 'recommended')}}
-                    <svg
-                      class='badge-icon'
-                      viewBox='0 0 24 24'
-                      fill='none'
-                      stroke='currentColor'
-                      stroke-width='3'
-                    >
-                      <polyline points='20 6 9 17 4 12'></polyline>
-                    </svg>
-                  {{/if}}
-                  {{@model.rightBadge}}
-                </div>
-              {{/if}}
-            </div>
-            <div class='strip-meta'>
-              <svg
-                class='strip-icon'
-                width='512'
-                height='512'
-                viewBox='0 0 512 512'
-                xmlns='http://www.w3.org/2000/svg'
-                fill='currentColor'
-                stroke='currentColor'
+  <template>
+    <div class='fitted-container'>
+      {{! Badge format (≤150px width, <170px height) }}
+      <div class='badge-format'>
+        <svg
+          class='badge-logo'
+          width='512'
+          height='512'
+          viewBox='0 0 512 512'
+          xmlns='http://www.w3.org/2000/svg'
+          fill='currentColor'
+          stroke='currentColor'
+        >
+          <g clip-path='url(#clip0_205_3)'>
+            <path
+              d='M3 248.945C18 248.945 76 236 106 219C136 202 136 202 198 158C276.497 102.293 332 120.945 423 120.945'
+              stroke-width='90'
+            />
+            <path d='M511 121.5L357.25 210.268L357.25 32.7324L511 121.5Z' />
+            <path
+              d='M0 249C15 249 73 261.945 103 278.945C133 295.945 133 295.945 195 339.945C273.497 395.652 329 377 420 377'
+              stroke-width='90'
+            />
+            <path d='M508 376.445L354.25 287.678L354.25 465.213L508 376.445Z' />
+          </g>
+        </svg>
+      </div>
+
+      {{! Strip format (>150px width, <170px height) }}
+      <div class='strip-format'>
+        <div class='strip-content'>
+          <div class='strip-row'>
+            {{#if @model.leftBadge}}
+              <div
+                class='strip-badge {{@model.leftBadgeVariant}}'
+                title={{this.leftBadgeTitle}}
               >
-                <g clip-path='url(#clip0_205_3)'>
-                  <path
-                    d='M3 248.945C18 248.945 76 236 106 219C136 202 136 202 198 158C276.497 102.293 332 120.945 423 120.945'
-                    stroke-width='90'
-                  />
-                  <path
-                    d='M511 121.5L357.25 210.268L357.25 32.7324L511 121.5Z'
-                  />
-                  <path
-                    d='M0 249C15 249 73 261.945 103 278.945C133 295.945 133 295.945 195 339.945C273.497 395.652 329 377 420 377'
-                    stroke-width='90'
-                  />
-                  <path
-                    d='M508 376.445L354.25 287.678L354.25 465.213L508 376.445Z'
-                  />
-                </g>
-              </svg>
-              {{#if @model.modelId}}
-                <span class='strip-id'>{{@model.modelId}}</span>
-              {{/if}}
-              <div class='strip-context'>{{this.formatContext
-                  @model.contextLength
+                {{@model.leftBadge}}
+              </div>
+            {{/if}}
+            <div class='strip-main'>
+              <div class='strip-title'>{{if
+                  @model.name
+                  @model.name
+                  (if @model.cardTitle @model.cardTitle 'Model')
                 }}</div>
             </div>
+            <div class='strip-spacer'></div>
+            {{#if @model.rightBadge}}
+              <div
+                class='strip-badge {{@model.rightBadgeVariant}}'
+                title={{this.rightBadgeTitle}}
+              >
+                {{#if (eq @model.rightBadgeVariant 'recommended')}}
+                  <svg
+                    class='badge-icon'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                    stroke-width='3'
+                  >
+                    <polyline points='20 6 9 17 4 12'></polyline>
+                  </svg>
+                {{/if}}
+                {{@model.rightBadge}}
+              </div>
+            {{/if}}
           </div>
-        </div>
-
-        {{! Tile format (<400px width, ≥170px height) }}
-        <div class='tile-format'>
-          <div class='tile-header'>
-            <div class='tile-badges'>
-              {{#if @model.leftBadge}}
-                <div class='tile-badge {{@model.leftBadgeVariant}}' title={{this.leftBadgeTitle}}>
-                  {{@model.leftBadge}}
-                </div>
-              {{/if}}
-            </div>
-            <div class='tile-badges-right'>
-              {{#if @model.rightBadge}}
-                <div class='tile-badge {{@model.rightBadgeVariant}}' title={{this.rightBadgeTitle}}>
-                  {{#if (eq @model.rightBadgeVariant 'recommended')}}
-                    <svg
-                      class='badge-icon'
-                      viewBox='0 0 24 24'
-                      fill='none'
-                      stroke='currentColor'
-                      stroke-width='3'
-                    >
-                      <polyline points='20 6 9 17 4 12'></polyline>
-                    </svg>
-                  {{/if}}
-                  {{@model.rightBadge}}
-                </div>
-              {{/if}}
-            </div>
-          </div>
-          <h4 class='tile-title'>{{if
-              @model.name
-              @model.name
-              (if @model.cardTitle @model.cardTitle 'Model')
-            }}</h4>
-          {{#if @model.modelId}}
-            <div class='tile-id'>{{@model.modelId}}</div>
-          {{/if}}
-          <div class='tile-footer'>
+          <div class='strip-meta'>
             <svg
-              class='tile-footer-icon'
+              class='strip-icon'
               width='512'
               height='512'
               viewBox='0 0 512 512'
@@ -689,416 +647,502 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
                 />
               </g>
             </svg>
-            {{#if @model.contextLength}}
-              <span class='tile-stat'>{{this.formatContext
-                  @model.contextLength
-                }}
-                context</span>
-            {{/if}}
-          </div>
-        </div>
-
-        {{! Card format (≥400px width, ≥170px height) }}
-        <div class='card-format'>
-          <div class='card-header'>
-            <div class='card-meta'>
-              <svg
-                class='card-icon'
-                width='512'
-                height='512'
-                viewBox='0 0 512 512'
-                xmlns='http://www.w3.org/2000/svg'
-                fill='currentColor'
-                stroke='currentColor'
-              >
-                <g clip-path='url(#clip0_205_3)'>
-                  <path
-                    d='M3 248.945C18 248.945 76 236 106 219C136 202 136 202 198 158C276.497 102.293 332 120.945 423 120.945'
-                    stroke-width='90'
-                  />
-                  <path
-                    d='M511 121.5L357.25 210.268L357.25 32.7324L511 121.5Z'
-                  />
-                  <path
-                    d='M0 249C15 249 73 261.945 103 278.945C133 295.945 133 295.945 195 339.945C273.497 395.652 329 377 420 377'
-                    stroke-width='90'
-                  />
-                  <path
-                    d='M508 376.445L354.25 287.678L354.25 465.213L508 376.445Z'
-                  />
-                </g>
-              </svg>
-              <span class='card-type'>MODEL</span>
-            </div>
-            <div class='card-badges'>
-              {{#if @model.leftBadge}}
-                <div class='card-badge {{@model.leftBadgeVariant}}' title={{this.leftBadgeTitle}}>
-                  {{@model.leftBadge}}
-                </div>
-              {{/if}}
-              {{#if @model.rightBadge}}
-                <div class='card-badge {{@model.rightBadgeVariant}}' title={{this.rightBadgeTitle}}>
-                  {{#if (eq @model.rightBadgeVariant 'recommended')}}
-                    <svg
-                      class='badge-icon'
-                      viewBox='0 0 24 24'
-                      fill='none'
-                      stroke='currentColor'
-                      stroke-width='3'
-                    >
-                      <polyline points='20 6 9 17 4 12'></polyline>
-                    </svg>
-                  {{/if}}
-                  {{@model.rightBadge}}
-                </div>
-              {{/if}}
-            </div>
-            <h4 class='card-title'>{{if
-                @model.name
-                @model.name
-                (if @model.cardTitle @model.cardTitle 'Model')
-              }}</h4>
             {{#if @model.modelId}}
-              <div class='card-id'>{{@model.modelId}}</div>
+              <span class='strip-id'>{{@model.modelId}}</span>
             {{/if}}
-          </div>
-          <div class='card-footer'>
-            {{#if @model.contextLength}}
-              <span class='footer-stat'>{{this.formatContext
-                  @model.contextLength
-                }}
-                context</span>
-            {{/if}}
+            <div class='strip-context'>{{this.formatContext
+                @model.contextLength
+              }}</div>
           </div>
         </div>
       </div>
 
-      <style scoped>
-        .fitted-container {
-          width: 100%;
-          height: 100%;
-          background: #ffffff;
-          overflow: hidden;
-          position: relative;
-        }
+      {{! Tile format (<400px width, ≥170px height) }}
+      <div class='tile-format'>
+        <div class='tile-header'>
+          <div class='tile-badges'>
+            {{#if @model.leftBadge}}
+              <div
+                class='tile-badge {{@model.leftBadgeVariant}}'
+                title={{this.leftBadgeTitle}}
+              >
+                {{@model.leftBadge}}
+              </div>
+            {{/if}}
+          </div>
+          <div class='tile-badges-right'>
+            {{#if @model.rightBadge}}
+              <div
+                class='tile-badge {{@model.rightBadgeVariant}}'
+                title={{this.rightBadgeTitle}}
+              >
+                {{#if (eq @model.rightBadgeVariant 'recommended')}}
+                  <svg
+                    class='badge-icon'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                    stroke-width='3'
+                  >
+                    <polyline points='20 6 9 17 4 12'></polyline>
+                  </svg>
+                {{/if}}
+                {{@model.rightBadge}}
+              </div>
+            {{/if}}
+          </div>
+        </div>
+        <h4 class='tile-title'>{{if
+            @model.name
+            @model.name
+            (if @model.cardTitle @model.cardTitle 'Model')
+          }}</h4>
+        {{#if @model.modelId}}
+          <div class='tile-id'>{{@model.modelId}}</div>
+        {{/if}}
+        <div class='tile-footer'>
+          <svg
+            class='tile-footer-icon'
+            width='512'
+            height='512'
+            viewBox='0 0 512 512'
+            xmlns='http://www.w3.org/2000/svg'
+            fill='currentColor'
+            stroke='currentColor'
+          >
+            <g clip-path='url(#clip0_205_3)'>
+              <path
+                d='M3 248.945C18 248.945 76 236 106 219C136 202 136 202 198 158C276.497 102.293 332 120.945 423 120.945'
+                stroke-width='90'
+              />
+              <path d='M511 121.5L357.25 210.268L357.25 32.7324L511 121.5Z' />
+              <path
+                d='M0 249C15 249 73 261.945 103 278.945C133 295.945 133 295.945 195 339.945C273.497 395.652 329 377 420 377'
+                stroke-width='90'
+              />
+              <path
+                d='M508 376.445L354.25 287.678L354.25 465.213L508 376.445Z'
+              />
+            </g>
+          </svg>
+          {{#if @model.contextLength}}
+            <span class='tile-stat'>{{this.formatContext @model.contextLength}}
+              context</span>
+          {{/if}}
+        </div>
+      </div>
 
-        /* Badge styles (inline, same layer) */
-        .strip-badge,
-        .tile-badge,
-        .card-badge {
-          font-size: 0.625rem;
-          font-weight: 700;
-          padding: 0.25rem 0.5rem;
-          border-radius: 4px;
-          line-height: 1;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          flex-shrink: 0;
-        }
+      {{! Card format (≥400px width, ≥170px height) }}
+      <div class='card-format'>
+        <div class='card-header'>
+          <div class='card-meta'>
+            <svg
+              class='card-icon'
+              width='512'
+              height='512'
+              viewBox='0 0 512 512'
+              xmlns='http://www.w3.org/2000/svg'
+              fill='currentColor'
+              stroke='currentColor'
+            >
+              <g clip-path='url(#clip0_205_3)'>
+                <path
+                  d='M3 248.945C18 248.945 76 236 106 219C136 202 136 202 198 158C276.497 102.293 332 120.945 423 120.945'
+                  stroke-width='90'
+                />
+                <path d='M511 121.5L357.25 210.268L357.25 32.7324L511 121.5Z' />
+                <path
+                  d='M0 249C15 249 73 261.945 103 278.945C133 295.945 133 295.945 195 339.945C273.497 395.652 329 377 420 377'
+                  stroke-width='90'
+                />
+                <path
+                  d='M508 376.445L354.25 287.678L354.25 465.213L508 376.445Z'
+                />
+              </g>
+            </svg>
+            <span class='card-type'>MODEL</span>
+          </div>
+          <div class='card-badges'>
+            {{#if @model.leftBadge}}
+              <div
+                class='card-badge {{@model.leftBadgeVariant}}'
+                title={{this.leftBadgeTitle}}
+              >
+                {{@model.leftBadge}}
+              </div>
+            {{/if}}
+            {{#if @model.rightBadge}}
+              <div
+                class='card-badge {{@model.rightBadgeVariant}}'
+                title={{this.rightBadgeTitle}}
+              >
+                {{#if (eq @model.rightBadgeVariant 'recommended')}}
+                  <svg
+                    class='badge-icon'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                    stroke-width='3'
+                  >
+                    <polyline points='20 6 9 17 4 12'></polyline>
+                  </svg>
+                {{/if}}
+                {{@model.rightBadge}}
+              </div>
+            {{/if}}
+          </div>
+          <h4 class='card-title'>{{if
+              @model.name
+              @model.name
+              (if @model.cardTitle @model.cardTitle 'Model')
+            }}</h4>
+          {{#if @model.modelId}}
+            <div class='card-id'>{{@model.modelId}}</div>
+          {{/if}}
+        </div>
+        <div class='card-footer'>
+          {{#if @model.contextLength}}
+            <span class='footer-stat'>{{this.formatContext
+                @model.contextLength
+              }}
+              context</span>
+          {{/if}}
+        </div>
+      </div>
+    </div>
 
-        /* Badge variants */
-        .strip-badge.generic,
-        .tile-badge.generic,
-        .card-badge.generic {
-          background: #f3f4f6;
-          color: #6b7280;
-        }
+    <style scoped>
+      .fitted-container {
+        width: 100%;
+        height: 100%;
+        background: #ffffff;
+        overflow: hidden;
+        position: relative;
+      }
 
-        .strip-badge.purpose,
-        .tile-badge.purpose,
-        .card-badge.purpose {
-          background: #6467f2;
-          color: #ffffff;
-        }
+      /* Badge styles (inline, same layer) */
+      .strip-badge,
+      .tile-badge,
+      .card-badge {
+        font-size: 0.625rem;
+        font-weight: 700;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        flex-shrink: 0;
+      }
 
-        .strip-badge.recommended,
-        .tile-badge.recommended,
-        .card-badge.recommended {
-          background: #d1fae5; /* soft green */
-          color: #065f46; /* deep green text */
-          padding: 0.25rem;
-        }
+      /* Badge variants */
+      .strip-badge.generic,
+      .tile-badge.generic,
+      .card-badge.generic {
+        background: #f3f4f6;
+        color: #6b7280;
+      }
 
-        .strip-badge.recommended-badge,
-        .tile-badge.recommended-badge,
-        .card-badge.recommended-badge {
-          background: #bbf7d0;
-          color: #065f46;
-          padding: 0.25rem 0.5rem;
-        }
+      .strip-badge.purpose,
+      .tile-badge.purpose,
+      .card-badge.purpose {
+        background: #6467f2;
+        color: #ffffff;
+      }
 
-        .badge-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          flex-shrink: 0;
-        }
+      .strip-badge.recommended,
+      .tile-badge.recommended,
+      .card-badge.recommended {
+        background: #d1fae5; /* soft green */
+        color: #065f46; /* deep green text */
+        padding: 0.25rem;
+      }
 
-        /* Hide non-default formats */
-        .badge-format,
-        .tile-format,
-        .card-format {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-        }
+      .strip-badge.recommended-badge,
+      .tile-badge.recommended-badge,
+      .card-badge.recommended-badge {
+        background: #bbf7d0;
+        color: #065f46;
+        padding: 0.25rem 0.5rem;
+      }
 
-        /* Strip is the default visible format */
+      .badge-icon {
+        width: 0.875rem;
+        height: 0.875rem;
+        flex-shrink: 0;
+      }
+
+      /* Hide non-default formats */
+      .badge-format,
+      .tile-format,
+      .card-format {
+        display: none;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      }
+
+      /* Strip is the default visible format */
+      .strip-format {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      }
+
+      /* Badge format (≤150px width, <170px height) */
+      @container (max-width: 150px) and (max-height: 169px) {
         .strip-format {
+          display: none;
+        }
+        .badge-format {
           display: flex;
           align-items: center;
-          padding: 0.5rem 0.75rem;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+          justify-content: center;
+          padding: 0.5rem;
         }
+      }
 
-        /* Badge format (≤150px width, <170px height) */
-        @container (max-width: 150px) and (max-height: 169px) {
-          .strip-format { display: none; }
-          .badge-format {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem;
-          }
-        }
+      .badge-logo {
+        width: clamp(1.5rem, 60%, 3rem);
+        height: clamp(1.5rem, 60%, 3rem);
+        color: #111827;
+      }
 
-        .badge-logo {
-          width: clamp(1.5rem, 60%, 3rem);
-          height: clamp(1.5rem, 60%, 3rem);
-          color: #111827;
+      /* Hide strip when tile/card should show */
+      @container (max-width: 399px) and (min-height: 170px) {
+        .strip-format {
+          display: none;
         }
+      }
+      @container (min-width: 400px) and (min-height: 170px) {
+        .strip-format {
+          display: none;
+        }
+      }
 
-        /* Hide strip when tile/card should show */
-        @container (max-width: 399px) and (min-height: 170px) {
-          .strip-format { display: none; }
-        }
-        @container (min-width: 400px) and (min-height: 170px) {
-          .strip-format { display: none; }
-        }
+      .strip-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        width: 100%;
+      }
 
-        .strip-content {
+      .strip-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+      }
+
+      .strip-main {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        flex: 1 1 70%;
+      }
+
+      .strip-spacer {
+        flex: 1;
+      }
+
+      .strip-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #111827;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .strip-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.625rem;
+        color: #9ca3af;
+      }
+
+      .strip-icon {
+        width: 1rem;
+        height: 1rem;
+        color: #9ca3af;
+        flex-shrink: 0;
+      }
+
+      .strip-id {
+        font-family: 'SF Mono', Monaco, monospace;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .strip-context {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: #6b7280;
+        flex-shrink: 0;
+        margin-left: auto;
+      }
+
+      /* Tile format (<400px width, ≥170px height) */
+      @container (max-width: 399px) and (min-height: 170px) {
+        .tile-format {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
-          width: 100%;
-        }
-
-        .strip-row {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          width: 100%;
-        }
-
-        .strip-main {
-          display: flex;
-          align-items: center;
-          min-width: 0;
-          flex: 1 1 70%;
-        }
-
-        .strip-spacer {
-          flex: 1;
-        }
-
-        .strip-title {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: #111827;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .strip-meta {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.625rem;
-          color: #9ca3af;
-        }
-
-        .strip-icon {
-          width: 1rem;
-          height: 1rem;
-          color: #9ca3af;
-          flex-shrink: 0;
-        }
-
-        .strip-id {
-          font-family: 'SF Mono', Monaco, monospace;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          min-width: 0;
-          flex: 1;
-        }
-
-        .strip-context {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          color: #6b7280;
-          flex-shrink: 0;
-          margin-left: auto;
-        }
-
-        /* Tile format (<400px width, ≥170px height) */
-        @container (max-width: 399px) and (min-height: 170px) {
-          .tile-format {
-            display: flex;
-            flex-direction: column;
-            padding: clamp(0.5rem, 3%, 0.875rem);
-            gap: 0.5rem;
-          }
-        }
-
-        .tile-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
+          padding: clamp(0.5rem, 3%, 0.875rem);
           gap: 0.5rem;
         }
+      }
 
-        .tile-badges {
-          display: flex;
-          gap: 0.375rem;
-        }
+      .tile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
 
-        .tile-badges-right {
-          display: flex;
-          gap: 0.375rem;
-          margin-left: auto;
-        }
+      .tile-badges {
+        display: flex;
+        gap: 0.375rem;
+      }
 
-        .tile-title {
-          font-size: clamp(0.875rem, 4%, 1rem);
-          font-weight: 700;
-          margin: 0;
-          color: #111827;
-          line-height: 1.2;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
+      .tile-badges-right {
+        display: flex;
+        gap: 0.375rem;
+        margin-left: auto;
+      }
 
-        .tile-id {
-          font-family: 'SF Mono', Monaco, monospace;
-          font-size: 0.625rem;
-          color: #6b7280;
-          line-height: 1.4;
-          word-break: break-all;
-        }
+      .tile-title {
+        font-size: clamp(0.875rem, 4%, 1rem);
+        font-weight: 700;
+        margin: 0;
+        color: #111827;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
 
-        .tile-footer {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          margin-top: auto;
-          padding-top: 0.5rem;
-          border-top: 1px solid #e5e7eb;
-        }
+      .tile-id {
+        font-family: 'SF Mono', Monaco, monospace;
+        font-size: 0.625rem;
+        color: #6b7280;
+        line-height: 1.4;
+        word-break: break-all;
+      }
 
-        .tile-footer-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: #9ca3af;
-          flex-shrink: 0;
-        }
+      .tile-footer {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        margin-top: auto;
+        padding-top: 0.5rem;
+        border-top: 1px solid #e5e7eb;
+      }
 
-        .tile-stat {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          color: #6b7280;
-        }
+      .tile-footer-icon {
+        width: 0.875rem;
+        height: 0.875rem;
+        color: #9ca3af;
+        flex-shrink: 0;
+      }
 
-        /* Card format (≥400px width, ≥170px height) */
-        @container (min-width: 400px) and (min-height: 170px) {
-          .card-format {
-            display: flex;
-            flex-direction: column;
-            padding: clamp(0.75rem, 3%, 1rem);
-            gap: 0.75rem;
-          }
-        }
+      .tile-stat {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: #6b7280;
+      }
 
-        .card-header {
+      /* Card format (≥400px width, ≥170px height) */
+      @container (min-width: 400px) and (min-height: 170px) {
+        .card-format {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .card-meta {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-        }
-
-        .card-badges {
-          display: flex;
-          gap: 0.375rem;
-          flex-wrap: wrap;
-          margin-top: 0.5rem;
-        }
-
-        .card-icon {
-          width: 1.125rem;
-          height: 1.125rem;
-          color: #111827;
-        }
-
-        .card-type {
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: #6b7280;
-        }
-
-        .card-title {
-          font-size: 1.125rem;
-          font-weight: 700;
-          margin: 0;
-          color: #111827;
-          line-height: 1.3;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-
-        .card-id {
-          font-family: 'SF Mono', Monaco, monospace;
-          font-size: 0.6875rem;
-          color: #6b7280;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .card-footer {
-          margin-top: auto;
-          padding-top: 0.75rem;
-          border-top: 1px solid #e5e7eb;
-          display: flex;
+          padding: clamp(0.75rem, 3%, 1rem);
           gap: 0.75rem;
-          flex-wrap: wrap;
         }
+      }
 
-        .footer-stat {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: #6b7280;
-        }
-      </style>
-    </template>
+      .card-header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .card-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+      }
+
+      .card-badges {
+        display: flex;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+      }
+
+      .card-icon {
+        width: 1.125rem;
+        height: 1.125rem;
+        color: #111827;
+      }
+
+      .card-type {
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b7280;
+      }
+
+      .card-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin: 0;
+        color: #111827;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .card-id {
+        font-family: 'SF Mono', Monaco, monospace;
+        font-size: 0.6875rem;
+        color: #6b7280;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .card-footer {
+        margin-top: auto;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .footer-stat {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+      }
+    </style>
+  </template>
 }
 
 ModelConfiguration.isolated = ModelConfigurationIsolated;

@@ -1,4 +1,8 @@
-import { Command, resolveAdoptsFrom, realmURL } from '@cardstack/runtime-common';
+import {
+  Command,
+  resolveAdoptsFrom,
+  realmURL,
+} from '@cardstack/runtime-common';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
