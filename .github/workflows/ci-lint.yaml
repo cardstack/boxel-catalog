@@ -24,14 +24,10 @@ jobs:
         with:
           repository: cardstack/boxel
 
-      # Checkout this catalog repo into a temp location
+      # Checkout this catalog repo directly into the monorepo's catalog location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
-          path: boxel-catalog-src
-
-      # Copy catalog files into the monorepo's catalog-realm location
-      - name: Copy catalog files into monorepo
-        run: sh boxel-catalog-src/scripts/copy-catalog-to-monorepo.sh
+          path: packages/catalog/contents
 
       # Remove experiments-realm so it is excluded from host lint:types
       - name: Remove experiments-realm
