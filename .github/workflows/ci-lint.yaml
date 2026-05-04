@@ -41,17 +41,12 @@ jobs:
 
       # Boxel UI and Boxel Icons need to be built first so that their
       # linting outputs types are available for projects that depend on them
-      - name: List catalog-realm files
-        run: find packages/catalog-realm -type f | sort
+      - name: List catalog files
+        run: find packages/catalog/contents -type f | sort
 
       - name: Build common dependencies
         if: always()
         run: pnpm run build-common-deps
-
-      - name: Lint Catalog
-        if: always()
-        run: pnpm run lint
-        working-directory: packages/catalog-realm
 
       - name: Lint Host
         if: always()

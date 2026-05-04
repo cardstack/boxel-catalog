@@ -37,8 +37,8 @@ jobs:
 
       - uses: ./.github/actions/init
 
-      - name: List catalog-realm files
-        run: find packages/catalog-realm -type f | sort
+      - name: List catalog files
+        run: find packages/catalog/contents -type f | sort
 
       - name: Build common dependencies
         run: pnpm run build-common-deps
