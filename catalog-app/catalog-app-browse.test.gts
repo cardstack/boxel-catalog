@@ -482,24 +482,13 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
     });
 
     module('navigation', function () {
-      // showcase tab has different behavior compared to other tabs (apps, cards, fields, skills)
       module('show results as per catalog tab selected', function () {
-        test('switch to showcase tab', async function (assert) {
-          await selectTab('Showcase');
-          await waitForShowcase();
-          assert
-            .dom('[data-test-navigation-reset-button="showcase"]')
-            .exists(`"Catalog Home" button should exist`)
-            .hasClass('is-selected');
-          assert.dom('[data-test-boxel-radio-option-id="grid"]').doesNotExist();
-        });
-
-        test('switch to apps tab', async function (assert) {
-          await selectTab('Apps');
+        test('switch to cards tab', async function (assert) {
+          await selectTab('Cards');
           await waitForGrid();
           assert
-            .dom('[data-test-navigation-reset-button="app"]')
-            .exists(`"All Apps" button should exist`)
+            .dom('[data-test-navigation-reset-button="card"]')
+            .exists(`"All Cards" button should exist`)
             .hasClass('is-selected');
           assert.dom('[data-test-boxel-radio-option-id="grid"]').exists();
         });
@@ -556,47 +545,6 @@ module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
             .exists(
               'Should return to showcase view after clicking Catalog Home',
             );
-
-          assert
-            .dom('[data-test-filter-search-input]')
-            .hasValue('', 'Search input should be cleared');
-          assert
-            .dom('[data-test-filter-list-item].is-selected')
-            .doesNotExist('No category should be selected after reset');
-          assert
-            .dom('[data-test-tag-list-pill].selected')
-            .doesNotExist('No tag should be selected after reset');
-        });
-
-        // TODO: restore in CS-9131
-        skip('should be reset when clicking "All Apps" button', async function (assert) {
-          await selectTab('Apps');
-          await waitForGrid();
-
-          await waitFor('[data-test-filter-search-input]');
-          await click('[data-test-filter-search-input]');
-          await fillIn('[data-test-filter-search-input]', 'Mortgage');
-          // filter by category
-          await click('[data-test-filter-list-item="All"]');
-          // filter by tag
-          let tagPill = document.querySelector('[data-test-tag-list-pill]');
-          if (tagPill) {
-            await click(tagPill);
-          }
-
-          await click('[data-test-navigation-reset-button="app"]');
-          assert
-            .dom('[data-test-showcase-view]')
-            .doesNotExist('Should remain in list view, not return to showcase');
-          await waitUntil(() => {
-            const cards = document.querySelectorAll(
-              '[data-test-catalog-list-view]',
-            );
-            return cards.length === 1;
-          });
-          assert
-            .dom('[data-test-catalog-list-view]')
-            .exists('Catalog list view should still be visible');
 
           assert
             .dom('[data-test-filter-search-input]')
