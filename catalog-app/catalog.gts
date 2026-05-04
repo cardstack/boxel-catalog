@@ -123,10 +123,6 @@ class Isolated extends Component<typeof Catalog> {
       displayName: 'Showcase',
     },
     {
-      tabId: 'app',
-      displayName: 'Apps',
-    },
-    {
       tabId: 'card',
       displayName: 'Cards',
     },
