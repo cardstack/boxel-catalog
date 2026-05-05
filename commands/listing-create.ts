@@ -29,6 +29,7 @@ import GetCatalogRealmUrlsCommand from '@cardstack/boxel-host/commands/get-catal
 import GetRealmOfUrlCommand from '@cardstack/boxel-host/commands/get-realm-of-url';
 import OneShotLlmRequestCommand from '@cardstack/boxel-host/commands/one-shot-llm-request';
 import SanitizeModuleListCommand from '@cardstack/boxel-host/commands/sanitize-module-list';
+import ScreenshotCardCommand from '@cardstack/boxel-host/commands/screenshot-card';
 import SearchAndChooseCommand from '@cardstack/boxel-host/commands/search-and-choose';
 import { SearchCardsByTypeAndTitleCommand } from '@cardstack/boxel-host/commands/search-cards';
 import StoreAddCommand from '@cardstack/boxel-host/commands/store-add';
@@ -130,6 +131,12 @@ export default class ListingCreateCommand extends Command<
     const listingCard = listing as CardAPI.CardDef;
     const firstOpenCardId = openCardIds?.[0];
 
+    const examplePromise = this.autoLinkExample(
+      listingCard,
+      codeRef,
+      openCardIds,
+    );
+
     const backgroundTasks = [
       {
         name: 'autoPatchName',
@@ -145,9 +152,12 @@ export default class ListingCreateCommand extends Command<
         promise: this.autoLinkCategory(listingCard, codeRef),
       },
       { name: 'autoLinkLicense', promise: this.autoLinkLicense(listingCard) },
+      { name: 'autoLinkExample', promise: examplePromise },
       {
-        name: 'autoLinkExample',
-        promise: this.autoLinkExample(listingCard, codeRef, openCardIds),
+        name: 'autoScreenshotExample',
+        promise: examplePromise.then(() =>
+          this.autoScreenshotExample(listingCard),
+        ),
       },
       {
         name: 'linkSpecs',
@@ -483,6 +493,72 @@ export default class ListingCreateCommand extends Command<
       }
     }
     (listing as any).examples = Array.from(uniqueById.values());
+  }
+
+  private async autoScreenshotExample(listing: CardAPI.CardDef) {
+    const examples = Array.isArray((listing as any).examples)
+      ? ((listing as any).examples as CardAPI.CardDef[])
+      : [];
+    const firstExample = examples[0];
+    if (!firstExample?.id) {
+      return;
+    }
+
+    let imageDefUrl: string | undefined;
+    try {
+      const result = await new ScreenshotCardCommand(
+        this.commandContext,
+      ).execute({ card: firstExample, format: 'isolated' });
+      imageDefUrl = (result as any)?.imageDefUrl;
+    } catch (error) {
+      console.warn('autoScreenshotExample: screenshot failed', {
+        exampleId: firstExample.id,
+        error,
+      });
+      return;
+    }
+    if (!imageDefUrl) {
+      return;
+    }
+
+    // The PNG is written synchronously, but the realm indexer promotes it
+    // into an ImageDef card asynchronously. Poll GetCardCommand briefly so
+    // the linksToMany(ImageDef) relationship can resolve on first render.
+    const imageDefCard = await this.loadCardWithRetry(imageDefUrl);
+    if (!imageDefCard) {
+      console.warn('autoScreenshotExample: ImageDef did not resolve in time', {
+        imageDefUrl,
+      });
+      return;
+    }
+
+    const existing = Array.isArray((listing as any).images)
+      ? ((listing as any).images as CardAPI.CardDef[])
+      : [];
+    (listing as any).images = [...existing, imageDefCard];
+  }
+
+  private async loadCardWithRetry(
+    cardId: string,
+    attempts = 5,
+    delayMs = 1000,
+  ): Promise<CardAPI.CardDef | undefined> {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const card = await new GetCardCommand(this.commandContext).execute({
+          cardId,
+        });
+        if (isCardInstance(card)) {
+          return card as CardAPI.CardDef;
+        }
+      } catch {
+        // ignore and retry
+      }
+      if (i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
+    return undefined;
   }
 
   private async autoLinkLicense(listing: CardAPI.CardDef) {
