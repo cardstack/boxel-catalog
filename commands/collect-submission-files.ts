@@ -8,6 +8,7 @@ import {
   logger,
   planInstanceInstall,
   planModuleInstall,
+  rri,
   type ListingPathResolver,
   type LooseSingleCardDocument,
   type Relationship,
@@ -313,7 +314,7 @@ export default class CollectSubmissionFilesCommand extends Command<
 
     const isBaseRealmId = (id: string) => {
       try {
-        return baseRealm.inRealm(new URL(id));
+        return baseRealm.inRealm(rri(id));
       } catch {
         return false;
       }
