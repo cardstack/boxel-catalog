@@ -1,4 +1,8 @@
-import { Command, isCardInstance, SupportedMimeType } from '@cardstack/runtime-common';
+import {
+  Command,
+  isCardInstance,
+  SupportedMimeType,
+} from '@cardstack/runtime-common';
 
 import { realmURL as realmURLSymbol } from '@cardstack/runtime-common';
 

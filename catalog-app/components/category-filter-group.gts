@@ -79,9 +79,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
 
   <template>
     <ul class='filter-list'>
-      <li
-        class='filter-list-item'
-      >
+      <li class='filter-list-item'>
         <span
           class='list-item-buttons
             {{if (eq @activeSphereOrCategory.id "all") "is-selected"}}'
@@ -115,9 +113,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
               </li>
             </:loading>
             <:response as |categories|>
-              <li
-                class='filter-list-item'
-              >
+              <li class='filter-list-item'>
                 <span
                   class='list-item-buttons
                     {{if
@@ -156,7 +152,8 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
                         class='category-pill-btn
                           {{if
                             (eq
-                              @activeSphereOrCategory.id (this.categoryIdFromUrl cat.url)
+                              @activeSphereOrCategory.id
+                              (this.categoryIdFromUrl cat.url)
                             )
                             "is-active"
                           }}'
@@ -316,6 +313,10 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
 }
 
 function displayNameFromUrl(url: string): string {
-  const slug = url.replace(/\.json$/, '').split('/').pop() ?? '';
+  const slug =
+    url
+      .replace(/\.json$/, '')
+      .split('/')
+      .pop() ?? '';
   return slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }

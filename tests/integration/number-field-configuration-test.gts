@@ -1,12 +1,12 @@
 import { module, test } from 'qunit';
 
-import { setupBaseRealm } from '../helpers/base-realm';
+import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import {
   setupCatalogRealm,
   CatalogNumberField,
 } from '../helpers/catalog-realm';
 import { renderConfiguredField } from '../helpers/field-test-helpers';
-import { setupRenderingTest } from '../helpers/setup';
+import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 module('Integration | number field configuration', function (hooks) {
   setupRenderingTest(hooks);

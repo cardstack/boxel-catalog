@@ -86,9 +86,8 @@ export default class UploadImageCommand extends Command<
     try {
       if (isBlobUrl || isDataUri) {
         this.progressStep = 'requesting-direct-upload-url';
-        let { uploadURL, id } = await this.requestDirectUploadUrl(
-          sendRequestCommand,
-        );
+        let { uploadURL, id } =
+          await this.requestDirectUploadUrl(sendRequestCommand);
 
         let blobDetails;
         if (isDataUri) {
@@ -264,9 +263,7 @@ export default class UploadImageCommand extends Command<
     if (isBase64) {
       try {
         if (nodeBuffer) {
-          byteArray = new Uint8Array(
-            nodeBuffer.from(cleanedPayload, 'base64'),
-          );
+          byteArray = new Uint8Array(nodeBuffer.from(cleanedPayload, 'base64'));
         } else if (typeof atob === 'function') {
           const binaryString = atob(cleanedPayload);
           byteArray = new Uint8Array(binaryString.length);
@@ -277,7 +274,9 @@ export default class UploadImageCommand extends Command<
           throw new Error('No base64 decoder available in this environment');
         }
       } catch (error) {
-        throw new Error(`Failed to decode base64 data URI payload: ${String(error)}`);
+        throw new Error(
+          `Failed to decode base64 data URI payload: ${String(error)}`,
+        );
       }
     } else {
       try {
@@ -445,5 +444,4 @@ export default class UploadImageCommand extends Command<
 
     return payload;
   }
-
 }

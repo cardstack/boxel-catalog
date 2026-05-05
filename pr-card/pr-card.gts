@@ -168,9 +168,10 @@ class IsolatedTemplate extends Component<typeof PrCard> {
 
   get ciIsLoading() {
     return (
-      this.checkRunEventData?.isLoading ||
-      this.checkSuiteEventData?.isLoading
-    ) ?? false;
+      (this.checkRunEventData?.isLoading ||
+        this.checkSuiteEventData?.isLoading) ??
+      false
+    );
   }
 
   // ── Reviews ──
@@ -273,7 +274,10 @@ class IsolatedTemplate extends Component<typeof PrCard> {
       {{! ── Body ── }}
       <div class='pr-body'>
         <section class='pr-status-columns'>
-          <CiSection @ciGroups={{this.ciGroups}} @isLoading={{this.ciIsLoading}} />
+          <CiSection
+            @ciGroups={{this.ciGroups}}
+            @isLoading={{this.ciIsLoading}}
+          />
           <hr class='status-divider' />
           <ReviewSection
             @reviewState={{this.latestReviewState}}

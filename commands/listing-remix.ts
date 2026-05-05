@@ -7,7 +7,12 @@ import {
 
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import { skillCardURL, devSkillId, envSkillId, loadCommandModule } from './utils';
+import {
+  skillCardURL,
+  devSkillId,
+  envSkillId,
+  loadCommandModule,
+} from './utils';
 
 import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
 import PersistModuleInspectorViewCommand from '@cardstack/boxel-host/commands/persist-module-inspector-view';

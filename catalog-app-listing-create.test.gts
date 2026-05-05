@@ -314,7 +314,9 @@ export function runTests() {
                 'Listing should have an Author spec',
               );
               assert.true(
-                listing.specs.some((spec: any) => spec.ref.name === 'AuthorCompany'),
+                listing.specs.some(
+                  (spec: any) => spec.ref.name === 'AuthorCompany',
+                ),
                 'Listing should have an AuthorCompany spec',
               );
               // Deterministic autoLink assertions from proxy mock
@@ -356,7 +358,9 @@ export function runTests() {
             await command.execute({
               openCardIds: [cardId],
               codeRef: {
-                module: rri(`${mockCatalogURL}card-with-unrecognised-imports.gts`),
+                module: rri(
+                  `${mockCatalogURL}card-with-unrecognised-imports.gts`,
+                ),
                 name: 'UnrecognisedImports',
               },
               targetRealm: mockCatalogURL,

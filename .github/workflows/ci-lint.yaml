@@ -49,3 +49,7 @@ jobs:
         run: pnpm run lint
         working-directory: packages/host
 
+      - name: Lint Catalog
+        if: always()
+        run: pnpm run lint
+        working-directory: packages/catalog

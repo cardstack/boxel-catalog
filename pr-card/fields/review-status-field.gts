@@ -24,7 +24,9 @@ export class PrReviewStatusField extends FieldDef {
   static displayName = 'PR Review Status';
   @field branchName = contains(StringField);
 
-  static embedded = class Embedded extends Component<typeof PrReviewStatusField> {
+  static embedded = class Embedded extends Component<
+    typeof PrReviewStatusField
+  > {
     get realmHrefs() {
       return buildRealmHrefs(this.args.model[realmURL]?.href);
     }
@@ -127,7 +129,9 @@ export class PrReviewStatusField extends FieldDef {
 
     // ── Review ──
     get latestReviewByReviewer() {
-      return buildLatestReviewByReviewer(this.prReviewEventData?.instances ?? []);
+      return buildLatestReviewByReviewer(
+        this.prReviewEventData?.instances ?? [],
+      );
     }
 
     get latestReviewState() {
