@@ -2,7 +2,7 @@ import {
   contains,
   field,
   CardDef,
-  containsMany,
+  ImageDef,
   linksToMany,
   StringField,
   linksTo,
@@ -290,9 +290,11 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         {{#if this.hasImages}}
           <ul class='images-list' data-test-catalog-listing-embedded-images>
             {{#each @model.images as |image|}}
-              <li class='images-item'>
-                <img src={{image}} alt={{@model.name}} />
-              </li>
+              {{#if image.url}}
+                <li class='images-item'>
+                  <img src={{image.url}} alt={{@model.name}} />
+                </li>
+              {{/if}}
             {{/each}}
           </ul>
         {{else}}
@@ -580,7 +582,7 @@ export class Listing extends CardDef {
   @field categories = linksToMany(() => Category);
   @field tags = linksToMany(() => Tag);
   @field license = linksTo(() => License);
-  @field images = containsMany(StringField);
+  @field images = linksToMany(ImageDef);
   @field examples = linksToMany(() => CardDef);
   @field skills = linksToMany(() => Skill);
 

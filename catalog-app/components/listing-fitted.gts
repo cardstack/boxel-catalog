@@ -47,12 +47,14 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
     listing: this.args.model as Listing,
   }));
 
-  get images() {
-    return this.args.model.images ?? [];
+  get images(): string[] {
+    return (this.args.model.images ?? [])
+      .map((image) => image?.url)
+      .filter((url): url is string => Boolean(url));
   }
 
   get firstImage() {
-    return this.args.model.images?.[0];
+    return this.images[0];
   }
 
   get publisherInfo() {
