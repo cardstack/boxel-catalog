@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "producer": "Château d'Esclans",
+      "varietal": "Whispering Angel (Grenache Blend)",
+      "region": "Côtes de Provence, France",
+      "wineType": "rosé",
+      "vintage": { "value": 2023 },
+      "purchaseDate": "2024-05-15",
+      "drinkingWindow": { "start": "2024-01-01", "end": "2026-12-31" },
+      "purchasePrice": { "amount": 22, "currency": { "code": "USD" } },
+      "currentValue": { "amount": 24, "currency": { "code": "USD" } },
+      "score": 89,
+      "bottlesRemaining": 12,
+      "liquidColor": "#F4C7C2",
+      "producerUrl": "https://esclans.com/",
+      "cardInfo": {
+        "name": "2023 Whispering Angel",
+        "summary": "Pale Provençal rosé — strawberry, citrus, mineral finish."
+      }
+    },
+    "relationships": {
+      "label": { "links": { "self": null } }
+    },
+    "meta": { "adoptsFrom": { "module": "../wine-bottle", "name": "WineBottle" } }
+  }
+}

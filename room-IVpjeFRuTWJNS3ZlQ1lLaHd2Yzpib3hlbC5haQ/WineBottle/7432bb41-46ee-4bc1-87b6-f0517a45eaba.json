@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "producer": "Radikon",
+      "varietal": "Ribolla Gialla",
+      "region": "Friuli-Venezia Giulia, Italy",
+      "wineType": "orange",
+      "vintage": { "value": 2019 },
+      "purchaseDate": "2022-06-11",
+      "drinkingWindow": { "start": "2024-01-01", "end": "2032-12-31" },
+      "purchasePrice": { "amount": 65, "currency": { "code": "EUR" } },
+      "currentValue": { "amount": 95, "currency": { "code": "EUR" } },
+      "score": 94,
+      "bottlesRemaining": 4,
+      "liquidColor": "#C8853A",
+      "producerUrl": "https://www.radikon.it/",
+      "cardInfo": {
+        "name": "2019 Radikon Ribolla Gialla",
+        "summary": "Pioneering Friulian skin-contact white — extended maceration, deep amber."
+      }
+    },
+    "relationships": {
+      "label": { "links": { "self": null } }
+    },
+    "meta": { "adoptsFrom": { "module": "../wine-bottle", "name": "WineBottle" } }
+  }
+}

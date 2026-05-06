@@ -1,0 +1,108 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Wine Bottle",
+      "summary": "The WineBottle component defines a comprehensive data structure and presentation for individual wine bottles, capturing details such as producer, varietal, region, wine type, vintage year, purchase date, drinking window, purchase price, current value, score, bottles remaining, and liquid color. It includes multiple visual representations, such as detailed cards with images, labels, and wine glass illustrations, as well as simplified inline and fitted views for embedding. The component also calculates and displays the value change, drinking window status, and related metrics to facilitate wine collection management and visualization.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/6c6b05b8-2838-4a45-8f74-097b4d3743d2"
+        }
+      },
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/card"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../WineBottle/011f0239-9a66-405f-a874-32bb4146ee7b"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../WineBottle/a227be75-3301-4f02-b99a-66e05fe87432"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../WineBottle/e05fe874-32bb-4146-ae7b-c1c7b6f0517a"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../WineBottle/399a66e0-5fe8-4432-bb41-46ee7bc1c7b6"
+        }
+      },
+      "examples.4": {
+        "links": {
+          "self": "../WineBottle/7432bb41-46ee-4bc1-87b6-f0517a45eaba"
+        }
+      },
+      "examples.5": {
+        "links": {
+          "self": "../WineBottle/7bc1c7b6-f051-4a45-aaba-8f41b62eed0d"
+        }
+      },
+      "examples.6": {
+        "links": {
+          "self": "../WineBottle/4146ee7b-c1c7-46f0-917a-45eaba8f41b6"
+        }
+      },
+      "examples.7": {
+        "links": {
+          "self": "../WineBottle/be753301-1f02-499a-a6e0-5fe87432bb41"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/food-cooking"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/winebottle-e06db079.png"
+        }
+      }
+    }
+  }
+}
