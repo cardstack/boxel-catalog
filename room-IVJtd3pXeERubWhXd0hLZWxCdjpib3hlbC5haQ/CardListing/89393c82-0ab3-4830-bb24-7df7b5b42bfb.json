@@ -1,0 +1,88 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Homework Grader",
+      "summary": "The HomeworkGrader component is a comprehensive card interface designed for managing and grading homework assignments. It organizes questions, displays grading information, feedback, and overall scores. The component supports multiple layout formats (isolated, embedded, fitted) for different UI contexts. It includes features for real-time grade updates, progress tracking, grade polling, and AI-assisted room setup for automatic grading. The primary purpose is to facilitate both manual and AI-assisted grading, providing educators and students with a clear, interactive overview of homework progress, scores, and feedback.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/ai"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/290b04c0-7901-4332-bf42-698094a63226"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/a7290b04-c079-41c3-b23f-42698094a632"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/5455e5c1-1d62-41c9-ae39-f2ff09da9b83"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../HomeworkGrader/67432ef8-6493-4ad7-aa3f-335d24e7213f"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../HomeworkGrader/b0092d07-cc3e-405d-9fe4-c9542d7397b2"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/education-courses"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/homeworkgrader-8562d336.png"
+        }
+      }
+    }
+  }
+}
