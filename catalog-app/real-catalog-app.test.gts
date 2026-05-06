@@ -31,7 +31,10 @@ export function runTests() {
     setupLocalIndexing(hooks);
 
     hooks.beforeEach(function () {
-      getOwner(this)!.register('service:host-mode-service', StubHostModeService);
+      getOwner(this)!.register(
+        'service:host-mode-service',
+        StubHostModeService,
+      );
     });
 
     // CS-9919 - Skipping this test for now as the catalog realm is now setup only in

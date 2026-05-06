@@ -1,10 +1,10 @@
 import {
   Command,
-  cardIdToURL,
-  codeRefWithAbsoluteURL,
+  codeRefWithAbsoluteIdentifier,
   isResolvedCodeRef,
   loadCardDef,
   generateInstallFolderName,
+  rri,
 } from '@cardstack/runtime-common';
 
 import type * as CardAPI from 'https://cardstack.com/base/card-api';
@@ -55,8 +55,7 @@ export default class ListingUseCommand extends Command<
       if (spec.isComponent) {
         return;
       }
-      let url = cardIdToURL(spec.id);
-      let ref = codeRefWithAbsoluteURL(spec.ref, url);
+      let ref = codeRefWithAbsoluteIdentifier(spec.ref, rri(spec.id));
       if (!isResolvedCodeRef(ref)) {
         throw new Error('ref is not a resolved code ref');
       }

@@ -14,10 +14,10 @@ import {
   testRealmInfo,
   testRealmURL,
   SYSTEM_CARD_FIXTURE_CONTENTS,
-} from '../helpers';
-import { setupBaseRealm } from '../helpers/base-realm';
-import { setupMockMatrix } from '../helpers/mock-matrix';
-import { setupRenderingTest } from '../helpers/setup';
+} from '@cardstack/host/tests/helpers';
+import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
+import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
+import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 import type UploadImageCommand from '@cardstack/catalog/commands/upload-image';
 

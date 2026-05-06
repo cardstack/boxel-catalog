@@ -2,9 +2,14 @@ import { getService } from '@universal-ember/test-support';
 
 import type { Loader } from '@cardstack/runtime-common';
 
-import { field, contains, CardDef, Component } from './base-realm';
+import {
+  field,
+  contains,
+  CardDef,
+  Component,
+} from '@cardstack/host/tests/helpers/base-realm';
 import { CatalogImageField, MultipleImageField } from './catalog-realm';
-import { renderCard } from './render-component';
+import { renderCard } from '@cardstack/host/tests/helpers/render-component';
 
 export type FieldFormat = 'embedded' | 'atom' | 'edit' | 'fitted';
 

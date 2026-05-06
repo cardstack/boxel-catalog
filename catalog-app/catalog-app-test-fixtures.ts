@@ -1,3 +1,5 @@
+import { makeMinimalPng } from '@cardstack/host/tests/helpers';
+
 export const authorCardSource = `
   import { field, contains, linksTo, CardDef } from 'https://cardstack.com/base/card-api';
   import StringField from 'https://cardstack.com/base/string';
@@ -87,7 +89,7 @@ export const cardWithUnrecognisedImports = `
 export function makeMockCatalogContents(
   mockCatalogURL: string,
   catalogRealmURL: string,
-): Record<string, string | Record<string, unknown>> {
+): Record<string, any> {
   const authorCompanyExampleId = `${mockCatalogURL}author/AuthorCompany/example`;
   const authorSpecId = `${mockCatalogURL}Spec/author`;
   const authorExampleId = `${mockCatalogURL}author/Author/example`;
@@ -140,7 +142,6 @@ export function makeMockCatalogContents(
         type: 'card',
         attributes: {
           name: 'Cardstack Theme',
-          images: [],
           summary: 'Cardstack base theme listing.',
         },
         relationships: {
@@ -435,22 +436,41 @@ export function makeMockCatalogContents(
         },
       },
     },
+    'Image/person-1.png': makeMinimalPng(),
+    'Image/person-2.png': makeMinimalPng(2, 2),
+    'Image/person-3.png': makeMinimalPng(3, 3),
     'Listing/person.json': {
       data: {
         type: 'card',
         attributes: {
           name: 'Person',
           cardTitle: 'Person', // hardcoding title otherwise test will be flaky when waiting for a computed
-          images: [
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-            'https://images.unsplash.com/photo-1494790108755-2616b332db29?w=400',
-            'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=400',
-          ],
         },
         relationships: {
           'tags.0': {
             links: {
               self: calculatorTagId,
+            },
+          },
+          'images.0': {
+            links: { self: `${mockCatalogURL}Image/person-1.png` },
+            data: {
+              type: 'file-meta',
+              id: `${mockCatalogURL}Image/person-1.png`,
+            },
+          },
+          'images.1': {
+            links: { self: `${mockCatalogURL}Image/person-2.png` },
+            data: {
+              type: 'file-meta',
+              id: `${mockCatalogURL}Image/person-2.png`,
+            },
+          },
+          'images.2': {
+            links: { self: `${mockCatalogURL}Image/person-3.png` },
+            data: {
+              type: 'file-meta',
+              id: `${mockCatalogURL}Image/person-3.png`,
             },
           },
         },
@@ -698,7 +718,10 @@ export function makeMockCatalogContents(
   };
 }
 
-export function makeDestinationRealmContents(): Record<string, string | Record<string, unknown>> {
+export function makeDestinationRealmContents(): Record<
+  string,
+  string | Record<string, unknown>
+> {
   return {
     'index.json': {
       data: {

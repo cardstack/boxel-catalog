@@ -87,9 +87,10 @@ export class PrCiStatusField extends FieldDef {
 
     get isLoading() {
       return (
-        this.checkRunEventData?.isLoading ||
-        this.checkSuiteEventData?.isLoading
-      ) ?? false;
+        (this.checkRunEventData?.isLoading ||
+          this.checkSuiteEventData?.isLoading) ??
+        false
+      );
     }
 
     get ciHeadline() {
@@ -199,8 +200,13 @@ export class PrCiStatusField extends FieldDef {
           color: var(--muted-foreground, #656d76);
         }
         @keyframes ci-donut-pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 1; }
+          0%,
+          100% {
+            opacity: 0.4;
+          }
+          50% {
+            opacity: 1;
+          }
         }
       </style>
     </template>

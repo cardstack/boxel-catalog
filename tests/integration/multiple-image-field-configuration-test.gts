@@ -5,8 +5,8 @@ import {
   type Permissions,
 } from '@cardstack/runtime-common';
 
-import { provideConsumeContext } from '../helpers';
-import { setupBaseRealm } from '../helpers/base-realm';
+import { provideConsumeContext } from '@cardstack/host/tests/helpers';
+import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import {
   setupCatalogRealm,
   MultipleImageField,
@@ -15,7 +15,7 @@ import {
   renderConfiguredField,
   buildMultipleImageField,
 } from '../helpers/field-test-helpers';
-import { setupRenderingTest } from '../helpers/setup';
+import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 module('Integration | multiple image field configuration', function (hooks) {
   setupRenderingTest(hooks);

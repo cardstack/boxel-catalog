@@ -2,7 +2,7 @@ import { click } from '@ember/test-helpers';
 
 import { module, test } from 'qunit';
 
-import { setupBaseRealm } from '../helpers/base-realm';
+import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import {
   setupCatalogRealm,
   CatalogDateField,
@@ -28,7 +28,7 @@ import {
   renderConfiguredField,
   buildField,
 } from '../helpers/field-test-helpers';
-import { setupRenderingTest } from '../helpers/setup';
+import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 module('Integration | date-time fields', function (hooks) {
   setupRenderingTest(hooks);

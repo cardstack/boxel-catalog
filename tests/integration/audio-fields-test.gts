@@ -1,13 +1,13 @@
 import { module, test } from 'qunit';
 
-import { setupBaseRealm } from '../helpers/base-realm';
+import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupCatalogRealm, AudioField } from '../helpers/catalog-realm';
 import {
   renderField,
   renderConfiguredField,
   buildField,
 } from '../helpers/field-test-helpers';
-import { setupRenderingTest } from '../helpers/setup';
+import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 module('Integration | audio fields', function (hooks) {
   setupRenderingTest(hooks);

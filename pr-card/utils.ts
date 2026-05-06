@@ -173,10 +173,7 @@ function eventLastModified(event: any): number {
   return event?.meta?.lastModified ?? event?.lastModified ?? 0;
 }
 
-function latestEventsByCheckId(
-  events: any[],
-  type: CiEventType,
-): any[] {
+function latestEventsByCheckId(events: any[], type: CiEventType): any[] {
   let latestById = new Map<string, any>();
   for (let event of events) {
     const checkData =
@@ -202,18 +199,12 @@ export function buildCiItems(
 ): CiItem[] {
   let events: { event: any; type: CiEventType }[] = [];
 
-  let latestSuites = latestEventsByCheckId(
-    checkSuiteInstances,
-    'check_suite',
-  );
+  let latestSuites = latestEventsByCheckId(checkSuiteInstances, 'check_suite');
   for (let event of latestSuites) {
     events.push({ event, type: 'check_suite' });
   }
 
-  let latestRuns = latestEventsByCheckId(
-    checkRunInstances,
-    'check_run',
-  );
+  let latestRuns = latestEventsByCheckId(checkRunInstances, 'check_run');
   for (let event of latestRuns) {
     events.push({ event, type: 'check_run' });
   }
@@ -299,7 +290,7 @@ export function findLatestChangesRequestedEvent(
     [...latestReviewByReviewer.values()].find(
       (event: any) =>
         normalizeReviewState(event?.payload?.review?.state) ===
-          'changes_requested',
+        'changes_requested',
     ) ?? null
   );
 }
@@ -322,7 +313,8 @@ export function buildGithubEventCardRef(
   relativePath = '../github-event/github-event',
 ) {
   return {
-    module: new URL(relativePath, moduleBaseUrl).href as RealmResourceIdentifier,
+    module: new URL(relativePath, moduleBaseUrl)
+      .href as RealmResourceIdentifier,
     name: 'GithubEventCard' as const,
   };
 }

@@ -275,8 +275,1140 @@ export class SubmissionParticipantField extends FieldDef {
   };
 }
 
-// ── Main Card ──
+// ── Isolated ──
+class Isolated extends Component<typeof SubmissionWorkflowCard> {
+  // ── Realm & card ref for live queries ──
+  get realmHrefs() {
+    return buildRealmHrefs(this.args.model[realmURL]?.href);
+  }
 
+  get githubEventCardRef() {
+    return buildGithubEventCardRef(
+      // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+      import.meta.url,
+      '../github-event/github-event',
+    );
+  }
+
+  get prBranchName() {
+    return (
+      this.args.model.prCard?.branchName ?? this.args.model.branchName ?? null
+    );
+  }
+
+  // ── Event queries ──
+  get pullRequestEventQuery() {
+    return searchEventQuery(
+      this.githubEventCardRef,
+      this.prBranchName,
+      'pull_request',
+    );
+  }
+
+  get checkRunEventQuery() {
+    return searchEventQuery(
+      this.githubEventCardRef,
+      this.prBranchName,
+      'check_run',
+    );
+  }
+
+  get checkSuiteEventQuery() {
+    return searchEventQuery(
+      this.githubEventCardRef,
+      this.prBranchName,
+      'check_suite',
+    );
+  }
+
+  get prReviewEventQuery() {
+    return searchEventQuery(
+      this.githubEventCardRef,
+      this.prBranchName,
+      'pull_request_review',
+    );
+  }
+
+  // ── Live queries ──
+  prEventData = this.args.context?.getCards(
+    this,
+    () => this.pullRequestEventQuery,
+    () => this.realmHrefs,
+    { isLive: true },
+  );
+
+  checkRunEventData = this.args.context?.getCards(
+    this,
+    () => this.checkRunEventQuery,
+    () => this.realmHrefs,
+    { isLive: true },
+  );
+
+  checkSuiteEventData = this.args.context?.getCards(
+    this,
+    () => this.checkSuiteEventQuery,
+    () => this.realmHrefs,
+    { isLive: true },
+  );
+
+  prReviewEventData = this.args.context?.getCards(
+    this,
+    () => this.prReviewEventQuery,
+    () => this.realmHrefs,
+    { isLive: true },
+  );
+
+  // ── Derived PR state ──
+  get latestPrEvent(): GithubEventCard | null {
+    return (this.prEventData?.instances[0] as GithubEventCard) ?? null;
+  }
+
+  get prActionLabel() {
+    let event = this.latestPrEvent;
+    return renderPrActionLabel(
+      event?.action,
+      event?.payload?.pull_request?.merged,
+    );
+  }
+
+  get isMerged() {
+    return this.prActionLabel === 'Merged';
+  }
+
+  get isClosed() {
+    let label = this.prActionLabel;
+    return label === 'Closed' || label === 'Merged';
+  }
+
+  get catalogListingUrl(): string | null {
+    if (!this.isMerged) return null;
+    let listing = this.args.model.listing;
+    if (!listing?.id) return null;
+
+    let listingRealmHref = listing[realmURL]?.href;
+    if (!listingRealmHref) return null;
+
+    let relativePath = listing.id.startsWith(listingRealmHref)
+      ? listing.id.slice(listingRealmHref.length)
+      : listing.id;
+
+    let catalogRealmUrl = this.args.model.catalogRealmUrl;
+    if (!catalogRealmUrl) return null;
+
+    let base = catalogRealmUrl.endsWith('/')
+      ? catalogRealmUrl
+      : catalogRealmUrl + '/';
+    return `${base}${relativePath}`;
+  }
+
+  // ── CI state ──
+  get ciItems() {
+    return buildCiItems(
+      this.checkRunEventData?.instances ?? [],
+      this.checkSuiteEventData?.instances ?? [],
+    );
+  }
+
+  get ciAllPassed() {
+    return (
+      this.ciItems.length > 0 &&
+      this.ciItems.every((i) => i.state === 'success')
+    );
+  }
+
+  get ciHasFailure() {
+    return this.ciItems.some((i) => i.state === 'failure');
+  }
+
+  get ciInProgress() {
+    return this.ciItems.some((i) => i.state === 'in_progress');
+  }
+
+  get ciIsLoading() {
+    return (
+      (this.checkRunEventData?.isLoading ||
+        this.checkSuiteEventData?.isLoading) ??
+      false
+    );
+  }
+
+  // ── Review state ──
+  get latestReviewByReviewer() {
+    return buildLatestReviewByReviewer(this.prReviewEventData?.instances ?? []);
+  }
+
+  get reviewState() {
+    return computeLatestReviewState(this.latestReviewByReviewer);
+  }
+
+  // ── Workflow resolution ──
+  get workflowState(): WorkflowState {
+    return resolveSubmissionWorkflowState(
+      !!this.args.model.listing,
+      !!this.args.model.prCard,
+      this.prActionLabel,
+      this.ciAllPassed,
+      this.ciHasFailure,
+      this.ciInProgress,
+      this.ciIsLoading,
+      this.reviewState,
+      this.isMerged,
+      this.isClosed,
+      this.args.model.lintStatus ?? null,
+      this.args.model.lintErrors ?? [],
+      this.args.model.prCreationError ?? null,
+      this.args.model.failedStep ?? null,
+    );
+  }
+
+  get overallStatusLabel(): string {
+    switch (this.workflowState.overallStatus) {
+      case 'completed':
+        return 'Completed';
+      case 'blocked':
+        return 'Blocked';
+      case 'in-progress':
+        return 'In Progress';
+      default:
+        return 'Not Started';
+    }
+  }
+
+  get lastStepIndex(): string {
+    return String(this.workflowState.steps.length - 1);
+  }
+
+  get overallStatusTone(): string {
+    switch (this.workflowState.overallStatus) {
+      case 'completed':
+        return 'success';
+      case 'blocked':
+        return 'danger';
+      case 'in-progress':
+        return 'active';
+      default:
+        return 'neutral';
+    }
+  }
+
+  get isSourceListing(): boolean {
+    return (
+      !!this.args.model.listing &&
+      !this.args.model.listing[realmURL]?.pathname?.includes('/catalog/')
+    );
+  }
+
+  // ── Retry support ──
+  @tracked isRetrying = false;
+
+  get canRetry(): boolean {
+    return (
+      !!this.args.context?.commandContext &&
+      !!this.args.model.id &&
+      !!this.args.model.roomId &&
+      (!!this.args.model.prCreationError ||
+        this.args.model.lintStatus === 'failed' ||
+        !!this.args.model.failedStep)
+    );
+  }
+
+  viewCatalogListing = () => {
+    let url = this.catalogListingUrl;
+    let commandContext = this.args.context?.commandContext;
+    if (!url || !commandContext) return;
+    new ShowCardCommand(commandContext).execute({
+      cardId: url,
+      format: 'isolated',
+    });
+  };
+
+  @action
+  async retrySubmission() {
+    let commandContext = this.args.context?.commandContext;
+    let workflowCardId = this.args.model.id;
+    if (!commandContext || !workflowCardId || this.isRetrying) {
+      return;
+    }
+    this.isRetrying = true;
+    try {
+      await new RetrySubmissionWorkflowCommand(commandContext).execute({
+        workflowCardId,
+      });
+    } finally {
+      this.isRetrying = false;
+    }
+  }
+
+  <template>
+    <div class='sw-layout'>
+
+      {{! ── Main content ── }}
+      <main class='sw-main'>
+        <header class='sw-header'>
+          <div class='sw-header-left'>
+            <h1 class='sw-title'>{{@model.title}}</h1>
+            <span
+              class={{concat 'sw-status-pill ' this.overallStatusTone}}
+            >{{this.overallStatusLabel}}</span>
+          </div>
+          {{#if @model.submittedBy}}
+            <span class='sw-submitted-by'>by {{@model.submittedBy}}</span>
+          {{/if}}
+        </header>
+
+        {{! ── Step tracker ── }}
+        <div class='sw-steps'>
+          {{#each this.workflowState.steps key='key' as |step idx|}}
+            <div class={{concat 'sw-step ' step.status}}>
+              <div class='sw-step-indicator'>
+                {{#if (eq step.status 'completed')}}
+                  <div class='sw-step-icon completed'>
+                    <svg
+                      width='12'
+                      height='12'
+                      viewBox='0 0 24 24'
+                      fill='none'
+                      stroke='currentColor'
+                      stroke-width='3'
+                    ><polyline points='20 6 9 17 4 12' /></svg>
+                  </div>
+                {{else if (eq step.status 'in-progress')}}
+                  <div class='sw-step-icon in-progress'>
+                    <div class='sw-step-spinner'></div>
+                  </div>
+                {{else if (eq step.status 'current')}}
+                  <div class='sw-step-icon current'>
+                    <div class='sw-step-pulse'></div>
+                  </div>
+                {{else if (eq step.status 'blocked')}}
+                  <div class='sw-step-icon blocked'>
+                    <svg
+                      width='12'
+                      height='12'
+                      viewBox='0 0 24 24'
+                      fill='none'
+                      stroke='currentColor'
+                      stroke-width='3'
+                    ><line x1='18' y1='6' x2='6' y2='18' /><line
+                        x1='6'
+                        y1='6'
+                        x2='18'
+                        y2='18'
+                      /></svg>
+                  </div>
+                {{else}}
+                  <div class='sw-step-icon upcoming'>
+                    <div class='sw-step-dot'></div>
+                  </div>
+                {{/if}}
+                {{#if (eq idx this.lastStepIndex)}}
+                  {{! last step, no connector }}
+                {{else}}
+                  <div class={{concat 'sw-step-connector ' step.status}}></div>
+                {{/if}}
+              </div>
+              <div class='sw-step-content'>
+                <div class='sw-step-label'>{{step.label}}</div>
+                <div class='sw-step-description'>{{step.description}}</div>
+
+                {{#if step.statusDetail}}
+                  <div class={{concat 'sw-step-status-detail ' step.status}}>
+                    {{#if (eq step.status 'in-progress')}}
+                      <span class='sw-status-spinner-small'></span>
+                    {{/if}}
+                    {{step.statusDetail}}
+                  </div>
+                {{/if}}
+
+                {{! ── Step detail cards ── }}
+                {{#if (eq step.key 'choose-listing')}}
+                  {{#if @model.listing}}
+                    <div class='sw-fitted-card-container'>
+                      {{#if this.isSourceListing}}
+                        <span class='sw-source-badge'>
+                          <SourceCode class='sw-source-icon' />
+                          Source Listing
+                        </span>
+                      {{/if}}
+                      <@fields.listing @format='fitted' />
+                    </div>
+                  {{/if}}
+                {{/if}}
+
+                {{#if (eq step.key 'create-pr')}}
+                  {{#if (eq @model.lintStatus 'failed')}}
+                    <div class='sw-step-detail sw-lint-errors'>
+                      <div class='sw-lint-header'>Unfixable Lint Errors</div>
+                      {{#each @model.lintErrors as |err|}}
+                        <div class='sw-lint-error-line'>{{err}}</div>
+                      {{/each}}
+                    </div>
+                  {{/if}}
+                  {{#if @model.prCreationError}}
+                    <div class='sw-step-detail sw-lint-errors'>
+                      <div class='sw-lint-header'>PR Creation Failed</div>
+                      <div class='sw-lint-error-line'>
+                        {{@model.prCreationError}}
+                      </div>
+                    </div>
+                  {{/if}}
+                  {{#if this.canRetry}}
+                    <div class='sw-step-detail sw-retry'>
+                      <BoxelButton
+                        @kind='primary'
+                        @size='small'
+                        @loading={{this.isRetrying}}
+                        @disabled={{this.isRetrying}}
+                        {{on 'click' this.retrySubmission}}
+                      >
+                        {{if this.isRetrying 'Retrying…' 'Retry'}}
+                      </BoxelButton>
+                    </div>
+                  {{/if}}
+                  {{#if (eq @model.lintStatus 'passed')}}
+                    {{#if @model.lintFixedCount}}
+                      <div class='sw-step-detail sw-lint-info'>
+                        Auto-fixed
+                        {{@model.lintFixedCount}}
+                        file{{#if (eq @model.lintFixedCount 1)}}{{else}}s{{/if}}
+                      </div>
+                    {{/if}}
+                  {{/if}}
+                  {{#if @model.prCard}}
+                    <div class='sw-step-detail sw-embedded-card-container'>
+                      <@fields.prCard @format='embedded' />
+                    </div>
+                  {{/if}}
+                {{/if}}
+
+                {{#if (eq step.key 'ci-checks')}}
+                  {{#if @model.prCard}}
+                    <div class='sw-step-detail'>
+                      <@fields.ciStatus />
+                    </div>
+                  {{/if}}
+                {{/if}}
+
+                {{#if (eq step.key 'reviewer-approve')}}
+                  {{#if @model.prCard}}
+                    <div class='sw-step-detail'>
+                      <@fields.reviewStatus />
+                    </div>
+                  {{/if}}
+                {{/if}}
+
+                {{#if (eq step.key 'merge-catalog')}}
+                  {{#if this.catalogListingUrl}}
+                    <div class='sw-step-detail sw-catalog-link'>
+                      <BoxelButton
+                        @kind='primary'
+                        @size='small'
+                        {{on 'click' this.viewCatalogListing}}
+                      >
+                        View listing in catalog
+                      </BoxelButton>
+                    </div>
+                  {{/if}}
+                {{/if}}
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      </main>
+
+      {{! ── Sidebar ── }}
+      <aside class='sw-sidebar'>
+        {{! Progress donut }}
+        <div class='sw-progress-section'>
+          <div
+            class={{concat 'sw-donut ' this.overallStatusTone}}
+            style={{htmlSafe
+              (concat '--pct:' this.workflowState.progressPercent ';')
+            }}
+          >
+            <span
+              class='sw-donut-pct'
+            >{{this.workflowState.progressPercent}}%</span>
+            <span class='sw-donut-label'>complete</span>
+          </div>
+        </div>
+
+        {{! Step summary }}
+        <div class='sw-sidebar-section'>
+          <div class='sw-sidebar-heading'>Steps</div>
+          {{#each this.workflowState.steps key='key' as |step|}}
+            <div class={{concat 'sw-sidebar-step ' step.status}}>
+              {{#if (eq step.status 'completed')}}
+                <span class='sw-sidebar-icon completed'>
+                  <svg
+                    width='10'
+                    height='10'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                    stroke-width='3'
+                  ><polyline points='20 6 9 17 4 12' /></svg>
+                </span>
+              {{else if (eq step.status 'in-progress')}}
+                <span class='sw-sidebar-icon in-progress'><span
+                    class='sw-sidebar-spinner-small'
+                  ></span></span>
+              {{else if (eq step.status 'current')}}
+                <span class='sw-sidebar-icon current'><span
+                    class='sw-sidebar-dot current'
+                  ></span></span>
+              {{else if (eq step.status 'blocked')}}
+                <span class='sw-sidebar-icon blocked'>
+                  <svg
+                    width='10'
+                    height='10'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                    stroke-width='3'
+                  ><line x1='18' y1='6' x2='6' y2='18' /><line
+                      x1='6'
+                      y1='6'
+                      x2='18'
+                      y2='18'
+                    /></svg>
+                </span>
+              {{else}}
+                <span class='sw-sidebar-icon upcoming'><span
+                    class='sw-sidebar-dot upcoming'
+                  ></span></span>
+              {{/if}}
+              <span class='sw-sidebar-step-label'>{{step.label}}</span>
+            </div>
+          {{/each}}
+        </div>
+
+        {{! Participants }}
+        {{#if @model.participants.length}}
+          <div class='sw-sidebar-section'>
+            <div class='sw-sidebar-heading'>Participants</div>
+            {{#each @model.participants as |p|}}
+              <div class='sw-sidebar-participant'>
+                <span class='sw-sidebar-avatar'>{{p.initials}}</span>
+                <div class='sw-sidebar-participant-info'>
+                  <span class='sw-sidebar-participant-name'>{{p.name}}</span>
+                  <span class='sw-sidebar-participant-role'>{{p.role}}</span>
+                </div>
+              </div>
+            {{/each}}
+          </div>
+        {{/if}}
+
+        {{! Linked cards }}
+        <div class='sw-sidebar-section'>
+          <div class='sw-sidebar-heading'>Linked Cards</div>
+          {{#if @model.listing}}
+            <div class='sw-sidebar-fitted-card'>
+              {{#if this.isSourceListing}}
+                <span class='sw-source-badge'>
+                  <SourceCode class='sw-source-icon' />
+                  Source Listing
+                </span>
+              {{/if}}
+              <@fields.listing @format='fitted' />
+            </div>
+          {{/if}}
+          {{#if @model.prCard}}
+            <div class='sw-sidebar-fitted-card'>
+              <@fields.prCard @format='fitted' />
+            </div>
+          {{/if}}
+          {{#unless @model.listing}}
+            {{#unless @model.prCard}}
+              <div class='sw-sidebar-empty'>No cards linked yet</div>
+            {{/unless}}
+          {{/unless}}
+        </div>
+      </aside>
+
+    </div>
+
+    <style scoped>
+      /* ── Layout ── */
+      .sw-layout {
+        --c-bg: #ffffff;
+        --c-surface: #f8fafc;
+        --c-border: #e2e8f0;
+        --c-text: #0f172a;
+        --c-muted: #64748b;
+        --c-success: #10b981;
+        --c-danger: #ef4444;
+        --c-active: #6366f1;
+        --c-neutral: #94a3b8;
+        --c-warning: #f5e00b;
+        --c-warning-text: #92400e;
+        --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 280px;
+        height: 100%;
+        width: 100%;
+        font-family: var(--font);
+        overflow: hidden;
+        background: var(--c-bg);
+      }
+
+      /* ── Main content ── */
+      .sw-main {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        border-right: 1px solid var(--c-border);
+      }
+
+      .sw-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--c-border);
+        flex-shrink: 0;
+      }
+      .sw-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+      .sw-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--c-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .sw-status-pill {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 999px;
+        flex-shrink: 0;
+      }
+      .sw-status-pill.success {
+        background: rgba(16, 185, 129, 0.12);
+        color: var(--c-success);
+      }
+      .sw-status-pill.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--c-danger);
+      }
+      .sw-status-pill.active {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--c-active);
+      }
+      .sw-status-pill.neutral {
+        background: var(--c-surface);
+        color: var(--c-muted);
+      }
+
+      .sw-submitted-by {
+        font-size: 12px;
+        color: var(--c-muted);
+        flex-shrink: 0;
+      }
+
+      /* ── Step tracker ── */
+      .sw-steps {
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sw-step {
+        display: flex;
+        gap: 16px;
+        min-height: 80px;
+      }
+      .sw-step:last-child {
+        min-height: auto;
+      }
+
+      .sw-step-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+        width: 28px;
+      }
+
+      .sw-step-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+      }
+      .sw-step-icon.completed {
+        background: var(--c-success);
+        color: #fff;
+      }
+      .sw-step-icon.current {
+        background: var(--c-active);
+        color: #fff;
+      }
+      .sw-step-icon.blocked {
+        background: var(--c-danger);
+        color: #fff;
+      }
+      .sw-step-icon.in-progress {
+        background: var(--c-active);
+        color: #fff;
+      }
+      .sw-step-icon.upcoming {
+        background: var(--c-surface);
+        border: 2px solid var(--c-border);
+      }
+
+      .sw-step-spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: stepSpin 0.8s linear infinite;
+      }
+
+      .sw-step-pulse {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #fff;
+        animation: stepPulse 2s ease-in-out infinite;
+      }
+
+      .sw-step-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--c-border);
+      }
+
+      .sw-step-connector {
+        flex: 1;
+        width: 2px;
+        min-height: 20px;
+        margin: 4px 0;
+      }
+      .sw-step-connector.completed {
+        background: var(--c-success);
+      }
+      .sw-step-connector.current {
+        background: linear-gradient(
+          to bottom,
+          var(--c-active),
+          var(--c-border)
+        );
+      }
+      .sw-step-connector.in-progress {
+        background: linear-gradient(
+          to bottom,
+          var(--c-active),
+          var(--c-border)
+        );
+      }
+      .sw-step-connector.blocked {
+        background: linear-gradient(
+          to bottom,
+          var(--c-danger),
+          var(--c-border)
+        );
+      }
+      .sw-step-connector.upcoming {
+        background: var(--c-border);
+      }
+
+      .sw-step-content {
+        flex: 1;
+        min-width: 0;
+        padding-bottom: 24px;
+      }
+      .sw-step:last-child .sw-step-content {
+        padding-bottom: 0;
+      }
+
+      .sw-step-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--c-text);
+        margin-bottom: 2px;
+      }
+      .sw-step.completed .sw-step-label {
+        color: var(--c-muted);
+      }
+      .sw-step.upcoming .sw-step-label {
+        color: var(--c-muted);
+      }
+
+      .sw-step-description {
+        font-size: 12px;
+        color: var(--c-muted);
+        line-height: 1.4;
+      }
+
+      /* ── Step status detail ── */
+      .sw-step-status-detail {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+      .sw-step-status-detail.in-progress {
+        color: var(--c-active);
+      }
+      .sw-step-status-detail.blocked {
+        color: var(--c-danger);
+      }
+
+      .sw-status-spinner-small {
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(99, 102, 241, 0.25);
+        border-top-color: var(--c-active);
+        border-radius: 50%;
+        animation: stepSpin 0.8s linear infinite;
+        flex-shrink: 0;
+      }
+
+      /* ── Step detail cards ── */
+      .sw-step-detail {
+        margin-top: 10px;
+      }
+
+      .sw-fitted-card-container {
+        position: relative;
+        max-width: 360px;
+        height: 180px;
+        border-radius: 10px;
+        border: 1px solid var(--c-border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        margin-top: 15px;
+        overflow: visible;
+      }
+
+      .sw-fitted-card-container > :not(.sw-source-badge) {
+        border-radius: inherit;
+        overflow: hidden;
+      }
+
+      .sw-source-badge {
+        position: absolute;
+        top: -10px;
+        right: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        background-color: var(--c-warning);
+        color: var(--c-warning-text);
+        font: 600 var(--boxel-font-sm);
+        padding: 3px 10px;
+        border-radius: 4px;
+        z-index: 15;
+        white-space: nowrap;
+        letter-spacing: 0.1px;
+        text-transform: uppercase;
+        font-size: 10px;
+        box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+        border: none;
+      }
+
+      .sw-source-icon {
+        width: 10px;
+        height: 10px;
+        flex-shrink: 0;
+      }
+
+      .sw-embedded-card-container {
+        max-width: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--c-border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+
+      .sw-lint-errors {
+        background: rgba(239, 68, 68, 0.06);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      .sw-lint-header {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--c-danger);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .sw-lint-error-line {
+        font-size: 12px;
+        font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+        color: var(--c-text);
+        line-height: 1.5;
+        padding: 2px 0;
+        word-break: break-word;
+      }
+      .sw-lint-info {
+        font-size: 12px;
+        color: var(--c-success);
+        font-weight: 600;
+      }
+
+      /* ── Sidebar ── */
+      .sw-sidebar {
+        display: flex;
+        flex-direction: column;
+        background: var(--c-surface);
+        overflow-y: auto;
+      }
+
+      .sw-progress-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px 20px;
+        border-bottom: 1px solid var(--c-border);
+        background: var(--c-bg);
+      }
+
+      .sw-donut {
+        --pct: 0;
+        --ring: var(--c-neutral);
+        --track: #e8ecf4;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background:
+          radial-gradient(closest-side, var(--c-bg) 72%, transparent 74%),
+          conic-gradient(var(--ring) calc(var(--pct) * 1%), var(--track) 0);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      }
+      .sw-donut.success {
+        --ring: var(--c-success);
+      }
+      .sw-donut.danger {
+        --ring: var(--c-danger);
+      }
+      .sw-donut.active {
+        --ring: var(--c-active);
+      }
+      .sw-donut.neutral {
+        --ring: var(--c-neutral);
+      }
+
+      .sw-donut-pct {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--c-text);
+        line-height: 1;
+      }
+      .sw-donut-label {
+        font-size: 10px;
+        color: var(--c-muted);
+        letter-spacing: 0.04em;
+      }
+
+      /* ── Sidebar sections ── */
+      .sw-sidebar-section {
+        padding: 16px;
+        border-bottom: 1px solid var(--c-border);
+        background: var(--c-bg);
+      }
+      .sw-sidebar-heading {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--c-muted);
+        margin-bottom: 10px;
+      }
+
+      /* ── Sidebar steps ── */
+      .sw-sidebar-step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 0;
+      }
+
+      .sw-sidebar-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .sw-sidebar-icon.completed {
+        background: var(--c-success);
+        color: #fff;
+      }
+      .sw-sidebar-icon.in-progress {
+        background: var(--c-active);
+      }
+      .sw-sidebar-icon.current {
+        background: var(--c-active);
+      }
+      .sw-sidebar-icon.blocked {
+        background: var(--c-danger);
+        color: #fff;
+      }
+
+      .sw-sidebar-spinner-small {
+        width: 8px;
+        height: 8px;
+        border: 1.5px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: stepSpin 0.8s linear infinite;
+      }
+      .sw-sidebar-icon.upcoming {
+        border: 2px solid var(--c-border);
+      }
+
+      .sw-sidebar-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .sw-sidebar-dot.current {
+        background: #fff;
+      }
+      .sw-sidebar-dot.upcoming {
+        background: var(--c-border);
+      }
+
+      .sw-sidebar-step-label {
+        font-size: 12px;
+        color: var(--c-text);
+      }
+      .sw-sidebar-step.completed .sw-sidebar-step-label {
+        color: var(--c-muted);
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
+      .sw-sidebar-step.in-progress .sw-sidebar-step-label {
+        font-weight: 700;
+        color: var(--c-active);
+      }
+      .sw-sidebar-step.current .sw-sidebar-step-label {
+        font-weight: 700;
+      }
+      .sw-sidebar-step.upcoming .sw-sidebar-step-label {
+        color: var(--c-muted);
+      }
+
+      /* ── Sidebar participants ── */
+      .sw-sidebar-participant {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 0;
+      }
+      .sw-sidebar-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #1e293b;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 800;
+        flex-shrink: 0;
+      }
+      .sw-sidebar-participant-info {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .sw-sidebar-participant-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--c-text);
+      }
+      .sw-sidebar-participant-role {
+        font-size: 11px;
+        color: var(--c-muted);
+      }
+
+      /* ── Sidebar linked cards ── */
+      .sw-sidebar-fitted-card {
+        position: relative;
+        height: 70px;
+        border-radius: 8px;
+        border: 1px solid var(--c-border);
+        margin-bottom: 6px;
+        overflow: visible;
+      }
+
+      .sw-sidebar-fitted-card > :not(.sw-source-badge) {
+        border-radius: inherit;
+        overflow: hidden;
+      }
+      .sw-sidebar-empty {
+        font-size: 12px;
+        color: var(--c-muted);
+      }
+
+      /* ── Animations ── */
+      @keyframes stepSpin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes stepPulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.6;
+          transform: scale(0.85);
+        }
+      }
+
+      /* ── Catalog link ── */
+      .sw-catalog-link {
+        margin-top: 8px;
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 800px) {
+        .sw-layout {
+          grid-template-columns: 1fr;
+        }
+        .sw-sidebar {
+          display: none;
+        }
+      }
+    </style>
+  </template>
+}
+
+// ── Main Card ──
 export class SubmissionWorkflowCard extends CardDef {
   static displayName = 'Submission Workflow';
   static prefersWideFormat = true;
@@ -334,1146 +1466,7 @@ export class SubmissionWorkflowCard extends CardDef {
 
   // ── Isolated: Full workflow view ──
 
-  static isolated = class Isolated extends Component<
-    typeof SubmissionWorkflowCard
-  > {
-    // ── Realm & card ref for live queries ──
-    get realmHrefs() {
-      return buildRealmHrefs(this.args.model[realmURL]?.href);
-    }
-
-    get githubEventCardRef() {
-      return buildGithubEventCardRef(
-        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-        import.meta.url,
-        '../github-event/github-event',
-      );
-    }
-
-    get prBranchName() {
-      return (
-        this.args.model.prCard?.branchName ?? this.args.model.branchName ?? null
-      );
-    }
-
-    // ── Event queries ──
-    get pullRequestEventQuery() {
-      return searchEventQuery(
-        this.githubEventCardRef,
-        this.prBranchName,
-        'pull_request',
-      );
-    }
-
-    get checkRunEventQuery() {
-      return searchEventQuery(
-        this.githubEventCardRef,
-        this.prBranchName,
-        'check_run',
-      );
-    }
-
-    get checkSuiteEventQuery() {
-      return searchEventQuery(
-        this.githubEventCardRef,
-        this.prBranchName,
-        'check_suite',
-      );
-    }
-
-    get prReviewEventQuery() {
-      return searchEventQuery(
-        this.githubEventCardRef,
-        this.prBranchName,
-        'pull_request_review',
-      );
-    }
-
-    // ── Live queries ──
-    prEventData = this.args.context?.getCards(
-      this,
-      () => this.pullRequestEventQuery,
-      () => this.realmHrefs,
-      { isLive: true },
-    );
-
-    checkRunEventData = this.args.context?.getCards(
-      this,
-      () => this.checkRunEventQuery,
-      () => this.realmHrefs,
-      { isLive: true },
-    );
-
-    checkSuiteEventData = this.args.context?.getCards(
-      this,
-      () => this.checkSuiteEventQuery,
-      () => this.realmHrefs,
-      { isLive: true },
-    );
-
-    prReviewEventData = this.args.context?.getCards(
-      this,
-      () => this.prReviewEventQuery,
-      () => this.realmHrefs,
-      { isLive: true },
-    );
-
-    // ── Derived PR state ──
-    get latestPrEvent(): GithubEventCard | null {
-      return (this.prEventData?.instances[0] as GithubEventCard) ?? null;
-    }
-
-    get prActionLabel() {
-      let event = this.latestPrEvent;
-      return renderPrActionLabel(
-        event?.action,
-        event?.payload?.pull_request?.merged,
-      );
-    }
-
-    get isMerged() {
-      return this.prActionLabel === 'Merged';
-    }
-
-    get isClosed() {
-      let label = this.prActionLabel;
-      return label === 'Closed' || label === 'Merged';
-    }
-
-    get catalogListingUrl(): string | null {
-      if (!this.isMerged) return null;
-      let listing = this.args.model.listing;
-      if (!listing?.id) return null;
-
-      let listingRealmHref = listing[realmURL]?.href;
-      if (!listingRealmHref) return null;
-
-      let relativePath = listing.id.startsWith(listingRealmHref)
-        ? listing.id.slice(listingRealmHref.length)
-        : listing.id;
-
-      let catalogRealmUrl = this.args.model.catalogRealmUrl;
-      if (!catalogRealmUrl) return null;
-
-      let base = catalogRealmUrl.endsWith('/')
-        ? catalogRealmUrl
-        : catalogRealmUrl + '/';
-      return `${base}${relativePath}`;
-    }
-
-    // ── CI state ──
-    get ciItems() {
-      return buildCiItems(
-        this.checkRunEventData?.instances ?? [],
-        this.checkSuiteEventData?.instances ?? [],
-      );
-    }
-
-    get ciAllPassed() {
-      return (
-        this.ciItems.length > 0 &&
-        this.ciItems.every((i) => i.state === 'success')
-      );
-    }
-
-    get ciHasFailure() {
-      return this.ciItems.some((i) => i.state === 'failure');
-    }
-
-    get ciInProgress() {
-      return this.ciItems.some((i) => i.state === 'in_progress');
-    }
-
-    get ciIsLoading() {
-      return (
-        (this.checkRunEventData?.isLoading ||
-          this.checkSuiteEventData?.isLoading) ??
-        false
-      );
-    }
-
-    // ── Review state ──
-    get latestReviewByReviewer() {
-      return buildLatestReviewByReviewer(
-        this.prReviewEventData?.instances ?? [],
-      );
-    }
-
-    get reviewState() {
-      return computeLatestReviewState(this.latestReviewByReviewer);
-    }
-
-    // ── Workflow resolution ──
-    get workflowState(): WorkflowState {
-      return resolveSubmissionWorkflowState(
-        !!this.args.model.listing,
-        !!this.args.model.prCard,
-        this.prActionLabel,
-        this.ciAllPassed,
-        this.ciHasFailure,
-        this.ciInProgress,
-        this.ciIsLoading,
-        this.reviewState,
-        this.isMerged,
-        this.isClosed,
-        this.args.model.lintStatus ?? null,
-        this.args.model.lintErrors ?? [],
-        this.args.model.prCreationError ?? null,
-        this.args.model.failedStep ?? null,
-      );
-    }
-
-    get overallStatusLabel(): string {
-      switch (this.workflowState.overallStatus) {
-        case 'completed':
-          return 'Completed';
-        case 'blocked':
-          return 'Blocked';
-        case 'in-progress':
-          return 'In Progress';
-        default:
-          return 'Not Started';
-      }
-    }
-
-    get lastStepIndex(): string {
-      return String(this.workflowState.steps.length - 1);
-    }
-
-    get overallStatusTone(): string {
-      switch (this.workflowState.overallStatus) {
-        case 'completed':
-          return 'success';
-        case 'blocked':
-          return 'danger';
-        case 'in-progress':
-          return 'active';
-        default:
-          return 'neutral';
-      }
-    }
-
-    get isSourceListing(): boolean {
-      return (
-        !!this.args.model.listing &&
-        !this.args.model.listing[realmURL]?.pathname?.includes('/catalog/')
-      );
-    }
-
-    // ── Retry support ──
-    @tracked isRetrying = false;
-
-    get canRetry(): boolean {
-      return (
-        !!this.args.context?.commandContext &&
-        !!this.args.model.id &&
-        !!this.args.model.roomId &&
-        (!!this.args.model.prCreationError ||
-          this.args.model.lintStatus === 'failed' ||
-          !!this.args.model.failedStep)
-      );
-    }
-
-    viewCatalogListing = () => {
-      let url = this.catalogListingUrl;
-      let commandContext = this.args.context?.commandContext;
-      if (!url || !commandContext) return;
-      new ShowCardCommand(commandContext).execute({
-        cardId: url,
-        format: 'isolated',
-      });
-    };
-
-    @action
-    async retrySubmission() {
-      let commandContext = this.args.context?.commandContext;
-      let workflowCardId = this.args.model.id;
-      if (!commandContext || !workflowCardId || this.isRetrying) {
-        return;
-      }
-      this.isRetrying = true;
-      try {
-        await new RetrySubmissionWorkflowCommand(commandContext).execute({
-          workflowCardId,
-        });
-      } finally {
-        this.isRetrying = false;
-      }
-    }
-
-    <template>
-      <div class='sw-layout'>
-
-        {{! ── Main content ── }}
-        <main class='sw-main'>
-          <header class='sw-header'>
-            <div class='sw-header-left'>
-              <h1 class='sw-title'>{{@model.title}}</h1>
-              <span
-                class={{concat 'sw-status-pill ' this.overallStatusTone}}
-              >{{this.overallStatusLabel}}</span>
-            </div>
-            {{#if @model.submittedBy}}
-              <span class='sw-submitted-by'>by {{@model.submittedBy}}</span>
-            {{/if}}
-          </header>
-
-          {{! ── Step tracker ── }}
-          <div class='sw-steps'>
-            {{#each this.workflowState.steps key='key' as |step idx|}}
-              <div class={{concat 'sw-step ' step.status}}>
-                <div class='sw-step-indicator'>
-                  {{#if (eq step.status 'completed')}}
-                    <div class='sw-step-icon completed'>
-                      <svg
-                        width='12'
-                        height='12'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        stroke='currentColor'
-                        stroke-width='3'
-                      ><polyline points='20 6 9 17 4 12' /></svg>
-                    </div>
-                  {{else if (eq step.status 'in-progress')}}
-                    <div class='sw-step-icon in-progress'>
-                      <div class='sw-step-spinner'></div>
-                    </div>
-                  {{else if (eq step.status 'current')}}
-                    <div class='sw-step-icon current'>
-                      <div class='sw-step-pulse'></div>
-                    </div>
-                  {{else if (eq step.status 'blocked')}}
-                    <div class='sw-step-icon blocked'>
-                      <svg
-                        width='12'
-                        height='12'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        stroke='currentColor'
-                        stroke-width='3'
-                      ><line x1='18' y1='6' x2='6' y2='18' /><line
-                          x1='6'
-                          y1='6'
-                          x2='18'
-                          y2='18'
-                        /></svg>
-                    </div>
-                  {{else}}
-                    <div class='sw-step-icon upcoming'>
-                      <div class='sw-step-dot'></div>
-                    </div>
-                  {{/if}}
-                  {{#if (eq idx this.lastStepIndex)}}
-                    {{! last step, no connector }}
-                  {{else}}
-                    <div
-                      class={{concat 'sw-step-connector ' step.status}}
-                    ></div>
-                  {{/if}}
-                </div>
-                <div class='sw-step-content'>
-                  <div class='sw-step-label'>{{step.label}}</div>
-                  <div class='sw-step-description'>{{step.description}}</div>
-
-                  {{#if step.statusDetail}}
-                    <div class={{concat 'sw-step-status-detail ' step.status}}>
-                      {{#if (eq step.status 'in-progress')}}
-                        <span class='sw-status-spinner-small'></span>
-                      {{/if}}
-                      {{step.statusDetail}}
-                    </div>
-                  {{/if}}
-
-                  {{! ── Step detail cards ── }}
-                  {{#if (eq step.key 'choose-listing')}}
-                    {{#if @model.listing}}
-                      <div class='sw-fitted-card-container'>
-                        {{#if this.isSourceListing}}
-                          <span class='sw-source-badge'>
-                            <SourceCode class='sw-source-icon' />
-                            Source Listing
-                          </span>
-                        {{/if}}
-                        <@fields.listing @format='fitted' />
-                      </div>
-                    {{/if}}
-                  {{/if}}
-
-                  {{#if (eq step.key 'create-pr')}}
-                    {{#if (eq @model.lintStatus 'failed')}}
-                      <div class='sw-step-detail sw-lint-errors'>
-                        <div class='sw-lint-header'>Unfixable Lint Errors</div>
-                        {{#each @model.lintErrors as |err|}}
-                          <div class='sw-lint-error-line'>{{err}}</div>
-                        {{/each}}
-                      </div>
-                    {{/if}}
-                    {{#if @model.prCreationError}}
-                      <div class='sw-step-detail sw-lint-errors'>
-                        <div class='sw-lint-header'>PR Creation Failed</div>
-                        <div class='sw-lint-error-line'>
-                          {{@model.prCreationError}}
-                        </div>
-                      </div>
-                    {{/if}}
-                    {{#if this.canRetry}}
-                      <div class='sw-step-detail sw-retry'>
-                        <BoxelButton
-                          @kind='primary'
-                          @size='small'
-                          @loading={{this.isRetrying}}
-                          @disabled={{this.isRetrying}}
-                          {{on 'click' this.retrySubmission}}
-                        >
-                          {{if this.isRetrying 'Retrying…' 'Retry'}}
-                        </BoxelButton>
-                      </div>
-                    {{/if}}
-                    {{#if (eq @model.lintStatus 'passed')}}
-                      {{#if @model.lintFixedCount}}
-                        <div class='sw-step-detail sw-lint-info'>
-                          Auto-fixed
-                          {{@model.lintFixedCount}}
-                          file{{#if
-                            (eq @model.lintFixedCount 1)
-                          }}{{else}}s{{/if}}
-                        </div>
-                      {{/if}}
-                    {{/if}}
-                    {{#if @model.prCard}}
-                      <div class='sw-step-detail sw-embedded-card-container'>
-                        <@fields.prCard @format='embedded' />
-                      </div>
-                    {{/if}}
-                  {{/if}}
-
-                  {{#if (eq step.key 'ci-checks')}}
-                    {{#if @model.prCard}}
-                      <div class='sw-step-detail'>
-                        <@fields.ciStatus />
-                      </div>
-                    {{/if}}
-                  {{/if}}
-
-                  {{#if (eq step.key 'reviewer-approve')}}
-                    {{#if @model.prCard}}
-                      <div class='sw-step-detail'>
-                        <@fields.reviewStatus />
-                      </div>
-                    {{/if}}
-                  {{/if}}
-
-                  {{#if (eq step.key 'merge-catalog')}}
-                    {{#if this.catalogListingUrl}}
-                      <div class='sw-step-detail sw-catalog-link'>
-                        <BoxelButton
-                          @kind='primary'
-                          @size='small'
-                          {{on 'click' this.viewCatalogListing}}
-                        >
-                          View listing in catalog
-                        </BoxelButton>
-                      </div>
-                    {{/if}}
-                  {{/if}}
-                </div>
-              </div>
-            {{/each}}
-          </div>
-        </main>
-
-        {{! ── Sidebar ── }}
-        <aside class='sw-sidebar'>
-          {{! Progress donut }}
-          <div class='sw-progress-section'>
-            <div
-              class={{concat 'sw-donut ' this.overallStatusTone}}
-              style={{htmlSafe
-                (concat '--pct:' this.workflowState.progressPercent ';')
-              }}
-            >
-              <span
-                class='sw-donut-pct'
-              >{{this.workflowState.progressPercent}}%</span>
-              <span class='sw-donut-label'>complete</span>
-            </div>
-          </div>
-
-          {{! Step summary }}
-          <div class='sw-sidebar-section'>
-            <div class='sw-sidebar-heading'>Steps</div>
-            {{#each this.workflowState.steps key='key' as |step|}}
-              <div class={{concat 'sw-sidebar-step ' step.status}}>
-                {{#if (eq step.status 'completed')}}
-                  <span class='sw-sidebar-icon completed'>
-                    <svg
-                      width='10'
-                      height='10'
-                      viewBox='0 0 24 24'
-                      fill='none'
-                      stroke='currentColor'
-                      stroke-width='3'
-                    ><polyline points='20 6 9 17 4 12' /></svg>
-                  </span>
-                {{else if (eq step.status 'in-progress')}}
-                  <span class='sw-sidebar-icon in-progress'><span
-                      class='sw-sidebar-spinner-small'
-                    ></span></span>
-                {{else if (eq step.status 'current')}}
-                  <span class='sw-sidebar-icon current'><span
-                      class='sw-sidebar-dot current'
-                    ></span></span>
-                {{else if (eq step.status 'blocked')}}
-                  <span class='sw-sidebar-icon blocked'>
-                    <svg
-                      width='10'
-                      height='10'
-                      viewBox='0 0 24 24'
-                      fill='none'
-                      stroke='currentColor'
-                      stroke-width='3'
-                    ><line x1='18' y1='6' x2='6' y2='18' /><line
-                        x1='6'
-                        y1='6'
-                        x2='18'
-                        y2='18'
-                      /></svg>
-                  </span>
-                {{else}}
-                  <span class='sw-sidebar-icon upcoming'><span
-                      class='sw-sidebar-dot upcoming'
-                    ></span></span>
-                {{/if}}
-                <span class='sw-sidebar-step-label'>{{step.label}}</span>
-              </div>
-            {{/each}}
-          </div>
-
-          {{! Participants }}
-          {{#if @model.participants.length}}
-            <div class='sw-sidebar-section'>
-              <div class='sw-sidebar-heading'>Participants</div>
-              {{#each @model.participants as |p|}}
-                <div class='sw-sidebar-participant'>
-                  <span class='sw-sidebar-avatar'>{{p.initials}}</span>
-                  <div class='sw-sidebar-participant-info'>
-                    <span class='sw-sidebar-participant-name'>{{p.name}}</span>
-                    <span class='sw-sidebar-participant-role'>{{p.role}}</span>
-                  </div>
-                </div>
-              {{/each}}
-            </div>
-          {{/if}}
-
-          {{! Linked cards }}
-          <div class='sw-sidebar-section'>
-            <div class='sw-sidebar-heading'>Linked Cards</div>
-            {{#if @model.listing}}
-              <div class='sw-sidebar-fitted-card'>
-                {{#if this.isSourceListing}}
-                  <span class='sw-source-badge'>
-                    <SourceCode class='sw-source-icon' />
-                    Source Listing
-                  </span>
-                {{/if}}
-                <@fields.listing @format='fitted' />
-              </div>
-            {{/if}}
-            {{#if @model.prCard}}
-              <div class='sw-sidebar-fitted-card'>
-                <@fields.prCard @format='fitted' />
-              </div>
-            {{/if}}
-            {{#unless @model.listing}}
-              {{#unless @model.prCard}}
-                <div class='sw-sidebar-empty'>No cards linked yet</div>
-              {{/unless}}
-            {{/unless}}
-          </div>
-        </aside>
-
-      </div>
-
-      <style scoped>
-        /* ── Layout ── */
-        .sw-layout {
-          --c-bg: #ffffff;
-          --c-surface: #f8fafc;
-          --c-border: #e2e8f0;
-          --c-text: #0f172a;
-          --c-muted: #64748b;
-          --c-success: #10b981;
-          --c-danger: #ef4444;
-          --c-active: #6366f1;
-          --c-neutral: #94a3b8;
-          --c-warning: #f5e00b;
-          --c-warning-text: #92400e;
-          --font:
-            ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 280px;
-          height: 100%;
-          width: 100%;
-          font-family: var(--font);
-          overflow: hidden;
-          background: var(--c-bg);
-        }
-
-        /* ── Main content ── */
-        .sw-main {
-          display: flex;
-          flex-direction: column;
-          overflow-y: auto;
-          border-right: 1px solid var(--c-border);
-        }
-
-        .sw-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 20px 24px;
-          border-bottom: 1px solid var(--c-border);
-          flex-shrink: 0;
-        }
-        .sw-header-left {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          min-width: 0;
-        }
-        .sw-title {
-          margin: 0;
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--c-text);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .sw-status-pill {
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          padding: 3px 10px;
-          border-radius: 999px;
-          flex-shrink: 0;
-        }
-        .sw-status-pill.success {
-          background: rgba(16, 185, 129, 0.12);
-          color: var(--c-success);
-        }
-        .sw-status-pill.danger {
-          background: rgba(239, 68, 68, 0.1);
-          color: var(--c-danger);
-        }
-        .sw-status-pill.active {
-          background: rgba(99, 102, 241, 0.1);
-          color: var(--c-active);
-        }
-        .sw-status-pill.neutral {
-          background: var(--c-surface);
-          color: var(--c-muted);
-        }
-
-        .sw-submitted-by {
-          font-size: 12px;
-          color: var(--c-muted);
-          flex-shrink: 0;
-        }
-
-        /* ── Step tracker ── */
-        .sw-steps {
-          padding: 28px 24px;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .sw-step {
-          display: flex;
-          gap: 16px;
-          min-height: 80px;
-        }
-        .sw-step:last-child {
-          min-height: auto;
-        }
-
-        .sw-step-indicator {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          flex-shrink: 0;
-          width: 28px;
-        }
-
-        .sw-step-icon {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          position: relative;
-        }
-        .sw-step-icon.completed {
-          background: var(--c-success);
-          color: #fff;
-        }
-        .sw-step-icon.current {
-          background: var(--c-active);
-          color: #fff;
-        }
-        .sw-step-icon.blocked {
-          background: var(--c-danger);
-          color: #fff;
-        }
-        .sw-step-icon.in-progress {
-          background: var(--c-active);
-          color: #fff;
-        }
-        .sw-step-icon.upcoming {
-          background: var(--c-surface);
-          border: 2px solid var(--c-border);
-        }
-
-        .sw-step-spinner {
-          width: 14px;
-          height: 14px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: #fff;
-          border-radius: 50%;
-          animation: stepSpin 0.8s linear infinite;
-        }
-
-        .sw-step-pulse {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: #fff;
-          animation: stepPulse 2s ease-in-out infinite;
-        }
-
-        .sw-step-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: var(--c-border);
-        }
-
-        .sw-step-connector {
-          flex: 1;
-          width: 2px;
-          min-height: 20px;
-          margin: 4px 0;
-        }
-        .sw-step-connector.completed {
-          background: var(--c-success);
-        }
-        .sw-step-connector.current {
-          background: linear-gradient(
-            to bottom,
-            var(--c-active),
-            var(--c-border)
-          );
-        }
-        .sw-step-connector.in-progress {
-          background: linear-gradient(
-            to bottom,
-            var(--c-active),
-            var(--c-border)
-          );
-        }
-        .sw-step-connector.blocked {
-          background: linear-gradient(
-            to bottom,
-            var(--c-danger),
-            var(--c-border)
-          );
-        }
-        .sw-step-connector.upcoming {
-          background: var(--c-border);
-        }
-
-        .sw-step-content {
-          flex: 1;
-          min-width: 0;
-          padding-bottom: 24px;
-        }
-        .sw-step:last-child .sw-step-content {
-          padding-bottom: 0;
-        }
-
-        .sw-step-label {
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--c-text);
-          margin-bottom: 2px;
-        }
-        .sw-step.completed .sw-step-label {
-          color: var(--c-muted);
-        }
-        .sw-step.upcoming .sw-step-label {
-          color: var(--c-muted);
-        }
-
-        .sw-step-description {
-          font-size: 12px;
-          color: var(--c-muted);
-          line-height: 1.4;
-        }
-
-        /* ── Step status detail ── */
-        .sw-step-status-detail {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-top: 6px;
-          font-size: 12px;
-          font-weight: 600;
-          line-height: 1.4;
-        }
-        .sw-step-status-detail.in-progress {
-          color: var(--c-active);
-        }
-        .sw-step-status-detail.blocked {
-          color: var(--c-danger);
-        }
-
-        .sw-status-spinner-small {
-          width: 12px;
-          height: 12px;
-          border: 2px solid rgba(99, 102, 241, 0.25);
-          border-top-color: var(--c-active);
-          border-radius: 50%;
-          animation: stepSpin 0.8s linear infinite;
-          flex-shrink: 0;
-        }
-
-        /* ── Step detail cards ── */
-        .sw-step-detail {
-          margin-top: 10px;
-        }
-
-        .sw-fitted-card-container {
-          position: relative;
-          max-width: 360px;
-          height: 180px;
-          border-radius: 10px;
-          border: 1px solid var(--c-border);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-          margin-top: 15px;
-          overflow: visible;
-        }
-
-        .sw-fitted-card-container > :not(.sw-source-badge) {
-          border-radius: inherit;
-          overflow: hidden;
-        }
-
-        .sw-source-badge {
-          position: absolute;
-          top: -10px;
-          right: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 3px;
-          background-color: var(--c-warning);
-          color: var(--c-warning-text);
-          font: 600 var(--boxel-font-sm);
-          padding: 3px 10px;
-          border-radius: 4px;
-          z-index: 15;
-          white-space: nowrap;
-          letter-spacing: 0.1px;
-          text-transform: uppercase;
-          font-size: 10px;
-          box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
-          border: none;
-        }
-
-        .sw-source-icon {
-          width: 10px;
-          height: 10px;
-          flex-shrink: 0;
-        }
-
-        .sw-embedded-card-container {
-          max-width: 100%;
-          border-radius: 10px;
-          overflow: hidden;
-          border: 1px solid var(--c-border);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .sw-lint-errors {
-          background: rgba(239, 68, 68, 0.06);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-          border-radius: 8px;
-          padding: 10px 12px;
-        }
-        .sw-lint-header {
-          font-size: 11px;
-          font-weight: 700;
-          color: var(--c-danger);
-          margin-bottom: 6px;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-        }
-        .sw-lint-error-line {
-          font-size: 12px;
-          font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
-          color: var(--c-text);
-          line-height: 1.5;
-          padding: 2px 0;
-          word-break: break-word;
-        }
-        .sw-lint-info {
-          font-size: 12px;
-          color: var(--c-success);
-          font-weight: 600;
-        }
-
-        /* ── Sidebar ── */
-        .sw-sidebar {
-          display: flex;
-          flex-direction: column;
-          background: var(--c-surface);
-          overflow-y: auto;
-        }
-
-        .sw-progress-section {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px 16px 20px;
-          border-bottom: 1px solid var(--c-border);
-          background: var(--c-bg);
-        }
-
-        .sw-donut {
-          --pct: 0;
-          --ring: var(--c-neutral);
-          --track: #e8ecf4;
-          width: 110px;
-          height: 110px;
-          border-radius: 50%;
-          background:
-            radial-gradient(closest-side, var(--c-bg) 72%, transparent 74%),
-            conic-gradient(var(--ring) calc(var(--pct) * 1%), var(--track) 0);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-        }
-        .sw-donut.success {
-          --ring: var(--c-success);
-        }
-        .sw-donut.danger {
-          --ring: var(--c-danger);
-        }
-        .sw-donut.active {
-          --ring: var(--c-active);
-        }
-        .sw-donut.neutral {
-          --ring: var(--c-neutral);
-        }
-
-        .sw-donut-pct {
-          font-size: 20px;
-          font-weight: 800;
-          color: var(--c-text);
-          line-height: 1;
-        }
-        .sw-donut-label {
-          font-size: 10px;
-          color: var(--c-muted);
-          letter-spacing: 0.04em;
-        }
-
-        /* ── Sidebar sections ── */
-        .sw-sidebar-section {
-          padding: 16px;
-          border-bottom: 1px solid var(--c-border);
-          background: var(--c-bg);
-        }
-        .sw-sidebar-heading {
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--c-muted);
-          margin-bottom: 10px;
-        }
-
-        /* ── Sidebar steps ── */
-        .sw-sidebar-step {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 5px 0;
-        }
-
-        .sw-sidebar-icon {
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .sw-sidebar-icon.completed {
-          background: var(--c-success);
-          color: #fff;
-        }
-        .sw-sidebar-icon.in-progress {
-          background: var(--c-active);
-        }
-        .sw-sidebar-icon.current {
-          background: var(--c-active);
-        }
-        .sw-sidebar-icon.blocked {
-          background: var(--c-danger);
-          color: #fff;
-        }
-
-        .sw-sidebar-spinner-small {
-          width: 8px;
-          height: 8px;
-          border: 1.5px solid rgba(255, 255, 255, 0.3);
-          border-top-color: #fff;
-          border-radius: 50%;
-          animation: stepSpin 0.8s linear infinite;
-        }
-        .sw-sidebar-icon.upcoming {
-          border: 2px solid var(--c-border);
-        }
-
-        .sw-sidebar-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-        }
-        .sw-sidebar-dot.current {
-          background: #fff;
-        }
-        .sw-sidebar-dot.upcoming {
-          background: var(--c-border);
-        }
-
-        .sw-sidebar-step-label {
-          font-size: 12px;
-          color: var(--c-text);
-        }
-        .sw-sidebar-step.completed .sw-sidebar-step-label {
-          color: var(--c-muted);
-          text-decoration: line-through;
-          opacity: 0.7;
-        }
-        .sw-sidebar-step.in-progress .sw-sidebar-step-label {
-          font-weight: 700;
-          color: var(--c-active);
-        }
-        .sw-sidebar-step.current .sw-sidebar-step-label {
-          font-weight: 700;
-        }
-        .sw-sidebar-step.upcoming .sw-sidebar-step-label {
-          color: var(--c-muted);
-        }
-
-        /* ── Sidebar participants ── */
-        .sw-sidebar-participant {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 5px 0;
-        }
-        .sw-sidebar-avatar {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: #1e293b;
-          color: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 10px;
-          font-weight: 800;
-          flex-shrink: 0;
-        }
-        .sw-sidebar-participant-info {
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-        }
-        .sw-sidebar-participant-name {
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--c-text);
-        }
-        .sw-sidebar-participant-role {
-          font-size: 11px;
-          color: var(--c-muted);
-        }
-
-        /* ── Sidebar linked cards ── */
-        .sw-sidebar-fitted-card {
-          position: relative;
-          height: 70px;
-          border-radius: 8px;
-          border: 1px solid var(--c-border);
-          margin-bottom: 6px;
-          overflow: visible;
-        }
-
-        .sw-sidebar-fitted-card > :not(.sw-source-badge) {
-          border-radius: inherit;
-          overflow: hidden;
-        }
-        .sw-sidebar-empty {
-          font-size: 12px;
-          color: var(--c-muted);
-        }
-
-        /* ── Animations ── */
-        @keyframes stepSpin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        @keyframes stepPulse {
-          0%,
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.6;
-            transform: scale(0.85);
-          }
-        }
-
-        /* ── Catalog link ── */
-        .sw-catalog-link {
-          margin-top: 8px;
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 800px) {
-          .sw-layout {
-            grid-template-columns: 1fr;
-          }
-          .sw-sidebar {
-            display: none;
-          }
-        }
-      </style>
-    </template>
-  };
+  static isolated = Isolated;
 
   // ── Fitted: Compact tile ──
 
