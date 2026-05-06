@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WineCellar",
+        "module": "../wine-cellar"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Office Stash — Manhattan",
+      "notes": "Long-hold collector picks kept off-site at the office wine locker (pro-managed, 55°F, low light). Both bottles are drinking-window outliers: the Grange peaks in the 2030s–40s, the Radikon is just entering its window now. Don't touch without checking the drinking window dashboard first.",
+      "owner": "Richard Tan",
+      "cardInfo": {
+        "name": "Office Stash — Manhattan",
+        "notes": null,
+        "summary": "Off-site locker for long-aging collector bottles.",
+        "cardThumbnailURL": null
+      },
+      "location": "Office locker, Midtown NYC"
+    },
+    "relationships": {
+      "bottles.0": {
+        "links": {
+          "self": "../WineBottle/e05fe874-32bb-4146-ae7b-c1c7b6f0517a"
+        }
+      },
+      "bottles.1": {
+        "links": {
+          "self": "../WineBottle/7432bb41-46ee-4bc1-87b6-f0517a45eaba"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

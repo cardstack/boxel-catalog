@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "producer": "Penfolds",
+      "varietal": "Grange (Shiraz)",
+      "region": "South Australia",
+      "wineType": "red",
+      "vintage": { "value": 2017 },
+      "purchaseDate": "2021-09-30",
+      "drinkingWindow": { "start": "2027-01-01", "end": "2050-12-31" },
+      "purchasePrice": { "amount": 750, "currency": { "code": "AUD" } },
+      "currentValue": { "amount": 950, "currency": { "code": "AUD" } },
+      "score": 97,
+      "bottlesRemaining": 3,
+      "liquidColor": "#3A0810",
+      "producerUrl": "https://www.penfolds.com/",
+      "cardInfo": {
+        "name": "2017 Penfolds Grange",
+        "summary": "Australia's iconic Shiraz — multi-region blend, deeply concentrated."
+      }
+    },
+    "relationships": {
+      "label": { "links": { "self": null } }
+    },
+    "meta": { "adoptsFrom": { "module": "../wine-bottle", "name": "WineBottle" } }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WineCellar",
+        "module": "../wine-cellar"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Home Cellar — Napa Cabin",
+      "notes": "Primary residence cellar. Climate-controlled at 55°F / 70% humidity. Layout follows the original 1978 build — reds on the north wall, whites and Champagne in the lower racks where it runs ~52°F. Restock priority: drink-now whites on top, long-hold reds in the back. Last inventory audit: 2026-01-12.",
+      "owner": "Richard Tan",
+      "cardInfo": {
+        "name": "Home Cellar — Napa Cabin",
+        "notes": null,
+        "summary": "Primary residence cellar, drink-now and mid-hold wines.",
+        "cardThumbnailURL": null
+      },
+      "location": "1234 Vineyard Rd, Napa, CA"
+    },
+    "relationships": {
+      "bottles.0": {
+        "links": {
+          "self": "../WineBottle/399a66e0-5fe8-4432-bb41-46ee7bc1c7b6"
+        }
+      },
+      "bottles.1": {
+        "links": {
+          "self": "../WineBottle/a227be75-3301-4f02-b99a-66e05fe87432"
+        }
+      },
+      "bottles.2": {
+        "links": {
+          "self": "../WineBottle/be753301-1f02-499a-a6e0-5fe87432bb41"
+        }
+      },
+      "bottles.3": {
+        "links": {
+          "self": "../WineBottle/7bc1c7b6-f051-4a45-aaba-8f41b62eed0d"
+        }
+      },
+      "bottles.4": {
+        "links": {
+          "self": "../WineBottle/4146ee7b-c1c7-46f0-917a-45eaba8f41b6"
+        }
+      },
+      "bottles.5": {
+        "links": {
+          "self": "../WineBottle/011f0239-9a66-405f-a874-32bb4146ee7b"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
