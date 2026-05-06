@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WineBottle",
+        "module": "../wine-bottle"
+      },
+      "readMe": "## Summary\n\nThe `WineBottle` spec is a CardDef that represents a wine bottle and its associated metadata. It provides a comprehensive view of a wine bottle, including details about the producer, varietal, region, vintage, purchase details, and current value.\n\n## Import\n\n```javascript\nimport { WineBottle } from '../wine-bottle';\n```\n\n## Usage as a Field\n\nTo use the `WineBottle` spec as a field within a consuming card or field, you can include it as follows:\n\n```javascript\n@field wineBotlle = linksTo(WineBottle);\n```\n\n## Template Usage\n\nTo invoke the `WineBottle` spec inside a template within a consuming card or field, you can use the following syntax:\n\n```hbs\n<@fields.wineBotlle @format=\"isolated\" />\n```\n\nThis will render the `WineBottle` card in its isolated format.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Wine Bottle",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
