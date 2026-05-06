@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WineCellar",
+        "module": "../wine-cellar"
+      },
+      "readMe": "## Summary\n\nThe `WineCellar` spec is a card definition that represents a wine cellar. It provides a comprehensive view of a wine cellar, including details about the cellar itself, the bottles it contains, and various statistics and visualizations.\n\n## Import\n\n```js\nimport { WineCellar } from '../wine-cellar';\n```\n\n## Usage as a Field\n\nThe `WineCellar` spec can be used as a field within a consuming card or field. To use it, simply include the `@fields.wineCellar` helper in your template:\n\n```hbs\n<@fields.wineCellar />\n```\n\nThis will render the wine cellar in the consuming component's template.\n\n## Template Usage\n\nTo use the `WineCellar` spec in a template, you can invoke the various format templates it provides:\n\n```hbs\n{{! Isolated format }}\n<WineCellar @format=\"isolated\" />\n\n{{! Embedded format }}\n<WineCellar @format=\"embedded\" />\n\n{{! Fitted format }}\n<WineCellar @format=\"fitted\" />\n\n{{! Atom format }}\n<WineCellar @format=\"atom\" />\n```\n\nThe `WineCellar` spec provides the following formats:\n\n- `isolated`: A detailed view of the wine cellar, including a timeline of the bottles, statistics, and a list of the bottles.\n- `embedded`: A compact view of the wine cellar, displaying key information such as the total number of bottles, total value, and average score.\n- `fitted`: A minimal view of the wine cellar, showing the name, location, and total number of bottles.\n- `atom`: An inline representation of the wine cellar, showing the name and total number of bottles.\n\nThe appropriate format can be chosen based on the layout and context of the consuming component.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Wine Cellar",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

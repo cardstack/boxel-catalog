@@ -1,0 +1,123 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Wine Cellar Card Definition",
+      "summary": "The WineCellar component serves as a comprehensive digital record and visualization of a wine collection. It allows users to document details such as the cellar's name, location, owner, notes, and a list of wine bottles within the cellar. The component calculates aggregate data including total bottles, total value, and average wine score from the collection. It visually represents each wine's drinking window timeline and displays metrics and type breakdowns to provide insight into the collection's composition. Variants of the component include an embedded compact view, a fitted concise display, and an atom version for integration within other interfaces, all supporting quick overview and detailed analysis of a wine cellar.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/app"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/66f99e12-ee7c-4692-b4e9-fca02c2e85e9"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/6c6b05b8-2838-4a45-8f74-097b4d3743d2"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../WineCellar/c7b6f051-7a45-4aba-8f41-b62eed0db152"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../WineCellar/2eed0db1-525c-4b73-897e-547193e4b7f2"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../WineBottle/011f0239-9a66-405f-a874-32bb4146ee7b"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../WineBottle/a227be75-3301-4f02-b99a-66e05fe87432"
+        }
+      },
+      "examples.4": {
+        "links": {
+          "self": "../WineBottle/e05fe874-32bb-4146-ae7b-c1c7b6f0517a"
+        }
+      },
+      "examples.5": {
+        "links": {
+          "self": "../WineBottle/399a66e0-5fe8-4432-bb41-46ee7bc1c7b6"
+        }
+      },
+      "examples.6": {
+        "links": {
+          "self": "../WineBottle/7432bb41-46ee-4bc1-87b6-f0517a45eaba"
+        }
+      },
+      "examples.7": {
+        "links": {
+          "self": "../WineBottle/be753301-1f02-499a-a6e0-5fe87432bb41"
+        }
+      },
+      "examples.8": {
+        "links": {
+          "self": "../WineBottle/4146ee7b-c1c7-46f0-917a-45eaba8f41b6"
+        }
+      },
+      "examples.9": {
+        "links": {
+          "self": "../WineBottle/7bc1c7b6-f051-4a45-aaba-8f41b62eed0d"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/product-catalogs"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/winecellar-cdf6afa0.png"
+        }
+      }
+    }
+  }
+}
