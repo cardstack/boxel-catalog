@@ -1,0 +1,73 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Testing",
+      "summary": "The Testing class defines a CardStack card that serves as a framework for creating and managing testing-related cards within the system. Its primary purpose is to facilitate the organization and execution of tests, providing a structured way to represent testing tasks, results, or configurations within the CardStack environment.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/skill"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/36093d5d-ce78-4bc5-93db-db328f0c57a9"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Testing/562be93c-79f6-49a1-b619-dea4b89e9323"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/quality-assurance"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/testing-15294460.png"
+        }
+      }
+    }
+  }
+}

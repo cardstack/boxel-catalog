@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Testing",
+        "module": "../testing"
+      },
+      "readMe": "# Testing Card\n\n## Summary\nThe `Testing` card is a simple card specification that can be used within a consuming card or field.\n\n## Import\n```javascript\nimport { Testing } from '../testing';\n```\n\n## Usage as a Field\nTo use the `Testing` card as a field within a consuming card or field, you can add it as a `containsOne` or `containsMany` field:\n\n```javascript\nimport { CardDef } from 'https://cardstack.com/base/card-api';\nimport { Testing } from '../testing';\n\nexport class MyCard extends CardDef {\n  static displayName = 'My Card';\n\n  containsOne = {\n    testing: Testing\n  };\n}\n```\n\n## Template Usage\nTo display the `Testing` card within a template, you can use the following syntax:\n\n```hbs\n<@fields.testing />\n```\n\nThis will render the `Testing` card within the consuming card or field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "testing",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

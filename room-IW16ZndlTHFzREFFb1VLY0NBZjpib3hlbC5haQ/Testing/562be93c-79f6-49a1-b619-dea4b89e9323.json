@@ -1,0 +1,31 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Testing",
+        "module": "../testing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/homeworkgrader-039c538f.png"
+        }
+      }
+    }
+  }
+}
