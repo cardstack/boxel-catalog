@@ -104,8 +104,11 @@ export default class CollectSubmissionFilesCommand extends Command<
     }
 
     let examplesToSnapshot = listing.examples;
+    let fileDefUrls = new Set<string>();
     if (listing.examples?.length) {
-      examplesToSnapshot = await this.expandInstances(listing.examples);
+      let expanded = await this.expandInstances(listing.examples);
+      examplesToSnapshot = expanded.instances;
+      fileDefUrls = expanded.fileDefUrls;
     }
 
     const builder = new PlanBuilder(realmUrl, listing);
@@ -195,6 +198,9 @@ export default class CollectSubmissionFilesCommand extends Command<
           toRepoPathNoExt(copyMeta.sourceCard.id),
         );
       }
+    }
+    for (const fileDefUrl of fileDefUrls) {
+      urlToRepoPath.set(fileDefUrl, toRepoRelativePath(fileDefUrl, ''));
     }
 
     const rewriteReferences = (content: string, fromPath: string): string => {
@@ -305,10 +311,34 @@ export default class CollectSubmissionFilesCommand extends Command<
       }
     }
 
+    for (const fileDefUrl of fileDefUrls) {
+      const path = toRepoRelativePath(fileDefUrl, '');
+      if (seenPaths.has(path)) {
+        continue;
+      }
+      seenPaths.add(path);
+      try {
+        let binary = await readBinaryFileCommand.execute({ url: fileDefUrl });
+        filesWithContent.push({
+          path,
+          content: binary.base64Content ?? '',
+        });
+      } catch (e: any) {
+        if (isAccessError(e)) {
+          throw new Error(
+            `Cannot collect files: no access to read file ${fileDefUrl}`,
+          );
+        }
+        throw e;
+      }
+    }
+
     return filesWithContent;
   }
 
-  private async expandInstances(instances: CardDef[]): Promise<CardDef[]> {
+  private async expandInstances(
+    instances: CardDef[],
+  ): Promise<{ instances: CardDef[]; fileDefUrls: Set<string> }> {
     let getCardCommand = new GetCardCommand(this.commandContext);
     let serializeCardCommand = new SerializeCardCommand(this.commandContext);
 
@@ -321,6 +351,7 @@ export default class CollectSubmissionFilesCommand extends Command<
     };
 
     const instancesById = new Map<string, CardDef>();
+    const fileDefUrls = new Set<string>();
     const visited = new Set<string>();
     const queue: string[] = instances
       .map((instance) => instance.id)
@@ -354,6 +385,14 @@ export default class CollectSubmissionFilesCommand extends Command<
         const rels = Array.isArray(rel) ? rel : [rel];
         for (const relationship of rels) {
           const relatedIds = extractRelationshipIds(relationship, baseUrl);
+          if (isFileMetaRelationship(relationship)) {
+            for (const relatedId of relatedIds) {
+              if (!isBaseRealmId(relatedId)) {
+                fileDefUrls.add(relatedId);
+              }
+            }
+            continue;
+          }
           for (const relatedId of relatedIds) {
             if (isBaseRealmId(relatedId)) {
               continue;
@@ -366,8 +405,13 @@ export default class CollectSubmissionFilesCommand extends Command<
       }
     }
 
-    return [...instancesById.values()];
+    return { instances: [...instancesById.values()], fileDefUrls };
   }
+}
+
+function isFileMetaRelationship(relationship: Relationship): boolean {
+  let data = (relationship as { data?: { type?: string } }).data;
+  return !!data && typeof data === 'object' && data.type === 'file-meta';
 }
 
 function extractThumbnailUrl(listingJsonContent: string): string | null {
