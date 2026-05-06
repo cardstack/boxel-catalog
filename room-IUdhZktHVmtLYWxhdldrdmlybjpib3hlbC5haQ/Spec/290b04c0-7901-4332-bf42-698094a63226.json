@@ -1,0 +1,61 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../homework-grader",
+              "name": "GradeField"
+            }
+          }
+        ]
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "GradeField",
+        "module": "../homework-grader"
+      },
+      "readMe": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Field",
+      "cardDescription": null,
+      "containedExamples": [
+        {
+          "overallGrade": null,
+          "overallFeedback": null,
+          "questionPoints": []
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
