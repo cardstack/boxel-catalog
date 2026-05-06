@@ -29,6 +29,7 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import GetCatalogRealmUrlsCommand from '@cardstack/boxel-host/commands/get-catalog-realm-urls';
 import GetRealmOfUrlCommand from '@cardstack/boxel-host/commands/get-realm-of-url';
 import OneShotLlmRequestCommand from '@cardstack/boxel-host/commands/one-shot-llm-request';
+import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import SanitizeModuleListCommand from '@cardstack/boxel-host/commands/sanitize-module-list';
 import ScreenshotCardCommand from '@cardstack/boxel-host/commands/screenshot-card';
 import SearchAndChooseCommand from '@cardstack/boxel-host/commands/search-and-choose';
@@ -501,6 +502,9 @@ export default class ListingCreateCommand extends Command<
   }
 
   private async autoScreenshotExample(listing: CardAPI.CardDef) {
+    if (!listing.id) {
+      return;
+    }
     const examples = Array.isArray((listing as any).examples)
       ? ((listing as any).examples as CardAPI.CardDef[])
       : [];
@@ -526,44 +530,40 @@ export default class ListingCreateCommand extends Command<
       return;
     }
 
-    // The PNG is written synchronously, but the realm indexer promotes it
-    // into an ImageDef card asynchronously. Poll GetCardCommand briefly so
-    // the linksToMany(ImageDef) relationship can resolve on first render.
-    const imageDefCard = await this.loadCardWithRetry(imageDefUrl);
-    if (!imageDefCard) {
-      console.warn('autoScreenshotExample: ImageDef did not resolve in time', {
-        imageDefUrl,
-      });
-      return;
-    }
-
-    const existing = Array.isArray((listing as any).images)
-      ? ((listing as any).images as CardAPI.CardDef[])
+    // ImageDef is a FileDef (not a CardDef), so we can't load it via
+    // GetCardCommand and assign to the in-memory array. Instead, patch the
+    // listing's relationships block directly — same shape the realm uses for
+    // linksTo(ImageDef) links — letting the indexer resolve the file at
+    // render time.
+    const existingImages = Array.isArray((listing as any).images)
+      ? ((listing as any).images as unknown[])
       : [];
-    (listing as any).images = [...existing, imageDefCard];
-  }
+    const nextIndex = existingImages.length;
 
-  private async loadCardWithRetry(
-    cardId: string,
-    attempts = 5,
-    delayMs = 1000,
-  ): Promise<CardAPI.CardDef | undefined> {
-    for (let i = 0; i < attempts; i++) {
-      try {
-        const card = await new GetCardCommand(this.commandContext).execute({
-          cardId,
-        });
-        if (isCardInstance(card)) {
-          return card as CardAPI.CardDef;
-        }
-      } catch {
-        // ignore and retry
-      }
-      if (i < attempts - 1) {
-        await new Promise((r) => setTimeout(r, delayMs));
-      }
+    try {
+      const cardApiModule = await getLoaderService(
+        this.commandContext,
+      ).loader.import<typeof CardAPI>('https://cardstack.com/base/card-api');
+
+      await new PatchCardInstanceCommand(this.commandContext, {
+        cardType: cardApiModule.CardDef as unknown as typeof CardAPI.CardDef,
+      }).execute({
+        cardId: listing.id,
+        patch: {
+          relationships: {
+            [`images.${nextIndex}`]: {
+              links: { self: imageDefUrl },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      console.warn('autoScreenshotExample: patch failed', {
+        listingId: listing.id,
+        imageDefUrl,
+        error,
+      });
     }
-    return undefined;
   }
 
   private async autoLinkLicense(listing: CardAPI.CardDef) {
