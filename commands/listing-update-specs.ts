@@ -30,9 +30,9 @@ export default class ListingUpdateSpecsCommand extends Command<
   }
 
   private async sanitizeDeps(deps: string[]): Promise<string[]> {
-    const { moduleUrls } = await new SanitizeModuleListCommand(
+    const { moduleIdentifiers: moduleUrls } = await new SanitizeModuleListCommand(
       this.commandContext,
-    ).execute({ moduleUrls: deps });
+    ).execute({ moduleIdentifiers: deps });
     return moduleUrls;
   }
 

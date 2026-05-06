@@ -26,8 +26,8 @@ import AuthedFetchCommand from '@cardstack/boxel-host/commands/authed-fetch';
 import CreateSpecCommand from '@cardstack/boxel-host/commands/create-specs';
 import GenerateThumbnailCommand from '@cardstack/boxel-host/commands/generate-thumbnail';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
-import GetCatalogRealmUrlsCommand from '@cardstack/boxel-host/commands/get-catalog-realm-urls';
-import GetRealmOfUrlCommand from '@cardstack/boxel-host/commands/get-realm-of-url';
+import GetCatalogRealmIdentifiersCommand from '@cardstack/boxel-host/commands/get-catalog-realm-identifiers';
+import GetRealmOfResourceIdentifierCommand from '@cardstack/boxel-host/commands/get-realm-of-resource-identifier';
 import OneShotLlmRequestCommand from '@cardstack/boxel-host/commands/one-shot-llm-request';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import SanitizeModuleListCommand from '@cardstack/boxel-host/commands/sanitize-module-list';
@@ -56,7 +56,7 @@ export default class ListingCreateCommand extends Command<
   description = 'Create a catalog listing for an example card';
 
   private async getCatalogRealm(): Promise<string> {
-    const { urls } = await new GetCatalogRealmUrlsCommand(
+    const { realmIdentifiers: urls } = await new GetCatalogRealmIdentifiersCommand(
       this.commandContext,
     ).execute();
     let catalogRealm = urls.find((realm: string) =>
@@ -81,9 +81,9 @@ export default class ListingCreateCommand extends Command<
   private async sanitizeModuleList(
     modulesToCreate: Iterable<string>,
   ): Promise<string[]> {
-    const { moduleUrls } = await new SanitizeModuleListCommand(
+    const { moduleIdentifiers: moduleUrls } = await new SanitizeModuleListCommand(
       this.commandContext,
-    ).execute({ moduleUrls: Array.from(modulesToCreate) });
+    ).execute({ moduleIdentifiers: Array.from(modulesToCreate) });
     return moduleUrls;
   }
 
@@ -248,9 +248,9 @@ export default class ListingCreateCommand extends Command<
     moduleUrl: string, // the module URL of the card type being listed
     codeRef: ResolvedCodeRef, // the specific export being listed
   ): Promise<Spec[]> {
-    const { realmUrl: resourceRealmUrl } = await new GetRealmOfUrlCommand(
+    const { realmIdentifier: resourceRealmUrl } = await new GetRealmOfResourceIdentifierCommand(
       this.commandContext,
-    ).execute({ url: resourceUrl });
+    ).execute({ resourceIdentifier: resourceUrl });
     const resourceRealm = resourceRealmUrl || targetRealm;
     const depUrl = `${resourceRealm}_dependencies?url=${encodeURIComponent(resourceUrl)}`;
     const { ok, body: jsonApiResponse } = await new AuthedFetchCommand(

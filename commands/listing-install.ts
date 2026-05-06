@@ -55,9 +55,9 @@ export default class ListingInstallCommand extends Command<
   ): Promise<BaseCommandModule.ListingInstallResult> {
     let { realm, listing: listingInput } = input;
 
-    let { realmUrl } = await new ValidateRealmCommand(
+    let { realmIdentifier: realmUrl } = await new ValidateRealmCommand(
       this.commandContext,
-    ).execute({ realmUrl: realm });
+    ).execute({ realmIdentifier: realm });
 
     // this is intentionally to type because base command cannot interpret Listing type from catalog
     const listing = listingInput as Listing;
@@ -116,7 +116,7 @@ export default class ListingInstallCommand extends Command<
         let { sourceCard } = copyInstanceMeta;
         let { document: doc } = await new FetchCardJsonCommand(
           this.commandContext,
-        ).execute({ url: sourceCard.id });
+        ).execute({ cardIdentifier: sourceCard.id });
         if (!doc || !('data' in doc)) {
           throw new Error('We are only expecting single documents returned');
         }
@@ -135,7 +135,7 @@ export default class ListingInstallCommand extends Command<
     try {
       ({ results: atomicResults } = await new ExecuteAtomicOperationsCommand(
         this.commandContext,
-      ).execute({ realmUrl, operations }));
+      ).execute({ realmIdentifier: realmUrl, operations }));
     } catch (e: any) {
       if (
         typeof e?.message === 'string' &&
