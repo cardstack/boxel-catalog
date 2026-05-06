@@ -1,0 +1,73 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "http://localhost:4201/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Wine Bottle",
+      "summary": "The WineBottle definition models a wine bottle with detailed attributes such as producer, varietal, region, wine type, vintage year, purchase and current value, score, bottles remaining, liquid color, and producer URL. It includes multiple presentation components: an isolated detailed view with a wine glass visualization and drinking window indicator; an embedded compact card summarizing key details; a fitted view optimized for display size; and an atom component for minimal inline display. Its primary purpose is to represent and visualize wine bottle information within a digital cellar or collection interface, providing both detailed and summary views with visual and data-driven elements.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Tag/card"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/4e161565-4a7c-4464-8294-372d3b9a93fd"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../WineBottle/opus-one-2018"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "http://localhost:4201/catalog/Category/food-cooking"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/winebottle-5d3f581f.png"
+        }
+      }
+    }
+  }
+}
