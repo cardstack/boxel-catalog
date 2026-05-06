@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WineBottle",
+        "module": "../wine-bottle"
+      },
+      "readMe": "# WineBottle\n\n## Summary\n\nThe `WineBottle` spec is a card that represents a wine bottle in a wine cellar. It includes various fields such as the producer, varietal, region, wine type, vintage, purchase date, drinking window, purchase price, current value, score, bottles remaining, liquid color, producer URL, and a label image.\n\n## Import\n\n```javascript\nimport { WineBottle } from '../wine-bottle';\n```\n\n## Usage as a Field\n\nTo use the `WineBottle` spec as a field within a consuming card or field, you can include it as follows:\n\n```javascript\nimport { CardDef, contains, linksTo } from 'https://cardstack.com/base/card-api';\nimport { WineBottle } from '../wine-bottle';\n\nexport class MyCard extends CardDef {\n  @field wines = contains(WineBottle, {\n    configuration: {\n      presentation: 'grid',\n      gridColumns: 3,\n    },\n  });\n}\n```\n\nIn this example, the `wines` field is a `contains` relationship that includes the `WineBottle` spec. The `configuration` object provides additional options for how the `WineBottle` cards should be displayed, such as a grid layout with 3 columns.\n\n## Template Usage\n\nTo use the `WineBottle` spec in a template within a consuming card or field, you can access its fields like this:\n\n```handlebars\n<@fields.wines as |wine|>\n  <WineBottle @model={{wine}} />\n</@fields.wines>\n```\n\nThis will render a `WineBottle` component for each wine bottle in the `wines` field, passing the individual wine bottle data as the `@model` argument.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Wine Bottle",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

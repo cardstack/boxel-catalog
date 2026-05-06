@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "producer": "Dom Pérignon",
+      "varietal": "Champagne (Chardonnay/Pinot Noir)",
+      "region": "Champagne, France",
+      "wineType": "sparkling",
+      "vintage": { "value": 2013 },
+      "purchaseDate": "2019-12-21",
+      "drinkingWindow": { "start": "2024-01-01", "end": "2038-12-31" },
+      "purchasePrice": { "amount": 220, "currency": { "code": "USD" } },
+      "currentValue": { "amount": 280, "currency": { "code": "USD" } },
+      "score": 96,
+      "bottlesRemaining": 5,
+      "liquidColor": "#E8C547",
+      "producerUrl": "https://www.domperignon.com/",
+      "cardInfo": {
+        "name": "2013 Dom Pérignon",
+        "summary": "Vintage Champagne — toasty brioche, citrus zest, chalk minerality."
+      }
+    },
+    "relationships": {
+      "label": { "links": { "self": null } }
+    },
+    "meta": { "adoptsFrom": { "module": "../wine-bottle", "name": "WineBottle" } }
+  }
+}
