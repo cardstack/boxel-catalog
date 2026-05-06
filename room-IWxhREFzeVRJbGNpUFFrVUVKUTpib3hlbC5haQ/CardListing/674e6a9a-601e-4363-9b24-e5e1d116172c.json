@@ -1,0 +1,78 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Homework Grader",
+      "summary": "The HomeworkGrader module defines a comprehensive card component designed to facilitate the assessment and grading of homework assignments. It includes structured fields for questions, grading criteria, and feedback, supporting various embedded or standalone display modes. The primary purpose is to enable educators to input student responses, apply grading logic, view score breakdowns, and provide feedback within an interactive interface. It integrates AI-assisted grading capabilities, real-time updates, and customizable layouts, making it suitable for use in educational workflows that require detailed scoring, feedback, and progress visualization.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/ai"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/5455e5c1-1d62-41c9-ae39-f2ff09da9b83"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../HomeworkGrader/67432ef8-6493-4ad7-aa3f-335d24e7213f"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../HomeworkGrader/b0092d07-cc3e-405d-9fe4-c9542d7397b2"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/teaching-instruction"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/homeworkgrader-910241a3.png"
+        }
+      }
+    }
+  }
+}
