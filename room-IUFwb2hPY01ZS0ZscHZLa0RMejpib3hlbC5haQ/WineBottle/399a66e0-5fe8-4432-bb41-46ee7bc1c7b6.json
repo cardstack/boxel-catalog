@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WineBottle",
+        "module": "../wine-bottle"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "score": 96,
+      "region": "Napa Valley, USA",
+      "vintage": {
+        "value": 2018
+      },
+      "cardInfo": {
+        "name": "2018 Opus One",
+        "notes": null,
+        "summary": "Flagship Napa Bordeaux blend, Mondavi/Rothschild collaboration.",
+        "cardThumbnailURL": null
+      },
+      "producer": "Opus One",
+      "varietal": "Cabernet Sauvignon Blend",
+      "wineType": "red",
+      "liquidColor": "#4A0E1A",
+      "producerUrl": "https://en.opusonewinery.com/",
+      "currentValue": {
+        "amount": 525,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "purchaseDate": "2020-11-12",
+      "purchasePrice": {
+        "amount": 350,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "drinkingWindow": {
+        "end": "2045-12-31",
+        "start": "2025-01-01"
+      },
+      "bottlesRemaining": 6
+    },
+    "relationships": {
+      "label": {
+        "links": {
+          "self": "../10992267_square.webp"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

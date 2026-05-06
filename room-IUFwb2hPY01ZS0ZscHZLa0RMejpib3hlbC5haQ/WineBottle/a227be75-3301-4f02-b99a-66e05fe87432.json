@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WineBottle",
+        "module": "../wine-bottle"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "score": 99,
+      "region": "Margaux, Bordeaux",
+      "vintage": {
+        "value": 2015
+      },
+      "cardInfo": {
+        "name": "2015 Château Margaux",
+        "notes": null,
+        "summary": "Premier Grand Cru Classé. Considered a wine of the century.",
+        "cardThumbnailURL": null
+      },
+      "producer": "Château Margaux",
+      "varietal": "Cabernet Sauvignon Blend",
+      "wineType": "red",
+      "liquidColor": "#5C1626",
+      "producerUrl": "https://www.chateau-margaux.com/",
+      "currentValue": {
+        "amount": 1450,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "purchaseDate": "2018-03-22",
+      "purchasePrice": {
+        "amount": 850,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "drinkingWindow": {
+        "end": "2055-12-31",
+        "start": "2028-01-01"
+      },
+      "bottlesRemaining": 2
+    },
+    "relationships": {
+      "label": {
+        "links": {
+          "self": "../2%2084%20C01679%20Cha%CC%82teau%20Margaux,%201er%20Cru%20Classe%CC%81,%20Margaux%20copy.jpg"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

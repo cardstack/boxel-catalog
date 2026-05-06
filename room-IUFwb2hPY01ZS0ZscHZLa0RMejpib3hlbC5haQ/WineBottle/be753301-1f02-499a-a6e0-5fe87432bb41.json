@@ -1,0 +1,64 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WineBottle",
+        "module": "../wine-bottle"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "score": 91,
+      "region": "Marlborough, New Zealand",
+      "vintage": {
+        "value": 2022
+      },
+      "cardInfo": {
+        "name": "2022 Cloudy Bay Sauvignon Blanc",
+        "notes": null,
+        "summary": "Marlborough benchmark — passionfruit, gooseberry, crisp acidity.",
+        "cardThumbnailURL": null
+      },
+      "producer": "Cloudy Bay",
+      "varietal": "Sauvignon Blanc",
+      "wineType": "white",
+      "liquidColor": "#EDE6B0",
+      "producerUrl": "https://www.cloudybay.co.nz/",
+      "currentValue": {
+        "amount": 34,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "purchaseDate": "2023-04-08",
+      "purchasePrice": {
+        "amount": 32,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "drinkingWindow": {
+        "end": "2026-12-31",
+        "start": "2023-01-01"
+      },
+      "bottlesRemaining": 9
+    },
+    "relationships": {
+      "label": {
+        "links": {
+          "self": "../CloudyBaySauvignonBlanc.webp"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

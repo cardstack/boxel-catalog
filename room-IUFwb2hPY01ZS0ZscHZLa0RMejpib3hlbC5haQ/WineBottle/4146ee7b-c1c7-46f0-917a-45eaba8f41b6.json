@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "producer": "Pascal Jolivet",
+      "varietal": "Sancerre (Sauvignon Blanc)",
+      "region": "Loire Valley, France",
+      "wineType": "white",
+      "vintage": { "value": 2022 },
+      "purchaseDate": "2023-08-19",
+      "drinkingWindow": { "start": "2023-01-01", "end": "2027-12-31" },
+      "purchasePrice": { "amount": 35, "currency": { "code": "EUR" } },
+      "currentValue": { "amount": 38, "currency": { "code": "EUR" } },
+      "score": 92,
+      "bottlesRemaining": 8,
+      "liquidColor": "#F0E8C5",
+      "producerUrl": "https://www.pascal-jolivet.com/",
+      "cardInfo": {
+        "name": "2022 Pascal Jolivet Sancerre",
+        "summary": "Flinty Loire Sauvignon — citrus, white peach, chalky minerality."
+      }
+    },
+    "relationships": {
+      "label": { "links": { "self": null } }
+    },
+    "meta": { "adoptsFrom": { "module": "../wine-bottle", "name": "WineBottle" } }
+  }
+}
