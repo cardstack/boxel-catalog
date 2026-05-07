@@ -1,0 +1,55 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Blackjack",
+        "module": "../blackjack"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "gameState": "betting",
+      "casinoName": null,
+      "currentBet": 500,
+      "dealerHand": [],
+      "playerHand": [],
+      "statistics": {
+        "wins": 0,
+        "losses": 1,
+        "earnings": -500
+      },
+      "dealerScore": null,
+      "gameMessage": "Place your bet and deal",
+      "playerChips": 4500,
+      "playerScore": null
+    },
+    "relationships": {
+      "dealer": {
+        "links": {
+          "self": "../Player/39a74ef1-e9d3-432d-824c-29fe17c05a72"
+        }
+      },
+      "player": {
+        "links": {
+          "self": "../Player/ad39a74e-f1e9-4333-adc2-4c29fe17c05a"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
