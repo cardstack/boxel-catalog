@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BeatPatternCard",
+        "module": "../beat-maker"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "bpm": 130,
+      "genre": "Breakbeat",
+      "creator": "Beat Maker Studio",
+      "pattern": {
+        "clap": "[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]",
+        "kick": "[true,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false]",
+        "name": "Breakbeat",
+        "crash": "[true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]",
+        "hihat": "[false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true]",
+        "snare": "[false,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false]",
+        "openhat": "[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]"
+      },
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "patternName": "Breakbeat",
+      "cardDescription": "Classic breakbeat pattern with syncopated kick and snare placement"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
