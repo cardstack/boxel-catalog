@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Blackjack",
+        "module": "../blackjack"
+      },
+      "readMe": "# Blackjack Card\n\n## Summary\nThe Blackjack card is a card-based game component that allows users to play a classic game of Blackjack. It manages the game state, player and dealer actions, card drawing, and score calculations.\n\n## Import\n```javascript\nimport { Blackjack } from '../blackjack';\n```\n\n## Usage as a Field\nTo use the Blackjack card as a field within a consuming card or field, you can include it like this:\n\n```javascript\n@field blackjack = contains(Blackjack);\n```\n\nThis will add the Blackjack card as a field that can be displayed and interacted with.\n\n## Template Usage\nWithin the template of the consuming card or field, you can render the Blackjack card like this:\n\n```handlebars\n<@fields.blackjack @model={{this.blackjack}} />\n```\n\nThe `@model` argument should be bound to the `blackjack` field defined in the card or field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Blackjack",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
