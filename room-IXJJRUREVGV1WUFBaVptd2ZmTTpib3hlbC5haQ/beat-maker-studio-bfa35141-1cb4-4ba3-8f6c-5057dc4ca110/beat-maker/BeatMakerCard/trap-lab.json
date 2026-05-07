@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "bpm": 140,
+      "pattern": "Trap-Pattern",
+      "instrumentKit": "Trap Kit",
+      "swing": 15,
+      "masterVolume": 85
+    },
+    "relationships": {
+      "currentPattern": {
+        "links": { "self": "../BeatPatternCard/trap-pattern" }
+      },
+      "currentKit": {
+        "links": { "self": "../DrumKitCard/trap-kit" }
+      },
+      "availableKits.0": { "links": { "self": "../DrumKitCard/808-analog-kit" } },
+      "availableKits.1": { "links": { "self": "../DrumKitCard/trap-kit" } },
+      "availableKits.2": { "links": { "self": "../DrumKitCard/house-kit" } },
+      "availableKits.3": { "links": { "self": "../DrumKitCard/techno-kit" } },
+      "availableKits.4": { "links": { "self": "../DrumKitCard/jazz-kit" } },
+      "availableKits.5": { "links": { "self": "../DrumKitCard/rock-kit" } },
+      "availablePatterns.0": { "links": { "self": "../BeatPatternCard/basic-4-4-beat" } },
+      "availablePatterns.1": { "links": { "self": "../BeatPatternCard/trap-pattern" } },
+      "availablePatterns.2": { "links": { "self": "../BeatPatternCard/house-groove" } },
+      "availablePatterns.3": { "links": { "self": "../BeatPatternCard/breakbeat" } },
+      "availablePatterns.4": { "links": { "self": "../BeatPatternCard/jazz-swing" } },
+      "availablePatterns.5": { "links": { "self": "../BeatPatternCard/rock-beat" } },
+      "cardInfo.cardThumbnail": { "links": { "self": null } },
+      "cardInfo.theme": { "links": { "self": null } }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../beat-maker",
+        "name": "BeatMakerCard"
+      }
+    }
+  }
+}

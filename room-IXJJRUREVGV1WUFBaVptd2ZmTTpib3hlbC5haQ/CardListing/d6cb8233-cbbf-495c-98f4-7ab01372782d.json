@@ -1,0 +1,78 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Beat Maker",
+      "summary": "The BeatMakerCard defines an interactive musical instrument interface that enables users to create, sequence, and customize drum patterns and drum kits. Its primary purpose is to serve as a 16-step step sequencer allowing real-time control over rhythm patterns, instrument sounds, tempos, swing, and volume levels. It supports selection and management of various drum kits, pattern presets, pattern editing (including step toggling, clearing, filling, and randomizing), and playback controls for looping beats. The component provides visual feedback and controls for pattern sequencing, kit management, and tempo adjustments, facilitating dynamic rhythm production in a modular card interface.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/app"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/bb955727-ab6d-4233-935e-f11556b309ff"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../beat-maker-studio-bfa35141-1cb4-4ba3-8f6c-5057dc4ca110/beat-maker/BeatMakerCard/rhythm-studio"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../beat-maker-studio-bfa35141-1cb4-4ba3-8f6c-5057dc4ca110/beat-maker/BeatMakerCard/trap-lab"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/content-creation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/beatmakercard-22848ae2.png"
+        }
+      }
+    }
+  }
+}
