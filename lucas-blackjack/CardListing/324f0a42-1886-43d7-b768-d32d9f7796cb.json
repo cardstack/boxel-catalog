@@ -1,0 +1,108 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Blackjack Cardgame Definition",
+      "summary": "The Blackjack module defines a card-based game interface and logic for playing Blackjack within the app. It provides a highly interactive, visually rich user interface featuring animated cards, score displays, betting controls, and game outcome overlays. The core purpose is to facilitate a Blackjack game experience, including handling game states, managing player and dealer hands, calculating scores, implementing betting mechanics, and recording game results. It is designed for seamless integration into a larger card or casino-themed application, supporting both wide and compact display formats.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/41bcf971-c05e-443a-8e2a-962aa652623b"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/58d97830-12ac-41bc-b971-c05ef43a8e2a"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/6458d978-3012-4c41-bcf9-71c05ef43a8e"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/5c6458d9-7830-42ac-81bc-f971c05ef43a"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/d9783012-ac41-4cf9-b1c0-5ef43a8e2a96"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/3012ac41-bcf9-41c0-9ef4-3a8e2a962aa6"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/783012ac-41bc-4971-805e-f43a8e2a962a"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/915c6458-d978-4012-ac41-bcf971c05ef4"
+        }
+      },
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/game"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Blackjack/be0fd885-7672-4379-a001-ea8611da2ec2"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/gaming"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/blackjack-e0c034ab.png"
+        }
+      }
+    }
+  }
+}

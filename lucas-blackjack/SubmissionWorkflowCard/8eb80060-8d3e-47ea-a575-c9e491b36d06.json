@@ -1,0 +1,52 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "SubmissionWorkflowCard",
+        "module": "https://app.boxel.ai/catalog/submission-workflow-card/submission-workflow-card"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Submit Blackjack Cardgame Definition",
+      "roomId": "!jOmYUoczjzniNnxJDr:boxel.ai",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "branchName": "room-IWpPbVlVb2N6anpuaU5ueEpEcjpib3hlbC5haQ/blackjack-cardgame-definition",
+      "failedStep": null,
+      "lintErrors": [],
+      "lintStatus": "passed",
+      "submittedBy": "@lucas:boxel.ai",
+      "participants": [],
+      "lintFixedCount": 0,
+      "catalogRealmUrl": "https://app.boxel.ai/catalog/",
+      "prCreationError": null
+    },
+    "relationships": {
+      "prCard": {
+        "links": {
+          "self": "https://app.boxel.ai/submissions/PrCard/e7d5b10a-1437-4f99-83ef-922cd9594c85"
+        }
+      },
+      "listing": {
+        "links": {
+          "self": "../CardListing/324f0a42-1886-43d7-b768-d32d9f7796cb"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

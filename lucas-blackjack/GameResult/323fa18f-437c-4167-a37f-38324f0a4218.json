@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "outcome": {
+        "outcome": {
+          "label": "Lose"
+        }
+      },
+      "ref": {
+        "module": "https://app.boxel.ai/lucas/blackjack/blackjack",
+        "name": "Blackjack"
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "game": {
+        "links": {
+          "self": "../Blackjack/be0fd885-7672-4379-a001-ea8611da2ec2"
+        }
+      },
+      "outcome.player": {
+        "links": {
+          "self": "../Player/ad39a74e-f1e9-4333-adc2-4c29fe17c05a"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../game-result",
+        "name": "GameResult"
+      }
+    }
+  }
+}
