@@ -641,7 +641,7 @@ export default class ListingCreateCommand extends Command<
 
     await new GenerateThumbnailCommand(this.commandContext).execute({
       prompt,
-      targetRealmUrl: targetRealm,
+      targetRealmIdentifier: targetRealm,
       targetPath: 'ListingThumbnails',
       targetCardId: listing.id,
       cardName: codeRef.name,
