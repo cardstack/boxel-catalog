@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BeatMakerCard",
+        "module": "../beat-maker-studio-bfa35141-1cb4-4ba3-8f6c-5057dc4ca110/beat-maker/beat-maker"
+      },
+      "readMe": "# BeatMakerCard\n\n## Summary\nThe BeatMakerCard is a card definition that provides a full-featured beat making and drum sequencing studio. It allows users to create and customize drum patterns, select from a library of drum kits, and control various parameters like BPM, swing, and master volume.\n\n## Import\n```javascript\nimport { BeatMakerCard } from '../beat-maker-studio-bfa35141-1cb4-4ba3-8f6c-5057dc4ca110/beat-maker/beat-maker';\n```\n\n## Usage as a Field\nYou can use the BeatMakerCard as a field within a consuming card or field. This will embed the full beat making studio experience into the parent component.\n\n```javascript\n@field beatMaker = contains(BeatMakerCard);\n```\n\n## Template Usage\nInside the template of a consuming card or field, you can display the BeatMakerCard by referencing the field:\n\n```htmlbars\n<@fields.beatMaker />\n```\n\nThis will render the full BeatMakerCard interface, including the header, sequencer, and controls.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Beat Maker",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

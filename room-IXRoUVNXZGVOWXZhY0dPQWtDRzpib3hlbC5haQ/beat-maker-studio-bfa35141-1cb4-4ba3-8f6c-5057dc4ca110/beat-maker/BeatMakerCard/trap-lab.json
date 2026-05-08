@@ -1,0 +1,106 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BeatMakerCard",
+        "module": "../beat-maker"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "bpm": 140,
+      "swing": 15,
+      "pattern": "Trap-Pattern",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "masterVolume": 85,
+      "instrumentKit": "Trap Kit"
+    },
+    "relationships": {
+      "currentKit": {
+        "links": {
+          "self": "../DrumKitCard/trap-kit"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "currentPattern": {
+        "links": {
+          "self": "../BeatPatternCard/trap-pattern"
+        }
+      },
+      "availableKits.0": {
+        "links": {
+          "self": "../DrumKitCard/808-analog-kit"
+        }
+      },
+      "availableKits.1": {
+        "links": {
+          "self": "../DrumKitCard/trap-kit"
+        }
+      },
+      "availableKits.2": {
+        "links": {
+          "self": "../DrumKitCard/house-kit"
+        }
+      },
+      "availableKits.3": {
+        "links": {
+          "self": "../DrumKitCard/techno-kit"
+        }
+      },
+      "availableKits.4": {
+        "links": {
+          "self": "../DrumKitCard/jazz-kit"
+        }
+      },
+      "availableKits.5": {
+        "links": {
+          "self": "../DrumKitCard/rock-kit"
+        }
+      },
+      "availablePatterns.0": {
+        "links": {
+          "self": "../BeatPatternCard/basic-4-4-beat"
+        }
+      },
+      "availablePatterns.1": {
+        "links": {
+          "self": "../BeatPatternCard/trap-pattern"
+        }
+      },
+      "availablePatterns.2": {
+        "links": {
+          "self": "../BeatPatternCard/house-groove"
+        }
+      },
+      "availablePatterns.3": {
+        "links": {
+          "self": "../BeatPatternCard/breakbeat"
+        }
+      },
+      "availablePatterns.4": {
+        "links": {
+          "self": "../BeatPatternCard/jazz-swing"
+        }
+      },
+      "availablePatterns.5": {
+        "links": {
+          "self": "../BeatPatternCard/rock-beat"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

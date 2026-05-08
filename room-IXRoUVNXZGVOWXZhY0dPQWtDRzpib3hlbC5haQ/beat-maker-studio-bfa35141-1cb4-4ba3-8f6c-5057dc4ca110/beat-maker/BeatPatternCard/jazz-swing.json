@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BeatPatternCard",
+        "module": "../beat-maker"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "bpm": 110,
+      "genre": "Jazz",
+      "creator": "Beat Maker Studio",
+      "pattern": {
+        "clap": "[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]",
+        "kick": "[true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false]",
+        "name": "Jazz Swing",
+        "crash": "[true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]",
+        "hihat": "[true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false]",
+        "snare": "[false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false]",
+        "openhat": "[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true]"
+      },
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "patternName": "Jazz Swing",
+      "cardDescription": "Laid-back jazz pattern with subtle kick and brushed snare feel"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

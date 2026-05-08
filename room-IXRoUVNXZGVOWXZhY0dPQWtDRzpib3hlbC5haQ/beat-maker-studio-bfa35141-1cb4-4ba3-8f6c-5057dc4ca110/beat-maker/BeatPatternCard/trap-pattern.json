@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BeatPatternCard",
+        "module": "../beat-maker"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "bpm": 140,
+      "genre": "Trap",
+      "creator": "Beat Maker Studio",
+      "pattern": {
+        "clap": "[false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false]",
+        "kick": "[true,false,false,true,false,false,true,false,false,false,true,false,false,true,false,false]",
+        "name": "Trap Pattern",
+        "crash": "[true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false]",
+        "hihat": "[true,false,true,true,false,true,true,false,true,false,true,true,false,true,true,false]",
+        "snare": "[false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false]",
+        "openhat": "[false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true]"
+      },
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "patternName": "Trap Pattern",
+      "cardDescription": "Modern trap beat with syncopated kicks and rapid hi-hat rolls"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
