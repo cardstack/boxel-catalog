@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "General Field",
+      "cardDescription": "A general field that can contain any field type.",
+      "specType": "field",
+      "ref": {
+        "module": "@cardstack/base/card-api",
+        "name": "FieldDef"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

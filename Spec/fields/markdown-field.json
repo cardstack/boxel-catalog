@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Markdown Field",
+      "cardDescription": "A field that captures markdown values",
+      "specType": "field",
+      "ref": {
+        "module": "@cardstack/base/markdown",
+        "name": "default"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
