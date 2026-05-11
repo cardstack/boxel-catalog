@@ -33,7 +33,13 @@ runs:
 
     - name: Install boxel-cli
       shell: bash
-      run: npm install -g @cardstack/boxel-cli
+      run: |
+        npm install -g pnpm
+        export PNPM_HOME="$HOME/.local/share/pnpm"
+        mkdir -p "$PNPM_HOME"
+        echo "PNPM_HOME=$PNPM_HOME" >> "$GITHUB_ENV"
+        echo "$PNPM_HOME" >> "$GITHUB_PATH"
+        PATH="$PNPM_HOME:$PATH" pnpm add -g @cardstack/boxel-cli
 
     - name: Create boxel-cli profile
       shell: bash
