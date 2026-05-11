@@ -10,7 +10,7 @@ module('Integration | catalog field specs (moved from base)', function (hooks) {
   setupBaseRealm(hooks);
   setupCatalogRealm(hooks);
 
-  test('every field spec in the catalog has correct shape and uses @cardstack/base/ refs', async function (assert) {
+  test('every field spec in the catalog has correct shape and uses https://cardstack.com/base/ refs', async function (assert) {
     let response = await fetch(`${catalogRealmURL}_search`, {
       method: 'QUERY',
       headers: {
@@ -19,7 +19,7 @@ module('Integration | catalog field specs (moved from base)', function (hooks) {
       },
       body: JSON.stringify({
         filter: {
-          on: { module: '@cardstack/base/spec', name: 'Spec' },
+          on: { module: 'https://cardstack.com/base/spec', name: 'Spec' },
           every: [{ eq: { specType: 'field' } }],
         },
       }),
@@ -41,8 +41,8 @@ module('Integration | catalog field specs (moved from base)', function (hooks) {
       assert.strictEqual(attrs.specType, 'field', `${id}: specType is "field"`);
       assert.ok(
         typeof ref?.module === 'string' &&
-          ref.module.startsWith('@cardstack/base/'),
-        `${id}: ref.module uses @cardstack/base/ form (got ${ref?.module})`,
+          ref.module.startsWith('https://cardstack.com/base/'),
+        `${id}: ref.module uses https://cardstack.com/base/ form (got ${ref?.module})`,
       );
       assert.ok(
         typeof ref?.name === 'string' && ref.name.length > 0,

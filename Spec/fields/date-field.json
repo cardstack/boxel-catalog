@@ -5,14 +5,14 @@
       "cardTitle": "Date Field",
       "cardDescription": "A field that captures date values",
       "ref": {
-        "module": "@cardstack/base/date",
+        "module": "https://cardstack.com/base/date",
         "name": "default"
       },
       "specType": "field"
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

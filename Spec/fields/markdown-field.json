@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures markdown values",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/markdown",
+        "module": "https://cardstack.com/base/markdown",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

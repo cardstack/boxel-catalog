@@ -6,13 +6,13 @@
       "cardDescription": "A datetime field that captures a precise timestamp",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/datetime-stamp",
+        "module": "https://cardstack.com/base/datetime-stamp",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

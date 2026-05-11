@@ -6,13 +6,13 @@
       "cardDescription": "A field that can capture string values in a multi-line input format. Useful for capturing a large body of text.",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/text-area",
+        "module": "https://cardstack.com/base/text-area",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

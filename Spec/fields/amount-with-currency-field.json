@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures a numeric amount paired with a currency",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/amount-with-currency",
+        "module": "https://cardstack.com/base/amount-with-currency",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

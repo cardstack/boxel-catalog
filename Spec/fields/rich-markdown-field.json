@@ -6,13 +6,13 @@
       "cardDescription": "A markdown field with rich-text editing support",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/rich-markdown",
+        "module": "https://cardstack.com/base/rich-markdown",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures a brand logo (used by the brand-guide system)",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/brand-logo",
+        "module": "https://cardstack.com/base/brand-logo",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures a CSS value (e.g. length, color, keyword)",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/css-value",
+        "module": "https://cardstack.com/base/css-value",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

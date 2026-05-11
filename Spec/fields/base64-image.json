@@ -6,13 +6,13 @@
       "cardDescription": "A field capable of representing an image via base64 encoding.",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/base64-image",
+        "module": "https://cardstack.com/base/base64-image",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

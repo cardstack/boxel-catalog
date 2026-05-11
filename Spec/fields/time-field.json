@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures a time of day",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/time",
+        "module": "https://cardstack.com/base/time",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

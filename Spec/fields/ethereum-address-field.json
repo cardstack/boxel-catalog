@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures checksum ethereum addresses",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/ethereum-address",
+        "module": "https://cardstack.com/base/ethereum-address",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

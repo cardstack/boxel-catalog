@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures a brand functional color palette (used by the brand-guide system)",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/brand-functional-palette",
+        "module": "https://cardstack.com/base/brand-functional-palette",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

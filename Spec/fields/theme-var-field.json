@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures a structured theme variable (used by the brand-guide system)",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/structured-theme-variables",
+        "module": "https://cardstack.com/base/structured-theme-variables",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }
