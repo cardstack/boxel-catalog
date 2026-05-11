@@ -33,7 +33,9 @@ runs:
 
     - name: Install boxel-cli
       shell: bash
-      run: npm install -g @cardstack/boxel-cli
+      run: |
+        npm install -g pnpm
+        pnpm add -g @cardstack/boxel-cli
 
     - name: Create boxel-cli profile
       shell: bash
