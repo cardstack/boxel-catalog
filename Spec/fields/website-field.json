@@ -6,13 +6,13 @@
       "cardDescription": "A field that validates website addresses and provides a suitable editor.",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/website",
+        "module": "https://cardstack.com/base/website",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

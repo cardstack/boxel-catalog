@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures a currency (symbol, code, name)",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/currency",
+        "module": "https://cardstack.com/base/currency",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures a value from a configured set of options",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/enum",
+        "module": "https://cardstack.com/base/enum",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

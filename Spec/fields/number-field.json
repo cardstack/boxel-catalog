@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures number values",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/number",
+        "module": "https://cardstack.com/base/number",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }

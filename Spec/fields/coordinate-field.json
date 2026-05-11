@@ -6,13 +6,13 @@
       "cardDescription": "A field that captures a 2D coordinate (x, y)",
       "specType": "field",
       "ref": {
-        "module": "@cardstack/base/coordinate",
+        "module": "https://cardstack.com/base/coordinate",
         "name": "default"
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/spec",
+        "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
     }
