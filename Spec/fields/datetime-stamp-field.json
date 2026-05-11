@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Datetime Stamp Field",
+      "cardDescription": "A datetime field that captures a precise timestamp",
+      "specType": "field",
+      "ref": {
+        "module": "@cardstack/base/datetime-stamp",
+        "name": "default"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

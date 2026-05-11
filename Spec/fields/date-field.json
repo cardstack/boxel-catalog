@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Date Field",
+      "cardDescription": "A field that captures date values",
+      "ref": {
+        "module": "@cardstack/base/date",
+        "name": "default"
+      },
+      "specType": "field"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

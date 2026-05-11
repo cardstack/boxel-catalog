@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "String Field",
+      "cardDescription": "A field that captures string values",
+      "specType": "field",
+      "ref": {
+        "module": "@cardstack/base/card-api",
+        "name": "StringField"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
