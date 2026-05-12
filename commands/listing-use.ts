@@ -40,9 +40,9 @@ export default class ListingUseCommand extends Command<
 
     const listing = listingInput as Listing;
 
-    let { realmUrl } = await new ValidateRealmCommand(
+    let { realmIdentifier: realmUrl } = await new ValidateRealmCommand(
       this.commandContext,
-    ).execute({ realmUrl: realm });
+    ).execute({ realmIdentifier: realm });
 
     const specsToCopy = listing.specs ?? [];
     const specsWithoutFields = specsToCopy.filter(

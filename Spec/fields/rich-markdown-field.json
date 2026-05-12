@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Rich Markdown Field",
+      "cardDescription": "A markdown field with rich-text editing support",
+      "specType": "field",
+      "ref": {
+        "module": "https://cardstack.com/base/rich-markdown",
+        "name": "default"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Theme Var Field",
+      "cardDescription": "A field that captures a structured theme variable (used by the brand-guide system)",
+      "specType": "field",
+      "ref": {
+        "module": "https://cardstack.com/base/structured-theme-variables",
+        "name": "default"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

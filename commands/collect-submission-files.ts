@@ -251,7 +251,7 @@ export default class CollectSubmissionFilesCommand extends Command<
         if (thumbnailUrl && thumbnailPath && !seenPaths.has(thumbnailPath)) {
           seenPaths.add(thumbnailPath);
           let binary = await readBinaryFileCommand.execute({
-            url: thumbnailUrl,
+            fileIdentifier: thumbnailUrl,
           });
           filesWithContent.push({
             path: thumbnailPath,
@@ -337,7 +337,9 @@ export default class CollectSubmissionFilesCommand extends Command<
       }
       seenPaths.add(path);
       try {
-        let binary = await readBinaryFileCommand.execute({ url: fileDefUrl });
+        let binary = await readBinaryFileCommand.execute({
+          fileIdentifier: fileDefUrl,
+        });
         filesWithContent.push({
           path,
           content: binary.base64Content ?? '',
