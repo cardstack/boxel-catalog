@@ -265,7 +265,7 @@ export default class CollectSubmissionFilesCommand extends Command<
           }
           seenPaths.add(imagePath);
           let binary = await readBinaryFileCommand.execute({
-            url: imageUrl,
+            fileIdentifier: imageUrl,
           });
           filesWithContent.push({
             path: imagePath,
