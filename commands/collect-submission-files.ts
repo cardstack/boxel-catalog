@@ -13,8 +13,10 @@ import {
   type LooseSingleCardDocument,
   type Relationship,
 } from '@cardstack/runtime-common';
-import type { CopyInstanceMeta } from '@cardstack/runtime-common/catalog';
-import type { CopyModuleMeta } from '@cardstack/runtime-common/catalog';
+import type {
+  CopyInstanceMeta,
+  CopyModuleMeta,
+} from '@cardstack/runtime-common/catalog';
 
 import {
   CardDef,
@@ -60,10 +62,6 @@ export default class CollectSubmissionFilesCommand extends Command<
     input: CollectSubmissionFilesInput,
   ): Promise<FileCollectionResult> {
     let { listingId, listingRealm, accessibleRealms } = input;
-
-    if (!listingId || !listingRealm) {
-      throw new Error('Missing listingId or listingRealm');
-    }
 
     let files = await this.collectFiles(
       listingId,
@@ -121,6 +119,9 @@ export default class CollectSubmissionFilesCommand extends Command<
       knownRealmUrls.add(normalized);
       builder.resolver.addKnownRealmURL(new URL(normalized));
     }
+    let sortedKnownRealmUrls = [...knownRealmUrls].sort(
+      (a, b) => b.length - a.length,
+    );
 
     builder
       .addIf(listing.specs?.length > 0, (resolver: ListingPathResolver) =>
@@ -142,10 +143,7 @@ export default class CollectSubmissionFilesCommand extends Command<
       let path = fullUrl;
       // Try to strip any known realm URL prefix (longest match first
       // to handle nested realm paths correctly)
-      let sortedRealms = [...knownRealmUrls].sort(
-        (a, b) => b.length - a.length,
-      );
-      for (const realm of sortedRealms) {
+      for (const realm of sortedKnownRealmUrls) {
         if (path.startsWith(realm)) {
           path = path.slice(realm.length);
           break;
@@ -227,9 +225,10 @@ export default class CollectSubmissionFilesCommand extends Command<
           path: `${listing.id}.json`,
         });
 
-        // Resolve thumbnail URL before rewriting listing.json so we can
-        // rewrite absolute thumbnail references to the copied PR asset path.
-        let rawThumbnailUrl = extractThumbnailUrl(source.content);
+        // Resolve asset URLs before rewriting listing.json so we can rewrite
+        // absolute references to the copied PR asset paths.
+        let listingAssetUrls = extractListingAssetUrls(source.content);
+        let rawThumbnailUrl = listingAssetUrls.thumbnailUrl;
         let thumbnailUrl: string | undefined;
         let thumbnailPath: string | undefined;
         if (rawThumbnailUrl) {
@@ -237,6 +236,12 @@ export default class CollectSubmissionFilesCommand extends Command<
           thumbnailPath = toRepoRelativePath(thumbnailUrl, '');
           urlToRepoPath.set(thumbnailUrl, thumbnailPath);
         }
+        let imageAssets = listingAssetUrls.imageUrls.map((rawImageUrl) => {
+          let imageUrl = new URL(rawImageUrl, `${listing.id}.json`).href;
+          let imagePath = toRepoRelativePath(imageUrl, '');
+          urlToRepoPath.set(imageUrl, imagePath);
+          return { imageUrl, imagePath };
+        });
 
         filesWithContent.push({
           path,
@@ -250,6 +255,20 @@ export default class CollectSubmissionFilesCommand extends Command<
           });
           filesWithContent.push({
             path: thumbnailPath,
+            content: binary.base64Content ?? '',
+          });
+        }
+
+        for (const { imageUrl, imagePath } of imageAssets) {
+          if (seenPaths.has(imagePath)) {
+            continue;
+          }
+          seenPaths.add(imagePath);
+          let binary = await readBinaryFileCommand.execute({
+            fileIdentifier: imageUrl,
+          });
+          filesWithContent.push({
+            path: imagePath,
             content: binary.base64Content ?? '',
           });
         }
@@ -416,14 +435,38 @@ function isFileMetaRelationship(relationship: Relationship): boolean {
   return !!data && typeof data === 'object' && data.type === 'file-meta';
 }
 
-function extractThumbnailUrl(listingJsonContent: string): string | null {
+function extractListingAssetUrls(listingJsonContent: string): {
+  thumbnailUrl: string | null;
+  imageUrls: string[];
+} {
   try {
     let doc = JSON.parse(listingJsonContent) as Record<string, any>;
-    let thumbnailRel = doc?.data?.relationships?.['cardInfo.cardThumbnail'];
-    let url = thumbnailRel?.links?.self;
-    return typeof url === 'string' && url.trim() ? url.trim() : null;
+    let relationships = doc?.data?.relationships as
+      | Record<string, { links?: { self?: unknown } }>
+      | undefined;
+    let thumbnailRel = relationships?.['cardInfo.cardThumbnail'];
+    let thumbnailUrl = thumbnailRel?.links?.self;
+    let imageUrls = Object.entries(relationships ?? {})
+      .filter(([key]) => key === 'images' || key.startsWith('images.'))
+      .map(([, rel]) => rel?.links?.self)
+      .filter(
+        (url): url is string =>
+          typeof url === 'string' && url.trim().length > 0,
+      )
+      .map((url) => url.trim());
+
+    return {
+      thumbnailUrl:
+        typeof thumbnailUrl === 'string' && thumbnailUrl.trim()
+          ? thumbnailUrl.trim()
+          : null,
+      imageUrls,
+    };
   } catch {
-    return null;
+    return {
+      thumbnailUrl: null,
+      imageUrls: [],
+    };
   }
 }
 
