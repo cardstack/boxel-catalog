@@ -1,0 +1,108 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Mortgage Calculator",
+      "summary": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/calculator"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/e1781813-e953-41af-a4ec-da635e0d776a"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/c6d35486-e178-4813-a953-71afa4ecda63"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/d35486e1-7818-43e9-9371-afa4ecda635e"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/1813e953-71af-44ec-9a63-5e0d776ac798"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/86e17818-13e9-4371-afa4-ecda635e0d77"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/781813e9-5371-4fa4-acda-635e0d776ac7"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/5486e178-1813-4953-b1af-a4ecda635e0d"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/51753bc8-c923-47a0-b8b5-cf00f2f51aaf"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/f3245c7a-1275-4c95-97eb-b9b7e9205658-5f4237ac.png"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../MortgageCalculator/f3245c7a-1275-4c95-97eb-b9b7e9205658"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/accounting-finance"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/mortgagecalculator-ee7bac61.png"
+        }
+      }
+    }
+  }
+}
