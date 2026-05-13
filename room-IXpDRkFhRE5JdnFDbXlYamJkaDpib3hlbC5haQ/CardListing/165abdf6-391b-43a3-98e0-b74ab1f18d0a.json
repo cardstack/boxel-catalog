@@ -1,0 +1,78 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Mortgage Calculator",
+      "summary": "The MortgageCalculator module defines a comprehensive mortgage calculation card with multiple display formats, including isolated, fitted, atom, and modal views. It calculates key mortgage metrics such as loan amount, monthly payment, total interest, and lifetime costs based on user inputs like home price, down payment, interest rate, loan term, and monthly expenses. The component provides visualizations like donut ring charts and bar charts to depict payment breakdowns and distributions of principal, interest, taxes, insurance, and HOA fees, with interactive hover states and responsive layouts. It includes configurable input fields for mortgage parameters and displays detailed statistics, summaries, and breakdown tables to facilitate mortgage analysis and decision-making.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/calculator"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/53a7e6fd-f26b-41a2-8251-7a8ea555db4d"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/50d22c31-3b4a-4a80-a5bb-b0fe01cb5164-d289bb22.png"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../MortgageCalculator/50d22c31-3b4a-4a80-a5bb-b0fe01cb5164"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../MortgageCalculator/843f5c63-8d47-44bc-a3bb-71d2cfba63ad"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/mortgagecalculator-3a77e696.png"
+        }
+      }
+    }
+  }
+}

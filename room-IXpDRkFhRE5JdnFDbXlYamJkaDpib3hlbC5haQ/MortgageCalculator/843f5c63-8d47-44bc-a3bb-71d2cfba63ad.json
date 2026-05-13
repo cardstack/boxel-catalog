@@ -1,0 +1,58 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "MortgageCalculator",
+        "module": "../mortgage-calculator-8a3c14a9-994e-4ad2-91fb-9429c21b5f65/mortgage-calculator/mortgage-calculator"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "homePrice": {
+        "amount": "200000",
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "taxPerMonth": {
+        "amount": "1000",
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "loanTermYears": 35,
+      "hoaFeesPerMonth": {
+        "amount": "500",
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "insurancePerMonth": {
+        "amount": "1000",
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "downPaymentPercentage": 10,
+      "interestRatePercentage": 8
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

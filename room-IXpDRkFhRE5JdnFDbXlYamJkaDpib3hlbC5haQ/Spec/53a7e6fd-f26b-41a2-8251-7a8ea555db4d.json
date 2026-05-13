@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "MortgageCalculator",
+        "module": "../mortgage-calculator-8a3c14a9-994e-4ad2-91fb-9429c21b5f65/mortgage-calculator/mortgage-calculator"
+      },
+      "readMe": "# MortgageCalculator Spec\n\n## Summary\nThe `MortgageCalculator` spec is a comprehensive card that allows users to input various home financing details, such as home price, down payment, loan term, and interest rate, and provides a detailed breakdown of the estimated monthly and lifetime costs associated with the mortgage.\n\n## Import\n```javascript\nimport { MortgageCalculator } from '../mortgage-calculator-8a3c14a9-994e-4ad2-91fb-9429c21b5f65/mortgage-calculator/mortgage-calculator';\n```\n\n## Usage as a Field\nTo use the `MortgageCalculator` as a field within a consuming card or field, you can simply include it as a `contains` field:\n\n```javascript\n@field mortgageCalculator = contains(MortgageCalculator);\n```\n\n## Template Usage\nTo invoke the `MortgageCalculator` spec within a template, you can use the following syntax:\n\n```handlebars\n<@fields.mortgageCalculator @format='edit' />\n```\n\nThis will render the full `MortgageCalculator` interface, allowing the user to interact with the various input fields and view the calculated results.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Mortgage Calculator",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
