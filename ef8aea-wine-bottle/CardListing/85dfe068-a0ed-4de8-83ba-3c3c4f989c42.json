@@ -18,11 +18,6 @@
       }
     },
     "relationships": {
-      "images": {
-        "links": {
-          "self": null
-        }
-      },
       "skills": {
         "links": {
           "self": null
@@ -41,6 +36,11 @@
       "specs.0": {
         "links": {
           "self": "../Spec/6c6b05b8-2838-4a45-8f74-097b4d3743d2"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/wine-bottle-screenshot.png"
         }
       },
       "publisher": {

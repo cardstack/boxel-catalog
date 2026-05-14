@@ -70,12 +70,12 @@
       },
       "examples.0": {
         "links": {
-          "self": "../beat-maker-studio-bfa35141-1cb4-4ba3-8f6c-5057dc4ca110/beat-maker/BeatMakerCard/rhythm-studio"
+          "self": "../BeatMakerCard/rhythm-studio"
         }
       },
       "examples.1": {
         "links": {
-          "self": "../beat-maker-studio-bfa35141-1cb4-4ba3-8f6c-5057dc4ca110/beat-maker/BeatMakerCard/trap-lab"
+          "self": "../BeatMakerCard/trap-lab"
         }
       },
       "categories.0": {
