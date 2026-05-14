@@ -1,0 +1,83 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Virtual Piano",
+      "summary": "A card component that presents an interactive, full-featured virtual piano with capabilities including playback of VP.net notation, multi-instrument sound profiles, real-time recording and playback, and keyboard/mouse interaction. It provides a user interface for song selection, auto-play, transposition, and sound settings, along with notation visualization. The component supports VP.net notation parsing, multi-instrument sound synthesis, and precise scheduling for autoplay, enabling users to simulate piano play, record performances, and explore sheet music within a web-based environment.",
+      "cardInfo": {
+        "name": "Virtual Piano",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/app"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/85e217cb-0584-434b-9577-997f283fa075"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/7f283fa0-7517-479f-85c6-68de49b37098"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/1f7aa785-e217-4b05-84c3-4b5577997f28"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/cd22b8ca-0a1d-4d41-9201-71a489b91acf-aa72ce18.png"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../VirtualPiano/cd22b8ca-0a1d-4d41-9201-71a489b91acf"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/content-creation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/virtualpiano-0383901d.png"
+        }
+      }
+    }
+  }
+}
