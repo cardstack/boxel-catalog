@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "VirtualPiano",
+        "module": "../virtual-piano"
+      },
+      "readMe": "# Virtual Piano\n\n## Summary\nThe `VirtualPiano` card provides a fully interactive virtual piano experience, allowing users to play, record, and explore music using the VP.net notation system.\n\n## Import\n```javascript\nimport { VirtualPiano } from '../virtual-piano';\n```\n\n## Usage as a Field\nThe `VirtualPiano` card can be used as a field within a consuming card or field. Here's an example:\n\n```javascript\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport { VirtualPiano } from '../virtual-piano';\n\nclass MyCard extends CardDef {\n  @field piano = contains(VirtualPiano);\n}\n```\n\n## Template Usage\nTo use the `VirtualPiano` card in a template, simply include the component:\n\n```html\n<VirtualPiano @model={{this.piano}} />\n```\n\nThis will render the full interactive virtual piano experience within the consuming card or field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Virtual Piano",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
