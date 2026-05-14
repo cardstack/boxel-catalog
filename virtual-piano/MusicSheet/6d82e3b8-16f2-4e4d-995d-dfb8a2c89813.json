@@ -1,0 +1,42 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "MusicSheet",
+        "module": "../music-sheet"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "tempo": 0,
+      "artist": "Lady Gaga & Bruno Mars",
+      "cardInfo": {
+        "name": "Die With A Smile",
+        "notes": null,
+        "summary": "",
+        "cardThumbnailURL": null
+      },
+      "notation": "[8oa] r u o u r [8oa] r u [of] u r\n[qip] t u p u t [qip] t u p u t\n[8oah]d[rf] u o u r [8oah] [rf] [uf] [pj] [uak] rj\n[qpsf] t u p u td[qpsh]f[tf] u [ph]f[uf] td\n[8oaf]g[rf] u o u rd[8oah] [rf]fu [pj] [uak] [rpj]\n[qpsf] t u p u td[qpsh] [tf] ud[ph] [uf] [tf]d\n[4psf]g[0f] e [4ps] 0 ed[4psf]d[0f] [ef] [4psf] [4d] [6s]\n[8oah] w r [8uaf] w r [8uaf] [wd]fr [8uaf] [8d] [9s]\n[3adk] 0 w [3oadh] 0 wh[3adk]j[0k]j[wk]j[3adk] [3k] [5k]j\n[6dfl]6k[6dfj]6 [6df]6k[6df][6k]j[S6fl] kj e [pj] [pj]\n[29sgl] 6 [9pj] [29sgl] [30] [4qpj] [5wak] [9ak][ak][wsl] [rdhz] w [4qoh]\n[30adk] 0aw [rd] [wfx] [0ak] [6epj] 0u[6o]p[6e] [7pj] [18pj]\n[29sgl] [6pj] [9pj] [29sgl] [30sj] [4q]h[5wak] [9ak] [wsl] [rdhz] w [4qoh]\n[30adk] 0aw [rd] [wfx] [0ak] [6epj] 0u[6o]p[6e] [7pj] [18pj]h\n[29pdj] 6 [9pg] [29] [30pg] [4qd]s[5wa] 9iw [ry] w [29oh]\n[18dhz] 9[os]8 [7oa] [8dz] [9fx] [6sl]j6u[8o]p[5u] [5sl] [7sl]\n[29sgl] 6 [9pj] [29ig] [30] [4quf] [5wyd] dds f s\n[8oa] r u o u r [8oa] r u [of] u r\n[qip] t u p u t [qip] t [uh]j[pl]k[uj]h[tj]\n[8oah]d[rf] u o u r [8oah] [rf] [uf] [pj] [uak] rj\n[qpsf] t u p u t [qpsh]f[tf]f[uf]f[ph] [uf]ftd\n[8oaf] [rh] u [pj] u rj[8kz][jl][rkz][jl][ukz] [okz][jl][ulx] r[jl]\n[qjl][kz]t ul[ogc] [ufx] tl[qgc][gc][tfx] u [ogzc] [uflx] [tsjl]\n[4dgz] 0l[ej] [4ps] 0 ed[4fh][dg][0fh] [efh] [4fh] [4dg] [6sf]\n[8ahk] w r [8ofh] w r [8fh] [wdg][fh]r [8fh] [8dg] [9sf]\n[3dkz] 0 w [3ahk] 0 wh[3dkz][jl][0dkz][jl][wdkz][jl][3dkz] [3dkz] [5dkz][jl]\n[6flx]6[kz][6fjl]6 [6f]6[kz][6f][6kz][jl][6flx] [kz][jL] e [pj] [pj]\n[29flx] 6 [9sl] [29flx] [30] [4qsl] [5wadk] [9ak][ak][wsfl] [rdgz] w [4qoh]\n[30adk] 0aw [rd] [wfx] [0ak] [6epj] 0u[6o]p[6e] [7pjl] [18pjl]\n[29flx] [6sjl] [9sjl] [29flx] [30sjl] [4q]h[5wak] [9ak] [wsl] [rdhz] w [4qoh]\n[30adk] 0aw [rd] [wfx] [0ak] [6epj] 0u[6o]p[6e] [7pjl] [18pjl][hk]\n[29sjl] 6 [9pgj] [29] [30gc] [4qdz][sl][5wak] 9iw [ry] w [4qoh]\n[18dhz] 9[os]8 [7oa] [8dz] [9fx] [6sl]j6u[8i]o[5u] [5sl] [7sl]\n[29sgl] 6 [9pj] [29ig] [30] [4quf] [5wyd] dds f s\n[8tyia] [yi]t[yi]t[8tyi] [yi]t[yi]t[wrio] [io]r[io]r[wro] irwu\n[0ruoa] [uoa]r[uoa]r[0ruoa] [uoa]r[wuoa] [6eup] [up]e[up]e[6eups] [up]eu[ed]\n[8tyid] [yis]t[yi]t[8tyi] [yi]t[yi]t[wrio] [io]r[io]r[wriof] [iod]r[io][rs]\n[0ruoa] [uoa]r[uoa]r[0ruoa] [uoa]r[wuoa] [6eup] [upf]e[ipg]e[6osh]\n[29upf] [upf]6[9upf] [qupf] [30ig] [4qoh] [5wuof] [uof]7[0uof] [ruof] [5wig] [4qoh]\n[30adk] [adk]7[0adk] [radk] [wadk] [0adk] [6epsj] [0psj]w[epsj] [6psj] [7psj] [18psj]\n[29upf] [upf]6[9upf] [qupf] [30ig] [4qoh] [5wuof] [uof]7[0uof] [ruof] [5wig] [4qoh]\n[30dkz] [dkz]7[0dkz] [rdkz] [wdkz] [0fkx] [6esjl] [0sjl]w[esjl] [6sjl] [pj] [pj]\n[9qetsgl] [pj] [9qetsgl] [pj] [9wryak] [ak][ak][sl] [9wrydhz] [oh]\n[0wryadk] [0wry] [fx] [ak] [0etupj] [0etu] [pj] [pj]\n[9qetsgl] [pj] [pj] [9qetsgl] [pj] h[9wryak] [ak] [sl] [9wrydhz] [oh]\n[0wryadk] [0wry] [fx] [ak] [0etupj] [0etu] [pj] [pj]h\n[29pdj] [29] [29pg] [29] [agk] [ak][sl][5wak][sl][5wak] [5w] [5hv] [oh]\n[18dhz] 9[os]8 [7oa] [8fx] [9dz] [6fx]l6u[8i]o[5u] [5sl] [7sl]\n[29sgl] 6 [9pj] [29ig] [30] [4quf] [30ak] [7ak][ak][0sl] [%dz] 6 [7sl]\n[6fx] 6 8 [0sl] [7dz] [18fx] [29dz] [9pj] Q e [Qsl] [9sl]\n[29sgl] 6 [9pj] [29ig] [30] [4quf] [5wyd] dds f s\n[8oa] r u o u r [8oa] r u [of] u r\n[qip] t u p u t [qid] [td]d[us] [pf] u th\n[8raf]",
+      "songTitle": "Die With A Smile",
+      "difficulty": 6,
+      "transposition": 0
+    },
+    "relationships": {
+      "genre": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Genre",
+        "module": "../genre"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "CLASSICAL",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": "https://images.pexels.com/photos/164693/pexels-photo-164693.jpeg?auto=compress&cs=tinysrgb&w=900"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Genre",
+        "module": "../genre"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "INDIE",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": "https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=900"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

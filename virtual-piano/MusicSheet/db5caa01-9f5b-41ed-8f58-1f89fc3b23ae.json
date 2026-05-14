@@ -1,0 +1,42 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "MusicSheet",
+        "module": "../music-sheet"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "tempo": 0,
+      "artist": "Ed Sheeran",
+      "cardInfo": {
+        "name": "Spark (Ed Sheeran)",
+        "notes": null,
+        "summary": "An energetic Ed Sheeran track requiring fast chord transitions and syncopated right-hand runs.",
+        "cardThumbnailURL": null
+      },
+      "notation": "[8(t] [8(t] [8(t] [^(E] [^(E] [^(E] [^(E][^(E][%(E] [%(E] [%(E] [5(E] [5(E] [5(E] [5(E] [5(E][8(t] [8(t] [8(t] [^(Y] i [^(o] [^(Y] i [^(o] [^(Y][%(] [%(] [%(] [5(Y] i [5(o] [5(Y] i [5(o] [5(P][8(] [8(] [8(] [^(Y] i [^(o] [^(Y] i [^(o] [^(i][%(] [%(] [%(] [5(] [5(] [5(] [5(] [5(][8(t] [8(t] [8(t] [^(Y] i [^(o] [^(Y] i [^(o] [^(Y][%(] [%(] [%(] [5(Y] i [5(o] [5(Y] i [5(o] [5(P][8(] [8(] [8(] [^(Y] i [^(o] i [^(Y] i [^(o] [^(i][%(] [%(Y] [%(] [5(] [5(] [5(] [5(][5(o] P [48s] [48d] [48s] [4^P] [4^o] [4^P] [4^o] [4^i] [^qi] [^q] [^q] [^q][^q] [^q] [^q]i [^qo] P [48s] [48d] [48s] [4^P] [4^o] [4^P] [4^o] [4^i] [^qi] [^q] [^q] [^q] [^q] [^q] [^q] [^q][(wt] [(wt] [(wt] [wED] [wEYh] [wEYJ] [wEYJ] [wEY] [(wt] [(wtD] [(wt][wEYD] [wEYh] [wEYJ] [wEYl] [wEY] [(wt] [(wtJ] [(wt][wEYD] [wEYh] [wEYg] [wEYg] [wEY] [(Wt] [(WtD] [(WtD] [wEY] [wEY] [wEY] [wEY] [wEY][(wt] [(wt] [(wt] [wED] [wEYh] [wEYJ] [wEYJ] [wEY] [(wt] [(wtD] [(wt][wEYD] [wEYh] [wEYJ] [wEYl] [wEY] [(wt] [(wtJ] [(wt][wEYD] [wEYh] [wEYg] [wEYg] [wEY] [(Wt] [(WtD] [(Wts] [wEY] [wEY] [wEY] [wEY] [wEY][8(t] [8(t] [8(t] [^(Y] i [^(o] i [^(Y] i [^(o] [^(Y][%(] [%(] [%(] [5(Y] i [5(o] i [5(Y] i [5(o] [5(P][8(] [8(] [8(] [^(Y] i [^(o] [^(Y] i [^(o] [^(i][%(] [%(] [%(] [5(] [5(] [5(] [5(] [5(][8(t] [8(t] [8(t] [^(Y] i [^(o] i [^(Y] i [^(o] [^(Y][%(] [%(] [%(] [5(Y] i [5(o] [5(Y] i [5(o] [5(P][8(] [8(] [8(] [^(Y] i [^(o] i [^(Y] i [^(o] [^(i][%(] [%(Y] [%(] [5(] [5(] [5(] [5(][5(o] P [48s] [48d] [48s] [4^P] [4^o] [4^P] [4^o] [4^i] [^qi] [^q] [^q] [^q][^q] [^q] [^q]i [^qo] P [48s] [48d] [48s] [4^P] [4^o] [4^P] [4^o] [4^i] [^qi] [^q] [^q] [^q] [^q] [^q] [^q] [^q][(wt] [(wt] [(wt] [wED] [wEYh] [wEYJ] [wEYJ] [wEY] [(wt] [(wtD] [(wt][wEYD] [wEYh] [wEYJ] [wEYl] [wEY] [(wt] [(wtJ] [(wt][wEYD] [wEYh] [wEYg] [wEYg] [wEY] [(Wt] [(WtD] [(WtD] [wEY] [wEY] [wEY] [wEY] [wEY][(wt] [(wt] [(wt] [wED] [wEYh] [wEYJ] [wEYJ] [wEY] [(wt] [(wtD] [(wt][wEYD] [wEYh] [wEYJ] [wEYl] [wEY] [(wt] [(wtJ] [(wt][wEYD] [wEYh] [wEYg] [wEYg] [wEY] [(Wt] [(WtD] [(Wts] [wEY] [wEY] [wEY] [wEY] [wEY]w w o [wP] s [wd] g w w o [wP] s [wd] s ( P (o [(P] s [(d] D [Ed] s [EP] e p q qw w o [wP] s [wd] g w w o [wP] s [wd] s ( P (o [(P] s [(d] D [Ed] s [EP] e p q [qP] [8(wo] [8(w] [8(w][(wt] [(wt] [(wt] [wED] [wEYh] [wEYJ] [wEYJ] [wEY] [(wt] [(wtD] [(wt][wEYD] [wEYh] [wEYJ] [wEYl] [wEY] [(wt] [(wtJ] [(wt][wEYD] [wEYh] [wEYg] [wEYg] [wEY] [(Wt] [(WtD] [(WtD] [wEY] [wEY] [wEY] [wEY] [wEY][(wt] [(wt] [(wt] [wED] [wEYh] [wEYJ] [wEYJ] [wEY] [(wt] [(wtD] [(wt][wEYD] [wEYh] [wEYJ] [wEYl] [wEY] [(wt] [(wtJ] [(wt][wEYD] [wEYh] [wEYg] [wEYg] [wEY] [(Wt] [(WtD] [(Wts] [wEY] [wEY] [wEY] [wEY] [wEY][(wt] [(wt] [(wt][wEYD] [wEYh] [wEYg] [wEYg] [wEY] [(Wt] [(WtD] [(WtD] [wEY] [wEY] [wEY] [wEY] [wEY][(wt] [(wt] [(wt][wEYD] [wEYh] [wEYg] [wEYg] [wEY] [(Wt] [(WtD] [(Wts] [wEY] [wEY] [wEY] [wEY] [wEY][(wED] [(wE] [(wEP] [(wE] [5^(P] [5^(] [5^(] [5^(D] [5^(] [5^(] [5^(P] [5^(] [@%8P] [@%8] [@%8] [@%8D] [@%8] [@%8] [@%8P] [@%8] [5^(o] [5^(] [5^(] [4^9i] [4^9] [4^9] [4^9] [4^9]",
+      "songTitle": "Spark",
+      "difficulty": 8,
+      "transposition": 0
+    },
+    "relationships": {
+      "genre": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

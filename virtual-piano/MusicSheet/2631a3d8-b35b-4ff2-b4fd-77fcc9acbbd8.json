@@ -1,0 +1,42 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "MusicSheet",
+        "module": "../music-sheet"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "tempo": 160,
+      "artist": "Selena Gomez",
+      "cardInfo": {
+        "name": "Come and Get It (Selena Gomez) ",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "notation": "[etup] fpf pf[80wp]\nfpf pf[qetp] fpf pf[9qep]\nfpf pf[etup] fpf pf[80wp]\nfpf pf[qetp] fpf pfp fpf pfu| u| u| u|\n60p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]0p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]0pp[tp] [ep]p[1p][5o]u\n[0y] [8p]p[4p]8pp[ep]o[qu]\n[2y]6u [qy] 9\n60p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]|0[eu]u[tu]\n[1u]uu5[8u]y[0t]r[4y] t8[qd]\n[es] 2|69 q 6|0[eu] [tu]\n[1u] o5[8y] [0y]t[4y] t8[qd]\n[es] 2|69 [qu]\n[6u] u0[eu] [tu]u[1u] u5[8u]\n[0t]i4ii8[qi]yei2ii6[9i]y[qu]\n[6u] u0[eu] ti1ii5[8i]y0i4y 8q ey2t 69 q\n[ef]tu|[etus]|\n[wf]tug d[wtu]d|\n[qg]etg d[qet]d|\n[9g]qeg h[9qe]f f60e|[60e]|\ns[8g]0wg d[80w]d|\n[4g]8qg d[48q]d|\n[9g]qeg h[9qe]f f6 0e0\n608 wtw 8w4 8q8 [4f][8g]2 [6f][9d]6s[2p]66\n0e0 605 9w9 594 8[qs][8f]d[4f]8[4f]g[8g]q[8g]f480| 0| 0| 0|\n60p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]0p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]0pp[tp] [ep]p[1p][5o]u [0y]\n[8p]p[4p]8pp[ep]o[qu]\n[2y]6u [qy] 9\n60p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]|[0e][eu]u[tu]\n[1u] u[5u][8u] [0y]t[4y] t8[qd] [es]\n2|69 q\n6|0[eu] [tu]\n[1u] o5[8y] [0y]\n[4y] u8[qd] [ef]\n2|69 [qu]\n[6u]uu0[eu] [tu]u[1u] u5[8u] 0i4ii8[qi]yei2ii6[9i]y[qu]\n[6u]eu0[eu] ti1ii5[8i]y0i4y 8q ey2t 69 q [ef]tu|[etus]|\n[wf]tug d[wtu]d|\n[qg]etg d[qet]d|\n[9g]qeg h[9qe]f f60e|[60e]|\n59w|[59w]|\n48q s[48qf]df\n[48qf]gg gf|\n0| 0|\n0| 0|\n60p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]0p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]0pp[tp] [ep]p[1p][5o]u [0y] [8p]p[4p]8pp[ep]o[qu]\n[2y]6u [qy] 9\n60p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[4qe]| [8qe] p\np|o[8qe] o\n[29o]|i[69qo]|ii| [69q]|\n[6e]| [0etu] p\np| [0et] s\n[5wa]| [9wra]|pp ou[9wr]|\n[4q]| [8qeu] u| [8qey] y\n[29]| [69qy] y|e|[69q]|\n[6e]| [0et] ty|ty[0et]u|\n[5wu]yte[9wr]|||\n[9wr]|\n5| 5| 5| [5s] ap60p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]0p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t]\n[6e]0pp[tp] [ep]p[1p][5o]u [0y]\n[8p]p[4p]8pp[ep]o[qu]\n[2y]6u [qy] 9\n60p [tp]p[ep]\n[1p][5o] u0y[8t]\n[4e]8 uey[qt]\n[2e]6 uqy[9t] [6e]",
+      "songTitle": "Come and Get It (Selena Gomez) ",
+      "difficulty": 6,
+      "transposition": -2
+    },
+    "relationships": {
+      "genre": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
