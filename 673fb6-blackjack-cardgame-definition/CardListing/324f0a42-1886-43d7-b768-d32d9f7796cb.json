@@ -18,11 +18,6 @@
       }
     },
     "relationships": {
-      "images": {
-        "links": {
-          "self": null
-        }
-      },
       "skills": {
         "links": {
           "self": null
@@ -76,6 +71,11 @@
       "specs.7": {
         "links": {
           "self": "../Spec/915c6458-d978-4012-ac41-bcf971c05ef4"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/blackjack-screenshot.png"
         }
       },
       "publisher": {

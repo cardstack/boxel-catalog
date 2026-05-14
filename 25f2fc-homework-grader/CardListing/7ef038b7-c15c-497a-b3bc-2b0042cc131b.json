@@ -18,11 +18,6 @@
       }
     },
     "relationships": {
-      "images": {
-        "links": {
-          "self": null
-        }
-      },
       "skills.0": {
         "links": {
           "self": "../Skill/dc116967-432e-4864-93aa-d7ea3f335d24"
@@ -51,6 +46,11 @@
       "specs.2": {
         "links": {
           "self": "../Spec/5455e5c1-1d62-41c9-ae39-f2ff09da9b83"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/homework-grader-screenshot.png"
         }
       },
       "publisher": {
