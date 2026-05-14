@@ -1,0 +1,41 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "MortgageCalculator",
+        "module": "../mortgage-calculator"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Mortgage Calculator",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "currency": {
+        "code": "MYR"
+      },
+      "homePrice": 1104000,
+      "taxPerMonth": 3300,
+      "loanTermYears": 30,
+      "hoaFeesPerMonth": 550,
+      "insurancePerMonth": 550,
+      "downPaymentPercentage": 20,
+      "interestRatePercentage": 6.8
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

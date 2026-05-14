@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "MortgageCalculator",
+        "module": "../mortgage-calculator"
+      },
+      "readMe": "# Mortgage Calculator \n\n## Summary\nThe Mortgage Calculator card provides a comprehensive tool for users to estimate the financial details of a mortgage, including the monthly payment, total lifetime costs, and breakdowns of various expenses. It allows users to input key factors such as home price, down payment, loan term, and interest rate, and then computes the resulting mortgage details.\n\n## Import\n```javascript\nimport { MortgageCalculator } from '../mortgage-calculator';\n```\n\n## Usage as a Field\nThe MortgageCalculator card can be used as a field within a consuming card or field. Here's an example:\n\n```gts\nexport class MyCard extends CardDef {\n  @field mortgageDetails = contains(MortgageCalculator);\n}\n```\n\nIn this case, the `mortgageDetails` field will contain an instance of the MortgageCalculator card, which can be accessed and displayed in templates.\n\n## Template Usage\nTo display the MortgageCalculator card within a template, you can use the following pattern:\n\n```hbs\n<@fields.mortgageDetails @format=\"isolated\" />\n```\n\nThis will render the isolated format of the MortgageCalculator card, which provides a detailed view of the mortgage details. You can also use the `fitted` format to display the calculator in a more compact layout.\n\n```hbs\n<@fields.mortgageDetails @format=\"fitted\" />\n```\n\nThe MortgageCalculator card handles all the necessary computations and displays the results, making it a convenient and powerful tool for users to estimate their mortgage costs.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Mortgage Calculator",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
