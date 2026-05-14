@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Genre",
+        "module": "../genre"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "DANCE",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=900"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

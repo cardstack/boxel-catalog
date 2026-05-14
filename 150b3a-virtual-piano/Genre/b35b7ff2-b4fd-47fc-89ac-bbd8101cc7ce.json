@@ -1,0 +1,32 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Genre",
+        "module": "../genre"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "POP",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=900"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
