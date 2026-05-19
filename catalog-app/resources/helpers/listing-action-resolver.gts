@@ -2,7 +2,7 @@ import { CardContext } from 'https://cardstack.com/base/card-api';
 import { Listing } from '../../listing/listing';
 
 import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
-import ListingBuildCommand from '@cardstack/boxel-host/commands/listing-action-build';
+import ListingBuildCommand from '../../../commands/listing-action-build';
 import ListingRemixCommand from '@cardstack/boxel-host/commands/listing-remix';
 import ShowCardCommand from '@cardstack/boxel-host/commands/show-card';
 
