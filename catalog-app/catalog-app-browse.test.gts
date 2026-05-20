@@ -962,7 +962,6 @@ export function runTests() {
           .containsText('No Skills Provided');
         assert.dom('[data-test-catalog-listing-action="Remix"]').doesNotExist();
       });
-
     });
   });
 }

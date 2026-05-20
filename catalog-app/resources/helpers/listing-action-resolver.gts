@@ -155,4 +155,3 @@ export class SkillListingAdapter extends CardOrFieldListingAdapter {
     });
   }
 }
-
