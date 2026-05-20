@@ -8,7 +8,6 @@ import {
 export type {
   ListingActions,
   SkillActions,
-  StubActions,
   RegularActions,
   ThemeActions,
 } from './helpers/listing-action-resolver';

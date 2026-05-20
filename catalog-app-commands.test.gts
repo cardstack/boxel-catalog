@@ -48,7 +48,6 @@ const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing
 const authorListingId = `${mockCatalogURL}Listing/author`;
-const apiDocumentationStubListingId = `${mockCatalogURL}Listing/api-documentation-stub`;
 const themeListingId = `${mockCatalogURL}ThemeListing/cardstack-theme`;
 const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;
 //license
@@ -143,28 +142,6 @@ export function runTests() {
           // we always run a command inside interact mode
           await visitOperatorMode({
             stacks: [[]],
-          });
-        });
-        module('"build"', function () {
-          test('card listing', async function (assert) {
-            await visitOperatorMode({
-              stacks: [
-                [
-                  {
-                    id: apiDocumentationStubListingId,
-                    format: 'isolated',
-                  },
-                ],
-              ],
-            });
-            await waitFor(
-              `[data-test-card="${apiDocumentationStubListingId}"]`,
-            );
-            assert
-              .dom(
-                `[data-test-card="${apiDocumentationStubListingId}"] [data-test-catalog-listing-action="Build"]`,
-              )
-              .containsText('Build', 'Build button exist in listing');
           });
         });
         module('"create"', function (hooks) {

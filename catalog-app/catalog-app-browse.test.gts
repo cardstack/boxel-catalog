@@ -43,8 +43,6 @@ const personListingId = `${nonCatalogRealmURL}Listing/person`;
 const emptyListingId = `${nonCatalogRealmURL}Listing/empty`;
 const pirateSkillListingId = `${nonCatalogRealmURL}SkillListing/pirate-skill`;
 const incompleteSkillListingId = `${nonCatalogRealmURL}Listing/incomplete-skill`;
-const apiDocumentationStubListingId = `${nonCatalogRealmURL}Listing/api-documentation-stub`;
-
 //tags
 const calculatorTagId = `${nonCatalogRealmURL}Tag/calculator`;
 const gameTagId = `${nonCatalogRealmURL}Tag/game`;
@@ -963,28 +961,6 @@ export function runTests() {
           .dom('[data-test-catalog-listing-embedded-skills-section]')
           .containsText('No Skills Provided');
         assert.dom('[data-test-catalog-listing-action="Remix"]').doesNotExist();
-      });
-
-      test('after clicking "Build" button, the ai room is initiated, and prompt is given correctly', async function (assert) {
-        await visitOperatorMode({
-          stacks: [
-            [
-              {
-                id: apiDocumentationStubListingId,
-                format: 'isolated',
-              },
-            ],
-          ],
-        });
-        await verifyListingAction(
-          assert,
-          `[data-test-card="${apiDocumentationStubListingId}"]`,
-          '[data-test-catalog-listing-action="Build"]',
-          'Build',
-          'Generate .gts card definition for "API Documentation" implementing all requirements from the attached listing specification. Then preview the final code in playground panel.',
-          'Test Workspace B',
-          false,
-        );
       });
     });
   });
