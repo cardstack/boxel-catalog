@@ -1,0 +1,48 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "default",
+        "module": "https://cardstack.com/base/style-reference"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "styleName": "Modern Magazine",
+      "visualDNA": "Crisp Inter sans throughout on a pure-white page. Heavy 800-weight display headlines with tight negative tracking, narrow reading column, purple accent for links and pull quotes. Contemporary online-magazine aesthetic.",
+      "inspirations": ["Medium", "The Verge", "Vox", "Substack", "Inter typeface"],
+      "wallpaperImages": [],
+      "cardInfo": {
+        "notes": null,
+        "name": "Modern Magazine",
+        "summary": "Inter sans · white page · purple accent — contemporary tech-blog feel."
+      },
+      "cssImports": [
+        "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      ],
+      "rootVariables": {
+        "background": "#ffffff",
+        "foreground": "#121212",
+        "primary": "#7b61ff",
+        "primaryForeground": "#ffffff",
+        "secondary": "#f3f0ff",
+        "secondaryForeground": "#1a1a1a",
+        "muted": "#f5f5f5",
+        "mutedForeground": "#6b6b6b",
+        "accent": "#7b61ff",
+        "accentForeground": "#ffffff",
+        "border": "#d1d5db",
+        "card": "#ffffff",
+        "cardForeground": "#121212",
+        "fontSans": "'Inter', system-ui, -apple-system, sans-serif",
+        "radius": "12px"
+      },
+      "cssVariables": ":root {\n  --blog-color-bg: #ffffff;\n  --blog-color-text: #121212;\n  --blog-color-body: #1a1a1a;\n  --blog-color-muted: #555;\n  --blog-color-subtle: #6b6b6b;\n  --blog-color-faint: #999;\n  --blog-color-placeholder: #b5b5b5;\n  --blog-color-thumb-bg: #e5e7eb;\n  --blog-color-divider: #d1d5db;\n  --blog-color-accent: #7b61ff;\n  --blog-color-card-bg: #ffffff;\n  --blog-font-family: 'Inter', system-ui, -apple-system, sans-serif;\n  --blog-font-headline: 800 4rem/1.05 var(--blog-font-family);\n  --blog-font-display-l: 800 2.6rem/1.05 var(--blog-font-family);\n  --blog-font-display-m: 800 2rem/1.1 var(--blog-font-family);\n  --blog-font-name: 800 1.5rem/1.15 var(--blog-font-family);\n  --blog-font-h2: 800 1.75rem/1.2 var(--blog-font-family);\n  --blog-font-h3: 700 1.2rem/1.3 var(--blog-font-family);\n  --blog-font-subtitle: 400 1.25rem/1.45 var(--blog-font-family);\n  --blog-font-pullquote: 600 1.5rem/1.35 var(--blog-font-family);\n  --blog-font-body: 400 1.0625rem/1.7 var(--blog-font-family);\n  --blog-font-body-sm: 400 0.95rem/1.6 var(--blog-font-family);\n  --blog-font-meta: 600 0.7rem/1 var(--blog-font-family);\n  --blog-font-eyebrow: 700 0.7rem/1 var(--blog-font-family);\n  --blog-tracking-meta: 0.05em;\n  --blog-tracking-eyebrow: 0.18em;\n  --blog-tracking-tight: -0.02em;\n  --blog-tracking-tighter: -0.01em;\n  --blog-reading-max: 680px;\n  --blog-subtitle-max: 720px;\n  --blog-headline-max: 860px;\n  --blog-canvas-max: 1100px;\n  --blog-radius-md: 12px;\n  --blog-radius-pill: 999px;\n  --blog-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);\n  --blog-shadow-card-hover: 0 6px 18px rgba(0, 0, 0, 0.1);\n  --blog-shadow-portrait: 0 4px 14px rgba(0, 0, 0, 0.08);\n}"
+    },
+    "relationships": {
+      "cardInfo.theme": { "links": { "self": null } },
+      "cardInfo.cardThumbnail": { "links": { "self": null } }
+    }
+  }
+}
+

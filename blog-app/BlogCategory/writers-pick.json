@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "longName": "Writer's Picks",
+      "shortName": "Picks",
+      "slug": "writers-pick",
+      "pillColor": "#F97316",
+      "cardInfo": {
+        "summary": "Strange, extreme, hand-picked stories the editors couldn't stop reading.",
+        "name": "Writer's Picks",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "blog": { "links": { "self": "../BlogApp/ramped" } }
+    },
+    "meta": {
+      "adoptsFrom": { "module": "../blog-category", "name": "BlogCategory" }
+    }
+  }
+}
+

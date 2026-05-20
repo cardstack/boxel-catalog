@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "longName": "Transit & Movement",
+      "shortName": "Transit",
+      "slug": "transit",
+      "pillColor": "#F59E0B",
+      "cardInfo": {
+        "summary": "How people and goods move through cities — buses, bikes, subways, sidewalks.",
+        "name": "Transit",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "blog": { "links": { "self": "../BlogApp/ramped" } }
+    },
+    "meta": {
+      "adoptsFrom": { "module": "../blog-category", "name": "BlogCategory" }
+    }
+  }
+}
+

@@ -1,0 +1,74 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BlogPost",
+        "module": "../blog-post"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "body": {
+        "content": "There's a particular kind of bargain you make when you decide to make art in New York. The city takes your time, your money, and your nervous system \u2014 and gives back, on its best days, a kind of attention you can't get anywhere else.\n\n## The math everyone does\n\nThe first month you arrive, you do the math. Studio rent. Materials. The MetroCard. The cost of a shared loft in Bushwick or Long Island City versus a closet on the Lower East Side. You learn quickly that the right address is less important than proximity to a freight elevator.\n\n> \"In Berlin you make work. In New York you make work *and* you make it visible.\"\n>\n> \u2014 A painter I met on Bogart Street\n\n## Three habits that keep you in the game\n\n1. **A day job you actually like.** The romance of starving for your art lasts about eighteen months. The artists who stay tend to have part-time gigs in galleries, fabrication shops, set design, or arts education \u2014 work that keeps them inside the conversation.\n2. **A studio you can leave at the end of the day.** Working from your apartment in this city is a slow kind of psychological erosion. Pay the extra two hundred dollars for a shared space across a bridge.\n3. **One night a week that isn't about networking.** Otherwise the city quietly metabolizes you into an event flyer.\n\n## What the city gives back\n\nProximity. You can see a museum show, an artist talk at a friend's loft, and a tiny gallery opening in a Chinatown basement in a single evening. That density is the actual asset \u2014 the work you make in a year in New York is shaped by the thousand small encounters you couldn't have engineered.\n\nIt isn't fair. It isn't sustainable for everyone. But for the years you can do it, it's a kind of education you can't pay for any other way."
+      },
+      "slug": "living-as-artist-new-york",
+      "layout": "[{\"slots\":[{\"name\":\"headline\",\"width\":12}]},{\"slots\":[{\"name\":\"featuredImage\",\"width\":12}]},{\"slots\":[{\"name\":\"body\",\"width\":6},{\"name\":\"categories\",\"width\":6}]},{\"slots\":[{\"name\":\"cardDescription\",\"width\":12}]},{\"slots\":[{\"name\":\"byline\",\"width\":12}]},{\"slots\":[{\"name\":\"authorBios\",\"width\":12}]}]",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": "The bargain you make to make art in New York \u2014 and the three habits that keep you in the game.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1554907984-15263bfd63bd?q=80&w=2940&auto=format&fit=crop"
+      },
+      "headline": "Living as an Artist in New York City",
+      "published": true,
+      "publishDate": "2025-09-12T14:00:00.000Z",
+      "featuredImage": {
+        "size": "actual",
+        "width": null,
+        "credit": "Photo via Unsplash",
+        "height": null,
+        "altText": "An artist's loft studio with canvases leaning against a brick wall and large industrial windows.",
+        "caption": "A working artist's studio in Brooklyn.",
+        "imageUrl": "https://images.unsplash.com/photo-1554907984-15263bfd63bd?q=80&w=2940&auto=format&fit=crop"
+      },
+      "cardDescription": null
+    },
+    "relationships": {
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "authors.0": {
+        "links": {
+          "self": "../Author/jane-doe"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/urban-work"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "../BlogCategory/new-york"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "body.linkedCards": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

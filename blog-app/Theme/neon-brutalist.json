@@ -1,0 +1,49 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "default",
+        "module": "https://cardstack.com/base/style-reference"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "styleName": "Neon Brutalist",
+      "visualDNA": "Pitch-dark page (near-black) with JetBrains Mono throughout. Headlines are tight monospace 700-weight, no rounding, sharp 2px corners on cards. An electric magenta accent powers links and pull quotes against a high-contrast off-white text. Hacker-zine, brutalist, terminal-inspired — assertive, angular, and aggressively un-precious.",
+      "inspirations": ["JetBrains documentation", "vintage BBS terminals", "Are.na", "Bret Easton Ellis press kits", "punk zines"],
+      "wallpaperImages": [],
+      "cardInfo": {
+        "notes": null,
+        "name": "Neon Brutalist",
+        "summary": "JetBrains Mono · near-black page · electric magenta — hacker-zine terminal vibe."
+      },
+      "cssImports": [
+        "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
+      ],
+      "rootVariables": {
+        "background": "#0d0d12",
+        "foreground": "#f5f5f7",
+        "primary": "#ff2d92",
+        "primaryForeground": "#0d0d12",
+        "secondary": "#1a1a22",
+        "secondaryForeground": "#f5f5f7",
+        "muted": "#15151b",
+        "mutedForeground": "#a0a0aa",
+        "accent": "#ff2d92",
+        "accentForeground": "#0d0d12",
+        "border": "#2a2a33",
+        "card": "#16161d",
+        "cardForeground": "#f5f5f7",
+        "fontMono": "'JetBrains Mono', 'Fira Code', 'Menlo', monospace",
+        "fontSans": "'JetBrains Mono', 'Fira Code', 'Menlo', monospace",
+        "radius": "2px"
+      },
+      "cssVariables": ":root {\n  --blog-color-bg: #0d0d12;\n  --blog-color-text: #f5f5f7;\n  --blog-color-body: #d4d4dc;\n  --blog-color-muted: #b8b8c0;\n  --blog-color-subtle: #a0a0aa;\n  --blog-color-faint: #707078;\n  --blog-color-placeholder: #505058;\n  --blog-color-thumb-bg: #1f1f28;\n  --blog-color-divider: #2a2a33;\n  --blog-color-accent: #ff2d92;\n  --blog-color-card-bg: #16161d;\n  --blog-font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;\n  --blog-font-headline: 700 3rem/1.1 var(--blog-font-family);\n  --blog-font-display-l: 700 2.2rem/1.1 var(--blog-font-family);\n  --blog-font-display-m: 700 1.7rem/1.15 var(--blog-font-family);\n  --blog-font-name: 700 1.25rem/1.2 var(--blog-font-family);\n  --blog-font-h2: 700 1.45rem/1.25 var(--blog-font-family);\n  --blog-font-h3: 600 1.1rem/1.3 var(--blog-font-family);\n  --blog-font-subtitle: 400 1rem/1.55 var(--blog-font-family);\n  --blog-font-pullquote: 600 1.2rem/1.5 var(--blog-font-family);\n  --blog-font-body: 400 0.95rem/1.75 var(--blog-font-family);\n  --blog-font-body-sm: 400 0.85rem/1.65 var(--blog-font-family);\n  --blog-font-meta: 600 0.7rem/1 var(--blog-font-family);\n  --blog-font-eyebrow: 700 0.7rem/1 var(--blog-font-family);\n  --blog-tracking-meta: 0.12em;\n  --blog-tracking-eyebrow: 0.2em;\n  --blog-tracking-tight: 0;\n  --blog-tracking-tighter: 0;\n  --blog-reading-max: 680px;\n  --blog-subtitle-max: 720px;\n  --blog-headline-max: 860px;\n  --blog-canvas-max: 1100px;\n  --blog-radius-md: 2px;\n  --blog-radius-pill: 2px;\n  --blog-shadow-card: 0 0 0 1px #2a2a33;\n  --blog-shadow-card-hover: 0 0 0 1px #ff2d92, 0 8px 24px rgba(255, 45, 146, 0.18);\n  --blog-shadow-portrait: 0 0 0 1px #2a2a33;\n}"
+    },
+    "relationships": {
+      "cardInfo.theme": { "links": { "self": null } },
+      "cardInfo.cardThumbnail": { "links": { "self": null } }
+    }
+  }
+}
+

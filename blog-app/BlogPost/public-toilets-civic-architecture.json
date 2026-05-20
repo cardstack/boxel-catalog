@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "Public Toilets: The Civic Architecture Nobody Talks About",
+      "slug": "public-toilets-civic-architecture",
+      "body": "London has roughly one public toilet for every 14,000 residents. Paris has one for every 4,000. The difference shapes how each city actually feels \u2014 for tourists, for the elderly, for parents, for anyone with a medical condition, for anyone who simply spent more time outside than they planned to.\n\n## Why they vanished\n\nMost cities had public conveniences a century ago. They were closed in waves, for three reasons:\n\n1. **Maintenance costs.** A staffed public toilet costs ~$80\u2013120K per year to operate.\n2. **Anti-social use.** Drug use, vandalism, persistent loitering.\n3. **Subtle hostile policy.** Closing them pushed certain populations out of public space \u2014 which was the unstated point.\n\nWhat replaced them was the *consumption-based bathroom*: coffee shops, fast-food chains, department stores. Functional, but only if you can afford to be a customer.\n\n## What works again\n\nThe cities that brought them back \u2014 Tokyo's recent designer-toilet program, Paris's free *sanisettes*, Portland's Loo \u2014 share a pattern:\n\n- **Self-cleaning** or fast turnover, removing the maintenance objection\n- **Visible**, well-lit, not hidden away\n- **Free**, because pay-per-use barriers reproduce the inequality that made them necessary\n\nThe Tokyo program in particular treated public toilets as legitimate architecture, commissioning Pritzker-winning architects. The point wasn't novelty \u2014 it was insisting that this is civic infrastructure worth designing well.\n\nA city's attitude toward public toilets is a fair proxy for its attitude toward the body. Which is to say: toward people who exist in it.",
+      "publishDate": "2024-01-22T11:00:00.000Z",
+      "published": true,
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1545063328-c8e3faffa16f?q=80&w=2940&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "A free-standing public toilet pavilion.",
+        "altText": "Modern small architectural public toilet building on a city street.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "Why most cities closed their public toilets in the 20th century, what we lost in the process, and what the cities that brought them back do differently.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1545063328-c8e3faffa16f?q=80&w=2940&auto=format&fit=crop"
+      }
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/news"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

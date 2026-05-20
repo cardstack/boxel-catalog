@@ -1,0 +1,63 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "Why Subway Maps Lie (And Why That Matters)",
+      "slug": "subway-maps-lie",
+      "body": "The London Underground map you have memorized is wrong. So is the New York subway map, and Tokyo's, and every other one you've ever held in your hand on a long-distance bus.\n\nThey were never meant to be right. Harry Beck's 1933 diagram threw away geographical accuracy in favor of legibility \u2014 straightened curves, distorted distances, every station equally important. It was a designer's choice that turned out to be a public-health intervention.\n\n## The trade you make\n\n- The map flattens the river. The Thames looks like a clean S. In reality it bends much more.\n- Trips through the center look short. Trips to the outer edge look long. The geography is reversed for most actual distances.\n- Walking between two stations on the map can be faster than the train. Tourists discover this the hard way.\n\n## Why the lie holds up\n\nBecause people don't navigate cities the way they navigate maps. They navigate by stations, by transfers, by counting stops. The schematic matches the cognitive task, not the physical one.\n\nThe newer \"accurate\" subway maps \u2014 proportional, geographically correct \u2014 keep failing because they make the easy task hard again. Every city that tried one quietly went back.",
+      "publishDate": "2025-07-22T09:30:00.000Z",
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1568438350562-2cae6d394ad0?q=80&w=2940&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "A subway map at a station entrance.",
+        "altText": "Close-up of a wall-mounted subway map showing colored lines and station dots.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "Harry Beck's 1933 schematic threw away geographical accuracy and accidentally invented modern wayfinding. A short tour of the most successful design lie of the 20th century.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1568438350562-2cae6d394ad0?q=80&w=2940&auto=format&fit=crop"
+      },
+      "published": true
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/jane-doe"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/transit"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "../BlogCategory/future-tech"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

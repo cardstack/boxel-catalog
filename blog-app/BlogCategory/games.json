@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "longName": "Games & Play",
+      "shortName": "Games",
+      "slug": "games",
+      "pillColor": "#7C3AED",
+      "cardInfo": {
+        "summary": "How play, sport, and games shape the city.",
+        "name": "Games",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "blog": { "links": { "self": "../BlogApp/ramped" } }
+    },
+    "meta": {
+      "adoptsFrom": { "module": "../blog-category", "name": "BlogCategory" }
+    }
+  }
+}
+

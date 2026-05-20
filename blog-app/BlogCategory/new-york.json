@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "longName": "New York",
+      "shortName": "NYC",
+      "slug": "new-york",
+      "pillColor": "#0F172A",
+      "cardInfo": {
+        "summary": "Stories about the city that doesn't sleep.",
+        "name": "New York",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "blog": { "links": { "self": "../BlogApp/ramped" } }
+    },
+    "meta": {
+      "adoptsFrom": { "module": "../blog-category", "name": "BlogCategory" }
+    }
+  }
+}
+

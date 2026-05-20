@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "What's a Plaza For?",
+      "slug": "whats-a-plaza-for",
+      "body": "Every city has a plaza that's wrong. The fountain that nobody sits near. The square that's empty at lunchtime. The hard-paved expanse next to the courthouse that the wind blows newspapers across.\n\n## The three failures\n\nMost failed plazas share a small set of mistakes:\n\n- **Designed for the photograph, not for the body.** Beautiful from above, miserable at human height \u2014 no shade, no seating, nothing to lean against.\n- **No edges.** A plaza without active ground-floor uses around it is just an open space. The caf\u00e9, the newsstand, the bookstore \u2014 these are what make a plaza feel alive.\n- **Pre-programmed.** Plazas that work allow many uses at once: lunch, chess, busking, dog-walking, kids running. The ones that don't dictate one purpose.\n\n## What works\n\nWilliam Whyte spent ten years filming plazas in New York and concluded that the best ones had one thing in common: **moveable chairs**. Not benches. Not steps. Chairs you can pick up and place where you want.\n\nThe second predictor was sunlight at the times of day when people were there. The third was the presence of food.\n\nAlmost everything else was secondary.\n\nThe interesting thing is how often we get this wrong on purpose \u2014 designing plazas for visual order at the expense of every other thing they could be.",
+      "publishDate": "2024-05-10T13:00:00.000Z",
+      "published": true,
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1499678329028-101435549a4e?q=80&w=2940&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "A plaza filled with moveable chairs on a sunny afternoon.",
+        "altText": "An urban plaza with scattered moveable metal chairs and people sitting in the sun.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "Most failed plazas share the same three mistakes. William Whyte spent ten years filming the good ones and found the predictor of success was \u2014 chairs.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1499678329028-101435549a4e?q=80&w=2940&auto=format&fit=crop"
+      }
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/news"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

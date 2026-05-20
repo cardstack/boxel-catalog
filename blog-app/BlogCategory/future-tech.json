@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "longName": "Future Tech",
+      "shortName": "Tech",
+      "slug": "future-tech",
+      "pillColor": "#5856D6",
+      "cardInfo": {
+        "summary": "Highlighting technology shaping tomorrow’s cities.",
+        "name": "Future Tech",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-category",
+        "name": "BlogCategory"
+      }
+    }
+  }
+}

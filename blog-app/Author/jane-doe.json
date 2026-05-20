@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "bio": "Jane Doe is the Senior Managing Editor at Ramped.com, where she leads content strategy, editorial direction, and ensures the highest standards of quality across all publications. With over a decade of experience in digital media and editorial management, Jane has a proven track record of shaping impactful narratives, growing engaged audiences, and collaborating with cross-functional teams to deliver compelling content. When she's not editing, you can find her exploring new books, hiking, or indulging in her love of photography.",
+      "fullBio": "Jane Doe is the Senior Managing Editor at *Ramped.com*, where she leads the editorial team in crafting high-impact content that resonates with a diverse, global audience. With over 10 years of experience in digital media, Jane has built a career around her passion for storytelling, strategic content development, and editorial excellence.",
+      "quote": "\u201cGreat content isn\u2019t just about words on a page\u2014it's about creating experiences that resonate with people, spark conversation, and drive meaningful action.\u201d",
+      "contactLinks": [
+        {
+          "label": "X",
+          "value": "https://x.com/jane-doe-boxel"
+        },
+        {
+          "label": "LinkedIn",
+          "value": "https://linkedin.com/jane-doe-boxel"
+        },
+        {
+          "label": "Email",
+          "value": "jane.doe@email.com"
+        }
+      ],
+      "email": "jane.doe@email.com",
+      "featuredImage": {
+        "imageUrl": "https://boxel-images.boxel.ai/app-assets/portraits/photo-1481214110143-ed630356e1bb.jpeg",
+        "credit": "Photo via Unsplash",
+        "caption": null,
+        "altText": "Jane Doe",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "Senior Managing Editor at Ramped.com",
+        "cardThumbnailURL": "https://boxel-images.boxel.ai/app-assets/portraits/photo-1481214110143-ed630356e1bb.jpeg"
+      }
+    },
+    "relationships": {
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/modern-magazine"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../author",
+        "name": "Author"
+      }
+    }
+  }
+}

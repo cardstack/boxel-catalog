@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "Ninety Days in a Ninety-Square-Foot Apartment",
+      "slug": "ninety-days-ninety-square-feet",
+      "body": "I spent three months last winter in a converted laundry room in central Tokyo that measured 8.4m\u00b2. Officially it was a *one-room apartment*. Practically, it was a coffin with a kitchenette.\n\nThis is not a real estate complaint piece. It's a report on what happens to a person when their dwelling is smaller than most American hallways.\n\n## What got smaller\n\n- Possessions. I owned, by the end, fourteen objects. Two were toothbrushes (different ages).\n- Decisions. There were maybe six things I could do indoors, and only three I could do while standing up.\n- Identity. I started telling people my address as if it were a joke. Then I noticed I didn't really need a name for it; I'd stopped thinking of it as *home*.\n\n## What got bigger\n\n- The city. A 90 sq ft room turns the entire rest of Tokyo into your living room. The 7-Eleven was my pantry. The Family Mart was my fridge. The koban was my hallway. The convenience store cashier became, briefly, the person I saw most reliably.\n- The library at Toritsu-Daigaku. I read more in three months than in any year of my life because there was nowhere to sit at home.\n- The neighborhood. I knew everyone within 200 meters by the end of week six. Not socially \u2014 but the way you know a co-worker's daily rhythms.\n\n## What I learned\n\nA city designed around tiny private spaces produces extraordinary public ones, because everyone has to live there. The caf\u00e9s stay open. The parks are full. The convenience stores function as social infrastructure. A bigger apartment in a city like that would have been a kind of withdrawal.\n\nWould I do it again? Probably not. But I think about it constantly. The most life-changing thing about the experiment wasn't the apartment. It was discovering how much of what I'd assumed about *home* turned out to be optional.",
+      "publishDate": "2025-04-08T09:00:00.000Z",
+      "published": true,
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1542718610-a1d656d1884c?q=80&w=2940&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "A narrow Tokyo apartment hallway at night.",
+        "altText": "Tightly-packed Tokyo street with narrow building fa\u00e7ades and lit windows.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "Three months in an 8.4m\u00b2 Tokyo room. Not a real-estate complaint piece \u2014 a report on what happens when your dwelling is smaller than most American hallways.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1542718610-a1d656d1884c?q=80&w=2940&auto=format&fit=crop"
+      }
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/jane-doe"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/writers-pick"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

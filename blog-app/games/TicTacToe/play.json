@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Play Tic Tac Toe",
+        "summary": "A small two-player game.",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": { "module": "../tic-tac-toe", "name": "TicTacToe" }
+    }
+  }
+}
+

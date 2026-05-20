@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "The Library as Public Living Room",
+      "slug": "library-public-living-room",
+      "body": "Walk into any thriving urban library on a weekday afternoon and you'll find: students at the tables, parents with strollers, retirees with newspapers, freelancers on laptops, a person reading a real book, someone using the bathroom they don't have to buy a coffee to access.\n\nIt's the most under-counted piece of urban infrastructure we have.\n\n## What the library quietly does\n\n- Heated and air-conditioned space, free, with no purchase required\n- Bathrooms, drinking water, plug sockets\n- A place to take a meeting if you don't have an office\n- Public computers for the third of the city without good internet at home\n- A space where being alone in public is normal \u2014 the disappearing third place\n- Childcare during story hour\n- The only legitimate place in the city center where a teenager can spend an afternoon without being chased away\n\n## Why we keep cutting them\n\nBecause the return on investment is dispersed across a dozen public budgets (housing, healthcare, education, sanitation) and the cost shows up in one (the library's).\n\nA branch library serving 50,000 people costs less per year than a single police precinct's overtime budget and probably prevents more actual harm.\n\n## What works\n\nThe libraries that thrive in 2025 have a few things in common: long opening hours, fast Wi-Fi, comfortable chairs, and staff who treat being there as a right rather than a privilege.\n\nThey're modest interventions. They're also the closest thing modern cities have to a working commons.",
+      "publishDate": "2024-03-15T10:00:00.000Z",
+      "published": true,
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=2940&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "A public library reading room.",
+        "altText": "Interior of a public library with tables, lamps, and rows of bookshelves.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "The most under-counted piece of urban infrastructure we have \u2014 and the closest thing modern cities have to a working commons.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=2940&auto=format&fit=crop"
+      }
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/jane-doe"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/news"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "I Followed a Pigeon for a Week",
+      "slug": "followed-a-pigeon-for-a-week",
+      "body": "There's a particular pigeon I'd been seeing for months on my morning walk to the caf\u00e9. White-grey, slightly scuffed wing on the left, an unmistakable stance. I started calling him Geoff. Last March I decided to follow Geoff for as much of a week as I could manage.\n\n## What I learned about Geoff\n\n- He has a roost. Above a side entrance to an office building, west side, fourth floor.\n- He has a morning route. Roost \u2192 fountain \u2192 bakery loading dock \u2192 small park \u2192 my caf\u00e9. Total: 0.6 miles, made in about ninety minutes.\n- He's not the leader of any flock. He's a tolerated middle-ranked bird in a group of nine that congregates near the bakery between 8:15 and 9:45 each morning.\n- He has predictable absences. Tuesdays and Fridays he's not at the bakery. I never found out where he goes.\n- He has a preferred drinking spot \u2014 a slow drip from an AC unit on the south face of a brick building. He waits in line behind two other birds for it.\n\n## What I learned about my neighborhood\n\nEverything. Following a pigeon for a week makes you notice every ledge, every cornice, every gap between buildings, every gust of wind from a subway grate. You walk slowly. You look up. You stop in places you'd usually walk past.\n\nI ended the week with a hand-drawn map of an eight-block area that included the names of every business, the location of every drinkable water source, and the migration patterns of nine birds.\n\nIt is the most accurate map I have ever owned of any neighborhood. And it cost nothing but seven mornings.\n\n## A recommendation\n\nFollow a pigeon. Or a cat. Or a particular dog you see being walked. Cities are designed for humans but used by an enormous number of other animals whose maps don't show up in any planning document. Their cartography is more honest than ours.",
+      "publishDate": "2025-02-12T08:00:00.000Z",
+      "published": true,
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?q=80&w=2940&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "A pigeon in profile on a city sidewalk.",
+        "altText": "A close-up of an urban pigeon walking on grey paving stones.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "I called him Geoff. I followed him for a week. I ended up with the most accurate neighborhood map I've ever owned, and seven mornings of unexpected meditation.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?q=80&w=2940&auto=format&fit=crop"
+      }
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/writers-pick"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

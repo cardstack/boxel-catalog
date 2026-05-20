@@ -1,0 +1,69 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BlogPost",
+        "module": "../blog-post"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "body": {
+        "content": "There is a specific kind of morning, three or four times a season if you're lucky, where the snow that fell overnight is so deep and so dry that the entire mountain has been reset. Tree wells become traps. The piste markers vanish. The maintenance crews don't bother grooming, because there's no point. The mountain has won; the only thing left to do is ski it.\n\n## What deep powder feels like\n\nIt is not what skiing on a regular day feels like. It is not faster. It is, somehow, both quieter and more violent.\n\n- You don't *carve* through powder. You float over it, sometimes, and through it, mostly.\n- The mountain stops resisting you. There's nothing under your skis that's hard enough to push back. Your edges are decorative.\n- You can't see the tips of your skis. You can't see your boots. On a really good day, you can't see your knees.\n- Every turn ends in a small explosion of snow up to your face. By the second run you've inhaled, swallowed, and stared into so much of it that you've started to forget what air at 20\u00b0C tastes like.\n\n## The math of a powder day\n\nThe lift line is twice as long. The runs take three times as long because nobody wants them to end. The skiable terrain is technically smaller \u2014 because half the runs are roped off for avalanche control \u2014 but functionally feels infinite, because every run is a new line.\n\nAnd everyone on the mountain is, for those few hours, the most cheerful version of themselves they will ever be. The chair-lift conversations are with strangers. The lodge is loud. The coffee at noon is the best coffee anybody has ever had.\n\n## What you remember\n\nYears later, you won't remember every run. You'll remember:\n\n- One specific moment where the snow came up over your head and you understood, briefly, what it would feel like to be inside a wave.\n- The sound a powder ski makes \u2014 a kind of hissing \u2014 that you didn't know existed.\n- The lift you took alone, looking out at trees so heavily loaded with snow that they had bent into apostrophes.\n- The friend who lost a glove and didn't care.\n\nMost good days fade. Big-snow days don't. They are stored somewhere different in the brain.\n\n---\n\nIf you've never had one, this is your annual reminder to take the days off, watch the forecast, and be ready to leave for the mountain at four in the morning. The window is short. It closes the moment the sun comes up and the lifts start to spin and the rest of the world arrives."
+      },
+      "slug": "skiing-in-big-snow",
+      "layout": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": "A specific kind of morning \u2014 three or four a season if you're lucky \u2014 where the mountain has been reset overnight. What deep powder actually feels like, and why it's stored differently in the brain.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1551524559-8af4e6624178?q=80&w=2940&auto=format&fit=crop"
+      },
+      "headline": "Skiing in Big Snow",
+      "published": true,
+      "publishDate": "2025-03-18T10:00:00.000Z",
+      "featuredImage": {
+        "size": "actual",
+        "width": null,
+        "credit": "Photo via Unsplash",
+        "height": null,
+        "altText": "A skier carving through deep fresh snow on a mountain.",
+        "caption": "Deep powder day on the mountain.",
+        "imageUrl": "https://images.unsplash.com/photo-1551524559-8af4e6624178?q=80&w=2940&auto=format&fit=crop"
+      },
+      "cardDescription": null
+    },
+    "relationships": {
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "authors.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/writers-pick"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "body.linkedCards": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
