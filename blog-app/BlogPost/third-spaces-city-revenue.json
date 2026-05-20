@@ -1,1 +1,58 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "How Third Spaces Quietly Power a City's Economy",
+      "slug": "third-spaces-city-revenue",
+      "body": "Ray Oldenburg coined the term *third place* in 1989 \u2014 anywhere that isn't home (first) or work (second) and where you can show up alone and be welcome. Caf\u00e9s, libraries, public squares, neighborhood bars, barber shops, the bench outside the bodega.\n\nThey look like leisure. They function like infrastructure.\n\n## The boring revenue math\n\nA neighborhood with a healthy third space pulls in money in ways that don't show up on any single ledger.\n\n- **Foot traffic compounds.** The caf\u00e9 on the corner turns a residential block into a destination. The dry cleaner next door picks up clients who came for the coffee.\n- **Commercial rent floors rise.** A block with two well-run third places can sustain rent 20\u201340% higher than its surroundings, because the businesses there capture overflow.\n- **Workers stay longer.** Cities with dense third-space coverage retain remote and hybrid workers who'd otherwise leave for the suburbs. A single retained tech worker is six figures of tax revenue over their tenure.\n\n## What kills them\n\nThree things, almost always in this order:\n\n1. **Zoning that bans mixed use.** Single-use commercial strips can't host third places \u2014 they have no residents to support them outside of peak hours.\n2. **Rent shocks.** A landlord doubles the lease, the caf\u00e9 closes, a chain pharmacy takes the space. The pharmacy generates more rent per square foot and less ambient revenue for everything around it.\n3. **The slow disappearance of unprogrammed space.** Every park bench replaced with armrests, every public square fenced for a private event, every library that gets quietly defunded.\n\n## What works\n\nThe interventions are unglamorous and they work:\n\n- Commercial rent stabilization for legacy businesses\n- Mixed-use zoning by default\n- Libraries kept open evenings and weekends\n- Streets that are easier to walk than to drive\n\nCities that protect their third places end up with stronger tax bases, lower public-health costs, and the quality that makes residents stay. The places that don't end up paying for the same outcome \u2014 much more expensively \u2014 through transit, healthcare, and policing budgets.\n\nIt's the cheapest economic policy nobody talks about.",
+      "publishDate": "2025-11-04T16:00:00.000Z",
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2947&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "A neighborhood caf\u00e9 in the late afternoon \u2014 third place at work.",
+        "altText": "Interior of a busy independent caf\u00e9 with people working and chatting at communal tables.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "Caf\u00e9s, libraries, and corner benches look like leisure. They function like infrastructure \u2014 and the revenue they generate is the cheapest economic policy nobody talks about.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2947&auto=format&fit=crop"
+      },
+      "published": true
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/city-design"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

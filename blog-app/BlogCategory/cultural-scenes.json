@@ -2,13 +2,13 @@
   "data": {
     "type": "card",
     "attributes": {
-      "longName": "Urban Work",
-      "shortName": "Work",
-      "slug": "urban-work",
-      "pillColor": "#0EA5E9",
+      "longName": "Cultural Scenes",
+      "shortName": "Culture",
+      "slug": "cultural-scenes",
+      "pillColor": "#FA7F01",
       "cardInfo": {
-        "summary": "Exploring work trends in the evolving city landscape.",
-        "name": "Work",
+        "summary": "Capturing the vibrant art, food, and music of cities.",
+        "name": "Cultural Scenes",
         "cardThumbnailURL": null
       }
     },

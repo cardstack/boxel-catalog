@@ -1,1 +1,49 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "default",
+        "module": "https://cardstack.com/base/style-reference"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "styleName": "Warm Editorial",
+      "visualDNA": "Playfair Display headlines paired with Lora body text on a warm cream page (#fcf8f1). Generous paragraph spacing, italic subtitles, deep-rose pull-quote color, near-sharp corner radius. Classic literary-magazine print feel — slower, more considered, decorative.",
+      "inspirations": ["The New Yorker", "Aeon", "Granta", "Harper's Magazine", "letterpress print"],
+      "wallpaperImages": [],
+      "cardInfo": {
+        "notes": null,
+        "name": "Warm Editorial",
+        "summary": "Playfair + Lora serifs · cream page · deep-rose accent — classic lit-mag print."
+      },
+      "cssImports": [
+        "https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+      ],
+      "rootVariables": {
+        "background": "#fcf8f1",
+        "foreground": "#1a1410",
+        "primary": "#b1395a",
+        "primaryForeground": "#ffffff",
+        "secondary": "#efe8db",
+        "secondaryForeground": "#2b2520",
+        "muted": "#f5efe2",
+        "mutedForeground": "#7a6b60",
+        "accent": "#b1395a",
+        "accentForeground": "#ffffff",
+        "border": "#e0d6c6",
+        "card": "#fffdf8",
+        "cardForeground": "#1a1410",
+        "fontSans": "'Lora', Georgia, 'Times New Roman', serif",
+        "fontSerif": "'Playfair Display', Georgia, serif",
+        "radius": "4px"
+      },
+      "cssVariables": ":root {\n  --blog-color-bg: #fcf8f1;\n  --blog-color-text: #1a1410;\n  --blog-color-body: #2b2520;\n  --blog-color-muted: #5b4f47;\n  --blog-color-subtle: #7a6b60;\n  --blog-color-faint: #a89c92;\n  --blog-color-placeholder: #c4b8ad;\n  --blog-color-thumb-bg: #efe8db;\n  --blog-color-divider: #e0d6c6;\n  --blog-color-accent: #b1395a;\n  --blog-color-card-bg: #fffdf8;\n  --blog-font-family: 'Lora', Georgia, 'Times New Roman', serif;\n  --blog-font-display-family: 'Playfair Display', Georgia, serif;\n  --blog-font-headline: 700 4.25rem/1.05 var(--blog-font-display-family);\n  --blog-font-display-l: 700 2.75rem/1.1 var(--blog-font-display-family);\n  --blog-font-display-m: 700 2.1rem/1.15 var(--blog-font-display-family);\n  --blog-font-name: 700 1.6rem/1.2 var(--blog-font-display-family);\n  --blog-font-h2: 700 1.9rem/1.25 var(--blog-font-display-family);\n  --blog-font-h3: 700 1.3rem/1.35 var(--blog-font-display-family);\n  --blog-font-subtitle: italic 400 1.3rem/1.5 var(--blog-font-family);\n  --blog-font-pullquote: italic 500 1.55rem/1.4 var(--blog-font-display-family);\n  --blog-font-body: 400 1.0625rem/1.75 var(--blog-font-family);\n  --blog-font-body-sm: 400 0.95rem/1.65 var(--blog-font-family);\n  --blog-font-meta: 500 0.72rem/1 var(--blog-font-family);\n  --blog-font-eyebrow: 600 0.72rem/1 var(--blog-font-family);\n  --blog-tracking-meta: 0.08em;\n  --blog-tracking-eyebrow: 0.22em;\n  --blog-tracking-tight: 0;\n  --blog-tracking-tighter: 0;\n  --blog-reading-max: 680px;\n  --blog-subtitle-max: 720px;\n  --blog-headline-max: 880px;\n  --blog-canvas-max: 1100px;\n  --blog-radius-md: 4px;\n  --blog-radius-pill: 999px;\n  --blog-shadow-card: 0 1px 2px rgba(60, 40, 20, 0.06);\n  --blog-shadow-card-hover: 0 6px 18px rgba(60, 40, 20, 0.1);\n  --blog-shadow-portrait: 0 6px 18px rgba(60, 40, 20, 0.12);\n}"
+    },
+    "relationships": {
+      "cardInfo.theme": { "links": { "self": null } },
+      "cardInfo.cardThumbnail": { "links": { "self": null } }
+    }
+  }
+}
+

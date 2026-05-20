@@ -1,1 +1,69 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BlogPost",
+        "module": "../blog-post"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "body": {
+        "content": "There's a particular kind of café — usually independent, usually less than five years old — that quietly stabilizes the four hundred feet around it. You can identify these places by what happens when they close.\n\n## The mechanism\n\nA good neighborhood café does three things at once:\n\n1. **Generates ambient foot traffic** — the dry cleaner, the bookstore, the bodega all pick up customers who came for coffee.\n2. **Anchors the morning commute** — a regular café visit is the closest thing most remote workers have to a structured workday.\n3. **Becomes a public office** — it's where freelancers, founders, and writers do the work that produces most of the new businesses on that street.\n\n## What happens when they close\n\nA neighborhood survey in San Francisco, Brooklyn, and Lisbon found a consistent pattern: when an anchor café closes, foot traffic on the block drops 15–25% within a quarter, retail vacancy on the same block doubles within a year, and the *next* business to fail is usually the bookstore.\n\nThis is the inverse of the chain-store argument. Chain stores can survive a block that's slowly hollowing out. Anchor cafés can't, because they *are* the block.\n\n## Why this is hard\n\nNobody writes a city plan that names individual coffee shops as protected infrastructure. We treat them as commercial tenants. But the productivity, sociability, and street-level life they generate is closer to a public good.\n\nThe cheapest urban policy nobody talks about: lower commercial rent for legacy independent food businesses, simpler permits, and a little patience."
+      },
+      "slug": "coffee-shop-anchor",
+      "layout": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": "What happens to a block when its anchor café closes — and why we don't have a word for the kind of infrastructure that café actually is.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=2940&auto=format&fit=crop"
+      },
+      "headline": "The Anchor Café: How One Shop Holds Up a Block",
+      "published": true,
+      "publishDate": "2025-06-05T08:00:00.000Z",
+      "featuredImage": {
+        "size": "actual",
+        "width": null,
+        "credit": "Photo via Unsplash",
+        "height": null,
+        "altText": "Interior of a small independent coffee shop with a barista at work behind the counter.",
+        "caption": "Morning at an independent café — quiet infrastructure.",
+        "imageUrl": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=2940&auto=format&fit=crop"
+      },
+      "cardDescription": null
+    },
+    "relationships": {
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "authors.0": {
+        "links": {
+          "self": "../Author/jane-doe"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/urban-work"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "body.linkedCards": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

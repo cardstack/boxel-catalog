@@ -1,1 +1,69 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BlogPost",
+        "module": "../blog-post"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "body": {
+        "content": "Central Park costs the city of New York about $80 million a year to operate. It returns somewhere north of a billion in adjacent property tax, tourism, and avoided public-health costs. Almost every city's parks operate at that ratio if you actually count.\n\n## What people forget\n\n- **The proximity premium.** Apartments within a five-minute walk of a well-kept park trade at a 5–15% premium. That premium becomes property tax revenue. The park is a quiet tax engine.\n- **The heat-island offset.** Each acre of mature urban tree cover lowers nearby summer temperatures by 1–3°C. That translates directly into lower air-conditioning costs and fewer heat-related ER visits.\n- **The third-space subsidy.** Parks absorb hours that would otherwise be spent inside paid venues. They're the only commons left in most cities.\n\n## Why they get cut anyway\n\nBecause the return is diffuse and the cost is visible. The mayor who delays a park renovation saves a line item this fiscal year. The mayor in 2031 inherits the cost — in heat-illness, in lost property tax, in the slow exodus of families to suburbs with backyards.\n\nIt's the same shape as climate policy, schools, and transit: cheap to neglect, expensive to lose."
+      },
+      "slug": "urban-parks-economics",
+      "layout": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": "Parks look like luxury and function like infrastructure. The hidden tax engine inside every patch of grass — and why cities keep cutting them anyway.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1568454537842-d933259bb258?q=80&w=2940&auto=format&fit=crop"
+      },
+      "headline": "What Urban Parks Actually Pay For Themselves",
+      "published": true,
+      "publishDate": "2025-10-10T15:00:00.000Z",
+      "featuredImage": {
+        "size": "actual",
+        "width": null,
+        "credit": "Photo via Unsplash",
+        "height": null,
+        "altText": "Aerial view of a city park surrounded by tall apartment buildings in fall colors.",
+        "caption": "An urban park in autumn — a tax engine disguised as a lawn.",
+        "imageUrl": "https://images.unsplash.com/photo-1568454537842-d933259bb258?q=80&w=2940&auto=format&fit=crop"
+      },
+      "cardDescription": null
+    },
+    "relationships": {
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "authors.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/city-design"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "body.linkedCards": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

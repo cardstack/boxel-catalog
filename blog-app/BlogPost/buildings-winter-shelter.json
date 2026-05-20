@@ -1,1 +1,69 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BlogPost",
+        "module": "../blog-post"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "body": {
+        "content": "When the temperature drops below freezing, the building you're inside of is doing more work than you notice. The wall against your back is moving heat outward at a rate determined by physics; the radiator under your window is racing it inward. The story of every cold-climate city is the story of buildings winning that race for hundreds of millions of person-hours a year.\n\n## The hidden machine\n\nA modern apartment in a temperate-zone city does four things to keep you alive:\n\n1. **Resists conduction.** Insulation in the walls, double or triple glazing, weatherstripping at every gap. The R-value of a wall is the most consequential number in domestic survival.\n2. **Resists infiltration.** Cold air leaks through every crack it can find. A well-built envelope is more about air-tightness than thickness.\n3. **Captures sun.** South-facing glazing, thermal mass in the floors, the way a window seat warms in the afternoon.\n4. **Adds heat actively.** Boiler, heat pump, district steam, whatever the city's grid can deliver.\n\nMost old buildings do (1) and (3) poorly, lean hard on (4), and bleed money into the atmosphere. Most new construction does (1) and (2) well and barely needs (4) at all.\n\n## District heating: the unsung hero\n\nIn parts of New York, Helsinki, Copenhagen, and Seoul, a network of underground pipes carries hot water — often heated by waste from power plants — to thousands of buildings at once. It's quietly one of the most efficient pieces of infrastructure ever built.\n\n- Single building boilers: ~80% efficient.\n- District heating from combined heat and power: 85–95% efficient, with much lower per-capita emissions.\n\nThe reason most cities don't have it is that you have to dig up every street once. After that, it runs for generations.\n\n## Why this matters more now\n\nWinters are becoming more volatile — polar-vortex events, multi-day grid stress, sudden cold snaps in cities that weren't designed for them. The buildings we live in were mostly built for a climate we no longer have.\n\nThe retrofit agenda — better windows, sealed envelopes, heat pumps, district networks — isn't glamorous. It's just the thing that determines whether several hundred million people in cold cities are warm next February.\n\n> Architecture is not the art of forms. It is the art of climates that admit human life.\n\nBuildings are the silent half of public health. We notice them only when they fail."
+      },
+      "slug": "buildings-winter-shelter",
+      "layout": "[{\"slots\":[{\"name\":\"headline\",\"width\":12}]},{\"slots\":[{\"name\":\"featuredImage\",\"width\":12}]},{\"slots\":[{\"name\":\"categories\",\"width\":12}]},{\"slots\":[{\"name\":\"cardDescription\",\"width\":12}]},{\"slots\":[{\"name\":\"byline\",\"width\":12}]},{\"slots\":[{\"name\":\"body\",\"width\":12}]},{\"slots\":[{\"name\":\"authorBios\",\"width\":12}]}]",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": "The walls keeping you warm tonight are doing more work than you notice. A short tour of the physics, the infrastructure, and the retrofit agenda nobody talks about.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?q=80&w=2940&auto=format&fit=crop"
+      },
+      "headline": "How Buildings Keep Us Alive in Winter",
+      "published": true,
+      "publishDate": "2025-12-19T12:00:00.000Z",
+      "featuredImage": {
+        "size": "actual",
+        "width": null,
+        "credit": "Photo via Unsplash",
+        "height": null,
+        "altText": "Rows of urban apartment buildings on a snowy evening, windows glowing yellow.",
+        "caption": "A row of apartments at dusk, their warm windows reading like signals.",
+        "imageUrl": "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?q=80&w=2940&auto=format&fit=crop"
+      },
+      "cardDescription": null
+    },
+    "relationships": {
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "authors.0": {
+        "links": {
+          "self": "../Author/jane-doe"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/city-design"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "body.linkedCards": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -2,13 +2,13 @@
   "data": {
     "type": "card",
     "attributes": {
-      "longName": "Urban Work",
-      "shortName": "Work",
-      "slug": "urban-work",
-      "pillColor": "#0EA5E9",
+      "longName": "Street Life",
+      "shortName": "Streets",
+      "slug": "street-life",
+      "pillColor": "#39B1FF",
       "cardInfo": {
-        "summary": "Exploring work trends in the evolving city landscape.",
-        "name": "Work",
+        "summary": "Discovering the stories of streets and public spaces.",
+        "name": "Street Life",
         "cardThumbnailURL": null
       }
     },

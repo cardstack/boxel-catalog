@@ -1,1 +1,58 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "What Makes a Street Feel Safe at Night",
+      "slug": "safe-streets-at-night",
+      "body": "It isn't more police. It usually isn't more cameras. It's almost always a combination of three small things, none of which costs much, all of which compound.\n\n## Eyes on the street\n\nJane Jacobs called it sixty years ago: a street is safe when people are casually watching it. Ground-floor windows that face the sidewalk. Caf\u00e9s that stay open late. The grandmother on the stoop. The dog walker at 11pm. Each of them is unconsciously providing a public service that no security guard can match.\n\n## Lighting that's right, not bright\n\nFloodlights make a street feel like a prison yard. What works is **even, warm, low-rise** illumination \u2014 closer to a streetlamp than a stadium light. The eye adjusts. Shadows shorten. The street feels populated even when no one is on it.\n\nA Chicago study in 2020 found that streets switched to LED warm lighting saw a 21% drop in night-time crime over three years. The cost was a fraction of what a single additional patrol car would have run.\n\n## Open shops and uneven hours\n\nA block where one or two businesses are open until midnight feels different from a block that goes dark at 9. The all-night bodega, the late caf\u00e9, the 24-hour laundromat \u2014 each one is an anchor that keeps the sidewalk alive.\n\nThe planning decision behind this is unglamorous: zoning that allows mixed-use, late-night permits that aren't punitive, and small business protection from the rent shocks that close anchors first.\n\nThe streets that feel dangerous at night usually got that way through neglect, not through anything dramatic. They become safe again the same way \u2014 quietly, through a few small choices made over years.",
+      "publishDate": "2024-09-15T11:00:00.000Z",
+      "published": true,
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2940&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "A warmly-lit street at night.",
+        "altText": "Empty city street with warm streetlights and lit shop fronts at night.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "Three small interventions \u2014 eyes on the street, warm lighting, uneven business hours \u2014 that turn dangerous blocks into safe ones, often for the cost of paint and patience.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2940&auto=format&fit=crop"
+      }
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/jane-doe"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/news"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

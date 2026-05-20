@@ -1,1 +1,29 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "longName": "City Design",
+      "shortName": "Design",
+      "slug": "city-design",
+      "pillColor": "#FF7A59",
+      "cardInfo": {
+        "summary": "Showcasing architecture and urban planning brilliance.",
+        "name": "City Design",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-category",
+        "name": "BlogCategory"
+      }
+    }
+  }
+}

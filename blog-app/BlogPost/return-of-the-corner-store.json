@@ -1,1 +1,58 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "The Return of the Corner Store",
+      "slug": "return-of-the-corner-store",
+      "body": "For thirty years, the corner store was a casualty of consolidation. Big-box retail and pharmacy chains ate the foot traffic. Then quietly, in the last five, small neighborhood shops started coming back.\n\n## What changed\n\n- **Remote work redistributed customers.** Daytime foot traffic in residential blocks doubled in many cities post-2020. The corner store that used to depend on the morning rush now has all-day demand.\n- **Chain pharmacies started closing.** CVS announced 900 closures, Walgreens 1,200. The locations they leave behind are too small for big-box and too well-located to stay empty.\n- **Permitting got slightly easier.** A handful of cities introduced \"micro-retail\" categories \u2014 simplified licenses for shops under 1,000 sq ft.\n\n## What the new corner store sells\n\nNot what the old one did. Today's version is:\n\n- Coffee in the morning, wine in the evening\n- Locally-made staples next to imported snacks\n- A few prepared foods, a few flowers\n- The thing you forgot at the grocery store on Sunday afternoon\n\nIt's not a convenience store. It's a *neighborhood store* \u2014 assembled deliberately for a specific block.\n\n## Why this matters more than it looks\n\nThese shops are quietly rebuilding the social fabric of urban blocks. They host the kind of brief, ambient interactions \u2014 the nod to the shopkeeper, the chat at the register \u2014 that disappear in any neighborhood that loses them.\n\nWhen they thrive, the blocks around them get safer, the property values stabilize, and people stay longer in apartments they would otherwise have left. The corner store turns out to be a small piece of infrastructure that pays for itself many times over \u2014 if we let it.",
+      "publishDate": "2024-07-20T09:00:00.000Z",
+      "published": true,
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=2940&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "A small neighborhood shop with the lights on.",
+        "altText": "Exterior of an independent corner store at dusk with warm interior lighting visible.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "After thirty years of decline, small neighborhood shops are coming back \u2014 and quietly rebuilding the social fabric of urban blocks while they do.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=2940&auto=format&fit=crop"
+      }
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/urban-work"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

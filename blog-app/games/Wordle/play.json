@@ -1,1 +1,17 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Play Wordle",
+        "summary": "Guess the five-letter word in six tries.",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": { "module": "../wordle", "name": "Wordle" }
+    }
+  }
+}
+

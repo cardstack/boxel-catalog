@@ -1,1 +1,69 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BlogPost",
+        "module": "../blog-post"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "body": {
+        "content": "Copenhagen didn't become the world's best bike city because Danes are intrinsically virtuous. It became the world's best bike city because a series of unglamorous policy decisions, made over forty years, turned out to be right.\n\n## The chain of small choices\n\n- Separated lanes, not paint. A line on the road tells a driver nothing. A curb tells them everything.\n- Bridges for bikes first. The Cykelslangen — the \"bicycle snake\" — was built before its car equivalent.\n- Snow plowed from bike lanes *before* car lanes during winter storms. That single policy is worth more than any campaign.\n\n## What it gives back\n\nA modal share above 49% for trips to work or school. A reduction in healthcare costs estimated at €235M per year. And a quality of urban life that anyone who has spent a week there knows in their bones.\n\nThe lesson isn't that other cities should copy Copenhagen. It's that infrastructure compounds — quietly, over decades — into culture."
+      },
+      "slug": "bike-city-copenhagen",
+      "layout": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": "How forty years of unglamorous policy turned Copenhagen into the world's bike capital — and what that means for everyone else.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1519583272095-6433daf26b6e?q=80&w=2940&auto=format&fit=crop"
+      },
+      "headline": "The Bike City: How Copenhagen Quietly Won",
+      "published": true,
+      "publishDate": "2025-08-15T10:00:00.000Z",
+      "featuredImage": {
+        "size": "actual",
+        "width": null,
+        "credit": "Photo via Unsplash",
+        "height": null,
+        "altText": "A row of cyclists crossing a bridge during morning rush in Copenhagen.",
+        "caption": "Morning commuter traffic on a Copenhagen bike lane.",
+        "imageUrl": "https://images.unsplash.com/photo-1519583272095-6433daf26b6e?q=80&w=2940&auto=format&fit=crop"
+      },
+      "cardDescription": null
+    },
+    "relationships": {
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "authors.0": {
+        "links": {
+          "self": "../Author/alice-enwunder"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/transit"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "body.linkedCards": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

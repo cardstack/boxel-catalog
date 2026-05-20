@@ -1,1 +1,62 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "BlogApp",
+        "module": "../blog-app"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "website": "ramped.com",
+      "cardInfo": {
+        "name": "Ramped",
+        "notes": null,
+        "summary": "Urban insights",
+        "cardThumbnailURL": "https://boxel-images.boxel.ai/icons/ramped.png"
+      }
+    },
+    "relationships": {
+      "lead": {
+        "links": {
+          "self": "../BlogPost/buildings-winter-shelter"
+        }
+      },
+      "games.0": {
+        "links": {
+          "self": "../games/Wordle/play"
+        }
+      },
+      "games.1": {
+        "links": {
+          "self": "../games/TicTacToe/play"
+        }
+      },
+      "featured.0": {
+        "links": {
+          "self": "../BlogPost/urban-parks-economics"
+        }
+      },
+      "featured.1": {
+        "links": {
+          "self": "../BlogPost/coffee-shop-anchor"
+        }
+      },
+      "featured.2": {
+        "links": {
+          "self": "../BlogPost/bike-city-copenhagen"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/modern-magazine"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

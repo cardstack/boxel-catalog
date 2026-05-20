@@ -1,1 +1,58 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "headline": "A Year of Eating Only at the Bodega Across the Street",
+      "slug": "year-at-the-bodega",
+      "body": "On January 1st I made a rule: every meal I ate outside my apartment would come from the deli on the corner of my block, no exceptions. No restaurants. No grocery stores. No food courts. Just the bodega \u2014 fifteen feet of refrigerated shelving, a sandwich counter, a hot bar, and a microwave.\n\nThis is what I learned in twelve months.\n\n## The bodega has a menu of about 200 dishes\n\nNot officially. Officially there are six sandwiches on the laminated card. But once you start asking, it turns out Hassan will make you anything \u2014 a Saturday-only specials list runs in his head; the breakfast bar reconfigures based on what was overstocked the day before; there are three different egg sandwiches that don't appear on any signage.\n\nA bodega is a restaurant the way a forest is a garden. You have to learn to forage.\n\n## My neighbors started showing up in my diary\n\nThe man who buys two single Marlboro Lights every Wednesday at 6:42pm. The woman with the small dog who is the only person in the neighborhood who actually buys vegetables here. The teenager from the building behind mine who picks up exactly one Snapple every afternoon and never says anything.\n\nI started referring to them by the contents of their orders. The single-Marlboro guy. The Snapple kid. They became, briefly, the closest thing I had to a stable circle.\n\n## I gained four pounds and saved $4,200\n\nI did the math at year-end. Average meal cost: $6.40. Restaurant control group from the year before: $19.20. Twelve months \u00d7 ~80 meals out per month = $4,200 saved.\n\nThe four pounds were from the egg-and-cheese on Saturdays, which I refuse to apologize for.\n\n## What I lost\n\nVariety, obviously. Date options. Reasonable conversations about restaurants. The ability to participate in food media at all.\n\n## What I gained\n\nThe sense that the smallest piece of infrastructure on my block was, in fact, enough. Hassan now knows my coffee order without being asked. He saves the better avocados under the counter. He once gave me a bowl of soup, on the house, when I had a cold.\n\nThe block has become something more like a village than I had any right to expect from a New York neighborhood. The thing that made that happen, more than anything, was deciding to use the same business every day, deliberately, for a year.",
+      "publishDate": "2024-12-30T11:00:00.000Z",
+      "published": true,
+      "featuredImage": {
+        "imageUrl": "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2940&auto=format&fit=crop",
+        "credit": "Photo via Unsplash",
+        "caption": "The counter at a small corner deli.",
+        "altText": "Interior of a small corner deli with packaged goods on shelves and a counter visible.",
+        "size": "actual",
+        "height": null,
+        "width": null
+      },
+      "cardInfo": {
+        "summary": "One rule for twelve months: every meal out came from the bodega on my corner. What I learned about food, neighbors, money, and what 'a block' can actually be.",
+        "cardThumbnailURL": "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2940&auto=format&fit=crop"
+      }
+    },
+    "relationships": {
+      "authors.0": {
+        "links": {
+          "self": "../Author/jane-doe"
+        }
+      },
+      "blog": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../BlogCategory/writers-pick"
+        }
+      },
+      "editors": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      }
+    }
+  }
+}

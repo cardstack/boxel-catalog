@@ -1,1 +1,23 @@
-[ELIFECYCLE] Command failed with exit code 1.
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "longName": "News",
+      "shortName": "News",
+      "slug": "news",
+      "pillColor": "#DC2626",
+      "cardInfo": {
+        "summary": "Reporting on what's happening in the city right now.",
+        "name": "News",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "blog": { "links": { "self": "../BlogApp/ramped" } }
+    },
+    "meta": {
+      "adoptsFrom": { "module": "../blog-category", "name": "BlogCategory" }
+    }
+  }
+}
+
