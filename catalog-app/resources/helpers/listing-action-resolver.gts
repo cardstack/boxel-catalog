@@ -2,7 +2,6 @@ import { CardContext } from 'https://cardstack.com/base/card-api';
 import { Listing } from '../../listing/listing';
 
 import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
-import ListingBuildCommand from '../../../commands/listing-action-build';
 import ListingRemixCommand from '@cardstack/boxel-host/commands/listing-remix';
 import ShowCardCommand from '@cardstack/boxel-host/commands/show-card';
 
@@ -18,12 +17,6 @@ export interface SkillActions extends BaseAction {
   remix?: (realmUrl: string) => Promise<void>;
 }
 
-export interface StubActions extends BaseAction {
-  readonly type: 'stub';
-  preview: () => Promise<void>;
-  build: (realmUrl: string) => Promise<void>;
-}
-
 export interface RegularActions extends BaseAction {
   readonly type: 'regular';
   preview?: () => Promise<void>;
@@ -36,11 +29,7 @@ export interface ThemeActions extends BaseAction {
   remix?: (realmUrl: string) => Promise<void>;
 }
 
-export type ListingActions =
-  | SkillActions
-  | StubActions
-  | RegularActions
-  | ThemeActions;
+export type ListingActions = SkillActions | RegularActions | ThemeActions;
 
 /**
  * Resolves listing type and returns appropriate action configuration
@@ -52,14 +41,12 @@ export function resolveListingActions(
   const hasExamples = Boolean(listing.examples?.length);
   const hasSpecs = Boolean(listing.specs?.length);
   const hasSkills = Boolean(listing.skills?.length);
-  const isStub = listing.tags?.some((tag) => tag.name === 'Stub') ?? false;
   const isSkillListing = listing.constructor?.name === 'SkillListing';
   const isThemeListing = listing.constructor?.name === 'ThemeListing';
 
   // Create appropriate adapter instances
   const cardOrFieldAdapter = new CardOrFieldListingAdapter(context);
   const skillAdapter = new SkillListingAdapter(context);
-  const stubAdapter = new StubListingAdapter(context);
 
   // Return typed adapter based on listing condition
   if (isSkillListing) {
@@ -76,17 +63,6 @@ export function resolveListingActions(
       }),
       view: () => skillAdapter.view(listing),
     } as SkillActions;
-  }
-
-  if (isStub) {
-    return {
-      type: 'stub',
-      ...(hasExamples && {
-        preview: () => stubAdapter.preview(listing),
-      }),
-      build: (realmUrl: string) => stubAdapter.build(listing, realmUrl),
-      view: () => stubAdapter.view(listing),
-    } as StubActions;
   }
 
   if (isThemeListing) {
@@ -180,17 +156,3 @@ export class SkillListingAdapter extends CardOrFieldListingAdapter {
   }
 }
 
-/**
- * Stub listing adapter - no remix, just build
- */
-export class StubListingAdapter extends BaseListingAdapter {
-  async build(listing: Listing, realmUrl: string): Promise<void> {
-    if (!realmUrl) throw new Error('Realm URL required for build action');
-    const commandContext = this.context.commandContext;
-    if (!commandContext) throw new Error('Missing commandContext');
-    await new ListingBuildCommand(commandContext).execute({
-      realm: realmUrl,
-      listing: listing,
-    });
-  }
-}

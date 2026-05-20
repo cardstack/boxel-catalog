@@ -99,7 +99,6 @@ export function makeMockCatalogContents(
   const publisherId = `${mockCatalogURL}Publisher/boxel-publisher`;
   const pirateSkillId = `${mockCatalogURL}Skill/pirate-speak`;
   const unknownSpecId = `${mockCatalogURL}Spec/unknown-no-type`;
-  const stubTagId = `${mockCatalogURL}Tag/stub`;
   const authorListingId = `${mockCatalogURL}Listing/author`;
 
   return {
@@ -626,42 +625,6 @@ export function makeMockCatalogContents(
           adoptsFrom: {
             module: `${catalogRealmURL}catalog-app/listing/tag`,
             name: 'Tag',
-          },
-        },
-      },
-    },
-    'Tag/stub.json': {
-      data: {
-        type: 'card',
-        attributes: {
-          name: 'Stub',
-        },
-        meta: {
-          adoptsFrom: {
-            module: `${catalogRealmURL}catalog-app/listing/tag`,
-            name: 'Tag',
-          },
-        },
-      },
-    },
-    'Listing/api-documentation-stub.json': {
-      data: {
-        type: 'card',
-        attributes: {
-          name: 'API Documentation',
-          cardTitle: 'API Documentation', // hardcoding title otherwise test will be flaky when waiting for a computed
-        },
-        relationships: {
-          'tags.0': {
-            links: {
-              self: stubTagId,
-            },
-          },
-        },
-        meta: {
-          adoptsFrom: {
-            module: `${catalogRealmURL}catalog-app/listing/listing`,
-            name: 'Listing',
           },
         },
       },

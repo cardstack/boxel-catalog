@@ -38,8 +38,6 @@ import {
 const catalogRealmURL: string = new URL('./', import.meta.url).href;
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
-//listing
-const apiDocumentationStubListingId = `${mockCatalogURL}Listing/api-documentation-stub`;
 //license
 const mitLicenseId = `${mockCatalogURL}License/mit`;
 //category
@@ -112,28 +110,6 @@ export function runTests() {
           // we always run a command inside interact mode
           await visitOperatorMode({
             stacks: [[]],
-          });
-        });
-        module('"build"', function () {
-          test('card listing', async function (assert) {
-            await visitOperatorMode({
-              stacks: [
-                [
-                  {
-                    id: apiDocumentationStubListingId,
-                    format: 'isolated',
-                  },
-                ],
-              ],
-            });
-            await waitFor(
-              `[data-test-card="${apiDocumentationStubListingId}"]`,
-            );
-            assert
-              .dom(
-                `[data-test-card="${apiDocumentationStubListingId}"] [data-test-catalog-listing-action="Build"]`,
-              )
-              .containsText('Build', 'Build button exist in listing');
           });
         });
         module('"create"', function (hooks) {

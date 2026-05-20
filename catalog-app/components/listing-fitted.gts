@@ -77,12 +77,6 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
     return;
   }
 
-  get stubActions() {
-    return this.listingActions?.type === 'stub'
-      ? this.listingActions
-      : undefined;
-  }
-
   get skillActions() {
     return this.listingActions?.type === 'skill'
       ? this.listingActions
@@ -145,15 +139,7 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
             {{#if this.hasTags}}
               <span class='card-tags'># {{this.firstTagName}}</span>
             {{/if}}
-            {{#if this.stubActions}}
-              <ChooseRealmAction
-                @name='Build'
-                @writableRealms={{this.writableRealms}}
-                @onAction={{this.stubActions.build}}
-                @context={{@context}}
-                @size='extra-small'
-              />
-            {{else if this.skillActions}}
+            {{#if this.skillActions}}
               {{#if this.skillActions.remix}}
                 <ChooseRealmAction
                   @name='Remix'

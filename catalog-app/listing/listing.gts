@@ -156,12 +156,6 @@ class EmbeddedTemplate extends Component<typeof Listing> {
     return;
   }
 
-  get stubActions() {
-    return this.listingActions?.type === 'stub'
-      ? this.listingActions
-      : undefined;
-  }
-
   get regularActions() {
     return this.listingActions?.type === 'regular'
       ? this.listingActions
@@ -215,13 +209,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                   </BoxelButton>
                 {{/if}}
               {{/if}}
-              {{#if this.stubActions}}
-                <ChooseRealmAction
-                  @name='Build'
-                  @writableRealms={{this.writableRealms}}
-                  @onAction={{this.stubActions.build}}
-                />
-              {{else if this.regularActions}}
+              {{#if this.regularActions}}
                 {{#if this.regularActions.remix}}
                   <ChooseRealmAction
                     @name='Remix'
