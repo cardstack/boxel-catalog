@@ -11,6 +11,7 @@ import {
   rri,
   type ListingPathResolver,
   type LooseSingleCardDocument,
+  type RealmResourceIdentifier,
   type Relationship,
 } from '@cardstack/runtime-common';
 import type {
@@ -376,7 +377,7 @@ export default class CollectSubmissionFilesCommand extends Command<
     const visited = new Set<string>();
     const queue: string[] = instances
       .map((instance) => instance.id)
-      .filter((id): id is string => typeof id === 'string')
+      .filter((id): id is RealmResourceIdentifier => typeof id === 'string')
       .filter((id) => !isBaseRealmId(id));
 
     while (queue.length > 0) {

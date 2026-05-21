@@ -2,6 +2,7 @@ import type {
   ListingPathResolver,
   ModuleResource,
   LooseCardResource,
+  RealmResourceIdentifier,
 } from '@cardstack/runtime-common';
 import {
   Command,
@@ -169,7 +170,7 @@ export default class ListingInstallCommand extends Command<
     let visited = new Set<string>();
     let queue: string[] = instances
       .map((instance) => instance.id)
-      .filter((id): id is string => typeof id === 'string');
+      .filter((id): id is RealmResourceIdentifier => typeof id === 'string');
 
     // - Queue of ids to traverse; visited prevents duplicate relationship ids.
     // - Each loop extracts relationship ids and enqueues them, so we descend
