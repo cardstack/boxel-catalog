@@ -5,12 +5,12 @@ import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 import { catalogRealmURL, setupCatalogRealm } from '../helpers/catalog-realm';
 
-module('Integration | catalog field specs (moved from base)', function (hooks) {
+module('Integration | base field specs', function (hooks) {
   setupRenderingTest(hooks);
   setupBaseRealm(hooks);
   setupCatalogRealm(hooks);
 
-  test('every field spec in the catalog has correct shape and uses https://cardstack.com/base/ refs', async function (assert) {
+  test('base realm field specs in catalog have correct shape and refs', async function (assert) {
     let response = await fetch(`${catalogRealmURL}_search`, {
       method: 'QUERY',
       headers: {

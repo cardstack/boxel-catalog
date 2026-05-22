@@ -7,7 +7,7 @@ import {
 import NumberField from 'https://cardstack.com/base/number';
 import { StepRangeScroller } from '../components/step-range-scroller';
 
-export class DiscreteRangeField extends CardDef {
+export default class DiscreteRangeField extends CardDef {
   @field startValue = contains(NumberField);
   @field endValue = contains(NumberField);
   @field min = contains(NumberField);
