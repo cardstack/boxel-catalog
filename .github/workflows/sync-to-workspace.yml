@@ -6,33 +6,74 @@ on:
   workflow_dispatch:
 
 env:
-  STAGING_WORKSPACE_URL: https://realms-staging.stack.cards/catalog
-  PRODUCTION_WORKSPACE_URL: https://app.boxel.ai/catalog
+  STAGING_WORKSPACE_URL: https://realms-staging.stack.cards/catalog/
+  PRODUCTION_WORKSPACE_URL: https://app.boxel.ai/catalog/
 
 jobs:
   sync-staging:
     name: Sync to Staging
     runs-on: ubuntu-latest
+    env:
+      MATRIX_URL: https://matrix-staging.stack.cards
+      MATRIX_USERNAME: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_USERNAME }}
+      MATRIX_PASSWORD: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_PASSWORD }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Boxel CLI
+        run: npm install -g @cardstack/boxel-cli@latest
+
+      - name: Configure Boxel profile
+        run: |
+          if echo "$MATRIX_URL" | grep -q "boxel.ai"; then
+            DOMAIN="boxel.ai"
+          elif echo "$MATRIX_URL" | grep -q "stack.cards"; then
+            DOMAIN="stack.cards"
+          else
+            DOMAIN="localhost"
+          fi
+          boxel profile add \
+            --user "@${MATRIX_USERNAME}:${DOMAIN}" \
+            --password "${MATRIX_PASSWORD}" \
+            --matrix-url "${MATRIX_URL}"
+
       - name: Sync to staging workspace
         id: sync
-        uses: ./.github/actions/sync-workspace
-        with:
-          environment: staging
-          workspace-url: ${{ env.STAGING_WORKSPACE_URL }}
-          matrix-url: https://matrix-staging.stack.cards
-          matrix-username: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_USERNAME }}
-          matrix-password: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_PASSWORD }}
+        run: |
+          echo "Starting sync to staging workspace..."
+          echo "Target workspace: ${STAGING_WORKSPACE_URL}"
+          echo "Commit: ${{ github.sha }}"
+          echo ""
+
+          set +e
+          OUTPUT=$(boxel realm push . "${STAGING_WORKSPACE_URL}" --delete 2>&1)
+          EXIT_CODE=$?
+          set -e
+          echo "$OUTPUT"
+
+          {
+            echo "SYNC_OUTPUT<<EOF"
+            echo "$OUTPUT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "staging workspace sync failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+          echo "staging workspace sync completed successfully!"
 
       - name: Write staging sync report
         if: always()
-        shell: bash
         env:
-          SYNC_OUTPUT: ${{ steps.sync.outputs.sync-output }}
+          SYNC_OUTPUT: ${{ steps.sync.outputs.SYNC_OUTPUT }}
         run: |
           mkdir -p artifacts
           STATUS="${{ job.status }}"
@@ -43,7 +84,7 @@ jobs:
           cat > artifacts/staging-sync-report.md <<EOF
           ## Staging Workspace Sync — ${STATUS}
 
-          **Workspace:** ${{ env.STAGING_WORKSPACE_URL }}
+          **Workspace:** ${STAGING_WORKSPACE_URL}
           **Commit:** ${SHORT_SHA}
           **Synced at:** ${SYNCED_AT} UTC
 
@@ -63,26 +104,67 @@ jobs:
   sync-production:
     name: Sync to Production
     runs-on: ubuntu-latest
+    env:
+      MATRIX_URL: https://matrix.boxel.ai
+      MATRIX_USERNAME: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_USERNAME }}
+      MATRIX_PASSWORD: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_PASSWORD }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Boxel CLI
+        run: npm install -g @cardstack/boxel-cli@latest
+
+      - name: Configure Boxel profile
+        run: |
+          if echo "$MATRIX_URL" | grep -q "boxel.ai"; then
+            DOMAIN="boxel.ai"
+          elif echo "$MATRIX_URL" | grep -q "stack.cards"; then
+            DOMAIN="stack.cards"
+          else
+            DOMAIN="localhost"
+          fi
+          boxel profile add \
+            --user "@${MATRIX_USERNAME}:${DOMAIN}" \
+            --password "${MATRIX_PASSWORD}" \
+            --matrix-url "${MATRIX_URL}"
+
       - name: Sync to production workspace
         id: sync
-        uses: ./.github/actions/sync-workspace
-        with:
-          environment: production
-          workspace-url: ${{ env.PRODUCTION_WORKSPACE_URL }}
-          matrix-url: https://matrix.boxel.ai
-          matrix-username: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_USERNAME }}
-          matrix-password: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_PASSWORD }}
+        run: |
+          echo "Starting sync to production workspace..."
+          echo "Target workspace: ${PRODUCTION_WORKSPACE_URL}"
+          echo "Commit: ${{ github.sha }}"
+          echo ""
+
+          set +e
+          OUTPUT=$(boxel realm push . "${PRODUCTION_WORKSPACE_URL}" --delete 2>&1)
+          EXIT_CODE=$?
+          set -e
+          echo "$OUTPUT"
+
+          {
+            echo "SYNC_OUTPUT<<EOF"
+            echo "$OUTPUT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "production workspace sync failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+          echo "production workspace sync completed successfully!"
 
       - name: Write production sync report
         if: always()
-        shell: bash
         env:
-          SYNC_OUTPUT: ${{ steps.sync.outputs.sync-output }}
+          SYNC_OUTPUT: ${{ steps.sync.outputs.SYNC_OUTPUT }}
         run: |
           mkdir -p artifacts
           STATUS="${{ job.status }}"
@@ -93,7 +175,7 @@ jobs:
           cat > artifacts/production-sync-report.md <<EOF
           ## Production Workspace Sync — ${STATUS}
 
-          **Workspace:** ${{ env.PRODUCTION_WORKSPACE_URL }}
+          **Workspace:** ${PRODUCTION_WORKSPACE_URL}
           **Commit:** ${SHORT_SHA}
           **Synced at:** ${SYNCED_AT} UTC
 
