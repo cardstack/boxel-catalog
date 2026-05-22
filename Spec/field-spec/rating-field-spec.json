@@ -10,7 +10,7 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "https://localhost:4201/fields/rating"
+        "module": "../../fields/rating"
       },
       "readMe": null,
       "cardInfo": {
