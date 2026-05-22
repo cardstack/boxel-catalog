@@ -1,19 +1,44 @@
 {
   "data": {
-    "type": "card",
-    "attributes": {
-      "cardTitle": "Slider Field",
-      "cardDescription": "A numeric field rendered as a draggable slider",
-      "specType": "field",
-      "ref": {
-        "module": "../../fields/slider",
-        "name": "default"
-      }
-    },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
-        "name": "Spec"
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../../fields/slider"
+      },
+      "readMe": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Slider Field",
+      "cardDescription": "A numeric field rendered as a draggable slider",
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
       }
     }
   }
