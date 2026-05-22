@@ -1,0 +1,53 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TimeRangeFieldSpec",
+        "module": "../../field-spec/time-range-field-spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "https://cardstack.com/base/time/time-range"
+      },
+      "readMe": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "standard": {
+        "end": {
+          "value": "12:30"
+        },
+        "start": {
+          "value": "12:00"
+        }
+      },
+      "cardTitle": "Time Range Field",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

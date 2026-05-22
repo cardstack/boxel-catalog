@@ -1,0 +1,51 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "DateFieldSpec",
+        "module": "../../field-spec/date-field-spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "age": "2026-05-22",
+      "ref": {
+        "name": "default",
+        "module": "https://cardstack.com/base/date"
+      },
+      "readMe": null,
+      "compact": "2026-05-22",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "standard": "2026-05-22",
+      "timeline": "2026-05-22",
+      "cardTitle": "Date Field",
+      "countdown": "2026-05-22",
+      "customFormat": "2026-05-22",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

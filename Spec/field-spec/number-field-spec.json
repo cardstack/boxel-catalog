@@ -1,0 +1,54 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "NumberFieldSpec",
+        "module": "../../field-spec/number-field-spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "https://cardstack.com/base/number"
+      },
+      "stat": 100,
+      "gauge": 30,
+      "score": 60,
+      "readMe": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "standard": 10,
+      "cardTitle": "Number Field",
+      "badgeMetric": 99,
+      "progressBar": 40,
+      "badgeCounter": 99,
+      "progressCircle": 50,
+      "cardDescription": null,
+      "badgeNotification": 99,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

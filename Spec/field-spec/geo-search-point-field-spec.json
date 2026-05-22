@@ -1,0 +1,65 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "GeoSearchPointFieldSpec",
+        "module": "../../field-spec/geo-search-point-spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../../fields/geo-search-point"
+      },
+      "basic": {
+        "lat": 3.1591628,
+        "lon": 101.7133606,
+        "searchKey": "klcc"
+      },
+      "readMe": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "combined": {
+        "lat": 36.638392,
+        "lon": 127.6961188,
+        "searchKey": "South Korea"
+      },
+      "specType": "field",
+      "cardTitle": "Geo Search Point Field",
+      "withTopResults": {
+        "lat": 51.5074456,
+        "lon": -0.1277653,
+        "searchKey": "Greater London, England, United Kingdom"
+      },
+      "cardDescription": null,
+      "containedExamples": [],
+      "withoutRecentSearches": {
+        "lat": 35.6633709,
+        "lon": 139.6964952,
+        "searchKey": "Shibuya, Tokyo, Japan"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
