@@ -62,7 +62,7 @@ export default class RatingField extends NumberField {
             class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
             disabled={{not @canEdit}}
             {{on 'click' (fn this.setRating star)}}
-          >★</button>
+          >{{if (lte star this.numericValue) '★' '☆'}}</button>
         {{/each}}
         <span
           class='rating-value'
@@ -79,7 +79,7 @@ export default class RatingField extends NumberField {
           background: none;
           border: none;
           font-size: 1.25rem;
-          color: var(--muted, #f1f5f9);
+          color: var(--muted-foreground, #cbd5e1);
           cursor: pointer;
           padding: 0;
           transition:
@@ -142,7 +142,7 @@ export default class RatingField extends NumberField {
         }
         .atom-star {
           font-size: 0.8125rem;
-          color: var(--muted, #f1f5f9);
+          color: var(--muted-foreground, #cbd5e1);
         }
         .atom-star.highlighted {
           color: var(--accent, #f59e0b);
@@ -178,12 +178,12 @@ export default class RatingField extends NumberField {
     }
 
     <template>
-      <div class='rating-field-edit' data-test-rating-edit>
+      <div class='rating-field-edit' data-test-rating-embedded>
         {{#each this.stars as |star|}}
           <button
             type='button'
             class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
-          >★</button>
+          >{{if (lte star this.numericValue) '★' '☆'}}</button>
         {{/each}}
         <span
           class='rating-value'
@@ -200,7 +200,7 @@ export default class RatingField extends NumberField {
           background: none;
           border: none;
           font-size: 1.25rem;
-          color: var(--muted, #f1f5f9);
+          color: var(--muted-foreground, #cbd5e1);
           cursor: pointer;
           padding: 0;
           transition:

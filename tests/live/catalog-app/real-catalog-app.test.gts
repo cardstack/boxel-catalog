@@ -12,7 +12,7 @@ import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 // where the realm is without needing an env var. This file lives in the
 // catalog-app/ subdirectory, so we go up one level to reach the realm root.
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-const catalogRealmURL: string = new URL('../', import.meta.url).href;
+const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const CATALOG_READINESS_URL = `${catalogRealmURL}_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson`;
 
 class StubHostModeService extends Service {

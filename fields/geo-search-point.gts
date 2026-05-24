@@ -40,11 +40,13 @@ export type GeoSearchPointConfiguration = {
 
 export class GeoSearchPointEdit extends Component<typeof GeoSearchPointField> {
   <template>
-    <GeoSearchPointEditField
-      @model={{@model}}
-      @canEdit={{@canEdit}}
-      @configuration={{@configuration}}
-    />
+    <div data-test-field-container>
+      <GeoSearchPointEditField
+        @model={{@model}}
+        @canEdit={{@canEdit}}
+        @configuration={{@configuration}}
+      />
+    </div>
   </template>
 }
 
@@ -52,7 +54,7 @@ export class GeoSearchPointEmbedded extends Component<
   typeof GeoSearchPointField
 > {
   get displayName(): string {
-    const { searchKey, lat, lon } = this.args.model;
+    const { searchKey, lat, lon } = this.args.model ?? ({} as any);
     if (searchKey && searchKey.trim() !== '') return searchKey;
     if (lat != null && lon != null) return `${lat}, ${lon}`;
     return 'No location';
@@ -71,7 +73,7 @@ export class GeoSearchPointEmbedded extends Component<
   }
 
   <template>
-    <div class='geo-search-point-embedded'>
+    <div class='geo-search-point-embedded' data-test-field-container>
       <div class='info-row'>
         <MapPinIcon class='pin-icon' />
         <div class='content'>
@@ -123,7 +125,7 @@ export class GeoSearchPointEmbedded extends Component<
 
 export class GeoSearchPointAtom extends Component<typeof GeoSearchPointField> {
   get displayValue(): string {
-    const { searchKey, lat, lon } = this.args.model;
+    const { searchKey, lat, lon } = this.args.model ?? ({} as any);
     if (searchKey && searchKey.trim() !== '') return searchKey;
     if (lat != null && lon != null) return `${lat}, ${lon}`;
     return 'No location';

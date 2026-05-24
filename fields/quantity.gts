@@ -72,11 +72,12 @@ export default class QuantityField extends NumberField {
     };
 
     <template>
-      <div class='quantity-field-edit'>
+      <div class='quantity-field-edit' data-test-quantity-edit>
         <label for='quantity-input' class='sr-only'>Quantity</label>
         <button
           type='button'
           class='qty-btn'
+          data-test-quantity-decrement
           {{on 'click' this.decrement}}
           disabled={{if
             (not @canEdit)
@@ -97,6 +98,7 @@ export default class QuantityField extends NumberField {
         <button
           type='button'
           class='qty-btn'
+          data-test-quantity-increment
           {{on 'click' this.increment}}
           disabled={{if
             (not @canEdit)
@@ -195,9 +197,12 @@ export default class QuantityField extends NumberField {
     }
 
     <template>
-      <span class='quantity-field-embedded'>
+      <span class='quantity-field-embedded' data-test-quantity-embedded>
         <Grid2x2Icon class='qty-icon' />
-        <span class='qty-value'>{{this.numericValue}}</span>
+        <span
+          class='qty-value'
+          data-test-quantity-value
+        >{{this.numericValue}}</span>
       </span>
 
       <style scoped>
@@ -243,7 +248,7 @@ export default class QuantityField extends NumberField {
     }
 
     <template>
-      <span class='quantity-atom'>QTY:
+      <span class='quantity-atom' data-test-quantity-atom>QTY:
         {{this.numericValue}}</span>
 
       <style scoped>

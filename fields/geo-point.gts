@@ -38,11 +38,13 @@ export type GeoPointConfiguration =
 
 export class GeoPointEdit extends Component<typeof GeoPointField> {
   <template>
-    <GeoPointEditField
-      @model={{@model}}
-      @canEdit={{@canEdit}}
-      @configuration={{@configuration}}
-    />
+    <div data-test-field-container>
+      <GeoPointEditField
+        @model={{@model}}
+        @canEdit={{@canEdit}}
+        @configuration={{@configuration}}
+      />
+    </div>
   </template>
 }
 
@@ -64,11 +66,13 @@ export class GeoPointEmbedded extends Component<typeof GeoPointField> {
   }
 
   <template>
-    <GeoPointMapPicker
-      @model={{@model}}
-      @options={{this.mapOptions}}
-      @canEdit={{false}}
-    />
+    <div data-test-field-container>
+      <GeoPointMapPicker
+        @model={{@model}}
+        @options={{this.mapOptions}}
+        @canEdit={{false}}
+      />
+    </div>
   </template>
 }
 

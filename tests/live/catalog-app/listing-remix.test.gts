@@ -1,7 +1,9 @@
+import { waitFor, settled } from '@ember/test-helpers';
+
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import ListingInstallCommand from '@cardstack/boxel-host/commands/listing-install';
+import ListingRemixCommand from '@cardstack/boxel-host/commands/listing-remix';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 
@@ -14,6 +16,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  verifySubmode,
+  toggleFileTree,
   openDir,
   verifyFolderWithUUIDInFileTree,
   verifyFileInFileTree,
@@ -25,21 +29,20 @@ import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 import {
   makeMockCatalogContents,
   makeDestinationRealmContents,
-} from './catalog-app-test-fixtures';
+} from '../../helpers/test-fixtures';
 
 // The test file is served from the catalog realm, so its own URL tells us
 // where the realm is without needing an env var.
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-const catalogRealmURL: string = new URL('./', import.meta.url).href;
+const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 //listing
-const authorListingId = `${mockCatalogURL}Listing/author`;
-const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;
+const themeListingId = `${mockCatalogURL}ThemeListing/cardstack-theme`;
 
 export function runTests() {
   module(
-    'Acceptance | Catalog | catalog app - listing install',
+    'Acceptance | Catalog | catalog app - listing remix',
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
@@ -80,7 +83,7 @@ export function runTests() {
       });
 
       async function executeCommand(
-        commandClass: typeof ListingInstallCommand,
+        commandClass: typeof ListingRemixCommand,
         listingUrl: string,
         realm: string,
       ) {
@@ -103,109 +106,49 @@ export function runTests() {
             stacks: [[]],
           });
         });
-        module('"install"', function () {
-          test('card listing', async function (assert) {
+        module('"remix"', function () {
+          test('card listing: installs the card and redirects to code mode with persisted playground selection for first example successfully', async function (assert) {
             const listingName = 'author';
-
-            await executeCommand(
-              ListingInstallCommand,
-              authorListingId,
-              testDestinationRealmURL,
-            );
+            const listingId = `${mockCatalogURL}Listing/${listingName}`;
             await visitOperatorMode({
-              submode: 'code',
-              fileView: 'browser',
-              codePath: `${testDestinationRealmURL}index`,
+              stacks: [[]],
             });
-
-            let outerFolder = await verifyFolderWithUUIDInFileTree(
-              assert,
-              listingName,
-            );
-            let gtsFilePath = `${outerFolder}${listingName}/author.gts`;
-            await openDir(assert, gtsFilePath);
-            await verifyFileInFileTree(assert, gtsFilePath);
-            let examplePath = `${outerFolder}${listingName}/Author/example.json`;
-            await openDir(assert, examplePath);
-            await verifyFileInFileTree(assert, examplePath);
-          });
-
-          test('listing installs relationships of examples and its modules', async function (assert) {
-            const listingName = 'blog-post';
-
             await executeCommand(
-              ListingInstallCommand,
-              blogPostListingId,
-              testDestinationRealmURL,
-            );
-            await visitOperatorMode({
-              submode: 'code',
-              fileView: 'browser',
-              codePath: `${testDestinationRealmURL}index`,
-            });
-
-            let outerFolder = await verifyFolderWithUUIDInFileTree(
-              assert,
-              listingName,
-            );
-            let blogPostModulePath = `${outerFolder}blog-post/blog-post.gts`;
-            let authorModulePath = `${outerFolder}author/author.gts`;
-            await openDir(assert, blogPostModulePath);
-            await verifyFileInFileTree(assert, blogPostModulePath);
-            await openDir(assert, authorModulePath);
-            await verifyFileInFileTree(assert, authorModulePath);
-
-            let blogPostExamplePath = `${outerFolder}blog-post/BlogPost/example.json`;
-            let authorExamplePath = `${outerFolder}author/Author/example.json`;
-            let authorCompanyExamplePath = `${outerFolder}author/AuthorCompany/example.json`;
-            await openDir(assert, blogPostExamplePath);
-            await verifyFileInFileTree(assert, blogPostExamplePath);
-            await openDir(assert, authorExamplePath);
-            await verifyFileInFileTree(assert, authorExamplePath);
-            await openDir(assert, authorCompanyExamplePath);
-            await verifyFileInFileTree(assert, authorCompanyExamplePath);
-          });
-
-          test('field listing', async function (assert) {
-            const listingName = 'contact-link';
-            const contactLinkFieldListingCardId = `${mockCatalogURL}FieldListing/contact-link`;
-
-            await executeCommand(
-              ListingInstallCommand,
-              contactLinkFieldListingCardId,
-              testDestinationRealmURL,
-            );
-
-            await visitOperatorMode({
-              submode: 'code',
-              fileView: 'browser',
-              codePath: `${testDestinationRealmURL}index`,
-            });
-
-            // contact-link-[uuid]/
-            let outerFolder = await verifyFolderWithUUIDInFileTree(
-              assert,
-              listingName,
-            );
-            await openDir(assert, `${outerFolder}fields/contact-link.gts`);
-            let gtsFilePath = `${outerFolder}fields/contact-link.gts`;
-            await verifyFileInFileTree(assert, gtsFilePath);
-          });
-
-          test('skill listing', async function (assert) {
-            const listingName = 'pirate-skill';
-            const listingId = `${mockCatalogURL}SkillListing/${listingName}`;
-            await executeCommand(
-              ListingInstallCommand,
+              ListingRemixCommand,
               listingId,
               testDestinationRealmURL,
             );
-            await visitOperatorMode({
-              submode: 'code',
-              fileView: 'browser',
-              codePath: `${testDestinationRealmURL}index`,
-            });
-
+            await settled();
+            await verifySubmode(assert, 'code');
+            await toggleFileTree();
+            let outerFolder = await verifyFolderWithUUIDInFileTree(
+              assert,
+              listingName,
+            );
+            let instanceFile = `${outerFolder}${listingName}/Author/example.json`;
+            await openDir(assert, instanceFile);
+            await verifyFileInFileTree(assert, instanceFile);
+            let gtsFilePath = `${outerFolder}${listingName}/author.gts`;
+            await openDir(assert, gtsFilePath);
+            await verifyFileInFileTree(assert, gtsFilePath);
+            await settled();
+            assert
+              .dom(
+                '[data-test-playground-panel] [data-test-boxel-card-header-title]',
+              )
+              .hasText('Author - Mike Dane');
+          });
+          test('skill listing: installs the card and redirects to code mode with preview on first skill successfully', async function (assert) {
+            const listingName = 'pirate-skill';
+            const listingId = `${mockCatalogURL}SkillListing/${listingName}`;
+            await executeCommand(
+              ListingRemixCommand,
+              listingId,
+              testDestinationRealmURL,
+            );
+            await settled();
+            await verifySubmode(assert, 'code');
+            await toggleFileTree();
             let outerFolder = await verifyFolderWithUUIDInFileTree(
               assert,
               listingName,
@@ -213,34 +156,69 @@ export function runTests() {
             let instancePath = `${outerFolder}Skill/pirate-speak.json`;
             await openDir(assert, instancePath);
             await verifyFileInFileTree(assert, instancePath);
+            let cardId =
+              testDestinationRealmURL + instancePath.replace('.json', '');
+            await waitFor('[data-test-card-resource-loaded]');
+            assert
+              .dom(`[data-test-code-mode-card-renderer-header="${cardId}"]`)
+              .exists();
+          });
+          test('theme listing: installs the theme example and redirects to code mode successfully', async function (assert) {
+            const listingName = 'cardstack-theme';
+            await executeCommand(
+              ListingRemixCommand,
+              themeListingId,
+              testDestinationRealmURL,
+            );
+            await settled();
+            await verifySubmode(assert, 'code');
+            await toggleFileTree();
+            let outerFolder = await verifyFolderWithUUIDInFileTree(
+              assert,
+              listingName,
+            );
+            let instancePath = `${outerFolder}theme/theme-example.json`;
+            await openDir(assert, instancePath);
+            await verifyFileInFileTree(assert, instancePath);
+            let cardId =
+              testDestinationRealmURL + instancePath.replace('.json', '');
+            await waitFor('[data-test-card-resource-loaded]');
+            assert
+              .dom(`[data-test-code-mode-card-renderer-header="${cardId}"]`)
+              .exists();
           });
         });
 
-        test('"install" is successful even if target realm does not have a trailing slash', async function (assert) {
+        test('"remix" is successful even if target realm does not have a trailing slash', async function (assert) {
           const listingName = 'author';
+          const listingId = `${mockCatalogURL}Listing/${listingName}`;
+          await visitOperatorMode({
+            stacks: [[]],
+          });
           await executeCommand(
-            ListingInstallCommand,
-            authorListingId,
+            ListingRemixCommand,
+            listingId,
             removeTrailingSlash(testDestinationRealmURL),
           );
-          await visitOperatorMode({
-            submode: 'code',
-            fileView: 'browser',
-            codePath: `${testDestinationRealmURL}index`,
-          });
-
+          await settled();
+          await verifySubmode(assert, 'code');
+          await toggleFileTree();
           let outerFolder = await verifyFolderWithUUIDInFileTree(
             assert,
             listingName,
           );
-
+          let instancePath = `${outerFolder}${listingName}/Author/example.json`;
+          await openDir(assert, instancePath);
+          await verifyFileInFileTree(assert, instancePath);
           let gtsFilePath = `${outerFolder}${listingName}/author.gts`;
           await openDir(assert, gtsFilePath);
           await verifyFileInFileTree(assert, gtsFilePath);
-          let instancePath = `${outerFolder}${listingName}/Author/example.json`;
-
-          await openDir(assert, instancePath);
-          await verifyFileInFileTree(assert, instancePath);
+          await settled();
+          assert
+            .dom(
+              '[data-test-playground-panel] [data-test-boxel-card-header-title]',
+            )
+            .hasText('Author - Mike Dane');
         });
       });
     },

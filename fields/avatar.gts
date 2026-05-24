@@ -12,16 +12,17 @@ import AvatarComponent from './components/avatar';
 class EditTemplate extends Component<typeof Avatar> {
   // Convert avatar field to the format expected by the component
   get avatarModel() {
+    const m = this.args.model ?? ({} as Partial<Avatar>);
     return {
-      topType: this.args.model.topType,
-      accessoriesType: this.args.model.accessoriesType,
-      hairColor: this.args.model.hairColor,
-      facialHairType: this.args.model.facialHairType,
-      clotheType: this.args.model.clotheType,
-      eyeType: this.args.model.eyeType,
-      eyebrowType: this.args.model.eyebrowType,
-      mouthType: this.args.model.mouthType,
-      skinColor: this.args.model.skinColor,
+      topType: m.topType,
+      accessoriesType: m.accessoriesType,
+      hairColor: m.hairColor,
+      facialHairType: m.facialHairType,
+      clotheType: m.clotheType,
+      eyeType: m.eyeType,
+      eyebrowType: m.eyebrowType,
+      mouthType: m.mouthType,
+      skinColor: m.skinColor,
     };
   }
 
@@ -38,11 +39,13 @@ class EditTemplate extends Component<typeof Avatar> {
   };
 
   <template>
-    <AvatarComponent
-      @model={{this.avatarModel}}
-      @context={{@context}}
-      @onUpdate={{this.updateAvatar}}
-    />
+    <div data-test-field-container>
+      <AvatarComponent
+        @model={{this.avatarModel}}
+        @context={{@context}}
+        @onUpdate={{this.updateAvatar}}
+      />
+    </div>
   </template>
 }
 

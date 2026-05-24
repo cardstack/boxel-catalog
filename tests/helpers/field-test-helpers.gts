@@ -70,9 +70,17 @@ export async function renderConfiguredField(
   await renderCard(loader, card, 'isolated');
 }
 
+// Build a value suitable to assign to a `contains(FieldClass)` field.
+// Primitive-backed fields (e.g. NumberField subclasses) store the raw value,
+// not an instance — for those, `{ value: X }` should yield `X` directly.
+// Composite FieldDef / CardDef subclasses store an instance, so we forward
+// the attrs to the constructor.
 export function buildField<T>(
   FieldClass: new (attrs: Record<string, unknown>) => T,
   attrs: Record<string, unknown> = {},
-): T {
+): any {
+  const keys = Object.keys(attrs);
+  if (keys.length === 0) return undefined;
+  if (keys.length === 1 && 'value' in attrs) return (attrs as any).value;
   return new FieldClass(attrs);
 }

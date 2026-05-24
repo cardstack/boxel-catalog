@@ -1,5 +1,5 @@
 import {
-  CardDef,
+  FieldDef,
   field,
   contains,
   Component,
@@ -7,7 +7,7 @@ import {
 import NumberField from 'https://cardstack.com/base/number';
 import { StepRangeScroller } from '../components/step-range-scroller';
 
-export default class DiscreteRangeField extends CardDef {
+export default class DiscreteRangeField extends FieldDef {
   @field startValue = contains(NumberField);
   @field endValue = contains(NumberField);
   @field min = contains(NumberField);
@@ -18,14 +18,16 @@ export default class DiscreteRangeField extends CardDef {
 
   static edit = class Edit extends Component<typeof this> {
     <template>
-      <StepRangeScroller
-        @startValue={{@model.startValue}}
-        @endValue={{@model.endValue}}
-        @min={{@model.min}}
-        @max={{@model.max}}
-        @interval={{@model.interval}}
-        @onChange={{this.updateRange}}
-      />
+      <div data-test-discrete-range-edit>
+        <StepRangeScroller
+          @startValue={{@model.startValue}}
+          @endValue={{@model.endValue}}
+          @min={{@model.min}}
+          @max={{@model.max}}
+          @interval={{@model.interval}}
+          @onChange={{this.updateRange}}
+        />
+      </div>
     </template>
 
     updateRange = (values: { startValue: number; endValue: number }) => {
@@ -36,8 +38,10 @@ export default class DiscreteRangeField extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <div class='discrete-range-display'>
-        <span>{{@model.startValue}} - {{@model.endValue}}</span>
+      <div class='discrete-range-display' data-test-discrete-range-embedded>
+        <span data-test-discrete-range-value>{{@model.startValue}}
+          -
+          {{@model.endValue}}</span>
       </div>
       <style scoped>
         .discrete-range-display {
