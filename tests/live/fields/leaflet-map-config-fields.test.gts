@@ -1,28 +1,16 @@
 import { module, test } from 'qunit';
 
-import { getService } from '@universal-ember/test-support';
-
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import { buildField, renderField } from '../../helpers/field-test-helpers';
+import LeafletMapConfigField from '../../../fields/leaflet-map-config-field';
 
-// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-const realmURL: string = new URL('../../../', import.meta.url).href;
+import { buildField, renderField } from '../../helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | leaflet-map-config fields', function (hooks) {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
-
-    let LeafletMapConfigField: any;
-
-    hooks.beforeEach(async function () {
-      const loader = getService('loader-service').loader;
-      LeafletMapConfigField = (
-        await loader.import(`${realmURL}fields/leaflet-map-config-field`)
-      ).default;
-    });
 
     test('leaflet-map-config field atom shows custom tileserver when configured', async function (assert) {
       await renderField(

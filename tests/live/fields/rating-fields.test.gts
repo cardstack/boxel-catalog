@@ -1,9 +1,9 @@
 import { module, test } from 'qunit';
 
-import { getService } from '@universal-ember/test-support';
-
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
+
+import RatingField from '../../../fields/rating';
 
 import {
   buildField,
@@ -11,20 +11,10 @@ import {
   renderField,
 } from '../../helpers/field-test-helpers';
 
-// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-const realmURL: string = new URL('../../../', import.meta.url).href;
-
 export function runTests() {
   module('Rendering | rating fields', function (hooks) {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
-
-    let RatingField: any;
-
-    hooks.beforeEach(async function () {
-      const loader = getService('loader-service').loader;
-      RatingField = (await loader.import(`${realmURL}fields/rating`)).default;
-    });
 
     test('rating field renders embedded view with a value', async function (assert) {
       await renderField(RatingField, buildField(RatingField, { value: 4 }));

@@ -1,28 +1,16 @@
 import { module, test } from 'qunit';
 
-import { getService } from '@universal-ember/test-support';
-
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import { buildField, renderField } from '../../helpers/field-test-helpers';
+import FeaturedImageField from '../../../fields/featured-image';
 
-// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-const realmURL: string = new URL('../../../', import.meta.url).href;
+import { buildField, renderField } from '../../helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | featured-image fields', function (hooks) {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
-
-    let FeaturedImageField: any;
-
-    hooks.beforeEach(async function () {
-      const loader = getService('loader-service').loader;
-      FeaturedImageField = (
-        await loader.import(`${realmURL}fields/featured-image`)
-      ).default;
-    });
 
     const sampleImage = {
       imageUrl: 'https://example.com/photo.jpg',

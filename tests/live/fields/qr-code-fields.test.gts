@@ -1,26 +1,16 @@
 import { module, test } from 'qunit';
 
-import { getService } from '@universal-ember/test-support';
-
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import { buildField, renderField } from '../../helpers/field-test-helpers';
+import QRCodeField from '../../../fields/qr-code';
 
-// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-const realmURL: string = new URL('../../../', import.meta.url).href;
+import { buildField, renderField } from '../../helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | qr-code fields', function (hooks) {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
-
-    let QRCodeField: any;
-
-    hooks.beforeEach(async function () {
-      const loader = getService('loader-service').loader;
-      QRCodeField = (await loader.import(`${realmURL}fields/qr-code`)).default;
-    });
 
     test('qr-code field renders embedded view with data', async function (assert) {
       await renderField(

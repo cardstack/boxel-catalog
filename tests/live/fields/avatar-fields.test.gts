@@ -1,26 +1,16 @@
 import { module, test } from 'qunit';
 
-import { getService } from '@universal-ember/test-support';
-
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import { buildField, renderField } from '../../helpers/field-test-helpers';
+import AvatarField from '../../../fields/avatar';
 
-// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-const realmURL: string = new URL('../../../', import.meta.url).href;
+import { buildField, renderField } from '../../helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | avatar fields', function (hooks) {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
-
-    let AvatarField: any;
-
-    hooks.beforeEach(async function () {
-      const loader = getService('loader-service').loader;
-      AvatarField = (await loader.import(`${realmURL}fields/avatar`)).default;
-    });
 
     const sampleAvatarData = {
       topType: 'ShortHairShortFlat',

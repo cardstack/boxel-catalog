@@ -1,27 +1,16 @@
 import { module, test } from 'qunit';
 
-import { getService } from '@universal-ember/test-support';
-
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import { buildField, renderField } from '../../helpers/field-test-helpers';
+import ContactLinkField from '../../../fields/contact-link';
 
-// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-const realmURL: string = new URL('../../../', import.meta.url).href;
+import { buildField, renderField } from '../../helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | contact-link fields', function (hooks) {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
-
-    let ContactLinkField: any;
-
-    hooks.beforeEach(async function () {
-      const loader = getService('loader-service').loader;
-      ContactLinkField = (await loader.import(`${realmURL}fields/contact-link`))
-        .default;
-    });
 
     const sampleContactLink = {
       label: 'Email',
