@@ -3,9 +3,9 @@ import { module, test } from 'qunit';
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import LeafletMapConfigField from '../../../fields/leaflet-map-config-field';
+import LeafletMapConfigField from './leaflet-map-config-field';
 
-import { buildField, renderField } from '../../helpers/field-test-helpers';
+import { buildField, renderField } from '../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | leaflet-map-config fields', function (hooks) {

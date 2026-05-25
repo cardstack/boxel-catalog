@@ -8,13 +8,13 @@ import NumberField from 'https://cardstack.com/base/number';
 import { StepRangeScroller } from '../components/step-range-scroller';
 
 export default class DiscreteRangeField extends FieldDef {
+  static displayName = 'Discrete Range';
+
   @field startValue = contains(NumberField);
   @field endValue = contains(NumberField);
   @field min = contains(NumberField);
   @field max = contains(NumberField);
   @field interval = contains(NumberField);
-
-  static displayName = 'Discrete Range';
 
   static edit = class Edit extends Component<typeof this> {
     <template>

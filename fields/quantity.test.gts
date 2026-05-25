@@ -3,13 +3,13 @@ import { module, test } from 'qunit';
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import QuantityField from '../../../fields/quantity';
+import QuantityField from './quantity';
 
 import {
   buildField,
   renderConfiguredField,
   renderField,
-} from '../../helpers/field-test-helpers';
+} from '../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | quantity fields', function (hooks) {

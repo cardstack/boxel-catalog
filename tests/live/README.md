@@ -9,14 +9,30 @@ modules are registered.
 
 ## Directory layout
 
+Per-field render tests live next to their field source under `fields/`. The
+`tests/live/` tree only holds tests that aren't tied to a single field source
+file (acceptance flows, the base-realm spec sanity check).
+
 ```
 tests/
 ├── helpers/
 │   ├── field-test-helpers.gts   — renderField / renderConfiguredField / buildField
 │   └── test-fixtures.ts         — fixture card source strings + makeMockCatalogContents
 └── live/
-    ├── catalog-app/             — listing flows: create / install / remix / use, commands, browse
-    └── fields/                  — per-field render tests + base-realm field spec sanity check
+    ├── fields/
+    │   └── base-field-specs.test.gts   — base-realm field-spec sanity check
+    └── catalog-app/                    — listing flows: create / install / remix / use, commands, browse
+
+fields/
+├── audio.gts
+├── audio.test.gts
+├── avatar.gts
+├── avatar.test.gts
+├── …                            — one <field>.test.gts per field, sibling of its source
+├── geo-point.gts
+├── geo-point.test.gts
+├── geo-search-point.gts
+└── geo-search-point.test.gts
 ```
 
 ## How to run
@@ -44,17 +60,21 @@ The `filter=` value matches against module names (e.g. `Live | slider fields`).
 QUnit-module prefixes follow Ember's standard `setupXxxTest` → category mapping
 so junit reports stay readable across the wider repo:
 
-| Sub-directory        | Ember setup              | Module prefix       | Test type meaning                                  |
-| -------------------- | ------------------------ | ------------------- | -------------------------------------------------- |
-| `tests/live/fields/` | `setupRenderingTest`     | `Rendering \| …`    | Renders a single field component                   |
-| `tests/live/catalog-app/` | `setupApplicationTest` | `Acceptance \| Catalog \| …` | Full user flow against the running app           |
+| Location                  | Ember setup              | Module prefix                | Test type meaning                                  |
+| ------------------------- | ------------------------ | ---------------------------- | -------------------------------------------------- |
+| `fields/<name>.test.gts`  | `setupRenderingTest`     | `Rendering \| …`             | Renders a single field component                   |
+| `tests/live/catalog-app/` | `setupApplicationTest`   | `Acceptance \| Catalog \| …` | Full user flow against the running app             |
 
 | Item               | Pattern                                    | Example                                   |
 | ------------------ | ------------------------------------------ | ----------------------------------------- |
-| Field test file    | `<field-kebab>-fields.test.gts`            | `slider-fields.test.gts`                  |
+| Field test file    | `fields/<source-filename>.test.gts`        | `fields/slider.test.gts`, `fields/discrete-range-field.test.gts` |
 | Field module       | `Rendering \| <field-kebab> fields`        | `Rendering \| qr-code fields`             |
 | Field test name    | `<field-kebab> field <action> <details>`   | `qr-code field renders embedded view with data` |
 | App module         | `Acceptance \| Catalog \| <feature>`       | `Acceptance \| Catalog \| catalog app - listing create` |
+
+The field test filename mirrors its source filename exactly (so
+`discrete-range-field.gts` pairs with `discrete-range-field.test.gts`, not a
+`-fields` suffix).
 
 Field-name kebab-casing is mandatory inside module and test names — never use
 spaces (`discrete-range`, not `discrete range`).

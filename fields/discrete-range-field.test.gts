@@ -3,9 +3,9 @@ import { module, test } from 'qunit';
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import DiscreteRangeField from '../../../fields/discrete-range-field';
+import DiscreteRangeField from './discrete-range-field';
 
-import { buildField, renderField } from '../../helpers/field-test-helpers';
+import { buildField, renderField } from '../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | discrete-range fields', function (hooks) {

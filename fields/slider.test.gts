@@ -3,13 +3,13 @@ import { module, test } from 'qunit';
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import SliderField from '../../../fields/slider';
+import SliderField from './slider';
 
 import {
   buildField,
   renderConfiguredField,
   renderField,
-} from '../../helpers/field-test-helpers';
+} from '../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | slider fields', function (hooks) {
