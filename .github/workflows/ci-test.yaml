@@ -25,11 +25,10 @@ jobs:
       # so it doesn't move HEAD off the PR commit during service startup.
       SKIP_CATALOG_UPDATE: '1'
     steps:
-      # Checkout the boxel monorepo
+      # Checkout the boxel monorepo 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
-          ref: split-out-commands
 
       # Checkout this catalog repo directly into the monorepo's catalog location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
