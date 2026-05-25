@@ -1,19 +1,49 @@
 {
   "data": {
-    "type": "card",
-    "attributes": {
-      "cardTitle": "Theme Var Field",
-      "cardDescription": "A field that captures a structured theme variable (used by the brand-guide system)",
-      "specType": "field",
-      "ref": {
-        "module": "https://cardstack.com/base/structured-theme-variables",
-        "name": "default"
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "name": "default",
+              "module": "https://cardstack.com/base/structured-theme-variables"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
       }
     },
-    "meta": {
-      "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
-        "name": "Spec"
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "https://cardstack.com/base/structured-theme-variables"
+      },
+      "readMe": "## Theme Var Field\n\nA field that captures a structured theme variable (used by the brand-guide system)\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport ThemeVarField from 'https://cardstack.com/base/structured-theme-variables';\n\nexport class Example extends CardDef {\n  @field themeVars = contains(ThemeVarField);\n}\n```\n",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Theme Var Field",
+      "cardDescription": "A field that captures a structured theme variable (used by the brand-guide system)",
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
       }
     }
   }

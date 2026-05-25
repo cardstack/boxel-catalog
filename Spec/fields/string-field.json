@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/card-api",
         "name": "StringField"
-      }
+      },
+      "readMe": "## String Field\n\nA field that captures string values\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport { StringField } from 'https://cardstack.com/base/card-api';\n\nexport class Example extends CardDef {\n  @field title = contains(StringField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/markdown",
         "name": "default"
-      }
+      },
+      "readMe": "## Markdown Field\n\nA field that captures markdown values\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport MarkdownField from 'https://cardstack.com/base/markdown';\n\nexport class Example extends CardDef {\n  @field body = contains(MarkdownField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

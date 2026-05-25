@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/color",
         "name": "default"
-      }
+      },
+      "readMe": "## Color Field\n\nA field that captures color values.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport ColorField from 'https://cardstack.com/base/color';\n\nexport class Example extends CardDef {\n  @field color = contains(ColorField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

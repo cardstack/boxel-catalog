@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/base64-image",
         "name": "default"
-      }
+      },
+      "readMe": "## Base64 Image Field\n\nA field capable of representing an image via base64 encoding.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport Base64ImageField from 'https://cardstack.com/base/base64-image';\n\nexport class Example extends CardDef {\n  @field image = contains(Base64ImageField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

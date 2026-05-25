@@ -1,19 +1,53 @@
 {
   "data": {
-    "type": "card",
-    "attributes": {
-      "cardTitle": "Time Field",
-      "cardDescription": "A field that captures a time of day",
-      "specType": "field",
-      "ref": {
-        "module": "https://cardstack.com/base/time",
-        "name": "default"
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "https://cardstack.com/base/time",
+              "name": "default"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
       }
     },
-    "meta": {
-      "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
-        "name": "Spec"
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "https://cardstack.com/base/time"
+      },
+      "readMe": "## Time Field\n\nA field that captures a time of day\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport TimeField from 'https://cardstack.com/base/time';\n\nexport class Example extends CardDef {\n  @field time = contains(TimeField);\n}\n```\n",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Time Field",
+      "cardDescription": "A field that captures a time of day",
+      "containedExamples": [
+        {
+          "value": "14:40"
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
       }
     }
   }

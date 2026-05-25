@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/big-integer",
         "name": "default"
-      }
+      },
+      "readMe": "## Bigint Field\n\nA field that captures big int values\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport BigIntegerField from 'https://cardstack.com/base/big-integer';\n\nexport class Example extends CardDef {\n  @field count = contains(BigIntegerField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

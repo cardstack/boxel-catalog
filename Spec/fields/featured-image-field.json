@@ -1,0 +1,65 @@
+{
+  "data": {
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../../fields/featured-image",
+              "name": "default"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../../fields/featured-image"
+      },
+      "readMe": "## Featured Image Field\n\nA field that captures an image with caption, credit, alt text, and size metadata — used for hero / featured imagery.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport FeaturedImageField from '@cardstack/catalog/fields/featured-image';\n\nexport class Example extends CardDef {\n  @field cover = contains(FeaturedImageField);\n}\n```\n",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Featured Image Field",
+      "cardDescription": "A field that captures an image with caption, credit, alt text, and size metadata — used for hero / featured imagery.",
+      "containedExamples": [
+        {
+          "imageUrl": "https://images.pexels.com/photos/15752372/pexels-photo-15752372.jpeg",
+          "credit": null,
+          "caption": "canon",
+          "altText": "camera",
+          "size": "actual",
+          "height": null,
+          "width": null
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

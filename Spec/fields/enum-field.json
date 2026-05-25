@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/enum",
         "name": "default"
-      }
+      },
+      "readMe": "## Enum Field\n\nA field that captures a value from a configured set of options\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport EnumField from 'https://cardstack.com/base/enum';\n\nexport class Example extends CardDef {\n  @field status = contains(EnumField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

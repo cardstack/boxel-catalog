@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/phone-number",
         "name": "default"
-      }
+      },
+      "readMe": "## Phone Number Field\n\nA field that validates phone numbers and provides a suitable editor.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport PhoneNumberField from 'https://cardstack.com/base/phone-number';\n\nexport class Example extends CardDef {\n  @field phone = contains(PhoneNumberField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

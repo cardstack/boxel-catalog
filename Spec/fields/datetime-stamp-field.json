@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/datetime-stamp",
         "name": "default"
-      }
+      },
+      "readMe": "## Datetime Stamp Field\n\nA datetime field that captures a precise timestamp\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport DatetimeStampField from 'https://cardstack.com/base/datetime-stamp';\n\nexport class Example extends CardDef {\n  @field recordedAt = contains(DatetimeStampField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

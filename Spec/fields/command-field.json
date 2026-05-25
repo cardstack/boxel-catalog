@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/skill",
         "name": "CommandField"
-      }
+      },
+      "readMe": "## Command Field\n\nA field that represents an executable command within a skill\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport { CommandField } from 'https://cardstack.com/base/skill';\n\nexport class Example extends CardDef {\n  @field command = contains(CommandField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

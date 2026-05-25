@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/url",
         "name": "default"
-      }
+      },
+      "readMe": "## URL Field\n\nA field that validates URL addresses and provides a suitable editor.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport URLField from 'https://cardstack.com/base/url';\n\nexport class Example extends CardDef {\n  @field url = contains(URLField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

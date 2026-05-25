@@ -8,7 +8,8 @@
         "module": "https://cardstack.com/base/date",
         "name": "default"
       },
-      "specType": "field"
+      "specType": "field",
+      "readMe": "## Date Field\n\nA field that captures date values\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport DateField from 'https://cardstack.com/base/date';\n\nexport class Example extends CardDef {\n  @field date = contains(DateField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

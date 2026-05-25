@@ -1,19 +1,58 @@
 {
   "data": {
-    "type": "card",
-    "attributes": {
-      "cardTitle": "Rich Markdown Field",
-      "cardDescription": "A markdown field with rich-text editing support",
-      "specType": "field",
-      "ref": {
-        "module": "https://cardstack.com/base/rich-markdown",
-        "name": "default"
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "https://cardstack.com/base/rich-markdown",
+              "name": "RichMarkdownField"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
       }
     },
-    "meta": {
-      "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
-        "name": "Spec"
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "https://cardstack.com/base/rich-markdown"
+      },
+      "readMe": "## Rich Markdown Field\n\nA markdown field with rich-text editing support\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport RichMarkdownField from 'https://cardstack.com/base/rich-markdown';\n\nexport class Example extends CardDef {\n  @field body = contains(RichMarkdownField);\n}\n```\n",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Rich Markdown Field",
+      "cardDescription": "A markdown field with rich-text editing support",
+      "containedExamples": [
+        {
+          "content": "Hello"
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
       }
     }
   }

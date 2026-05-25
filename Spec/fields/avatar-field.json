@@ -1,0 +1,67 @@
+{
+  "data": {
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../../fields/avatar",
+              "name": "default"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../../fields/avatar"
+      },
+      "readMe": "## Avatar Field\n\nA field that captures an Avataaars-style avatar with configurable hair, eyes, clothing, accessories, and skin color.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport Avatar from '@cardstack/catalog/fields/avatar';\n\nexport class Example extends CardDef {\n  @field avatar = contains(Avatar);\n}\n```\n",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Avatar Field",
+      "cardDescription": "A field that captures an Avataaars-style avatar with configurable hair, eyes, clothing, accessories, and skin color.",
+      "containedExamples": [
+        {
+          "topType": "LongHairMiaWallace",
+          "accessoriesType": "Blank",
+          "hairColor": "Blonde",
+          "facialHairType": "Blank",
+          "clotheType": "ShirtCrewNeck",
+          "eyeType": "Hearts",
+          "eyebrowType": "AngryNatural",
+          "mouthType": "Grimace",
+          "skinColor": "Brown"
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
