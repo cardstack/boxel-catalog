@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/percentage",
         "name": "default"
-      }
+      },
+      "readMe": "## Percentage Field\n\nA field that captures percentage values.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport PercentageField from 'https://cardstack.com/base/percentage';\n\nexport class Example extends CardDef {\n  @field percentage = contains(PercentageField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

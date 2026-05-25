@@ -16,7 +16,7 @@
         "lat": 60,
         "lon": 125
       },
-      "readMe": null,
+      "readMe": "## Geo Point Field\n\nA field that captures a geographic point (latitude / longitude) and renders it on a Leaflet map.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport GeoPointField from '@cardstack/catalog/fields/geo-point';\n\nexport class Example extends CardDef {\n  @field location = contains(GeoPointField, {\n    configuration: { zoom: 13 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
       "cardInfo": {
         "name": null,
         "notes": null,
@@ -33,7 +33,7 @@
         "lat": -8.320212289522944,
         "lon": -140.07568359375003
       },
-      "cardDescription": null,
+      "cardDescription": "A field that captures a geographic point (latitude / longitude) and renders it on a Leaflet map.",
       "containedExamples": [],
       "withQuickLocations": {
         "lat": 48.8534951,

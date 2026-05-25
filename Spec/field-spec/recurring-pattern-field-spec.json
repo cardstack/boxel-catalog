@@ -12,7 +12,7 @@
         "name": "default",
         "module": "../../fields/recurring-pattern"
       },
-      "readMe": null,
+      "readMe": "## Recurring Pattern Field\n\nA field that captures a recurring schedule (daily / weekly / monthly with interval, weekday selection, and end date).\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport RecurringPatternField from '@cardstack/catalog/fields/recurring-pattern';\n\nexport class Example extends CardDef {\n  @field schedule = contains(RecurringPatternField, {\n    configuration: { defaultFrequency: 'weekly' },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
       "cardInfo": {
         "name": null,
         "notes": null,
@@ -32,7 +32,7 @@
         "occurrences": 2
       },
       "cardTitle": "Recurring Pattern Field",
-      "cardDescription": null,
+      "cardDescription": "A field that captures a recurring schedule (daily / weekly / monthly with interval, weekday selection, and end date).",
       "containedExamples": []
     },
     "relationships": {

@@ -5,7 +5,7 @@
         "containedExamples": [
           {
             "adoptsFrom": {
-              "module": "https://cardstack.com/base/amount-with-currency",
+              "module": "../../fields/qr-code",
               "name": "default"
             }
           }
@@ -20,9 +20,9 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "https://cardstack.com/base/amount-with-currency"
+        "module": "../../fields/qr-code"
       },
-      "readMe": "## Amount With Currency Field\n\nA field that captures a numeric amount paired with a currency\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport AmountWithCurrencyField from 'https://cardstack.com/base/amount-with-currency';\n\nexport class Example extends CardDef {\n  @field price = contains(AmountWithCurrencyField);\n}\n```\n",
+      "readMe": "## QR Code Field\n\nA field that captures an arbitrary string value and renders it as a QR code.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport QRField from '@cardstack/catalog/fields/qr-code';\n\nexport class Example extends CardDef {\n  @field qrCode = contains(QRField);\n}\n```\n",
       "cardInfo": {
         "name": null,
         "notes": null,
@@ -30,14 +30,11 @@
         "cardThumbnailURL": null
       },
       "specType": "field",
-      "cardTitle": "Amount With Currency Field",
-      "cardDescription": "A field that captures a numeric amount paired with a currency",
+      "cardTitle": "QR Code Field",
+      "cardDescription": "A field that captures an arbitrary string value and renders it as a QR code.",
       "containedExamples": [
         {
-          "amount": "100",
-          "currency": {
-            "code": "USD"
-          }
+          "data": "https://www.google.com/"
         }
       ]
     },

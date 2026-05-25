@@ -1,19 +1,44 @@
 {
   "data": {
-    "type": "card",
-    "attributes": {
-      "cardTitle": "General Field",
-      "cardDescription": "A general field that can contain any field type.",
-      "specType": "field",
-      "ref": {
-        "module": "https://cardstack.com/base/card-api",
-        "name": "FieldDef"
-      }
-    },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
-        "name": "Spec"
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "FieldDef",
+        "module": "https://cardstack.com/base/card-api"
+      },
+      "readMe": "## General Field\n\nA general field that can contain any field type.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport { FieldDef } from 'https://cardstack.com/base/card-api';\n\nexport class Example extends CardDef {\n  @field value = contains(FieldDef);\n}\n```\n",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "General Field",
+      "cardDescription": "A general field that can contain any field type.",
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
       }
     }
   }

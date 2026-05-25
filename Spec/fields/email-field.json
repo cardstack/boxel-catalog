@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/email",
         "name": "default"
-      }
+      },
+      "readMe": "## Email Field\n\nAn email field that validates email addresses and provides a suitable editor.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport EmailField from 'https://cardstack.com/base/email';\n\nexport class Example extends CardDef {\n  @field email = contains(EmailField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

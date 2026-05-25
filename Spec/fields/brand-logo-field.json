@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/brand-logo",
         "name": "default"
-      }
+      },
+      "readMe": "## Brand Logo Field\n\nA field that captures a brand logo (used by the brand-guide system)\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport BrandLogoField from 'https://cardstack.com/base/brand-logo';\n\nexport class Example extends CardDef {\n  @field logo = contains(BrandLogoField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

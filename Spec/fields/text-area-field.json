@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/text-area",
         "name": "default"
-      }
+      },
+      "readMe": "## Text Area Field\n\nA field that can capture string values in a multi-line input format. Useful for capturing a large body of text.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport TextAreaField from 'https://cardstack.com/base/text-area';\n\nexport class Example extends CardDef {\n  @field description = contains(TextAreaField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

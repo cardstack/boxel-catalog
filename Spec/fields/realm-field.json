@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/realm",
         "name": "default"
-      }
+      },
+      "readMe": "## Realm Field\n\nA field that captures realm values.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport RealmField from 'https://cardstack.com/base/realm';\n\nexport class Example extends CardDef {\n  @field realm = contains(RealmField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

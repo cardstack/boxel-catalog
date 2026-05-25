@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/currency",
         "name": "default"
-      }
+      },
+      "readMe": "## Currency Field\n\nA field that captures a currency (symbol, code, name)\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport CurrencyField from 'https://cardstack.com/base/currency';\n\nexport class Example extends CardDef {\n  @field currency = contains(CurrencyField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/brand-functional-palette",
         "name": "default"
-      }
+      },
+      "readMe": "## Brand Functional Palette Field\n\nA field that captures a brand functional color palette (used by the brand-guide system)\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport BrandFunctionalPaletteField from 'https://cardstack.com/base/brand-functional-palette';\n\nexport class Example extends CardDef {\n  @field palette = contains(BrandFunctionalPaletteField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

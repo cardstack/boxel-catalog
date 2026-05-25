@@ -8,7 +8,8 @@
       "ref": {
         "module": "https://cardstack.com/base/css-value",
         "name": "default"
-      }
+      },
+      "readMe": "## CSS Value Field\n\nA field that captures a CSS value (e.g. length, color, keyword)\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport CssValueField from 'https://cardstack.com/base/css-value';\n\nexport class Example extends CardDef {\n  @field value = contains(CssValueField);\n}\n```\n"
     },
     "meta": {
       "adoptsFrom": {

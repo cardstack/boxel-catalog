@@ -1,19 +1,67 @@
 {
   "data": {
-    "type": "card",
-    "attributes": {
-      "cardTitle": "Address Field",
-      "cardDescription": "A field that validates physical addresses and provides a suitable editor.",
-      "specType": "field",
-      "ref": {
-        "module": "https://cardstack.com/base/address",
-        "name": "default"
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "https://cardstack.com/base/address",
+              "name": "default"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
       }
     },
-    "meta": {
-      "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
-        "name": "Spec"
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "https://cardstack.com/base/address"
+      },
+      "readMe": "## Address Field\n\nA field that validates physical addresses and provides a suitable editor.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport AddressField from 'https://cardstack.com/base/address';\n\nexport class Example extends CardDef {\n  @field address = contains(AddressField);\n}\n```\n",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Address Field",
+      "cardDescription": "A field that validates physical addresses and provides a suitable editor.",
+      "containedExamples": [
+        {
+          "addressLine1": "123 Main Street",
+          "addressLine2": "Apartment 4B",
+          "city": "New York",
+          "state": "NY",
+          "postalCode": "10001",
+          "country": {
+            "name": "United States of America",
+            "code": "US"
+          },
+          "poBoxNumber": "PO Box 567"
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
       }
     }
   }
