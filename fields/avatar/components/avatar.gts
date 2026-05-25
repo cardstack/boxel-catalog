@@ -23,9 +23,9 @@ import {
   getCurrentSelectionForCategory,
   updateAvatarModelForCategory,
   playClickSound,
-} from '../../utils/external/avataar';
+} from '../utils/external/avataar';
 
-import { SuggestAvatar } from '../../commands/suggest-avatar';
+import { SuggestAvatar } from '../../../commands/suggest-avatar';
 
 interface AvatarCreatorArgs {
   model: AvataaarsModel;

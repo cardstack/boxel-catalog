@@ -6,8 +6,11 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import UserIcon from '@cardstack/boxel-icons/user';
-import { getAvataarsUrl, AvataaarsModel } from '../utils/external/avataar';
-import AvatarComponent from './components/avatar';
+import {
+  getAvataarsUrl,
+  AvataaarsModel,
+} from './avatar/utils/external/avataar';
+import AvatarComponent from './avatar/components/avatar';
 
 class EditTemplate extends Component<typeof Avatar> {
   // Convert avatar field to the format expected by the component
