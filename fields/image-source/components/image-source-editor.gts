@@ -3,7 +3,6 @@ import SparkleIcon from '@cardstack/boxel-icons/sparkle';
 import type { BoxComponent } from 'https://cardstack.com/base/card-api';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
-import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   BoxelInputGroup,
@@ -19,21 +18,7 @@ import {
 } from '@cardstack/boxel-ui/icons';
 
 import type { ImageSourceMode } from '../../image-source';
-
-function selectedSourceMode(
-  sourceMode: string | null | undefined,
-  url: string | null | undefined,
-): ImageSourceMode {
-  if (sourceMode === 'url') {
-    return 'url';
-  }
-
-  if (sourceMode === 'file') {
-    return 'file';
-  }
-
-  return url ? 'url' : 'file';
-}
+import { selectedSourceMode } from '../utils';
 
 interface ImageSourceModel {
   url: string | null | undefined;
@@ -49,13 +34,14 @@ interface ImageSourceEditorSignature {
 }
 
 export default class ImageSourceEditor extends Component<ImageSourceEditorSignature> {
-  @tracked sourceMode: ImageSourceMode = selectedSourceMode(
-    this.args.model?.sourceMode,
-    this.args.model?.url,
-  );
+  get sourceMode(): ImageSourceMode {
+    return selectedSourceMode(
+      this.args.model?.sourceMode,
+      this.args.model?.url,
+    );
+  }
 
   switchTo = (mode: ImageSourceMode) => {
-    this.sourceMode = mode;
     this.args.model.sourceMode = mode;
   };
 

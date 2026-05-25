@@ -10,6 +10,7 @@ import StringField from 'https://cardstack.com/base/string';
 import UrlField from 'https://cardstack.com/base/url';
 import ImageIcon from '@cardstack/boxel-icons/image';
 import ImageSourceEditor from './image-source/components/image-source-editor';
+import { selectedSourceMode } from './image-source/utils';
 
 export type ImageSourceMode = 'url' | 'file';
 
@@ -18,13 +19,8 @@ function selectedImageURL(
   url: string | null | undefined,
   fileUrl: string | null | undefined,
 ): string {
-  if (sourceMode === 'url') {
-    return url || '';
-  }
-  if (sourceMode === 'file') {
-    return fileUrl || '';
-  }
-  return url || fileUrl || '';
+  const mode = selectedSourceMode(sourceMode, url);
+  return mode === 'url' ? url || '' : fileUrl || '';
 }
 
 class EmbeddedTemplate extends Component<typeof ImageSourceField> {
