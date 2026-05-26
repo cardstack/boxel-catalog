@@ -50,19 +50,19 @@ jobs:
       - name: Disable TCP/UDP network offloading
         run: sudo ethtool -K eth0 tx off rx off
 
-      - name: Start test services (icons + host dist + realm servers)
-        run: mise run test-services:host | tee -a /tmp/server.log &
-
-      - name: Create realm users
-        run: pnpm register-realm-users
-        working-directory: packages/matrix
-
       - name: Install D-Bus helpers
         run: |
           sudo apt-get update
           sudo apt-get install -y dbus-x11 upower
           sudo service dbus restart
           sudo service upower restart
+
+      - name: Start test services (icons + host dist + realm servers)
+        run: mise run test-services:host | tee -a /tmp/server.log &
+
+      - name: Create realm users
+        run: pnpm register-realm-users
+        working-directory: packages/matrix
 
       - name: Live test suite
         run: dbus-run-session -- pnpm test:live
