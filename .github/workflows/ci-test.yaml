@@ -25,11 +25,10 @@ jobs:
       # so it doesn't move HEAD off the PR commit during service startup.
       SKIP_CATALOG_UPDATE: '1'
     steps:
-      # Checkout the boxel monorepo
+      # Checkout the boxel monorepo 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
-          ref: split-out-commands
 
       # Checkout this catalog repo directly into the monorepo's catalog location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
@@ -51,19 +50,19 @@ jobs:
       - name: Disable TCP/UDP network offloading
         run: sudo ethtool -K eth0 tx off rx off
 
-      - name: Start test services (icons + host dist + realm servers)
-        run: mise run test-services:host | tee -a /tmp/server.log &
-
-      - name: Create realm users
-        run: pnpm register-realm-users
-        working-directory: packages/matrix
-
       - name: Install D-Bus helpers
         run: |
           sudo apt-get update
           sudo apt-get install -y dbus-x11 upower
           sudo service dbus restart
           sudo service upower restart
+
+      - name: Start test services (icons + host dist + realm servers)
+        run: mise run test-services:host | tee -a /tmp/server.log &
+
+      - name: Create realm users
+        run: pnpm register-realm-users
+        working-directory: packages/matrix
 
       - name: Live test suite
         run: dbus-run-session -- pnpm test:live
