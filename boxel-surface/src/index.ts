@@ -564,7 +564,10 @@ export type {
 
 // ─── boxel-layout ─────────────────────────────────────────────────
 export { Layout } from '../packages/boxel-layout/index.ts';
-export type { LayoutPreset, LayoutSignature } from '../packages/boxel-layout/index.ts';
+export type {
+  LayoutPreset,
+  LayoutSignature,
+} from '../packages/boxel-layout/index.ts';
 
 // ─── boxel-grid (future) ──────────────────────────────────────────
 // export { ... } from './boxel-grid/index.ts';
