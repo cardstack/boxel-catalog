@@ -1,0 +1,10 @@
+export const LadderContextName = 'boxel-surface:ladder';
+export const SurfaceRuntimeContextName = 'boxel-surface:runtime';
+export const ParentIdContextName = 'boxel-surface:parent-id';
+export const ParentContextName = 'boxel-surface:parent-surface';
+export const DemoContextName = 'boxel-surface:demo';
+export const ModeContextName = 'boxel-surface:mode';
+export const InspectContextName = 'boxel-surface:inspect';
+export const PathContextName = 'boxel-surface:path';
+export const ChangeRouteContextName = 'boxel-surface:change-route';
+export const CoordinateSpaceContextName = 'boxel-surface:coordinate-space';
