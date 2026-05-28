@@ -77,7 +77,7 @@ import type { Surface } from './widget.ts';
  *
  * Re-exported from `widget.ts` so consumers can import from a
  * single module:
- *   `import type { Surface } from '@cardstack/boxel-surface'`
+ *   `import type { Surface } from '../boxel-surface/src'`
  */
 export type { Surface };
 

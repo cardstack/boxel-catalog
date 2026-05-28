@@ -563,8 +563,8 @@ export type {
 } from './resize-stability.ts';
 
 // ─── boxel-layout ─────────────────────────────────────────────────
-export { Layout } from './boxel-layout/index.ts';
-export type { LayoutPreset, LayoutSignature } from './boxel-layout/index.ts';
+export { Layout } from '../packages/boxel-layout/index.ts';
+export type { LayoutPreset, LayoutSignature } from '../packages/boxel-layout/index.ts';
 
 // ─── boxel-grid (future) ──────────────────────────────────────────
 // export { ... } from './boxel-grid/index.ts';

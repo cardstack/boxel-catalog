@@ -1,309 +1,186 @@
+<div align="center">
+
 # boxel-surface
 
-Surface layer primitives used by the catalog demo cards.
-Import from `../boxel-surface/index` (relative path — no `@cardstack` prefix).
+**Headless interaction engine for typed-block UIs.**
+A library of primitives — `Environment`, `Layout`, `Grid`, `Row`, `Cell`,
+`Run`, `Unit`, `Canvas`, `Scene`, `Frame`, `Plane`, `Outline`, `Pane`,
+`Scroll`, `Flow`, `Lift` — plus a runtime that
+bakes the right keyboard, focus, selection, lifted-edit, and inspection
+patterns into reusable contracts. Built on Glimmer / Ember.
 
-```ts
-import { Environment, Layout, Grid, Row, Cell, Run, Unit, Pane } from '../boxel-surface/index';
+> Surfaces is to UI semantics what react-aria is to accessibility.
+
+</div>
+
+```gts
+import { Cell, Environment, Layout } from '../boxel-surface/src';
+
+<template>
+  <Environment @space={{@model}} @posture='use'>
+    <Layout
+      @preset='page'
+      @key='launch-plan'
+      @tag='article'
+      @runtimePointer='preview-only'
+    >
+      <section class='plan-toolbar'>Q3 launch plan</section>
+
+      <Cell @key='budget' @change={{true}}>
+        {{@model.budget}}
+      </Cell>
+    </Layout>
+  </Environment>
+</template>
 ```
 
----
-
-## Layer overview
-
-| Layer | Components | Job |
-|---|---|---|
-| **Structure** | `Environment` `Layout` `Pane` | Nesting context, page container, side panel |
-| **Data** | `Grid` `Row` `Cell` `Run` `Unit` | Tabular data with focus/selection |
-| **Form** | `Form` `FormSection` `FormField` | Structured editing chrome |
-| **Typed cells** | `TextCell` `EmailCell` `NumberCell` `SwitchCell` | Editable value slots |
-| **Lift** | `Lift` `LiftChevron` | Floating overlays anchored to a cell |
-| **Modifier** | `multiUnit` | Per-chip selection inside one cell |
-| **Focus** | `FocusLadder` `createFocusLadder` | Who has attention right now |
+The engine handles traversal, browser focus, selection scoping, lift/input
+ownership, dismissal on Esc / outside-click, ARIA roles, and projection-driven
+adornments. Package bindings such as `surfaceGridBinding` and
+`surfaceCanvasBinding` add sheet and canvas-specific gestures on top. The host
+owns *what* a cell or object does on commit; the engine owns *how* it gets
+there.
 
 ---
 
-## Structure layer
+## Install
 
-### `Environment`
+`boxel-surface` now lives inside the catalog realm at
+`catalog/contents/boxel-surface/`. Consumers import it by relative path
+from anywhere else in the same realm (e.g. `'../boxel-surface/src'`) — no
+npm install step required.
 
-Root context provider. Nothing works without it.
-<!-- Without Environment
-Environment does three things on mount:
+`@cardstack/boxel-ui` is an optional peer for default thimble visuals.
 
-Creates the SurfaceRuntime and FocusLadder
-Provides them to all descendants via Glimmer context (@provide)
-Installs the surfaceRoot modifier on its host element (keyboard routing, background-click-clear, tabindex)
-Without it, every child component (Grid, Row, Cell, etc.) calls @consume(LadderContextName) and gets back undefined. Looking at the surfaceNode modifier:
+## What you get
 
+| Layer            | What's in it                                                                                                  |
+|------------------|---------------------------------------------------------------------------------------------------------------|
+| **Foundations**  | 14 surface kinds — `Environment`, `Layout`, `Pane`, `Frame`, `Plane`, `Canvas`, `Scene`, `Grid`, `Row`, `Cell`, `Run`, `Unit`, `Scroll`, `Flow`, `Outline` |
+| **Lift**         | Anchored floating surface for focused interaction. Four kinds: `details`, `preview`, `edit`, `tools`.         |
+| **Form**         | `Form`, `FormField`, `FormSection`, `FormTabs` / `FormTab`, `FormWizard` / `FormStep`, `FormAlert`, plus canonical cells `TextCell`, `EmailCell`, `NumberCell`, `SwitchCell`. Density / layout / columns cascade from `Form` to children. |
+| **Cues**         | `CueLabel`, `CueDescription`, `CueStatus` — accessibility-wired support UI.                                   |
+| **Engine**       | `SurfaceRuntime`, scoped subscriptions, viewport state, focus ladder compatibility, lift edges, contract negotiation, surface rules, projection-driven decals. |
+| **Modifiers**    | `surfaceRoot`, `surfaceNode`, `surfaceGridBinding`, `surfaceCanvasBinding`, `surfaceSceneBinding`, `surfaceDecalLayer`, `surfaceInlineEdit`, `multiUnit`, `surfaceLiftBinding`, `portal`. |
 
-const owningLadder = ladder ?? ladderForSurfaceElement(element);
-if (!owningLadder || !opts.id || !opts.surface) return false;  // ← silently bails
-It just returns false — no registration happens, no error thrown. The component renders its DOM fine, but:
+## Current Runtime Shape
 
-No surface node is registered in the ladder
-No keyboard navigation (Tab/Arrow keys do nothing)
-No click-to-select
-No focus path tracking
-No @posture cascade
-Lift will fail to find an anchor since the DOM root isn't marked -->
+The maintained path is runtime-driven. `Environment` creates the runtime and
+foundation/package surfaces register semantic participants. Package bindings own
+normal interaction behavior:
 
+- `Grid @preset="sheet"` owns cell selection, column/header projection, keyboard
+  movement, edit handoff, and Escape cleanup.
+- `surfaceCanvasBinding` owns object and edge selection, object move/resize,
+  marquee, nudge, duplicate/delete, connection callbacks, snap, auto-pan, and
+  transformed-canvas reveal hooks.
+- `surfaceSceneBinding` is the scene-facing binding over the same object
+  machinery; scene hosts still own camera/orbit behavior.
+- `SurfaceRuntime` exposes scoped `subscribeSelection`, `subscribeTopology`,
+  `subscribeInput`, and `subscribeViewport` channels. Use the broad
+  `subscribe()` channel only for compatibility or whole-runtime diagnostics.
 
-| Arg | Type | Notes |
-|---|---|---|
-| `@space` | `string \| object` | Identity anchor. Pass `@model` from a CardDef so each card instance is independent. |
-| `@posture` | `'use' \| 'compose'` | Cascade signal broadcast to all children. `use` = interacting, `compose` = editing the layout. |
-| `@ladder` | `FocusLadder` | Bring your own ladder (needed when subscribing externally). |
-| `@keyboard` | `boolean \| 'surface-tree' \| 'manual' \| 'none'` | Keyboard navigation model. |
+Structural page chrome should not become selected product state by accident. Use
+`@posture` / `@inspect` for authoring posture, and use low-level runtime policy
+overrides such as `@runtimePointer="preview-only"` only when a structural surface
+needs to render context while leaving selection to descendants.
 
-### `Layout`
+## Two dialects, one engine
 
-Page container inside an Environment. Handles outer chrome (padding, border-radius, overflow).
-No notable args beyond standard HTML attributes.
+**Portable** — expanded markup, explicit `@space` / `@coord` / `@schema`,
+local CSS + tokens. Lossless and copy-pasteable.
 
-### `Pane`
+**Adaptive** — concise, pattern-driven markup. The runtime fills in
+defaults (traversal, ARIA, responsive, Cue decals, Place candidates)
+from contracts and rules.
 
-Independent side-panel region inside a Layout. Floats alongside Grid content without joining the column structure.
-No notable args beyond standard HTML attributes.
+Both dialects resolve to the same surface tree.
 
----
+## The workbench
 
-## Data layer
+Every primitive ships with a live exhibit that paints coordinate decals
+over real surfaces, lets you walk the runtime projection with Tab, and
+shows lift escalation chaining through `details` → `edit` → `tools`.
+The workbench is maintained alongside the original surfaces source and
+is not bundled into the catalog realm — open it from the upstream
+surfaces development environment when you need it.
 
-### `Grid`
+The workbench has six tiers:
 
-Tabular host — gives rows and cells keyboard/selection semantics.
-No notable args beyond standard HTML attributes + `role`.
+| Tier         | What it is                                                                                          |
+|--------------|------------------------------------------------------------------------------------------------------|
+| **Showcase** | Same Cell, three hosts · Cross-host drag · Lift escalation · Agent dashboard                         |
+| **Concepts** | One-page reference for each v3 word — Surface, Cue, Coordinate, Posture &amp; Inspect, Lift, Place, Adorn, Trail, Pattern, Traversal Set, Rule Matching |
+| **Lessons**  | Mental model + the 10-lesson Build track                                                            |
+| **Apps**     | Spreadsheet (boxel) · Document outline (notion) · Canvas board (figma) · Canvas flow (figma) · Space (3D) · Music library (spotify) · Storefront composer (shopify) · Form lab (form chrome) |
+| **Reference**| Storybook-style component panels — args, schema, examples, code. Every entry is sourced from the live TypeScript signatures. |
+| **Matrix**   | 14 × 14 pairwise composition catalog                                                                |
 
-### `Row`
+## Vocabulary, in one paragraph
 
-One record in a Grid.
+A **Surface** is a meaningful unit of substance — a cell, a row, a run
+of text, a framed image. A **Cue** is the support UI around it — a
+label, a handle, a well, a popup. A **Coordinate** is a typed location
+inside a parent **Coordinate Space**, not a DOM path. **Posture**
+(`use` vs `compose`) and **Inspect** (overlay on / off) are independent
+dials that cascade through the network. **Lift** shows a surface
+elsewhere; **Place** moves one into another. The Concepts tier in the
+workbench defines each in one screen.
 
-| Arg | Type | Notes |
-|---|---|---|
-| `@space` | `string` | Stable identity across re-sorts. Pass the record's id. |
+> DOM and component renderers produce trees.
+> *Surfaces produces a network over those trees.*
 
-### `Cell`
+## Project layout
 
-One value slot inside a Row.
-
-| Arg | Type | Notes |
-|---|---|---|
-| `@key` | `string` | Column identity — required for correct focus tracking. |
-| `@surface` | `'form' \| 'grid' \| 'canvas' \| 'scene'` | Override chrome skin (usually auto-detected). |
-| `@state` | `'none' \| 'valid' \| 'invalid' \| 'loading' \| 'initial'` | Validation ring colour. |
-| `@readonly` | `boolean` | Blocks edit interactions. |
-| `@disabled` | `boolean` | Blocks + grays out. |
-| `@chained` | `boolean` | Drops the outer border so adjacent cells visually merge. |
-
-### `Run`
-
-Inline prose / text value inside a Cell. Use for labels, names, any string that reads as content.
-
-| Arg | Type | Notes |
-|---|---|---|
-| `@key` | `string` | Optional stable identity when multiple Runs share a Cell. |
-
-### `Unit`
-
-Typed leaf value inside a Cell — for non-prose data: a status dot, a checkbox, a badge.
-Semantically "this is a value, not prose".
-
-| Arg | Type | Notes |
-|---|---|---|
-| `@key` | `string` | Optional stable identity. |
-
----
-
-## Form layer
-
-### `Form`
-
-Wraps a set of fields. `@mode` broadcasts read-only vs editable to all children.
-
-| Arg | Type | Notes |
-|---|---|---|
-| `@mode` | `'edit' \| 'view' \| 'create'` | Default `'edit'`. All child cells switch accordingly. |
-| `@layout` | `'vertical' \| 'horizontal'` | Label above or beside the field. |
-| `@density` | `'comfortable' \| 'compact'` | Field spacing. |
-| `@variant` | `'standalone' \| 'embedded'` | `standalone` → `<form>` tag; `embedded` → `<fieldset>`. |
-| `@columns` | `1 \| 2 \| 3` | Field grid column count. |
-
-### `FormSection`
-
-Collapsible group of fields with a heading.
-
-| Arg | Type | Notes |
-|---|---|---|
-| `@heading` | `string` | Section title. Required. |
-| `@collapsible` | `boolean` | Shows a collapse toggle. |
-| `@defaultOpen` | `boolean` | Initial open state when collapsible. Default `true`. |
-
-### `FormField`
-
-Label + value slot pair. Put a typed cell in the default block.
-
-| Arg | Type | Notes |
-|---|---|---|
-| `@label` | `string` | Required. |
-| `@state` | `'none' \| 'valid' \| 'invalid' \| 'loading' \| 'initial'` | Validation ring. |
-| `@readonly` | `boolean` | Switches label chrome to read-only style. |
-| `@required` | `boolean` | Adds required indicator. |
-| `@helperText` | `string` | Small hint below the field. |
-| `@errorMessage` | `string` | Shown when `@state='invalid'`. |
-
----
-
-## Typed cells
-
-### `TextCell`
-
-| Arg | Type |
-|---|---|
-| `@value` | `string` |
-| `@readonly` | `boolean` |
-| `@disabled` | `boolean` |
-| `@placeholder` | `string` |
-| `@type` | `'text' \| 'tel' \| 'url' \| 'search'` |
-| `@multiline` | `boolean` |
-| `@prefix` / `@suffix` | `string` |
-| `@onInput` | `(value: string) => void` |
-
-### `EmailCell`
-
-| Arg | Type |
-|---|---|
-| `@value` | `string` |
-| `@readonly` | `boolean` |
-| `@disabled` | `boolean` |
-| `@placeholder` | `string` |
-| `@onInput` | `(value: string) => void` |
-
-### `NumberCell`
-
-| Arg | Type |
-|---|---|
-| `@value` | `number \| string` |
-| `@readonly` | `boolean` |
-| `@disabled` | `boolean` |
-| `@placeholder` | `string` |
-| `@min` / `@max` | `number` |
-| `@step` | `number \| string` |
-| `@prefix` / `@suffix` | `string` |
-| `@onInput` | `(value: string) => void` |
-
-### `SwitchCell`
-
-| Arg | Type |
-|---|---|
-| `@label` | `string` (required) |
-| `@value` | `boolean` |
-| `@disabled` | `boolean` |
-| `@description` | `string` |
-| `@onChange` | `(value: boolean) => void` |
-
----
-
-## Lift layer
-
-### `Lift`
-
-Floating surface anchored to a source element via CSS selector. Yields `kind` to the block — switch on it to render different bodies.
-
-```hbs
-<Lift
-  @anchor='[data-lift-anchor=my-cell]'
-  @open={{this.isOpen}}
-  @kind={{this.kind}}
-  @canEscalateTo={{this.allKinds}}
-  @onEscalate={{this.escalate}}
-  @onDismiss={{this.dismiss}}
-  as |kind|
->
-  {{#if (eq kind 'details')}}…{{/if}}
-  {{#if (eq kind 'edit')}}…{{/if}}
-</Lift>
+```
+boxel-surface/
+├── LICENSE
+├── README.md
+├── src/                  # Engine + foundation primitives
+│   ├── index.ts            # Public surface — re-exports everything
+│   ├── components/         # Glimmer/Ember bindings
+│   │   ├── surface-component.gts   # Environment + 14 surface kinds
+│   │   ├── lift.gts                # Lift component + chrome variants
+│   │   ├── accessory.gts           # Accessory + CueLabel/Description/Status
+│   │   ├── form*.gts               # Form, FormField, FormSection, …
+│   │   └── (cell components, etc.)
+│   ├── modifiers/          # grid/canvas/scene bindings, decals,
+│   │                       #   root/node, inline edit, portal, lift binding
+│   ├── contracts.ts        # ContractKey table, Contract / Capability types,
+│   │                       #   negotiation, BASE_CONTRACTS for every pair
+│   ├── focus-ladder.ts     # Focus/selection traversal compatibility bridge
+│   ├── lift-edges.ts       # Declarative @lift edges + LiftManager
+│   ├── lift-state.ts       # Lift state machine
+│   ├── rules.ts            # CSS-selector pattern matching (adaptive dialect)
+│   ├── canvas-dom.ts       # Canvas DOM registry
+│   ├── grid-dom.ts         # Grid DOM registry
+│   ├── dom-registry.ts     # Shared DOM registry primitives
+│   ├── foci-*.ts           # Foci policy / projection / store
+│   ├── surface-runtime.ts  # SurfaceRuntime + scoped subscriptions
+│   ├── surface-contexts.ts # Provided contexts (Mode, Inspect, …)
+│   ├── form-field-*.ts     # Form field context + resolution
+│   ├── geometry-events.ts, keyboard.ts, layer-manager.ts,
+│   ├── relative-scale.ts, resize-stability.ts, scope-relay.ts,
+│   ├── template-helpers.ts, widget.ts
+│   ├── icons/              # Inline SVG icon components
+│   ├── styles/             # Shared CSS used by components
+│   ├── themes/             # Theme tokens (boxel default theme)
+│   └── thimble/            # Default thimble visuals (CSS + tokens)
+└── packages/
+    └── boxel-layout/       # Layout primitive (separate package boundary)
+        ├── index.ts
+        └── components/layout.gts
 ```
 
-| Arg | Type | Notes |
-|---|---|---|
-| `@anchor` | `string` (CSS selector) | Target element. Use a unique `data-lift-anchor` attribute. Required. |
-| `@open` | `boolean` | Mount / unmount. Required. |
-| `@kind` | `'details' \| 'preview' \| 'edit' \| 'tools'` | Chrome variant. Yielded back to block. Required. |
-| `@canEscalateTo` | `LiftKind[]` | Kinds shown in the escalation toolbar. Empty = no toolbar. |
-| `@onEscalate` | `(next: LiftKind) => void` | User clicked an escalation chip. |
-| `@onDismiss` | `() => void` | Esc or outside-click. Set `@open=false` here. |
-| `@placementMode` | `'attached' \| 'shadow' \| 'plane'` | Geometric strategy. Default `'attached'`. |
-| `@size` | `'compact' \| 'comfortable' \| 'spacious' \| 'auto'` | Width/height preset. |
-| `@backdrop` | `'none' \| 'tint' \| 'blur' \| 'scrim'` | Background treatment. |
-| `@elevation` | `'flat' \| 'raised' \| 'elevated' \| 'modal'` | Shadow / z-index tier. |
-| `@autoFocus` | `boolean` | Move DOM focus into lift on open. Default `true` except `details`. |
+## Status
 
-**Four kinds:**
+`0.10.0` — pre-release. The engine surface (foundations,
+SurfaceRuntime, contracts, lift edges, rules, and package bindings) is
+stable enough to build apps against. Default thimble implementations,
+the rule library, and the Build track lessons are in active
+development.
 
-| Kind | Opens on | Closes on | Use for |
-|---|---|---|---|
-| `details` | hover | cursor leave | Read-only peek, full value + context |
-| `preview` | click / pin | click outside | Richer read view, stays open |
-| `edit` | click | Enter / Esc | In-place editing, focus-trapped |
-| `tools` | click | action runs / click outside | Full action menu (5+ actions) |
 
-### `LiftChevron`
+## License
 
-Small ▾ affordance placed inside a Cell. Signals "this cell has a lift" and serves as the click target.
-
----
-
-## Modifier layer
-
-### `multiUnit`
-
-Put on a Cell that contains several chips/values. Scans for `[data-unit-key]` children and registers each as an individually focusable unit.
-
-```hbs
-<Cell
-  @key='tags'
-  data-ladder-id={{this.cellId}}
-  {{multiUnit this.ladder this.cellId}}
->
-  {{#each this.tags as |tag|}}
-    <span class='chip' data-unit-key={{tag}}>{{tag}}</span>
-  {{/each}}
-</Cell>
-```
-
-- Click a chip → selects that chip
-- Click between chips → selects the whole cell (the group)
-- Re-renders with stable `data-unit-key` values preserve selection
-
----
-
-## Focus layer
-
-### `createFocusLadder` / `FocusLadder`
-
-```ts
-ladder = createFocusLadder();
-
-// subscribe to focus/selection changes
-this.unsub = this.ladder.subscribe(() => {
-  this.focused  = this.ladder.focusedId;
-  const path = this.ladder.focusPath;
-  const last = path[path.length - 1];
-  this.selected = last && this.ladder.isSelected(last) ? last : null;
-});
-```
-
-Pass the ladder to `Environment` via `@ladder` and to `multiUnit` as the first argument.
-
----
-
-## Demo cards
-
-| Card | File | Surfaces demonstrated |
-|---|---|---|
-| Team Roster | `../team-roster/team-roster.gts` | `Environment` `Layout` `Grid` `Row` `Cell` `Run` `Unit` `Pane` |
-| Employee Profile | `../employee-profile/employee-profile.gts` | `Form` `FormSection` `FormField` `TextCell` `EmailCell` `SwitchCell` |
-| Todo List | `../todo-list/todo-list.gts` | Inline edit pattern — `Unit` checkbox, `Run` double-click edit |
-| Budget Metrics | `../budget-metrics/budget-metrics.gts` | `Lift` — hover for `details`, click for `edit` |
-| People Tags | `../people-tags/people-tags.gts` | `multiUnit` — per-chip selection, add/remove chips |
+[MIT](./LICENSE) © Cardstack

@@ -7,7 +7,7 @@ import {
   type SurfaceComponentSignature as FoundationSignature,
   type FociNodePolicy,
   type Target,
-} from '../../components/surface-component.gts';
+} from '../../../src/components/surface-component.gts';
 
 export type LayoutPreset = 'bare' | 'page' | 'notebook' | 'tools';
 
