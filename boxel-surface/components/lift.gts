@@ -12,10 +12,7 @@ import {
 } from '@floating-ui/dom';
 import type { Placement, Strategy } from '@floating-ui/dom';
 
-import {
-  SURFACE_LAYERS,
-  type SurfaceLayerTier,
-} from '../layer-manager.ts';
+import { SURFACE_LAYERS, type SurfaceLayerTier } from '../layer-manager.ts';
 import {
   createSurfaceScopeRelay,
   SurfaceScopeContextName,
@@ -24,10 +21,7 @@ import {
 import surfaceScopeRelay from '../modifiers/scope-relay.ts';
 import type { FocusLadder } from '../focus-ladder.ts';
 import type { SurfaceRuntime } from '../surface-runtime.ts';
-import {
-  LiftContextName,
-  type LiftManager,
-} from '../lift-edges.ts';
+import { LiftContextName, type LiftManager } from '../lift-edges.ts';
 import {
   ladderForSurfaceElement,
   liftManagerForSurfaceElement,
@@ -179,10 +173,7 @@ export interface LiftSignature {
  *  one lift directly into another cell). The lift owns dismissal,
  *  full stop. */
 const dismissOnOutside = modifier(
-  (
-    _el: HTMLElement,
-    [onDismiss]: [(() => void) | undefined],
-  ) => {
+  (_el: HTMLElement, [onDismiss]: [(() => void) | undefined]) => {
     if (!onDismiss) return;
     const onPointer = (event: PointerEvent): void => {
       const target = event.target as Element | null;
@@ -198,7 +189,7 @@ const dismissOnOutside = modifier(
       if (target.closest('[data-bx-lift-anchor]')) return;
       // ember-power-select renders its dropdown options in a portal at
       // document.body — treat that portal as "inside" so picking an
-      // option from a <BoxelSelect> within the lift does not dismiss it.
+      // option from a BoxelSelect within the lift does not dismiss it.
       if (target.closest('.ember-basic-dropdown-content')) return;
       onDismiss();
     };
@@ -259,26 +250,31 @@ const liftSurfaceRoot = modifier(
     const anchor = named.anchor
       ? element.ownerDocument.querySelector<HTMLElement>(named.anchor)
       : null;
-    const ladder = named.ladder ?? (anchor ? ladderForSurfaceElement(anchor) : undefined);
-    const runtime = named.runtime ?? (anchor ? surfaceRuntimeForElement(anchor) : undefined);
-    const liftManager = named.liftManager ??
+    const ladder =
+      named.ladder ?? (anchor ? ladderForSurfaceElement(anchor) : undefined);
+    const runtime =
+      named.runtime ?? (anchor ? surfaceRuntimeForElement(anchor) : undefined);
+    const liftManager =
+      named.liftManager ??
       (anchor ? liftManagerForSurfaceElement(anchor) : undefined);
     const modeRoot = anchor?.closest<HTMLElement>('[data-surface-mode]');
     const inspectRoot = anchor?.closest<HTMLElement>('[data-surface-inspect]');
     const priorMode = element.getAttribute('data-surface-mode');
     const priorInspect = element.getAttribute('data-surface-inspect');
     const syncModeAndInspect = (): void => {
-      const mode = named.mode ??
-        modeRoot?.dataset['surfaceMode'] as
+      const mode =
+        named.mode ??
+        (modeRoot?.dataset['surfaceMode'] as
           | 'use'
           | 'change'
           | 'inspect'
-          | undefined;
+          | undefined);
       const inspectAttr =
         named.inspect ?? inspectRoot?.getAttribute('data-surface-inspect');
-      const inspect = typeof inspectAttr === 'boolean'
-        ? inspectAttr
-        : inspectAttr === 'true' || inspectAttr === '';
+      const inspect =
+        typeof inspectAttr === 'boolean'
+          ? inspectAttr
+          : inspectAttr === 'true' || inspectAttr === '';
       element.setAttribute('data-surface-mode', mode ?? 'use');
       element.setAttribute('data-surface-inspect', String(inspect));
     };
@@ -311,7 +307,8 @@ const liftSurfaceRoot = modifier(
       element.removeAttribute('data-surface-portaled-root');
       if (priorMode === null) element.removeAttribute('data-surface-mode');
       else element.setAttribute('data-surface-mode', priorMode);
-      if (priorInspect === null) element.removeAttribute('data-surface-inspect');
+      if (priorInspect === null)
+        element.removeAttribute('data-surface-inspect');
       else element.setAttribute('data-surface-inspect', priorInspect);
     };
   },
@@ -321,51 +318,49 @@ const liftSurfaceRoot = modifier(
  *  Sets top / left / min-width from anchor's getBoundingClientRect.
  *  Clamps to the viewport: if the lift's natural width would extend
  *  past the right edge, shifts left to keep the right edge inside. */
-const shadowAnchor = modifier(
-  (element: HTMLElement, [selector]: [string]) => {
-    const anchorEl = (): HTMLElement | null =>
-      document.querySelector<HTMLElement>(selector);
-    const update = (): void => {
-      const a = anchorEl();
-      if (!a) return;
-      const r = a.getBoundingClientRect();
-      // Reset position-related styles before measuring so a previous
-      // run's shifts don't pollute the new computation.
-      element.style.position = 'absolute';
-      element.style.top = `${window.scrollY + r.top}px`;
-      element.style.left = `${window.scrollX + r.left}px`;
-      element.style.minWidth = `${Math.round(r.width)}px`;
-      // Now measure the lift's actual width (after layout settled
-      // with the new min-width applied) and clamp to viewport.
-      requestAnimationFrame(() => {
-        const lr = element.getBoundingClientRect();
-        const overflowRight = lr.right - window.innerWidth + 8; // 8px gutter
-        if (overflowRight > 0) {
-          const newLeft = window.scrollX + r.left - overflowRight;
-          element.style.left = `${Math.max(window.scrollX + 8, newLeft)}px`;
-        }
-        // Same for vertical — if extending past viewport bottom,
-        // shift up so we don't get cut off.
-        const overflowBottom = lr.bottom - window.innerHeight + 8;
-        if (overflowBottom > 0) {
-          const newTop = window.scrollY + r.top - overflowBottom;
-          element.style.top = `${Math.max(window.scrollY + 8, newTop)}px`;
-        }
-      });
-    };
-    update();
-    const ro = new ResizeObserver(update);
+const shadowAnchor = modifier((element: HTMLElement, [selector]: [string]) => {
+  const anchorEl = (): HTMLElement | null =>
+    document.querySelector<HTMLElement>(selector);
+  const update = (): void => {
     const a = anchorEl();
-    if (a) ro.observe(a);
-    window.addEventListener('scroll', update, true);
-    window.addEventListener('resize', update);
-    return (): void => {
-      ro.disconnect();
-      window.removeEventListener('scroll', update, true);
-      window.removeEventListener('resize', update);
-    };
-  },
-);
+    if (!a) return;
+    const r = a.getBoundingClientRect();
+    // Reset position-related styles before measuring so a previous
+    // run's shifts don't pollute the new computation.
+    element.style.position = 'absolute';
+    element.style.top = `${window.scrollY + r.top}px`;
+    element.style.left = `${window.scrollX + r.left}px`;
+    element.style.minWidth = `${Math.round(r.width)}px`;
+    // Now measure the lift's actual width (after layout settled
+    // with the new min-width applied) and clamp to viewport.
+    requestAnimationFrame(() => {
+      const lr = element.getBoundingClientRect();
+      const overflowRight = lr.right - window.innerWidth + 8; // 8px gutter
+      if (overflowRight > 0) {
+        const newLeft = window.scrollX + r.left - overflowRight;
+        element.style.left = `${Math.max(window.scrollX + 8, newLeft)}px`;
+      }
+      // Same for vertical — if extending past viewport bottom,
+      // shift up so we don't get cut off.
+      const overflowBottom = lr.bottom - window.innerHeight + 8;
+      if (overflowBottom > 0) {
+        const newTop = window.scrollY + r.top - overflowBottom;
+        element.style.top = `${Math.max(window.scrollY + 8, newTop)}px`;
+      }
+    });
+  };
+  update();
+  const ro = new ResizeObserver(update);
+  const a = anchorEl();
+  if (a) ro.observe(a);
+  window.addEventListener('scroll', update, true);
+  window.addEventListener('resize', update);
+  return (): void => {
+    ro.disconnect();
+    window.removeEventListener('scroll', update, true);
+    window.removeEventListener('resize', update);
+  };
+});
 
 const anchoredLift = modifier(
   (
@@ -398,7 +393,11 @@ const anchoredLift = modifier(
     });
 
     const apply = (top: string, left: string, visibility: string): void => {
-      if (top === lastTop && left === lastLeft && visibility === lastVisibility) {
+      if (
+        top === lastTop &&
+        left === lastLeft &&
+        visibility === lastVisibility
+      ) {
         return;
       }
 
@@ -455,12 +454,12 @@ const anchoredLift = modifier(
     const reference = referenceElement();
     const cleanup = reference
       ? autoUpdate(reference, floatingElement, schedule, {
-        ancestorResize: true,
-        ancestorScroll: true,
-        elementResize: true,
-        layoutShift: false,
-        animationFrame: false,
-      })
+          ancestorResize: true,
+          ancestorScroll: true,
+          elementResize: true,
+          layoutShift: false,
+          animationFrame: false,
+        })
       : undefined;
 
     return (): void => {
@@ -521,9 +520,9 @@ function firstLiftFocusTarget(element: HTMLElement): HTMLElement | null {
   const autofocus = body.querySelector<HTMLElement>('[autofocus]');
   if (autofocus) return autofocus;
   if (
-    keyboardModel === 'edit-text'
-    || keyboardModel === 'edit-number'
-    || keyboardModel === 'compose'
+    keyboardModel === 'edit-text' ||
+    keyboardModel === 'edit-number' ||
+    keyboardModel === 'compose'
   ) {
     const editor = body.querySelector<HTMLElement>(liftEditorSelector());
     if (editor) return editor;
@@ -555,14 +554,14 @@ type ReroutedKeyboardEvent = KeyboardEvent & {
 };
 
 function isPlainTextKey(event: KeyboardEvent): boolean {
-  return event.key.length === 1 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.altKey;
+  return (
+    event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey
+  );
 }
 
 function isPickerNavigationKey(event: KeyboardEvent): boolean {
-  return event.key === 'ArrowDown' ||
+  return (
+    event.key === 'ArrowDown' ||
     event.key === 'ArrowUp' ||
     event.key === 'Home' ||
     event.key === 'End' ||
@@ -570,12 +569,14 @@ function isPickerNavigationKey(event: KeyboardEvent): boolean {
     event.key === 'Tab' ||
     event.key === ' ' ||
     event.key === 'Spacebar' ||
-    isPlainTextKey(event);
+    isPlainTextKey(event)
+  );
 }
 
 function isEditingKey(event: KeyboardEvent): boolean {
   if (event.metaKey || event.ctrlKey || event.altKey) return false;
-  return event.key === 'Enter' ||
+  return (
+    event.key === 'Enter' ||
     event.key === 'Tab' ||
     event.key.startsWith('Arrow') ||
     event.key === 'Home' ||
@@ -584,7 +585,8 @@ function isEditingKey(event: KeyboardEvent): boolean {
     event.key === 'PageDown' ||
     event.key === 'Backspace' ||
     event.key === 'Delete' ||
-    isPlainTextKey(event);
+    isPlainTextKey(event)
+  );
 }
 
 function liftKeyboardModelOwnsEvent(
@@ -605,13 +607,17 @@ function liftKeyboardModelOwnsEvent(
 
 function topmostKeyboardLift(): HTMLElement | null {
   const lifts = Array.from(
-    document.querySelectorAll<HTMLElement>('[data-bx-lift][data-bx-lift-keyboard-lock="true"]'),
+    document.querySelectorAll<HTMLElement>(
+      '[data-bx-lift][data-bx-lift-keyboard-lock="true"]',
+    ),
   );
-  return lifts.sort((a, b) => {
-    const za = Number(a.dataset['surfaceLayerZ'] ?? 0);
-    const zb = Number(b.dataset['surfaceLayerZ'] ?? 0);
-    return zb - za;
-  })[0] ?? null;
+  return (
+    lifts.sort((a, b) => {
+      const za = Number(a.dataset['surfaceLayerZ'] ?? 0);
+      const zb = Number(b.dataset['surfaceLayerZ'] ?? 0);
+      return zb - za;
+    })[0] ?? null
+  );
 }
 
 function cloneKeyboardEvent(event: KeyboardEvent): ReroutedKeyboardEvent {
@@ -662,9 +668,7 @@ const liftFocusModifier = modifier(
       if (token) focusedLiftTokens.add(token);
     };
     frame = requestAnimationFrame(focusWhenReady);
-    const anchorSelector = element.getAttribute(
-      'data-bx-lift-anchor-selector',
-    );
+    const anchorSelector = element.getAttribute('data-bx-lift-anchor-selector');
     return (): void => {
       cancelAnimationFrame(frame);
       const active = document.activeElement as HTMLElement | null;
@@ -745,14 +749,17 @@ const delegateLiftKeyboardModifier = modifier(
       if (topmostKeyboardLift() !== element) return;
 
       const target = event.target instanceof Element ? event.target : null;
-      const active = document.activeElement instanceof Element
-        ? document.activeElement
-        : null;
+      const active =
+        document.activeElement instanceof Element
+          ? document.activeElement
+          : null;
       // Treat ember-power-select's portal as logically inside the lift —
       // keystrokes in its search/options must NOT be hijacked by the lift.
-      const insideLift = (node: Element): boolean =>
-        element.contains(node)
-        || !!node.closest('.ember-basic-dropdown-content');
+      const insideLift = (node: Element): boolean => {
+        if (element.contains(node)) return true;
+        if (node.closest('.ember-basic-dropdown-content')) return true;
+        return false;
+      };
       if (target && insideLift(target)) return;
       if (active && insideLift(active)) return;
       if (!liftKeyboardModelOwnsEvent(element, event)) return;
@@ -792,16 +799,15 @@ const trapLiftFocusModifier = modifier(
       requestAnimationFrame(() => {
         if (!element.isConnected) return;
         if (
-          document.activeElement instanceof Element
-          && element.contains(document.activeElement)
+          document.activeElement instanceof Element &&
+          element.contains(document.activeElement)
         ) {
           return;
         }
         const target =
           (lastFocused?.isConnected && element.contains(lastFocused)
             ? lastFocused
-            : null)
-          ?? firstLiftFocusTarget(element);
+            : null) ?? firstLiftFocusTarget(element);
         target?.focus({ preventScroll: true });
       });
     };
@@ -831,9 +837,11 @@ const trapLiftFocusModifier = modifier(
     // Treat ember-power-select's portal (rendered at document.body) as
     // logically inside the lift — its dropdown options sit outside our
     // element subtree but represent interaction with our content.
-    const isInsideOrPortal = (target: Element): boolean =>
-      element.contains(target) ||
-      !!target.closest('.ember-basic-dropdown-content');
+    const isInsideOrPortal = (target: Element): boolean => {
+      if (element.contains(target)) return true;
+      if (target.closest('.ember-basic-dropdown-content')) return true;
+      return false;
+    };
 
     const onFocusin = (event: FocusEvent): void => {
       const target = event.target;
@@ -870,10 +878,7 @@ const trapLiftFocusModifier = modifier(
 let nextLiftInstanceId = 0;
 
 const cleanupClosedLiftModifier = modifier(
-  (
-    _element: HTMLElement,
-    [open, instanceId]: [boolean, string],
-  ) => {
+  (_element: HTMLElement, [open, instanceId]: [boolean, string]) => {
     let frame = 0;
     if (!open) {
       frame = requestAnimationFrame(() => {
@@ -896,9 +901,7 @@ export default class Lift extends Component<LiftSignature> {
   @consume(SurfaceScopeContextName) declare inheritedScopeRelay:
     | SurfaceScopeRelay
     | undefined;
-  @consume(LadderContextName) declare inheritedLadder:
-    | FocusLadder
-    | undefined;
+  @consume(LadderContextName) declare inheritedLadder: FocusLadder | undefined;
   @consume(SurfaceRuntimeContextName) declare inheritedRuntime:
     | SurfaceRuntime
     | undefined;
@@ -906,17 +909,18 @@ export default class Lift extends Component<LiftSignature> {
     | LiftManager
     | undefined;
   @consume(ModeContextName) declare inheritedMode:
-    | 'use' | 'change' | 'inspect'
+    | 'use'
+    | 'change'
+    | 'inspect'
     | undefined;
-  @consume(InspectContextName) declare inheritedInspect:
-    | boolean
-    | undefined;
+  @consume(InspectContextName) declare inheritedInspect: boolean | undefined;
   private localScopeRelay: SurfaceScopeRelay | undefined;
 
   get scopeRelay(): SurfaceScopeRelay {
     let relay = this.localScopeRelay;
     if (!relay || relay.parent !== this.inheritedScopeRelay) {
       relay = createSurfaceScopeRelay(this.inheritedScopeRelay);
+      // eslint-disable-next-line ember/no-side-effects
       this.localScopeRelay = relay;
     }
     return relay;
@@ -989,9 +993,11 @@ export default class Lift extends Component<LiftSignature> {
   }
 
   get shouldDelegateKeyboard(): boolean {
-    return this.args.kind === 'edit' ||
+    return (
+      this.args.kind === 'edit' ||
       this.args.kind === 'tools' ||
-      this.placementMode === 'plane';
+      this.placementMode === 'plane'
+    );
   }
 
   get layerTier(): SurfaceLayerTier {
@@ -1062,9 +1068,7 @@ export default class Lift extends Component<LiftSignature> {
   /** Other kinds the user can escalate to (filtered to exclude
    *  the current one). When empty, no escalation chrome renders. */
   get escalationTargets(): LiftKind[] {
-    return (this.args.canEscalateTo ?? []).filter(
-      (k) => k !== this.args.kind,
-    );
+    return (this.args.canEscalateTo ?? []).filter((k) => k !== this.args.kind);
   }
 
   get hasEscalation(): boolean {
@@ -1108,19 +1112,27 @@ export default class Lift extends Component<LiftSignature> {
 
   kindLabel(kind: LiftKind): string {
     switch (kind) {
-      case 'details': return 'Details';
-      case 'preview': return 'Preview';
-      case 'edit': return 'Edit';
-      case 'tools': return 'Tools';
+      case 'details':
+        return 'Details';
+      case 'preview':
+        return 'Preview';
+      case 'edit':
+        return 'Edit';
+      case 'tools':
+        return 'Tools';
     }
   }
 
   kindGlyph(kind: LiftKind): string {
     switch (kind) {
-      case 'details': return 'ⓘ';
-      case 'preview': return '⊡';
-      case 'edit': return '✎';
-      case 'tools': return '⋯';
+      case 'details':
+        return 'ⓘ';
+      case 'preview':
+        return '⊡';
+      case 'edit':
+        return '✎';
+      case 'tools':
+        return '⋯';
     }
   }
 
@@ -1144,165 +1156,181 @@ export default class Lift extends Component<LiftSignature> {
   <template>
     <span
       hidden
-      aria-hidden="true"
+      aria-hidden='true'
       {{this.cleanupClosedLift @open this.instanceId}}
     ></span>
     {{#unless @open}}
       <span
         hidden
-        aria-hidden="true"
+        aria-hidden='true'
         {{this.cleanupClosedLift false this.instanceId}}
       ></span>
     {{/unless}}
     {{#if @open}}
-      {{!-- Scrim — full-viewport dim layer behind the lift, mounted
+      {{! Scrim — full-viewport dim layer behind the lift, mounted
             as a sibling so it doesn't share the lift's z-stack. Only
-            renders when backdrop === 'scrim' (plane modals).  --}}
+            renders when backdrop === 'scrim' (plane modals).  }}
       {{#if this.hasScrim}}
         {{#in-element this.portalTarget insertBefore=null}}
-        <div
-          class="bx-lift-scrim"
-          data-bx-lift-instance={{this.instanceId}}
-          {{on "click" this.handleScrimClick}}
-          {{surfaceScopeRelay this.scopeRelay}}
-          aria-hidden="true"
-        ></div>
+          <div
+            class='bx-lift-scrim'
+            data-bx-lift-instance={{this.instanceId}}
+            {{on 'click' this.handleScrimClick}}
+            {{surfaceScopeRelay this.scopeRelay}}
+            aria-hidden='true'
+          ></div>
         {{/in-element}}
       {{/if}}
 
       {{#if this.isShadow}}
         {{#in-element this.portalTarget insertBefore=null}}
-        <div
-          class={{this.liftClass}}
-          data-bx-lift
-          data-bx-lift-instance={{this.instanceId}}
-          data-bx-lift-kind={{@kind}}
-          data-bx-lift-placement="shadow"
-          data-bx-lift-anchor-selector={{@anchor}}
-          data-bx-lift-keyboard-model={{this.keyboardModel}}
-          data-bx-lift-keyboard-lock={{if this.shouldDelegateKeyboard "true" "false"}}
-          data-bx-lift-focus-token={{@focusToken}}
-          data-surface-preserve-focus
-          style={{this.rootStyle}}
-          {{this.allocateLiftLayer this.layerTier @zIndex}}
-          {{this.liftSurfaceRoot
-            anchor=@anchor
-            ladder=this.inheritedLadder
-            runtime=this.inheritedRuntime
-            liftManager=this.inheritedLiftManager
-            mode=this.inheritedMode
-            inspect=this.inheritedInspect
-          }}
-          {{this.shadowAnchor @anchor}}
-          {{this.dismissOnOutside @onDismiss}}
-          {{this.liftFocus @focusToken enabled=this.shouldAutoFocus}}
-          {{this.trapLiftFocus enabled=this.shouldTrapFocus}}
-          {{this.delegateLiftKeyboard enabled=this.shouldDelegateKeyboard}}
-          {{surfaceScopeRelay this.scopeRelay}}
-          ...attributes
-        >
-          {{#if this.hasEscalation}}
-            <button
-              type="button"
-              class="bx-lift__escalate"
-              aria-label={{this.escalationLabel}}
-              title={{this.escalationLabel}}
-              {{on "click" this.fireEscalateNext}}
-            >{{this.escalationGlyph}}</button>
-          {{/if}}
-          <div class="bx-lift__body">
-            {{yield @kind}}
+          <div
+            class={{this.liftClass}}
+            data-bx-lift
+            data-bx-lift-instance={{this.instanceId}}
+            data-bx-lift-kind={{@kind}}
+            data-bx-lift-placement='shadow'
+            data-bx-lift-anchor-selector={{@anchor}}
+            data-bx-lift-keyboard-model={{this.keyboardModel}}
+            data-bx-lift-keyboard-lock={{if
+              this.shouldDelegateKeyboard
+              'true'
+              'false'
+            }}
+            data-bx-lift-focus-token={{@focusToken}}
+            data-surface-preserve-focus
+            style={{this.rootStyle}}
+            {{this.allocateLiftLayer this.layerTier @zIndex}}
+            {{this.liftSurfaceRoot
+              anchor=@anchor
+              ladder=this.inheritedLadder
+              runtime=this.inheritedRuntime
+              liftManager=this.inheritedLiftManager
+              mode=this.inheritedMode
+              inspect=this.inheritedInspect
+            }}
+            {{this.shadowAnchor @anchor}}
+            {{this.dismissOnOutside @onDismiss}}
+            {{this.liftFocus @focusToken enabled=this.shouldAutoFocus}}
+            {{this.trapLiftFocus enabled=this.shouldTrapFocus}}
+            {{this.delegateLiftKeyboard enabled=this.shouldDelegateKeyboard}}
+            {{surfaceScopeRelay this.scopeRelay}}
+            ...attributes
+          >
+            {{#if this.hasEscalation}}
+              <button
+                type='button'
+                class='bx-lift__escalate'
+                aria-label={{this.escalationLabel}}
+                title={{this.escalationLabel}}
+                {{on 'click' this.fireEscalateNext}}
+              >{{this.escalationGlyph}}</button>
+            {{/if}}
+            <div class='bx-lift__body'>
+              {{yield @kind}}
+            </div>
           </div>
-        </div>
         {{/in-element}}
       {{else if this.isPlane}}
         {{#in-element this.portalTarget insertBefore=null}}
-        <div
-          class={{this.liftClass}}
-          data-bx-lift
-          data-bx-lift-instance={{this.instanceId}}
-          data-bx-lift-kind={{@kind}}
-          data-bx-lift-placement="plane"
-          data-bx-lift-anchor-selector={{@anchor}}
-          data-bx-lift-keyboard-model={{this.keyboardModel}}
-          data-bx-lift-keyboard-lock={{if this.shouldDelegateKeyboard "true" "false"}}
-          data-bx-lift-focus-token={{@focusToken}}
-          data-surface-preserve-focus
-          style={{this.rootStyle}}
-          {{this.allocateLiftLayer this.layerTier @zIndex}}
-          {{this.liftSurfaceRoot
-            anchor=@anchor
-            ladder=this.inheritedLadder
-            runtime=this.inheritedRuntime
-            liftManager=this.inheritedLiftManager
-            mode=this.inheritedMode
-            inspect=this.inheritedInspect
-          }}
-          {{this.dismissOnOutside @onDismiss}}
-          {{this.liftFocus @focusToken enabled=this.shouldAutoFocus}}
-          {{this.trapLiftFocus enabled=this.shouldTrapFocus}}
-          {{this.delegateLiftKeyboard enabled=this.shouldDelegateKeyboard}}
-          {{surfaceScopeRelay this.scopeRelay}}
-          ...attributes
-        >
-          {{#if this.hasEscalation}}
-            <button
-              type="button"
-              class="bx-lift__escalate"
-              aria-label={{this.escalationLabel}}
-              title={{this.escalationLabel}}
-              {{on "click" this.fireEscalateNext}}
-            >{{this.escalationGlyph}}</button>
-          {{/if}}
-          <div class="bx-lift__body">
-            {{yield @kind}}
+          <div
+            class={{this.liftClass}}
+            data-bx-lift
+            data-bx-lift-instance={{this.instanceId}}
+            data-bx-lift-kind={{@kind}}
+            data-bx-lift-placement='plane'
+            data-bx-lift-anchor-selector={{@anchor}}
+            data-bx-lift-keyboard-model={{this.keyboardModel}}
+            data-bx-lift-keyboard-lock={{if
+              this.shouldDelegateKeyboard
+              'true'
+              'false'
+            }}
+            data-bx-lift-focus-token={{@focusToken}}
+            data-surface-preserve-focus
+            style={{this.rootStyle}}
+            {{this.allocateLiftLayer this.layerTier @zIndex}}
+            {{this.liftSurfaceRoot
+              anchor=@anchor
+              ladder=this.inheritedLadder
+              runtime=this.inheritedRuntime
+              liftManager=this.inheritedLiftManager
+              mode=this.inheritedMode
+              inspect=this.inheritedInspect
+            }}
+            {{this.dismissOnOutside @onDismiss}}
+            {{this.liftFocus @focusToken enabled=this.shouldAutoFocus}}
+            {{this.trapLiftFocus enabled=this.shouldTrapFocus}}
+            {{this.delegateLiftKeyboard enabled=this.shouldDelegateKeyboard}}
+            {{surfaceScopeRelay this.scopeRelay}}
+            ...attributes
+          >
+            {{#if this.hasEscalation}}
+              <button
+                type='button'
+                class='bx-lift__escalate'
+                aria-label={{this.escalationLabel}}
+                title={{this.escalationLabel}}
+                {{on 'click' this.fireEscalateNext}}
+              >{{this.escalationGlyph}}</button>
+            {{/if}}
+            <div class='bx-lift__body'>
+              {{yield @kind}}
+            </div>
           </div>
-        </div>
         {{/in-element}}
       {{else}}
         {{#in-element this.portalTarget insertBefore=null}}
-        <div
-          class={{this.liftClass}}
-          data-bx-lift
-          data-bx-lift-instance={{this.instanceId}}
-          data-bx-lift-kind={{@kind}}
-          data-bx-lift-placement="attached"
-          data-bx-lift-anchor-selector={{@anchor}}
-          data-bx-lift-keyboard-model={{this.keyboardModel}}
-          data-bx-lift-keyboard-lock={{if this.shouldDelegateKeyboard "true" "false"}}
-          data-bx-lift-focus-token={{@focusToken}}
-          data-surface-preserve-focus
-          style={{this.rootStyle}}
-          {{this.allocateLiftLayer this.layerTier @zIndex}}
-          {{this.liftSurfaceRoot
-            anchor=@anchor
-            ladder=this.inheritedLadder
-            runtime=this.inheritedRuntime
-            liftManager=this.inheritedLiftManager
-            mode=this.inheritedMode
-            inspect=this.inheritedInspect
-          }}
-          {{this.anchoredLift @anchor placement=this.effectivePlacement offsetOptions=8}}
-          {{this.dismissOnOutside @onDismiss}}
-          {{this.liftFocus @focusToken enabled=this.shouldAutoFocus}}
-          {{this.trapLiftFocus enabled=this.shouldTrapFocus}}
-          {{this.delegateLiftKeyboard enabled=this.shouldDelegateKeyboard}}
-          {{surfaceScopeRelay this.scopeRelay}}
-          ...attributes
-        >
-          {{#if this.hasEscalation}}
-            <button
-              type="button"
-              class="bx-lift__escalate"
-              aria-label={{this.escalationLabel}}
-              title={{this.escalationLabel}}
-              {{on "click" this.fireEscalateNext}}
-            >{{this.escalationGlyph}}</button>
-          {{/if}}
-          <div class="bx-lift__body">
-            {{yield @kind}}
+          <div
+            class={{this.liftClass}}
+            data-bx-lift
+            data-bx-lift-instance={{this.instanceId}}
+            data-bx-lift-kind={{@kind}}
+            data-bx-lift-placement='attached'
+            data-bx-lift-anchor-selector={{@anchor}}
+            data-bx-lift-keyboard-model={{this.keyboardModel}}
+            data-bx-lift-keyboard-lock={{if
+              this.shouldDelegateKeyboard
+              'true'
+              'false'
+            }}
+            data-bx-lift-focus-token={{@focusToken}}
+            data-surface-preserve-focus
+            style={{this.rootStyle}}
+            {{this.allocateLiftLayer this.layerTier @zIndex}}
+            {{this.liftSurfaceRoot
+              anchor=@anchor
+              ladder=this.inheritedLadder
+              runtime=this.inheritedRuntime
+              liftManager=this.inheritedLiftManager
+              mode=this.inheritedMode
+              inspect=this.inheritedInspect
+            }}
+            {{this.anchoredLift
+              @anchor
+              placement=this.effectivePlacement
+              offsetOptions=8
+            }}
+            {{this.dismissOnOutside @onDismiss}}
+            {{this.liftFocus @focusToken enabled=this.shouldAutoFocus}}
+            {{this.trapLiftFocus enabled=this.shouldTrapFocus}}
+            {{this.delegateLiftKeyboard enabled=this.shouldDelegateKeyboard}}
+            {{surfaceScopeRelay this.scopeRelay}}
+            ...attributes
+          >
+            {{#if this.hasEscalation}}
+              <button
+                type='button'
+                class='bx-lift__escalate'
+                aria-label={{this.escalationLabel}}
+                title={{this.escalationLabel}}
+                {{on 'click' this.fireEscalateNext}}
+              >{{this.escalationGlyph}}</button>
+            {{/if}}
+            <div class='bx-lift__body'>
+              {{yield @kind}}
+            </div>
           </div>
-        </div>
         {{/in-element}}
       {{/if}}
     {{/if}}
@@ -1325,12 +1353,16 @@ export default class Lift extends Component<LiftSignature> {
         position: absolute;
         z-index: var(--bx-lift-z, 1000);
         font:
-          13px/1.4 Inter, ui-sans-serif, system-ui, -apple-system,
-          Segoe UI, sans-serif;
+          13px/1.4 Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
         color: var(--bx-lift-fg, #111827);
-        /* `overflow: hidden` clips children to the lift's
+        /* overflow hidden clips children to the lift's
          * border-radius. Without this, an inner scroll container
-         * (`.bx-lift__body { overflow: auto }`) paints over the
+         * (.bx-lift__body with overflow auto) paints over the
          * rounded corners — visible as a square notch in the bottom
          * corners of any picker / list. The corner-escalation glyph
          * sits inside the radius (top: 6px right: 6px) so it isn't
@@ -1341,8 +1373,14 @@ export default class Lift extends Component<LiftSignature> {
         animation: bx-lift-in 100ms cubic-bezier(0.32, 0.72, 0.4, 1);
       }
       @keyframes bx-lift-in {
-        from { opacity: 0; transform: translateY(-2px) scale(0.985); }
-        to   { opacity: 1; transform: translateY(0)    scale(1); }
+        from {
+          opacity: 0;
+          transform: translateY(-2px) scale(0.985);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
 
       /* ─── SIZE — width / height tokens ─────────────────────────
@@ -1372,7 +1410,7 @@ export default class Lift extends Component<LiftSignature> {
         max-width: min(var(--bx-lift-size-spacious-max-w, 460px), 92vw);
         max-height: min(var(--bx-lift-size-spacious-max-h, 500px), 80vh);
       }
-      /* `auto` adds nothing — content drives. Used for shadow lifts
+      /* auto adds nothing — content drives. Used for shadow lifts
        * where the anchor's width is the floor (set by shadowAnchor). */
 
       /* ─── BACKDROP — visual separation ────────────────────────── */
@@ -1403,8 +1441,12 @@ export default class Lift extends Component<LiftSignature> {
         animation: bx-lift-scrim-in 140ms ease-out;
       }
       @keyframes bx-lift-scrim-in {
-        from { opacity: 0; }
-        to   { opacity: 1; }
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
       }
 
       /* ─── ELEVATION — shadow + ring ladder ─────────────────────
@@ -1430,9 +1472,10 @@ export default class Lift extends Component<LiftSignature> {
       .bx-lift--elevation-elevated {
         box-shadow: var(
           --bx-lift-shadow-elevated,
-          0 8px 16px -4px rgba(15, 23, 42, 0.10),
+          0 8px 16px -4px rgba(15, 23, 42, 0.1),
           0 2px 4px -2px rgba(15, 23, 42, 0.06),
-          0 0 0 1px color-mix(in srgb, var(--bx-lift-accent, #4f46e5) 32%, transparent)
+          0 0 0 1px
+            color-mix(in srgb, var(--bx-lift-accent, #4f46e5) 32%, transparent)
         );
         border-radius: 8px;
       }
@@ -1442,7 +1485,8 @@ export default class Lift extends Component<LiftSignature> {
           --bx-lift-shadow-modal,
           0 32px 56px -16px rgba(15, 23, 42, 0.22),
           0 12px 24px -8px rgba(15, 23, 42, 0.14),
-          0 0 0 1px color-mix(in srgb, var(--bx-lift-accent, #4f46e5) 18%, transparent)
+          0 0 0 1px
+            color-mix(in srgb, var(--bx-lift-accent, #4f46e5) 18%, transparent)
         );
         border-radius: 12px;
       }
@@ -1455,7 +1499,7 @@ export default class Lift extends Component<LiftSignature> {
          *     no large drop shadow extending below the row. */
         border-radius: 4px;
         box-shadow:
-          0 4px 8px -2px rgba(15, 23, 42, 0.10),
+          0 4px 8px -2px rgba(15, 23, 42, 0.1),
           0 0 0 1.5px var(--bx-lift-accent, #4f46e5);
       }
       .bx-lift--placement-plane {
@@ -1466,8 +1510,14 @@ export default class Lift extends Component<LiftSignature> {
         animation: bx-lift-plane-in 180ms cubic-bezier(0.32, 0.72, 0.4, 1);
       }
       @keyframes bx-lift-plane-in {
-        from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
-        to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        from {
+          opacity: 0;
+          transform: translate(-50%, -48%) scale(0.96);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
       }
 
       /* ─── KIND — content-color hints ──────────────────────────
@@ -1493,7 +1543,8 @@ export default class Lift extends Component<LiftSignature> {
       .bx-lift--edit .bx-lift__body > [data-surface-lift-target='edit'] > * {
         background-color: var(--bx-lift-edit-bg);
         box-shadow:
-          inset 0 0 0 1px color-mix(in srgb, var(--bx-lift-edit-border) 56%, transparent),
+          inset 0 0 0 1px
+            color-mix(in srgb, var(--bx-lift-edit-border) 56%, transparent),
           0 16px 42px rgba(120, 85, 0, 0.12);
       }
       .bx-lift--tools.bx-lift--elevation-raised {
@@ -1503,7 +1554,7 @@ export default class Lift extends Component<LiftSignature> {
       /* ─── ESCALATION GLYPH — corner button ─────────────────────
        * Compact one-glyph escalation in the top-right. Only renders
        * when the contract has multiple lift kinds (the host's
-       * `canEscalateTo` includes kinds OTHER than current). For
+       * canEscalateTo includes kinds OTHER than current. For
        * single-kind contracts, no chrome — the body is the lift. */
       .bx-lift__escalate {
         /* Per mockup §2 — small unobtrusive corner glyph. 18px,
@@ -1526,13 +1577,20 @@ export default class Lift extends Component<LiftSignature> {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        transition: background 80ms, color 80ms, opacity 80ms;
+        transition:
+          background 80ms,
+          color 80ms,
+          opacity 80ms;
         opacity: 0.55;
       }
       .bx-lift__escalate:hover,
       .bx-lift__escalate:focus-visible {
         opacity: 1;
-        background: color-mix(in srgb, var(--bx-lift-accent, #4f46e5) 10%, transparent);
+        background: color-mix(
+          in srgb,
+          var(--bx-lift-accent, #4f46e5) 10%,
+          transparent
+        );
         color: var(--bx-lift-accent, #4f46e5);
       }
       .bx-lift--tools .bx-lift__escalate {
@@ -1563,8 +1621,8 @@ export default class Lift extends Component<LiftSignature> {
        * breathing room outside a lift. Convention keeps each editor
        * self-contained.
        *
-       * If you're authoring a new editor pane, add `padding: 6px` to
-       * the root and use `gap` for inner rhythm. That's it. */
+       * If you're authoring a new editor pane, add padding: 6px to
+       * the root and use gap for inner rhythm. That's it. */
       .bx-lift__body {
         display: block;
         max-height: inherit;

@@ -14,6 +14,7 @@ import type {
   Target,
   TargetScope,
 } from '../focus-ladder.ts';
+export type { Target } from '../focus-ladder.ts';
 import type {
   FociEditPolicy,
   FociGridCoordinate,
@@ -27,6 +28,7 @@ import type {
   FociTraversalModel,
   FociTraversalPolicy,
 } from '../foci-store.ts';
+export type { FociNodePolicy } from '../foci-store.ts';
 import {
   createSurfaceRuntime,
   type SurfaceRuntime,
@@ -426,6 +428,7 @@ export abstract class SurfaceComponent extends Component<SurfaceComponentSignatu
     let relay = this.localScopeRelay;
     if (!relay || relay.parent !== this.inheritedScopeRelay) {
       relay = createSurfaceScopeRelay(this.inheritedScopeRelay);
+      // eslint-disable-next-line ember/no-side-effects
       this.localScopeRelay = relay;
     }
     return relay;
@@ -457,6 +460,7 @@ export abstract class SurfaceComponent extends Component<SurfaceComponentSignatu
     }
 
     if (this.usesAnonymousLeafGeneratedId) {
+      // eslint-disable-next-line ember/no-side-effects
       this.generatedId ??= nextScopedSurfaceId(
         this.inheritedParentId,
         this.surface,
@@ -472,6 +476,7 @@ export abstract class SurfaceComponent extends Component<SurfaceComponentSignatu
       return surfaceId(this.surface, this.spaceIdentity, ...this.keyParts);
     }
 
+    // eslint-disable-next-line ember/no-side-effects
     this.generatedId ??= this.usesContextScopedGeneratedId
       ? nextScopedSurfaceId(this.inheritedParentId, this.surface)
       : nextSurfaceId(this.surface);
@@ -1422,6 +1427,7 @@ export class Environment extends Component<EnvironmentSignature> {
     let relay = this.localScopeRelay;
     if (!relay || relay.parent !== this.inheritedScopeRelay) {
       relay = createSurfaceScopeRelay(this.inheritedScopeRelay);
+      // eslint-disable-next-line ember/no-side-effects
       this.localScopeRelay = relay;
     }
     return relay;
@@ -1460,6 +1466,7 @@ export class Environment extends Component<EnvironmentSignature> {
       return surfaceId('environment', this.spaceIdentity, ...this.keyParts);
     }
 
+    // eslint-disable-next-line ember/no-side-effects
     this.generatedId ??= nextSurfaceId('environment');
     return this.generatedId;
   }
@@ -1691,6 +1698,7 @@ export class Environment extends Component<EnvironmentSignature> {
   }
 
   get liftManager(): LiftManager {
+    // eslint-disable-next-line ember/no-side-effects
     this.localLiftManager.resolver = this.args.liftResolver;
     return this.localLiftManager;
   }

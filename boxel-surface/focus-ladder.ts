@@ -668,6 +668,7 @@ export class FocusLadder {
     const idx = sibs.indexOf(id);
     if (idx > 0) {
       let cur = sibs[idx - 1]!;
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const kids = this._children.get(cur) ?? [];
         if (kids.length === 0) return cur;
