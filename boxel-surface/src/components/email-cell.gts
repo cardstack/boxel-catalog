@@ -39,6 +39,14 @@ export default class EmailCell extends Component<EmailCellSignature> {
     return this.state === 'invalid';
   }
 
+  get isReadonly(): boolean {
+    return this.args.readonly ?? this.inheritedFormField?.readonly ?? false;
+  }
+
+  get isDisabled(): boolean {
+    return this.args.disabled ?? this.inheritedFormField?.disabled ?? false;
+  }
+
   @action
   handleInput(event: Event): void {
     this.args.onInput?.((event.target as HTMLInputElement).value);
@@ -47,8 +55,8 @@ export default class EmailCell extends Component<EmailCellSignature> {
   <template>
     <Cell
       @state={{@state}}
-      @disabled={{@disabled}}
-      @readonly={{@readonly}}
+      @disabled={{this.isDisabled}}
+      @readonly={{this.isReadonly}}
       @runtimePolicy={{@runtimePolicy}}
     >
       <input
@@ -56,8 +64,8 @@ export default class EmailCell extends Component<EmailCellSignature> {
         type='email'
         value={{@value}}
         placeholder={{@placeholder}}
-        disabled={{@disabled}}
-        readonly={{@readonly}}
+        disabled={{this.isDisabled}}
+        readonly={{this.isReadonly}}
         aria-invalid={{if this.isInvalid 'true'}}
         data-test-boxel-input
         {{on 'input' this.handleInput}}

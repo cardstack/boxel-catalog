@@ -1,7 +1,12 @@
 import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 import Component from '@glimmer/component';
+import { consume } from 'ember-provide-consume-context';
 
+import {
+  FormFieldContextName,
+  type FormFieldContext,
+} from '../form-field-context.ts';
 import type { FociNodePolicy } from './surface-component.gts';
 import { Cell } from './surface-component.gts';
 
@@ -18,20 +23,31 @@ export interface SwitchCellSignature {
 }
 
 export default class SwitchCell extends Component<SwitchCellSignature> {
+  @consume(FormFieldContextName) declare inheritedFormField:
+    | FormFieldContext
+    | undefined;
+
   get checked(): boolean {
     return Boolean(this.args.value);
   }
 
+  get isDisabled(): boolean {
+    if (this.args.disabled !== undefined) return this.args.disabled;
+    return Boolean(
+      this.inheritedFormField?.disabled || this.inheritedFormField?.readonly,
+    );
+  }
+
   @action
   toggle(): void {
-    if (this.args.disabled) return;
+    if (this.isDisabled) return;
     this.args.onChange?.(!this.checked);
   }
 
   <template>
     <Cell
       class='bx-switch-cell'
-      @disabled={{@disabled}}
+      @disabled={{this.isDisabled}}
       @runtimePolicy={{@runtimePolicy}}
     >
       {{! TODO: Replace this local switch control with Boxel UI Switch once
@@ -42,7 +58,7 @@ export default class SwitchCell extends Component<SwitchCellSignature> {
         type='button'
         role='switch'
         aria-checked={{this.checked}}
-        disabled={{@disabled}}
+        disabled={{this.isDisabled}}
         {{on 'click' this.toggle}}
       >
         <span class='bx-switch-cell__copy'>

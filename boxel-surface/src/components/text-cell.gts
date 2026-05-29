@@ -1,7 +1,12 @@
 import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 import Component from '@glimmer/component';
+import { consume } from 'ember-provide-consume-context';
 
+import {
+  FormFieldContextName,
+  type FormFieldContext,
+} from '../form-field-context.ts';
 import type {
   CellValidationState,
   FociNodePolicy,
@@ -27,6 +32,10 @@ export interface TextCellSignature {
 }
 
 export default class TextCell extends Component<TextCellSignature> {
+  @consume(FormFieldContextName) declare inheritedFormField:
+    | FormFieldContext
+    | undefined;
+
   @action
   handleInput(event: Event): void {
     this.args.onInput?.(
@@ -38,13 +47,21 @@ export default class TextCell extends Component<TextCellSignature> {
     return this.args.type ?? 'text';
   }
 
+  get isReadonly(): boolean {
+    return this.args.readonly ?? this.inheritedFormField?.readonly ?? false;
+  }
+
+  get isDisabled(): boolean {
+    return this.args.disabled ?? this.inheritedFormField?.disabled ?? false;
+  }
+
   <template>
     {{#if @prefix}}
       {{#if @suffix}}
         <Cell
           @state={{@state}}
-          @disabled={{@disabled}}
-          @readonly={{@readonly}}
+          @disabled={{this.isDisabled}}
+          @readonly={{this.isReadonly}}
           @runtimePolicy={{@runtimePolicy}}
         >
           <:pre>{{@prefix}}</:pre>
@@ -54,8 +71,8 @@ export default class TextCell extends Component<TextCellSignature> {
                 class='boxel-input'
                 value={{@value}}
                 placeholder={{@placeholder}}
-                disabled={{@disabled}}
-                readonly={{@readonly}}
+                disabled={{this.isDisabled}}
+                readonly={{this.isReadonly}}
                 data-test-boxel-input
                 {{on 'input' this.handleInput}}
               />
@@ -66,8 +83,8 @@ export default class TextCell extends Component<TextCellSignature> {
                 value={{@value}}
                 placeholder={{@placeholder}}
                 autocomplete={{@autocomplete}}
-                disabled={{@disabled}}
-                readonly={{@readonly}}
+                disabled={{this.isDisabled}}
+                readonly={{this.isReadonly}}
                 data-test-boxel-input
                 {{on 'input' this.handleInput}}
               />
@@ -78,8 +95,8 @@ export default class TextCell extends Component<TextCellSignature> {
       {{else}}
         <Cell
           @state={{@state}}
-          @disabled={{@disabled}}
-          @readonly={{@readonly}}
+          @disabled={{this.isDisabled}}
+          @readonly={{this.isReadonly}}
           @runtimePolicy={{@runtimePolicy}}
         >
           <:pre>{{@prefix}}</:pre>
@@ -89,8 +106,8 @@ export default class TextCell extends Component<TextCellSignature> {
                 class='boxel-input'
                 value={{@value}}
                 placeholder={{@placeholder}}
-                disabled={{@disabled}}
-                readonly={{@readonly}}
+                disabled={{this.isDisabled}}
+                readonly={{this.isReadonly}}
                 data-test-boxel-input
                 {{on 'input' this.handleInput}}
               />
@@ -101,8 +118,8 @@ export default class TextCell extends Component<TextCellSignature> {
                 value={{@value}}
                 placeholder={{@placeholder}}
                 autocomplete={{@autocomplete}}
-                disabled={{@disabled}}
-                readonly={{@readonly}}
+                disabled={{this.isDisabled}}
+                readonly={{this.isReadonly}}
                 data-test-boxel-input
                 {{on 'input' this.handleInput}}
               />
@@ -113,8 +130,8 @@ export default class TextCell extends Component<TextCellSignature> {
     {{else if @suffix}}
       <Cell
         @state={{@state}}
-        @disabled={{@disabled}}
-        @readonly={{@readonly}}
+        @disabled={{this.isDisabled}}
+        @readonly={{this.isReadonly}}
         @runtimePolicy={{@runtimePolicy}}
       >
         <:default>
@@ -123,8 +140,8 @@ export default class TextCell extends Component<TextCellSignature> {
               class='boxel-input'
               value={{@value}}
               placeholder={{@placeholder}}
-              disabled={{@disabled}}
-              readonly={{@readonly}}
+              disabled={{this.isDisabled}}
+              readonly={{this.isReadonly}}
               data-test-boxel-input
               {{on 'input' this.handleInput}}
             />
@@ -135,8 +152,8 @@ export default class TextCell extends Component<TextCellSignature> {
               value={{@value}}
               placeholder={{@placeholder}}
               autocomplete={{@autocomplete}}
-              disabled={{@disabled}}
-              readonly={{@readonly}}
+              disabled={{this.isDisabled}}
+              readonly={{this.isReadonly}}
               data-test-boxel-input
               {{on 'input' this.handleInput}}
             />
@@ -147,8 +164,8 @@ export default class TextCell extends Component<TextCellSignature> {
     {{else}}
       <Cell
         @state={{@state}}
-        @disabled={{@disabled}}
-        @readonly={{@readonly}}
+        @disabled={{this.isDisabled}}
+        @readonly={{this.isReadonly}}
         @runtimePolicy={{@runtimePolicy}}
       >
         {{#if @multiline}}
@@ -156,8 +173,8 @@ export default class TextCell extends Component<TextCellSignature> {
             class='boxel-input'
             value={{@value}}
             placeholder={{@placeholder}}
-            disabled={{@disabled}}
-            readonly={{@readonly}}
+            disabled={{this.isDisabled}}
+            readonly={{this.isReadonly}}
             data-test-boxel-input
             {{on 'input' this.handleInput}}
           />
@@ -168,8 +185,8 @@ export default class TextCell extends Component<TextCellSignature> {
             value={{@value}}
             placeholder={{@placeholder}}
             autocomplete={{@autocomplete}}
-            disabled={{@disabled}}
-            readonly={{@readonly}}
+            disabled={{this.isDisabled}}
+            readonly={{this.isReadonly}}
             data-test-boxel-input
             {{on 'input' this.handleInput}}
           />
