@@ -59,8 +59,7 @@ export default class FormField extends Component<FormFieldSignature> {
     let mode = form?.getAttribute('data-bx-form-mode');
     this.inheritedLayout = layout === 'horizontal' ? 'horizontal' : 'vertical';
     this.inheritedDensity = density === 'compact' ? 'compact' : 'comfortable';
-    this.inheritedMode =
-      mode === 'view' || mode === 'create' ? mode : 'edit';
+    this.inheritedMode = mode === 'view' || mode === 'create' ? mode : 'edit';
   });
 
   get state(): CellValidationState {
