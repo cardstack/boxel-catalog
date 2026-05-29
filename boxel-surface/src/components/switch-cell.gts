@@ -31,6 +31,8 @@ export default class SwitchCell extends Component<SwitchCellSignature> {
     return Boolean(this.args.value);
   }
 
+  // HTML has no `readonly` for buttons, so inherited readonly collapses
+  // into `disabled` — the only "not interactable" state a switch can show.
   get isDisabled(): boolean {
     if (this.args.disabled !== undefined) return this.args.disabled;
     return Boolean(
