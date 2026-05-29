@@ -23,7 +23,7 @@ import type {
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import { loadCommandModule } from './utils';
+import { getLoaderService, loadCommandModule } from './utils';
 
 import ExecuteAtomicOperationsCommand from '@cardstack/boxel-host/commands/execute-atomic-operations';
 import FetchCardJsonCommand from '@cardstack/boxel-host/commands/fetch-card-json';
@@ -166,6 +166,9 @@ export default class ListingInstallCommand extends Command<
 
   // Walk relationships by fetching linked cards and enqueueing their ids.
   private async expandInstances(instances: CardDef[]): Promise<CardDef[]> {
+    let virtualNetwork = getLoaderService(
+      this.commandContext,
+    ).loader.getVirtualNetwork()!;
     let instancesById = new Map<string, CardDef>();
     let visited = new Set<string>();
     let queue: string[] = instances
@@ -215,7 +218,11 @@ export default class ListingInstallCommand extends Command<
       for (let rel of Object.values(relationships)) {
         let rels = Array.isArray(rel) ? rel : [rel];
         for (let relationship of rels) {
-          let relatedIds = extractRelationshipIds(relationship, baseUrl);
+          let relatedIds = extractRelationshipIds(
+            relationship,
+            baseUrl,
+            virtualNetwork,
+          );
           for (let relatedId of relatedIds) {
             if (!visited.has(relatedId)) {
               queue.push(relatedId);

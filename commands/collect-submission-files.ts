@@ -33,6 +33,7 @@ import SerializeCardCommand from '@cardstack/boxel-host/commands/serialize-card'
 
 import type { Listing } from '../catalog-app/listing/listing';
 import { FileContentField, FileCollectionResult } from '../fields/file-content';
+import { getLoaderService } from './utils';
 
 const log = logger('commands:collect-submission-files');
 
@@ -363,6 +364,9 @@ export default class CollectSubmissionFilesCommand extends Command<
   ): Promise<{ instances: CardDef[]; fileDefUrls: Set<string> }> {
     let getCardCommand = new GetCardCommand(this.commandContext);
     let serializeCardCommand = new SerializeCardCommand(this.commandContext);
+    let virtualNetwork = getLoaderService(
+      this.commandContext,
+    ).loader.getVirtualNetwork()!;
 
     const isBaseRealmId = (id: string) => {
       try {
@@ -406,7 +410,11 @@ export default class CollectSubmissionFilesCommand extends Command<
       for (const rel of Object.values(relationships)) {
         const rels = Array.isArray(rel) ? rel : [rel];
         for (const relationship of rels) {
-          const relatedIds = extractRelationshipIds(relationship, baseUrl);
+          const relatedIds = extractRelationshipIds(
+            relationship,
+            baseUrl,
+            virtualNetwork,
+          );
           if (isFileMetaRelationship(relationship)) {
             for (const relatedId of relatedIds) {
               if (!isBaseRealmId(relatedId)) {
