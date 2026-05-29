@@ -1,0 +1,41 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "MortgageSurfaceDemo",
+        "module": "../mortgage-surface-demo"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Mortgage Calculator",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "currency": {
+        "code": "MYR"
+      },
+      "homePrice": 2750000,
+      "taxPerMonth": 1650,
+      "loanTermYears": 30,
+      "hoaFeesPerMonth": 0,
+      "insurancePerMonth": 330,
+      "downPaymentPercentage": 20,
+      "interestRatePercentage": 5.2
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
