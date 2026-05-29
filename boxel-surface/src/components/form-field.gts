@@ -11,6 +11,7 @@ import {
   SuccessBordered,
 } from '../icons/index.ts';
 
+import type { FormMode } from '../form-field-resolution.ts';
 import type { CellValidationState } from './surface-component.gts';
 import type { IdentityPart } from './surface-component.gts';
 import {
@@ -43,13 +44,22 @@ export default class FormField extends Component<FormFieldSignature> {
   private guid = guidFor(this);
   @tracked private inheritedLayout: 'vertical' | 'horizontal' = 'vertical';
   @tracked private inheritedDensity: 'comfortable' | 'compact' = 'comfortable';
+  @tracked private inheritedMode: FormMode = 'edit';
+
+  get effectiveReadonly(): boolean | undefined {
+    if (this.args.readonly !== undefined) return this.args.readonly;
+    if (this.inheritedMode === 'view') return true;
+    return undefined;
+  }
 
   inheritFormChrome = modifier((el: HTMLElement) => {
     let form = el.closest('[data-bx-form]');
     let layout = form?.getAttribute('data-bx-form-layout');
     let density = form?.getAttribute('data-bx-form-density');
+    let mode = form?.getAttribute('data-bx-form-mode');
     this.inheritedLayout = layout === 'horizontal' ? 'horizontal' : 'vertical';
     this.inheritedDensity = density === 'compact' ? 'compact' : 'comfortable';
+    this.inheritedMode = mode === 'view' || mode === 'create' ? mode : 'edit';
   });
 
   get state(): CellValidationState {
@@ -115,7 +125,7 @@ export default class FormField extends Component<FormFieldSignature> {
       describedBy: this.describedBy,
       invalid: this.isInvalid,
       disabled: this.args.disabled,
-      readonly: this.args.readonly,
+      readonly: this.effectiveReadonly,
       required: this.args.required,
     };
   }
@@ -148,7 +158,7 @@ export default class FormField extends Component<FormFieldSignature> {
         data-bx-form-field-density={{this.density}}
         data-bx-form-field-state={{this.state}}
         data-bx-form-field-disabled={{if @disabled 'true'}}
-        data-bx-form-field-readonly={{if @readonly 'true'}}
+        data-bx-form-field-readonly={{if this.effectiveReadonly 'true'}}
         data-test-boxel-field
         {{this.inheritFormChrome}}
         ...attributes

@@ -1,7 +1,12 @@
 import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 import Component from '@glimmer/component';
+import { consume } from 'ember-provide-consume-context';
 
+import {
+  FormFieldContextName,
+  type FormFieldContext,
+} from '../form-field-context.ts';
 import type {
   CellValidationState,
   FociNodePolicy,
@@ -27,8 +32,20 @@ export interface NumberCellSignature {
 }
 
 export default class NumberCell extends Component<NumberCellSignature> {
+  @consume(FormFieldContextName) declare inheritedFormField:
+    | FormFieldContext
+    | undefined;
+
   get value(): string {
     return this.args.value === undefined ? '' : String(this.args.value);
+  }
+
+  get isReadonly(): boolean {
+    return this.args.readonly ?? this.inheritedFormField?.readonly ?? false;
+  }
+
+  get isDisabled(): boolean {
+    return this.args.disabled ?? this.inheritedFormField?.disabled ?? false;
   }
 
   @action
@@ -41,8 +58,8 @@ export default class NumberCell extends Component<NumberCellSignature> {
       {{#if @suffix}}
         <Cell
           @state={{@state}}
-          @disabled={{@disabled}}
-          @readonly={{@readonly}}
+          @disabled={{this.isDisabled}}
+          @readonly={{this.isReadonly}}
           @runtimePolicy={{@runtimePolicy}}
         >
           <:pre>{{@prefix}}</:pre>
@@ -52,8 +69,8 @@ export default class NumberCell extends Component<NumberCellSignature> {
               type='number'
               value={{this.value}}
               placeholder={{@placeholder}}
-              disabled={{@disabled}}
-              readonly={{@readonly}}
+              disabled={{this.isDisabled}}
+              readonly={{this.isReadonly}}
               min={{@min}}
               max={{@max}}
               step={{@step}}
@@ -66,8 +83,8 @@ export default class NumberCell extends Component<NumberCellSignature> {
       {{else}}
         <Cell
           @state={{@state}}
-          @disabled={{@disabled}}
-          @readonly={{@readonly}}
+          @disabled={{this.isDisabled}}
+          @readonly={{this.isReadonly}}
           @runtimePolicy={{@runtimePolicy}}
         >
           <:pre>{{@prefix}}</:pre>
@@ -77,8 +94,8 @@ export default class NumberCell extends Component<NumberCellSignature> {
               type='number'
               value={{this.value}}
               placeholder={{@placeholder}}
-              disabled={{@disabled}}
-              readonly={{@readonly}}
+              disabled={{this.isDisabled}}
+              readonly={{this.isReadonly}}
               min={{@min}}
               max={{@max}}
               step={{@step}}
@@ -91,8 +108,8 @@ export default class NumberCell extends Component<NumberCellSignature> {
     {{else if @suffix}}
       <Cell
         @state={{@state}}
-        @disabled={{@disabled}}
-        @readonly={{@readonly}}
+        @disabled={{this.isDisabled}}
+        @readonly={{this.isReadonly}}
         @runtimePolicy={{@runtimePolicy}}
       >
         <:default>
@@ -101,8 +118,8 @@ export default class NumberCell extends Component<NumberCellSignature> {
             type='number'
             value={{this.value}}
             placeholder={{@placeholder}}
-            disabled={{@disabled}}
-            readonly={{@readonly}}
+            disabled={{this.isDisabled}}
+            readonly={{this.isReadonly}}
             min={{@min}}
             max={{@max}}
             step={{@step}}
@@ -115,8 +132,8 @@ export default class NumberCell extends Component<NumberCellSignature> {
     {{else}}
       <Cell
         @state={{@state}}
-        @disabled={{@disabled}}
-        @readonly={{@readonly}}
+        @disabled={{this.isDisabled}}
+        @readonly={{this.isReadonly}}
         @runtimePolicy={{@runtimePolicy}}
       >
         <input
@@ -124,8 +141,8 @@ export default class NumberCell extends Component<NumberCellSignature> {
           type='number'
           value={{this.value}}
           placeholder={{@placeholder}}
-          disabled={{@disabled}}
-          readonly={{@readonly}}
+          disabled={{this.isDisabled}}
+          readonly={{this.isReadonly}}
           min={{@min}}
           max={{@max}}
           step={{@step}}
