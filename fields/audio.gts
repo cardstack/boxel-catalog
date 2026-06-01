@@ -2,8 +2,10 @@ import {
   FieldDef,
   field,
   contains,
+  linksTo,
   Component,
 } from 'https://cardstack.com/base/card-api';
+import { AudioDef } from 'https://cardstack.com/base/audio-file-def';
 import StringField from 'https://cardstack.com/base/string';
 import NumberField from 'https://cardstack.com/base/number';
 import BooleanField from 'https://cardstack.com/base/boolean';
@@ -34,7 +36,6 @@ import {
   FieldContainer,
 } from '@cardstack/boxel-ui/components';
 import MusicIcon from '@cardstack/boxel-icons/music';
-import UploadIcon from '@cardstack/boxel-icons/upload';
 import PlayIcon from '@cardstack/boxel-icons/play';
 import PauseIcon from '@cardstack/boxel-icons/pause';
 
@@ -45,245 +46,36 @@ export type {
 };
 
 class AudioFieldEdit extends Component<typeof AudioField> {
-  @action
-  handleFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    // Create object URL for the file
-    const url = URL.createObjectURL(file);
-
-    // Update model fields
-    this.args.model.url = url;
-    this.args.model.filename = file.name;
-    this.args.model.mimeType = file.type;
-    this.args.model.fileSize = file.size;
-
-    // Extract duration via audio element
-    const audio = new Audio(url);
-    audio.addEventListener('loadedmetadata', () => {
-      this.args.model.duration = audio.duration;
-    });
-  }
-
-  formatDuration(seconds: number): string {
-    if (!seconds || isNaN(seconds)) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }
-
   <template>
     <div class='audio-edit' data-test-audio-edit>
-      {{#if @model.url}}
-        <div class='uploaded-file' data-test-audio-uploaded-file>
-          <div class='file-icon'>
-            <svg
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              stroke-width='2'
-            >
-              <path d='M9 18V5l12-2v13' />
-              <circle cx='6' cy='18' r='3' />
-              <circle cx='18' cy='16' r='3' />
-            </svg>
-          </div>
-          <div class='file-info'>
-            <div class='file-name'>{{@model.filename}}</div>
-            {{#if @model.duration}}
-              <div class='file-meta'>
-                Duration:
-                {{this.formatDuration @model.duration}}
-              </div>
-            {{/if}}
-          </div>
-          {{#if @canEdit}}
-            <label class='change-button'>
-              Change
-              <BoxelInput
-                @type='file'
-                @value={{null}}
-                @onChange={{this.handleFileSelect}}
-                @disabled={{not @canEdit}}
-                accept='audio/*'
-                class='hidden-input'
-              />
-            </label>
-          {{/if}}
-        </div>
+      <FieldContainer @label='Audio file'>
+        <@fields.file />
+      </FieldContainer>
 
-        <div class='metadata-fields'>
-          <FieldContainer @label='Title'>
-            <BoxelInput
-              @value={{@model.cardTitle}}
-              @onInput={{fn (mut @model.cardTitle)}}
-              placeholder='Track title'
-              @disabled={{not @canEdit}}
-            />
-          </FieldContainer>
+      <FieldContainer @label='Title'>
+        <BoxelInput
+          @value={{@model.cardTitle}}
+          @onInput={{fn (mut @model.cardTitle)}}
+          placeholder='Track title'
+          @disabled={{not @canEdit}}
+        />
+      </FieldContainer>
 
-          <FieldContainer @label='Artist'>
-            <BoxelInput
-              @value={{@model.artist}}
-              @onInput={{fn (mut @model.artist)}}
-              placeholder='Artist name'
-              @disabled={{not @canEdit}}
-            />
-          </FieldContainer>
-        </div>
-      {{else}}
-        <label
-          class='upload-area {{unless @canEdit "upload-area-disabled"}}'
-          data-test-audio-upload-area
-        >
-          <div class='upload-icon'>
-            <UploadIcon width='48' height='48' />
-          </div>
-          <div class='upload-text'>
-            <div class='upload-title'>Click to upload audio</div>
-            <div class='upload-subtitle'>MP3, WAV, OGG, M4A, FLAC</div>
-          </div>
-          <BoxelInput
-            @type='file'
-            @value={{null}}
-            @onChange={{this.handleFileSelect}}
-            @disabled={{not @canEdit}}
-            accept='audio/*'
-            class='hidden-input'
-          />
-        </label>
-      {{/if}}
+      <FieldContainer @label='Artist'>
+        <BoxelInput
+          @value={{@model.artist}}
+          @onInput={{fn (mut @model.artist)}}
+          placeholder='Artist name'
+          @disabled={{not @canEdit}}
+        />
+      </FieldContainer>
     </div>
 
     <style scoped>
       .audio-edit {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
-      }
-
-      .upload-area {
-        border: 2px dashed var(--border, #e5e7eb);
-        border-radius: var(--radius, 0.5rem);
-        padding: 3rem 1.5rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        background: var(--card, #ffffff);
-      }
-
-      .upload-area:hover:not(.upload-area-disabled) {
-        border-color: var(--primary, #3b82f6);
-        background: var(--accent, #f0f9ff);
-      }
-
-      .upload-area-disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
-      }
-
-      .upload-icon {
-        width: 3rem;
-        height: 3rem;
-        margin: 0 auto 1rem;
-        color: var(--muted-foreground, #6b7280);
-      }
-
-      .upload-icon svg {
-        width: 100%;
-        height: 100%;
-      }
-
-      .upload-title {
-        font-weight: 600;
-        font-size: 1rem;
-        color: var(--foreground, #1f2937);
-        margin-bottom: 0.25rem;
-      }
-
-      .upload-subtitle {
-        font-size: 0.875rem;
-        color: var(--muted-foreground, #6b7280);
-      }
-
-      .uploaded-file {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem;
-        background: var(--muted, #f3f4f6);
-        border-radius: var(--radius, 0.5rem);
-      }
-
-      .file-icon {
-        width: 2.5rem;
-        height: 2.5rem;
-        background: linear-gradient(
-          135deg,
-          var(--primary, #3b82f6),
-          var(--accent, #60a5fa)
-        );
-        border-radius: var(--boxel-border-radius, 0.5rem);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        flex-shrink: 0;
-      }
-
-      .file-icon svg {
-        width: 1.5rem;
-        height: 1.5rem;
-      }
-
-      .file-info {
-        flex: 1;
-        min-width: 0;
-      }
-
-      .file-name {
-        font-weight: 600;
-        font-size: 0.875rem;
-        color: var(--foreground, #1f2937);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .file-meta {
-        font-size: 0.75rem;
-        color: var(--muted-foreground, #6b7280);
-        margin-top: 0.125rem;
-      }
-
-      .change-button {
-        padding: 0.5rem 1rem;
-        background: var(--primary, #3b82f6);
-        color: var(--primary-foreground, #ffffff);
-        border-radius: var(--radius, 0.5rem);
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        white-space: nowrap;
-        text-align: center;
-      }
-
-      .change-button:hover {
-        background: var(--accent, #60a5fa);
-      }
-
-      .metadata-fields {
-        display: flex;
-        flex-direction: column;
         gap: var(--boxel-sp-lg);
-      }
-
-      .hidden-input {
-        display: none;
       }
     </style>
   </template>
@@ -588,11 +380,35 @@ export default class AudioField extends FieldDef {
   static displayName = 'Audio';
   static icon = MusicIcon;
 
-  @field url = contains(StringField);
-  @field filename = contains(StringField);
-  @field mimeType = contains(StringField);
-  @field duration = contains(NumberField); // in seconds
-  @field fileSize = contains(NumberField); // in bytes
+  @field file = linksTo(() => AudioDef);
+
+  // Back-compat shims. Player components read these names directly; the data
+  // now flows from the linked AudioDef instead of being stored on this field.
+  @field url = contains(StringField, {
+    computeVia: function (this: AudioField) {
+      return this.file?.url ?? '';
+    },
+  });
+  @field filename = contains(StringField, {
+    computeVia: function (this: AudioField) {
+      return this.file?.name ?? '';
+    },
+  });
+  @field mimeType = contains(StringField, {
+    computeVia: function (this: AudioField) {
+      return this.file?.contentType ?? '';
+    },
+  });
+  @field fileSize = contains(NumberField, {
+    computeVia: function (this: AudioField) {
+      return this.file?.contentSize ?? 0;
+    },
+  });
+  @field duration = contains(NumberField, {
+    computeVia: function (this: AudioField) {
+      return this.file?.duration ?? 0;
+    },
+  });
 
   // Optional metadata
   @field cardTitle = contains(StringField);
@@ -616,7 +432,7 @@ export default class AudioField extends FieldDef {
 
   @field displayTitle = contains(StringField, {
     computeVia: function (this: AudioField) {
-      return this.cardTitle || this.filename || 'Untitled Audio';
+      return this.cardTitle || this.file?.name || 'Untitled Audio';
     },
   });
 
@@ -988,22 +804,23 @@ export default class AudioField extends FieldDef {
     </template>
   };
 
-  // ⁹ Atom format - minimal display
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='audio-atom' data-test-audio-atom>
-        <svg
-          viewBox='0 0 24 24'
-          fill='none'
-          stroke='currentColor'
-          stroke-width='2'
-        >
-          <path d='M9 18V5l12-2v13' />
-          <circle cx='6' cy='18' r='3' />
-          <circle cx='18' cy='16' r='3' />
-        </svg>
-        {{@model.displayTitle}}
-      </span>
+      {{#if @model.url}}
+        <span class='audio-atom' data-test-audio-atom>
+          <svg
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+            stroke-width='2'
+          >
+            <path d='M9 18V5l12-2v13' />
+            <circle cx='6' cy='18' r='3' />
+            <circle cx='18' cy='16' r='3' />
+          </svg>
+          {{@model.displayTitle}}
+        </span>
+      {{/if}}
 
       <style scoped>
         .audio-atom {
