@@ -11,8 +11,11 @@ export const SurfaceScopeContextName = 'boxel-surface:scope';
 
 export class SurfaceScopeRelay {
   private local = new Map<string, string>();
+  readonly parent?: SurfaceScopeRelay;
 
-  constructor(readonly parent?: SurfaceScopeRelay) {}
+  constructor(parent?: SurfaceScopeRelay) {
+    this.parent = parent;
+  }
 
   get attributes(): SurfaceScopeAttributes {
     return mergeSurfaceScopeAttributes(
