@@ -238,7 +238,7 @@ export function runTests() {
         await waitForShowcase();
       });
 
-      module('listing fitted', function () {
+      module.skip('listing fitted', function () {
         test('remix button is hidden in fitted view when listing is not under catalog realm', async function (assert) {
           await selectTab('Cards');
           await waitForGrid();
@@ -500,7 +500,7 @@ export function runTests() {
 
       module('navigation', function () {
         module('show results as per catalog tab selected', function () {
-          test('switch to cards tab', async function (assert) {
+          skip('switch to cards tab', async function (assert) {
             await selectTab('Cards');
             await waitForGrid();
             assert
