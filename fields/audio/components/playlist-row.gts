@@ -74,10 +74,16 @@ export class PlaylistRow extends GlimmerComponent<PlaylistRowSignature> {
       }
 
       .playlist-play-btn {
+        --boxel-button-min-width: 0;
+        --boxel-button-min-height: 0;
+        --boxel-button-padding: 0;
         width: 2rem;
         height: 2rem;
         border-radius: 50%;
         flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .playlist-cover {

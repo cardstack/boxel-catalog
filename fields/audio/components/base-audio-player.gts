@@ -215,6 +215,27 @@ export class BaseAudioPlayer extends GlimmerComponent<BaseAudioPlayerSignature> 
   @action
   handleLoadedMetadata(event: Event): void {
     const audio = event.target as HTMLAudioElement;
+
+    if (!isFinite(audio.duration)) {
+      // Browsers report duration=Infinity when the response lacks
+      // Content-Length / Range support. Force the browser to resolve it by
+      // seeking past the end; once durationchange fires with a finite value,
+      // restore currentTime and proceed.
+      const onDurationChange = () => {
+        if (!isFinite(audio.duration)) return;
+        audio.removeEventListener('durationchange', onDurationChange);
+        audio.currentTime = 0;
+        this.finalizeLoadedMetadata(audio);
+      };
+      audio.addEventListener('durationchange', onDurationChange);
+      audio.currentTime = Number.MAX_SAFE_INTEGER;
+      return;
+    }
+
+    this.finalizeLoadedMetadata(audio);
+  }
+
+  private finalizeLoadedMetadata(audio: HTMLAudioElement): void {
     this.audioDuration = audio.duration;
 
     if (this.model.trimStart != null && this.model.trimEnd != null) {
@@ -457,7 +478,7 @@ export class BaseAudioPlayer extends GlimmerComponent<BaseAudioPlayerSignature> 
   };
 
   formatTime(seconds: number): string {
-    if (!seconds || isNaN(seconds)) return '0:00';
+    if (!seconds || !isFinite(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;

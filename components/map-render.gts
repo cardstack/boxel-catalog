@@ -119,8 +119,9 @@ interface LeafletTileInterface {
 
 class LeafletTile implements LeafletTileInterface {
   private tile: LeafletTileLayer | null = null;
+  private map: LeafletMap;
 
-  constructor(private map: LeafletMap) {
+  constructor(map: LeafletMap) {
     this.map = map;
   }
 
@@ -160,8 +161,10 @@ interface LeafletLayerStateInterface {
 
 class LeafletLayerState implements LeafletLayerStateInterface {
   private group: LeafletLayerGroup | null = null;
+  private map: LeafletMap;
 
-  constructor(private map: LeafletMap) {
+  constructor(map: LeafletMap) {
+    this.map = map;
     this.group = L.layerGroup();
     this.group?.addTo(this.map);
   }
