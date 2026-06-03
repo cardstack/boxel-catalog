@@ -300,8 +300,9 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
 
       .trim-actions {
         display: flex;
-        justify-content: space-between;
+        flex-wrap: wrap;
         align-items: center;
+        gap: var(--boxel-sp);
         padding-top: 1rem;
         border-top: 1px solid var(--border, #e5e7eb);
       }
@@ -314,10 +315,17 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         color: var(--foreground, #1f2937);
         cursor: pointer;
         user-select: none;
+        white-space: nowrap;
       }
 
       .trim-apply-btn {
-        padding: 0.625rem 1.25rem;
+        --boxel-button-min-width: 0;
+        --boxel-button-padding: 0.625rem 1.25rem;
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        white-space: nowrap;
         background: var(--primary, #3b82f6) !important;
         color: white !important;
       }
@@ -327,16 +335,24 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
       }
 
       .playback-controls-row {
+        flex: 1 1 auto;
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 0.75rem;
       }
 
       .control-btn {
+        --boxel-button-min-width: 0;
+        --boxel-button-min-height: 0;
+        --boxel-button-padding: 0;
         width: 2.5rem;
         height: 2.5rem;
         border-radius: 50%;
         flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         background: var(--primary, #3b82f6) !important;
         color: white !important;
       }

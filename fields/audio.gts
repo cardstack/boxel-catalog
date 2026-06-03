@@ -130,6 +130,19 @@ class AudioFieldFitted extends Component<typeof AudioField> {
   @action
   handleLoadedMetadata(event: Event) {
     const audio = event.target as HTMLAudioElement;
+
+    if (!isFinite(audio.duration)) {
+      const onDurationChange = () => {
+        if (!isFinite(audio.duration)) return;
+        audio.removeEventListener('durationchange', onDurationChange);
+        audio.currentTime = 0;
+        this.audioDuration = audio.duration;
+      };
+      audio.addEventListener('durationchange', onDurationChange);
+      audio.currentTime = Number.MAX_SAFE_INTEGER;
+      return;
+    }
+
     this.audioDuration = audio.duration;
   }
 
@@ -144,7 +157,7 @@ class AudioFieldFitted extends Component<typeof AudioField> {
   }
 
   formatTime(seconds: number): string {
-    if (!seconds || isNaN(seconds)) return '0:00';
+    if (!seconds || !isFinite(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -291,9 +304,15 @@ class AudioFieldFitted extends Component<typeof AudioField> {
       }
 
       .play-overlay-button {
+        --boxel-button-min-width: 0;
+        --boxel-button-min-height: 0;
+        --boxel-button-padding: 0;
         width: 4rem;
         height: 4rem;
         border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         background: white !important;
         color: var(--primary, #3b82f6) !important;
         box-shadow:
@@ -690,10 +709,16 @@ export default class AudioField extends FieldDef {
         }
 
         .play-button {
+          --boxel-button-min-width: 0;
+          --boxel-button-min-height: 0;
+          --boxel-button-padding: 0;
           width: 2.5rem;
           height: 2.5rem;
           border-radius: 50%;
           flex-shrink: 0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           background: var(--primary, #3b82f6) !important;
           color: white !important;
         }

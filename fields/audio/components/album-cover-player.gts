@@ -116,9 +116,15 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
       }
 
       .album-play-btn {
+        --boxel-button-min-width: 0;
+        --boxel-button-min-height: 0;
+        --boxel-button-padding: 0;
         width: 5rem;
         height: 5rem;
         border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         background: white !important;
         color: var(--primary, #3b82f6) !important;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;

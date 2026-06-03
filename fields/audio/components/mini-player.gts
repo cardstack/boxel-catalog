@@ -95,11 +95,15 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
 
     <style scoped>
       .mini-player {
+        container-type: inline-size;
         position: relative;
-        display: flex;
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        grid-template-areas: 'play info skip time';
         align-items: center;
-        gap: var(--boxel-sp);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
+        column-gap: var(--boxel-sp);
+        row-gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp) var(--boxel-sp-lg) calc(var(--boxel-sp) + 4px);
         background: var(--boxel-light, #ffffff);
         border: 1px solid var(--boxel-border-color, #e5e7eb);
         border-radius: var(--boxel-border-radius, 0.5rem);
@@ -107,13 +111,19 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
       }
 
       .mini-play-btn {
+        --boxel-button-min-width: 0;
+        --boxel-button-min-height: 0;
+        --boxel-button-padding: 0;
+        grid-area: play;
         width: 2.5rem;
         height: 2.5rem;
         border-radius: 50%;
         flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         background: var(--primary, #3b82f6) !important;
         color: white !important;
-        padding: 0;
       }
 
       .mini-play-btn:hover {
@@ -121,9 +131,8 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
       }
 
       .mini-info {
-        flex: 1;
+        grid-area: info;
         min-width: 0;
-        margin-right: auto;
       }
 
       .mini-title {
@@ -145,6 +154,7 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
       }
 
       .mini-skip-controls {
+        grid-area: skip;
         display: flex;
         align-items: center;
         gap: 0.25rem;
@@ -152,10 +162,11 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
       }
 
       .skip-btn {
-        width: 2rem;
-        height: 2rem;
-        padding: 0;
-        display: flex;
+        --boxel-button-min-width: 0;
+        --boxel-button-min-height: 0;
+        --boxel-button-padding: 0 0.25rem;
+        height: 1.75rem;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 0.125rem;
@@ -175,11 +186,44 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
       }
 
       .mini-time {
+        grid-area: time;
         font-size: 0.75rem;
         color: var(--muted-foreground, #6b7280);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         flex-shrink: 0;
+      }
+
+      /* Narrow: stack to two rows — [play | info | time] / [skip spans all] */
+      @container (max-width: 420px) {
+        .mini-player {
+          grid-template-columns: auto 1fr auto;
+          grid-template-areas:
+            'play info time'
+            'skip skip skip';
+        }
+
+        .mini-skip-controls {
+          justify-self: center;
+        }
+      }
+
+      /* Very narrow: drop skip controls inline, stack info under play */
+      @container (max-width: 260px) {
+        .mini-player {
+          grid-template-columns: auto 1fr;
+          grid-template-areas:
+            'play info'
+            'skip time';
+        }
+
+        .mini-skip-controls {
+          justify-self: start;
+        }
+
+        .mini-time {
+          justify-self: end;
+        }
       }
 
       .time-separator {

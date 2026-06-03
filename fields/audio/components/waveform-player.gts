@@ -103,10 +103,16 @@ export class WaveformPlayer extends GlimmerComponent<WaveformPlayerSignature> {
       }
 
       .waveform-play-btn {
+        --boxel-button-min-width: 0;
+        --boxel-button-min-height: 0;
+        --boxel-button-padding: 0;
         width: 2.5rem;
         height: 2.5rem;
         border-radius: 50%;
         flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         background: var(--boxel-light, #ffffff) !important;
         color: var(--boxel-purple-500, #8b5cf6) !important;
       }
