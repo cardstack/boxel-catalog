@@ -1,4 +1,4 @@
-import type { ImageSourceMode } from '../image-source';
+import type { ImageSourceMode } from './image-source';
 
 export function selectedSourceMode(
   sourceMode: string | null | undefined,

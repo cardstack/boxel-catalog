@@ -5,7 +5,7 @@ import {
   Component,
 } from 'https://cardstack.com/base/card-api';
 import NumberField from 'https://cardstack.com/base/number';
-import { StepRangeScroller } from '../components/step-range-scroller';
+import { StepRangeScroller } from '../../components/step-range-scroller';
 
 export default class DiscreteRangeField extends FieldDef {
   static displayName = 'Discrete Range';

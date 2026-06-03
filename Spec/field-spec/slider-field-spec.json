@@ -10,9 +10,9 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "../../fields/slider"
+        "module": "../../fields/slider/slider"
       },
-      "readMe": "## Slider Field\n\nA numeric field rendered as a draggable slider, with configurable min, max, and step.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport SliderField from '@cardstack/catalog/fields/slider';\n\nexport class Example extends CardDef {\n  @field volume = contains(SliderField, {\n    configuration: { min: 0, max: 100, step: 1 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
+      "readMe": "## Slider Field\n\nA numeric field rendered as a draggable slider, with configurable min, max, and step.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport SliderField from '@cardstack/catalog/fields/slider/slider';\n\nexport class Example extends CardDef {\n  @field volume = contains(SliderField, {\n    configuration: { min: 0, max: 100, step: 1 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
       "cardInfo": {
         "name": null,
         "notes": null,

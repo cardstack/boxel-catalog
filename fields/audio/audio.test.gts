@@ -7,7 +7,10 @@ import { AudioDef } from 'https://cardstack.com/base/audio-file-def';
 
 import AudioField from './audio';
 
-import { buildField, renderField } from '../tests/helpers/field-test-helpers';
+import {
+  buildField,
+  renderField,
+} from '../../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | audio fields', function (hooks) {

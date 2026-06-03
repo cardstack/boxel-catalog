@@ -10,7 +10,7 @@ import {
   contains,
   Component,
 } from 'https://cardstack.com/base/card-api';
-import QuantityField from '../fields/quantity';
+import QuantityField from '../fields/quantity/quantity';
 import CodeSnippet from '../components/code-snippet';
 
 const standardFieldCode = `@field standard = contains(QuantityField);`;

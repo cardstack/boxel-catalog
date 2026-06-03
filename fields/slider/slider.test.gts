@@ -9,7 +9,7 @@ import {
   buildField,
   renderConfiguredField,
   renderField,
-} from '../tests/helpers/field-test-helpers';
+} from '../../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | slider fields', function (hooks) {

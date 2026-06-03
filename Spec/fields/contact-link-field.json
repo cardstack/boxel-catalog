@@ -2,10 +2,10 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Contact Link Field\n\nA field that captures a contact link (email, phone, or URL) and renders an appropriate icon plus a click-through action.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport ContactLinkField from '@cardstack/catalog/fields/contact-link';\n\nexport class Example extends CardDef {\n  @field contact = contains(ContactLinkField);\n}\n```\n",
+      "readMe": "## Contact Link Field\n\nA field that captures a contact link (email, phone, or URL) and renders an appropriate icon plus a click-through action.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport ContactLinkField from '@cardstack/catalog/fields/contact-link/contact-link';\n\nexport class Example extends CardDef {\n  @field contact = contains(ContactLinkField);\n}\n```\n",
       "ref": {
         "name": "default",
-        "module": "../../fields/contact-link"
+        "module": "../../fields/contact-link/contact-link"
       },
       "specType": "field",
       "containedExamples": [],

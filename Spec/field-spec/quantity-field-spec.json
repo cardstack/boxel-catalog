@@ -10,9 +10,9 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "../../fields/quantity"
+        "module": "../../fields/quantity/quantity"
       },
-      "readMe": "## Quantity Field\n\nA numeric field paired with a unit, rendered with configurable formatting (decimals, unit suffix, min/max bounds).\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport QuantityField from '@cardstack/catalog/fields/quantity';\n\nexport class Example extends CardDef {\n  @field amount = contains(QuantityField, {\n    configuration: { unit: 'kg', decimals: 2 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
+      "readMe": "## Quantity Field\n\nA numeric field paired with a unit, rendered with configurable formatting (decimals, unit suffix, min/max bounds).\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport QuantityField from '@cardstack/catalog/fields/quantity/quantity';\n\nexport class Example extends CardDef {\n  @field amount = contains(QuantityField, {\n    configuration: { unit: 'kg', decimals: 2 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
       "cardInfo": {
         "name": null,
         "notes": null,

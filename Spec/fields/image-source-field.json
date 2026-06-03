@@ -5,7 +5,7 @@
         "containedExamples": [
           {
             "adoptsFrom": {
-              "module": "../../fields/image-source",
+              "module": "../../fields/image-source/image-source",
               "name": "default"
             }
           }
@@ -20,9 +20,9 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "../../fields/image-source"
+        "module": "../../fields/image-source/image-source"
       },
-      "readMe": "## Image Source Field\n\nA field that stores an image sourced from either a URL or a linked file upload. The edit template provides a tabbed interface to switch between input modes; the embedded template renders the resolved image.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport ImageSourceField from '@cardstack/catalog/fields/image-source';\n\nexport class Example extends CardDef {\n  @field photo = contains(ImageSourceField);\n}\n```\n",
+      "readMe": "## Image Source Field\n\nA field that stores an image sourced from either a URL or a linked file upload. The edit template provides a tabbed interface to switch between input modes; the embedded template renders the resolved image.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';\n\nexport class Example extends CardDef {\n  @field photo = contains(ImageSourceField);\n}\n```\n",
       "cardInfo": {
         "name": null,
         "notes": null,

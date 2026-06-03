@@ -10,13 +10,13 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "../../fields/geo-point"
+        "module": "../../fields/geo-point/geo-point"
       },
       "basic": {
         "lat": 60,
         "lon": 125
       },
-      "readMe": "## Geo Point Field\n\nA field that captures a geographic point (latitude / longitude) and renders it on a Leaflet map.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport GeoPointField from '@cardstack/catalog/fields/geo-point';\n\nexport class Example extends CardDef {\n  @field location = contains(GeoPointField, {\n    configuration: { zoom: 13 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
+      "readMe": "## Geo Point Field\n\nA field that captures a geographic point (latitude / longitude) and renders it on a Leaflet map.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport GeoPointField from '@cardstack/catalog/fields/geo-point/geo-point';\n\nexport class Example extends CardDef {\n  @field location = contains(GeoPointField, {\n    configuration: { zoom: 13 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
       "cardInfo": {
         "name": null,
         "notes": null,

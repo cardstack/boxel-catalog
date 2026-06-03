@@ -32,7 +32,10 @@ import ReadSourceCommand from '@cardstack/boxel-host/commands/read-source';
 import SerializeCardCommand from '@cardstack/boxel-host/commands/serialize-card';
 
 import type { Listing } from '../catalog-app/listing/listing';
-import { FileContentField, FileCollectionResult } from '../fields/file-content';
+import {
+  FileContentField,
+  FileCollectionResult,
+} from '../fields/file-content/file-content';
 import { getLoaderService } from './utils';
 
 const log = logger('commands:collect-submission-files');

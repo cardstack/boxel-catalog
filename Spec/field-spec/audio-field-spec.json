@@ -10,9 +10,9 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "../../fields/audio"
+        "module": "../../fields/audio/audio"
       },
-      "readMe": "## Audio Field\n\nA field that captures an audio track and renders it via configurable players (mini, waveform, playlist row, album cover, trim editor, volume control, advanced controls).\n\nThe audio asset is backed by a linked `AudioDef` (or one of its format-specific subclasses: `Mp3Def`, `WavDef`, `OggDef`, `M4aDef`, `FlacDef`). Players read `@model.url` which is computed from the linked file, so consumers don't need to know about the FileDef layer.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport AudioField from '@cardstack/catalog/fields/audio';\n\nexport class Example extends CardDef {\n  @field track = contains(AudioField, {\n    configuration: { presentation: 'waveform-player' },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
+      "readMe": "## Audio Field\n\nA field that captures an audio track and renders it via configurable players (mini, waveform, playlist row, album cover, trim editor, volume control, advanced controls).\n\nThe audio asset is backed by a linked `AudioDef` (or one of its format-specific subclasses: `Mp3Def`, `WavDef`, `OggDef`, `M4aDef`, `FlacDef`). Players read `@model.url` which is computed from the linked file, so consumers don't need to know about the FileDef layer.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport AudioField from '@cardstack/catalog/fields/audio/audio';\n\nexport class Example extends CardDef {\n  @field track = contains(AudioField, {\n    configuration: { presentation: 'waveform-player' },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
       "cardInfo": {
         "name": null,
         "notes": null,

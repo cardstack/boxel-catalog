@@ -10,14 +10,14 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "../../fields/geo-search-point"
+        "module": "../../fields/geo-search-point/geo-search-point"
       },
       "basic": {
         "lat": 3.1591628,
         "lon": 101.7133606,
         "searchKey": "klcc"
       },
-      "readMe": "## Geo Search Point Field\n\nA geo point that is resolved from a search key (place name) via geocoding, then rendered on a Leaflet map.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport GeoSearchPointField from '@cardstack/catalog/fields/geo-search-point';\n\nexport class Example extends CardDef {\n  @field location = contains(GeoSearchPointField, {\n    configuration: { zoom: 13 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
+      "readMe": "## Geo Search Point Field\n\nA geo point that is resolved from a search key (place name) via geocoding, then rendered on a Leaflet map.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport GeoSearchPointField from '@cardstack/catalog/fields/geo-search-point/geo-search-point';\n\nexport class Example extends CardDef {\n  @field location = contains(GeoSearchPointField, {\n    configuration: { zoom: 13 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
       "cardInfo": {
         "name": null,
         "notes": null,

@@ -5,7 +5,10 @@ import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 import GeoPointField from './geo-point';
 
-import { buildField, renderField } from '../tests/helpers/field-test-helpers';
+import {
+  buildField,
+  renderField,
+} from '../../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | geo-point fields', function (hooks) {

@@ -5,7 +5,7 @@
         "containedExamples": [
           {
             "adoptsFrom": {
-              "module": "../../fields/avatar",
+              "module": "../../fields/avatar/avatar",
               "name": "default"
             }
           }
@@ -20,9 +20,9 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "../../fields/avatar"
+        "module": "../../fields/avatar/avatar"
       },
-      "readMe": "## Avatar Field\n\nA field that captures an Avataaars-style avatar with configurable hair, eyes, clothing, accessories, and skin color.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport Avatar from '@cardstack/catalog/fields/avatar';\n\nexport class Example extends CardDef {\n  @field avatar = contains(Avatar);\n}\n```\n",
+      "readMe": "## Avatar Field\n\nA field that captures an Avataaars-style avatar with configurable hair, eyes, clothing, accessories, and skin color.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport Avatar from '@cardstack/catalog/fields/avatar/avatar';\n\nexport class Example extends CardDef {\n  @field avatar = contains(Avatar);\n}\n```\n",
       "cardInfo": {
         "name": null,
         "notes": null,

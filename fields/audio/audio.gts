@@ -21,13 +21,13 @@ import {
   type AudioFieldConfiguration,
   type AudioFieldOptions,
   type AudioPresentationStyle,
-} from './audio/components/base-audio-player';
-import { WaveformPlayer } from './audio/components/waveform-player';
-import { MiniPlayer } from './audio/components/mini-player';
-import { AlbumCoverPlayer } from './audio/components/album-cover-player';
-import { TrimEditor } from './audio/components/trim-editor';
-import { PlaylistRow } from './audio/components/playlist-row';
-import { VolumeControl } from './audio/components/volume-control';
+} from './components/base-audio-player';
+import { WaveformPlayer } from './components/waveform-player';
+import { MiniPlayer } from './components/mini-player';
+import { AlbumCoverPlayer } from './components/album-cover-player';
+import { TrimEditor } from './components/trim-editor';
+import { PlaylistRow } from './components/playlist-row';
+import { VolumeControl } from './components/volume-control';
 import { eq, or, and, bool, not } from '@cardstack/boxel-ui/helpers';
 import {
   BoxelInput,

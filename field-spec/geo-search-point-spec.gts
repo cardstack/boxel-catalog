@@ -10,7 +10,7 @@ import {
   contains,
   Component,
 } from 'https://cardstack.com/base/card-api';
-import GeoSearchPointField from '../fields/geo-search-point';
+import GeoSearchPointField from '../fields/geo-search-point/geo-search-point';
 import CodeSnippet from '../components/code-snippet';
 
 // 1. Basic (no config)

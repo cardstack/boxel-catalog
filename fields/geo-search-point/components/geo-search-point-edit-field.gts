@@ -11,7 +11,7 @@ import { searchAddress, type GeoSearchModel } from '../util/index';
 import type {
   GeoSearchPointConfiguration,
   GeoSearchPointOptions,
-} from '../../geo-search-point';
+} from '../geo-search-point';
 
 // Module-level storage for recent searches keyed by configuration
 // Persists across component recreation within the same page session

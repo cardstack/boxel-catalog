@@ -9,8 +9,8 @@ import {
 import StringField from 'https://cardstack.com/base/string';
 import UrlField from 'https://cardstack.com/base/url';
 import ImageIcon from '@cardstack/boxel-icons/image';
-import ImageSourceEditor from './image-source/components/image-source-editor';
-import { selectedSourceMode } from './image-source/utils';
+import ImageSourceEditor from './components/image-source-editor';
+import { selectedSourceMode } from './utils';
 
 export type ImageSourceMode = 'url' | 'file';
 

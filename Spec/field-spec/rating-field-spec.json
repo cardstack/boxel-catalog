@@ -10,9 +10,9 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "../../fields/rating"
+        "module": "../../fields/rating/rating"
       },
-      "readMe": "## Rating Field\n\nA numeric rating field rendered as a row of star icons; the max value, icon, and read-only state are configurable.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport RatingField from '@cardstack/catalog/fields/rating';\n\nexport class Example extends CardDef {\n  @field score = contains(RatingField, {\n    configuration: { maxRating: 5 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
+      "readMe": "## Rating Field\n\nA numeric rating field rendered as a row of star icons; the max value, icon, and read-only state are configurable.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport RatingField from '@cardstack/catalog/fields/rating/rating';\n\nexport class Example extends CardDef {\n  @field score = contains(RatingField, {\n    configuration: { maxRating: 5 },\n  });\n}\n```\n\nSee the **Examples** section of this spec for the full set of supported configuration options.\n",
       "cardInfo": {
         "name": null,
         "notes": null,

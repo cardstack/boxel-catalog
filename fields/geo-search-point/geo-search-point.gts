@@ -5,9 +5,9 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
-import GeoPointField from './geo-point';
-import GeoSearchPointEditField from './geo-search-point/components/geo-search-point-edit-field';
-import GeoPointMapPicker from './geo-point/components/geo-point-map-picker';
+import GeoPointField from '../geo-point/geo-point';
+import GeoSearchPointEditField from './components/geo-search-point-edit-field';
+import GeoPointMapPicker from '../geo-point/components/geo-point-map-picker';
 
 // --- Configuration Types ---
 

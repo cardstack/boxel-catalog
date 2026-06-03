@@ -5,7 +5,10 @@ import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 import FeaturedImageField from './featured-image';
 
-import { buildField, renderField } from '../tests/helpers/field-test-helpers';
+import {
+  buildField,
+  renderField,
+} from '../../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | featured-image fields', function (hooks) {

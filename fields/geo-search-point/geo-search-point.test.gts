@@ -5,7 +5,10 @@ import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 import GeoSearchPointField from './geo-search-point';
 
-import { buildField, renderField } from '../tests/helpers/field-test-helpers';
+import {
+  buildField,
+  renderField,
+} from '../../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | geo-search-point fields', function (hooks) {

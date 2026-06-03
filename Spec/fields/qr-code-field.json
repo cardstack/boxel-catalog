@@ -5,7 +5,7 @@
         "containedExamples": [
           {
             "adoptsFrom": {
-              "module": "../../fields/qr-code",
+              "module": "../../fields/qr-code/qr-code",
               "name": "default"
             }
           }
@@ -20,9 +20,9 @@
     "attributes": {
       "ref": {
         "name": "default",
-        "module": "../../fields/qr-code"
+        "module": "../../fields/qr-code/qr-code"
       },
-      "readMe": "## QR Code Field\n\nA field that captures an arbitrary string value and renders it as a QR code.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport QRField from '@cardstack/catalog/fields/qr-code';\n\nexport class Example extends CardDef {\n  @field qrCode = contains(QRField);\n}\n```\n",
+      "readMe": "## QR Code Field\n\nA field that captures an arbitrary string value and renders it as a QR code.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport QRField from '@cardstack/catalog/fields/qr-code/qr-code';\n\nexport class Example extends CardDef {\n  @field qrCode = contains(QRField);\n}\n```\n",
       "cardInfo": {
         "name": null,
         "notes": null,

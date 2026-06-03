@@ -766,8 +766,11 @@ export function runTests() {
               assert,
               listingName,
             );
-            await openDir(assert, `${outerFolder}fields/contact-link.gts`);
-            let gtsFilePath = `${outerFolder}fields/contact-link.gts`;
+            await openDir(
+              assert,
+              `${outerFolder}fields/contact-link/contact-link.gts`,
+            );
+            let gtsFilePath = `${outerFolder}fields/contact-link/contact-link.gts`;
             await verifyFileInFileTree(assert, gtsFilePath);
           });
 

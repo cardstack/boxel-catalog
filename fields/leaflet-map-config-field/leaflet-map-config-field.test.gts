@@ -5,7 +5,10 @@ import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 import LeafletMapConfigField from './leaflet-map-config-field';
 
-import { buildField, renderField } from '../tests/helpers/field-test-helpers';
+import {
+  buildField,
+  renderField,
+} from '../../tests/helpers/field-test-helpers';
 
 export function runTests() {
   module('Rendering | leaflet-map-config fields', function (hooks) {

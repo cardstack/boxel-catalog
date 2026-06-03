@@ -17,7 +17,7 @@ import {
   Upload,
 } from '@cardstack/boxel-ui/icons';
 
-import type { ImageSourceMode } from '../../image-source';
+import type { ImageSourceMode } from '../image-source';
 import { selectedSourceMode } from '../utils';
 
 interface ImageSourceModel {

@@ -10,7 +10,7 @@ import {
   contains,
   Component,
 } from 'https://cardstack.com/base/card-api';
-import RecurringPatternField from '../fields/recurring-pattern';
+import RecurringPatternField from '../fields/recurring-pattern/recurring-pattern';
 import CodeSnippet from '../components/code-snippet';
 
 const standardFieldCode = `@field standard = contains(RecurringPatternField);`;

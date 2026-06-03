@@ -7,8 +7,8 @@ import {
 import NumberField from 'https://cardstack.com/base/number';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 
-import GeoPointEditField from './geo-point/components/geo-point-edit-field';
-import GeoPointMapPicker from './geo-point/components/geo-point-map-picker';
+import GeoPointEditField from './components/geo-point-edit-field';
+import GeoPointMapPicker from './components/geo-point-map-picker';
 
 // --- Configuration Types ---
 

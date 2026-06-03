@@ -5,7 +5,7 @@ import type {
   GeoPointConfiguration,
   GeoPointMapOptions,
   GeoPointVariant,
-} from '../../geo-point';
+} from '../geo-point';
 import GeoPointCoordinateInput from './geo-point-coordinate-input';
 import GeoPointMapPicker from './geo-point-map-picker';
 import CurrentLocationAddon from './current-location-addon';
