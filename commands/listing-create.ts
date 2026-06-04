@@ -103,8 +103,16 @@ export default class ListingCreateCommand extends Command<
     if (!targetRealm) {
       throw new Error('Target Realm is required');
     }
-
-    let listingType = await this.guessListingType(codeRef);
+    let cardDef: CardAPI.BaseDefConstructor | undefined;
+    try {
+      cardDef = await loadCardDef(codeRef, {
+        loader: getLoaderService(this.commandContext).loader,
+      });
+    } catch {
+      // leave undefined; downstream falls back appropriately
+    }
+    let listingType = this.guessListingType(cardDef);
+    const displayName = (cardDef as any)?.displayName ?? codeRef.name;
     const catalogRealm = await this.getCatalogRealm();
 
     let relationships: Record<string, { links: { self: string } }> = {};
@@ -144,16 +152,19 @@ export default class ListingCreateCommand extends Command<
     const backgroundTasks = [
       {
         name: 'autoPatchName',
-        promise: this.autoPatchName(listingCard, codeRef),
+        promise: this.autoPatchName(listingCard, codeRef, displayName),
       },
       {
         name: 'autoPatchSummary',
-        promise: this.autoPatchSummary(listingCard, codeRef),
+        promise: this.autoPatchSummary(listingCard, codeRef, displayName),
       },
-      { name: 'autoLinkTag', promise: this.autoLinkTag(listingCard, codeRef) },
+      {
+        name: 'autoLinkTag',
+        promise: this.autoLinkTag(listingCard, codeRef, displayName),
+      },
       {
         name: 'autoLinkCategory',
-        promise: this.autoLinkCategory(listingCard, codeRef),
+        promise: this.autoLinkCategory(listingCard, codeRef, displayName),
       },
       { name: 'autoLinkLicense', promise: this.autoLinkLicense(listingCard) },
       { name: 'autoLinkExample', promise: examplePromise },
@@ -165,7 +176,11 @@ export default class ListingCreateCommand extends Command<
       },
       {
         name: 'autoGenerateThumbnail',
-        promise: this.autoGenerateThumbnail(listingCard, codeRef, targetRealm),
+        promise: this.autoGenerateThumbnail(
+          listingCard,
+          displayName,
+          targetRealm,
+        ),
       },
       {
         name: 'linkSpecs',
@@ -198,18 +213,12 @@ export default class ListingCreateCommand extends Command<
     return result;
   }
 
-  private async guessListingType(
-    codeRef: ResolvedCodeRef,
-  ): Promise<ListingType> {
-    let cardDef;
-    try {
-      cardDef = await loadCardDef(codeRef, {
-        loader: getLoaderService(this.commandContext).loader,
-      });
-    } catch {
+  private guessListingType(
+    cardDef: CardAPI.BaseDefConstructor | undefined,
+  ): ListingType {
+    if (!cardDef) {
       return 'card';
     }
-
     if (isFieldDef(cardDef)) {
       return 'field';
     }
@@ -353,13 +362,14 @@ export default class ListingCreateCommand extends Command<
   private async autoPatchName(
     listing: CardAPI.CardDef,
     codeRef: ResolvedCodeRef,
+    displayName: string,
   ) {
     const name = await this.getStringPatch({
       codeRef,
       systemPrompt:
         'You are a concise and accurate summarization system. You read a Cardstack card/field definition source file and create a concise catalog listing title. Respond ONLY with the title text—no quotes, no JSON, no markdown, and no extra commentary.',
       userPrompt: [
-        `Generate a catalog listing title for the definition referenced by:`,
+        `Generate a catalog listing title for the ${displayName} definition referenced by:`,
         `- module: ${codeRef.module}`,
         `- exportName: ${codeRef.name}`,
         `Use ONLY the attached module source shown below (the file content).`,
@@ -374,13 +384,14 @@ export default class ListingCreateCommand extends Command<
   private async autoPatchSummary(
     listing: CardAPI.CardDef,
     codeRef: ResolvedCodeRef,
+    displayName: string,
   ) {
     const summary = await this.getStringPatch({
       codeRef,
       systemPrompt:
         'You are a concise and accurate summarization system. You read a Cardstack card/field definition source file and write a concise spec-style summary. Output ONLY the summary text—no quotes, no JSON, no markdown, and no extra commentary.',
       userPrompt: [
-        `Generate a README-style catalog listing summary for the definition referenced by:`,
+        `Generate a README-style catalog listing summary for the ${displayName} definition referenced by:`,
         `- module: ${codeRef.module}`,
         `- exportName: ${codeRef.name}`,
         `Use ONLY the attached module source shown below (the file content).`,
@@ -583,6 +594,7 @@ export default class ListingCreateCommand extends Command<
   private async autoLinkTag(
     listing: CardAPI.CardDef,
     codeRef: ResolvedCodeRef,
+    displayName: string,
   ) {
     const catalogRealm = await this.getCatalogRealm();
     const selected = await this.chooseCards(
@@ -596,6 +608,7 @@ export default class ListingCreateCommand extends Command<
       {
         max: 1,
         additionalSystemPrompt:
+          `The card type being tagged is "${displayName}". ` +
           'You are selecting from an existing list of catalog tags. ' +
           "Choose the most specific descriptive tag that describes the card's subject matter, use case, or domain. " +
           'If no tag clearly fits the subject matter, select a Source/Origin tag as a fallback (From tag pools). ' +
@@ -608,6 +621,7 @@ export default class ListingCreateCommand extends Command<
   private async autoLinkCategory(
     listing: CardAPI.CardDef,
     codeRef: ResolvedCodeRef,
+    displayName: string,
   ) {
     const catalogRealm = await this.getCatalogRealm();
     const selected = await this.chooseCards(
@@ -621,6 +635,7 @@ export default class ListingCreateCommand extends Command<
       {
         max: 1,
         additionalSystemPrompt:
+          `The card type being categorized is "${displayName}". ` +
           'You are selecting from an existing list of catalog categories. ' +
           "Choose the most specific descriptive category that matches the card's main purpose. " +
           'Return [] if no category clearly fits.',
@@ -631,20 +646,20 @@ export default class ListingCreateCommand extends Command<
 
   private async autoGenerateThumbnail(
     listing: CardAPI.CardDef,
-    codeRef: ResolvedCodeRef,
+    displayName: string,
     targetRealm: string,
   ) {
     if (!listing.id) {
       return;
     }
-    const prompt = `Create a square thumbnail for "${codeRef.name}". Top 70%: large centered flat icon (simple, bold, minimal, slightly angled/layered if needed). Bottom 30%: "${codeRef.name}" in big, bold, uppercase sans-serif text. Style: flat vector, solid vivid background, 2–3 colors max. Icon should be white or light-colored, clean geometric shapes, highly recognizable. No gradients, no shadows, no borders, no clutter. Must be clear at small sizes.`;
+    const prompt = `Create a square thumbnail for "${displayName}". Top 70%: large centered flat icon (simple, bold, minimal, slightly angled/layered if needed). Bottom 30%: "${displayName}" in big, bold, uppercase sans-serif text. Style: flat vector, solid vivid background, 2–3 colors max. Icon should be white or light-colored, clean geometric shapes, highly recognizable. No gradients, no shadows, no borders, no clutter. Must be clear at small sizes.`;
 
     await new GenerateThumbnailCommand(this.commandContext).execute({
       prompt,
       targetRealmIdentifier: targetRealm,
       targetPath: 'ListingThumbnails',
       targetCardId: listing.id,
-      cardName: codeRef.name,
+      cardName: displayName,
     });
   }
 
