@@ -1,0 +1,73 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "../../../catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "QR Code",
+      "summary": "The QR Code field provides a way to generate customizable QR codes within a card. It encodes string data into a scannable QR image, with configurable foreground and background colors and margin spacing. The field supports both isolated and embedded display modes for integration into card layouts. Its primary purpose is to render dynamic QR codes based on provided data, facilitating quick access or sharing of encoded information within a cardstack application.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../../Tag/field"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../../../Spec/fields/qr-code-field"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../../Category/api-integration"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/qr-code-6ade8630.png"
+        }
+      }
+    }
+  }
+}

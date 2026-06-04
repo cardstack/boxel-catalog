@@ -1,0 +1,73 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "../../../catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Geo Point",
+      "summary": "The default export defines a Geo Point field type for use within card-based data models. It enables capturing geographic coordinates (latitude and longitude) and provides components for viewing, editing, and embedding geo points. The field supports various display and interaction modes, including standard and map picker variants, with optional map customization. Its primary purpose is to facilitate intuitive geographic location input and display within cardstack applications.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../../Tag/field"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../../../Spec/field-spec/geo-point-field-spec"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../../Category/maps-navigation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/geo-point-95868bd5.png"
+        }
+      }
+    }
+  }
+}

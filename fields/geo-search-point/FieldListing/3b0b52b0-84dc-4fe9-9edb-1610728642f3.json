@@ -1,0 +1,73 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "../../../catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": null,
+      "summary": "The Geo Search Point field allows for capturing and displaying geographic locations with optional search capabilities. It supports rendering a map picker interface for selecting locations and displays search result options if enabled. The field can show a search key label or coordinate-based name, and provides components for editing, embedded display, and atom-style inline presentation. Its primary purpose is to facilitate geolocation data entry and visualization within a card-based system.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../../Tag/field"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../../../Spec/field-spec/geo-search-point-field-spec"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../../Category/maps-navigation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/geo-search-0966d80b.png"
+        }
+      }
+    }
+  }
+}

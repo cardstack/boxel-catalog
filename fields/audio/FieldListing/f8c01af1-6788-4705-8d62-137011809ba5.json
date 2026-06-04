@@ -1,0 +1,73 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "../../../catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Audio",
+      "summary": "The default export defines an Audio field type for use in card-based interfaces, representing audio files with associated metadata and various presentation styles. It manages linked audio file data, including URL, filename, MIME type, size, duration, and optional metadata like title and artist. The component provides multiple embedded presentation styles, such as waveform, mini, album cover, trim editor, and playlist row, as well as a standard embedded player with controls for play, pause, seek, volume, speed, and looping. It also includes a concise representation for use as an atom. Its primary purpose is to enable rich, customizable audio playback and metadata display within card interfaces.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../../Tag/field"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../../../Spec/field-spec/audio-field-spec"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../../Category/content-creation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/audio-b736c46f.png"
+        }
+      }
+    }
+  }
+}
