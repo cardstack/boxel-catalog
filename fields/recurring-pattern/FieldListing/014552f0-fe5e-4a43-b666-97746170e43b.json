@@ -40,7 +40,12 @@
       },
       "specs.0": {
         "links": {
-          "self": "../../../Spec/field-spec/recurring-pattern-field-spec"
+          "self": "../Spec/recurring-pattern-field-spec"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
         }
       },
       "examples": {

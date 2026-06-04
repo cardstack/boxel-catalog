@@ -8,8 +8,8 @@
     },
     "type": "card",
     "attributes": {
-      "name": "Avatar",
-      "summary": "The Avatar field defines a customizable avatar component for user representation, allowing selection of hair style, accessories, hair color, facial hair, clothing, eye type, eyebrows, mouth, and skin color. It supports editing through an embedded template and generates a thumbnail URL based on selected attributes. Its primary purpose is to enable users to create and display personalized avatar images within applications.",
+      "name": "Slider",
+      "summary": "The Slider Number Field provides a user interface component for selecting numerical values via a slider control. It supports customization options such as minimum and maximum bounds, decimal precision, and display prefixes or suffixes. The field offers visual feedback through inline display, progress bars, and optional value labels, enabling intuitive and adjustable input for numerical data within forms or interfaces. It includes embedded, atom, and editable variations to accommodate different presentation contexts.",
       "cardInfo": {
         "name": null,
         "notes": null,
@@ -38,6 +38,11 @@
           "self": null
         }
       },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/slider-field-spec"
+        }
+      },
       "examples": {
         "links": {
           "self": null
@@ -50,7 +55,7 @@
       },
       "categories.0": {
         "links": {
-          "self": "../../../Category/social-networking"
+          "self": "../../../Category/ui-components-design"
         }
       },
       "cardInfo.theme": {
@@ -60,27 +65,7 @@
       },
       "cardInfo.cardThumbnail": {
         "links": {
-          "self": "../ListingThumbnails/avatar-cd224588.png"
-        }
-      },
-      "specs.0": {
-        "links": {
-          "self": "../Spec/avatar-field"
-        }
-      },
-      "specs.1": {
-        "links": {
-          "self": "../Spec/avatar"
-        }
-      },
-      "specs.2": {
-        "links": {
-          "self": "../Spec/avataar"
-        }
-      },
-      "specs.3": {
-        "links": {
-          "self": "../../../Spec/suggest-avatar"
+          "self": "../ListingThumbnails/slider-number-c603297c.png"
         }
       }
     }

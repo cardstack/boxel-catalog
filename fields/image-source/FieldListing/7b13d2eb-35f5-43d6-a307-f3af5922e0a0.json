@@ -40,7 +40,17 @@
       },
       "specs.0": {
         "links": {
-          "self": "../../../Spec/fields/image-source-field"
+          "self": "../Spec/image-source-field"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/image-source-editor"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/utils"
         }
       },
       "examples": {

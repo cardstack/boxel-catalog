@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Contact Link Field\n\nA field that captures a contact link (email, phone, or URL) and renders an appropriate icon plus a click-through action.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport ContactLinkField from '@cardstack/catalog/fields/contact-link/contact-link';\n\nexport class Example extends CardDef {\n  @field contact = contains(ContactLinkField);\n}\n```\n",
+      "ref": {
+        "name": "default",
+        "module": "../contact-link"
+      },
+      "specType": "field",
+      "containedExamples": [],
+      "cardTitle": "Contact Link Field",
+      "cardDescription": "A field that captures a contact link (email, phone, or URL) and renders an appropriate icon plus a click-through action.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

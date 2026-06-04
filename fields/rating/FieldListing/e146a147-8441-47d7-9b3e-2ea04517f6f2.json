@@ -40,7 +40,12 @@
       },
       "specs.0": {
         "links": {
-          "self": "../../../Spec/field-spec/rating-field-spec"
+          "self": "../Spec/rating-field-spec"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
         }
       },
       "examples": {

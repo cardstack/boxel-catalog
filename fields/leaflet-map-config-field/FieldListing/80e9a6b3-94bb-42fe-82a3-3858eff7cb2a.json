@@ -40,7 +40,7 @@
       },
       "specs.0": {
         "links": {
-          "self": "../../../Spec/fields/leaflet-map-config-field"
+          "self": "../Spec/leaflet-map-config-field"
         }
       },
       "examples": {

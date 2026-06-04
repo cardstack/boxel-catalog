@@ -1,0 +1,55 @@
+{
+  "data": {
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "name": "default",
+              "module": "../leaflet-map-config-field"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../leaflet-map-config-field"
+      },
+      "readMe": "## Leaflet Map Config Field\n\nA field that captures Leaflet map configuration (tile-server URL, attribution, and default zoom / center).\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport LeafletMapConfigField from '@cardstack/catalog/fields/leaflet-map-config-field/leaflet-map-config-field';\n\nexport class Example extends CardDef {\n  @field mapConfig = contains(LeafletMapConfigField);\n}\n```\n",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Leaflet Map Config Field",
+      "cardDescription": "A field that captures Leaflet map configuration (tile-server URL, attribution, and default zoom / center).",
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

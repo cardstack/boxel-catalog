@@ -38,11 +38,6 @@
           "self": null
         }
       },
-      "specs.0": {
-        "links": {
-          "self": "../../../Spec/field-spec/audio-field-spec"
-        }
-      },
       "examples": {
         "links": {
           "self": null
@@ -66,6 +61,61 @@
       "cardInfo.cardThumbnail": {
         "links": {
           "self": "../ListingThumbnails/audio-b736c46f.png"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/audio-field-spec"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/album-cover-player"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/audio-time-display"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/base-audio-player"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/mini-player"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/playlist-row"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/trim-editor"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/volume-control"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/waveform-player"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/waveform-visualizer"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
         }
       }
     }

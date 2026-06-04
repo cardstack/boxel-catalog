@@ -40,7 +40,47 @@
       },
       "specs.0": {
         "links": {
-          "self": "../../../Spec/field-spec/geo-point-field-spec"
+          "self": "../Spec/geo-point-field-spec"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/current-location-addon"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/geo-point-coordinate-input"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/geo-point-edit-field"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/geo-point-map-picker"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/quick-locations-addon"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/util"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../../../Spec/map-render"
         }
       },
       "examples": {

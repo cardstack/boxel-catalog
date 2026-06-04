@@ -38,11 +38,6 @@
           "self": null
         }
       },
-      "specs.0": {
-        "links": {
-          "self": "../../../Spec/fields/contact-link-field"
-        }
-      },
       "examples": {
         "links": {
           "self": null
@@ -66,6 +61,11 @@
       "cardInfo.cardThumbnail": {
         "links": {
           "self": "../ListingThumbnails/contact-link-5c7037b5.png"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/contact-link-field"
         }
       }
     }

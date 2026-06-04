@@ -38,11 +38,6 @@
           "self": null
         }
       },
-      "specs.0": {
-        "links": {
-          "self": "../../../Spec/fields/qr-code-field"
-        }
-      },
       "examples": {
         "links": {
           "self": null
@@ -66,6 +61,11 @@
       "cardInfo.cardThumbnail": {
         "links": {
           "self": "../ListingThumbnails/qr-code-6ade8630.png"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/qr-code-field"
         }
       }
     }

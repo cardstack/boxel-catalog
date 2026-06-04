@@ -40,7 +40,12 @@
       },
       "specs.0": {
         "links": {
-          "self": "../../../Spec/fields/discrete-range-field"
+          "self": "../Spec/discrete-range-field"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../../Spec/step-range-scroller"
         }
       },
       "examples": {

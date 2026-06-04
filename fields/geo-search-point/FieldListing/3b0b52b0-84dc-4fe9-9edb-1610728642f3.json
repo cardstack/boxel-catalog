@@ -40,7 +40,77 @@
       },
       "specs.0": {
         "links": {
-          "self": "../../../Spec/field-spec/geo-search-point-field-spec"
+          "self": "../Spec/geo-search-point-field-spec"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/geo-search-address-input"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/geo-search-point-edit-field"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/geo-search-recent-searches-addon"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/geo-search-top-results-addon"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/util"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../../../Spec/map-render"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../../geo-point/Spec/geo-point-field-spec"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../../geo-point/Spec/current-location-addon"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../../geo-point/Spec/geo-point-coordinate-input"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../../geo-point/Spec/geo-point-edit-field"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../../geo-point/Spec/geo-point-map-picker"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../../geo-point/Spec/quick-locations-addon"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../../geo-point/Spec/util"
         }
       },
       "examples": {
