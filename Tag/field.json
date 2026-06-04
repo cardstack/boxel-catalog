@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Field",
+      "color": "#10B981",
+      "cardInfo": {
+        "notes": null,
+        "name": "Field",
+        "summary": "Reusable field types that capture a single piece of structured data, such as audio, color, address, or rating.",
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../catalog-app/listing/tag",
+        "name": "Tag"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
