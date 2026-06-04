@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "CardListing",
-        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+        "module": "../../catalog-app/listing/listing"
       }
     },
     "type": "card",
@@ -25,7 +25,7 @@
       },
       "tags.0": {
         "links": {
-          "self": "https://app.boxel.ai/catalog/Tag/card"
+          "self": "../../Tag/card"
         }
       },
       "license": {
@@ -90,7 +90,7 @@
       },
       "categories.0": {
         "links": {
-          "self": "https://app.boxel.ai/catalog/Category/food-cooking"
+          "self": "../../Category/food-cooking"
         }
       },
       "cardInfo.theme": {

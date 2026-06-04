@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "CardListing",
-        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+        "module": "../../catalog-app/listing/listing"
       }
     },
     "type": "card",
@@ -18,14 +18,9 @@
       }
     },
     "relationships": {
-      "skills.0": {
-        "links": {
-          "self": "../Skill/dc116967-432e-4864-93aa-d7ea3f335d24"
-        }
-      },
       "tags.0": {
         "links": {
-          "self": "https://app.boxel.ai/catalog/Tag/ai"
+          "self": "../../Tag/ai"
         }
       },
       "license": {
@@ -53,6 +48,11 @@
           "self": "../Screenshots/homework-grader-screenshot.png"
         }
       },
+      "skills.0": {
+        "links": {
+          "self": "../Skill/dc116967-432e-4864-93aa-d7ea3f335d24"
+        }
+      },
       "publisher": {
         "links": {
           "self": null
@@ -70,7 +70,7 @@
       },
       "categories.0": {
         "links": {
-          "self": "https://app.boxel.ai/catalog/Category/education-courses"
+          "self": "../../Category/education-courses"
         }
       },
       "cardInfo.theme": {
