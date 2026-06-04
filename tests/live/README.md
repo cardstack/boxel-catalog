@@ -62,12 +62,12 @@ so junit reports stay readable across the wider repo:
 
 | Location                  | Ember setup              | Module prefix                | Test type meaning                                  |
 | ------------------------- | ------------------------ | ---------------------------- | -------------------------------------------------- |
-| `fields/<name>.test.gts`  | `setupRenderingTest`     | `Rendering \| …`             | Renders a single field component                   |
+| `fields/<name>/<name>.test.gts`  | `setupRenderingTest`     | `Rendering \| …`             | Renders a single field component                   |
 | `tests/live/catalog-app/` | `setupApplicationTest`   | `Acceptance \| Catalog \| …` | Full user flow against the running app             |
 
 | Item               | Pattern                                    | Example                                   |
 | ------------------ | ------------------------------------------ | ----------------------------------------- |
-| Field test file    | `fields/<source-filename>.test.gts`        | `fields/slider.test.gts`, `fields/discrete-range-field.test.gts` |
+| Field test file    | `fields/<source-filename>/<source-filename>.test.gts`        | `fields/slider/slider.test.gts`, `fields/discrete-range-field/discrete-range-field.test.gts` |
 | Field module       | `Rendering \| <field-kebab> fields`        | `Rendering \| qr-code fields`             |
 | Field test name    | `<field-kebab> field <action> <details>`   | `qr-code field renders embedded view with data` |
 | App module         | `Acceptance \| Catalog \| <feature>`       | `Acceptance \| Catalog \| catalog app - listing create` |

@@ -6,7 +6,7 @@ import { or } from '@cardstack/boxel-ui/helpers';
 import { MapRender, type Coordinate } from '../../../components/map-render';
 import { hasValidCoordinates, formatCoordinates } from '../util/index';
 import type { GeoModel } from '../util/index';
-import type { GeoPointMapOptions } from '../../geo-point';
+import type { GeoPointMapOptions } from '../geo-point';
 
 interface MapPickerSignature {
   Args: {

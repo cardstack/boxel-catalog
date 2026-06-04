@@ -6,7 +6,7 @@ import StringField from 'https://cardstack.com/base/string';
 import { JsonField } from 'https://cardstack.com/base/commands/search-card-result';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { FileContentField } from '../fields/file-content';
+import { FileContentField } from '../fields/file-content/file-content';
 import { PrCard } from '../pr-card/pr-card';
 
 class CreatePrCardInput extends CardDef {

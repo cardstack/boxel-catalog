@@ -1,0 +1,143 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "../../../catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Geo Search Point",
+      "summary": "The Geo Search Point field allows for capturing and displaying geographic locations with optional search capabilities. It supports rendering a map picker interface for selecting locations and displays search result options if enabled. The field can show a search key label or coordinate-based name, and provides components for editing, embedded display, and atom-style inline presentation. Its primary purpose is to facilitate geolocation data entry and visualization within a card-based system.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../../Tag/field"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/geo-search-point-field-spec"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/geo-search-address-input"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/geo-search-point-edit-field"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/geo-search-recent-searches-addon"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/geo-search-top-results-addon"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/util"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../../../Spec/map-render"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../../geo-point/Spec/geo-point-field-spec"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../../geo-point/Spec/current-location-addon"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../../geo-point/Spec/geo-point-coordinate-input"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../../geo-point/Spec/geo-point-edit-field"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../../geo-point/Spec/geo-point-map-picker"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../../geo-point/Spec/quick-locations-addon"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../../geo-point/Spec/util"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../../Category/maps-navigation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/geo-search-0966d80b.png"
+        }
+      }
+    }
+  }
+}

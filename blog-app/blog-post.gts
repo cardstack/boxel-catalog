@@ -175,7 +175,7 @@ import { BlogCategory, categoryStyle } from './blog-category';
 const formatDatetime = (datetime: Date, opts: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat('en-US', opts).format(datetime);
 import { User } from './user';
-import FeaturedImageField from '../fields/featured-image';
+import FeaturedImageField from '../fields/featured-image/featured-image';
 
 class EmbeddedTemplate extends Component<typeof BlogPost> {
   <template>

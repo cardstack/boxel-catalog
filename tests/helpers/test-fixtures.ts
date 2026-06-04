@@ -104,7 +104,7 @@ export function makeMockCatalogContents(
   return {
     'author/author.gts': authorCardSource,
     'blog-post/blog-post.gts': blogPostCardSource,
-    'fields/contact-link.gts': contactLinkFieldSource,
+    'fields/contact-link/contact-link.gts': contactLinkFieldSource,
     'app-card.gts': appCardSource,
     'blog-app/blog-app.gts': blogAppCardSource,
     'card-with-unrecognised-imports.gts': cardWithUnrecognisedImports,
@@ -299,7 +299,7 @@ export function makeMockCatalogContents(
         attributes: {
           ref: {
             name: 'ContactLink',
-            module: `${mockCatalogURL}fields/contact-link`,
+            module: `${mockCatalogURL}fields/contact-link/contact-link`,
           },
         },
         specType: 'field',

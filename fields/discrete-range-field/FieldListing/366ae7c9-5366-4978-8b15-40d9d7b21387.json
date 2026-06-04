@@ -1,0 +1,78 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "../../../catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Discrete Range Field",
+      "summary": "The Discrete Range definition creates a field component for selecting and displaying a range of numeric values with discrete steps. Its primary purpose is to enable users to specify a start and end value within defined minimum and maximum bounds, using interval steps. It provides an editing interface with a step range scroller for user interaction and a styled embedded view for displaying the selected range. This component is useful for capturing ranges of numerical data in a clear and constrained manner.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../../Tag/field"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/discrete-range-field"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../../Spec/step-range-scroller"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../../Category/ui-components-design"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/discrete-range-51da4717.png"
+        }
+      }
+    }
+  }
+}

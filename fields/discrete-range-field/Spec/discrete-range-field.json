@@ -1,0 +1,63 @@
+{
+  "data": {
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../discrete-range-field",
+              "name": "default"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../discrete-range-field"
+      },
+      "readMe": "## Discrete Range Field\n\nA field that captures a numeric value within a fixed discrete range (min, max, and step).\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport DiscreteRangeField from '@cardstack/catalog/fields/discrete-range-field/discrete-range-field';\n\nexport class Example extends CardDef {\n  @field range = contains(DiscreteRangeField);\n}\n```\n",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Discrete Range Field",
+      "cardDescription": "A field that captures a numeric value within a fixed discrete range (min, max, and step).",
+      "containedExamples": [
+        {
+          "startValue": 1950,
+          "endValue": 1990,
+          "min": null,
+          "max": null,
+          "interval": null
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

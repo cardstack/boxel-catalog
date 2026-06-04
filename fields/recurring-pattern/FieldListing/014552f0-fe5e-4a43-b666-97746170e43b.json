@@ -1,0 +1,78 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "../../../catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Recurring Pattern",
+      "summary": "The recurring pattern definition specifies a field type for modeling repeating events or tasks with various recurrence patterns such as daily, weekly, monthly, or yearly. It allows configuring start and end dates, recurrence intervals, specific days of the week or month, and custom rules. The associated UI components facilitate selecting patterns, defining recurrence details, and providing summaries, supporting flexible and user-friendly configuration of recurring schedules.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../../Tag/field"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/recurring-pattern-field-spec"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../../Category/project-management"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/recurring-pattern-199872d3.png"
+        }
+      }
+    }
+  }
+}
