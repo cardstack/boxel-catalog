@@ -716,6 +716,10 @@ export class ThemeListing extends Listing {
   static displayName = 'ThemeListing';
 }
 
+export class ComponentListing extends Listing {
+  static displayName = 'ComponentListing';
+}
+
 function specBreakdown(specs: Spec[]): Record<string, Spec[]> {
   return specs.reduce(
     (groupedSpecs, spec) => {

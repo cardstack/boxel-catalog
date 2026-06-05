@@ -42,6 +42,7 @@ const catalogRealmAuthorListingId = `${catalogRealmMockURL}Listing/author`;
 const personListingId = `${nonCatalogRealmURL}Listing/person`;
 const emptyListingId = `${nonCatalogRealmURL}Listing/empty`;
 const pirateSkillListingId = `${nonCatalogRealmURL}SkillListing/pirate-skill`;
+const buttonComponentListingId = `${nonCatalogRealmURL}ComponentListing/button-component`;
 const incompleteSkillListingId = `${nonCatalogRealmURL}Listing/incomplete-skill`;
 //tags
 const calculatorTagId = `${nonCatalogRealmURL}Tag/calculator`;
@@ -508,6 +509,18 @@ export function runTests() {
               .exists(`"All Cards" button should exist`)
               .hasClass('is-selected');
             assert.dom('[data-test-boxel-radio-option-id="grid"]').exists();
+          });
+
+          test('switch to components tab shows ComponentListing cards', async function (assert) {
+            await selectTab('Components');
+            await waitForGrid();
+            await waitForCardOnGrid(
+              buttonComponentListingId,
+              'Button Component',
+            );
+            assert
+              .dom(`[data-test-cards-grid-item="${buttonComponentListingId}"]`)
+              .exists('Component listing appears in Components tab');
           });
         });
 
