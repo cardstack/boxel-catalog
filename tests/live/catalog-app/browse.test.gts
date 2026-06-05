@@ -42,7 +42,6 @@ const catalogRealmAuthorListingId = `${catalogRealmMockURL}Listing/author`;
 const personListingId = `${nonCatalogRealmURL}Listing/person`;
 const emptyListingId = `${nonCatalogRealmURL}Listing/empty`;
 const pirateSkillListingId = `${nonCatalogRealmURL}SkillListing/pirate-skill`;
-const buttonComponentListingId = `${nonCatalogRealmURL}ComponentListing/button-component`;
 const incompleteSkillListingId = `${nonCatalogRealmURL}Listing/incomplete-skill`;
 //tags
 const calculatorTagId = `${nonCatalogRealmURL}Tag/calculator`;
