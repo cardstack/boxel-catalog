@@ -135,6 +135,10 @@ class Isolated extends Component<typeof Catalog> {
       displayName: 'Skills',
     },
     {
+      tabId: 'component',
+      displayName: 'Components',
+    },
+    {
       tabId: 'theme',
       displayName: 'Themes',
     },
