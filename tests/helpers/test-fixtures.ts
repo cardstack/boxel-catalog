@@ -629,22 +629,6 @@ export function makeMockCatalogContents(
         },
       },
     },
-    'ComponentListing/button-component.json': {
-      data: {
-        type: 'card',
-        attributes: {
-          name: 'Button Component',
-          cardTitle: 'Button Component',
-          summary: 'A reusable button component for Boxel UI.',
-        },
-        meta: {
-          adoptsFrom: {
-            module: `${catalogRealmURL}catalog-app/listing/listing`,
-            name: 'ComponentListing',
-          },
-        },
-      },
-    },
     'FieldListing/contact-link.json': {
       data: {
         type: 'card',

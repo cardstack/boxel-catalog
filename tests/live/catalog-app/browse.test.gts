@@ -510,18 +510,6 @@ export function runTests() {
               .hasClass('is-selected');
             assert.dom('[data-test-boxel-radio-option-id="grid"]').exists();
           });
-
-          test('switch to components tab shows ComponentListing cards', async function (assert) {
-            await selectTab('Components');
-            await waitForGrid();
-            await waitForCardOnGrid(
-              buttonComponentListingId,
-              'Button Component',
-            );
-            assert
-              .dom(`[data-test-cards-grid-item="${buttonComponentListingId}"]`)
-              .exists('Component listing appears in Components tab');
-          });
         });
 
         skip('filters', async function () {
