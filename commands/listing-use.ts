@@ -50,12 +50,20 @@ export default class ListingUseCommand extends Command<
     );
 
     const localDir = generateInstallFolderName(listing.name);
+    let virtualNetwork = getLoaderService(
+      this.commandContext,
+    ).loader.getVirtualNetwork()!;
 
     for (const spec of specsWithoutFields) {
       if (spec.isComponent) {
         return;
       }
-      let ref = codeRefWithAbsoluteIdentifier(spec.ref, rri(spec.id));
+      let ref = codeRefWithAbsoluteIdentifier(
+        spec.ref,
+        rri(spec.id),
+        undefined,
+        virtualNetwork,
+      );
       if (!isResolvedCodeRef(ref)) {
         throw new Error('ref is not a resolved code ref');
       }
