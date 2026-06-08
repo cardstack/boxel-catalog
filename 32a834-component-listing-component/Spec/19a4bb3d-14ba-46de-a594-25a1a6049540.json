@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ComponentListingComponent",
+        "module": "../component-listing"
+      },
+      "readMe": "**Summary:**\nThe `ComponentListingComponent` is a Glimmer component that displays a listing of Boxel UI components with a search functionality. It allows users to filter the components by name or description, and provides a visual status indicator for each component.\n\n**Import:**\n```gts\nimport Component from '@glimmer/component';\nimport { tracked } from '@glimmer/tracking';\nimport { on } from '@ember/modifier';\n```\n\n**Usage as a Field:**\nNot applicable, as this is a standalone Glimmer component and not a field within a card.\n\n**Template Usage:**\nTo use the `ComponentListingComponent` in a template, you can simply include it as follows:\n\n```hbs\n<ComponentListingComponent />\n```\n\nThis will render the component listing with the default set of components.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "component",
+      "cardTitle": "ComponentListingComponent",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
