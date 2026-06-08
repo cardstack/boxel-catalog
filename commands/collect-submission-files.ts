@@ -92,6 +92,9 @@ export default class CollectSubmissionFilesCommand extends Command<
     accessibleRealms: string[],
   ): Promise<FileWithContent[]> {
     let realmUrl = new RealmPaths(new URL(listingRealm)).url;
+    let virtualNetwork = getLoaderService(
+      this.commandContext,
+    ).loader.getVirtualNetwork()!;
     let getCardCommand = new GetCardCommand(this.commandContext);
     let readBinaryFileCommand = new ReadBinaryFileCommand(this.commandContext);
     let readSourceCommand = new ReadSourceCommand(this.commandContext);
@@ -114,7 +117,7 @@ export default class CollectSubmissionFilesCommand extends Command<
       fileDefUrls = expanded.fileDefUrls;
     }
 
-    const builder = new PlanBuilder(realmUrl, listing);
+    const builder = new PlanBuilder(realmUrl, listing, virtualNetwork);
 
     let knownRealmUrls = new Set<string>();
     knownRealmUrls.add(realmUrl);
@@ -130,16 +133,16 @@ export default class CollectSubmissionFilesCommand extends Command<
 
     builder
       .addIf(listing.specs?.length > 0, (resolver: ListingPathResolver) =>
-        planModuleInstall(listing.specs ?? [], resolver),
+        planModuleInstall(listing.specs ?? [], resolver, virtualNetwork),
       )
       .addIf(listing.specs?.length > 0, (resolver: ListingPathResolver) =>
-        planInstanceInstall(listing.specs ?? [], resolver),
+        planInstanceInstall(listing.specs ?? [], resolver, virtualNetwork),
       )
       .addIf(examplesToSnapshot?.length > 0, (resolver: ListingPathResolver) =>
-        planInstanceInstall(examplesToSnapshot ?? [], resolver),
+        planInstanceInstall(examplesToSnapshot ?? [], resolver, virtualNetwork),
       )
       .addIf(listing.skills?.length > 0, (resolver: ListingPathResolver) =>
-        planInstanceInstall(listing.skills ?? [], resolver),
+        planInstanceInstall(listing.skills ?? [], resolver, virtualNetwork),
       );
 
     const plan = builder.build();

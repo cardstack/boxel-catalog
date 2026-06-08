@@ -73,23 +73,30 @@ export default class ListingInstallCommand extends Command<
     let selectedCodeRef: ResolvedCodeRef | undefined;
     let skillCardId: string | undefined;
 
-    const builder = new PlanBuilder(realmUrl, listing);
+    let virtualNetwork = getLoaderService(
+      this.commandContext,
+    ).loader.getVirtualNetwork()!;
+    const builder = new PlanBuilder(realmUrl, listing, virtualNetwork);
 
     builder
       .addIf(listing.specs?.length > 0, (resolver: ListingPathResolver) => {
-        let r = planModuleInstall(listing.specs, resolver);
+        let r = planModuleInstall(listing.specs, resolver, virtualNetwork);
         selectedCodeRef = r.modulesCopy[0].targetCodeRef;
         return r;
       })
       .addIf(examplesToInstall?.length > 0, (resolver: ListingPathResolver) => {
-        let r = planInstanceInstall(examplesToInstall, resolver);
+        let r = planInstanceInstall(
+          examplesToInstall,
+          resolver,
+          virtualNetwork,
+        );
         let firstInstance = r.instancesCopy[0];
         exampleCardId = join(realmUrl, firstInstance.lid);
         selectedCodeRef = firstInstance.targetCodeRef;
         return r;
       })
       .addIf(listing.skills?.length > 0, (resolver: ListingPathResolver) => {
-        let r = planInstanceInstall(listing.skills, resolver);
+        let r = planInstanceInstall(listing.skills, resolver, virtualNetwork);
         skillCardId = join(realmUrl, r.instancesCopy[0].lid);
         return r;
       });
