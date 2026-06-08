@@ -3,10 +3,10 @@ import { waitFor, settled } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, skip, test } from 'qunit';
 
-import ListingCreateCommand from '@cardstack/boxel-host/commands/listing-create';
-import ListingInstallCommand from '@cardstack/boxel-host/commands/listing-install';
-import ListingRemixCommand from '@cardstack/boxel-host/commands/listing-remix';
-import ListingUseCommand from '@cardstack/boxel-host/commands/listing-use';
+import ListingCreateCommand from '@cardstack/catalog/commands/listing-create';
+import ListingInstallCommand from '@cardstack/catalog/commands/listing-install';
+import ListingRemixCommand from '@cardstack/catalog/commands/listing-remix';
+import ListingUseCommand from '@cardstack/catalog/commands/listing-use';
 
 import { rri } from '@cardstack/runtime-common';
 

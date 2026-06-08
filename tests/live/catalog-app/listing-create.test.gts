@@ -3,7 +3,7 @@ import { waitFor } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, skip } from 'qunit';
 
-import ListingCreateCommand from '@cardstack/boxel-host/commands/listing-create';
+import ListingCreateCommand from '@cardstack/catalog/commands/listing-create';
 
 import { rri } from '@cardstack/runtime-common';
 

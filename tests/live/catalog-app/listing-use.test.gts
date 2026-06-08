@@ -1,7 +1,7 @@
 import { getService } from '@universal-ember/test-support';
 import { module, skip } from 'qunit';
 
-import ListingUseCommand from '@cardstack/boxel-host/commands/listing-use';
+import ListingUseCommand from '@cardstack/catalog/commands/listing-use';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 
