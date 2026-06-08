@@ -1,0 +1,21 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Performance",
+      "color": "#ec4899",
+      "cardInfo": {
+        "name": "Performance",
+        "summary": "Theater, concerts, dance, and live shows — ticketed performances and cultural events to schedule around their start times.",
+        "cardThumbnailURL": "https://images.pexels.com/photos/167636/pexels-photo-167636.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/travel-itinerary",
+        "name": "TripItineraryCategory"
+      }
+    }
+  }
+}

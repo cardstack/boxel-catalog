@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Food & Dining",
+      "color": "#F97316",
+      "cardInfo": {
+        "name": "Food & Dining",
+        "summary": "Restaurants, street food, and local cuisine",
+        "cardThumbnailURL": "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": { "self": "https://cardstack.com/base/Theme/cardstack-brand-guide" }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../travel-itinerary",
+        "name": "TripItineraryCategory"
+      }
+    }
+  }
+}

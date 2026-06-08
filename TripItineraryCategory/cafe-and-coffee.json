@@ -1,0 +1,21 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Caf\u00e9 & Coffee",
+      "color": "#b45309",
+      "cardInfo": {
+        "name": "Caf\u00e9 & Coffee",
+        "summary": "Coffee shops, tea houses, and cozy caf\u00e9s \u2014 perfect spots for a break, a light bite, or people-watching between activities.",
+        "cardThumbnailURL": "https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/travel-itinerary",
+        "name": "TripItineraryCategory"
+      }
+    }
+  }
+}

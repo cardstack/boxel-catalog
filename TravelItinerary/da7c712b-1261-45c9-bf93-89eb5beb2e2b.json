@@ -1,0 +1,171 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TravelItinerary",
+        "module": "../travel-itinerary"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "stops": [
+        {
+          "location": {
+            "searchKey": "Yanaka Ginza, Tokyo",
+            "lat": 35.7264,
+            "lon": 139.7704
+          },
+          "day": 1,
+          "startTime": {
+            "value": "09:00"
+          },
+          "endTime": {
+            "value": "10:00"
+          },
+          "notes": "Stroll the charming old-town shopping street that survived WWII. Browse local shops, try menchi-katsu, and soak in the Showa-era atmosphere. Arrive early to beat the heat."
+        },
+        {
+          "location": {
+            "searchKey": "Kayaba Coffee, Yanaka, Tokyo",
+            "lat": 35.7221,
+            "lon": 139.7651
+          },
+          "day": 1,
+          "startTime": {
+            "value": "10:15"
+          },
+          "endTime": {
+            "value": "11:30"
+          },
+          "notes": "A beloved retro kissaten that has been serving coffee since 1938. Order the morning set (toast + egg) with a pour-over. Cash only — arrive before 11:30 to secure a seat."
+        },
+        {
+          "location": {
+            "searchKey": "Tokyo National Museum, Ueno",
+            "lat": 35.7188,
+            "lon": 139.7764
+          },
+          "day": 1,
+          "startTime": {
+            "value": "12:00"
+          },
+          "endTime": {
+            "value": "14:00"
+          },
+          "notes": "Japan's oldest and largest museum. Head to the Honkan (Japanese Gallery) for samurai armour, ceramics, and ukiyo-e woodblock prints. Pre-book tickets online to skip queues."
+        },
+        {
+          "location": {
+            "searchKey": "Nezu Shrine, Tokyo",
+            "lat": 35.7215,
+            "lon": 139.7598
+          },
+          "day": 2,
+          "startTime": {
+            "value": "09:00"
+          },
+          "endTime": {
+            "value": "10:00"
+          },
+          "notes": "A quiet alternative to Fushimi Inari — dozens of torii gates wind through a hillside garden. Arrive early for a serene atmosphere before tour groups arrive. Free entry."
+        },
+        {
+          "location": {
+            "searchKey": "Nezu no Taiyaki, Tokyo",
+            "lat": 35.7208,
+            "lon": 139.7612
+          },
+          "day": 2,
+          "startTime": {
+            "value": "10:30"
+          },
+          "endTime": {
+            "value": "11:30"
+          },
+          "notes": "A charming neighbourhood café and traditional snack stop near Nezu Shrine. Try a freshly grilled taiyaki (fish-shaped cake) with matcha or a light coffee. Perfect post-shrine pit stop."
+        },
+        {
+          "location": {
+            "searchKey": "Senso-ji Temple, Asakusa, Tokyo",
+            "lat": 35.7148,
+            "lon": 139.7967
+          },
+          "day": 2,
+          "startTime": {
+            "value": "12:30"
+          },
+          "endTime": {
+            "value": "14:30"
+          },
+          "notes": "Tokyo's oldest Buddhist temple and most iconic landmark. Walk the full Nakamise shopping arcade for souvenirs, draw an omikuji fortune slip, and explore the five-storey pagoda. Go slightly off the main path to avoid crowds."
+        }
+      ],
+      "cardInfo": {
+        "name": "Tokyo (2 days)",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "dateRange": {
+        "end": "2026-07-02",
+        "start": "2026-07-01"
+      },
+      "tripTitle": "Tokyo (2 days)",
+      "destination": {
+        "lat": 35.6762,
+        "lon": 139.6503,
+        "searchKey": "Tokyo, Japan"
+      },
+      "shareTripCode": {
+        "data": "https://localhost:4201/catalog/TravelItinerary/da7c712b-1261-45c9-bf93-89eb5beb2e2b.json"
+      }
+    },
+    "relationships": {
+      "planSkill": {
+        "links": {
+          "self": "../Skill/itinerary-planner-skill"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "stops.0.category": {
+        "links": {
+          "self": null
+        }
+      },
+      "stops.1.category": {
+        "links": {
+          "self": null
+        }
+      },
+      "stops.2.category": {
+        "links": {
+          "self": null
+        }
+      },
+      "stops.3.category": {
+        "links": {
+          "self": null
+        }
+      },
+      "stops.4.category": {
+        "links": {
+          "self": null
+        }
+      },
+      "stops.5.category": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

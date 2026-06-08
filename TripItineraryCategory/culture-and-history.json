@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Culture & History",
+      "color": "#7C3AED",
+      "cardInfo": {
+        "name": "Culture & History",
+        "summary": "Temples, shrines, museums, and historical sites",
+        "cardThumbnailURL": "https://images.pexels.com/photos/2225442/pexels-photo-2225442.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": { "self": "https://cardstack.com/base/Theme/cardstack-brand-guide" }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../travel-itinerary",
+        "name": "TripItineraryCategory"
+      }
+    }
+  }
+}
