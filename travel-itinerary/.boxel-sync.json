@@ -1,0 +1,35 @@
+{
+  "realmUrl": "https://app.boxel.ai/lucas/travel-itinerary/",
+  "files": {
+    "ItineraryCategory/cafe-and-coffee.json": "951d6667cc47a348a9ea275dcca52377",
+    "ItineraryCategory/culture-and-history.json": "f8c2425bc78f7d1bc52bf0529205fe09",
+    "ItineraryCategory/food-and-dining.json": "6f4c3b3edcd092938396f243880cfb7d",
+    "ItineraryCategory/museum.json": "04fcda28f21066507e6a55505986d035",
+    "ItineraryCategory/nature-and-outdoors.json": "f5386338fa66305895e1bd6729f5f807",
+    "ItineraryCategory/nightlife.json": "cad0aa602dde0a5d013d90df70e8434e",
+    "ItineraryCategory/performance.json": "dcc998f779c3be48941cc013727ae438",
+    "ItineraryCategory/relaxation.json": "a59e5da37792a0aacafa7de9ad378b4a",
+    "ItineraryCategory/shopping.json": "afb10abf5dc877ccd3d3e3340c230053",
+    "ItineraryCategory/sightseeing.json": "6848bec57602eabfbd17e5975e3f29a8",
+    "TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json": "b6935a9fdbf846a72c0f125fa393669c",
+    "TravelItinerary/da7c712b-1261-45c9-bf93-89eb5beb2e2b.json": "4b7e6f771f7608b19fc7033d0b049b78",
+    "travel-itinerary.gts": "aa7316e9122e3d061f2db41fa619fe3a",
+    "Skill/itinerary-planner-skill.json": "2ad2e89db68bc4f3453b38d55712b6ec"
+  },
+  "remoteMtimes": {
+    "ItineraryCategory/cafe-and-coffee.json": 1781012454,
+    "ItineraryCategory/culture-and-history.json": 1781012454,
+    "ItineraryCategory/food-and-dining.json": 1781012454,
+    "ItineraryCategory/museum.json": 1781012454,
+    "ItineraryCategory/nature-and-outdoors.json": 1781012454,
+    "ItineraryCategory/nightlife.json": 1781012454,
+    "ItineraryCategory/performance.json": 1781012454,
+    "ItineraryCategory/relaxation.json": 1781012454,
+    "ItineraryCategory/shopping.json": 1781012454,
+    "ItineraryCategory/sightseeing.json": 1781012454,
+    "TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json": 1781012455,
+    "TravelItinerary/da7c712b-1261-45c9-bf93-89eb5beb2e2b.json": 1781012455,
+    "travel-itinerary.gts": 1781012452,
+    "Skill/itinerary-planner-skill.json": 1781012455
+  }
+}

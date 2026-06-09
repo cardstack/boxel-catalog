@@ -1,0 +1,50 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TravelItinerary",
+        "module": "../travel-itinerary/travel-itinerary"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "stops": [],
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "dateRange": {
+        "end": null,
+        "start": null
+      },
+      "tripTitle": null,
+      "destination": {
+        "lat": null,
+        "lon": null,
+        "searchKey": null
+      },
+      "shareTripCode": {
+        "data": null
+      }
+    },
+    "relationships": {
+      "planSkill": {
+        "links": {
+          "self": "../Skill/itinerary-planner-skill"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

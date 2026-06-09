@@ -2,19 +2,19 @@
   "data": {
     "meta": {
       "adoptsFrom": {
-        "name": "TripItineraryCategory",
+        "name": "ItineraryCategory",
         "module": "../travel-itinerary"
       }
     },
     "type": "card",
     "attributes": {
-      "name": "Nightlife",
-      "color": "#6366f1",
+      "name": "Nature & Outdoors",
+      "color": "#16a34a",
       "cardInfo": {
-        "name": "Nightlife",
+        "name": "Nature & Outdoors",
         "notes": null,
-        "summary": "Bars, clubs, live music, and late-night spots — where to go after dark for drinks, dancing, and evening entertainment.",
-        "cardThumbnailURL": "https://images.pexels.com/photos/274192/pexels-photo-274192.jpeg?auto=compress&cs=tinysrgb&w=1200"
+        "summary": "Parks, trails, gardens, beaches, and scenic overlooks — outdoor adventures and natural landscapes to experience on foot.",
+        "cardThumbnailURL": "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg?auto=compress&cs=tinysrgb&w=1200"
       }
     },
     "relationships": {

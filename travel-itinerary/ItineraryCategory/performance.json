@@ -2,19 +2,19 @@
   "data": {
     "meta": {
       "adoptsFrom": {
-        "name": "TripItineraryCategory",
+        "name": "ItineraryCategory",
         "module": "../travel-itinerary"
       }
     },
     "type": "card",
     "attributes": {
-      "name": "Nature & Outdoors",
-      "color": "#16a34a",
+      "name": "Performance",
+      "color": "#ec4899",
       "cardInfo": {
-        "name": "Nature & Outdoors",
+        "name": "Performance",
         "notes": null,
-        "summary": "Parks, trails, gardens, beaches, and scenic overlooks — outdoor adventures and natural landscapes to experience on foot.",
-        "cardThumbnailURL": "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg?auto=compress&cs=tinysrgb&w=1200"
+        "summary": "Theater, concerts, dance, and live shows — ticketed performances and cultural events to schedule around their start times.",
+        "cardThumbnailURL": "https://images.pexels.com/photos/167636/pexels-photo-167636.jpeg?auto=compress&cs=tinysrgb&w=1200"
       }
     },
     "relationships": {

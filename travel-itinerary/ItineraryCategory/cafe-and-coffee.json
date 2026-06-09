@@ -2,19 +2,19 @@
   "data": {
     "meta": {
       "adoptsFrom": {
-        "name": "TripItineraryCategory",
+        "name": "ItineraryCategory",
         "module": "../travel-itinerary"
       }
     },
     "type": "card",
     "attributes": {
-      "name": "Museum",
-      "color": "#8b5cf6",
+      "name": "Café & Coffee",
+      "color": "#b45309",
       "cardInfo": {
-        "name": "Museum",
+        "name": "Café & Coffee",
         "notes": null,
-        "summary": "Museums, galleries, and exhibitions — art, history, science, and culture worth setting aside dedicated time to explore.",
-        "cardThumbnailURL": "https://images.pexels.com/photos/1674049/pexels-photo-1674049.jpeg?auto=compress&cs=tinysrgb&w=1200"
+        "summary": "Coffee shops, tea houses, and cozy cafés — perfect spots for a break, a light bite, or people-watching between activities.",
+        "cardThumbnailURL": "https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=1200"
       }
     },
     "relationships": {

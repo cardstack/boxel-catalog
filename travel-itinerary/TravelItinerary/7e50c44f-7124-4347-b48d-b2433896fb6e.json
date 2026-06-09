@@ -252,7 +252,7 @@
         "searchKey": "Greater London, England, United Kingdom"
       },
       "shareTripCode": {
-        "data": "https://localhost:4201/catalog/trip-itinerary/TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json"
+        "data": "https://localhost:4201/catalog/travel-itinerary/TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json"
       }
     },
     "relationships": {

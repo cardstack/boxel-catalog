@@ -59,19 +59,19 @@ function addHours(time: string | undefined, hours: number) {
   return `${String(nh).padStart(2, '0')}:${String(nm).padStart(2, '0')}`;
 }
 
-export class TripItineraryCategory extends CardDef {
-  static displayName = 'Trip Itinerary Category';
+export class ItineraryCategory extends CardDef {
+  static displayName = 'Itinerary Category';
   static icon = TagIcon;
 
   @field name = contains(StringField);
   @field color = contains(ColorField);
   @field title = contains(StringField, {
-    computeVia: function (this: TripItineraryCategory) {
+    computeVia: function (this: ItineraryCategory) {
       return this.name?.trim() || 'Category';
     },
   });
 
-  static atom = class Atom extends Component<typeof TripItineraryCategory> {
+  static atom = class Atom extends Component<typeof ItineraryCategory> {
     <template>
       <span class='cat-pill' style={{accentStyle @model.color}}>
         <span class='cat-dot'></span>
@@ -107,9 +107,7 @@ export class TripItineraryCategory extends CardDef {
     </template>
   };
 
-  static embedded = class Embedded extends Component<
-    typeof TripItineraryCategory
-  > {
+  static embedded = class Embedded extends Component<typeof ItineraryCategory> {
     <template>
       <div class='cat-embedded' style={{accentStyle @model.color}}>
         {{#if @model.cardThumbnailURL}}
@@ -178,7 +176,7 @@ export class TripItineraryCategory extends CardDef {
     </template>
   };
 
-  static fitted = class Fitted extends Component<typeof TripItineraryCategory> {
+  static fitted = class Fitted extends Component<typeof ItineraryCategory> {
     <template>
       <div class='cat-fitted' style={{accentStyle @model.color}}>
         <div class='badge'>
@@ -452,9 +450,7 @@ export class TripItineraryCategory extends CardDef {
     </template>
   };
 
-  static isolated = class Isolated extends Component<
-    typeof TripItineraryCategory
-  > {
+  static isolated = class Isolated extends Component<typeof ItineraryCategory> {
     <template>
       <section class='cat-iso' style={{accentStyle @model.color}}>
         <div
@@ -585,7 +581,7 @@ export class ItineraryStop extends FieldDef {
   @field day = contains(NumberField);
   @field startTime = contains(TimeField);
   @field endTime = contains(TimeField);
-  @field category = linksTo(() => TripItineraryCategory);
+  @field category = linksTo(() => ItineraryCategory);
   @field notes = contains(TextAreaField);
 
   static embedded = class Embedded extends Component<typeof ItineraryStop> {
