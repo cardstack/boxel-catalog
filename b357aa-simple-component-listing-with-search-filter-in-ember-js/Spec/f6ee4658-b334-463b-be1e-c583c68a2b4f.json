@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ComponentListingComponent",
+        "module": "../progress-bar"
+      },
+      "readMe": "# ComponentListingComponent\n\n## Summary\n\nThe `ComponentListingComponent` is a Glimmer component that displays a listing of various Boxel UI components, including their names, descriptions, and status. The component allows users to filter the list of components by searching for keywords in the name or description.\n\n## Import\n\n```javascript\nimport ComponentListingComponent from '(name:ComponentListingComponent, module:../progress-bar)';\n```\n\n## Usage as a Field\n\nTo use the `ComponentListingComponent` as a field within a consuming card or field, you can include it in the `fields` section of the card or field definition:\n\n```json\n{\n  \"type\": \"card\",\n  \"id\": \"my-card\",\n  \"attributes\": {\n    \"title\": \"My Card\",\n    \"fields\": [\n      {\n        \"name\": \"componentListing\",\n        \"type\": \"component\",\n        \"component\": \"ComponentListingComponent\"\n      }\n    ]\n  }\n}\n```\n\n## Template Usage\n\nWithin the consuming card or field's template, you can display the `ComponentListingComponent` by using the field name specified in the card or field definition:\n\n```hbs\n<div>\n  <h2>My Card</h2>\n  {{#if this.model.componentListing}}\n    {{this.model.componentListing}}\n  {{else}}\n    <p>Loading component listing...</p>\n  {{/if}}\n</div>\n```\n\nIn this example, the `ComponentListingComponent` will be rendered within the consuming card or field.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "component",
+      "cardTitle": "ComponentListingComponent",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
