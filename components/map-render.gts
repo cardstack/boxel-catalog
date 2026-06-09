@@ -70,8 +70,54 @@ interface MapRenderSignature {
   Element: HTMLElement;
 }
 
-declare global {
-  var L: any;
+// Leaflet instance, held in module scope (NOT on globalThis). Every map
+// instance in this module shares this single reference, but it stays isolated
+// from any other module that also loads Leaflet — so a sibling loader can never
+// clobber or be clobbered by ours through a shared global.
+let L: any;
+
+// Leaflet is pulled from a CDN as a UMD bundle and run at runtime. Its wrapper
+// picks where to expose itself based on the ambient module system:
+//   - CommonJS branch  -> runs the factory synchronously against `exports`
+//   - AMD branch       -> only REGISTERS the factory, never runs it
+//   - browser-global   -> assigns window.L synchronously
+// Under the realm loader a `define` (no define.amd) and a `module` are visible
+// in the eval scope, so a plain `eval(script)` mis-detects the environment and
+// leaves `L` unset — the next read of `L.Bounds` then throws "Cannot read
+// properties of undefined (reading 'prototype')". Instead we run the bundle
+// through `new Function('module','exports', ...)`, which executes in global
+// scope with explicit CommonJS bindings: the factory always runs synchronously
+// against our `exports`, regardless of any ambient `define`. We capture the
+// result into the module-scoped `L` (not globalThis) once and share it across
+// every map instance in this module.
+let leafletLoaded: Promise<void> | undefined;
+
+function loadLeaflet(): Promise<void> {
+  if (!leafletLoaded) {
+    leafletLoaded = (async () => {
+      if (!L?.map) {
+        let response = await fetch(
+          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+        );
+        let code = await response.text();
+        let leafletModule: { exports: any } = { exports: {} };
+        new Function('module', 'exports', code)(
+          leafletModule,
+          leafletModule.exports,
+        );
+        L = leafletModule.exports;
+      }
+      // Polylines call L.Bounds.prototype.intersects(), which throws on the
+      // LatLng -> Bounds conversion (a long-standing Leaflet bug). Short-circuit
+      // it so bounds checks never reject valid coordinates.
+      if (L?.Bounds?.prototype) {
+        L.Bounds.prototype.intersects = function () {
+          return true;
+        };
+      }
+    })();
+  }
+  return leafletLoaded;
 }
 
 export class MapRender extends GlimmerComponent<MapRenderSignature> {
@@ -336,22 +382,13 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
           return;
         }
         this.initializing = true;
-        let module = await fetch(
-          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
-        );
-        let script = await module.text();
-        eval(script);
-        // the reason we do this is bcos there exist an error when adding a polyline layer
-        // complaining that x() coordinate doesn't exist when calling intersects() method
-        // this I suspect is due to a bug in the conversion of LatLng object into L.Bounds
-        // which is a recurring issue in Leaflet github repo
-        L.Bounds.prototype.intersects = function () {
-          // Always return true (ignore bounds checks)
-          return true;
-        };
-        this.initMap(mapConfig, onMapClick);
-        this.moduleSet = true;
-        this.initializing = false;
+        try {
+          await loadLeaflet();
+          this.initMap(mapConfig, onMapClick);
+          this.moduleSet = true;
+        } finally {
+          this.initializing = false;
+        }
       }
       if (!this.map) {
         return;
