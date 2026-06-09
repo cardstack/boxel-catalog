@@ -21,6 +21,7 @@ interface LeafletTileLayer {
 interface LeafletMarker {
   bindPopup: (content: string) => LeafletMarker;
   getLatLng: () => LeafletLatLng;
+  openPopup: () => LeafletMarker;
 }
 
 interface LeafletPolyline {
@@ -42,6 +43,7 @@ interface LeafletLayerGroup {
 }
 
 export interface Coordinate {
+  id?: string | number;
   address?: string;
   lat: number;
   lng: number;
@@ -63,6 +65,7 @@ interface MapRenderSignature {
     routes?: Route[]; //use this arg if you want to render routes (polylines)
     mapConfig?: LeafletMapConfig;
     onMapClick?: (coordinate: Coordinate) => void;
+    selectedId?: string | number | null; //open the popup of the marker with this Coordinate id
   };
   Element: HTMLElement;
 }
@@ -79,6 +82,7 @@ export class MapRender extends GlimmerComponent<MapRenderSignature> {
         routes=@routes
         mapConfig=@mapConfig
         onMapClick=@onMapClick
+        selectedId=@selectedId
       }}
       class='map'
     />
@@ -150,6 +154,7 @@ interface LeafletModifierSignature {
       routes?: Route[];
       mapConfig?: LeafletMapConfig;
       onMapClick?: (coordinate: Coordinate) => void;
+      selectedId?: string | number | null;
     };
   };
 }
@@ -162,11 +167,20 @@ interface LeafletLayerStateInterface {
 class LeafletLayerState implements LeafletLayerStateInterface {
   private group: LeafletLayerGroup | null = null;
   private map: LeafletMap;
+  private markerById = new Map<string | number, LeafletMarker>();
 
   constructor(map: LeafletMap) {
     this.map = map;
     this.group = L.layerGroup();
     this.group?.addTo(this.map);
+  }
+
+  focus(id: string | number) {
+    let marker = this.markerById.get(id);
+    if (marker) {
+      // Leaflet popups auto-pan into view, so opening is enough to reveal it.
+      marker.openPopup();
+    }
   }
 
   onCoordinatesChange(coordinates: Coordinate[]) {
@@ -204,6 +218,9 @@ class LeafletLayerState implements LeafletLayerStateInterface {
       const popupContent =
         trimmedAddress ?? `${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
       marker.bindPopup(popupContent);
+      if (c.id != null) {
+        this.markerById.set(c.id, marker);
+      }
       return marker;
     });
   }
@@ -275,12 +292,16 @@ class LeafletLayerState implements LeafletLayerStateInterface {
 
   teardown() {
     this.group?.clearLayers();
+    this.markerById.clear();
   }
 }
 
 export default class LeafletModifier extends Modifier<LeafletModifierSignature> {
   private element: HTMLElement | null = null;
   private moduleSet: boolean = false;
+  private initializing: boolean = false;
+  private lastCoordinates: Coordinate[] | undefined = undefined;
+  private lastRoutes: Route[] | undefined = undefined;
   private map: LeafletMap | null = null;
   private tile: LeafletTile | null = null;
   private state: LeafletLayerState | undefined;
@@ -290,7 +311,7 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
     _positional: [],
     named: NamedArgs<LeafletModifierSignature>,
   ) {
-    let { coordinates, routes, onMapClick, mapConfig } = named;
+    let { coordinates, routes, onMapClick, mapConfig, selectedId } = named;
     let { tileserverUrl } = mapConfig || {};
     this.element = element;
 
@@ -307,6 +328,14 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
 
     (async () => {
       if (!this.moduleSet) {
+        // A re-render can call modify() again while the async load below is
+        // still in flight; without this guard both passes would run initMap()
+        // on the same element and Leaflet throws "Map container is already
+        // initialized."
+        if (this.initializing) {
+          return;
+        }
+        this.initializing = true;
         let module = await fetch(
           'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
         );
@@ -322,6 +351,7 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
         };
         this.initMap(mapConfig, onMapClick);
         this.moduleSet = true;
+        this.initializing = false;
       }
       if (!this.map) {
         return;
@@ -334,11 +364,18 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
       if (!this.state) {
         this.state = new LeafletLayerState(this.map);
       }
-      if (coordinates) {
+      // Only rebuild layers when the data reference actually changes; otherwise
+      // a re-render that merely changed selectedId would re-fit the whole map.
+      if (coordinates && coordinates !== this.lastCoordinates) {
+        this.lastCoordinates = coordinates;
         this.state.onCoordinatesChange(coordinates);
       }
-      if (routes) {
+      if (routes && routes !== this.lastRoutes) {
+        this.lastRoutes = routes;
         this.state.onRoutesChange(routes);
+      }
+      if (selectedId != null) {
+        this.state.focus(selectedId);
       }
     })();
   }
@@ -352,6 +389,9 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
     onMapClick?: (c: Coordinate) => void,
   ) {
     if (!this.element) return;
+    // Leaflet tags an initialized container with a _leaflet_id; bail if one is
+    // already present so we never double-initialize the same element.
+    if ((this.element as any)._leaflet_id) return;
 
     const center = [20, 0];
     const zoom = 2;

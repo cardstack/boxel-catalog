@@ -36,16 +36,18 @@ import SearchAndChooseCommand from '@cardstack/boxel-host/commands/search-and-ch
 import { SearchCardsByTypeAndTitleCommand } from '@cardstack/boxel-host/commands/search-cards';
 import StoreAddCommand from '@cardstack/boxel-host/commands/store-add';
 
-type ListingType = 'card' | 'skill' | 'theme' | 'field';
+type ListingType = 'card' | 'skill' | 'theme' | 'field' | 'component';
 
 const BASE_CARD_API_MODULE = 'https://cardstack.com/base/card-api';
 const BASE_SKILL_MODULE = 'https://cardstack.com/base/skill';
+const GLIMMER_COMPONENT_MODULE = '@glimmer/component';
 
 const listingSubClass: Record<ListingType, string> = {
   card: 'CardListing',
   skill: 'SkillListing',
   theme: 'ThemeListing',
   field: 'FieldListing',
+  component: 'ComponentListing',
 };
 
 export default class ListingCreateCommand extends Command<
@@ -53,7 +55,8 @@ export default class ListingCreateCommand extends Command<
   typeof BaseCommandModule.ListingCreateResult
 > {
   static actionVerb = 'Create';
-  description = 'Create a catalog listing for an example card';
+  description =
+    'Create a catalog listing for a card, field, skill, theme, or component';
 
   private async getCatalogRealm(): Promise<string> {
     const { realmIdentifiers: urls } =
@@ -111,7 +114,7 @@ export default class ListingCreateCommand extends Command<
     } catch {
       // leave undefined; downstream falls back appropriately
     }
-    let listingType = this.guessListingType(cardDef);
+    let listingType = await this.guessListingType(codeRef, cardDef);
     const displayName = (cardDef as any)?.displayName ?? codeRef.name;
     const catalogRealm = await this.getCatalogRealm();
 
@@ -213,22 +216,54 @@ export default class ListingCreateCommand extends Command<
     return result;
   }
 
-  private guessListingType(
+  private async guessListingType(
+    codeRef: ResolvedCodeRef,
     cardDef: CardAPI.BaseDefConstructor | undefined,
-  ): ListingType {
-    if (!cardDef) {
+  ): Promise<ListingType> {
+    if (cardDef) {
+      if (isFieldDef(cardDef)) {
+        return 'field';
+      }
+      if (this.isAncestor(cardDef, BASE_CARD_API_MODULE, 'Theme')) {
+        return 'theme';
+      }
+      if (this.isAncestor(cardDef, BASE_SKILL_MODULE, 'Skill')) {
+        return 'skill';
+      }
       return 'card';
     }
-    if (isFieldDef(cardDef)) {
-      return 'field';
-    }
-    if (this.isAncestor(cardDef, BASE_CARD_API_MODULE, 'Theme')) {
-      return 'theme';
-    }
-    if (this.isAncestor(cardDef, BASE_SKILL_MODULE, 'Skill')) {
-      return 'skill';
+    // Not a card/field def — it may be a Glimmer component. loadCardDef can't
+    // classify those, so check the export against the shimmed GlimmerComponent
+    // base at runtime.
+    if (await this.isComponentCodeRef(codeRef)) {
+      return 'component';
     }
     return 'card';
+  }
+
+  private async isComponentCodeRef(codeRef: ResolvedCodeRef): Promise<boolean> {
+    try {
+      let loader = getLoaderService(this.commandContext).loader;
+      let [mod, glimmer] = await Promise.all([
+        loader.import<Record<string, unknown>>(codeRef.module),
+        loader.import<{ default: unknown }>(GLIMMER_COMPONENT_MODULE),
+      ]);
+      // codeRef.name may be the export name ('default') or the class's local
+      // name (a default-exported component is referenced by its local name),
+      // so fall back to the module's default export.
+      let exported = mod?.[codeRef.name] ?? mod?.default;
+      let GlimmerComponent = glimmer?.default as
+        | (abstract new (...args: any[]) => unknown)
+        | undefined;
+      return (
+        typeof exported === 'function' &&
+        typeof GlimmerComponent === 'function' &&
+        (exported === GlimmerComponent ||
+          exported.prototype instanceof GlimmerComponent)
+      );
+    } catch {
+      return false;
+    }
   }
 
   private isAncestor(

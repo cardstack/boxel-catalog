@@ -7,7 +7,7 @@ import {
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import { loadCommandModule } from './utils';
+import { loadCommandModule, getLoaderService } from './utils';
 
 import { GenerateExampleCardsOneShotCommand } from '@cardstack/boxel-host/commands/generate-example-cards';
 import GetDefaultWritableRealmCommand from '@cardstack/boxel-host/commands/get-default-writable-realm';
@@ -40,7 +40,10 @@ export default class ListingGenerateExampleCommand extends Command<
       throw new Error('Listing must include a reference example');
     }
 
-    const codeRef = resolveAdoptsFrom(referenceExample);
+    const virtualNetwork = getLoaderService(
+      this.commandContext,
+    ).loader.getVirtualNetwork()!;
+    const codeRef = resolveAdoptsFrom(referenceExample, virtualNetwork);
     if (!codeRef) {
       throw new Error(
         'Unable to resolve card definition from reference example',
