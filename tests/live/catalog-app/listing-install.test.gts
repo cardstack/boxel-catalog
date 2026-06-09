@@ -1,7 +1,7 @@
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import ListingInstallCommand from '@cardstack/catalog/commands/listing-install';
+import type ListingInstallCommand from '@cardstack/catalog/commands/listing-install';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 
