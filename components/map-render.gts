@@ -345,8 +345,12 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
           // Resolve the CDN URL through a variable so TS doesn't try to type
           // the module (there are no type declarations for the +esm bundle).
           let leafletUrl = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/+esm';
-          let leaflet = await import(leafletUrl);
-          (globalThis as any).L = (leaflet as any).default ?? leaflet;
+          let leaflet = (await import(leafletUrl)) as any;
+          // The +esm build exposes Leaflet's factories (map, tileLayer, marker,
+          // …) as named exports on the namespace; its `default` export does not
+          // carry them, so prefer the namespace and only fall back to default.
+          (globalThis as any).L =
+            typeof leaflet.map === 'function' ? leaflet : leaflet.default;
         }
         // the reason we do this is bcos there exist an error when adding a polyline layer
         // complaining that x() coordinate doesn't exist when calling intersects() method
