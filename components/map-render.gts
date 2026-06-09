@@ -336,19 +336,28 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
           return;
         }
         this.initializing = true;
-        let module = await fetch(
-          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
-        );
-        let script = await module.text();
-        eval(script);
+        // Load Leaflet as a real ES module instead of fetch()+eval(). The
+        // eval() path relied on the bundle leaking a global `L`, which is
+        // environment-sensitive: on the server-side prerender path `L` came
+        // back undefined and the prototype patch below threw "Cannot read
+        // properties of undefined (reading 'prototype')".
+        if (!(globalThis as any).L) {
+          // Resolve the CDN URL through a variable so TS doesn't try to type
+          // the module (there are no type declarations for the +esm bundle).
+          let leafletUrl = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/+esm';
+          let leaflet = await import(leafletUrl);
+          (globalThis as any).L = (leaflet as any).default ?? leaflet;
+        }
         // the reason we do this is bcos there exist an error when adding a polyline layer
         // complaining that x() coordinate doesn't exist when calling intersects() method
         // this I suspect is due to a bug in the conversion of LatLng object into L.Bounds
         // which is a recurring issue in Leaflet github repo
-        L.Bounds.prototype.intersects = function () {
-          // Always return true (ignore bounds checks)
-          return true;
-        };
+        if (L?.Bounds?.prototype) {
+          L.Bounds.prototype.intersects = function () {
+            // Always return true (ignore bounds checks)
+            return true;
+          };
+        }
         this.initMap(mapConfig, onMapClick);
         this.moduleSet = true;
         this.initializing = false;
