@@ -1,0 +1,37 @@
+{
+  "realmUrl": "https://app.boxel.ai/lucas/popover/",
+  "files": {
+    "example/popover-playground-example.gts": "96a66b991e2cee371676d1b8c630480b",
+    "modifiers/popover-binding.ts": "76dde6e3a2762617567e856d2b1e1f36",
+    "popover.gts": "90a5647869aed165f6dc1e447a2c555f",
+    "utils/layer-manager.ts": "9cbacfd7b97962e940cb12d1dbb0f810",
+    "utils/popover-state.ts": "97d7c19b29ef4a1e9b3612de42ef2967",
+    "utils/popover-types.ts": "424f578db6549259dddb2e3b2b8bc872",
+    "LICENSE": "68f5a98f3ef18547390c3e57997297c4",
+    "README.md": "722b9968edb84619101c4e1dfbb46762",
+    "Spec/layer-manager.json": "b7632f73a83aa94a5be8141e523b8507",
+    "Spec/popover-binding.json": "c4fbc79c62030c229a21ed1a7f5e4588",
+    "Spec/popover-playground-example.json": "cea5cd69042bfc9e2e66771d007c42a0",
+    "Spec/popover-state.json": "4d83585fa2759079db7db43902613476",
+    "Spec/popover-types.json": "b2cfad3173da12442d45227af2287018",
+    "Spec/popover.json": "e6a6cb4c231b847862d8402ae0ad1342",
+    "example/PopoverPlayground/fa9c0fa1-44e2-4cd6-a5d3-6e249c09b53f.json": "dc777fafa658347b1e3791f90639ca88"
+  },
+  "remoteMtimes": {
+    "example/popover-playground-example.gts": 1780999735,
+    "modifiers/popover-binding.ts": 1780999735,
+    "popover.gts": 1780999736,
+    "utils/layer-manager.ts": 1780999736,
+    "utils/popover-state.ts": 1780999736,
+    "utils/popover-types.ts": 1780999736,
+    "LICENSE": 1780999736,
+    "README.md": 1780999736,
+    "Spec/layer-manager.json": 1780999739,
+    "Spec/popover-binding.json": 1780999739,
+    "Spec/popover-playground-example.json": 1780999739,
+    "Spec/popover-state.json": 1780999739,
+    "Spec/popover-types.json": 1780999739,
+    "Spec/popover.json": 1780999739,
+    "example/PopoverPlayground/fa9c0fa1-44e2-4cd6-a5d3-6e249c09b53f.json": 1780999740
+  }
+}

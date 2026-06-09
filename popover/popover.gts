@@ -14,10 +14,18 @@ import {
 } from '@floating-ui/dom';
 import type { Placement, Strategy } from '@floating-ui/dom';
 
+import { SURFACE_LAYERS, type SurfaceLayerTier } from './utils/layer-manager';
 import {
-  SURFACE_LAYERS,
-  type SurfaceLayerTier,
-} from '../utils/layer-manager.ts';
+  POPOVER_KIND_GLYPHS,
+  POPOVER_KIND_LABELS,
+  resolvePopoverEscalationTarget,
+  type PopoverKind,
+  type PopoverAnchoring,
+  type PopoverSize,
+  type PopoverBackdrop,
+  type PopoverElevation,
+  type PopoverKeyboardModel,
+} from './utils/popover-types';
 
 /**
  * `<Popover>` — anchored floating surface that hosts a focused
@@ -28,7 +36,7 @@ import {
  * **Four orthogonal dimensions** drive the visual + behavioral
  * variant:
  *
- *   kind          'details' | 'preview' | 'edit' | 'tools'
+ *   kind          'details' | 'edit' | 'tools'
  *   anchoring     'beside' | 'overlay' | 'center'
  *   size          'compact' | 'comfortable' | 'spacious' | 'auto'
  *   backdrop      'none' | 'tint' | 'blur' | 'dim'
@@ -56,17 +64,10 @@ import {
  * externals shim — no install step is required to remix this.
  */
 
-export type PopoverKind = 'details' | 'preview' | 'edit' | 'tools';
-
-export type PopoverAnchoring = 'beside' | 'overlay' | 'center';
-
-export type PopoverSize = 'compact' | 'comfortable' | 'spacious' | 'auto';
-
-export type PopoverBackdrop = 'none' | 'tint' | 'blur' | 'dim';
-
-export type PopoverElevation = 'flat' | 'raised' | 'elevated' | 'floating';
-
-export type PopoverKeyboardModel = 'pick' | 'edit';
+// The popover type vocabulary (kind / anchoring / size / backdrop /
+// elevation / keyboardModel) plus the kind→glyph / kind→label maps and
+// escalation resolver live in ../utils/popover-types.ts (imported above).
+// PopoverSignature stays here — it's the component's own args contract.
 
 export interface PopoverSignature {
   Args: {
@@ -103,6 +104,9 @@ export interface PopoverSignature {
     /** Move DOM focus into the popover on open + restore on close.
      *  Default true except for `details` kind. */
     autoFocus?: boolean;
+    /** Trap Tab focus inside the popover (aria-modal behaviour). Off by
+     *  default — turn on for editor popovers that own the focus cycle. */
+    trapFocus?: boolean;
     /** Optional kinds the user can escalate to. When the array
      *  contains kinds OTHER than the current `@kind`, a corner
      *  escalation glyph button appears. Single-kind contracts
@@ -320,8 +324,8 @@ const anchoredPopover = modifier(
     floatingElement: HTMLElement,
     [selector]: [string],
     {
-      placement = 'bottom-start',
-      offsetOptions = 0,
+      placement = 'bottom',
+      offsetOptions = 8,
       strategy = 'fixed',
     }: {
       placement?: Placement;
@@ -449,10 +453,58 @@ const anchoredPopover = modifier(
           ] ?? 'bottom';
         for (const edge of ['top', 'right', 'bottom', 'left']) {
           arrowEl.style.removeProperty(edge);
+          arrowEl.style.removeProperty(`border-${edge}`);
         }
         if (arrowX != null) arrowEl.style.left = `${roundByDPR(arrowX)}px`;
         if (arrowY != null) arrowEl.style.top = `${roundByDPR(arrowY)}px`;
-        arrowEl.style.setProperty(staticSide, '-4px');
+        arrowEl.style.setProperty(staticSide, '-6px');
+
+        // CSS border-triangle technique — no rotation, no clip-path.
+        // A zero-size element with two transparent borders and one
+        // coloured border produces a clean triangle in any direction.
+        // staticSide is the card edge the arrow is pinned to; the tip
+        // points in the OPPOSITE direction (toward the anchor).
+        arrowEl.style.setProperty('transform', 'none');
+        arrowEl.style.setProperty('background', 'none');
+        arrowEl.style.setProperty('clip-path', 'none');
+        arrowEl.style.setProperty('width', '0');
+        arrowEl.style.setProperty('height', '0');
+        const fill = 'var(--bx-popover-bg, #fff)';
+        const none = '0';
+        const solid = `7px solid ${fill}`;
+        const clear = '7px solid transparent';
+        const triangles: Record<string, Record<string, string>> = {
+          top: {
+            'border-top': none,
+            'border-right': clear,
+            'border-bottom': solid,
+            'border-left': clear,
+          },
+          bottom: {
+            'border-top': solid,
+            'border-right': clear,
+            'border-bottom': none,
+            'border-left': clear,
+          },
+          left: {
+            'border-top': clear,
+            'border-right': solid,
+            'border-bottom': clear,
+            'border-left': none,
+          },
+          right: {
+            'border-top': clear,
+            'border-right': none,
+            'border-bottom': clear,
+            'border-left': solid,
+          },
+        };
+        const t = triangles[staticSide];
+        if (t) {
+          for (const [prop, val] of Object.entries(t)) {
+            arrowEl.style.setProperty(prop, val);
+          }
+        }
       }
     };
 
@@ -918,7 +970,7 @@ export default class Popover extends Component<PopoverSignature> {
   }
 
   get effectivePlacement(): Placement {
-    return this.args.placement ?? 'bottom-start';
+    return this.args.placement ?? 'bottom';
   }
 
   get offsetDistance(): number {
@@ -935,7 +987,7 @@ export default class Popover extends Component<PopoverSignature> {
   // elevated" preset? Set @backdrop / @elevation explicitly.)
 
   get size(): PopoverSize {
-    return this.args.size ?? 'comfortable';
+    return this.args.size ?? 'compact';
   }
 
   get backdrop(): PopoverBackdrop {
@@ -946,8 +998,8 @@ export default class Popover extends Component<PopoverSignature> {
     return this.args.elevation ?? 'raised';
   }
 
-  get keyboardModel(): PopoverKeyboardModel {
-    return this.args.keyboardModel ?? 'edit';
+  get keyboardModel(): PopoverKeyboardModel | undefined {
+    return this.args.keyboardModel;
   }
 
   get isOverlay(): boolean {
@@ -975,7 +1027,6 @@ export default class Popover extends Component<PopoverSignature> {
     return this.args.kind !== 'details';
   }
 
-  /** Edit popovers are popover-shaped but modal-like for focus. */
   /** ARIA role for the popover root. details is a passive
    *  tooltip; every interactive kind is a dialog. Host can override
    *  via `@role` (e.g. 'menu' for an action list). */
@@ -984,18 +1035,20 @@ export default class Popover extends Component<PopoverSignature> {
     return this.args.kind === 'details' ? 'tooltip' : 'dialog';
   }
 
-  /** Modal = trap focus + aria-modal. Purely a behavior of the `edit`
-   *  kind — independent of position (center) and backdrop (dim). */
-  get isModal(): boolean {
-    return this.args.kind === 'edit';
-  }
-
+  /** Trap focus + aria-modal. Driven by @trapFocus, not kind. */
   get shouldTrapFocus(): boolean {
-    return this.isModal;
+    return this.args.trapFocus ?? false;
   }
 
+  get isModal(): boolean {
+    return this.shouldTrapFocus;
+  }
+
+  /** Delegate keyboard events into the popover body. Active when the
+   *  host explicitly passes @keyboardModel — that signals there is an
+   *  inner pick/edit target that owns key events. */
   get shouldDelegateKeyboard(): boolean {
-    return this.args.kind === 'edit' || this.args.kind === 'tools';
+    return this.args.keyboardModel !== undefined;
   }
 
   get layerTier(): SurfaceLayerTier {
@@ -1071,69 +1124,46 @@ export default class Popover extends Component<PopoverSignature> {
     return (this.args.canEscalateTo ?? []).filter((k) => k !== this.args.kind);
   }
 
-  get hasEscalation(): boolean {
-    return this.escalationTargets.length > 0 && this.args.onEscalate != null;
+  /** The single kind the corner glyph escalates to: the highest-priority
+   *  available target (see POPOVER_ESCALATION_PRIORITY). One source of
+   *  truth for the glyph, the label, and the click — they never disagree. */
+  get primaryEscalationTarget(): PopoverKind | undefined {
+    return resolvePopoverEscalationTarget(this.escalationTargets);
   }
 
-  /** Glyph for the corner escalation button. When escalation has
-   *  exactly one target, use that target's glyph. Otherwise (rare,
-   *  but supported), use a generic kebab. */
+  get hasEscalation(): boolean {
+    return this.primaryEscalationTarget != null && this.args.onEscalate != null;
+  }
+
+  /** Glyph for the corner escalation button — the primary target's glyph
+   *  (e.g. ✎ when edit is offered). Never a generic kebab while a real
+   *  target exists, so the affordance reads as "lift to <that kind>". */
   get escalationGlyph(): string {
-    const targets = this.escalationTargets;
-    const only = targets[0];
-    if (targets.length === 1 && only) return this.kindGlyph(only);
-    return '⋯';
+    const target = this.primaryEscalationTarget;
+    return target ? this.kindGlyph(target) : '⋯';
   }
 
   /** Aria-label for the corner escalation button. */
   get escalationLabel(): string {
-    const targets = this.escalationTargets;
-    const only = targets[0];
-    if (targets.length === 1 && only) {
-      return `Switch to ${this.kindLabel(only)}`;
-    }
-    return 'Switch popover mode';
+    const target = this.primaryEscalationTarget;
+    return target
+      ? `Switch to ${this.kindLabel(target)}`
+      : 'Switch popover mode';
   }
 
-  /** Default action when the user clicks the corner glyph. With
-   *  exactly one escalation target, fire that. Otherwise rotate
-   *  through targets. */
+  /** Click handler for the corner glyph — escalates to the same primary
+   *  target the glyph depicts. */
   fireEscalateNext = (): void => {
-    const targets = this.escalationTargets;
-    const first = targets[0];
-    if (targets.length === 0) return;
-    if (targets.length === 1 && first) {
-      this.args.onEscalate?.(first);
-      return;
-    }
-    // Multi-target — pick the first that ISN'T the current kind.
-    if (first) this.args.onEscalate?.(first);
+    const target = this.primaryEscalationTarget;
+    if (target) this.args.onEscalate?.(target);
   };
 
   kindLabel(kind: PopoverKind): string {
-    switch (kind) {
-      case 'details':
-        return 'Details';
-      case 'preview':
-        return 'Preview';
-      case 'edit':
-        return 'Edit';
-      case 'tools':
-        return 'Tools';
-    }
+    return POPOVER_KIND_LABELS[kind];
   }
 
   kindGlyph(kind: PopoverKind): string {
-    switch (kind) {
-      case 'details':
-        return 'ⓘ';
-      case 'preview':
-        return '⊡';
-      case 'edit':
-        return '✎';
-      case 'tools':
-        return '⋯';
-    }
+    return POPOVER_KIND_GLYPHS[kind];
   }
 
   /** Dim click — fires onDismiss if provided. Bound here so the
@@ -1332,7 +1362,7 @@ export default class Popover extends Component<PopoverSignature> {
     <style scoped>
       /* ════════════════════════════════════════════════════════════
        * Popover visual system — driven by 5 orthogonal class modifiers:
-       *   .bx-popover--{kind}        details | preview | edit | tools
+       *   .bx-popover--{kind}        details | edit | tools
        *   .bx-popover--placement-{p} beside | shadow | center
        *   .bx-popover--size-{s}      compact | comfortable | spacious | auto
        *   .bx-popover--backdrop-{b}  none | tint | blur | dim
@@ -1466,53 +1496,35 @@ export default class Popover extends Component<PopoverSignature> {
       /* ─── ELEVATION — shadow + ring ladder ─────────────────────
        * Each tier ONE notch up:
        *   radius      4 → 6 → 8 → 12
-       *   shadow      flat → raised → elevated → modal
-       *   accent ring none → none → 1px @ 32% → 1px @ 18%
-       * Ring SHRINKS in opacity as elevation grows — the deeper
-       * shadow takes over the "lifted" job. */
+       *   shadow      none → xs → md → xl
+       *   border      none → subtle → subtle → subtle
+       * Shadow depth increases with each tier so 'raised', 'elevated',
+       * and 'floating' are visually distinct. */
       .bx-popover--elevation-flat {
-        box-shadow: var(
-          --bx-popover-shadow-flat,
-          0 1px 2px rgba(0, 0, 0, 0.06)
-        );
+        --bx-popover-border: transparent;
         border-radius: 4px;
+        box-shadow: none;
       }
       .bx-popover--elevation-raised {
-        box-shadow: var(
-          --bx-popover-shadow-raised,
-          0 2px 6px -1px rgba(0, 0, 0, 0.08),
-          0 1px 2px rgba(0, 0, 0, 0.04)
-        );
-        border: 1px solid var(--bx-popover-border-soft, #e5e7eb);
+        --bx-popover-border: #e5e7eb;
         border-radius: 6px;
+        box-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.08),
+          0 1px 2px rgba(0, 0, 0, 0.06);
       }
       .bx-popover--elevation-elevated {
-        box-shadow: var(
-          --bx-popover-shadow-elevated,
-          0 8px 16px -4px rgba(15, 23, 42, 0.1),
-          0 2px 4px -2px rgba(15, 23, 42, 0.06),
-          0 0 0 1px
-            color-mix(
-              in srgb,
-              var(--bx-popover-accent, #4f46e5) 32%,
-              transparent
-            )
-        );
+        --bx-popover-border: #e5e7eb;
         border-radius: 8px;
+        box-shadow:
+          0 4px 12px rgba(0, 0, 0, 0.1),
+          0 2px 4px rgba(0, 0, 0, 0.07);
       }
       .bx-popover--elevation-floating {
-        box-shadow: var(
-          --bx-popover-shadow-floating,
-          0 32px 56px -16px rgba(15, 23, 42, 0.22),
-          0 12px 24px -8px rgba(15, 23, 42, 0.14),
-          0 0 0 1px
-            color-mix(
-              in srgb,
-              var(--bx-popover-accent, #4f46e5) 18%,
-              transparent
-            )
-        );
+        --bx-popover-border: #e5e7eb;
         border-radius: 12px;
+        box-shadow:
+          0 12px 32px rgba(0, 0, 0, 0.14),
+          0 4px 10px rgba(0, 0, 0, 0.09);
       }
 
       /* ─── PLACEMENT — POSITION ONLY ───────────────────────────
@@ -1555,13 +1567,13 @@ export default class Popover extends Component<PopoverSignature> {
       .bx-popover--edit {
         --bx-popover-edit-bg: #fef7d6;
         --bx-popover-edit-border: #f5d75e;
-        /* Translucent so an `edit` popover with backdrop=blur still
-         * frosts (a solid fill would hide the blur). */
-        --bx-popover-bg: color-mix(
-          in srgb,
-          var(--bx-popover-edit-bg) 92%,
-          transparent
-        );
+        --bx-popover-bg: var(--bx-popover-edit-bg);
+      }
+      .bx-popover--edit.bx-popover--backdrop-tint {
+        --bx-popover-bg: rgba(254, 247, 214, 0.8);
+      }
+      .bx-popover--edit.bx-popover--backdrop-blur {
+        --bx-popover-bg: rgba(254, 247, 214, 0.55);
       }
       .bx-popover--edit
         .bx-popover__body
@@ -1578,8 +1590,8 @@ export default class Popover extends Component<PopoverSignature> {
             color-mix(in srgb, var(--bx-popover-edit-border) 56%, transparent),
           0 16px 42px rgba(120, 85, 0, 0.12);
       }
-      .bx-popover--tools.bx-popover--elevation-raised {
-        border-color: rgba(255, 255, 255, 0.08);
+      .bx-popover--tools[class*='bx-popover--elevation-'] {
+        border-color: rgba(255, 255, 255, 0.12);
       }
 
       /* ─── ESCALATION GLYPH — corner button ─────────────────────
@@ -1654,6 +1666,9 @@ export default class Popover extends Component<PopoverSignature> {
          * picker content doesn't square off the popover's corners
          * (the root no longer clips — see its overflow note). */
         border-radius: inherit;
+        /* Border lives here, not on the root, so it never intersects
+         * the arrow which is positioned on the root element. */
+        border: 1px solid var(--bx-popover-border, transparent);
       }
 
       /* ─── ARROW — optional caret (beside anchoring) ───────────────
@@ -1662,15 +1677,11 @@ export default class Popover extends Component<PopoverSignature> {
        * anchor. The JS modifier sets its left/top + the static side. */
       .bx-popover__arrow {
         position: absolute;
-        width: 8px;
-        height: 8px;
-        background: var(--bx-popover-bg, #fff);
-        transform: rotate(45deg);
-        box-shadow: var(
-          --bx-popover-arrow-shadow,
-          0 0 0 0.5px rgba(15, 23, 42, 0.08)
-        );
+        width: 0;
+        height: 0;
         pointer-events: none;
+        /* Shape, direction, and fill are set as inline styles by the
+         * anchoredPopover modifier using the CSS border-triangle technique. */
       }
     </style>
   </template>

@@ -52,7 +52,7 @@
 
 import { tracked } from '@glimmer/tracking';
 
-import type { PopoverKind } from '../components/popover.gts';
+import type { PopoverKind } from './popover-types.ts';
 
 /** The minimal per-unit contract this state machine reads: the list of
  *  popover kinds the unit supports. A unit whose `popover` array
