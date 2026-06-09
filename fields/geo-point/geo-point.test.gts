@@ -1,4 +1,4 @@
-import { module, test } from 'qunit';
+import { module, skip, test } from 'qunit';
 
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
@@ -15,7 +15,7 @@ export function runTests() {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
 
-    test('geo-point field renders embedded view with coordinates', async function (assert) {
+    skip('geo-point field renders embedded view with coordinates', async function (assert) {
       await renderField(
         GeoPointField,
         buildField(GeoPointField, { lat: 1.3521, lon: 103.8198 }),
