@@ -336,19 +336,25 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
           return;
         }
         this.initializing = true;
-        let module = await fetch(
-          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
-        );
-        let script = await module.text();
-        eval(script);
+        // Load Leaflet as a real ES module instead of fetch()+eval(): eval is
+        // blocked by a strict script-src CSP in production, which left the
+        // global `L` undefined and made the prototype patch below throw
+        // "Cannot read properties of undefined (reading 'prototype')".
+        if (!globalThis.L) {
+          let leaflet =
+            await import('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/+esm');
+          globalThis.L = (leaflet as any).default ?? leaflet;
+        }
         // the reason we do this is bcos there exist an error when adding a polyline layer
         // complaining that x() coordinate doesn't exist when calling intersects() method
         // this I suspect is due to a bug in the conversion of LatLng object into L.Bounds
         // which is a recurring issue in Leaflet github repo
-        L.Bounds.prototype.intersects = function () {
-          // Always return true (ignore bounds checks)
-          return true;
-        };
+        if (L?.Bounds?.prototype) {
+          L.Bounds.prototype.intersects = function () {
+            // Always return true (ignore bounds checks)
+            return true;
+          };
+        }
         this.initMap(mapConfig, onMapClick);
         this.moduleSet = true;
         this.initializing = false;
