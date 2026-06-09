@@ -1,0 +1,33 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TripItineraryCategory",
+        "module": "../travel-itinerary"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Nightlife",
+      "color": "#6366f1",
+      "cardInfo": {
+        "name": "Nightlife",
+        "notes": null,
+        "summary": "Bars, clubs, live music, and late-night spots — where to go after dark for drinks, dancing, and evening entertainment.",
+        "cardThumbnailURL": "https://images.pexels.com/photos/274192/pexels-photo-274192.jpeg?auto=compress&cs=tinysrgb&w=1200"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

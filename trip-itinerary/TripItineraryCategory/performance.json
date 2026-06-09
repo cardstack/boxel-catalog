@@ -1,0 +1,33 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TripItineraryCategory",
+        "module": "../travel-itinerary"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Performance",
+      "color": "#ec4899",
+      "cardInfo": {
+        "name": "Performance",
+        "notes": null,
+        "summary": "Theater, concerts, dance, and live shows — ticketed performances and cultural events to schedule around their start times.",
+        "cardThumbnailURL": "https://images.pexels.com/photos/167636/pexels-photo-167636.jpeg?auto=compress&cs=tinysrgb&w=1200"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
