@@ -335,20 +335,49 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
         if (this.initializing) {
           return;
         }
+        // Leaflet needs a real DOM. During server-side prerender (indexing)
+        // there is no document, so skip map setup entirely — the card still
+        // indexes, it just renders without a live map.
+        if (typeof document === 'undefined' || typeof window === 'undefined') {
+          return;
+        }
         this.initializing = true;
-        let module = await fetch(
-          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
-        );
-        let script = await module.text();
-        eval(script);
+        // Load Leaflet by fetching its UMD bundle and running it with an
+        // explicit CommonJS `module`/`exports`. This is deliberate, after two
+        // approaches that failed in non-trivial environments:
+        //   1. fetch()+eval() relied on the bundle leaking a global `L`. But
+        //      Leaflet's UMD takes the AMD branch when a global `define.amd`
+        //      exists (it does, via the realm loader), so `L` was never set
+        //      and the prototype patch below threw "Cannot read properties of
+        //      undefined (reading 'prototype')".
+        //   2. import() of the +esm build goes through the realm loader's
+        //      ESM→AMD transpile + on-demand jsdelivr compile, which proved
+        //      unreliable in CI ("L.map is not a function").
+        // Passing a real module/exports forces the CommonJS branch, so we
+        // capture the full library directly regardless of globals or loader.
+        if (!(globalThis as any).L?.map) {
+          let res = await fetch(
+            'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+          );
+          let code = await res.text();
+          let leafletModule: { exports: any } = { exports: {} };
+
+          new Function('module', 'exports', code)(
+            leafletModule,
+            leafletModule.exports,
+          );
+          (globalThis as any).L = leafletModule.exports;
+        }
         // the reason we do this is bcos there exist an error when adding a polyline layer
         // complaining that x() coordinate doesn't exist when calling intersects() method
         // this I suspect is due to a bug in the conversion of LatLng object into L.Bounds
         // which is a recurring issue in Leaflet github repo
-        L.Bounds.prototype.intersects = function () {
-          // Always return true (ignore bounds checks)
-          return true;
-        };
+        if (L?.Bounds?.prototype) {
+          L.Bounds.prototype.intersects = function () {
+            // Always return true (ignore bounds checks)
+            return true;
+          };
+        }
         this.initMap(mapConfig, onMapClick);
         this.moduleSet = true;
         this.initializing = false;

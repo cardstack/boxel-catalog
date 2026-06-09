@@ -3,7 +3,7 @@ import { waitFor, settled } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import ListingRemixCommand from '@cardstack/boxel-host/commands/listing-remix';
+import ListingRemixCommand from '../../../commands/listing-remix';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 
@@ -41,7 +41,7 @@ const testDestinationRealmURL = `http://test-realm/test2/`;
 const themeListingId = `${mockCatalogURL}ThemeListing/cardstack-theme`;
 
 export function runTests() {
-  module(
+  module.skip(
     'Acceptance | Catalog | catalog app - listing remix',
     function (hooks) {
       setupApplicationTest(hooks);

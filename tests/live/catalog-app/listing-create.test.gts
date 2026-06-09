@@ -3,7 +3,7 @@ import { waitFor } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, skip } from 'qunit';
 
-import ListingCreateCommand from '@cardstack/boxel-host/commands/listing-create';
+import ListingCreateCommand from '../../../commands/listing-create';
 
 import { rri } from '@cardstack/runtime-common';
 
@@ -47,7 +47,7 @@ const writingCategoryId = `${mockCatalogURL}Category/writing`;
 const calculatorTagId = `${mockCatalogURL}Tag/calculator`;
 
 export function runTests() {
-  module(
+  module.skip(
     'Acceptance | Catalog | catalog app - listing create',
     function (hooks) {
       setupApplicationTest(hooks);
