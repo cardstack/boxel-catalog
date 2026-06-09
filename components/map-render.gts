@@ -355,7 +355,7 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
         //      unreliable in CI ("L.map is not a function").
         // Passing a real module/exports forces the CommonJS branch, so we
         // capture the full library directly regardless of globals or loader.
-        if (!(globalThis as any).L) {
+        if (!(globalThis as any).L?.map) {
           let res = await fetch(
             'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
           );
