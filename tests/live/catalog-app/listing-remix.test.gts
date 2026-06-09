@@ -3,7 +3,7 @@ import { waitFor, settled } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import type ListingRemixCommand from '@cardstack/catalog/commands/listing-remix';
+import ListingRemixCommand from '../../../commands/listing-remix';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 
