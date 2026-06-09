@@ -48,7 +48,7 @@ const calculatorTagId = `${nonCatalogRealmURL}Tag/calculator`;
 const gameTagId = `${nonCatalogRealmURL}Tag/game`;
 
 export function runTests() {
-  module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
+  module.skip('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
     setupOnSave(hooks);

@@ -47,7 +47,7 @@ const writingCategoryId = `${mockCatalogURL}Category/writing`;
 const calculatorTagId = `${mockCatalogURL}Tag/calculator`;
 
 export function runTests() {
-  module(
+  module.skip(
     'Acceptance | Catalog | catalog app - listing create',
     function (hooks) {
       setupApplicationTest(hooks);

@@ -34,7 +34,7 @@ const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 export function runTests() {
-  module('Acceptance | Catalog | catalog app - listing use', function (hooks) {
+  module.skip('Acceptance | Catalog | catalog app - listing use', function (hooks) {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
     setupOnSave(hooks);

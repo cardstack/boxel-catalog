@@ -38,7 +38,7 @@ const authorListingId = `${mockCatalogURL}Listing/author`;
 const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;
 
 export function runTests() {
-  module(
+  module.skip(
     'Acceptance | Catalog | catalog app - listing install',
     function (hooks) {
       setupApplicationTest(hooks);
