@@ -1,0 +1,73 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ComponentListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": null,
+      "summary": "The Popover component provides an anchored floating surface designed to display context-specific content adjacent to a source element, facilitating focused interactions without navigating away from the source. It manages positioning, visibility, and dismissal behaviors, offering configurable variants in kind, size, anchoring mode, backdrop style, elevation, and focus management. The component supports complex interaction patterns, including escalation to different popover modes, focus trapping, keyboard event delegation, and dynamic positioning with tail and overflow adjustments. Its primary purpose is to serve as a flexible, accessible, and visually consistent floating UI surface that integrates seamlessly into various host contexts, enabling rich, focus-managed interactions for both informational and editable content.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/88d034e4-3bf3-408c-91b1-f5bfb28c649e"
+        }
+      },
+      "images": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/popover-23d25ed1.png"
+        }
+      }
+    }
+  }
+}

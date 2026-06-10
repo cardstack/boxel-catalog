@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Popover",
+        "module": "../popover-0eb44ed4-450d-4212-9cec-2749125c8b98/46f065-popover/popover"
+      },
+      "readMe": "Here is the usage documentation for the Popover component:\n\n## Summary\n\nThe `<Popover>` component is a versatile floating surface that hosts a focused interaction next to a source element. It can be used to display various types of content, such as details, edit forms, or tool menus, and it provides a range of customization options for the visual appearance and behavior of the popover.\n\n## Import\n\n```javascript\nimport Popover from '../popover-0eb44ed4-450d-4212-9cec-2749125c8b98/46f065-popover/popover';\n```\n\n## Usage as a Field\n\nTo use the Popover component as a field within a consuming card or field, you can include it in the template and pass the necessary arguments:\n\n```hbs\n<Popover\n  @anchor=\".my-anchor-element\"\n  @open={{this.isPopoverOpen}}\n  @kind=\"details\"\n  @onDismiss={{this.handlePopoverDismiss}}\n  @onEscalate={{this.handlePopoverEscalate}}\n  @focusToken={{this.popoverFocusToken}}\n>\n  <div>\n    Popover content goes here\n  </div>\n</Popover>\n```\n\n## Template Usage\n\nYou can also invoke the Popover component directly in a template within a consuming card or field:\n\n```hbs\n<button\n  type=\"button\"\n  class=\"my-anchor-element\"\n  {{on \"click\" (toggle \"isPopoverOpen\" this)}}\n>\n  Open Popover\n</button>\n\n{{#if this.isPopoverOpen}}\n  <Popover\n    @anchor=\".my-anchor-element\"\n    @open={{this.isPopoverOpen}}\n    @kind=\"details\"\n    @onDismiss={{this.handlePopoverDismiss}}\n    @onEscalateTo={{this.handlePopoverEscalate}}\n    @focusToken={{this.popoverFocusToken}}\n  >\n    <div>\n      Popover content goes here\n    </div>\n  </Popover>\n{{/if}}\n```\n\nIn this example, the Popover is displayed when the button is clicked, and it is dismissed when the user clicks outside the popover or presses the Escape key.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "component",
+      "cardTitle": "Popover",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
