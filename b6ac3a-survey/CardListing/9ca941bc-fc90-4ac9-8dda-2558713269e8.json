@@ -1,0 +1,128 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Survey",
+      "summary": "A card definition for creating and managing surveys, allowing users to specify a title, description, and a collection of survey questions. It includes computed fields for question count and dynamic card titles, supporting wide-format display with associated isolated and fitted templates. Primarily used to design, present, and collect responses via structured survey questions.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/dda01cec-bb53-4d47-ad0e-91624906f5ae"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/bb53cd47-2d0e-4162-8906-f5ae669e2c12"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/ecbb53cd-472d-4e91-a249-06f5ae669e2c"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/1cecbb53-cd47-4d0e-9162-4906f5ae669e"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/53cd472d-0e91-4249-86f5-ae669e2c12b6"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/cd472d0e-9162-4906-b5ae-669e2c12b604"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/a01cecbb-53cd-472d-8e91-624906f5ae66"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/f5ae669e-2c12-4604-b476-9b544b42d170"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/0e916249-06f5-4e66-9e2c-12b60474769b"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/customer-satisfaction-2358486b.png"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Survey/customer-satisfaction"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../Survey/event-feedback"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../Survey/employee-pulse"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../Survey/product-onboarding"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/survey-c6bebed8.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Customer Satisfaction Survey",
+      "description": "Help us improve! This short survey takes about two minutes. Your responses are anonymous.",
+      "questions": [
+        {
+          "prompt": "How satisfied are you with our product overall?",
+          "helpText": "1 = very dissatisfied, 5 = very satisfied",
+          "kind": "rating",
+          "options": [],
+          "required": true
+        },
+        {
+          "prompt": "Would you recommend us to a friend or colleague?",
+          "helpText": null,
+          "kind": "yes-no",
+          "options": [],
+          "required": true
+        },
+        {
+          "prompt": "Which features do you use most often?",
+          "helpText": "Select all that apply.",
+          "kind": "multi-choice",
+          "options": [
+            "Dashboards",
+            "Reports",
+            "Integrations",
+            "Mobile app",
+            "API"
+          ],
+          "required": false
+        },
+        {
+          "prompt": "How did you first hear about us?",
+          "helpText": null,
+          "kind": "single-choice",
+          "options": [
+            "Search engine",
+            "Social media",
+            "A friend",
+            "An ad",
+            "Other"
+          ],
+          "required": false
+        },
+        {
+          "prompt": "In one word, how would you describe your experience?",
+          "helpText": null,
+          "kind": "short-text",
+          "options": [],
+          "required": false
+        },
+        {
+          "prompt": "What could we do to improve?",
+          "helpText": "Be as specific as you like.",
+          "kind": "long-text",
+          "options": [],
+          "required": false
+        }
+      ],
+      "cardInfo": {
+        "name": "Customer Satisfaction Survey",
+        "summary": "A six-question satisfaction survey spanning rating, yes/no, choice, and free-text inputs."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../survey",
+        "name": "Survey"
+      }
+    }
+  }
+}

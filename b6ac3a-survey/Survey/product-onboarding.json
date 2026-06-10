@@ -1,0 +1,75 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Product Onboarding Feedback",
+      "description": "You just finished setting up your account — tell us how it went so we can smooth out the rough edges.",
+      "questions": [
+        {
+          "prompt": "How easy was it to get started?",
+          "helpText": "1 = very difficult, 5 = very easy",
+          "kind": "rating",
+          "options": [],
+          "required": true
+        },
+        {
+          "prompt": "How did you set up your account?",
+          "helpText": null,
+          "kind": "single-choice",
+          "options": [
+            "On my own",
+            "With docs/guides",
+            "With support's help",
+            "A teammate set it up"
+          ],
+          "required": true
+        },
+        {
+          "prompt": "Where did you get stuck, if anywhere?",
+          "helpText": "Select all that apply.",
+          "kind": "multi-choice",
+          "options": [
+            "Sign up",
+            "Connecting data",
+            "Inviting teammates",
+            "First project",
+            "Billing",
+            "I didn't get stuck"
+          ],
+          "required": false
+        },
+        {
+          "prompt": "Did you reach your first 'aha' moment?",
+          "helpText": "The point where the product's value clicked.",
+          "kind": "yes-no",
+          "options": [],
+          "required": false
+        },
+        {
+          "prompt": "What nearly stopped you from continuing?",
+          "helpText": null,
+          "kind": "long-text",
+          "options": [],
+          "required": false
+        },
+        {
+          "prompt": "If you could change one thing about onboarding, what would it be?",
+          "helpText": null,
+          "kind": "short-text",
+          "options": [],
+          "required": false
+        }
+      ],
+      "cardInfo": {
+        "name": "Product Onboarding Feedback",
+        "summary": "Post-onboarding survey measuring setup ease, friction points, and the first value moment for a SaaS product."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../survey",
+        "name": "Survey"
+      }
+    }
+  }
+}
