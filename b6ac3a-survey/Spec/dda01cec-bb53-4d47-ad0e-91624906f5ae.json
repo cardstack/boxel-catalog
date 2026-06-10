@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Survey",
+        "module": "../survey"
+      },
+      "readMe": "# Survey\n\n## Summary\n\nThe `Survey` spec is a card definition that represents a survey, containing a title, description, and a list of survey questions.\n\n## Import\n\n```javascript\nimport { Survey } from '../survey';\n```\n\n## Usage as a Field\n\nTo use the `Survey` spec as a field within a consuming card or field, you can include it like this:\n\n```typescript\nimport {\n  CardDef,\n  field,\n  contains,\n  containsMany,\n} from 'https://cardstack.com/base/card-api';\nimport { Survey } from '../survey';\n\nexport class MyCard extends CardDef {\n  @field survey = contains(Survey);\n}\n```\n\n## Template Usage\n\nTo display a `Survey` within a template, you can use the following markup:\n\n```handlebars\n<div class=\"survey\">\n  <h2>{{this.survey.cardTitle}}</h2>\n  <div class=\"survey-description\">\n    {{this.survey.description}}\n  </div>\n  {{#each this.survey.questions as |question|}}\n    <div class=\"survey-question\">\n      {{question.text}}\n    </div>\n  {{/each}}\n</div>\n```",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Survey",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
