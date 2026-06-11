@@ -231,7 +231,7 @@ class LeafletLayerState implements LeafletLayerStateInterface {
 
   onCoordinatesChange(coordinates: Coordinate[]) {
     this.teardown();
-    let markers = this.createMarkers(coordinates);
+    let markers = this.createMarkers(coordinates.filter(hasLatLng));
     this.addLayers(markers);
   }
 
@@ -239,12 +239,13 @@ class LeafletLayerState implements LeafletLayerStateInterface {
     this.teardown();
     let layersToAdd: LeafletLayers[] = [];
     routes.forEach((route) => {
-      if (route.coordinates.length > 0) {
-        this.createMarkers(route.coordinates).forEach((marker) =>
+      let coords = (route.coordinates ?? []).filter(hasLatLng);
+      if (coords.length > 0) {
+        this.createMarkers(coords).forEach((marker) =>
           layersToAdd.push(marker),
         );
       }
-      let line = this.addPolyline(route.coordinates);
+      let line = this.addPolyline(coords);
       if (line) layersToAdd.push(line);
     });
     this.addLayers(layersToAdd);
@@ -293,7 +294,8 @@ class LeafletLayerState implements LeafletLayerStateInterface {
 
   private fitMapToCoordinates(coords: Coordinate[], attempt = 0) {
     if (!this.map || coords.length === 0) {
-      throw new Error('Map is not initialized or no coordinates provided');
+      // nothing to fit — keep the current (world) view
+      return;
     }
 
     let size = this.map.getSize ? this.map.getSize() : null;
@@ -464,6 +466,12 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
 }
 
 //utilities
+function hasLatLng(c: Coordinate): boolean {
+  // card field data can arrive with unset lat/lng even though the type says
+  // number; Leaflet throws deep inside project() when handed null
+  return c?.lat != null && c?.lng != null;
+}
+
 function createMarker(coord: Coordinate, color: string): LeafletMarker {
   const strokeColor = darken(color, 0.3);
   const html = `<svg width="24" height="32" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
