@@ -8,10 +8,10 @@
     },
     "type": "card",
     "attributes": {
-      "name": "Popover",
+      "name": "Popover UI",
       "summary": "The Popover component provides an anchored floating surface that appears next to a source element to display focused interactions without redirecting user focus away from the source. It supports multiple visual and behavioral variants driven by four main dimensions—kind, anchoring, size, backdrop, and elevation—allowing customization of appearance and positioning. The component manages open/close state, positioning, dismissal (via Escape or outside clicks), focus restoration, and optional escalation to different modes or kinds through a corner glyph button. It supports accessibility features such as ARIA roles and labels, keyboard navigation, focus trapping, auto-focus, and delegation of keyboard events. The Popover owns the surface rendering, positioning, chrome variants, and optional dim background, making it suitable for contextual, modal, or overlay interactions across app domains like cards, fields, skills, or themes.",
       "cardInfo": {
-        "name": null,
+        "name": "Popover UI",
         "notes": null,
         "summary": null,
         "cardThumbnailURL": null
@@ -76,6 +76,11 @@
       "examples.0": {
         "links": {
           "self": "../example/PopoverPlayground/fa9c0fa1-44e2-4cd6-a5d3-6e249c09b53f"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../../popover/.boxel-history/example/PopoverPlayground/fa9c0fa1-44e2-4cd6-a5d3-6e249c09b53f"
         }
       },
       "categories.0": {
