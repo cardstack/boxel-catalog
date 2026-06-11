@@ -187,7 +187,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
       lines.push(`  @autoFocus={{${this.autoFocusChoice === 'on'}}}`);
     }
     if (this.escalationEnabled) {
-      const targets = this.escalationTargets.map((k) => `'${k}'`).join(', ');
+      const targets = this.escalationTargets.map((k) => `'${k}'`).join(' ');
       lines.push(`  @canEscalateTo={{(array ${targets})}}`);
       lines.push(`  @onEscalate={{this.handleEscalate}}`);
     }
@@ -266,7 +266,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
   /** All kinds except the currently active one — passed to @canEscalateTo. */
   get escalationTargets(): PopoverKind[] {
     if (!this.escalationEnabled) return [];
-    return (['details', 'edit', 'tools'] as PopoverKind[]).filter(
+    return (['details', 'edit'] as PopoverKind[]).filter(
       (k) => k !== this.kind,
     );
   }
@@ -316,6 +316,12 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     <div class='pp'>
       <div class='pp-section'>Live preview</div>
       <div class='pp-stage'>
+        {{#if @model.cardTheme}}
+          <span class='pp-theme-chip' data-test-pp-theme-chip>
+            Themed:
+            {{@model.cardTheme.cardTitle}}
+          </span>
+        {{/if}}
         <button
           type='button'
           class='pp-open'
@@ -880,6 +886,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         border-radius: 3px;
       }
       .pp-stage {
+        position: relative;
         height: 250px;
         width: 100%;
         background: #333333;
@@ -890,6 +897,20 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         gap: 12px;
         overflow: hidden;
         contain: layout size;
+      }
+      /* Corner chip naming the Theme card the playground instance links
+       * (cardInfo.theme) — the popovers below follow that theme. */
+      .pp-theme-chip {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        background: color-mix(in srgb, var(--primary, #fff) 22%, transparent);
+        color: #fff;
       }
       .pp-open {
         padding: 8px 18px;
@@ -926,12 +947,12 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: #6b7280;
+        color: var(--muted-foreground, #6b7280);
       }
       .pp-detail-title {
         font-size: 15px;
         font-weight: 600;
-        color: #111827;
+        color: var(--popover-foreground, #111827);
       }
       .pp-detail-list {
         margin: 0;
@@ -945,26 +966,26 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         font-size: 12px;
       }
       .pp-detail-row dt {
-        color: #9ca3af;
+        color: var(--muted-foreground, #9ca3af);
       }
       .pp-detail-row dd {
         margin: 0;
-        color: #374151;
+        color: var(--popover-foreground, #374151);
         font-weight: 500;
       }
       .pp-detail-note {
         margin: 0;
         font-size: 11px;
         line-height: 1.5;
-        color: #6b7280;
+        color: var(--muted-foreground, #6b7280);
       }
       .pp-input {
         padding: 6px 8px;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--border, #d1d5db);
         border-radius: 4px;
         font: inherit;
         width: 100%;
-        background: #fff;
+        background: var(--background, #fff);
       }
       /* EDIT view — form fields on the popover's yellow editor surface. */
       .pp-edit {

@@ -89,7 +89,7 @@ export interface PopoverSignature {
      *  box, 'center' is a viewport-centered modal. Default 'beside'.
      *  (Distinct from `@placement`, which is the Floating UI side.) */
     anchoring?: PopoverAnchoring;
-    /** Size class. Independent of kind. Default 'comfortable'. Drives
+    /** Size class. Independent of kind. Default 'compact'. Drives
      *  min / max width + height via CSS variables. */
     size?: PopoverSize;
     /** Surface material. Independent of kind. Default 'none' (solid). */
@@ -240,6 +240,82 @@ const allocatePopoverLayer = modifier(
       element.style.removeProperty('--bx-popover-z');
       delete element.dataset['surfaceLayerTier'];
       delete element.dataset['surfaceLayerZ'];
+    };
+  },
+);
+
+/** Theme tokens the popover carries across its portal.
+ *
+ *  Theme CSS variables are scoped to the CardContainer of the themed
+ *  card (extractCssVariables applies the `:root` block there, not to
+ *  the real document root). The popover portals into document.body —
+ *  outside that scope — so a plain `var(--popover)` on the portaled
+ *  root would resolve to nothing. This modifier reads the RESOLVED
+ *  values from the anchor element (which lives inside the themed card)
+ *  and copies them onto the portaled root as inline custom properties,
+ *  so the popover follows whatever theme governs its anchor — including
+ *  dark mode and Brand Guide custom variables. */
+const POPOVER_THEME_BRIDGE_TOKENS = [
+  /* semantic theme tokens (shadcn vocabulary) */
+  '--popover',
+  '--popover-foreground',
+  '--foreground',
+  '--background',
+  '--border',
+  '--primary',
+  '--muted-foreground',
+  '--radius',
+  '--shadow-sm',
+  '--shadow-md',
+  '--shadow-xl',
+  '--font-sans',
+  /* popover-specific knobs a host or theme may set (e.g. via Brand
+   * Guide custom variables) */
+  '--bx-popover-bg',
+  '--bx-popover-fg',
+  '--bx-popover-fg-muted',
+  '--bx-popover-border',
+  '--bx-popover-accent',
+  '--bx-popover-dim-bg',
+  '--bx-popover-bg-tint',
+  '--bx-popover-bg-blur',
+  '--bx-popover-tools-bg',
+  '--bx-popover-tools-fg',
+  '--bx-popover-edit-bg',
+  '--bx-popover-edit-border',
+  '--bx-popover-radius',
+  '--bx-popover-shadow-raised',
+  '--bx-popover-shadow-elevated',
+  '--bx-popover-shadow-floating',
+  '--bx-popover-font-family',
+  '--bx-popover-size-compact-min-w',
+  '--bx-popover-size-compact-max-w',
+  '--bx-popover-size-compact-max-h',
+  '--bx-popover-size-comfortable-min-w',
+  '--bx-popover-size-comfortable-max-w',
+  '--bx-popover-size-comfortable-max-h',
+  '--bx-popover-size-spacious-min-w',
+  '--bx-popover-size-spacious-max-w',
+  '--bx-popover-size-spacious-max-h',
+];
+
+const bridgeThemeVariables = modifier(
+  (element: HTMLElement, [selector]: [string]) => {
+    const anchor = document.querySelector<HTMLElement>(selector);
+    if (!anchor) return;
+    const computed = getComputedStyle(anchor);
+    const applied: string[] = [];
+    for (const token of POPOVER_THEME_BRIDGE_TOKENS) {
+      const value = computed.getPropertyValue(token).trim();
+      if (value) {
+        element.style.setProperty(token, value);
+        applied.push(token);
+      }
+    }
+    return () => {
+      for (const token of applied) {
+        element.style.removeProperty(token);
+      }
     };
   },
 );
@@ -1188,6 +1264,7 @@ export default class Popover extends Component<PopoverSignature> {
   dismissOnOutside = dismissOnOutside;
   allocatePopoverLayer = allocatePopoverLayer;
   popoverSurfaceRoot = popoverSurfaceRoot;
+  bridgeThemeVars = bridgeThemeVariables;
   cleanupClosedPopover = cleanupClosedPopoverModifier;
 
   <template>
@@ -1213,6 +1290,7 @@ export default class Popover extends Component<PopoverSignature> {
             class='bx-popover-dim'
             data-bx-popover-instance={{this.instanceId}}
             {{this.allocatePopoverLayer this.layerTier @zIndex}}
+            {{this.bridgeThemeVars @anchor}}
             {{on 'click' this.handleDimClick}}
             aria-hidden='true'
           ></div>
@@ -1243,6 +1321,7 @@ export default class Popover extends Component<PopoverSignature> {
             data-surface-preserve-focus
             style={{this.rootStyle}}
             {{this.allocatePopoverLayer this.layerTier @zIndex}}
+            {{this.bridgeThemeVars @anchor}}
             {{this.popoverSurfaceRoot}}
             {{this.shadowAnchor @anchor}}
             {{this.dismissOnOutside @onDismiss}}
@@ -1305,6 +1384,7 @@ export default class Popover extends Component<PopoverSignature> {
             data-surface-preserve-focus
             style={{this.rootStyle}}
             {{this.allocatePopoverLayer this.layerTier @zIndex}}
+            {{this.bridgeThemeVars @anchor}}
             {{this.popoverSurfaceRoot}}
             {{this.dismissOnOutside @onDismiss}}
             {{this.popoverFocus @focusToken enabled=this.shouldAutoFocus}}
@@ -1366,6 +1446,7 @@ export default class Popover extends Component<PopoverSignature> {
             data-surface-preserve-focus
             style={{this.rootStyle}}
             {{this.allocatePopoverLayer this.layerTier @zIndex}}
+            {{this.bridgeThemeVars @anchor}}
             {{this.popoverSurfaceRoot}}
             {{this.anchoredPopover
               @anchor
@@ -1421,7 +1502,7 @@ export default class Popover extends Component<PopoverSignature> {
        *   .bx-popover--placement-{p} beside | shadow | center
        *   .bx-popover--size-{s}      compact | comfortable | spacious | auto
        *   .bx-popover--backdrop-{b}  none | tint | blur | dim
-       *   .bx-popover--elevation-{e} flat | raised | elevated | modal
+       *   .bx-popover--elevation-{e} flat | raised | elevated | floating
        *
        * Each axis paints ONE thing, so the cartesian product is
        * predictable. CSS custom properties let hosts re-skin
@@ -1431,14 +1512,20 @@ export default class Popover extends Component<PopoverSignature> {
       .bx-popover {
         position: absolute;
         z-index: var(--bx-popover-z, 1000);
-        font:
-          13px/1.4 Inter,
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          Segoe UI,
-          sans-serif;
-        color: var(--bx-popover-fg, #111827);
+        font: 13px/1.4
+          var(
+            --bx-popover-font-family,
+            var(
+              --font-sans,
+              Inter,
+              ui-sans-serif,
+              system-ui,
+              -apple-system,
+              'Segoe UI',
+              sans-serif
+            )
+          );
+        color: var(--bx-popover-fg, var(--popover-foreground, #111827));
         /* Single source of truth for the surface fill. backdrop sets
          * this var (opaque / translucent), kind overrides the hue. */
         background: var(--bx-popover-bg, #fff);
@@ -1510,18 +1597,24 @@ export default class Popover extends Component<PopoverSignature> {
        *   dim  opaque + page dim   — the separate .bx-popover-dim
        *          element dims the page behind it */
       .bx-popover--backdrop-none {
-        --bx-popover-bg: #fff;
+        --bx-popover-bg: var(--popover, #fff);
       }
       .bx-popover--backdrop-tint {
-        --bx-popover-bg: var(--bx-popover-bg-tint, rgba(255, 255, 255, 0.8));
+        --bx-popover-bg: var(
+          --bx-popover-bg-tint,
+          color-mix(in srgb, var(--popover, #fff) 80%, transparent)
+        );
       }
       .bx-popover--backdrop-blur {
-        --bx-popover-bg: var(--bx-popover-bg-blur, rgba(255, 255, 255, 0.55));
+        --bx-popover-bg: var(
+          --bx-popover-bg-blur,
+          color-mix(in srgb, var(--popover, #fff) 55%, transparent)
+        );
         backdrop-filter: blur(12px) saturate(1.4);
         -webkit-backdrop-filter: blur(12px) saturate(1.4);
       }
       .bx-popover--backdrop-dim {
-        --bx-popover-bg: #fff;
+        --bx-popover-bg: var(--popover, #fff);
       }
 
       /* Dim — full-viewport dim layer mounted as a sibling.
@@ -1530,7 +1623,10 @@ export default class Popover extends Component<PopoverSignature> {
       .bx-popover-dim {
         position: fixed;
         inset: 0;
-        background: var(--bx-popover-dim-bg, rgba(15, 23, 42, 0.4));
+        background: var(
+          --bx-popover-dim-bg,
+          color-mix(in srgb, var(--foreground, #0f172a) 40%, transparent)
+        );
         backdrop-filter: blur(2px);
         /* The dim allocates its own layer from the same (modal) tier,
          * and renders just before the popover, so it gets a lower z and
@@ -1555,31 +1651,52 @@ export default class Popover extends Component<PopoverSignature> {
        *   border      none → subtle → subtle → subtle
        * Shadow depth increases with each tier so 'raised', 'elevated',
        * and 'floating' are visually distinct. */
+      /* The whole ladder derives from ONE radius base so a theme moves
+       * every tier consistently. Each value has two override scopes:
+       *   --bx-popover-radius / --bx-popover-shadow-{tier}
+       *       popover-only — no effect on any other UI
+       *   --radius / --shadow-{sm,md,xl}
+       *       the theme's global tokens */
       .bx-popover--elevation-flat {
         --bx-popover-border: transparent;
-        border-radius: 4px;
+        border-radius: calc(var(--bx-popover-radius, var(--radius, 6px)) - 2px);
         box-shadow: none;
       }
       .bx-popover--elevation-raised {
-        --bx-popover-border: #e5e7eb;
-        border-radius: 6px;
-        box-shadow:
-          0 1px 3px rgba(0, 0, 0, 0.08),
-          0 1px 2px rgba(0, 0, 0, 0.06);
+        --bx-popover-border: var(--border, #e5e7eb);
+        border-radius: var(--bx-popover-radius, var(--radius, 6px));
+        box-shadow: var(
+          --bx-popover-shadow-raised,
+          var(
+            --shadow-sm,
+            0 1px 3px rgba(0, 0, 0, 0.08),
+            0 1px 2px rgba(0, 0, 0, 0.06)
+          )
+        );
       }
       .bx-popover--elevation-elevated {
-        --bx-popover-border: #e5e7eb;
-        border-radius: 8px;
-        box-shadow:
-          0 4px 12px rgba(0, 0, 0, 0.1),
-          0 2px 4px rgba(0, 0, 0, 0.07);
+        --bx-popover-border: var(--border, #e5e7eb);
+        border-radius: calc(var(--bx-popover-radius, var(--radius, 6px)) + 2px);
+        box-shadow: var(
+          --bx-popover-shadow-elevated,
+          var(
+            --shadow-md,
+            0 4px 12px rgba(0, 0, 0, 0.1),
+            0 2px 4px rgba(0, 0, 0, 0.07)
+          )
+        );
       }
       .bx-popover--elevation-floating {
-        --bx-popover-border: #e5e7eb;
-        border-radius: 12px;
-        box-shadow:
-          0 12px 32px rgba(0, 0, 0, 0.14),
-          0 4px 10px rgba(0, 0, 0, 0.09);
+        --bx-popover-border: var(--border, #e5e7eb);
+        border-radius: calc(var(--bx-popover-radius, var(--radius, 6px)) * 2);
+        box-shadow: var(
+          --bx-popover-shadow-floating,
+          var(
+            --shadow-xl,
+            0 12px 32px rgba(0, 0, 0, 0.14),
+            0 4px 10px rgba(0, 0, 0, 0.09)
+          )
+        );
       }
 
       /* ─── PLACEMENT — POSITION ONLY ───────────────────────────
@@ -1612,41 +1729,67 @@ export default class Popover extends Component<PopoverSignature> {
        * elevation + size; per-kind overrides only differentiate
        * what's left (tools is dark; details has muted body color). */
       .bx-popover--details {
-        color: var(--bx-popover-fg-muted, #1f2937);
+        color: var(--bx-popover-fg-muted, var(--muted-foreground, #1f2937));
         font-size: 12px;
       }
+      /* tools is an INVERTED surface — it defaults to the theme's
+       * foreground/background swapped, so it stays "the dark one" in a
+       * light theme and "the light one" in a dark theme. */
       .bx-popover--tools {
-        --bx-popover-bg: var(--bx-popover-tools-bg, #1f2937);
-        color: var(--bx-popover-tools-fg, #f9fafb);
+        --bx-popover-bg: var(--bx-popover-tools-bg, var(--foreground, #1f2937));
+        color: var(--bx-popover-tools-fg, var(--background, #f9fafb));
       }
+      /* edit's sticky-note yellow is a semantic "unsaved" signal, not a
+       * brand color — it stays fixed by default; themes override it via
+       * --bx-popover-edit-bg / --bx-popover-edit-border (the -resolved
+       * vars exist so an outer override isn't shadowed by this rule). */
       .bx-popover--edit {
-        --bx-popover-edit-bg: #fef7d6;
-        --bx-popover-edit-border: #f5d75e;
-        --bx-popover-bg: var(--bx-popover-edit-bg);
+        --bx-popover-edit-bg-resolved: var(--bx-popover-edit-bg, #fef7d6);
+        --bx-popover-edit-border-resolved: var(
+          --bx-popover-edit-border,
+          #f5d75e
+        );
+        --bx-popover-bg: var(--bx-popover-edit-bg-resolved);
       }
       .bx-popover--edit.bx-popover--backdrop-tint {
-        --bx-popover-bg: rgba(254, 247, 214, 0.8);
+        --bx-popover-bg: color-mix(
+          in srgb,
+          var(--bx-popover-edit-bg-resolved) 80%,
+          transparent
+        );
       }
       .bx-popover--edit.bx-popover--backdrop-blur {
-        --bx-popover-bg: rgba(254, 247, 214, 0.55);
+        --bx-popover-bg: color-mix(
+          in srgb,
+          var(--bx-popover-edit-bg-resolved) 55%,
+          transparent
+        );
       }
       .bx-popover--edit
         .bx-popover__pane
         > [data-surface-popover-target='edit'] {
-        background: var(--bx-popover-edit-bg);
+        background: var(--bx-popover-edit-bg-resolved);
       }
       .bx-popover--edit
         .bx-popover__pane
         > [data-surface-popover-target='edit']
         > * {
-        background-color: var(--bx-popover-edit-bg);
+        background-color: var(--bx-popover-edit-bg-resolved);
         box-shadow:
           inset 0 0 0 1px
-            color-mix(in srgb, var(--bx-popover-edit-border) 56%, transparent),
+            color-mix(
+              in srgb,
+              var(--bx-popover-edit-border-resolved) 56%,
+              transparent
+            ),
           0 16px 42px rgba(120, 85, 0, 0.12);
       }
       .bx-popover--tools[class*='bx-popover--elevation-'] {
-        border-color: rgba(255, 255, 255, 0.12);
+        --bx-popover-border: color-mix(
+          in srgb,
+          var(--bx-popover-tools-fg, var(--background, #fff)) 12%,
+          transparent
+        );
       }
 
       /* ─── ESCALATION GLYPH — corner button ─────────────────────
@@ -1668,7 +1811,7 @@ export default class Popover extends Component<PopoverSignature> {
         border: none;
         border-radius: 4px;
         background: transparent;
-        color: var(--bx-popover-fg-muted, #9ca3af);
+        color: var(--bx-popover-fg-muted, var(--muted-foreground, #9ca3af));
         font-size: 12px;
         line-height: 1;
         cursor: pointer;
@@ -1686,17 +1829,25 @@ export default class Popover extends Component<PopoverSignature> {
         opacity: 1;
         background: color-mix(
           in srgb,
-          var(--bx-popover-accent, #4f46e5) 10%,
+          var(--bx-popover-accent, var(--primary, #4f46e5)) 10%,
           transparent
         );
-        color: var(--bx-popover-accent, #4f46e5);
+        color: var(--bx-popover-accent, var(--primary, #4f46e5));
       }
       .bx-popover--tools .bx-popover__escalate {
-        color: rgba(255, 255, 255, 0.6);
+        color: color-mix(
+          in srgb,
+          var(--bx-popover-tools-fg, var(--background, #fff)) 60%,
+          transparent
+        );
       }
       .bx-popover--tools .bx-popover__escalate:hover {
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
+        background: color-mix(
+          in srgb,
+          var(--bx-popover-tools-fg, var(--background, #fff)) 12%,
+          transparent
+        );
+        color: var(--bx-popover-tools-fg, var(--background, #fff));
       }
 
       /* ─── BODY ──────────────────────────────────────────────────
