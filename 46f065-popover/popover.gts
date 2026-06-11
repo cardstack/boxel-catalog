@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { modifier } from 'ember-modifier';
 import {
   arrow,
@@ -48,10 +49,12 @@ import {
  * editor input (typing/caret keys).
  *
  * **What the host owns.** Open / close state, kind state, the
- * actual content (yielded as the default block), what each kind
- * means in the host's domain. The Popover owns positioning, dismissal
- * plumbing (Esc + click-out), focus enter / restore, the per-kind
- * + per-elevation visual chrome, and the optional dim backdrop.
+ * actual content (one named block per kind: `<:details>` / `<:edit>`
+ * / `<:tools>` — the popover renders the block matching the current
+ * `@kind`), what each kind means in the host's domain. The Popover
+ * owns positioning, dismissal plumbing (Esc + click-out), focus
+ * enter / restore, the per-kind + per-elevation visual chrome, and
+ * the optional dim backdrop.
  *
  * **Chrome simplification.** The escalation toolbar is OFF by
  * default. When `canEscalateTo` lists more than the current kind,
@@ -76,8 +79,10 @@ export interface PopoverSignature {
     /** When false, popover is unmounted. Toggling preserves the
      *  surrounding `<Popover>` invocation so re-opens are cheap. */
     open: boolean;
-    /** Popover kind — drives the per-kind chrome variant + body content
-     *  (host yields different content per kind). */
+    /** Popover kind — drives the per-kind chrome variant and selects
+     *  which named block renders (`<:details>` / `<:edit>` / `<:tools>`).
+     *  Supply a block for every kind reachable via `@kind` or
+     *  `@canEscalateTo`; a missing block renders an empty pane. */
     kind: PopoverKind;
     /** How the popover relates to its anchor — the mounting strategy.
      *  'beside' floats beside it (Floating UI), 'overlay' overlays its
@@ -161,7 +166,9 @@ export interface PopoverSignature {
     relativeScale?: number;
   };
   Blocks: {
-    default: [PopoverKind];
+    details: [];
+    edit: [];
+    tools: [];
   };
   Element: HTMLDivElement;
 }
@@ -1254,7 +1261,23 @@ export default class Popover extends Component<PopoverSignature> {
               >{{this.escalationGlyph}}</button>
             {{/if}}
             <div class='bx-popover__body'>
-              {{yield @kind}}
+              {{! Per-kind named-block dispatch. yield-to only accepts a
+                  static block name, so the kinds are enumerated here — once,
+                  inside the component — and hosts just write the named
+                  blocks details / edit / tools. }}
+              {{#if (eq @kind 'edit')}}
+                <div class='bx-popover__pane' data-bx-popover-pane='edit'>
+                  {{yield to='edit'}}
+                </div>
+              {{else if (eq @kind 'tools')}}
+                <div class='bx-popover__pane' data-bx-popover-pane='tools'>
+                  {{yield to='tools'}}
+                </div>
+              {{else}}
+                <div class='bx-popover__pane' data-bx-popover-pane='details'>
+                  {{yield to='details'}}
+                </div>
+              {{/if}}
             </div>
           </div>
         {{/in-element}}
@@ -1299,7 +1322,23 @@ export default class Popover extends Component<PopoverSignature> {
               >{{this.escalationGlyph}}</button>
             {{/if}}
             <div class='bx-popover__body'>
-              {{yield @kind}}
+              {{! Per-kind named-block dispatch. yield-to only accepts a
+                  static block name, so the kinds are enumerated here — once,
+                  inside the component — and hosts just write the named
+                  blocks details / edit / tools. }}
+              {{#if (eq @kind 'edit')}}
+                <div class='bx-popover__pane' data-bx-popover-pane='edit'>
+                  {{yield to='edit'}}
+                </div>
+              {{else if (eq @kind 'tools')}}
+                <div class='bx-popover__pane' data-bx-popover-pane='tools'>
+                  {{yield to='tools'}}
+                </div>
+              {{else}}
+                <div class='bx-popover__pane' data-bx-popover-pane='details'>
+                  {{yield to='details'}}
+                </div>
+              {{/if}}
             </div>
           </div>
         {{/in-element}}
@@ -1352,7 +1391,23 @@ export default class Popover extends Component<PopoverSignature> {
               >{{this.escalationGlyph}}</button>
             {{/if}}
             <div class='bx-popover__body'>
-              {{yield @kind}}
+              {{! Per-kind named-block dispatch. yield-to only accepts a
+                  static block name, so the kinds are enumerated here — once,
+                  inside the component — and hosts just write the named
+                  blocks details / edit / tools. }}
+              {{#if (eq @kind 'edit')}}
+                <div class='bx-popover__pane' data-bx-popover-pane='edit'>
+                  {{yield to='edit'}}
+                </div>
+              {{else if (eq @kind 'tools')}}
+                <div class='bx-popover__pane' data-bx-popover-pane='tools'>
+                  {{yield to='tools'}}
+                </div>
+              {{else}}
+                <div class='bx-popover__pane' data-bx-popover-pane='details'>
+                  {{yield to='details'}}
+                </div>
+              {{/if}}
             </div>
           </div>
         {{/in-element}}
@@ -1576,12 +1631,12 @@ export default class Popover extends Component<PopoverSignature> {
         --bx-popover-bg: rgba(254, 247, 214, 0.55);
       }
       .bx-popover--edit
-        .bx-popover__body
+        .bx-popover__pane
         > [data-surface-popover-target='edit'] {
         background: var(--bx-popover-edit-bg);
       }
       .bx-popover--edit
-        .bx-popover__body
+        .bx-popover__pane
         > [data-surface-popover-target='edit']
         > * {
         background-color: var(--bx-popover-edit-bg);
@@ -1669,6 +1724,15 @@ export default class Popover extends Component<PopoverSignature> {
         /* Border lives here, not on the root, so it never intersects
          * the arrow which is positioned on the root element. */
         border: 1px solid var(--bx-popover-border, transparent);
+      }
+
+      /* ─── PANE — per-kind wrapper around the active named block ────
+       * Class/data hook only: NO padding (the body's picker convention
+       * applies — each editor pane owns its own 6px gutter). Target a
+       * kind via .bx-popover__pane[data-bx-popover-pane='edit']. */
+      .bx-popover__pane {
+        display: block;
+        border-radius: inherit;
       }
 
       /* ─── ARROW — optional caret (beside anchoring) ───────────────

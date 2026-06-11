@@ -192,7 +192,16 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
       lines.push(`  @onEscalate={{this.handleEscalate}}`);
     }
     lines.push(`  @onDismiss={{this.close}}`);
-    lines.push(`>`, `  …your content…`, `</Popover>`);
+    lines.push(`>`);
+    // One named block per reachable kind — the current kind plus any
+    // escalation targets. The popover renders the block matching @kind.
+    const reachable = (['details', 'edit', 'tools'] as PopoverKind[]).filter(
+      (k) => k === this.kind || this.escalationTargets.includes(k),
+    );
+    for (const k of reachable) {
+      lines.push(`  <:${k}>`, `    …${k} content…`, `  </:${k}>`);
+    }
+    lines.push(`</Popover>`);
     return lines.join('\n');
   }
 
@@ -342,14 +351,13 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
             @canEscalateTo={{this.escalationTargets}}
             @onEscalate={{this.handleEscalate}}
             @onDismiss={{this.close}}
-            as |kind|
           >
-            {{#if (eq kind 'edit')}}
+            <:edit>
               {{! EDIT — the editor surface (kind paints it yellow). A
                   BoxelSelect + text input, the controls keyboardModel='edit'
                   focuses. }}
               <div class='pp-body pp-edit'>
-                <div class='pp-eyebrow'>{{kind}}</div>
+                <div class='pp-eyebrow'>edit</div>
                 <label class='pp-field'>
                   <span class='pp-field-label'>Priority</span>
                   <BoxelSelect
@@ -372,11 +380,12 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                   />
                 </label>
               </div>
-            {{else if (eq kind 'tools')}}
+            </:edit>
+            <:tools>
               {{! TOOLS — a dark action menu (the docs paint tools kind on a
                   dark surface). Each item drives a real popover behavior. }}
               <div class='pp-body pp-tools'>
-                <div class='pp-eyebrow'>{{kind}}</div>
+                <div class='pp-eyebrow'>tools</div>
                 <ul
                   class='pp-tools-menu'
                   role='menu'
@@ -423,11 +432,12 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                   </li>
                 </ul>
               </div>
-            {{else}}
+            </:tools>
+            <:details>
               {{! DETAILS — passive, read-only info (the docs give details
                   kind a tooltip role + muted text). No edit field. }}
               <div class='pp-body pp-detail'>
-                <div class='pp-eyebrow'>{{kind}}</div>
+                <div class='pp-eyebrow'>details</div>
                 <div class='pp-detail-title'>{{this.selectedPick}}
                   priority</div>
                 <dl class='pp-detail-list'>
@@ -458,7 +468,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                     field.</p>
                 {{/if}}
               </div>
-            {{/if}}
+            </:details>
           </Popover>
         {{/if}}
       </div>
@@ -476,7 +486,10 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
           >
             {{item}}
           </BoxelSelect>
-          <span class='pp-desc'>Sets the ARIA role and CSS colour theme.
+          <span class='pp-desc'>Sets the ARIA role, the CSS colour theme, and
+            which named block (<code>&lt;:details&gt;</code>,
+            <code>&lt;:edit&gt;</code>,
+            <code>&lt;:tools&gt;</code>) renders.
             <code>details</code>
             = passive tooltip,
             <code>edit</code>
@@ -767,7 +780,8 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
             <code>@onEscalate</code>
             fires with that kind — host updates
             <code>@kind</code>
-            in that handler. Toggle the
+            in that handler, and the popover re-renders the named block matching
+            the new kind while staying open. Toggle the
             <em>@canEscalateTo / @onEscalate</em>
             control above to see it live.</span>
         </div>
