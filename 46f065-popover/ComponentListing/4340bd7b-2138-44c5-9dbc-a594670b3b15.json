@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "ComponentListing",
-        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+        "module": "../../catalog-app/listing/listing"
       }
     },
     "type": "card",
@@ -30,7 +30,7 @@
       },
       "tags.0": {
         "links": {
-          "self": "https://app.boxel.ai/catalog/Tag/card"
+          "self": "../../Tag/card"
         }
       },
       "license": {
@@ -80,12 +80,22 @@
       },
       "examples.1": {
         "links": {
-          "self": "../../popover/.boxel-history/example/PopoverPlayground/fa9c0fa1-44e2-4cd6-a5d3-6e249c09b53f"
+          "self": "../example/PopoverPlayground/70b516be-e312-4c75-8521-40116794e35e"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../Theme/paper-press"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../Theme/midnight-glass"
         }
       },
       "categories.0": {
         "links": {
-          "self": "https://app.boxel.ai/catalog/Category/ui-components-design"
+          "self": "../../Category/ui-components-design"
         }
       },
       "cardInfo.theme": {
