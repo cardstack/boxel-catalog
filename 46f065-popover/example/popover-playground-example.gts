@@ -187,12 +187,21 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
       lines.push(`  @autoFocus={{${this.autoFocusChoice === 'on'}}}`);
     }
     if (this.escalationEnabled) {
-      const targets = this.escalationTargets.map((k) => `'${k}'`).join(', ');
+      const targets = this.escalationTargets.map((k) => `'${k}'`).join(' ');
       lines.push(`  @canEscalateTo={{(array ${targets})}}`);
       lines.push(`  @onEscalate={{this.handleEscalate}}`);
     }
     lines.push(`  @onDismiss={{this.close}}`);
-    lines.push(`>`, `  …your content…`, `</Popover>`);
+    lines.push(`>`);
+    // One named block per reachable kind — the current kind plus any
+    // escalation targets. The popover renders the block matching @kind.
+    const reachable = (['details', 'edit', 'tools'] as PopoverKind[]).filter(
+      (k) => k === this.kind || this.escalationTargets.includes(k),
+    );
+    for (const k of reachable) {
+      lines.push(`  <:${k}>`, `    …${k} content…`, `  </:${k}>`);
+    }
+    lines.push(`</Popover>`);
     return lines.join('\n');
   }
 
@@ -257,7 +266,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
   /** All kinds except the currently active one — passed to @canEscalateTo. */
   get escalationTargets(): PopoverKind[] {
     if (!this.escalationEnabled) return [];
-    return (['details', 'edit', 'tools'] as PopoverKind[]).filter(
+    return (['details', 'edit'] as PopoverKind[]).filter(
       (k) => k !== this.kind,
     );
   }
@@ -307,6 +316,12 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     <div class='pp'>
       <div class='pp-section'>Live preview</div>
       <div class='pp-stage'>
+        {{#if @model.cardTheme}}
+          <span class='pp-theme-chip' data-test-pp-theme-chip>
+            Themed:
+            {{@model.cardTheme.cardTitle}}
+          </span>
+        {{/if}}
         <button
           type='button'
           class='pp-open'
@@ -342,14 +357,13 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
             @canEscalateTo={{this.escalationTargets}}
             @onEscalate={{this.handleEscalate}}
             @onDismiss={{this.close}}
-            as |kind|
           >
-            {{#if (eq kind 'edit')}}
+            <:edit>
               {{! EDIT — the editor surface (kind paints it yellow). A
                   BoxelSelect + text input, the controls keyboardModel='edit'
                   focuses. }}
               <div class='pp-body pp-edit'>
-                <div class='pp-eyebrow'>{{kind}}</div>
+                <div class='pp-eyebrow'>edit</div>
                 <label class='pp-field'>
                   <span class='pp-field-label'>Priority</span>
                   <BoxelSelect
@@ -372,11 +386,12 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                   />
                 </label>
               </div>
-            {{else if (eq kind 'tools')}}
+            </:edit>
+            <:tools>
               {{! TOOLS — a dark action menu (the docs paint tools kind on a
                   dark surface). Each item drives a real popover behavior. }}
               <div class='pp-body pp-tools'>
-                <div class='pp-eyebrow'>{{kind}}</div>
+                <div class='pp-eyebrow'>tools</div>
                 <ul
                   class='pp-tools-menu'
                   role='menu'
@@ -423,11 +438,12 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                   </li>
                 </ul>
               </div>
-            {{else}}
+            </:tools>
+            <:details>
               {{! DETAILS — passive, read-only info (the docs give details
                   kind a tooltip role + muted text). No edit field. }}
               <div class='pp-body pp-detail'>
-                <div class='pp-eyebrow'>{{kind}}</div>
+                <div class='pp-eyebrow'>details</div>
                 <div class='pp-detail-title'>{{this.selectedPick}}
                   priority</div>
                 <dl class='pp-detail-list'>
@@ -458,7 +474,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                     field.</p>
                 {{/if}}
               </div>
-            {{/if}}
+            </:details>
           </Popover>
         {{/if}}
       </div>
@@ -476,7 +492,10 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
           >
             {{item}}
           </BoxelSelect>
-          <span class='pp-desc'>Sets the ARIA role and CSS colour theme.
+          <span class='pp-desc'>Sets the ARIA role, the CSS colour theme, and
+            which named block (<code>&lt;:details&gt;</code>,
+            <code>&lt;:edit&gt;</code>,
+            <code>&lt;:tools&gt;</code>) renders.
             <code>details</code>
             = passive tooltip,
             <code>edit</code>
@@ -767,7 +786,8 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
             <code>@onEscalate</code>
             fires with that kind — host updates
             <code>@kind</code>
-            in that handler. Toggle the
+            in that handler, and the popover re-renders the named block matching
+            the new kind while staying open. Toggle the
             <em>@canEscalateTo / @onEscalate</em>
             control above to see it live.</span>
         </div>
@@ -866,6 +886,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         border-radius: 3px;
       }
       .pp-stage {
+        position: relative;
         height: 250px;
         width: 100%;
         background: #333333;
@@ -876,6 +897,20 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         gap: 12px;
         overflow: hidden;
         contain: layout size;
+      }
+      /* Corner chip naming the Theme card the playground instance links
+       * (cardInfo.theme) — the popovers below follow that theme. */
+      .pp-theme-chip {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        background: color-mix(in srgb, var(--primary, #fff) 22%, transparent);
+        color: #fff;
       }
       .pp-open {
         padding: 8px 18px;
@@ -912,12 +947,12 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: #6b7280;
+        color: var(--muted-foreground, #6b7280);
       }
       .pp-detail-title {
         font-size: 15px;
         font-weight: 600;
-        color: #111827;
+        color: var(--popover-foreground, #111827);
       }
       .pp-detail-list {
         margin: 0;
@@ -931,26 +966,26 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         font-size: 12px;
       }
       .pp-detail-row dt {
-        color: #9ca3af;
+        color: var(--muted-foreground, #9ca3af);
       }
       .pp-detail-row dd {
         margin: 0;
-        color: #374151;
+        color: var(--popover-foreground, #374151);
         font-weight: 500;
       }
       .pp-detail-note {
         margin: 0;
         font-size: 11px;
         line-height: 1.5;
-        color: #6b7280;
+        color: var(--muted-foreground, #6b7280);
       }
       .pp-input {
         padding: 6px 8px;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--border, #d1d5db);
         border-radius: 4px;
         font: inherit;
         width: 100%;
-        background: #fff;
+        background: var(--background, #fff);
       }
       /* EDIT view — form fields on the popover's yellow editor surface. */
       .pp-edit {

@@ -8,9 +8,9 @@
     },
     "type": "card",
     "attributes": {
-      "title": "Popover Playground Example (Theme Linked)",
+      "title": "Popover Playground Example (No Theme Linked)",
       "cardInfo": {
-        "name": "Popover Playground",
+        "name": null,
         "notes": null,
         "summary": null,
         "cardThumbnailURL": null
@@ -19,7 +19,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": "../../Theme/paper-press"
+          "self": null
         }
       },
       "cardInfo.cardThumbnail": {

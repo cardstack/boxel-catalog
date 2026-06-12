@@ -1,0 +1,75 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Employee Pulse Check",
+      "description": "A quick monthly check-in on how you're feeling at work. Responses are confidential and help us improve.",
+      "questions": [
+        {
+          "prompt": "How would you rate your overall job satisfaction this month?",
+          "helpText": "1 = very dissatisfied, 5 = very satisfied",
+          "kind": "rating",
+          "options": [],
+          "required": true
+        },
+        {
+          "prompt": "How manageable was your workload?",
+          "helpText": null,
+          "kind": "single-choice",
+          "options": [
+            "Too light",
+            "Just right",
+            "A bit heavy",
+            "Unmanageable"
+          ],
+          "required": true
+        },
+        {
+          "prompt": "Which areas would most improve your day-to-day?",
+          "helpText": "Select all that apply.",
+          "kind": "multi-choice",
+          "options": [
+            "Clearer priorities",
+            "Better tools",
+            "More autonomy",
+            "Career growth",
+            "Team communication",
+            "Work-life balance"
+          ],
+          "required": false
+        },
+        {
+          "prompt": "Do you feel recognized for your contributions?",
+          "helpText": null,
+          "kind": "yes-no",
+          "options": [],
+          "required": true
+        },
+        {
+          "prompt": "What's one thing we should keep doing?",
+          "helpText": null,
+          "kind": "short-text",
+          "options": [],
+          "required": false
+        },
+        {
+          "prompt": "What's one thing we should change?",
+          "helpText": "Be as candid as you like — this is anonymous.",
+          "kind": "long-text",
+          "options": [],
+          "required": false
+        }
+      ],
+      "cardInfo": {
+        "name": "Employee Pulse Check",
+        "summary": "A confidential monthly engagement pulse covering satisfaction, workload, recognition, and open feedback."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../survey",
+        "name": "Survey"
+      }
+    }
+  }
+}
