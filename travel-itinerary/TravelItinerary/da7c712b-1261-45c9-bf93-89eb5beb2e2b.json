@@ -121,11 +121,6 @@
       }
     },
     "relationships": {
-      "planSkill": {
-        "links": {
-          "self": "../Skill/itinerary-planner-skill"
-        }
-      },
       "cardInfo.theme": {
         "links": {
           "self": null

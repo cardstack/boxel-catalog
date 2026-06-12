@@ -11,228 +11,123 @@
       "stops": [
         {
           "location": {
-            "searchKey": "Dishoom Shoreditch, London",
-            "lat": 51.5225,
-            "lon": -0.0753
+            "searchKey": "Café de Flore",
+            "lat": 48.8543,
+            "lon": 2.3327
           },
           "day": 1,
           "startTime": {
-            "value": "09:00"
+            "value": "08:00"
           },
           "endTime": {
+            "value": "09:30"
+          },
+          "notes": "Arrive early to secure a seat on the terrace; iconic café in Saint-Germain-des-Prés."
+        },
+        {
+          "location": {
+            "searchKey": "Brûlerie des Ternes",
+            "lat": 48.8751,
+            "lon": 2.2922
+          },
+          "day": 1,
+          "startTime": {
             "value": "10:30"
-          },
-          "notes": "Iconic Bombay-style café. Book ahead or arrive early — queues form fast. Try the bacon naan roll and chai."
-        },
-        {
-          "location": {
-            "searchKey": "Brick Lane Market, London",
-            "lat": 51.5222,
-            "lon": -0.0717
-          },
-          "day": 1,
-          "startTime": {
-            "value": "10:30"
-          },
-          "endTime": {
-            "value": "13:00"
-          },
-          "notes": "Sunday street market stretching along Brick Lane. Best for vintage clothing, records, and street food. Busiest from 11am."
-        },
-        {
-          "location": {
-            "searchKey": "Old Spitalfields Market, London",
-            "lat": 51.5196,
-            "lon": -0.0759
-          },
-          "day": 1,
-          "startTime": {
-            "value": "13:00"
-          },
-          "endTime": {
-            "value": "14:00"
-          },
-          "notes": "Dozens of food stalls under a Victorian glass roof. Great for a quick affordable lunch — try the Thai, Ethiopian, or Argentinian stalls."
-        },
-        {
-          "location": {
-            "searchKey": "Old Spitalfields Market, Brushfield Street, London",
-            "lat": 51.5196,
-            "lon": -0.0759
-          },
-          "day": 1,
-          "startTime": {
-            "value": "14:00"
-          },
-          "endTime": {
-            "value": "17:00"
-          },
-          "notes": "Covered market with indie fashion, antiques, and gifts. Great for unique finds — check the weekly trader schedule before visiting."
-        },
-        {
-          "location": {
-            "searchKey": "Columbia Road Flower Market, London",
-            "lat": 51.529,
-            "lon": -0.0724
-          },
-          "day": 1,
-          "startTime": {
-            "value": "17:00"
-          },
-          "endTime": {
-            "value": "19:00"
-          },
-          "notes": "Famous Sunday flower market on Columbia Road. Even outside market hours the street is lined with independent plant shops, cafés, and boutiques."
-        },
-        {
-          "location": {
-            "searchKey": "Sketch London, 9 Conduit Street, Mayfair",
-            "lat": 51.5128,
-            "lon": -0.1433
-          },
-          "day": 2,
-          "startTime": {
-            "value": "09:00"
-          },
-          "endTime": {
-            "value": "10:00"
-          },
-          "notes": "Whimsical pink-upholstered café. Breakfast in the Gallery room. Booking essential — one of London's most Instagrammed interiors."
-        },
-        {
-          "location": {
-            "searchKey": "Selfridges, Oxford Street, London",
-            "lat": 51.5143,
-            "lon": -0.1522
-          },
-          "day": 2,
-          "startTime": {
-            "value": "10:00"
-          },
-          "endTime": {
-            "value": "13:00"
-          },
-          "notes": "Europe's busiest shopping street. Selfridges is the anchor — hit the beauty hall and food hall. Also check John Lewis and Marks & Spencer."
-        },
-        {
-          "location": {
-            "searchKey": "Carnaby Street, London",
-            "lat": 51.5128,
-            "lon": -0.1397
-          },
-          "day": 2,
-          "startTime": {
-            "value": "13:00"
-          },
-          "endTime": {
-            "value": "14:00"
-          },
-          "notes": "Pedestrianised street lined with cafés. Good for a relaxed sit-down lunch — try Kua 'Aina for burgers or Flatbread Kitchen for mezze."
-        },
-        {
-          "location": {
-            "searchKey": "Liberty London, Great Marlborough Street",
-            "lat": 51.5132,
-            "lon": -0.1407
-          },
-          "day": 2,
-          "startTime": {
-            "value": "14:00"
-          },
-          "endTime": {
-            "value": "16:30"
-          },
-          "notes": "Liberty London is a must — beautiful Tudor-Revival building housing luxury and indie brands. Carnaby nearby is great for streetwear and lifestyle brands."
-        },
-        {
-          "location": {
-            "searchKey": "Covent Garden, London",
-            "lat": 51.5117,
-            "lon": -0.124
-          },
-          "day": 2,
-          "startTime": {
-            "value": "16:30"
-          },
-          "endTime": {
-            "value": "19:00"
-          },
-          "notes": "Lively piazza with street performers. Good for independent boutiques in Neal's Yard and the Apple Market. End the evening with dinner at one of the many restaurants."
-        },
-        {
-          "location": {
-            "searchKey": "Ottolenghi, 63 Ledbury Road, Notting Hill, London",
-            "lat": 51.5143,
-            "lon": -0.2013
-          },
-          "day": 3,
-          "startTime": {
-            "value": "09:00"
-          },
-          "endTime": {
-            "value": "10:00"
-          },
-          "notes": "Celebrated deli-café. Perfect breakfast spot before Portobello — try the shakshuka or avocado toast. Small and busy; arrive early."
-        },
-        {
-          "location": {
-            "searchKey": "Portobello Road Market, Notting Hill, London",
-            "lat": 51.5154,
-            "lon": -0.2045
-          },
-          "day": 3,
-          "startTime": {
-            "value": "10:00"
           },
           "endTime": {
             "value": "12:00"
           },
-          "notes": "World-famous antiques and vintage market. Best for silver, jewellery, vintage clothing, and art. Antique dealers are mainly at the Notting Hill end."
+          "notes": "Specialty roastery; try single-origin espresso or pour-over in this intimate space."
         },
         {
           "location": {
-            "searchKey": "Notting Hill, London",
-            "lat": 51.5091,
-            "lon": -0.196
+            "searchKey": "Verlet",
+            "lat": 48.8637,
+            "lon": 2.3416
           },
-          "day": 3,
+          "day": 1,
           "startTime": {
+            "value": "14:00"
+          },
+          "endTime": {
+            "value": "15:30"
+          },
+          "notes": "Historic 1880s coffee roaster; purchase beans or enjoy coffee in the adjoining salon."
+        },
+        {
+          "location": {
+            "searchKey": "Odette",
+            "lat": 48.8626,
+            "lon": 2.3359
+          },
+          "day": 1,
+          "startTime": {
+            "value": "16:30"
+          },
+          "endTime": {
+            "value": "18:00"
+          },
+          "notes": "Pastry and coffee pairing in Île-Saint-Louis; reserve ahead for the best tables."
+        },
+        {
+          "location": {
+            "searchKey": "Boot Café",
+            "lat": 48.8604,
+            "lon": 2.3581
+          },
+          "day": 2,
+          "startTime": {
+            "value": "08:30"
+          },
+          "endTime": {
+            "value": "10:00"
+          },
+          "notes": "Third-wave coffee roaster in the Marais with minimal, Nordic aesthetic."
+        },
+        {
+          "location": {
+            "searchKey": "Café Charlot",
+            "lat": 48.8617,
+            "lon": 2.3614
+          },
+          "day": 2,
+          "startTime": {
+            "value": "10:30"
+          },
+          "endTime": {
             "value": "12:00"
           },
-          "endTime": {
-            "value": "13:30"
-          },
-          "notes": "Explore the neighbourhood's pastel-coloured houses and grab lunch. Try The Ledbury or a simpler bite at Lisboa Patisserie for pastéis de nata."
+          "notes": "Trendy spot in the Marais; excellent coffee and brunch options; arrive mid-morning."
         },
         {
           "location": {
-            "searchKey": "Harrods, Brompton Road, Knightsbridge, London",
-            "lat": 51.4994,
-            "lon": -0.1632
+            "searchKey": "Broken Arm",
+            "lat": 48.862,
+            "lon": 2.3571
           },
-          "day": 3,
+          "day": 2,
           "startTime": {
-            "value": "13:30"
+            "value": "14:00"
           },
           "endTime": {
-            "value": "16:30"
+            "value": "15:30"
           },
-          "notes": "One of the world's most famous department stores — 330 departments across 7 floors. Visit the Egyptian Hall, Food Hall, and perfume halls. Free entry."
+          "notes": "Design-focused café and concept store; quality espresso and modern ambiance."
         },
         {
           "location": {
-            "searchKey": "King's Road, Chelsea, London",
-            "lat": 51.4877,
-            "lon": -0.1685
+            "searchKey": "Café Kitsuné",
+            "lat": 48.8637,
+            "lon": 2.2956
           },
-          "day": 3,
+          "day": 2,
           "startTime": {
             "value": "16:30"
           },
           "endTime": {
-            "value": "18:30"
+            "value": "18:00"
           },
-          "notes": "Chelsea's famous shopping street. Mix of designer boutiques, homewares, and vintage shops. Great for a leisurely browse to round off the trip."
+          "notes": "Japanese-inspired café in Palais Royal gardens; serene setting for afternoon coffee."
         }
       ],
       "cardInfo": {
@@ -242,25 +137,20 @@
         "cardThumbnailURL": null
       },
       "dateRange": {
-        "end": "2026-06-07",
-        "start": "2026-06-05"
+        "end": "2026-07-02",
+        "start": "2026-07-01"
       },
       "tripTitle": "London (3 days)",
       "destination": {
-        "lat": 51.5074456,
-        "lon": -0.1277653,
-        "searchKey": "Greater London, England, United Kingdom"
+        "lat": null,
+        "lon": null,
+        "searchKey": "Tokyo, Japan"
       },
       "shareTripCode": {
         "data": "https://localhost:4201/catalog/travel-itinerary/TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json"
       }
     },
     "relationships": {
-      "planSkill": {
-        "links": {
-          "self": "../Skill/itinerary-planner-skill"
-        }
-      },
       "cardInfo.theme": {
         "links": {
           "self": null
@@ -268,77 +158,42 @@
       },
       "stops.0.category": {
         "links": {
-          "self": null
+          "self": "../ItineraryCategory/cafe-and-coffee"
         }
       },
       "stops.1.category": {
         "links": {
-          "self": null
+          "self": "../ItineraryCategory/cafe-and-coffee"
         }
       },
       "stops.2.category": {
         "links": {
-          "self": null
+          "self": "../ItineraryCategory/cafe-and-coffee"
         }
       },
       "stops.3.category": {
         "links": {
-          "self": null
+          "self": "../ItineraryCategory/cafe-and-coffee"
         }
       },
       "stops.4.category": {
         "links": {
-          "self": null
+          "self": "../ItineraryCategory/cafe-and-coffee"
         }
       },
       "stops.5.category": {
         "links": {
-          "self": null
+          "self": "../ItineraryCategory/cafe-and-coffee"
         }
       },
       "stops.6.category": {
         "links": {
-          "self": null
+          "self": "../ItineraryCategory/cafe-and-coffee"
         }
       },
       "stops.7.category": {
         "links": {
-          "self": null
-        }
-      },
-      "stops.8.category": {
-        "links": {
-          "self": null
-        }
-      },
-      "stops.9.category": {
-        "links": {
-          "self": null
-        }
-      },
-      "stops.10.category": {
-        "links": {
-          "self": null
-        }
-      },
-      "stops.11.category": {
-        "links": {
-          "self": null
-        }
-      },
-      "stops.12.category": {
-        "links": {
-          "self": null
-        }
-      },
-      "stops.13.category": {
-        "links": {
-          "self": null
-        }
-      },
-      "stops.14.category": {
-        "links": {
-          "self": null
+          "self": "../ItineraryCategory/cafe-and-coffee"
         }
       },
       "cardInfo.cardThumbnail": {
