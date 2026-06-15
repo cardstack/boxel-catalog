@@ -20,9 +20,13 @@ jobs:
       cancel-in-progress: true
     steps:
       # Checkout the boxel monorepo at root to get tooling and init action
+      # TEMPORARY: pinned to boxel PR #5231 branch to validate the narrowed
+      # no-restricted-syntax catalog override against real contents. Revert
+      # this `ref:` (back to the default branch) before merging.
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
+          ref: cs-11461-narrow-catalog-no-restricted-syntax
 
       # Checkout this catalog repo directly into the monorepo's catalog location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
