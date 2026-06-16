@@ -16,7 +16,7 @@ import SparklesIcon from '@cardstack/boxel-icons/sparkles';
 import TrashIcon from '@cardstack/boxel-icons/trash';
 import XIcon from '@cardstack/boxel-icons/x';
 
-import { TravelPlannerCommand } from '@cardstack/catalog/travel-itinerary/commands/travel-planner-command';
+import { TravelPlannerCommand } from '../commands/travel-planner-command';
 import { Button, DateRangePicker } from '@cardstack/boxel-ui/components';
 import { add, eq, not } from '@cardstack/boxel-ui/helpers';
 import { Component, getComponent } from 'https://cardstack.com/base/card-api';
