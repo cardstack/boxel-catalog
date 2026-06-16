@@ -8,6 +8,9 @@ import { Command } from '@cardstack/runtime-common';
 // request.
 const SYSTEM_PROMPT = `You are a travel-itinerary planner. Follow the attached skill's instructions and JSON schema exactly. OUTPUT: ONE JSON object only — no prose, no markdown fences, no commentary.`;
 
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const here: string = import.meta.url;
+
 class TravelPlannerInput extends CardDef {
   @field userPrompt = contains(StringField, {
     description:
@@ -40,11 +43,7 @@ export class TravelPlannerCommand extends Command<
       throw new Error('userPrompt is required');
     }
 
-    // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-    let skillCardId = new URL(
-      '../../Skill/travel-planner-skill',
-      import.meta.url,
-    ).href;
+    let skillCardId = new URL('../../Skill/travel-planner-skill', here).href;
 
     let oneShot = new OneShotLlmRequestCommand(this.commandContext);
     let result = await oneShot.execute({
