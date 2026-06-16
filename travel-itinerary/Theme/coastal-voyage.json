@@ -1,0 +1,193 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "default",
+        "module": "https://cardstack.com/base/brand-guide"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "version": null,
+      "cardInfo": {
+        "name": "Coastal Voyage",
+        "notes": null,
+        "summary": "An ocean-teal theme for the Travel Itinerary app. Drives the card's brand palette through both the semantic theme slots (--primary, --foreground, --muted, …) and the app's own --ti-* knobs, so the whole chrome — header, stops, map chips, the AI chat popover — shifts from Airbnb pink to a calm coastal teal.",
+        "cardThumbnailURL": null
+      },
+      "markUsage": {
+        "primaryMark1": null,
+        "primaryMark2": null,
+        "secondaryMark1": null,
+        "secondaryMark2": null,
+        "primaryMarkMinHeight": null,
+        "primaryMarkGreyscale1": null,
+        "primaryMarkGreyscale2": null,
+        "secondaryMarkMinHeight": null,
+        "socialMediaProfileIcon": null,
+        "secondaryMarkGreyscale1": null,
+        "secondaryMarkGreyscale2": null,
+        "primaryMarkClearanceRatio": null,
+        "secondaryMarkClearanceRatio": null
+      },
+      "styleName": "Coastal Voyage",
+      "visualDNA": "Calm ocean teal accents over cool slate neutrals, soft cyan tints, crisp white surfaces — an unhurried, sea-air travel mood.",
+      "cssImports": [],
+      "typography": {
+        "body": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "caption": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "heading": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "subheading": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "sectionHeading": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        }
+      },
+      "colorPalette": null,
+      "contentVoice": null,
+      "inspirations": [],
+      "designMindset": null,
+      "rootVariables": {
+        "card": "#ffffff",
+        "ring": "#14b8a6",
+        "input": "#ffffff",
+        "muted": "#eef6f6",
+        "accent": "#14b8a6",
+        "border": "#cbd5e1",
+        "radius": "0.75rem",
+        "popover": "#ffffff",
+        "primary": "#0d9488",
+        "background": "#f7fafa",
+        "foreground": "#0f172a",
+        "destructive": "#ef4444",
+        "cardForeground": "#0f172a",
+        "mutedForeground": "#64748b",
+        "accentForeground": "#ffffff",
+        "popoverForeground": "#0f172a",
+        "primaryForeground": "#ffffff",
+        "secondary": "#e2e8f0",
+        "secondaryForeground": "#0f172a",
+        "destructiveForeground": "#ffffff"
+      },
+      "motionLanguage": null,
+      "technicalSpecs": null,
+      "wallpaperImages": [],
+      "compositionRules": null,
+      "qualityStandards": null,
+      "typographySystem": null,
+      "brandColorPalette": [],
+      "darkModeVariables": {
+        "card": "#0f2b2e",
+        "ring": "#2dd4bf",
+        "input": "#0f2b2e",
+        "muted": "#11302f",
+        "accent": "#2dd4bf",
+        "border": "#1f3f3f",
+        "radius": "0.75rem",
+        "popover": "#0f2b2e",
+        "primary": "#2dd4bf",
+        "background": "#08201f",
+        "foreground": "#e2f4f1",
+        "destructive": "#f87171",
+        "cardForeground": "#e2f4f1",
+        "mutedForeground": "#8fb3ad",
+        "accentForeground": "#08201f",
+        "popoverForeground": "#e2f4f1",
+        "primaryForeground": "#08201f",
+        "secondary": "#163a39",
+        "secondaryForeground": "#e2f4f1",
+        "destructiveForeground": "#08201f"
+      },
+      "functionalPalette": {
+        "dark": null,
+        "light": null,
+        "accent": null,
+        "primary": null,
+        "secondary": null
+      },
+      "geometricLanguage": null,
+      "historicalContext": null,
+      "customCssVariables": [
+        {
+          "name": "ti-accent",
+          "value": "#0d9488"
+        },
+        {
+          "name": "ti-accent-dark",
+          "value": "#0f766e"
+        },
+        {
+          "name": "ti-accent-bg",
+          "value": "#f0fdfa"
+        },
+        {
+          "name": "ti-text",
+          "value": "#0f172a"
+        },
+        {
+          "name": "ti-text-light",
+          "value": "#ffffff"
+        },
+        {
+          "name": "ti-muted",
+          "value": "#64748b"
+        },
+        {
+          "name": "ti-border",
+          "value": "#cbd5e1"
+        },
+        {
+          "name": "ti-border-light",
+          "value": "#e2e8f0"
+        },
+        {
+          "name": "ti-bg",
+          "value": "#f7fafa"
+        }
+      ],
+      "materialVocabulary": null,
+      "componentVocabulary": null,
+      "applicationScenarios": null,
+      "brandImageAttachments": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

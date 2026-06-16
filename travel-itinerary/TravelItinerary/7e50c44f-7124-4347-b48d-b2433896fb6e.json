@@ -11,140 +11,100 @@
       "stops": [
         {
           "location": {
-            "searchKey": "Café de Flore",
-            "lat": 48.8543,
-            "lon": 2.3327
+            "searchKey": "Louvre Museum",
+            "lat": 48.8606,
+            "lon": 2.3352
           },
           "day": 1,
           "startTime": {
-            "value": "08:00"
+            "value": "09:00"
           },
           "endTime": {
-            "value": "09:30"
+            "value": "12:30"
           },
-          "notes": "Arrive early to secure a seat on the terrace; iconic café in Saint-Germain-des-Prés."
+          "category": "Museum",
+          "notes": "Book timed entry in advance to skip lines; arrive early for smaller crowds on Tuesday morning."
         },
         {
           "location": {
-            "searchKey": "Brûlerie des Ternes",
-            "lat": 48.8751,
-            "lon": 2.2922
+            "searchKey": "Café Marly",
+            "lat": 48.8609,
+            "lon": 2.337
           },
           "day": 1,
           "startTime": {
-            "value": "10:30"
+            "value": "12:45"
           },
           "endTime": {
-            "value": "12:00"
-          },
-          "notes": "Specialty roastery; try single-origin espresso or pour-over in this intimate space."
-        },
-        {
-          "location": {
-            "searchKey": "Verlet",
-            "lat": 48.8637,
-            "lon": 2.3416
-          },
-          "day": 1,
-          "startTime": {
             "value": "14:00"
           },
-          "endTime": {
-            "value": "15:30"
-          },
-          "notes": "Historic 1880s coffee roaster; purchase beans or enjoy coffee in the adjoining salon."
+          "category": "Café & Coffee",
+          "notes": "Overlooks the Louvre courtyard; reserve a table by the window for views while you eat."
         },
         {
           "location": {
-            "searchKey": "Odette",
-            "lat": 48.8626,
-            "lon": 2.3359
+            "searchKey": "Sainte-Chapelle",
+            "lat": 48.853,
+            "lon": 2.3499
           },
           "day": 1,
           "startTime": {
-            "value": "16:30"
+            "value": "14:30"
           },
           "endTime": {
-            "value": "18:00"
+            "value": "16:00"
           },
-          "notes": "Pastry and coffee pairing in Île-Saint-Louis; reserve ahead for the best tables."
+          "category": "Culture & History",
+          "notes": "Famous for stained glass windows; visit in late afternoon when light illuminates the glass best."
         },
         {
           "location": {
-            "searchKey": "Boot Café",
-            "lat": 48.8604,
-            "lon": 2.3581
+            "searchKey": "Arc de Triomphe",
+            "lat": 48.8738,
+            "lon": 2.295
           },
           "day": 2,
           "startTime": {
-            "value": "08:30"
+            "value": "09:00"
           },
           "endTime": {
-            "value": "10:00"
+            "value": "11:00"
           },
-          "notes": "Third-wave coffee roaster in the Marais with minimal, Nordic aesthetic."
+          "category": "Sightseeing",
+          "notes": "Climb to the top for panoramic views of Paris; arrive early to avoid crowds on weekday morning."
         },
         {
           "location": {
-            "searchKey": "Café Charlot",
-            "lat": 48.8617,
-            "lon": 2.3614
-          },
-          "day": 2,
-          "startTime": {
-            "value": "10:30"
-          },
-          "endTime": {
-            "value": "12:00"
-          },
-          "notes": "Trendy spot in the Marais; excellent coffee and brunch options; arrive mid-morning."
-        },
-        {
-          "location": {
-            "searchKey": "Broken Arm",
-            "lat": 48.862,
-            "lon": 2.3571
-          },
-          "day": 2,
-          "startTime": {
-            "value": "14:00"
-          },
-          "endTime": {
-            "value": "15:30"
-          },
-          "notes": "Design-focused café and concept store; quality espresso and modern ambiance."
-        },
-        {
-          "location": {
-            "searchKey": "Café Kitsuné",
+            "searchKey": "Musée de l'Orangerie",
             "lat": 48.8637,
-            "lon": 2.2956
+            "lon": 2.3227
           },
           "day": 2,
           "startTime": {
-            "value": "16:30"
+            "value": "11:15"
           },
           "endTime": {
-            "value": "18:00"
+            "value": "12:45"
           },
-          "notes": "Japanese-inspired café in Palais Royal gardens; serene setting for afternoon coffee."
+          "category": "Museum",
+          "notes": "Home to Monet's Water Lilies and Impressionist masterpieces; smaller, quieter museum than Louvre."
         }
       ],
       "cardInfo": {
-        "name": "London (3 days)",
+        "name": "2 Days in Paris",
         "notes": null,
         "summary": null,
         "cardThumbnailURL": null
       },
       "dateRange": {
-        "end": "2026-07-02",
-        "start": "2026-07-01"
+        "end": "2026-06-18",
+        "start": "2026-06-17"
       },
-      "tripTitle": "London (3 days)",
+      "tripTitle": "2 Days in Paris",
       "destination": {
         "lat": null,
         "lon": null,
-        "searchKey": "Tokyo, Japan"
+        "searchKey": "Paris, France"
       },
       "shareTripCode": {
         "data": "https://localhost:4201/catalog/travel-itinerary/TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json"
@@ -154,46 +114,6 @@
       "cardInfo.theme": {
         "links": {
           "self": null
-        }
-      },
-      "stops.0.category": {
-        "links": {
-          "self": "../ItineraryCategory/cafe-and-coffee"
-        }
-      },
-      "stops.1.category": {
-        "links": {
-          "self": "../ItineraryCategory/cafe-and-coffee"
-        }
-      },
-      "stops.2.category": {
-        "links": {
-          "self": "../ItineraryCategory/cafe-and-coffee"
-        }
-      },
-      "stops.3.category": {
-        "links": {
-          "self": "../ItineraryCategory/cafe-and-coffee"
-        }
-      },
-      "stops.4.category": {
-        "links": {
-          "self": "../ItineraryCategory/cafe-and-coffee"
-        }
-      },
-      "stops.5.category": {
-        "links": {
-          "self": "../ItineraryCategory/cafe-and-coffee"
-        }
-      },
-      "stops.6.category": {
-        "links": {
-          "self": "../ItineraryCategory/cafe-and-coffee"
-        }
-      },
-      "stops.7.category": {
-        "links": {
-          "self": "../ItineraryCategory/cafe-and-coffee"
         }
       },
       "cardInfo.cardThumbnail": {
