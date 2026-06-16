@@ -43,7 +43,7 @@ export class TravelPlannerCommand extends Command<
       throw new Error('userPrompt is required');
     }
 
-    let skillCardId = new URL('../../Skill/travel-planner-skill', here).href;
+    let skillCardId = new URL('../Skill/travel-planner-skill', here).href;
 
     let oneShot = new OneShotLlmRequestCommand(this.commandContext);
     let result = await oneShot.execute({

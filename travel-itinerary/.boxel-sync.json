@@ -1,0 +1,27 @@
+{
+  "realmUrl": "https://app.boxel.ai/lucas/travel-planner/",
+  "files": {
+    "Skill/itinerary-planner-skill.json": "b0e914b0d4a10f2211e4738102053ef8",
+    "Skill/travel-planner-skill.json": "002fe8cbbbc4d05199a74a222cfaa301",
+    "Theme/coastal-voyage.json": "3860dc28c178f1441f64a2ad8b736ee0",
+    "TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json": "6290a7187b2c348962427add21bfdb99",
+    "components/ti-ai-chat-panel.gts": "f3eb3e4175200afdc374abaf16c75d6a",
+    "components/ti-stop.gts": "38ec36e4bc941ac0ee41729f64ad7401",
+    "components/ti.gts": "f225f3889c6cf6e1e372eda84525f6b8",
+    "travel-itinerary.gts": "5c157510e838f430a989598d51d2eb68",
+    "utils/index.gts": "47c76d96eed0c55240a527db4b9382e6",
+    "commands/travel-planner-command.gts": "8ceff62715dade4a46b300361bfe4484"
+  },
+  "remoteMtimes": {
+    "Skill/itinerary-planner-skill.json": 1781596775,
+    "Skill/travel-planner-skill.json": 1781598420,
+    "Theme/coastal-voyage.json": 1781596775,
+    "TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json": 1781598421,
+    "components/ti-ai-chat-panel.gts": 1781596772,
+    "components/ti-stop.gts": 1781596772,
+    "components/ti.gts": 1781596897,
+    "travel-itinerary.gts": 1781596772,
+    "utils/index.gts": 1781596772,
+    "commands/travel-planner-command.gts": 1781598418
+  }
+}
