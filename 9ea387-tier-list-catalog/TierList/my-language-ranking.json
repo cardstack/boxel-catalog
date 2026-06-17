@@ -1,0 +1,127 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TierList",
+        "module": "../tier-list"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "tiers": [
+        {
+          "key": "S",
+          "label": "S",
+          "color": "#ff7f7f",
+          "sortOrder": 0
+        },
+        {
+          "key": "A",
+          "label": "A",
+          "color": "#ffbf7f",
+          "sortOrder": 1
+        },
+        {
+          "key": "B",
+          "label": "B",
+          "color": "#ffdf80",
+          "sortOrder": 2
+        },
+        {
+          "key": "C",
+          "label": "C",
+          "color": "#ffff7f",
+          "sortOrder": 3
+        },
+        {
+          "key": "D",
+          "label": "D",
+          "color": "#bfff7f",
+          "sortOrder": 4
+        },
+        {
+          "key": "F",
+          "label": "F",
+          "color": "#7fbfff",
+          "sortOrder": 5
+        }
+      ],
+      "title": "My Language Ranking",
+      "cardInfo": {
+        "name": "My Language Ranking",
+        "notes": null,
+        "summary": "Drag languages between tiers in the isolated view.",
+        "cardThumbnailURL": null
+      },
+      "placements": [
+        {
+          "itemId": "../TierItem/ts",
+          "tierKey": "S",
+          "sortOrder": 1
+        },
+        {
+          "itemId": "../TierItem/rust",
+          "tierKey": "S",
+          "sortOrder": 2
+        },
+        {
+          "itemId": "../TierItem/py",
+          "tierKey": "A",
+          "sortOrder": 4
+        },
+        {
+          "itemId": "../TierItem/go",
+          "tierKey": "A",
+          "sortOrder": 5
+        },
+        {
+          "itemId": "../TierItem/js",
+          "tierKey": "B",
+          "sortOrder": 1
+        },
+        {
+          "itemId": "../TierItem/js",
+          "tierKey": "A",
+          "sortOrder": 2
+        },
+        {
+          "itemId": "../TierItem/java",
+          "tierKey": "A",
+          "sortOrder": 0
+        },
+        {
+          "itemId": "../TierItem/swift",
+          "tierKey": "A",
+          "sortOrder": 1
+        },
+        {
+          "itemId": "../TierItem/cpp",
+          "tierKey": "S",
+          "sortOrder": 0
+        },
+        {
+          "itemId": "../TierItem/ts",
+          "tierKey": "A",
+          "sortOrder": 3
+        }
+      ]
+    },
+    "relationships": {
+      "template": {
+        "links": {
+          "self": "../TierTemplate/programming-languages"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

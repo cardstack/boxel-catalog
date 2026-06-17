@@ -1,0 +1,73 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Tier List Catalog",
+      "summary": "The Tier List definition provides a customizable interface for ranking and organizing items across multiple tiers. It allows users to view, create, and modify tiers, assign items to specific tiers through dragging-and-dropping, and visualize the tier distribution. The component supports filtering unranked items, color-coding tiers, and dynamically updating rankings. It is primarily designed for visualizing hierarchical rankings, managing tier structures, and facilitating easy reordering of items within a tiered system.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/my-language-ranking-6a21334a.png"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../TierList/my-language-ranking"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/tier-list-ce6c4160.png"
+        }
+      }
+    }
+  }
+}
