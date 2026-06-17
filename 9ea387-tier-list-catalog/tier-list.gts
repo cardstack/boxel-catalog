@@ -323,7 +323,8 @@ class TierListIsolated extends Component<typeof TierList> {
                 </div>
               </div>
               <div
-                class='strip {{if (eq this.dropTierKey tier.key) "drop-active"}}'
+                class='strip
+                  {{if (eq this.dropTierKey tier.key) "drop-active"}}'
                 data-droptarget
                 data-tier-key={{tier.key}}
               >
@@ -342,7 +343,11 @@ class TierListIsolated extends Component<typeof TierList> {
                         {{on 'error' (fn this.markBroken item.id)}}
                       />
                     {{else}}
-                      <span class='tile-text'>{{if item.name item.name '?'}}</span>
+                      <span class='tile-text'>{{if
+                          item.name
+                          item.name
+                          '?'
+                        }}</span>
                     {{/if}}
                     {{#if item.name}}
                       <span class='tile-cap'>{{item.name}}</span>
@@ -687,7 +692,10 @@ export class TierList extends CardDef {
         <div class='emb-rows'>
           {{#each this.sortedTiers as |t|}}
             <div class='emb-row'>
-              <span class='emb-key' style={{styleColor t.color}}>{{t.label}}</span>
+              <span
+                class='emb-key'
+                style={{styleColor t.color}}
+              >{{t.label}}</span>
               <span class='emb-count'>{{this.countFor t.key}}</span>
             </div>
           {{/each}}
@@ -741,9 +749,8 @@ export class TierList extends CardDef {
     }
 
     get ranked(): number {
-      return (this.args.model.placements ?? []).filter(
-        (p) => p && p.tierKey,
-      ).length;
+      return (this.args.model.placements ?? []).filter((p) => p && p.tierKey)
+        .length;
     }
 
     <template>

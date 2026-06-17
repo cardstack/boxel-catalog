@@ -302,11 +302,7 @@ class TierTemplateIsolated extends Component<typeof TierTemplate> {
             Cancel
           </button>
         {{else}}
-          <button
-            type='button'
-            class='gen-btn'
-            {{on 'click' this.runGenerate}}
-          >
+          <button type='button' class='gen-btn' {{on 'click' this.runGenerate}}>
             Generate with AI
           </button>
         {{/if}}
@@ -316,7 +312,10 @@ class TierTemplateIsolated extends Component<typeof TierTemplate> {
         <div class='gen-progress' role='status' aria-live='polite'>
           <span
             class='bar {{if this.genIndeterminate "bar--indeterminate"}}'
-          ><span class='bar-fill' style={{styleWidth this.genPct}}></span></span>
+          ><span
+              class='bar-fill'
+              style={{styleWidth this.genPct}}
+            ></span></span>
           <span class='gen-note'>{{this.genPhaseLabel}}</span>
         </div>
       {{else if this.genHasError}}
@@ -327,7 +326,10 @@ class TierTemplateIsolated extends Component<typeof TierTemplate> {
 
       <div class='tiers'>
         {{#each this.sortedTiers as |tier|}}
-          <span class='band' style={{styleColor tier.color}}>{{tier.label}}</span>
+          <span
+            class='band'
+            style={{styleColor tier.color}}
+          >{{tier.label}}</span>
         {{/each}}
       </div>
 
@@ -369,8 +371,7 @@ class TierTemplateIsolated extends Component<typeof TierTemplate> {
           </div>
         {{else}}
           {{#unless this.genBusy}}
-            <p class='empty'>No items yet. Add TierItem cards to build the
-              pool.</p>
+            <p class='empty'>No items yet. Add TierItem cards to build the pool.</p>
           {{/unless}}
         {{/each}}
       </div>
