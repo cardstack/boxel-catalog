@@ -11,18 +11,13 @@
       "name": "Travel Itinerary Planner",
       "summary": "The Travel Itinerary Planner defines a card structure for planning and organizing travel trips. It allows users to specify trip details such as the title, destination, date range, and a sequence of planned stops with locations, timings, categories, and notes. The card supports sharing via a manually entered QR code and emphasizes an easy-to-use interface for creating comprehensive travel itineraries.",
       "cardInfo": {
-        "name": null,
+        "name": "Travel Itinerary Planner",
         "notes": null,
         "summary": null,
         "cardThumbnailURL": null
       }
     },
     "relationships": {
-      "skills.0": {
-        "links": {
-          "self": "../Skill/travel-planner-skill"
-        }
-      },
       "tags.0": {
         "links": {
           "self": "../../Tag/app"
@@ -241,6 +236,11 @@
       "images.0": {
         "links": {
           "self": "../Screenshots/0dfb17d9-2d85-41e9-a02b-42b9038283c5-f4eada46.png"
+        }
+      },
+      "skills.0": {
+        "links": {
+          "self": "../Skill/travel-planner-skill"
         }
       },
       "publisher": {
