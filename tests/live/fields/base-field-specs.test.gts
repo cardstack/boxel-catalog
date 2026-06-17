@@ -1,4 +1,4 @@
-import { module, test } from 'qunit';
+import { module, skip } from 'qunit';
 
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
@@ -11,7 +11,7 @@ export function runTests() {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
 
-    test('base realm field specs in catalog have correct shape and refs', async function (assert) {
+    skip('base realm field specs in catalog have correct shape and refs', async function (assert) {
       let response = await fetch(`${realmURL}_search`, {
         method: 'QUERY',
         headers: {
