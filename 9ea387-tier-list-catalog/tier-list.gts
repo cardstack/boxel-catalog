@@ -56,6 +56,593 @@ export class Placement extends FieldDef {
   };
 }
 
+class TierListIsolated extends Component<typeof TierList> {
+  @tracked draggingId: string | null = null;
+  @tracked dropTierKey: string | null = null;
+  @tracked dropIndex = 0;
+  @tracked ghostX = 0;
+  @tracked ghostY = 0;
+  @tracked ghostLabel = '';
+  @tracked ghostURL = '';
+  @tracked filter = '';
+  @tracked broken = new Set<string>();
+  boardEl: HTMLElement | null = null;
+
+  markBroken = (id: string): void => {
+    this.broken = new Set(this.broken).add(id);
+  };
+  showImg = (item: TierItem): boolean => {
+    return Boolean(item.image?.resolvedUrl) && !this.broken.has(item.id);
+  };
+
+  get sortedTiers(): Tier[] {
+    let own = (this.args.model.tiers ?? []).filter(Boolean);
+    let base = own.length
+      ? own
+      : (this.args.model.template?.tiers ?? []).filter(Boolean);
+    return [...base].sort(byOrder);
+  }
+
+  get pool(): TierItem[] {
+    return (this.args.model.template?.items ?? []).filter(Boolean);
+  }
+
+  get poolById(): Map<string, TierItem> {
+    return new Map(this.pool.map((i) => [i.id, i]));
+  }
+
+  get placements(): Placement[] {
+    return (this.args.model.placements ?? []).filter(Boolean);
+  }
+
+  itemsForTier = (key: string | undefined): TierItem[] => {
+    let map = this.poolById;
+    return this.placements
+      .filter((p) => (p.tierKey ?? '') === (key ?? ''))
+      .sort(byOrder)
+      .map((p) => map.get(p.itemId ?? ''))
+      .filter(Boolean) as TierItem[];
+  };
+
+  get rankedIds(): Set<string> {
+    return new Set(
+      this.placements.filter((p) => p.tierKey).map((p) => p.itemId ?? ''),
+    );
+  }
+
+  get unrankedItems(): TierItem[] {
+    let ranked = this.rankedIds;
+    let list = this.pool.filter((i) => !ranked.has(i.id));
+    let q = this.filter.trim().toLowerCase();
+    if (q) {
+      list = list.filter((i) => (i.name ?? '').toLowerCase().includes(q));
+    }
+    return list;
+  }
+
+  isDragging = (item: TierItem): boolean => {
+    return !!this.draggingId && item.id === this.draggingId;
+  };
+
+  // --- drag lifecycle -------------------------------------------------
+
+  startDrag = (item: TierItem, event: PointerEvent): void => {
+    event.preventDefault();
+    this.boardEl =
+      (event.currentTarget as HTMLElement | null)?.closest('.board') ?? null;
+    this.draggingId = item.id ?? null;
+    this.ghostLabel = item.name ?? '';
+    this.ghostURL = this.showImg(item) ? (item.image?.resolvedUrl ?? '') : '';
+    this.positionGhost(event);
+    let existing = this.placements.find((p) => p.itemId === item.id);
+    this.dropTierKey = existing?.tierKey ? existing.tierKey : UNRANKED;
+    this.dropIndex = 0;
+    window.addEventListener('pointermove', this.onPointerMove);
+    window.addEventListener('pointerup', this.onPointerUp);
+  };
+
+  positionGhost = (event: PointerEvent): void => {
+    let rect = this.boardEl?.getBoundingClientRect();
+    this.ghostX = event.clientX - (rect?.left ?? 0);
+    this.ghostY = event.clientY - (rect?.top ?? 0);
+  };
+
+  onPointerMove = (event: PointerEvent): void => {
+    this.positionGhost(event);
+    let el = document.elementFromPoint(event.clientX, event.clientY);
+    let zone = el?.closest('[data-droptarget]') as HTMLElement | null;
+    if (!zone) {
+      return;
+    }
+    this.dropTierKey = zone.getAttribute('data-tier-key');
+    let tiles = Array.from(zone.querySelectorAll('[data-tile]'));
+    let idx = tiles.length;
+    for (let i = 0; i < tiles.length; i++) {
+      let r = tiles[i].getBoundingClientRect();
+      if (event.clientX < r.left + r.width / 2) {
+        idx = i;
+        break;
+      }
+    }
+    this.dropIndex = idx;
+  };
+
+  onPointerUp = (): void => {
+    window.removeEventListener('pointermove', this.onPointerMove);
+    window.removeEventListener('pointerup', this.onPointerUp);
+    let id = this.draggingId;
+    if (id) {
+      let targetKey = this.dropTierKey === UNRANKED ? null : this.dropTierKey;
+      let placements = [...(this.args.model.placements ?? [])].filter(Boolean);
+      if (targetKey == null) {
+        // dragged to the tray → unrank (drop its placement)
+        placements = placements.filter((p) => p.itemId !== id);
+      } else {
+        let dragged = placements.find((p) => p.itemId === id);
+        if (!dragged) {
+          dragged = Object.assign(new Placement(), {
+            itemId: id,
+            tierKey: targetKey,
+            sortOrder: 0,
+          });
+          placements.push(dragged);
+        } else {
+          dragged.tierKey = targetKey;
+        }
+        let group = placements
+          .filter((p) => p !== dragged && (p.tierKey ?? '') === targetKey)
+          .sort(byOrder);
+        let insertAt = Math.max(0, Math.min(this.dropIndex, group.length));
+        group.splice(insertAt, 0, dragged);
+        group.forEach((p, i) => {
+          p.sortOrder = i;
+        });
+      }
+      this.args.model.placements = placements;
+    }
+    this.draggingId = null;
+    this.dropTierKey = null;
+    this.dropIndex = 0;
+  };
+
+  // --- controls -------------------------------------------------------
+
+  setFilter = (event: Event): void => {
+    this.filter = (event.target as HTMLInputElement).value;
+  };
+
+  resetAll = (): void => {
+    this.args.model.placements = [];
+  };
+
+  ensureOwnTiers = (): void => {
+    if (!(this.args.model.tiers ?? []).filter(Boolean).length) {
+      let base = (this.args.model.template?.tiers ?? []).filter(Boolean);
+      this.args.model.tiers = base.map((t) =>
+        Object.assign(new Tier(), {
+          key: t.key,
+          label: t.label,
+          color: t.color,
+          sortOrder: t.sortOrder,
+        }),
+      );
+    }
+  };
+
+  addTier = (): void => {
+    this.ensureOwnTiers();
+    let tiers = (this.args.model.tiers ?? []).filter(Boolean);
+    let t = Object.assign(new Tier(), {
+      key: `tier-${tiers.length}-${tiers.reduce((m, x) => Math.max(m, x.sortOrder ?? 0), 0) + 1}`,
+      label: 'New',
+      color: '#c9ccd4',
+      sortOrder: tiers.length,
+    });
+    this.args.model.tiers = [...tiers, t];
+  };
+
+  removeTier = (tier: Tier): void => {
+    this.ensureOwnTiers();
+    let key = tier.key;
+    this.args.model.tiers = (this.args.model.tiers ?? []).filter(
+      (t) => t && t.key !== key,
+    );
+    this.args.model.placements = (this.args.model.placements ?? []).filter(
+      (p) => p && p.tierKey !== key,
+    );
+  };
+
+  renameTier = (tier: Tier, event: Event): void => {
+    this.ensureOwnTiers();
+    tier.label = (event.target as HTMLInputElement).value;
+    this.args.model.tiers = [...(this.args.model.tiers ?? [])];
+  };
+
+  recolorTier = (tier: Tier, event: Event): void => {
+    this.ensureOwnTiers();
+    tier.color = (event.target as HTMLInputElement).value;
+    this.args.model.tiers = [...(this.args.model.tiers ?? [])];
+  };
+
+  willDestroy(): void {
+    super.willDestroy();
+    window.removeEventListener('pointermove', this.onPointerMove);
+    window.removeEventListener('pointerup', this.onPointerUp);
+  }
+
+  <template>
+    {{! template-lint-disable no-pointer-down-event-binding }}
+    <section class='board'>
+      <header class='board-head'>
+        <h1><@fields.cardTitle /></h1>
+        <div class='controls'>
+          <input
+            class='ctl-input'
+            aria-label='Filter unranked items'
+            placeholder='Filter…'
+            value={{this.filter}}
+            {{on 'input' this.setFilter}}
+          />
+          <button type='button' class='btn' {{on 'click' this.addTier}}>
+            Add tier
+          </button>
+          <button
+            type='button'
+            class='btn ghost-btn'
+            {{on 'click' this.resetAll}}
+          >
+            Reset
+          </button>
+        </div>
+      </header>
+
+      {{#if this.pool.length}}
+        <div class='tiers'>
+          {{#each this.sortedTiers as |tier|}}
+            <div class='tier-row'>
+              <div class='tier-label' style={{styleColor tier.color}}>
+                <input
+                  class='tier-name'
+                  aria-label='Tier label'
+                  value={{tier.label}}
+                  {{on 'input' (fn this.renameTier tier)}}
+                />
+                <div class='tier-tools'>
+                  <input
+                    class='tier-color'
+                    type='color'
+                    aria-label='Tier color'
+                    value={{tier.color}}
+                    {{on 'input' (fn this.recolorTier tier)}}
+                  />
+                  <button
+                    type='button'
+                    class='tier-del'
+                    {{on 'click' (fn this.removeTier tier)}}
+                  >×</button>
+                </div>
+              </div>
+              <div
+                class='strip {{if (eq this.dropTierKey tier.key) "drop-active"}}'
+                data-droptarget
+                data-tier-key={{tier.key}}
+              >
+                {{#each (this.itemsForTier tier.key) as |item|}}
+                  <div
+                    class='tile {{if (this.isDragging item) "is-dragging"}}'
+                    data-tile
+                    {{on 'pointerdown' (fn this.startDrag item)}}
+                  >
+                    {{#if (this.showImg item)}}
+                      <img
+                        src={{item.image.resolvedUrl}}
+                        alt={{item.name}}
+                        class='tile-img'
+                        draggable='false'
+                        {{on 'error' (fn this.markBroken item.id)}}
+                      />
+                    {{else}}
+                      <span class='tile-text'>{{if item.name item.name '?'}}</span>
+                    {{/if}}
+                    {{#if item.name}}
+                      <span class='tile-cap'>{{item.name}}</span>
+                    {{/if}}
+                  </div>
+                {{/each}}
+              </div>
+            </div>
+          {{/each}}
+        </div>
+
+        <div class='tray-wrap'>
+          <div class='tray-label'>Unranked ({{this.unrankedItems.length}})</div>
+          <div
+            class='strip tray
+              {{if (eq this.dropTierKey "__unranked__") "drop-active"}}'
+            data-droptarget
+            data-tier-key='__unranked__'
+          >
+            {{#each this.unrankedItems as |item|}}
+              <div
+                class='tile {{if (this.isDragging item) "is-dragging"}}'
+                data-tile
+                {{on 'pointerdown' (fn this.startDrag item)}}
+              >
+                {{#if (this.showImg item)}}
+                  <img
+                    src={{item.image.resolvedUrl}}
+                    alt={{item.name}}
+                    class='tile-img'
+                    draggable='false'
+                    {{on 'error' (fn this.markBroken item.id)}}
+                  />
+                {{else}}
+                  <span class='tile-text'>{{if item.name item.name '?'}}</span>
+                {{/if}}
+                {{#if item.name}}
+                  <span class='tile-cap'>{{item.name}}</span>
+                {{/if}}
+              </div>
+            {{else}}
+              <span class='tray-empty'>Everything is ranked. 🎉</span>
+            {{/each}}
+          </div>
+        </div>
+      {{else}}
+        <div class='no-template'>
+          Link a Tier Template to load items to rank.
+        </div>
+      {{/if}}
+
+      {{#if this.draggingId}}
+        <div class='ghost' style={{ghostPos this.ghostX this.ghostY}}>
+          {{#if this.ghostURL}}
+            <img
+              src={{this.ghostURL}}
+              alt=''
+              class='tile-img'
+              draggable='false'
+            />
+          {{else}}
+            <span class='tile-text'>{{if
+                this.ghostLabel
+                this.ghostLabel
+                '?'
+              }}</span>
+          {{/if}}
+        </div>
+      {{/if}}
+    </section>
+
+    <style scoped>
+      .board {
+        position: relative;
+        height: 100%;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        background: var(--background, #15161a);
+        color: var(--foreground, #f4f5f7);
+        font-family: var(--font-sans, system-ui, sans-serif);
+      }
+      .board-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid var(--border, #2c2e36);
+        background: var(--card, #1c1e24);
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 700;
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+      }
+      .ctl-input {
+        padding: 0.3125rem 0.5rem;
+        font: inherit;
+        font-size: 0.8125rem;
+        color: var(--foreground, #f4f5f7);
+        background: var(--background, #15161a);
+        border: 1px solid var(--border, #2c2e36);
+        border-radius: var(--radius, 0.375rem);
+      }
+      .ctl-input::placeholder {
+        color: var(--muted-foreground, #9aa0ad);
+      }
+      .btn {
+        padding: 0.3125rem 0.625rem;
+        font: inherit;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--primary-foreground, #15161a);
+        background: var(--primary, #f4f5f7);
+        border: 1px solid transparent;
+        border-radius: var(--radius, 0.375rem);
+      }
+      .btn.ghost-btn {
+        color: var(--foreground, #f4f5f7);
+        background: transparent;
+        border-color: var(--border, #2c2e36);
+      }
+      .tiers {
+        min-height: 0;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.5rem;
+      }
+      .tier-row {
+        display: grid;
+        grid-template-columns: 5.5rem minmax(0, 1fr);
+        gap: 0.25rem;
+        min-height: 4.5rem;
+      }
+      .tier-label {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        gap: 0.25rem;
+        padding: 0.375rem;
+        border-radius: var(--radius, 0.375rem);
+        color: #111;
+      }
+      .tier-name {
+        width: 100%;
+        padding: 0.125rem 0.25rem;
+        font: inherit;
+        font-weight: 800;
+        font-size: 1rem;
+        text-align: center;
+        color: #111;
+        background: rgba(255, 255, 255, 0.55);
+        border: none;
+        border-radius: 0.25rem;
+      }
+      .tier-tools {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+      }
+      .tier-color {
+        width: 1.5rem;
+        height: 1.25rem;
+        padding: 0;
+        border: none;
+        background: none;
+        cursor: pointer;
+      }
+      .tier-del {
+        width: 1.25rem;
+        height: 1.25rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #111;
+        background: rgba(255, 255, 255, 0.55);
+        border: none;
+        border-radius: 0.25rem;
+      }
+      .strip {
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        background: var(--card, #1c1e24);
+        border: 1px solid var(--border, #2c2e36);
+        border-radius: var(--radius, 0.375rem);
+      }
+      .strip.drop-active {
+        outline: 2px dashed var(--primary, #f4f5f7);
+        outline-offset: -2px;
+      }
+      .tray-wrap {
+        border-top: 1px solid var(--border, #2c2e36);
+        background: var(--card, #1c1e24);
+        padding: 0.5rem;
+      }
+      .tray-label {
+        margin: 0 0 0.375rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, #9aa0ad);
+      }
+      .tray {
+        min-height: 4rem;
+        max-height: 40%;
+        overflow: auto;
+      }
+      .tray-empty {
+        padding: 0.75rem;
+        font-size: 0.8125rem;
+        color: var(--muted-foreground, #9aa0ad);
+      }
+      .no-template {
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+        color: var(--muted-foreground, #9aa0ad);
+      }
+      .tile {
+        position: relative;
+        width: 4rem;
+        height: 4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+        overflow: hidden;
+        background: var(--background, #15161a);
+        border: 1px solid var(--border, #2c2e36);
+        border-radius: 0.25rem;
+      }
+      .tile.is-dragging {
+        opacity: 0.3;
+      }
+      .tile-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
+      }
+      .tile-text {
+        padding: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+        line-height: 1.1;
+        overflow: hidden;
+      }
+      .tile-cap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0.0625rem 0.125rem;
+        font-size: 0.5625rem;
+        text-align: center;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.6);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ghost {
+        position: absolute;
+        z-index: 1000;
+        width: 4rem;
+        height: 4rem;
+        transform: translate(-50%, -50%) rotate(-3deg);
+        pointer-events: none;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--background, #15161a);
+        border: 1px solid var(--primary, #f4f5f7);
+        border-radius: 0.25rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+      }
+    </style>
+  </template>
+}
+
 export class TierList extends CardDef {
   static displayName = 'Tier List';
   static icon = LayoutRowsIcon;
@@ -77,578 +664,7 @@ export class TierList extends CardDef {
     },
   });
 
-  static isolated = class extends Component<typeof TierList> {
-    @tracked draggingId: string | null = null;
-    @tracked dropTierKey: string | null = null;
-    @tracked dropIndex = 0;
-    @tracked ghostX = 0;
-    @tracked ghostY = 0;
-    @tracked ghostLabel = '';
-    @tracked ghostURL = '';
-    @tracked filter = '';
-    @tracked broken = new Set<string>();
-    boardEl: HTMLElement | null = null;
-
-    markBroken = (id: string): void => {
-      this.broken = new Set(this.broken).add(id);
-    };
-    showImg = (item: TierItem): boolean => {
-      return Boolean(item.image?.resolvedUrl) && !this.broken.has(item.id);
-    };
-
-    get sortedTiers(): Tier[] {
-      let own = (this.args.model.tiers ?? []).filter(Boolean);
-      let base = own.length
-        ? own
-        : (this.args.model.template?.tiers ?? []).filter(Boolean);
-      return [...base].sort(byOrder);
-    }
-
-    get pool(): TierItem[] {
-      return (this.args.model.template?.items ?? []).filter(Boolean);
-    }
-
-    get poolById(): Map<string, TierItem> {
-      return new Map(this.pool.map((i) => [i.id, i]));
-    }
-
-    get placements(): Placement[] {
-      return (this.args.model.placements ?? []).filter(Boolean);
-    }
-
-    itemsForTier = (key: string | undefined): TierItem[] => {
-      let map = this.poolById;
-      return this.placements
-        .filter((p) => (p.tierKey ?? '') === (key ?? ''))
-        .sort(byOrder)
-        .map((p) => map.get(p.itemId ?? ''))
-        .filter(Boolean) as TierItem[];
-    };
-
-    get rankedIds(): Set<string> {
-      return new Set(
-        this.placements.filter((p) => p.tierKey).map((p) => p.itemId ?? ''),
-      );
-    }
-
-    get unrankedItems(): TierItem[] {
-      let ranked = this.rankedIds;
-      let list = this.pool.filter((i) => !ranked.has(i.id));
-      let q = this.filter.trim().toLowerCase();
-      if (q) {
-        list = list.filter((i) => (i.name ?? '').toLowerCase().includes(q));
-      }
-      return list;
-    }
-
-    isDragging = (item: TierItem): boolean => {
-      return !!this.draggingId && item.id === this.draggingId;
-    };
-
-    // --- drag lifecycle -------------------------------------------------
-
-    startDrag = (item: TierItem, event: PointerEvent): void => {
-      event.preventDefault();
-      this.boardEl =
-        (event.currentTarget as HTMLElement | null)?.closest('.board') ?? null;
-      this.draggingId = item.id ?? null;
-      this.ghostLabel = item.name ?? '';
-      this.ghostURL = this.showImg(item) ? (item.image?.resolvedUrl ?? '') : '';
-      this.positionGhost(event);
-      let existing = this.placements.find((p) => p.itemId === item.id);
-      this.dropTierKey = existing?.tierKey ? existing.tierKey : UNRANKED;
-      this.dropIndex = 0;
-      window.addEventListener('pointermove', this.onPointerMove);
-      window.addEventListener('pointerup', this.onPointerUp);
-    };
-
-    positionGhost = (event: PointerEvent): void => {
-      let rect = this.boardEl?.getBoundingClientRect();
-      this.ghostX = event.clientX - (rect?.left ?? 0);
-      this.ghostY = event.clientY - (rect?.top ?? 0);
-    };
-
-    onPointerMove = (event: PointerEvent): void => {
-      this.positionGhost(event);
-      let el = document.elementFromPoint(event.clientX, event.clientY);
-      let zone = el?.closest('[data-droptarget]') as HTMLElement | null;
-      if (!zone) {
-        return;
-      }
-      this.dropTierKey = zone.getAttribute('data-tier-key');
-      let tiles = Array.from(zone.querySelectorAll('[data-tile]'));
-      let idx = tiles.length;
-      for (let i = 0; i < tiles.length; i++) {
-        let r = tiles[i].getBoundingClientRect();
-        if (event.clientX < r.left + r.width / 2) {
-          idx = i;
-          break;
-        }
-      }
-      this.dropIndex = idx;
-    };
-
-    onPointerUp = (): void => {
-      window.removeEventListener('pointermove', this.onPointerMove);
-      window.removeEventListener('pointerup', this.onPointerUp);
-      let id = this.draggingId;
-      if (id) {
-        let targetKey = this.dropTierKey === UNRANKED ? null : this.dropTierKey;
-        let placements = [...(this.args.model.placements ?? [])].filter(Boolean);
-        if (targetKey == null) {
-          // dragged to the tray → unrank (drop its placement)
-          placements = placements.filter((p) => p.itemId !== id);
-        } else {
-          let dragged = placements.find((p) => p.itemId === id);
-          if (!dragged) {
-            dragged = Object.assign(new Placement(), {
-              itemId: id,
-              tierKey: targetKey,
-              sortOrder: 0,
-            });
-            placements.push(dragged);
-          } else {
-            dragged.tierKey = targetKey;
-          }
-          let group = placements
-            .filter((p) => p !== dragged && (p.tierKey ?? '') === targetKey)
-            .sort(byOrder);
-          let insertAt = Math.max(0, Math.min(this.dropIndex, group.length));
-          group.splice(insertAt, 0, dragged);
-          group.forEach((p, i) => {
-            p.sortOrder = i;
-          });
-        }
-        this.args.model.placements = placements;
-      }
-      this.draggingId = null;
-      this.dropTierKey = null;
-      this.dropIndex = 0;
-    };
-
-    // --- controls -------------------------------------------------------
-
-    setFilter = (event: Event): void => {
-      this.filter = (event.target as HTMLInputElement).value;
-    };
-
-    resetAll = (): void => {
-      this.args.model.placements = [];
-    };
-
-    ensureOwnTiers = (): void => {
-      if (!(this.args.model.tiers ?? []).filter(Boolean).length) {
-        let base = (this.args.model.template?.tiers ?? []).filter(Boolean);
-        this.args.model.tiers = base.map((t) =>
-          Object.assign(new Tier(), {
-            key: t.key,
-            label: t.label,
-            color: t.color,
-            sortOrder: t.sortOrder,
-          }),
-        );
-      }
-    };
-
-    addTier = (): void => {
-      this.ensureOwnTiers();
-      let tiers = (this.args.model.tiers ?? []).filter(Boolean);
-      let t = Object.assign(new Tier(), {
-        key: `tier-${tiers.length}-${tiers.reduce((m, x) => Math.max(m, x.sortOrder ?? 0), 0) + 1}`,
-        label: 'New',
-        color: '#c9ccd4',
-        sortOrder: tiers.length,
-      });
-      this.args.model.tiers = [...tiers, t];
-    };
-
-    removeTier = (tier: Tier): void => {
-      this.ensureOwnTiers();
-      let key = tier.key;
-      this.args.model.tiers = (this.args.model.tiers ?? []).filter(
-        (t) => t && t.key !== key,
-      );
-      this.args.model.placements = (this.args.model.placements ?? []).filter(
-        (p) => p && p.tierKey !== key,
-      );
-    };
-
-    renameTier = (tier: Tier, event: Event): void => {
-      this.ensureOwnTiers();
-      tier.label = (event.target as HTMLInputElement).value;
-      this.args.model.tiers = [...(this.args.model.tiers ?? [])];
-    };
-
-    recolorTier = (tier: Tier, event: Event): void => {
-      this.ensureOwnTiers();
-      tier.color = (event.target as HTMLInputElement).value;
-      this.args.model.tiers = [...(this.args.model.tiers ?? [])];
-    };
-
-    willDestroy(): void {
-      super.willDestroy();
-      window.removeEventListener('pointermove', this.onPointerMove);
-      window.removeEventListener('pointerup', this.onPointerUp);
-    }
-
-    <template>
-      {{! template-lint-disable no-pointer-down-event-binding }}
-      <section class='board'>
-        <header class='board-head'>
-          <h1><@fields.cardTitle /></h1>
-          <div class='controls'>
-            <input
-              class='ctl-input'
-              aria-label='Filter unranked items'
-              placeholder='Filter…'
-              value={{this.filter}}
-              {{on 'input' this.setFilter}}
-            />
-            <button type='button' class='btn' {{on 'click' this.addTier}}>
-              Add tier
-            </button>
-            <button type='button' class='btn ghost-btn' {{on 'click' this.resetAll}}>
-              Reset
-            </button>
-          </div>
-        </header>
-
-        {{#if this.pool.length}}
-          <div class='tiers'>
-            {{#each this.sortedTiers as |tier|}}
-              <div class='tier-row'>
-                <div class='tier-label' style={{styleColor tier.color}}>
-                  <input
-                    class='tier-name'
-                    aria-label='Tier label'
-                    value={{tier.label}}
-                    {{on 'input' (fn this.renameTier tier)}}
-                  />
-                  <div class='tier-tools'>
-                    <input
-                      class='tier-color'
-                      type='color'
-                      aria-label='Tier color'
-                      value={{tier.color}}
-                      {{on 'input' (fn this.recolorTier tier)}}
-                    />
-                    <button
-                      type='button'
-                      class='tier-del'
-                      {{on 'click' (fn this.removeTier tier)}}
-                    >×</button>
-                  </div>
-                </div>
-                <div
-                  class='strip {{if (eq this.dropTierKey tier.key) "drop-active"}}'
-                  data-droptarget
-                  data-tier-key={{tier.key}}
-                >
-                  {{#each (this.itemsForTier tier.key) as |item|}}
-                    <div
-                      class='tile {{if (this.isDragging item) "is-dragging"}}'
-                      data-tile
-                      {{on 'pointerdown' (fn this.startDrag item)}}
-                    >
-                      {{#if (this.showImg item)}}
-                        <img
-                          src={{item.image.resolvedUrl}}
-                          alt={{item.name}}
-                          class='tile-img'
-                          draggable='false'
-                          {{on 'error' (fn this.markBroken item.id)}}
-                        />
-                      {{else}}
-                        <span class='tile-text'>{{if item.name item.name '?'}}</span>
-                      {{/if}}
-                      {{#if item.name}}
-                        <span class='tile-cap'>{{item.name}}</span>
-                      {{/if}}
-                    </div>
-                  {{/each}}
-                </div>
-              </div>
-            {{/each}}
-          </div>
-
-          <div class='tray-wrap'>
-            <div class='tray-label'>Unranked ({{this.unrankedItems.length}})</div>
-            <div
-              class='strip tray {{if (eq this.dropTierKey "__unranked__") "drop-active"}}'
-              data-droptarget
-              data-tier-key='__unranked__'
-            >
-              {{#each this.unrankedItems as |item|}}
-                <div
-                  class='tile {{if (this.isDragging item) "is-dragging"}}'
-                  data-tile
-                  {{on 'pointerdown' (fn this.startDrag item)}}
-                >
-                  {{#if (this.showImg item)}}
-                    <img
-                      src={{item.image.resolvedUrl}}
-                      alt={{item.name}}
-                      class='tile-img'
-                      draggable='false'
-                      {{on 'error' (fn this.markBroken item.id)}}
-                    />
-                  {{else}}
-                    <span class='tile-text'>{{if item.name item.name '?'}}</span>
-                  {{/if}}
-                  {{#if item.name}}
-                    <span class='tile-cap'>{{item.name}}</span>
-                  {{/if}}
-                </div>
-              {{else}}
-                <span class='tray-empty'>Everything is ranked. 🎉</span>
-              {{/each}}
-            </div>
-          </div>
-        {{else}}
-          <div class='no-template'>
-            Link a Tier Template to load items to rank.
-          </div>
-        {{/if}}
-
-        {{#if this.draggingId}}
-          <div class='ghost' style={{ghostPos this.ghostX this.ghostY}}>
-            {{#if this.ghostURL}}
-              <img src={{this.ghostURL}} alt='' class='tile-img' draggable='false' />
-            {{else}}
-              <span class='tile-text'>{{if this.ghostLabel this.ghostLabel '?'}}</span>
-            {{/if}}
-          </div>
-        {{/if}}
-      </section>
-
-      <style scoped>
-        .board {
-          position: relative;
-          height: 100%;
-          min-height: 0;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          background: var(--background, #15161a);
-          color: var(--foreground, #f4f5f7);
-          font-family: var(--font-sans, system-ui, sans-serif);
-        }
-        .board-head {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 0.75rem;
-          padding: 0.875rem 1rem;
-          border-bottom: 1px solid var(--border, #2c2e36);
-          background: var(--card, #1c1e24);
-        }
-        h1 {
-          margin: 0;
-          font-size: 1.125rem;
-          font-weight: 700;
-        }
-        .controls {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 0.375rem;
-        }
-        .ctl-input {
-          padding: 0.3125rem 0.5rem;
-          font: inherit;
-          font-size: 0.8125rem;
-          color: var(--foreground, #f4f5f7);
-          background: var(--background, #15161a);
-          border: 1px solid var(--border, #2c2e36);
-          border-radius: var(--radius, 0.375rem);
-        }
-        .ctl-input::placeholder {
-          color: var(--muted-foreground, #9aa0ad);
-        }
-        .btn {
-          padding: 0.3125rem 0.625rem;
-          font: inherit;
-          font-size: 0.8125rem;
-          font-weight: 600;
-          cursor: pointer;
-          color: var(--primary-foreground, #15161a);
-          background: var(--primary, #f4f5f7);
-          border: 1px solid transparent;
-          border-radius: var(--radius, 0.375rem);
-        }
-        .btn.ghost-btn {
-          color: var(--foreground, #f4f5f7);
-          background: transparent;
-          border-color: var(--border, #2c2e36);
-        }
-        .tiers {
-          min-height: 0;
-          overflow: auto;
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-          padding: 0.5rem;
-        }
-        .tier-row {
-          display: grid;
-          grid-template-columns: 5.5rem minmax(0, 1fr);
-          gap: 0.25rem;
-          min-height: 4.5rem;
-        }
-        .tier-label {
-          display: flex;
-          flex-direction: column;
-          align-items: stretch;
-          justify-content: center;
-          gap: 0.25rem;
-          padding: 0.375rem;
-          border-radius: var(--radius, 0.375rem);
-          color: #111;
-        }
-        .tier-name {
-          width: 100%;
-          padding: 0.125rem 0.25rem;
-          font: inherit;
-          font-weight: 800;
-          font-size: 1rem;
-          text-align: center;
-          color: #111;
-          background: rgba(255, 255, 255, 0.55);
-          border: none;
-          border-radius: 0.25rem;
-        }
-        .tier-tools {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.25rem;
-        }
-        .tier-color {
-          width: 1.5rem;
-          height: 1.25rem;
-          padding: 0;
-          border: none;
-          background: none;
-          cursor: pointer;
-        }
-        .tier-del {
-          width: 1.25rem;
-          height: 1.25rem;
-          line-height: 1;
-          cursor: pointer;
-          color: #111;
-          background: rgba(255, 255, 255, 0.55);
-          border: none;
-          border-radius: 0.25rem;
-        }
-        .strip {
-          display: flex;
-          flex-wrap: wrap;
-          align-content: flex-start;
-          gap: 0.25rem;
-          padding: 0.25rem;
-          background: var(--card, #1c1e24);
-          border: 1px solid var(--border, #2c2e36);
-          border-radius: var(--radius, 0.375rem);
-        }
-        .strip.drop-active {
-          outline: 2px dashed var(--primary, #f4f5f7);
-          outline-offset: -2px;
-        }
-        .tray-wrap {
-          border-top: 1px solid var(--border, #2c2e36);
-          background: var(--card, #1c1e24);
-          padding: 0.5rem;
-        }
-        .tray-label {
-          margin: 0 0 0.375rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, #9aa0ad);
-        }
-        .tray {
-          min-height: 4rem;
-          max-height: 40%;
-          overflow: auto;
-        }
-        .tray-empty {
-          padding: 0.75rem;
-          font-size: 0.8125rem;
-          color: var(--muted-foreground, #9aa0ad);
-        }
-        .no-template {
-          display: grid;
-          place-items: center;
-          padding: 2rem;
-          color: var(--muted-foreground, #9aa0ad);
-        }
-        .tile {
-          position: relative;
-          width: 4rem;
-          height: 4rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: grab;
-          touch-action: none;
-          user-select: none;
-          overflow: hidden;
-          background: var(--background, #15161a);
-          border: 1px solid var(--border, #2c2e36);
-          border-radius: 0.25rem;
-        }
-        .tile.is-dragging {
-          opacity: 0.3;
-        }
-        .tile-img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          pointer-events: none;
-        }
-        .tile-text {
-          padding: 0.25rem;
-          font-size: 0.75rem;
-          font-weight: 600;
-          text-align: center;
-          line-height: 1.1;
-          overflow: hidden;
-        }
-        .tile-cap {
-          position: absolute;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          padding: 0.0625rem 0.125rem;
-          font-size: 0.5625rem;
-          text-align: center;
-          color: #fff;
-          background: rgba(0, 0, 0, 0.6);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .ghost {
-          position: absolute;
-          z-index: 1000;
-          width: 4rem;
-          height: 4rem;
-          transform: translate(-50%, -50%) rotate(-3deg);
-          pointer-events: none;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--background, #15161a);
-          border: 1px solid var(--primary, #f4f5f7);
-          border-radius: 0.25rem;
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-        }
-      </style>
-    </template>
-  };
+  static isolated = TierListIsolated;
 
   static embedded = class extends Component<typeof TierList> {
     get sortedTiers(): Tier[] {
