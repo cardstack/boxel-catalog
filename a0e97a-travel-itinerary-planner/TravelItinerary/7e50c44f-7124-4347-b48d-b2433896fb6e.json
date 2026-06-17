@@ -1,0 +1,126 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TravelItinerary",
+        "module": "../travel-itinerary"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "stops": [
+        {
+          "location": {
+            "searchKey": "Louvre Museum",
+            "lat": 48.8606,
+            "lon": 2.3352
+          },
+          "day": 1,
+          "startTime": {
+            "value": "09:00"
+          },
+          "endTime": {
+            "value": "12:30"
+          },
+          "category": "Museum",
+          "notes": "Book timed entry in advance to skip lines; arrive early for smaller crowds on Tuesday morning."
+        },
+        {
+          "location": {
+            "searchKey": "Café Marly",
+            "lat": 48.8609,
+            "lon": 2.337
+          },
+          "day": 1,
+          "startTime": {
+            "value": "12:45"
+          },
+          "endTime": {
+            "value": "14:00"
+          },
+          "category": "Café & Coffee",
+          "notes": "Overlooks the Louvre courtyard; reserve a table by the window for views while you eat."
+        },
+        {
+          "location": {
+            "searchKey": "Sainte-Chapelle",
+            "lat": 48.853,
+            "lon": 2.3499
+          },
+          "day": 1,
+          "startTime": {
+            "value": "14:30"
+          },
+          "endTime": {
+            "value": "16:00"
+          },
+          "category": "Culture & History",
+          "notes": "Famous for stained glass windows; visit in late afternoon when light illuminates the glass best."
+        },
+        {
+          "location": {
+            "searchKey": "Arc de Triomphe",
+            "lat": 48.8738,
+            "lon": 2.295
+          },
+          "day": 2,
+          "startTime": {
+            "value": "09:00"
+          },
+          "endTime": {
+            "value": "11:00"
+          },
+          "category": "Sightseeing",
+          "notes": "Climb to the top for panoramic views of Paris; arrive early to avoid crowds on weekday morning."
+        },
+        {
+          "location": {
+            "searchKey": "Musée de l'Orangerie",
+            "lat": 48.8637,
+            "lon": 2.3227
+          },
+          "day": 2,
+          "startTime": {
+            "value": "11:15"
+          },
+          "endTime": {
+            "value": "12:45"
+          },
+          "category": "Museum",
+          "notes": "Home to Monet's Water Lilies and Impressionist masterpieces; smaller, quieter museum than Louvre."
+        }
+      ],
+      "cardInfo": {
+        "name": "2 Days in Paris",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "dateRange": {
+        "end": "2026-06-18",
+        "start": "2026-06-17"
+      },
+      "tripTitle": "2 Days in Paris",
+      "destination": {
+        "lat": null,
+        "lon": null,
+        "searchKey": "Paris, France"
+      },
+      "shareTripCode": {
+        "data": "https://localhost:4201/catalog/travel-itinerary/TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
