@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "TravelItinerary",
+        "module": "../travel-itinerary"
+      },
+      "readMe": "# TravelItinerary Card\n\n## Summary\nThe `TravelItinerary` card is a specialized card for creating and managing travel itineraries. It allows users to define a trip title, destination, date range, and a list of itinerary stops with details like location, time, and category. The card also includes a QR code field for sharing the itinerary.\n\n## Import\n```javascript\nimport { TravelItinerary } from '../travel-itinerary';\n```\n\n## Usage as a Field\nTo use the `TravelItinerary` card as a field within a consuming card or field, you can include it as follows:\n\n```javascript\nimport { CardDef, contains } from 'https://cardstack.com/base/card-api';\nimport { TravelItinerary } from '../travel-itinerary';\n\nexport class MyCard extends CardDef {\n  @field travelItinerary = contains(TravelItinerary);\n}\n```\n\n## Template Usage\nTo display the `TravelItinerary` card within a template, you can use the following markup:\n\n```handlebars\n<BoxelCard>\n  <@fields.travelItinerary />\n</BoxelCard>\n```\n\nThis will render the `TravelItinerary` card inline within the consuming card.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Travel Itinerary Planner",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

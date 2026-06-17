@@ -1,0 +1,142 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TravelItinerary",
+        "module": "../travel-itinerary"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "stops": [
+        {
+          "location": {
+            "searchKey": "Tsukiji Outer Market",
+            "lat": 35.6654,
+            "lon": 139.7707
+          },
+          "day": 1,
+          "startTime": {
+            "value": "08:00"
+          },
+          "endTime": {
+            "value": "10:00"
+          },
+          "category": "Food & Dining",
+          "notes": "Arrive early to catch fresh sushi breakfast and explore vendor stalls; peak activity 8–9 AM."
+        },
+        {
+          "location": {
+            "searchKey": "Ginza Sushi Yoshitake",
+            "lat": 35.6723,
+            "lon": 139.7638
+          },
+          "day": 1,
+          "startTime": {
+            "value": "11:30"
+          },
+          "endTime": {
+            "value": "13:30"
+          },
+          "category": "Food & Dining",
+          "notes": "Reserve ahead; this Michelin 3-star omakase is a once-in-a-lifetime experience; lunch is more affordable than dinner."
+        },
+        {
+          "location": {
+            "searchKey": "Ginza Six Department Store Food Hall",
+            "lat": 35.6726,
+            "lon": 139.7648
+          },
+          "day": 1,
+          "startTime": {
+            "value": "14:00"
+          },
+          "endTime": {
+            "value": "15:30"
+          },
+          "category": "Food & Dining",
+          "notes": "Sample artisan pastries, wagashi, and sake from top Japanese makers; great for gifts and snacks."
+        },
+        {
+          "location": {
+            "searchKey": "Senso-ji Temple",
+            "lat": 35.7148,
+            "lon": 139.7967
+          },
+          "day": 2,
+          "startTime": {
+            "value": "07:00"
+          },
+          "endTime": {
+            "value": "09:00"
+          },
+          "category": "Sightseeing",
+          "notes": "Tokyo's oldest temple; explore the historic grounds and iconic red lantern at dawn for fewer crowds."
+        },
+        {
+          "location": {
+            "searchKey": "Kiji Tonkatsu Restaurant",
+            "lat": 35.7161,
+            "lon": 139.7873
+          },
+          "day": 2,
+          "startTime": {
+            "value": "12:00"
+          },
+          "endTime": {
+            "value": "13:30"
+          },
+          "category": "Food & Dining",
+          "notes": "Legendary tonkatsu (breaded pork cutlet) since 1935; book ahead or arrive at opening to minimize wait."
+        },
+        {
+          "location": {
+            "searchKey": "Nabezo Hot Pot (Roppongi)",
+            "lat": 35.6647,
+            "lon": 139.7318
+          },
+          "day": 2,
+          "startTime": {
+            "value": "18:00"
+          },
+          "endTime": {
+            "value": "20:00"
+          },
+          "category": "Food & Dining",
+          "notes": "Interactive dining: cook premium wagyu and vegetables in broths at your table; perfect final meal."
+        }
+      ],
+      "cardInfo": {
+        "name": "2 Days in Tokyo",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "dateRange": {
+        "end": "2026-06-17",
+        "start": "2026-06-16"
+      },
+      "tripTitle": "2 Days in Tokyo",
+      "destination": {
+        "lat": 35.6768601,
+        "lon": 139.7638947,
+        "searchKey": "Tokyo, Japan"
+      },
+      "shareTripCode": {
+        "data": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/coastal-voyage"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
