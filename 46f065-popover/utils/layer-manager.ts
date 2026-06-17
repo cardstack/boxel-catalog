@@ -53,20 +53,40 @@ export interface SurfaceLayerBoxCollapseOptions {
   tolerance?: number;
 }
 
+// The whole ladder lives in the z-index window (700, 900): ABOVE the host's
+// persistent top-bar chrome (--host-top-bar-z-index = 700) but BELOW the host
+// popups/modals that can co-occur with an open card — the AI-panel popover
+// (--host-ai-panel-popover-z-index = 900), the profile popover
+// (--boxel-layer-floating-button + 1 = 1001), and boxel-ui modals / the
+// card-chooser (1500 / 2000).
+//
+// Why above the top bar (not below all host chrome): the top bar is persistent
+// chrome, not a dismissable popup. Sitting BELOW it (as an earlier, more
+// aggressive compression did) means a tall popover slides UP under the bar and
+// gets visually CROPPED. Sitting just ABOVE it makes that crop structurally
+// impossible — the popover simply paints over the bar, the same way the host's
+// own AI-chat popover (anchored into the top bar) already does — while still
+// staying under every real popup/modal.
+//
+// (This z ordering only holds because the popover portals into the SAME
+// stacking context as that host chrome — see Popover#portalTarget; a z-index
+// is meaningless across stacking contexts.) Ordering within the ladder is
+// preserved (selection < cell-lift < popover < modal < toast) for catalog
+// surfaces that stack among themselves.
 const TIER_BASE: Record<SurfaceLayerTier, number> = {
-  selection: 1,
-  'cell-lift': 200,
-  popover: 1000,
-  modal: 10000,
-  toast: 90000,
+  selection: 705,
+  'cell-lift': 715,
+  popover: 740,
+  modal: 800,
+  toast: 860,
 };
 
 const TIER_CEILING: Record<SurfaceLayerTier, number> = {
-  selection: 99,
-  'cell-lift': 999,
-  popover: 9999,
-  modal: 89999,
-  toast: 99999,
+  selection: 714,
+  'cell-lift': 739,
+  popover: 799,
+  modal: 859,
+  toast: 899,
 };
 
 export class SurfaceLayerManager {

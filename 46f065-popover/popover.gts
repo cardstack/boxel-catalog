@@ -1049,7 +1049,33 @@ export default class Popover extends Component<PopoverSignature> {
     if (typeof document === 'undefined') {
       throw new Error('<Popover> requires a browser document to portal into.');
     }
-    return document.body;
+    // Portal into the host's submode layout, NOT document.body and NOT the
+    // operator-mode root. The reason is stacking context, not z-index value:
+    //
+    //   .operator-mode (position: fixed)         ← own stacking context
+    //     .submode-layout (position: relative;   ← own stacking context @ z:0
+    //                      z-index: 0)
+    //       …the card stack (z ~1–10)            ← the card we belong to
+    //       …host in-submode popups              ← profile (z 1001), top-bar
+    //                                              (700), AI panel (900) …
+    //     CardChooserModal / boxel modals (z 1500 / 2000)
+    //
+    // The card we float over AND the host's in-submode popups (profile,
+    // top-bar, AI panel) both live INSIDE .submode-layout. Portaling any
+    // higher (operator-mode or body) puts the popover at a level that paints
+    // OVER the whole .submode-layout subtree — so it covers those host
+    // popups no matter how small its z-index is (their z is trapped inside
+    // submode-layout's z:0 context). Portaling INTO .submode-layout puts the
+    // popover in the same stacking context as them, so its compressed tier
+    // (z < 200, see SurfaceLayerManager) correctly sits ABOVE the card stack
+    // yet BELOW every host surface — the in-submode popups here, and the
+    // operator-mode-level modals (which sit above the whole submode subtree).
+    // Falls back outward when a level is absent (code mode, standalone, tests).
+    return (
+      document.querySelector<HTMLElement>('.submode-layout') ??
+      document.querySelector<HTMLElement>('.operator-mode') ??
+      document.body
+    );
   }
 
   get effectivePlacement(): Placement {
@@ -1511,7 +1537,10 @@ export default class Popover extends Component<PopoverSignature> {
 
       .bx-popover {
         position: absolute;
-        z-index: var(--bx-popover-z, 1000);
+        /* Fallback sits in the host window (700, 900) — above the top bar,
+         * below host popups/modals; the real value comes from --bx-popover-z
+         * (see SurfaceLayerManager). */
+        z-index: var(--bx-popover-z, 740);
         font: 13px/1.4
           var(
             --bx-popover-font-family,
@@ -1632,7 +1661,7 @@ export default class Popover extends Component<PopoverSignature> {
          * and renders just before the popover, so it gets a lower z and
          * sits directly beneath it. (No `- 1` hack: the popover takes
          * the next number in the tier.) */
-        z-index: var(--bx-popover-z, 9999);
+        z-index: var(--bx-popover-z, 800);
         animation: bx-popover-dim-in 140ms ease-out;
       }
       @keyframes bx-popover-dim-in {
