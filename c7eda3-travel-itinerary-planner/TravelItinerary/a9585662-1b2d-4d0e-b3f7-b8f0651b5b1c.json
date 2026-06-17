@@ -1,0 +1,190 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TravelItinerary",
+        "module": "../travel-itinerary"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "stops": [
+        {
+          "location": {
+            "searchKey": "Petaling Street Market",
+            "lat": 3.1447,
+            "lon": 101.6964
+          },
+          "day": 1,
+          "startTime": {
+            "value": "09:00"
+          },
+          "endTime": {
+            "value": "11:00"
+          },
+          "category": "Culture & History",
+          "notes": "Arrive early to beat crowds; haggle for local crafts and textiles."
+        },
+        {
+          "location": {
+            "searchKey": "Sri Mahamandir Temple",
+            "lat": 3.1438,
+            "lon": 101.6986
+          },
+          "day": 1,
+          "startTime": {
+            "value": "11:15"
+          },
+          "endTime": {
+            "value": "12:30"
+          },
+          "category": "Culture & History",
+          "notes": "Remove shoes before entering; colorful Hindu temple in Chinatown's heart."
+        },
+        {
+          "location": {
+            "searchKey": "Jalan Alor Street Food Market",
+            "lat": 3.157,
+            "lon": 101.7129
+          },
+          "day": 1,
+          "startTime": {
+            "value": "13:00"
+          },
+          "endTime": {
+            "value": "15:00"
+          },
+          "category": "Food & Dining",
+          "notes": "Best visited in late afternoon; try satay, char kway teow, and grilled seafood."
+        },
+        {
+          "location": {
+            "searchKey": "Thean Hou Temple",
+            "lat": 3.1555,
+            "lon": 101.6839
+          },
+          "day": 1,
+          "startTime": {
+            "value": "15:30"
+          },
+          "endTime": {
+            "value": "17:00"
+          },
+          "category": "Culture & History",
+          "notes": "Largest Chinese temple in Malaysia; stunning architecture and peaceful gardens."
+        },
+        {
+          "location": {
+            "searchKey": "Dinner at Lot 10 Hutong Food Court",
+            "lat": 3.1567,
+            "lon": 101.7127
+          },
+          "day": 1,
+          "startTime": {
+            "value": "18:30"
+          },
+          "endTime": {
+            "value": "20:00"
+          },
+          "category": "Food & Dining",
+          "notes": "Curated Malaysian street food stalls in a modern setting; reserve energy for variety."
+        },
+        {
+          "location": {
+            "searchKey": "Islamic Arts Museum Malaysia",
+            "lat": 3.1407,
+            "lon": 101.685
+          },
+          "day": 2,
+          "startTime": {
+            "value": "09:00"
+          },
+          "endTime": {
+            "value": "11:00"
+          },
+          "category": "Culture & History",
+          "notes": "Book tickets online; world-class collection of Islamic artifacts and manuscripts."
+        },
+        {
+          "location": {
+            "searchKey": "Central Market (Pasar Seni)",
+            "lat": 3.1469,
+            "lon": 101.6947
+          },
+          "day": 2,
+          "startTime": {
+            "value": "12:45"
+          },
+          "endTime": {
+            "value": "14:15"
+          },
+          "category": "Culture & History",
+          "notes": "Restored Art Deco building; browse Malaysian handicrafts and local souvenirs."
+        },
+        {
+          "location": {
+            "searchKey": "Lunch at Authentic Malaysian Restaurant",
+            "lat": 3.148,
+            "lon": 101.6955
+          },
+          "day": 2,
+          "startTime": {
+            "value": "14:30"
+          },
+          "endTime": {
+            "value": "16:00"
+          },
+          "category": "Food & Dining",
+          "notes": "Try nasi lemak, laksa, and rendang; ask locals for hidden gems near Central Market."
+        },
+        {
+          "location": {
+            "searchKey": "Petronas Twin Towers",
+            "lat": 3.1578,
+            "lon": 101.7123
+          },
+          "day": 2,
+          "startTime": {
+            "value": "16:30"
+          },
+          "endTime": {
+            "value": "18:00"
+          },
+          "category": "Culture & History",
+          "notes": "Book tickets ahead; visit the Skybridge at sunset for panoramic city views."
+        }
+      ],
+      "cardInfo": {
+        "name": "2 Days in Malaysia",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "dateRange": {
+        "end": "2026-06-18",
+        "start": "2026-06-17"
+      },
+      "tripTitle": "2 Days in Malaysia",
+      "destination": {
+        "lat": null,
+        "lon": null,
+        "searchKey": "Malaysia"
+      },
+      "shareTripCode": {
+        "data": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
