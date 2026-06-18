@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "TierList",
+        "module": "../tier-list"
+      },
+      "readMe": "# TierList\n\n## Summary\nThe `TierList` spec is a card that allows users to create and manage a tier-based ranking system. It provides a visual interface for dragging and dropping items into different tiers, as well as tools for customizing the tiers themselves.\n\n## Import\n```javascript\nimport { TierList } from '../tier-list';\n```\n\n## Usage as a Field\nThe `TierList` spec can be used as a field within a consuming card or field. Here's an example:\n\n```json\n{\n  \"type\": \"card\",\n  \"id\": \"my-tier-list-card\",\n  \"attributes\": {\n    \"title\": \"My Tier List\",\n    \"template\": { \"type\": \"tier-template\", \"id\": \"my-tier-template\" },\n    \"tiers\": [],\n    \"placements\": []\n  },\n  \"relationships\": {\n    \"fields\": {\n      \"data\": [\n        { \"type\": \"field\", \"id\": \"tier-list\" }\n      ]\n    }\n  }\n}\n```\n\n```json\n{\n  \"type\": \"field\",\n  \"id\": \"tier-list\",\n  \"attributes\": {\n    \"fieldType\": \"TierList\"\n  }\n}\n```\n\nIn this example, the `TierList` spec is used as a field within a card. The card has a `template` relationship that links to a `TierTemplate` card, which provides the items to be ranked. The `tiers` and `placements` fields store the current state of the tier list.\n\n## Template Usage\nTo use the `TierList` spec in a template, you can simply reference the `@fields.` prefix, like this:\n\n```handlebars\n<@fields.tier-list />\n```\n\nThis will render the tier list UI, allowing users to drag and drop items into the different tiers.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Tier List",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Tier List",
+      "summary": "The Tier List definition provides a system for organizing and ranking items into customizable tiers within a user interface. It allows users to assign items to different tiers via drag-and-drop interactions, with support for multiple tier configurations, filtering of unranked items, and visual customization of tiers. The system manages item placements, tier management (adding, removing, renaming, coloring), and displays summaries of item distributions. Designed for flexible integration, it facilitates creating visual tier-based rankings for collections of items in a clear and interactive manner.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/d6aa929f-53d7-43d0-8fab-11037e3102bd"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/ab11037e-3102-4dab-bb3a-9cf4763ee8e4"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/cfab1103-7e31-42bd-abbb-3a9cf4763ee8"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/d3d0cfab-1103-4e31-82bd-abbb3a9cf476"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/d0cfab11-037e-4102-bdab-bb3a9cf4763e"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/53d7d3d0-cfab-4103-be31-02bdabbb3a9c"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/d7d3d0cf-ab11-437e-b102-bdabbb3a9cf4"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/my-language-ranking-dce62586.png"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../TierList/my-language-ranking"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/tier-list-70ca9c16.png"
+        }
+      }
+    }
+  }
+}
