@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "JavaScript",
+      "image": {
+        "url": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
+        "sourceMode": "url"
+      },
+      "cardInfo": {
+        "name": "JavaScript",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../tier-item",
+        "name": "TierItem"
+      }
+    }
+  }
+}
