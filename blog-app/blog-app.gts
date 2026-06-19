@@ -99,6 +99,7 @@ import {
   type LooseSingleCardDocument,
   ResolvedCodeRef,
   TypedFilter,
+  type Query,
   searchEntryWireQueryFromQuery,
   type SearchEntryWireQuery,
 } from '@cardstack/runtime-common';
@@ -826,7 +827,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
     };
   }
 
-  get picksQuery() {
+  get picksQuery(): Query {
     const on = codeRef(here, './blog-post', 'BlogPost');
     return {
       filter: {
@@ -837,19 +838,24 @@ class BlogSiteView extends Component<typeof BlogApp> {
     };
   }
 
-  get latestQuery() {
+  get latestQuery(): Query {
     const on = codeRef(here, './blog-post', 'BlogPost');
-    const eqFilter: Record<string, unknown> = { published: true };
-    if (this.activeFilter === 'news') {
-      eqFilter['categories.slug'] = 'news';
-    } else if (this.activeFilter === 'new-york') {
-      eqFilter['categories.slug'] = 'new-york';
-    } else if (this.activeFilter === 'tech') {
-      eqFilter['categories.slug'] = 'future-tech';
-    }
+    const categorySlug =
+      this.activeFilter === 'news'
+        ? 'news'
+        : this.activeFilter === 'new-york'
+          ? 'new-york'
+          : this.activeFilter === 'tech'
+            ? 'future-tech'
+            : undefined;
     return {
-      filter: { on, eq: eqFilter },
-      sort: [{ on, by: 'publishDate', direction: 'desc' as const }],
+      filter: {
+        on,
+        eq: categorySlug
+          ? { published: true, 'categories.slug': categorySlug }
+          : { published: true },
+      },
+      sort: [{ on, by: 'publishDate', direction: 'desc' }],
     };
   }
 
@@ -993,13 +999,14 @@ class BlogSiteView extends Component<typeof BlogApp> {
         <div class='picks-carousel'>
           {{#let (component @context.searchResultsComponent) as |Search|}}
             <Search @query={{this.picksSearchQuery}} as |results|>
-              {{#if results.isLoading}}
-                <div class='aside-loading'>Loading…</div>
-              {{/if}}
               {{#each results.entries key='id' as |card|}}
                 <div class='picks-card'>
                   <card.component />
                 </div>
+              {{else}}
+                {{#if results.isLoading}}
+                  <div class='aside-loading'>Loading…</div>
+                {{/if}}
               {{/each}}
             </Search>
           {{/let}}
@@ -1040,13 +1047,14 @@ class BlogSiteView extends Component<typeof BlogApp> {
         <div class='recent-grid filter-{{this.activeFilter}}'>
           {{#let (component @context.searchResultsComponent) as |Search|}}
             <Search @query={{this.latestSearchQuery}} as |results|>
-              {{#if results.isLoading}}
-                <div class='recent-loading'>Loading…</div>
-              {{/if}}
               {{#each results.entries key='id' as |card|}}
                 <div class='recent-card'>
                   <card.component />
                 </div>
+              {{else}}
+                {{#if results.isLoading}}
+                  <div class='recent-loading'>Loading…</div>
+                {{/if}}
               {{/each}}
             </Search>
           {{/let}}
@@ -1829,7 +1837,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
     this.searchQuery = (event.target as HTMLInputElement).value;
   }
 
-  get themeQuery() {
+  get themeQuery(): Query {
     return {
       filter: {
         type: {
@@ -1901,7 +1909,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
     return u ? [u.href] : [];
   }
 
-  get libraryPostsQuery() {
+  get libraryPostsQuery(): Query {
     const on = codeRef(here, './blog-post', 'BlogPost');
     const sort = [{ on, by: 'publishDate', direction: 'desc' as const }];
     const q = this.searchQuery.trim();
@@ -1982,9 +1990,6 @@ class IsolatedPortal extends Component<typeof BlogApp> {
               </label>
               {{#let (component @context.searchResultsComponent) as |Search|}}
                 <Search @query={{this.themeSearchQuery}} as |results|>
-                  {{#if results.isLoading}}
-                    <div class='theme-loading'>Loading themes…</div>
-                  {{/if}}
                   {{#each results.entries key='id' as |card|}}
                     <label
                       class='theme-row
@@ -2001,6 +2006,10 @@ class IsolatedPortal extends Component<typeof BlogApp> {
                         <card.component />
                       </span>
                     </label>
+                  {{else}}
+                    {{#if results.isLoading}}
+                      <div class='theme-loading'>Loading themes…</div>
+                    {{/if}}
                   {{/each}}
                 </Search>
               {{/let}}

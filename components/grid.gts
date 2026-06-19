@@ -32,13 +32,14 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
     >
       {{#let (component @context.searchResultsComponent) as |SearchResults|}}
         <SearchResults @query={{this.searchResultsQuery}} as |results|>
-          {{#if results.isLoading}}
-            Loading...
-          {{/if}}
           {{#each results.entries key='id' as |card|}}
             <li class='{{@selectedView}}-view-container'>
               <card.component class='card' />
             </li>
+          {{else}}
+            {{#if results.isLoading}}
+              Loading...
+            {{/if}}
           {{/each}}
         </SearchResults>
       {{/let}}

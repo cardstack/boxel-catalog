@@ -98,6 +98,13 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
     };
   };
 
+  // Show the skeleton only on the initial (empty) load; during a live refetch
+  // the previous categories stay visible rather than collapsing to a skeleton.
+  showSphereSkeleton = (results: {
+    isLoading: boolean;
+    entries: unknown[];
+  }): boolean => results.isLoading && results.entries.length === 0;
+
   <template>
     <ul class='filter-list'>
       <li class='filter-list-item'>

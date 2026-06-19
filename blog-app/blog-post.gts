@@ -14,6 +14,7 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import {
   codeRef,
+  type Query,
   searchEntryWireQueryFromQuery,
   type SearchEntryWireQuery,
 } from '@cardstack/runtime-common';
@@ -782,7 +783,7 @@ const DEFAULT_LAYOUT: BlogLayout = [
 ];
 
 class IsolatedBlogPost extends Component<typeof BlogPost> {
-  get searchResultsQuery(): SearchEntryWireQuery {
+  get themeSearchQuery(): SearchEntryWireQuery {
     return {
       ...searchEntryWireQueryFromQuery(this.themeQuery),
       realms: this.realmHrefs,
@@ -845,7 +846,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
     actions?.saveCard?.(this.args.model);
   }
 
-  get themeQuery() {
+  get themeQuery(): Query {
     return {
       filter: {
         type: {
@@ -999,10 +1000,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
                 </span>
               </label>
               {{#let (component @context.searchResultsComponent) as |Search|}}
-                <Search @query={{this.searchResultsQuery}} as |results|>
-                  {{#if results.isLoading}}
-                    <div class='theme-loading'>Loading themes…</div>
-                  {{/if}}
+                <Search @query={{this.themeSearchQuery}} as |results|>
                   {{#each results.entries key='id' as |card|}}
                     <label
                       class='theme-row
@@ -1019,6 +1017,10 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
                         <card.component />
                       </span>
                     </label>
+                  {{else}}
+                    {{#if results.isLoading}}
+                      <div class='theme-loading'>Loading themes…</div>
+                    {{/if}}
                   {{/each}}
                 </Search>
               {{/let}}

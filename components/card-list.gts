@@ -43,9 +43,6 @@ export class CardList extends GlimmerComponent<CardListSignature> {
     <ul class='card-list' ...attributes>
       {{#let (component @context.searchResultsComponent) as |SearchResults|}}
         <SearchResults @query={{this.searchResultsQuery}} as |results|>
-          {{#if results.isLoading}}
-            Loading...
-          {{/if}}
           {{#each results.entries key='id' as |card|}}
             <li class='card-list-item'>
               <card.component class='card' />
@@ -53,6 +50,10 @@ export class CardList extends GlimmerComponent<CardListSignature> {
                 {{yield card to='meta'}}
               {{/if}}
             </li>
+          {{else}}
+            {{#if results.isLoading}}
+              Loading...
+            {{/if}}
           {{/each}}
         </SearchResults>
       {{/let}}
