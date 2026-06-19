@@ -14,6 +14,7 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import {
   codeRef,
+  rri,
   type Query,
   searchEntryWireQueryFromQuery,
   type SearchEntryWireQuery,
@@ -850,7 +851,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
     return {
       filter: {
         type: {
-          module: 'https://cardstack.com/base/style-reference',
+          module: rri('https://cardstack.com/base/style-reference'),
           name: 'default',
         },
       },

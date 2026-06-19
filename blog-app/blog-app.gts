@@ -96,6 +96,7 @@ import {
 
 import {
   codeRef,
+  rri,
   type LooseSingleCardDocument,
   ResolvedCodeRef,
   TypedFilter,
@@ -1841,7 +1842,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
     return {
       filter: {
         type: {
-          module: 'https://cardstack.com/base/style-reference',
+          module: rri('https://cardstack.com/base/style-reference'),
           name: 'default',
         },
       },
