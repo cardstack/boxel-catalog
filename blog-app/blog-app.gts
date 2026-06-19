@@ -580,13 +580,13 @@ type LatestFilter = 'all' | 'latest' | 'news' | 'new-york' | 'tech';
 
 // Reader-facing view: NYT-inspired magazine layout, lists BlogPosts via search.
 class BlogSiteView extends Component<typeof BlogApp> {
-  get searchResultsQuery2(): SearchEntryWireQuery {
+  get latestSearchQuery(): SearchEntryWireQuery {
     return {
       ...searchEntryWireQueryFromQuery(this.latestQuery),
       realms: this.realmHrefs,
     };
   }
-  get searchResultsQuery(): SearchEntryWireQuery {
+  get picksSearchQuery(): SearchEntryWireQuery {
     return {
       ...searchEntryWireQueryFromQuery(this.picksQuery),
       realms: this.realmHrefs,
@@ -992,7 +992,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
         </header>
         <div class='picks-carousel'>
           {{#let (component @context.searchResultsComponent) as |Search|}}
-            <Search @query={{this.searchResultsQuery}} as |results|>
+            <Search @query={{this.picksSearchQuery}} as |results|>
               {{#if results.isLoading}}
                 <div class='aside-loading'>Loading…</div>
               {{/if}}
@@ -1039,7 +1039,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
         </header>
         <div class='recent-grid filter-{{this.activeFilter}}'>
           {{#let (component @context.searchResultsComponent) as |Search|}}
-            <Search @query={{this.searchResultsQuery2}} as |results|>
+            <Search @query={{this.latestSearchQuery}} as |results|>
               {{#if results.isLoading}}
                 <div class='recent-loading'>Loading…</div>
               {{/if}}
@@ -1792,13 +1792,13 @@ class BlogSiteView extends Component<typeof BlogApp> {
 
 // Portal wrapper: collapsible left drawer + main content (site or admin).
 class IsolatedPortal extends Component<typeof BlogApp> {
-  get searchResultsQuery3(): SearchEntryWireQuery {
+  get themeSearchQuery(): SearchEntryWireQuery {
     return {
       ...searchEntryWireQueryFromQuery(this.themeQuery),
       realms: this.realmHrefs,
     };
   }
-  get searchResultsQuery4(): SearchEntryWireQuery {
+  get libraryPostsSearchQuery(): SearchEntryWireQuery {
     return {
       ...searchEntryWireQueryFromQuery(this.libraryPostsQuery),
       realms: this.realmHrefs,
@@ -1981,7 +1981,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
                 </span>
               </label>
               {{#let (component @context.searchResultsComponent) as |Search|}}
-                <Search @query={{this.searchResultsQuery3}} as |results|>
+                <Search @query={{this.themeSearchQuery}} as |results|>
                   {{#if results.isLoading}}
                     <div class='theme-loading'>Loading themes…</div>
                   {{/if}}
@@ -2018,7 +2018,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
               {{on 'input' this.onSearchInput}}
             />
             <@context.searchResultsComponent
-              @query={{this.searchResultsQuery4}}
+              @query={{this.libraryPostsSearchQuery}}
               as |results|
             >
               {{#if results.entries.length}}
