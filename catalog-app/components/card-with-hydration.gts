@@ -10,11 +10,11 @@ import {
   type BoxComponent,
 } from 'https://cardstack.com/base/card-api';
 
-import { type PrerenderedCardLike } from '@cardstack/runtime-common';
+import { type RenderableSearchEntryLike } from '@cardstack/runtime-common';
 
 interface CardWithHydrationSignature {
   Args: {
-    card: PrerenderedCardLike;
+    card: RenderableSearchEntryLike;
     context?: CardContext;
   };
   Element: HTMLElement;
@@ -23,11 +23,11 @@ interface CardWithHydrationSignature {
 export class CardWithHydration extends GlimmerComponent<CardWithHydrationSignature> {
   @tracked hydratedCardId: string | undefined;
   @action
-  async hydrateCard(card: PrerenderedCardLike) {
-    if (this.hydratedCardId == card.url) {
+  async hydrateCard(card: RenderableSearchEntryLike) {
+    if (this.hydratedCardId == card.id) {
       return;
     }
-    const cardId = removeFileExtension(card.url);
+    const cardId = removeFileExtension(card.id);
     this.hydratedCardId = cardId;
   }
   get isHydrated() {
@@ -45,8 +45,8 @@ export class CardWithHydration extends GlimmerComponent<CardWithHydrationSignatu
           {{#if Component}}
             <Component
               class='card'
-              data-test-cards-grid-item={{removeFileExtension @card.url}}
-              data-cards-grid-item={{removeFileExtension @card.url}}
+              data-test-cards-grid-item={{removeFileExtension @card.id}}
+              data-cards-grid-item={{removeFileExtension @card.id}}
               data-test-hydrated-card
             />
           {{/if}}
@@ -56,14 +56,14 @@ export class CardWithHydration extends GlimmerComponent<CardWithHydrationSignatu
       <@card.component
         class='card instance-error'
         data-test-instance-error={{@card.isError}}
-        data-test-cards-grid-item={{removeFileExtension @card.url}}
-        data-cards-grid-item={{removeFileExtension @card.url}}
+        data-test-cards-grid-item={{removeFileExtension @card.id}}
+        data-cards-grid-item={{removeFileExtension @card.id}}
       />
     {{else}}
       <@card.component
         class='card'
-        data-test-cards-grid-item={{removeFileExtension @card.url}}
-        data-cards-grid-item={{removeFileExtension @card.url}}
+        data-test-cards-grid-item={{removeFileExtension @card.id}}
+        data-cards-grid-item={{removeFileExtension @card.id}}
         {{on 'mouseenter' (fn this.hydrateCard @card)}}
       />
     {{/if}}

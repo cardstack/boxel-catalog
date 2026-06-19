@@ -4,7 +4,9 @@ import { type CardContext } from 'https://cardstack.com/base/card-api';
 
 import {
   type Query,
-  type PrerenderedCardLike,
+  type RenderableSearchEntryLike,
+  type SearchEntryWireQuery,
+  searchEntryWireQueryFromQuery,
 } from '@cardstack/runtime-common';
 
 type CardFormat = 'embedded' | 'fitted' | 'atom';
@@ -17,37 +19,42 @@ interface CardListSignature {
     format?: CardFormat;
   };
   Blocks: {
-    meta: [card: PrerenderedCardLike];
+    meta: [card: RenderableSearchEntryLike];
   };
   Element: HTMLElement;
 }
 export class CardList extends GlimmerComponent<CardListSignature> {
+  // The v2 `search-entry`-rooted query, adapted from the incoming v1 `Query`.
+  // The prerendered format (`embedded` by default) is bound through the query's
+  // `htmlQuery` field — the v2 way to select it.
+  get searchResultsQuery(): SearchEntryWireQuery {
+    let query = searchEntryWireQueryFromQuery(this.args.query);
+    let format = this.args.format ?? 'embedded';
+    return {
+      ...query,
+      realms: this.args.realms,
+      filter: {
+        ...query.filter,
+        eq: { ...query.filter?.eq, htmlQuery: { eq: { format } } },
+      },
+    };
+  }
   <template>
     <ul class='card-list' ...attributes>
-      {{#let
-        (component @context.prerenderedCardSearchComponent)
-        as |PrerenderedCardSearch|
-      }}
-        <PrerenderedCardSearch
-          @query={{@query}}
-          @format={{if @format @format 'embedded'}}
-          @realms={{@realms}}
-          @isLive={{true}}
-        >
-          <:loading>
+      {{#let (component @context.searchResultsComponent) as |SearchResults|}}
+        <SearchResults @query={{this.searchResultsQuery}} as |results|>
+          {{#if results.isLoading}}
             Loading...
-          </:loading>
-          <:response as |cards|>
-            {{#each cards key='url' as |card|}}
-              <li class='card-list-item'>
-                <card.component class='card' />
-                {{#if (has-block 'meta')}}
-                  {{yield card to='meta'}}
-                {{/if}}
-              </li>
-            {{/each}}
-          </:response>
-        </PrerenderedCardSearch>
+          {{/if}}
+          {{#each results.entries key='id' as |card|}}
+            <li class='card-list-item'>
+              <card.component class='card' />
+              {{#if (has-block 'meta')}}
+                {{yield card to='meta'}}
+              {{/if}}
+            </li>
+          {{/each}}
+        </SearchResults>
       {{/let}}
     </ul>
     <style scoped>

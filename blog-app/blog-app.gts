@@ -99,6 +99,8 @@ import {
   type LooseSingleCardDocument,
   ResolvedCodeRef,
   TypedFilter,
+  searchEntryWireQueryFromQuery,
+  type SearchEntryWireQuery,
 } from '@cardstack/runtime-common';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
@@ -398,7 +400,7 @@ class BlogAppTemplate extends Component<typeof BlogApp> {
               <:meta as |card|>
                 {{#if this.showAdminData}}
                   <BlogAdminData
-                    @cardId={{card.url}}
+                    @cardId={{card.id}}
                     @context={{this.context}}
                   />
                 {{/if}}
@@ -578,6 +580,18 @@ type LatestFilter = 'all' | 'latest' | 'news' | 'new-york' | 'tech';
 
 // Reader-facing view: NYT-inspired magazine layout, lists BlogPosts via search.
 class BlogSiteView extends Component<typeof BlogApp> {
+  get searchResultsQuery2(): SearchEntryWireQuery {
+    return {
+      ...searchEntryWireQueryFromQuery(this.latestQuery),
+      realms: this.realmHrefs,
+    };
+  }
+  get searchResultsQuery(): SearchEntryWireQuery {
+    return {
+      ...searchEntryWireQueryFromQuery(this.picksQuery),
+      realms: this.realmHrefs,
+    };
+  }
   @tracked activeFilter: LatestFilter = 'all';
   @tracked dragOverSlot: string | null = null;
 
@@ -977,26 +991,16 @@ class BlogSiteView extends Component<typeof BlogApp> {
           </p>
         </header>
         <div class='picks-carousel'>
-          {{#let
-            (component @context.prerenderedCardSearchComponent)
-            as |Search|
-          }}
-            <Search
-              @query={{this.picksQuery}}
-              @format='fitted'
-              @realms={{this.realmHrefs}}
-              @isLive={{true}}
-            >
-              <:loading>
+          {{#let (component @context.searchResultsComponent) as |Search|}}
+            <Search @query={{this.searchResultsQuery}} as |results|>
+              {{#if results.isLoading}}
                 <div class='aside-loading'>Loading…</div>
-              </:loading>
-              <:response as |cards|>
-                {{#each cards key='url' as |card|}}
-                  <div class='picks-card'>
-                    <card.component />
-                  </div>
-                {{/each}}
-              </:response>
+              {{/if}}
+              {{#each results.entries key='id' as |card|}}
+                <div class='picks-card'>
+                  <card.component />
+                </div>
+              {{/each}}
             </Search>
           {{/let}}
         </div>
@@ -1034,26 +1038,16 @@ class BlogSiteView extends Component<typeof BlogApp> {
           </nav>
         </header>
         <div class='recent-grid filter-{{this.activeFilter}}'>
-          {{#let
-            (component @context.prerenderedCardSearchComponent)
-            as |Search|
-          }}
-            <Search
-              @query={{this.latestQuery}}
-              @format='fitted'
-              @realms={{this.realmHrefs}}
-              @isLive={{true}}
-            >
-              <:loading>
+          {{#let (component @context.searchResultsComponent) as |Search|}}
+            <Search @query={{this.searchResultsQuery2}} as |results|>
+              {{#if results.isLoading}}
                 <div class='recent-loading'>Loading…</div>
-              </:loading>
-              <:response as |cards|>
-                {{#each cards key='url' as |card|}}
-                  <div class='recent-card'>
-                    <card.component />
-                  </div>
-                {{/each}}
-              </:response>
+              {{/if}}
+              {{#each results.entries key='id' as |card|}}
+                <div class='recent-card'>
+                  <card.component />
+                </div>
+              {{/each}}
             </Search>
           {{/let}}
         </div>
@@ -1798,6 +1792,18 @@ class BlogSiteView extends Component<typeof BlogApp> {
 
 // Portal wrapper: collapsible left drawer + main content (site or admin).
 class IsolatedPortal extends Component<typeof BlogApp> {
+  get searchResultsQuery3(): SearchEntryWireQuery {
+    return {
+      ...searchEntryWireQueryFromQuery(this.themeQuery),
+      realms: this.realmHrefs,
+    };
+  }
+  get searchResultsQuery4(): SearchEntryWireQuery {
+    return {
+      ...searchEntryWireQueryFromQuery(this.libraryPostsQuery),
+      realms: this.realmHrefs,
+    };
+  }
   @tracked viewMode: 'site' | 'admin' = 'site';
   @tracked drawerOpen = false;
   @tracked searchQuery = '';
@@ -1974,38 +1980,28 @@ class IsolatedPortal extends Component<typeof BlogApp> {
                   <span class='theme-row__desc'>Use built-in defaults</span>
                 </span>
               </label>
-              {{#let
-                (component @context.prerenderedCardSearchComponent)
-                as |Search|
-              }}
-                <Search
-                  @query={{this.themeQuery}}
-                  @format='fitted'
-                  @realms={{this.realmHrefs}}
-                  @isLive={{true}}
-                >
-                  <:loading>
+              {{#let (component @context.searchResultsComponent) as |Search|}}
+                <Search @query={{this.searchResultsQuery3}} as |results|>
+                  {{#if results.isLoading}}
                     <div class='theme-loading'>Loading themes…</div>
-                  </:loading>
-                  <:response as |cards|>
-                    {{#each cards key='url' as |card|}}
-                      <label
-                        class='theme-row
-                          {{if (this.isThemeSelected card.url) "is-selected"}}'
-                      >
-                        <input
-                          type='radio'
-                          name='blog-site-theme'
-                          class='theme-radio'
-                          checked={{this.isThemeSelected card.url}}
-                          {{on 'change' (fn this.onThemeRadioChange card.url)}}
-                        />
-                        <span class='theme-preview'>
-                          <card.component />
-                        </span>
-                      </label>
-                    {{/each}}
-                  </:response>
+                  {{/if}}
+                  {{#each results.entries key='id' as |card|}}
+                    <label
+                      class='theme-row
+                        {{if (this.isThemeSelected card.id) "is-selected"}}'
+                    >
+                      <input
+                        type='radio'
+                        name='blog-site-theme'
+                        class='theme-radio'
+                        checked={{this.isThemeSelected card.id}}
+                        {{on 'change' (fn this.onThemeRadioChange card.id)}}
+                      />
+                      <span class='theme-preview'>
+                        <card.component />
+                      </span>
+                    </label>
+                  {{/each}}
                 </Search>
               {{/let}}
             </div>
@@ -2021,36 +2017,27 @@ class IsolatedPortal extends Component<typeof BlogApp> {
               value={{this.searchQuery}}
               {{on 'input' this.onSearchInput}}
             />
-            {{#let
-              (component @context.prerenderedCardSearchComponent)
-              as |Search|
-            }}
-              <Search
-                @query={{this.libraryPostsQuery}}
-                @format='fitted'
-                @realms={{this.realmHrefs}}
-                @isLive={{true}}
-              >
-                <:loading>
-                  <div class='lib-loading'>Loading posts…</div>
-                </:loading>
-                <:response as |cards|>
-                  <div class='lib-list'>
-                    {{#each cards key='url' as |card|}}
-                      <div
-                        class='lib-card'
-                        draggable='true'
-                        {{on 'dragstart' (fn this.onLibraryDragStart card.url)}}
-                        title='Drag {{card.url}}'
-                      >
-                        <card.component />
-                      </div>
-                    {{/each}}
-                  </div>
-                </:response>
-              </Search>
-
-            {{/let}}
+            <@context.searchResultsComponent
+              @query={{this.searchResultsQuery4}}
+              as |results|
+            >
+              {{#if results.entries.length}}
+                <div class='lib-list'>
+                  {{#each results.entries key='id' as |card|}}
+                    <div
+                      class='lib-card'
+                      draggable='true'
+                      {{on 'dragstart' (fn this.onLibraryDragStart card.id)}}
+                      title='Drag {{card.id}}'
+                    >
+                      <card.component />
+                    </div>
+                  {{/each}}
+                </div>
+              {{else if results.isLoading}}
+                <div class='lib-loading'>Loading posts…</div>
+              {{/if}}
+            </@context.searchResultsComponent>
           </section>
         </div>
       </aside>
