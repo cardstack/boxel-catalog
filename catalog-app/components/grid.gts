@@ -1,8 +1,11 @@
 import GlimmerComponent from '@glimmer/component';
 import { type CardContext } from 'https://cardstack.com/base/card-api';
-import { eq } from '@cardstack/boxel-ui/helpers';
 
-import { type Query } from '@cardstack/runtime-common';
+import {
+  type Query,
+  type SearchEntryWireQuery,
+  searchEntryWireQueryFromQuery,
+} from '@cardstack/runtime-common';
 
 import { CardContainer } from '@cardstack/boxel-ui/components';
 import ListingFittedSkeleton from './listing-fitted-skeleton';
@@ -24,50 +27,49 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
     return Array.from({ length: 10 }, (_, i) => i);
   }
 
+  // The v2 `search-entry`-rooted query, adapted from the incoming v1 `Query`.
+  // `fitted` is the default rendering, so no `htmlQuery` binding is needed.
+  get searchResultsQuery(): SearchEntryWireQuery {
+    return {
+      ...searchEntryWireQueryFromQuery(this.args.query),
+      realms: this.args.realms,
+    };
+  }
+
   <template>
-    {{#let
-      (component @context.prerenderedCardSearchComponent)
-      as |PrerenderedCardSearch|
-    }}
-      <PrerenderedCardSearch
-        @query={{@query}}
-        @format='fitted'
-        @realms={{@realms}}
-        @isLive={{true}}
-      >
-        <:loading>
-          <ul class='cards {{@selectedView}}-view' ...attributes>
-            {{#each this.renderSkeletons}}
-              <li class='{{@selectedView}}-view-container'>
-                <CardContainer class='card' @displayBoundaries={{true}}>
-                  <ListingFittedSkeleton />
-                </CardContainer>
-              </li>
-            {{/each}}
-          </ul>
-        </:loading>
-        <:response as |cards|>
-          {{#if (eq cards.length 0)}}
-            <p class='no-results' data-test-no-results>No results found</p>
-          {{else}}
-            <ul
-              class='cards {{@selectedView}}-view'
-              data-test-cards-grid-cards
-              ...attributes
+    <@context.searchResultsComponent
+      @query={{this.searchResultsQuery}}
+      as |results|
+    >
+      {{#if results.entries.length}}
+        <ul
+          class='cards {{@selectedView}}-view'
+          data-test-cards-grid-cards
+          ...attributes
+        >
+          {{#each results.entries key='id' as |card|}}
+            <li
+              class='{{@selectedView}}-view-container'
+              data-test-card-url={{card.id}}
             >
-              {{#each cards key='url' as |card|}}
-                <li
-                  class='{{@selectedView}}-view-container'
-                  data-test-card-url={{card.url}}
-                >
-                  <CardWithHydration @card={{card}} @context={{@context}} />
-                </li>
-              {{/each}}
-            </ul>
-          {{/if}}
-        </:response>
-      </PrerenderedCardSearch>
-    {{/let}}
+              <CardWithHydration @card={{card}} @context={{@context}} />
+            </li>
+          {{/each}}
+        </ul>
+      {{else if results.isLoading}}
+        <ul class='cards {{@selectedView}}-view' ...attributes>
+          {{#each this.renderSkeletons}}
+            <li class='{{@selectedView}}-view-container'>
+              <CardContainer class='card' @displayBoundaries={{true}}>
+                <ListingFittedSkeleton />
+              </CardContainer>
+            </li>
+          {{/each}}
+        </ul>
+      {{else}}
+        <p class='no-results' data-test-no-results>No results found</p>
+      {{/if}}
+    </@context.searchResultsComponent>
 
     <style scoped>
       .cards {

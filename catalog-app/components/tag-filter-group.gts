@@ -4,6 +4,10 @@ import GlimmerComponent from '@glimmer/component';
 
 import type { CardContext } from 'https://cardstack.com/base/card-api';
 import type { Query } from '@cardstack/runtime-common';
+import {
+  searchEntryWireQueryFromQuery,
+  type SearchEntryWireQuery,
+} from '@cardstack/runtime-common';
 import { Pill, SkeletonPlaceholder } from '@cardstack/boxel-ui/components';
 
 interface TagFilterGroupArgs {
@@ -20,36 +24,42 @@ export default class TagFilterGroup extends GlimmerComponent<TagFilterGroupArgs>
   isTagActive = (url: string) =>
     this.args.activeTags.includes(url.replace(/\.json$/, ''));
 
+  // The v2 `search-entry`-rooted query, adapted from the incoming v1 `tagQuery`.
+  // `atom` is bound through the query's `htmlQuery` field — the v2 way to select
+  // a prerendered format.
+  get searchResultsQuery(): SearchEntryWireQuery {
+    let query = searchEntryWireQueryFromQuery(this.args.tagQuery);
+    return {
+      ...query,
+      realms: this.args.realmHrefs,
+      filter: {
+        ...query.filter,
+        eq: { ...query.filter?.eq, htmlQuery: { eq: { format: 'atom' } } },
+      },
+    };
+  }
+
   <template>
-    {{#let
-      (component @context.prerenderedCardSearchComponent)
-      as |PrerenderedCardSearch|
-    }}
-      <PrerenderedCardSearch
-        @query={{@tagQuery}}
-        @format='atom'
-        @realms={{@realmHrefs}}
-        @isLive={{true}}
-      >
-        <:loading>
-          <SkeletonPlaceholder class='tag-skeleton' />
-        </:loading>
-        <:response as |tags|>
-          <div class='tag-pill-list'>
-            {{#each tags key='url' as |tag|}}
-              <Pill
-                @kind='button'
-                class='tag-pill-btn
-                  {{if (this.isTagActive tag.url) "is-active"}}'
-                {{on 'click' (fn @onTagSelect tag.url)}}
-              >
-                <tag.component class='hide-boundaries' />
-              </Pill>
-            {{/each}}
-          </div>
-        </:response>
-      </PrerenderedCardSearch>
-    {{/let}}
+    <@context.searchResultsComponent
+      @query={{this.searchResultsQuery}}
+      as |results|
+    >
+      {{#if results.entries.length}}
+        <div class='tag-pill-list'>
+          {{#each results.entries key='id' as |tag|}}
+            <Pill
+              @kind='button'
+              class='tag-pill-btn {{if (this.isTagActive tag.id) "is-active"}}'
+              {{on 'click' (fn @onTagSelect tag.id)}}
+            >
+              <tag.component class='hide-boundaries' />
+            </Pill>
+          {{/each}}
+        </div>
+      {{else if results.isLoading}}
+        <SkeletonPlaceholder class='tag-skeleton' />
+      {{/if}}
+    </@context.searchResultsComponent>
 
     <style scoped>
       .tag-pill-list {

@@ -12,7 +12,13 @@ import {
   linksToMany,
   realmURL,
 } from 'https://cardstack.com/base/card-api';
-import { codeRef } from '@cardstack/runtime-common';
+import {
+  codeRef,
+  rri,
+  type Query,
+  searchEntryWireQueryFromQuery,
+  type SearchEntryWireQuery,
+} from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
@@ -778,6 +784,12 @@ const DEFAULT_LAYOUT: BlogLayout = [
 ];
 
 class IsolatedBlogPost extends Component<typeof BlogPost> {
+  get themeSearchQuery(): SearchEntryWireQuery {
+    return {
+      ...searchEntryWireQueryFromQuery(this.themeQuery),
+      realms: this.realmHrefs,
+    };
+  }
   get canEdit(): boolean {
     const ctx = (this.args as any).context;
     // If context defines actions, trust its saveCard signal.
@@ -835,11 +847,11 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
     actions?.saveCard?.(this.args.model);
   }
 
-  get themeQuery() {
+  get themeQuery(): Query {
     return {
       filter: {
         type: {
-          module: 'https://cardstack.com/base/style-reference',
+          module: rri('https://cardstack.com/base/style-reference'),
           name: 'default',
         },
       },
@@ -988,38 +1000,29 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
                   <span class='theme-row__desc'>Use the parent blog's theme</span>
                 </span>
               </label>
-              {{#let
-                (component @context.prerenderedCardSearchComponent)
-                as |Search|
-              }}
-                <Search
-                  @query={{this.themeQuery}}
-                  @format='fitted'
-                  @realms={{this.realmHrefs}}
-                  @isLive={{true}}
-                >
-                  <:loading>
-                    <div class='theme-loading'>Loading themes…</div>
-                  </:loading>
-                  <:response as |cards|>
-                    {{#each cards key='url' as |card|}}
-                      <label
-                        class='theme-row
-                          {{if (this.isThemeSelected card.url) "is-selected"}}'
-                      >
-                        <input
-                          type='radio'
-                          name='blog-theme'
-                          class='theme-radio'
-                          checked={{this.isThemeSelected card.url}}
-                          {{on 'change' (fn this.onThemeRadioChange card.url)}}
-                        />
-                        <span class='theme-preview'>
-                          <card.component />
-                        </span>
-                      </label>
-                    {{/each}}
-                  </:response>
+              {{#let (component @context.searchResultsComponent) as |Search|}}
+                <Search @query={{this.themeSearchQuery}} as |results|>
+                  {{#each results.entries key='id' as |card|}}
+                    <label
+                      class='theme-row
+                        {{if (this.isThemeSelected card.id) "is-selected"}}'
+                    >
+                      <input
+                        type='radio'
+                        name='blog-theme'
+                        class='theme-radio'
+                        checked={{this.isThemeSelected card.id}}
+                        {{on 'change' (fn this.onThemeRadioChange card.id)}}
+                      />
+                      <span class='theme-preview'>
+                        <card.component />
+                      </span>
+                    </label>
+                  {{else}}
+                    {{#if results.isLoading}}
+                      <div class='theme-loading'>Loading themes…</div>
+                    {{/if}}
+                  {{/each}}
                 </Search>
               {{/let}}
             </div>

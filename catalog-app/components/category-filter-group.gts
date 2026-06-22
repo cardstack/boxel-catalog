@@ -5,7 +5,12 @@ import { tracked } from '@glimmer/tracking';
 import GlimmerComponent from '@glimmer/component';
 
 import type { CardContext } from 'https://cardstack.com/base/card-api';
-import type { Query, PrerenderedCardLike } from '@cardstack/runtime-common';
+import type {
+  Query,
+  RenderableSearchEntryLike,
+  SearchEntryWireQuery,
+} from '@cardstack/runtime-common';
+import { searchEntryWireQueryFromQuery } from '@cardstack/runtime-common';
 import {
   Button,
   Pill,
@@ -69,13 +74,36 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
     });
   }
 
-  @action selectCategory(cat: PrerenderedCardLike) {
+  @action selectCategory(cat: RenderableSearchEntryLike) {
     this.args.onSelect({
-      id: cat.url.replace(/\.json$/, ''),
-      displayName: displayNameFromUrl(cat.url),
+      id: cat.id.replace(/\.json$/, ''),
+      displayName: displayNameFromUrl(cat.id),
       kind: 'category',
     });
   }
+
+  // Adapt a sphere's v1 `Query` into the v2 `search-entry` query for
+  // `<@context.searchResultsComponent>`. Called inline because the query is a
+  // per-sphere `{{#each}}` block value, not a static arg. `atom` is bound
+  // through the query's `htmlQuery` field.
+  searchQueryForSphere = (query: Query): SearchEntryWireQuery => {
+    let wire = searchEntryWireQueryFromQuery(query);
+    return {
+      ...wire,
+      realms: this.args.realmHrefs,
+      filter: {
+        ...wire.filter,
+        eq: { ...wire.filter?.eq, htmlQuery: { eq: { format: 'atom' } } },
+      },
+    };
+  };
+
+  // Show the skeleton only on the initial (empty) load; during a live refetch
+  // the previous categories stay visible rather than collapsing to a skeleton.
+  showSphereSkeleton = (results: {
+    isLoading: boolean;
+    entries: unknown[];
+  }): boolean => results.isLoading && results.entries.length === 0;
 
   <template>
     <ul class='filter-list'>
@@ -96,83 +124,72 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
         </span>
       </li>
 
-      {{#let
-        (component @context.prerenderedCardSearchComponent)
-        as |PrerenderedCardSearch|
-      }}
-        {{#each @spheres as |sphere|}}
-          <PrerenderedCardSearch
-            @query={{sphere.query}}
-            @format='atom'
-            @realms={{@realmHrefs}}
-            @isLive={{true}}
-          >
-            <:loading>
-              <li class='filter-list-item'>
-                <SkeletonPlaceholder class='sphere-skeleton' />
-              </li>
-            </:loading>
-            <:response as |categories|>
-              <li class='filter-list-item'>
-                <span
-                  class='list-item-buttons
-                    {{if
-                      (eq @activeSphereOrCategory.id (this.sphereUrl sphere.id))
-                      "is-selected"
-                    }}
-                    {{if (this.isSphereExpanded sphere.id) "is-expanded"}}'
+      {{#each @spheres as |sphere|}}
+        <@context.searchResultsComponent
+          @query={{this.searchQueryForSphere sphere.query}}
+          as |results|
+        >
+          {{#if results.isLoading}}
+            <li class='filter-list-item'>
+              <SkeletonPlaceholder class='sphere-skeleton' />
+            </li>
+          {{else}}
+            <li class='filter-list-item'>
+              <span
+                class='list-item-buttons
+                  {{if
+                    (eq @activeSphereOrCategory.id (this.sphereUrl sphere.id))
+                    "is-selected"
+                  }}
+                  {{if (this.isSphereExpanded sphere.id) "is-expanded"}}'
+              >
+                <Button
+                  @kind='text-only'
+                  @size='small'
+                  class='filter-list__button'
+                  {{on 'click' (fn this.selectSphere sphere)}}
                 >
-                  <Button
-                    @kind='text-only'
-                    @size='small'
-                    class='filter-list__button'
-                    {{on 'click' (fn this.selectSphere sphere)}}
-                  >
-                    <sphere.Icon
-                      class='filter-list__icon'
-                      role='presentation'
-                    />
-                    <span
-                      class='filter-name boxel-ellipsize'
-                    >{{sphere.name}}</span>
-                  </Button>
-                  <button
-                    class='dropdown-toggle'
-                    aria-label='Toggle {{sphere.name}} group'
-                    {{on 'click' (fn this.toggleSphere sphere.id)}}
-                  >
-                    <ChevronDown class='caret-icon' />
-                  </button>
-                </span>
-                {{#if (this.isSphereExpanded sphere.id)}}
-                  <div class='category-pill-list'>
-                    {{#each categories key='url' as |cat|}}
-                      <Pill
-                        @kind='button'
-                        class='category-pill-btn
-                          {{if
-                            (eq
-                              @activeSphereOrCategory.id
-                              (this.categoryIdFromUrl cat.url)
-                            )
-                            "is-active"
-                          }}'
-                        {{on 'click' (fn this.selectCategory cat)}}
-                      >
-                        <FolderIcon
-                          class='category-pill-icon'
-                          role='presentation'
-                        />
-                        <cat.component class='hide-boundaries' />
-                      </Pill>
-                    {{/each}}
-                  </div>
-                {{/if}}
-              </li>
-            </:response>
-          </PrerenderedCardSearch>
-        {{/each}}
-      {{/let}}
+                  <sphere.Icon class='filter-list__icon' role='presentation' />
+                  <span
+                    class='filter-name boxel-ellipsize'
+                  >{{sphere.name}}</span>
+                </Button>
+                <button
+                  class='dropdown-toggle'
+                  aria-label='Toggle {{sphere.name}} group'
+                  {{on 'click' (fn this.toggleSphere sphere.id)}}
+                >
+                  <ChevronDown class='caret-icon' />
+                </button>
+              </span>
+              {{#if (this.isSphereExpanded sphere.id)}}
+                <div class='category-pill-list'>
+                  {{#each results.entries key='id' as |cat|}}
+                    <Pill
+                      @kind='button'
+                      class='category-pill-btn
+                        {{if
+                          (eq
+                            @activeSphereOrCategory.id
+                            (this.categoryIdFromUrl cat.id)
+                          )
+                          "is-active"
+                        }}'
+                      {{on 'click' (fn this.selectCategory cat)}}
+                    >
+                      <FolderIcon
+                        class='category-pill-icon'
+                        role='presentation'
+                      />
+                      <cat.component class='hide-boundaries' />
+                    </Pill>
+                  {{/each}}
+                </div>
+              {{/if}}
+            </li>
+          {{/if}}
+        </@context.searchResultsComponent>
+      {{/each}}
     </ul>
 
     <style scoped>
