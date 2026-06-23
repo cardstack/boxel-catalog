@@ -1278,25 +1278,24 @@ async function fetchPlaceImage(
   if (!byName.length && !byGeo.length) return null;
 
   let target = normalizePlaceText(name);
-  // Drop generic place words ("shopping mall", "tower"…) so matching keys off
-  // the distinctive part of the name. "Nu Sentral shopping mall" → "nu sentral".
-  let core = target
-    .split(' ')
-    .filter((w) => w && !GENERIC_PLACE_WORDS.has(w))
-    .join(' ')
-    .trim();
 
-  // High precision: an article counts only when its title clearly IS the place
-  // — the title equals the name, or contains the full (generic-stripped) name.
-  // We deliberately do NOT match on a single shared word, because that returned
-  // unrelated articles (a search's top "related" result, or a neighbour that
-  // merely shares "mall"/"sentral"). No clear match → no image.
+  // High precision, using the head/tail asymmetry of place names (distinctive
+  // name first, city/qualifier last). An article counts only when:
+  //   - its title equals the name, or
+  //   - its title contains the whole name (e.g. "Central Market, Kuala Lumpur"
+  //     for "Central Market Kuala Lumpur"), or
+  //   - the name begins with the (multi-word) title — the article is the
+  //     distinctive head and the name just adds a trailing qualifier
+  //     (e.g. "Nu Sentral" for "Nu Sentral shopping mall").
+  // It must NOT match on the trailing city alone, or we'd grab the city article
+  // (and its photo) for any place named "... Kuala Lumpur". No clear match →
+  // no image.
   let titleMatches = (title: string): boolean => {
     let t = normalizePlaceText(title);
     if (!t) return false;
-    if (t === target || t === core) return true;
+    if (t === target) return true;
     if (t.includes(target)) return true;
-    if (core.length >= 4 && t.includes(core)) return true;
+    if (t.includes(' ') && target.startsWith(`${t} `)) return true;
     return false;
   };
 
@@ -1323,48 +1322,6 @@ function normalizePlaceText(s: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
-
-// Generic words that don't identify a specific place; dropped before matching a
-// Wikipedia article title so they can't trigger a false image match.
-const GENERIC_PLACE_WORDS = new Set([
-  'shopping',
-  'mall',
-  'centre',
-  'center',
-  'complex',
-  'tower',
-  'towers',
-  'hotel',
-  'resort',
-  'restaurant',
-  'cafe',
-  'coffee',
-  'bar',
-  'park',
-  'garden',
-  'gardens',
-  'museum',
-  'gallery',
-  'temple',
-  'shrine',
-  'market',
-  'plaza',
-  'square',
-  'station',
-  'central',
-  'sentral',
-  'city',
-  'street',
-  'road',
-  'avenue',
-  'beach',
-  'pantai',
-  'the',
-  'and',
-  'of',
-  'at',
-  'in',
-]);
 
 // Fetch nearby points of interest from the Overpass (OpenStreetMap) API. Any
 // failure resolves to an empty list so the popup degrades gracefully.
