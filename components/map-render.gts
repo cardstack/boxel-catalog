@@ -1220,52 +1220,107 @@ const WIKIMEDIA_HEADERS = {
   'Api-User-Agent': 'BoxelTravelItinerary/1.0 (https://app.boxel.ai/catalog/)',
 };
 
-// Fetch a representative photo for a place. Tries the Wikipedia REST summary by
-// title first (most accurate for named landmarks), then falls back to a
-// coordinate-based geosearch. Any failure resolves to null — no broken images.
+interface WikiCandidate {
+  title: string;
+  thumb: string;
+  order: number; // API order: search relevance, or geosearch distance
+}
+
+// One Wikipedia pageimages query. `generator` is 'search' (by name) or
+// 'geosearch' (by coordinates). Returns the candidate articles that actually
+// have a thumbnail, preserving the API's own ordering (relevance / distance).
+async function wikiThumbs(params: string): Promise<WikiCandidate[]> {
+  try {
+    let res = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*` +
+        `&prop=pageimages&piprop=thumbnail&pithumbsize=400&` +
+        params,
+      { headers: WIKIMEDIA_HEADERS },
+    );
+    if (!res.ok) return [];
+    let data = await res.json();
+    let pages = data?.query?.pages;
+    if (!pages) return [];
+    let out: WikiCandidate[] = [];
+    for (let key of Object.keys(pages)) {
+      let p = pages[key];
+      let thumb = p?.thumbnail?.source;
+      if (thumb && typeof p?.title === 'string') {
+        out.push({ title: p.title, thumb, order: p.index ?? 999 });
+      }
+    }
+    return out.sort((a, b) => a.order - b.order);
+  } catch (e) {
+    return [];
+  }
+}
+
+// Fetch a representative photo for a place. The old approach (look up the exact
+// title, else grab the nearest geo article) often returned an unrelated image —
+// an imprecise name hit a redirect/disambiguation, and the geo fallback grabbed
+// whatever neighbouring article had a picture. Instead we gather candidates
+// BOTH by name and by the (now precise) coordinates, then pick the one whose
+// article title best matches the place name, breaking ties toward location and
+// relevance. Any failure resolves to null — no broken images.
 async function fetchPlaceImage(
   name: string,
   lat: number,
   lng: number,
 ): Promise<string | null> {
-  try {
-    let res = await fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
-        name,
-      )}`,
-      { headers: WIKIMEDIA_HEADERS },
-    );
-    if (res.ok) {
-      let data = await res.json();
-      let src = data?.thumbnail?.source ?? data?.originalimage?.source;
-      if (src) return src;
-    }
-  } catch (e) {
-    // fall through to geosearch
-  }
+  let [byName, byGeo] = await Promise.all([
+    wikiThumbs(
+      `generator=search&gsrsearch=${encodeURIComponent(name)}&gsrlimit=5`,
+    ),
+    wikiThumbs(
+      `generator=geosearch&ggscoord=${lat}|${lng}&ggsradius=1000&ggslimit=10`,
+    ),
+  ]);
+  if (!byName.length && !byGeo.length) return null;
 
-  try {
-    let res = await fetch(
-      `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*` +
-        `&prop=pageimages&piprop=thumbnail&pithumbsize=320` +
-        `&generator=geosearch&ggscoord=${lat}|${lng}&ggsradius=500&ggslimit=1`,
-      { headers: WIKIMEDIA_HEADERS },
-    );
-    if (res.ok) {
-      let data = await res.json();
-      let pages = data?.query?.pages;
-      if (pages) {
-        for (let key of Object.keys(pages)) {
-          let src = pages[key]?.thumbnail?.source;
-          if (src) return src;
-        }
-      }
-    }
-  } catch (e) {
-    // give up gracefully
-  }
+  let target = normalizePlaceText(name);
 
-  return null;
+  // High precision, using the head/tail asymmetry of place names (distinctive
+  // name first, city/qualifier last). An article counts only when:
+  //   - its title equals the name, or
+  //   - its title contains the whole name (e.g. "Central Market, Kuala Lumpur"
+  //     for "Central Market Kuala Lumpur"), or
+  //   - the name begins with the (multi-word) title — the article is the
+  //     distinctive head and the name just adds a trailing qualifier
+  //     (e.g. "Nu Sentral" for "Nu Sentral shopping mall").
+  // It must NOT match on the trailing city alone, or we'd grab the city article
+  // (and its photo) for any place named "... Kuala Lumpur". No clear match →
+  // no image.
+  let titleMatches = (title: string): boolean => {
+    let t = normalizePlaceText(title);
+    if (!t) return false;
+    if (t === target) return true;
+    if (t.includes(target)) return true;
+    if (t.includes(' ') && target.startsWith(`${t} `)) return true;
+    return false;
+  };
+
+  // Among the clear matches, break ties toward location (precise coords) then
+  // search relevance.
+  let scored = [
+    ...byGeo.map((c, i) => ({ c, base: 15 + Math.max(0, 10 - i) })),
+    ...byName.map((c, i) => ({ c, base: 5 + Math.max(0, 5 - i) })),
+  ]
+    .filter((x) => titleMatches(x.c.title))
+    .sort((a, b) => b.base - a.base);
+
+  return scored[0]?.c.thumb ?? null;
+}
+
+// Lowercase, strip diacritics and punctuation, collapse spaces — so "Sensō-ji"
+// and "Senso ji" compare equal and matching isn't thrown off by commas/macrons.
+function normalizePlaceText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // Fetch nearby points of interest from the Overpass (OpenStreetMap) API. Any
