@@ -262,3 +262,82 @@ export function parsePlanJson(raw: string): PlannedTrip | null {
       : undefined;
   return { tripTitle, summary, stops: out };
 }
+
+// Resolve a place name to precise coordinates via Photon (komoot's free,
+// CORS-enabled, OpenStreetMap-based geocoder — no API key, lenient limits). An
+// optional bias point nudges the search toward the right area when a name is
+// ambiguous (e.g. a café chain). LLMs are unreliable at recalling exact
+// lat/lon, so we trust them only for the place NAME and resolve real
+// coordinates here. Resolves to null on any failure so callers can fall back to
+// whatever coordinates they already have.
+export async function geocodePlace(
+  name: string,
+  opts?: {
+    bias?: { lat?: number | null; lon?: number | null };
+    context?: string; // destination/region to disambiguate (e.g. "Lombok, Indonesia")
+  },
+): Promise<{ lat: number; lon: number } | null> {
+  let name0 = name.trim();
+  if (!name0) return null;
+  // Including the destination steers the geocoder to the right region instead
+  // of a same-named place on the other side of the world.
+  let context = opts?.context?.trim();
+  let q = context ? `${name0}, ${context}` : name0;
+  let url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5`;
+  let bias = opts?.bias;
+  if (
+    bias &&
+    typeof bias.lat === 'number' &&
+    typeof bias.lon === 'number' &&
+    Number.isFinite(bias.lat) &&
+    Number.isFinite(bias.lon)
+  ) {
+    url += `&lat=${bias.lat}&lon=${bias.lon}`;
+  }
+  try {
+    let res = await fetch(url);
+    if (!res.ok) return null;
+    let data = await res.json();
+    let features: any[] = Array.isArray(data?.features) ? data.features : [];
+    if (!features.length) return null;
+    // Prefer the feature whose own name best matches the place name; the raw
+    // first result is often a broader area or a weaker match.
+    let target = name0.toLowerCase();
+    let nameScore = (f: any): number => {
+      let fname = String(f?.properties?.name ?? '').toLowerCase();
+      if (!fname) return 0;
+      if (fname === target) return 3;
+      if (fname.includes(target) || target.includes(fname)) return 2;
+      return 1;
+    };
+    let best = features
+      .map((f) => ({ f, score: nameScore(f) }))
+      .sort((a, b) => b.score - a.score)[0];
+    let coords = best?.f?.geometry?.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) return null;
+    let lon = Number(coords[0]);
+    let lat = Number(coords[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    return { lat, lon };
+  } catch {
+    return null;
+  }
+}
+
+// Refine a plan's stops with real coordinates: geocode each stop by name
+// (disambiguated by the trip destination, biased to the LLM's rough
+// coordinates). A stop that fails to geocode keeps its original coordinates.
+export async function geocodePlannedStops(
+  stops: PlannedStop[],
+  context?: string,
+): Promise<PlannedStop[]> {
+  return Promise.all(
+    stops.map(async (s) => {
+      let resolved = await geocodePlace(s.name, {
+        bias: { lat: s.lat, lon: s.lon },
+        context,
+      });
+      return resolved ? { ...s, lat: resolved.lat, lon: resolved.lon } : s;
+    }),
+  );
+}

@@ -3,7 +3,10 @@ import { action } from '@ember/object';
 import { htmlSafe } from '@ember/template';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 import { or } from '@cardstack/boxel-ui/helpers';
-import { MapRender, type Coordinate } from '../../../components/map-render';
+import {
+  MapRender,
+  type Coordinate,
+} from '@cardstack/catalog/components/map-render';
 import { hasValidCoordinates, formatCoordinates } from '../util/index';
 import type { GeoModel } from '../util/index';
 import type { GeoPointMapOptions } from '../geo-point';

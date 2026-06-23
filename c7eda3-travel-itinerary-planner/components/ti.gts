@@ -39,6 +39,7 @@ import {
   addHours,
   categoryStyle,
   formatShortDate,
+  geocodePlannedStops,
   matchCategory,
   parsePlanJson,
   CATEGORY_NAMES,
@@ -186,17 +187,15 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         let loc = stop.location;
         if (typeof loc?.lat === 'number' && typeof loc?.lon === 'number') {
           let label = loc.searchKey?.trim() || 'Stop';
-          let start = stop.startTime?.value?.trim();
-          let end = stop.endTime?.value?.trim();
-          let timeRange =
-            start && end ? `${start} – ${end}` : start || end || '';
-          let popup = `<strong>${label}</strong>`;
-          if (timeRange) popup += `<br>${timeRange}`;
+          // The popup shows the place's real-world detail (open-now hours,
+          // website) via the map's showLocationDetails enrichment — the
+          // itinerary's planned start/end time stays in the list row, not here.
           result.push({
             id: index,
             lat: loc.lat,
             lng: loc.lon,
-            address: popup,
+            name: label,
+            address: `<strong>${label}</strong>`,
           });
         }
       });
@@ -222,6 +221,26 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
     let coords = this.routeCoordinates;
     if (!coords.length) return undefined;
     return [{ name: this.destinationLabel ?? 'Trip', coordinates: coords }];
+  }
+
+  // Opt into the shared map's Google-style enrichment: a Wikipedia photo +
+  // nearby recommendations on each stop popup (with clickable nearby markers),
+  // plus a "View on Google Maps" link per stop. routeStyle 'road' follows real
+  // roads (OSRM); 'straight' connects stops directly with no routing API call.
+  get mapConfig() {
+    return {
+      showLocationImage: true,
+      showNearbyPlaces: true,
+      showGoogleMapsLink: true,
+      showFitButton: true,
+      // Reserve room at the top so popups auto-pan clear of the floating
+      // day-filter bar (sits at top:14px, ~40px tall).
+      popupTopInset: 64,
+      routeStyle: 'road' as const,
+      // High-contrast violet so the route line stands apart from the
+      // green/blue/red stop pins and the map tiles underneath.
+      routeColor: '#555555',
+    };
   }
 
   get dayCount() {
@@ -761,7 +780,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
     let command = new TravelPlannerCommand(commandContext);
     let result = await command.execute({
       userPrompt,
-      llmModel: 'anthropic/claude-haiku-4.5',
+      llmModel: 'anthropic/claude-sonnet-4.6',
     });
     let raw = (result as any)?.output ?? '';
     let planned = parsePlanJson(String(raw));
@@ -770,7 +789,16 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         'Could not read an itinerary from the AI response. Please try again.',
       );
     }
-    return planned;
+    // The model is unreliable at exact coordinates, so resolve real ones from
+    // the place names (its strong suit), disambiguated by the trip destination.
+    // Geocoding degrades to the model's own coordinates per-stop on failure, so
+    // this never blocks a plan.
+    let destination = this.plannerAnswers.destination ?? this.destinationLabel;
+    let stops = await geocodePlannedStops(
+      planned.stops,
+      destination ?? undefined,
+    );
+    return { ...planned, stops };
   }
 
   generatePlan = async () => {
@@ -1495,6 +1523,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
             <MapRender
               @routes={{this.routes}}
               @selectedId={{this.focusedStopId}}
+              @mapConfig={{this.mapConfig}}
             />
           {{else}}
             <div class='ti-map-empty'>
@@ -2354,7 +2383,8 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         border: none;
         padding: 8px 10px;
         cursor: pointer;
-        color: var(--c-border);
+        color: var(--c-muted);
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2362,18 +2392,25 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         opacity: 0;
         transition:
           opacity 0.12s ease,
-          color 0.12s ease;
+          color 0.12s ease,
+          background 0.12s ease;
       }
       .ti-stop:hover .ti-icon-btn,
       .ti-stop.is-sel .ti-icon-btn {
         opacity: 1;
       }
       .ti-icon-btn:hover {
-        color: var(--c-accent-dark);
+        color: var(--c-accent);
+        background: var(--c-accent-bg);
       }
       .ti-icon-btn.is-editing {
         opacity: 1;
         color: var(--c-accent);
+        background: var(--c-accent-bg);
+      }
+      .ti-icon-btn.ti-danger:hover {
+        color: #ef4444;
+        background: #fee2e2;
       }
       .ti-add-stop {
         align-self: flex-start;

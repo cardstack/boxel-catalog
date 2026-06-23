@@ -11,116 +11,180 @@
       "stops": [
         {
           "location": {
-            "searchKey": "Tsukiji Outer Market",
-            "lat": 35.6654,
-            "lon": 139.7707
+            "searchKey": "Bajra Sandhi Monument",
+            "lat": -8.6717521,
+            "lon": 115.2338937
           },
           "day": 1,
           "startTime": {
             "value": "08:00"
           },
           "endTime": {
+            "value": "09:30"
+          },
+          "category": "Culture & History",
+          "notes": "Arrive early to beat the heat and enjoy the monument gardens before crowds arrive."
+        },
+        {
+          "location": {
+            "searchKey": "Bali Museum",
+            "lat": -8.6576485,
+            "lon": 115.2186753
+          },
+          "day": 1,
+          "startTime": {
             "value": "10:00"
           },
-          "category": "Food & Dining",
-          "notes": "Arrive early to catch fresh sushi breakfast and explore vendor stalls; peak activity 8–9 AM."
-        },
-        {
-          "location": {
-            "searchKey": "Ginza Sushi Yoshitake",
-            "lat": 35.6723,
-            "lon": 139.7638
-          },
-          "day": 1,
-          "startTime": {
+          "endTime": {
             "value": "11:30"
           },
-          "endTime": {
-            "value": "13:30"
-          },
-          "category": "Food & Dining",
-          "notes": "Reserve ahead; this Michelin 3-star omakase is a once-in-a-lifetime experience; lunch is more affordable than dinner."
+          "category": "Museum",
+          "notes": "Explore four pavilions showcasing Balinese history, art, and traditional artifacts."
         },
         {
           "location": {
-            "searchKey": "Ginza Six Department Store Food Hall",
-            "lat": 35.6726,
-            "lon": 139.7648
+            "searchKey": "Pura Jagatnatha",
+            "lat": -8.8000007,
+            "lon": 115.2145114
           },
           "day": 1,
           "startTime": {
-            "value": "14:00"
+            "value": "11:45"
           },
           "endTime": {
-            "value": "15:30"
+            "value": "12:30"
           },
-          "category": "Food & Dining",
-          "notes": "Sample artisan pastries, wagashi, and sake from top Japanese makers; great for gifts and snacks."
+          "category": "Culture & History",
+          "notes": "Dress respectfully with a sarong; this active Hindu temple is right next to the Bali Museum."
         },
         {
           "location": {
-            "searchKey": "Senso-ji Temple",
-            "lat": 35.7148,
-            "lon": 139.7967
+            "searchKey": "Pasar Badung",
+            "lat": -8.6565446,
+            "lon": 115.2124325
+          },
+          "day": 1,
+          "startTime": {
+            "value": "13:30"
+          },
+          "endTime": {
+            "value": "15:00"
+          },
+          "category": "Shopping",
+          "notes": "Denpasar's largest traditional market — great for local snacks, spices, and souvenirs at bargain prices."
+        },
+        {
+          "location": {
+            "searchKey": "Warung Mak Beng",
+            "lat": -8.6737273,
+            "lon": 115.2630457
+          },
+          "day": 1,
+          "startTime": {
+            "value": "18:00"
+          },
+          "endTime": {
+            "value": "19:30"
+          },
+          "category": "Food & Dining",
+          "notes": "Legendary local spot famous for its Balinese fried fish set; arrive early as it sells out fast."
+        },
+        {
+          "location": {
+            "searchKey": "Pura Maospahit",
+            "lat": -8.2271303,
+            "lon": 115.1919203
           },
           "day": 2,
           "startTime": {
-            "value": "07:00"
+            "value": "08:30"
           },
           "endTime": {
-            "value": "09:00"
+            "value": "09:30"
           },
-          "category": "Sightseeing",
-          "notes": "Tokyo's oldest temple; explore the historic grounds and iconic red lantern at dawn for fewer crowds."
+          "category": "Culture & History",
+          "notes": "One of Denpasar's oldest temples with unique Majapahit-era architectural details."
         },
         {
           "location": {
-            "searchKey": "Kiji Tonkatsu Restaurant",
-            "lat": 35.7161,
-            "lon": 139.7873
+            "searchKey": "Taman Budaya Bali (Bali Arts Centre)",
+            "lat": -8.6555877,
+            "lon": 115.2346829
+          },
+          "day": 2,
+          "startTime": {
+            "value": "10:00"
+          },
+          "endTime": {
+            "value": "11:30"
+          },
+          "category": "Performance",
+          "notes": "Check the June schedule — the annual Bali Arts Festival runs through June, with performances and exhibitions."
+        },
+        {
+          "location": {
+            "searchKey": "Taman Puputan Badung",
+            "lat": -8.5099348,
+            "lon": 115.206718
           },
           "day": 2,
           "startTime": {
             "value": "12:00"
           },
           "endTime": {
-            "value": "13:30"
+            "value": "13:00"
           },
-          "category": "Food & Dining",
-          "notes": "Legendary tonkatsu (breaded pork cutlet) since 1935; book ahead or arrive at opening to minimize wait."
+          "category": "Relaxation",
+          "notes": "Stroll this historic central square and relax under the shade trees before lunch."
         },
         {
           "location": {
-            "searchKey": "Nabezo Hot Pot (Roppongi)",
-            "lat": 35.6647,
-            "lon": 139.7318
+            "searchKey": "Pasar Kumbasari",
+            "lat": -8.6560993,
+            "lon": 115.2118033
           },
           "day": 2,
           "startTime": {
-            "value": "18:00"
+            "value": "13:30"
           },
           "endTime": {
-            "value": "20:00"
+            "value": "15:00"
+          },
+          "category": "Shopping",
+          "notes": "Cross the river from Pasar Badung for handicrafts, batik, and traditional Balinese goods."
+        },
+        {
+          "location": {
+            "searchKey": "Warung Nasi Bali Men Weti",
+            "lat": -8.6959198,
+            "lon": 115.2628241
+          },
+          "day": 2,
+          "startTime": {
+            "value": "17:30"
+          },
+          "endTime": {
+            "value": "19:00"
           },
           "category": "Food & Dining",
-          "notes": "Interactive dining: cook premium wagyu and vegetables in broths at your table; perfect final meal."
+          "notes": "Authentic Balinese rice plate with rotating daily dishes — a true local dinner experience in Denpasar."
         }
       ],
       "cardInfo": {
-        "name": "2 Days in Tokyo",
+        "name": "2 Days in Denpasar, Bali",
         "notes": null,
         "summary": null,
         "cardThumbnailURL": null
       },
       "dateRange": {
-        "end": "2026-06-17",
-        "start": "2026-06-16"
+        "end": "2026-06-25",
+        "start": "2026-06-24"
       },
-      "tripTitle": "2 Days in Tokyo",
+      "tripTitle": "2 Days in Denpasar, Bali",
       "destination": {
-        "lat": 35.6768601,
-        "lon": 139.7638947,
-        "searchKey": "Tokyo, Japan"
+        "lat": null,
+        "lon": null,
+        "searchKey": "Bali, Indonesia"
       },
       "shareTripCode": {
         "data": null
