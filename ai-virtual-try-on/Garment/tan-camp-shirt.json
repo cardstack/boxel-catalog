@@ -1,0 +1,41 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Garment",
+        "module": "../garment"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "image": {
+        "url": null,
+        "sourceMode": "file"
+      },
+      "cardInfo": {
+        "name": "Tan Camp Shirt",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "category": "top"
+    },
+    "relationships": {
+      "image.file": {
+        "links": {
+          "self": "./tan-camp-shirt.png"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
