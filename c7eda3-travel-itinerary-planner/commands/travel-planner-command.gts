@@ -17,7 +17,8 @@ class TravelPlannerInput extends CardDef {
       'The trip facts (destination, days, dates, vibe, category list) and any revision request, as plain text.',
   });
   @field llmModel = contains(StringField, {
-    description: 'Optional OpenRouter model id. Defaults to claude-haiku-4.5.',
+    description:
+      'Optional OpenRouter model id. Defaults to anthropic/claude-sonnet-4.6.',
   });
 }
 
@@ -50,7 +51,7 @@ export class TravelPlannerCommand extends Command<
       systemPrompt: SYSTEM_PROMPT,
       userPrompt: input.userPrompt,
       skillCardIds: [skillCardId],
-      llmModel: input.llmModel || 'anthropic/claude-haiku-4.5',
+      llmModel: input.llmModel || 'anthropic/claude-sonnet-4.6',
     });
 
     return new TravelPlannerResult({
