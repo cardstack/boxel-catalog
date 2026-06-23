@@ -1,0 +1,41 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Garment",
+        "module": "../garment"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "image": {
+        "url": null,
+        "sourceMode": "file"
+      },
+      "cardInfo": {
+        "name": "Gold Layered Necklace",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "category": "accessory"
+    },
+    "relationships": {
+      "image.file": {
+        "links": {
+          "self": "./gold-layered-necklace.png"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

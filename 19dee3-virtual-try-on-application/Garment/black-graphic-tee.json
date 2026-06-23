@@ -1,0 +1,41 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Garment",
+        "module": "../garment"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "image": {
+        "url": null,
+        "sourceMode": "file"
+      },
+      "cardInfo": {
+        "name": "Black Graphic Tee",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "category": "top"
+    },
+    "relationships": {
+      "image.file": {
+        "links": {
+          "self": "./black-graphic-tee.png"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
