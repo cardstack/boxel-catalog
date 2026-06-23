@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "VirtualTryOnApp",
+        "module": "../virtual-try-on-app"
+      },
+      "readMe": "Sure, here's the README documentation for the `VirtualTryOnApp` spec:\n\n## Summary\n\nThe `VirtualTryOnApp` spec is a card that provides an AI-powered virtual clothing try-on experience. Users can select a model and outfit pieces, and the app will generate a photorealistic image of the model wearing the chosen clothing.\n\n## Import\n\n```javascript\nimport {\n  VirtualTryOnApp,\n  Model,\n  Garment,\n  TryOnResult\n} from '../virtual-try-on-app';\n```\n\n## Usage as a Field\n\nTo use the `VirtualTryOnApp` spec as a field within a consuming card or field, you can add the following:\n\n```json\n{\n  \"type\": \"field\",\n  \"name\": \"virtual-try-on\",\n  \"field\": {\n    \"type\": \"@cardstack/skills/Skill/VirtualTryOnApp\",\n    \"model\": {\n      \"type\": \"@cardstack/skills/Skill/Model\",\n      \"id\": \"model-id\"\n    }\n  }\n}\n```\n\nIn this example, the `virtual-try-on` field of the consuming card or field will display the `VirtualTryOnApp` functionality, with the specified `model` card linked to it.\n\n## Template Usage\n\nTo invoke the `VirtualTryOnApp` spec within a consuming card or field's template, you can use the following:\n\n```handlebars\n<@cardstack/skills/Skill/VirtualTryOnApp\n  @model={{this.model}}\n/>\n```\n\nThis will render the `VirtualTryOnApp` component within the consuming template, passing the `model` field as a parameter.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Virtual Try-On App",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

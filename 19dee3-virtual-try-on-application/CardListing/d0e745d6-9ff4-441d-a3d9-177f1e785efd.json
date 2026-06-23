@@ -1,0 +1,303 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Virtual Try-On Application",
+      "summary": "The Virtual Try-On App is a photo-realistic digital fitting room that allows users to visualize how different garments and accessories look on their body using uploaded images or models. Its primary purpose is to enable virtual outfit experimentation by combining selected garments onto a user's body, generating realistic images from multiple angles, and providing interactive features such as model linking, garment customization, and image export. It supports real-time outfit composition, AI-powered image generation of different views, and managing a library of garments and models, all within a responsive, user-friendly interface.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/ai"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/b9bf0d98-37ce-45e8-ae19-5802f1ba3042"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/a466e92c-fdb9-4f0d-9837-ce85e8ae1958"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/e92cfdb9-bf0d-4837-8e85-e8ae195802f1"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/bf0d9837-ce85-48ae-9958-02f1ba3042b7"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/37ce85e8-ae19-4802-b1ba-3042b7a0f5da"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/2cfdb9bf-0d98-47ce-85e8-ae195802f1ba"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/fdb9bf0d-9837-4e85-a8ae-195802f1ba30"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/9837ce85-e8ae-4958-82f1-ba3042b7a0f5"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/0d9837ce-85e8-4e19-9802-f1ba3042b7a0"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/195802f1-ba30-42b7-a0f5-daa0c595c6ed"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/66e92cfd-b9bf-4d98-b7ce-85e8ae195802"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/ae195802-f1ba-4042-b7a0-f5daa0c595c6"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/e8ae1958-02f1-4a30-82b7-a0f5daa0c595"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/de898381-0fbe-4b54-a845-2fb2df7b6ed1-5401d9e9.png"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../VirtualTryOnApp/de898381-0fbe-4b54-a845-2fb2df7b6ed1"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../Garment/black-derby-shoes"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../Garment/black-graphic-tee"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../Garment/black-hiking-boots"
+        }
+      },
+      "examples.4": {
+        "links": {
+          "self": "../Garment/black-leather-jacket"
+        }
+      },
+      "examples.5": {
+        "links": {
+          "self": "../Garment/black-shorts"
+        }
+      },
+      "examples.6": {
+        "links": {
+          "self": "../Garment/blue-dial-watch"
+        }
+      },
+      "examples.7": {
+        "links": {
+          "self": "../Garment/blue-jeans"
+        }
+      },
+      "examples.8": {
+        "links": {
+          "self": "../Garment/brown-felt-fedora"
+        }
+      },
+      "examples.9": {
+        "links": {
+          "self": "../Garment/brown-leather-jacket"
+        }
+      },
+      "examples.10": {
+        "links": {
+          "self": "../Garment/brown-print-scarf"
+        }
+      },
+      "examples.11": {
+        "links": {
+          "self": "../Garment/silver-brown-watch"
+        }
+      },
+      "examples.12": {
+        "links": {
+          "self": "../Garment/camel-trench-coat"
+        }
+      },
+      "examples.13": {
+        "links": {
+          "self": "../Garment/cream-blouse"
+        }
+      },
+      "examples.14": {
+        "links": {
+          "self": "../Garment/denim-jacket"
+        }
+      },
+      "examples.15": {
+        "links": {
+          "self": "../Garment/denim-overalls"
+        }
+      },
+      "examples.16": {
+        "links": {
+          "self": "../Garment/floral-maxi-dress"
+        }
+      },
+      "examples.17": {
+        "links": {
+          "self": "../Garment/gold-layered-necklace"
+        }
+      },
+      "examples.18": {
+        "links": {
+          "self": "../Garment/grey-graphic-tee"
+        }
+      },
+      "examples.19": {
+        "links": {
+          "self": "../Garment/grey-hoodie"
+        }
+      },
+      "examples.20": {
+        "links": {
+          "self": "../Garment/grey-pleated-skirt"
+        }
+      },
+      "examples.21": {
+        "links": {
+          "self": "../Garment/navy-jumpsuit"
+        }
+      },
+      "examples.22": {
+        "links": {
+          "self": "../Garment/navy-print-scarf"
+        }
+      },
+      "examples.23": {
+        "links": {
+          "self": "../Garment/navy-puffer-vest"
+        }
+      },
+      "examples.24": {
+        "links": {
+          "self": "../Garment/navy-suit"
+        }
+      },
+      "examples.25": {
+        "links": {
+          "self": "../Garment/nude-pumps"
+        }
+      },
+      "examples.26": {
+        "links": {
+          "self": "../Garment/olive-trousers"
+        }
+      },
+      "examples.27": {
+        "links": {
+          "self": "../Garment/olive-hiking-boots"
+        }
+      },
+      "examples.28": {
+        "links": {
+          "self": "../Garment/olive-cargo-pants"
+        }
+      },
+      "examples.29": {
+        "links": {
+          "self": "../Garment/olive-camp-shirt"
+        }
+      },
+      "examples.30": {
+        "links": {
+          "self": "../Garment/tan-camp-shirt"
+        }
+      },
+      "examples.31": {
+        "links": {
+          "self": "../Garment/tan-pleated-skirt"
+        }
+      },
+      "examples.32": {
+        "links": {
+          "self": "../Garment/tan-puffer-vest"
+        }
+      },
+      "examples.33": {
+        "links": {
+          "self": "../Garment/tan-silk-blouse"
+        }
+      },
+      "examples.34": {
+        "links": {
+          "self": "../Garment/white-converse-low"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/ai-automation"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/virtual-tryon-eb0ae0d2.png"
+        }
+      }
+    }
+  }
+}
