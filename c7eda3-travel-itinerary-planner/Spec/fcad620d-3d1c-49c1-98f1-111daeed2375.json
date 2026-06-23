@@ -4,7 +4,7 @@
     "attributes": {
       "readMe": null,
       "ref": {
-        "module": "../components/map-render",
+        "module": "../../components/map-render",
         "name": "default"
       },
       "specType": null,
