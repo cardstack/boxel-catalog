@@ -130,11 +130,16 @@ class TierItemFitted extends Component<typeof TierItem> {
         overflow: hidden;
       }
       .fit {
-        --type-base: clamp(9px, calc(3px + 2.4cqi + 1cqb), 16px);
+        --type-base: clamp(10px, calc(4px + 2.4cqi + 1cqb), 16px);
         width: 100%;
         height: 100%;
-        display: grid;
-        grid-template-rows: minmax(0, 1fr) auto;
+        /* Flex-center so a name-only card (no image) sits dead center instead
+           of pinned to a top grid row. With an image, the image fills and the
+           label tucks underneath. */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         gap: 2px;
         padding: 4px;
         box-sizing: border-box;
@@ -143,32 +148,38 @@ class TierItemFitted extends Component<typeof TierItem> {
         color: var(--foreground, #f4f5f7);
         font-family: var(--font-sans, system-ui, sans-serif);
       }
-      .r-hero,
-      .r-head {
-        overflow: hidden;
-        min-height: 0;
-      }
       .r-hero {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 0;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
       }
       .r-hero img {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
       }
+      .r-head {
+        flex: 0 0 auto;
+        width: 100%;
+        min-height: 0;
+        overflow: hidden;
+      }
       .label {
-        display: block;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
         font-size: var(--type-base, 11px);
         font-weight: 600;
         text-align: center;
-        line-height: 1.1;
+        line-height: 1.15;
         overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+        overflow-wrap: anywhere;
       }
-      @container card (height <= 60px) {
+      @container card (height <= 56px) {
         .r-hero {
           display: none;
         }
@@ -183,10 +194,10 @@ class TierItemAtom extends Component<typeof TierItem> {
   </template>
 }
 
-// A reusable rankable thing (a Pokémon, a movie, a logo). Its own card, so it
-// can be shared across many TierTemplates / TierLists and edited (incl. image
-// upload) on its own page. Ranking is NOT stored here — it lives on the
-// TierList's placements, keyed by this card's id.
+// A rankable thing (a Pokémon, a movie, a logo). Its own card, so it can be
+// edited (incl. image upload) on its own page. Created in bulk by a TierList's
+// "Generate with AI" action and linked into its `items` pool. Ranking is NOT
+// stored here — it lives on the TierList's placements, keyed by this card's id.
 export class TierItem extends CardDef {
   static displayName = 'Tier Item';
   static icon = ImageIcon;

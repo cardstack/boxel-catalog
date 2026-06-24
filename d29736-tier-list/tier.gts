@@ -12,7 +12,7 @@ import { htmlSafe } from '@ember/template';
 import LayoutRowsIcon from '@cardstack/boxel-icons/layout-rows';
 
 // A single tier band: a stable key, a display label, a band color, and an
-// order. Shared by TierTemplate (default tiers) and TierList (per-list tiers).
+// order. Used by TierList for its tier rows.
 export class Tier extends FieldDef {
   static displayName = 'Tier';
   static icon = LayoutRowsIcon;

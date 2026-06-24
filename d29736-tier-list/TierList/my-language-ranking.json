@@ -107,9 +107,54 @@
       ]
     },
     "relationships": {
-      "template": {
+      "items.0": {
         "links": {
-          "self": "../TierTemplate/programming-languages"
+          "self": "../TierItem/ts"
+        }
+      },
+      "items.1": {
+        "links": {
+          "self": "../TierItem/rust"
+        }
+      },
+      "items.2": {
+        "links": {
+          "self": "../TierItem/py"
+        }
+      },
+      "items.3": {
+        "links": {
+          "self": "../TierItem/go"
+        }
+      },
+      "items.4": {
+        "links": {
+          "self": "../TierItem/js"
+        }
+      },
+      "items.5": {
+        "links": {
+          "self": "../TierItem/swift"
+        }
+      },
+      "items.6": {
+        "links": {
+          "self": "../TierItem/java"
+        }
+      },
+      "items.7": {
+        "links": {
+          "self": "../TierItem/cpp"
+        }
+      },
+      "items.8": {
+        "links": {
+          "self": "../TierItem/php"
+        }
+      },
+      "items.9": {
+        "links": {
+          "self": "../TierItem/ruby"
         }
       },
       "cardInfo.theme": {
