@@ -9,6 +9,7 @@ import {
   linksToMany,
   realmURL,
 } from 'https://cardstack.com/base/card-api';
+import type { PartialBaseInstanceType } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import NumberField from 'https://cardstack.com/base/number';
 
@@ -68,9 +69,14 @@ function defaultTiers(): Tier[] {
   return DEFAULT_TIERS.map((t) => Object.assign(new Tier(), t));
 }
 
-// A best-effort display string for filtering arbitrary cards by name.
+// A best-effort display string for filtering arbitrary cards by name. Falls
+// back through the common title sources (incl. cardInfo.name) so cards that
+// don't expose `title`/`name`/`cardTitle` still match. String() guards against
+// a non-string field surfacing as "[object Object]".
 function itemLabel(card: any): string {
-  return (card?.title || card?.cardTitle || card?.name || '').toString();
+  return String(
+    card?.title ?? card?.cardTitle ?? card?.name ?? card?.cardInfo?.name ?? '',
+  );
 }
 
 function styleColor(color?: string) {
@@ -139,7 +145,11 @@ export class Placement extends FieldDef {
 
 interface TierBoardSignature {
   Args: {
-    model: TierList;
+    // The boxed model a format component passes down — its fields are optional
+    // on the box, so use the framework's partial type (not the strict
+    // `TierList`, which would mismatch on required vs. optional fields) while
+    // keeping `tiers`/`items`/`placements` typed for the callbacks below.
+    model: PartialBaseInstanceType<typeof TierList>;
     fields: any;
     context: any;
     // When true (edit view): tier editing, AI generation, and per-tile remove
@@ -383,7 +393,9 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
   get unrankedItems(): CardDef[] {
     let ranked = this.rankedIds;
     let list = this.pool.filter((i) => !ranked.has(i.id));
-    let q = this.filter.trim().toLowerCase();
+    // Only apply the filter while its input is actually shown, so a stale value
+    // can't silently hide items once the pool shrinks below the threshold.
+    let q = this.showFilter ? this.filter.trim().toLowerCase() : '';
     if (q) {
       list = list.filter((i) => itemLabel(i).toLowerCase().includes(q));
     }
