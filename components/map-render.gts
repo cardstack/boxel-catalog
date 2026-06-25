@@ -400,14 +400,18 @@ class LeafletLayerState implements LeafletLayerStateInterface {
   private routeStyle: 'road' | 'straight';
   private routeColor: string;
   private popupTopInset: number;
-  // Per-coordinate cache so re-opening a popup never refetches.
+  // Per-place cache so re-opening a popup never refetches. Keyed by the place
+  // identity (name + coordinates) the fetch actually depends on — NOT the
+  // coordinate's positional id, which a host can reuse for a different place
+  // (e.g. an itinerary regenerated in place), which would otherwise serve the
+  // previous place's photo.
   private enrichCache = new Map<
-    string | number,
+    string,
     { image: string | null; nearby: NearbyPlace[] }
   >();
-  // The coordinate key whose stop popup is currently open; lets an in-flight
-  // fetch detect that the user has since switched/closed popups.
-  private activeKey: string | number | null = null;
+  // The place key whose stop popup is currently open; lets an in-flight fetch
+  // detect that the user has since switched/closed popups.
+  private activeKey: string | null = null;
 
   constructor(map: LeafletMap, mapConfig?: LeafletMapConfig) {
     this.map = map;
@@ -531,7 +535,7 @@ class LeafletLayerState implements LeafletLayerStateInterface {
     header: string,
     linkHtml: string,
   ) {
-    let key = c.id ?? `${c.lat},${c.lng}`;
+    let key = enrichCacheKey(c);
     this.activeKey = key;
     this.nearbyGroup?.clearLayers();
 
@@ -1253,6 +1257,14 @@ async function wikiThumbs(params: string): Promise<WikiCandidate[]> {
   } catch (e) {
     return [];
   }
+}
+
+// Cache key for a popup's fetched enrichments. Built from the place identity
+// the fetch depends on (name + rounded coordinates) so two different places
+// never collide, even when a host reuses the same coordinate id for both.
+function enrichCacheKey(c: Coordinate): string {
+  let name = (c.name ?? '').trim().toLowerCase();
+  return `${name}@${c.lat.toFixed(5)},${c.lng.toFixed(5)}`;
 }
 
 // Fetch a representative photo for a place. The old approach (look up the exact
