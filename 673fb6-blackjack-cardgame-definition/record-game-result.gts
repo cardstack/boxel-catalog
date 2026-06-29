@@ -14,7 +14,7 @@ import {
 } from '@cardstack/runtime-common';
 
 class RecordGameResultInput extends CardDef {
-  @field card = linksTo(CardDef);
+  @field card = linksTo(CardDef, { searchable: true });
   @field realm = contains(StringField);
 }
 

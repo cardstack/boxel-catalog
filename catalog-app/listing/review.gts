@@ -14,5 +14,5 @@ export class Review extends CardDef {
   static headerColor = '#00ebac';
   @field score = contains(NumberField);
   @field comment = contains(MarkdownField);
-  @field listing = linksTo(() => Listing);
+  @field listing = linksTo(() => Listing, { searchable: true });
 }

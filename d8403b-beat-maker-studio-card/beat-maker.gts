@@ -2221,10 +2221,12 @@ export class BeatMakerCard extends CardDef {
   @field instrumentKit = contains(StringField);
   @field swing = contains(NumberField);
   @field masterVolume = contains(NumberField);
-  @field currentPattern = linksTo(() => BeatPatternCard);
-  @field currentKit = linksTo(() => DrumKitCard);
-  @field availableKits = linksToMany(() => DrumKitCard);
-  @field availablePatterns = linksToMany(() => BeatPatternCard);
+  @field currentPattern = linksTo(() => BeatPatternCard, { searchable: true });
+  @field currentKit = linksTo(() => DrumKitCard, { searchable: true });
+  @field availableKits = linksToMany(() => DrumKitCard, { searchable: true });
+  @field availablePatterns = linksToMany(() => BeatPatternCard, {
+    searchable: true,
+  });
 
   @field cardTitle = contains(StringField, {
     computeVia: function (this: BeatMakerCard) {

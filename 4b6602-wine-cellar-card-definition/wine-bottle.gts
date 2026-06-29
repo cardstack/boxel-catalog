@@ -72,7 +72,7 @@ export class WineBottle extends CardDef {
   });
   @field liquidColor = contains(ColorField);
   @field producerUrl = contains(UrlField);
-  @field label = linksTo(() => ImageDef);
+  @field label = linksTo(() => ImageDef, { searchable: true });
 
   @field displayName = contains(StringField, {
     computeVia: function (this: WineBottle) {

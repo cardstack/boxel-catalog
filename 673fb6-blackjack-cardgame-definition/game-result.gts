@@ -266,7 +266,7 @@ export class GameResult extends CardDef {
   static displayName = 'Game Result';
   static icon = GamepadIcon;
 
-  @field game = linksTo(() => CardDef);
+  @field game = linksTo(() => CardDef, { searchable: true });
   @field outcome = contains(PlayerOutcomeField);
   @field ref = contains(AbsoluteCodeRefField);
   @field createdAt = contains(DateTimeField, {

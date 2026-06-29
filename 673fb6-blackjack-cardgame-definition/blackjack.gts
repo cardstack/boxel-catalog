@@ -2528,8 +2528,8 @@ export class Blackjack extends CardDef {
 
   @field casinoName = contains(StringField);
 
-  @field player = linksTo(() => Player);
-  @field dealer = linksTo(() => Player);
+  @field player = linksTo(() => Player, { searchable: true });
+  @field dealer = linksTo(() => Player, { searchable: true });
 
   @field playerChips = contains(NumberField);
   @field currentBet = contains(NumberField);

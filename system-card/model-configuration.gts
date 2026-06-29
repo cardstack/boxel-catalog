@@ -28,7 +28,7 @@ const TRAILING_ZERO_DECIMAL_RE = new RegExp('\\.0$');
 export class ModelConfiguration extends BaseModelConfiguration {
   static displayName = 'Model Configuration';
 
-  @field openRouterModel = linksTo(OpenRouterModel);
+  @field openRouterModel = linksTo(OpenRouterModel, { searchable: true });
 
   @field purpose = contains(PurposeField);
 

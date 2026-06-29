@@ -21,7 +21,7 @@ export const BodyVisibilityField = enumField(StringField, {
 export class Model extends CardDef {
   static displayName = 'Model';
 
-  @field photo = contains(ImageSourceField);
+  @field photo = contains(ImageSourceField, { searchable: 'file' });
 
   // Detected once (cheaply) when the model is added. Drives the try-on UI hint
   // and lets generation know when it must invent a standard body.

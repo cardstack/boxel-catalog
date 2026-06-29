@@ -210,13 +210,15 @@ export class AudioFieldSpec extends Spec {
   static displayName = 'Audio Field Spec';
 
   // Standard AudioField - default inline player
-  @field standard = contains(AudioField);
+  @field standard = contains(AudioField, { searchable: 'file' });
 
   // Waveform player - SoundCloud-style waveform visualization
   @field waveformPlayer = contains(AudioField, {
     configuration: {
       presentation: 'waveform-player',
     },
+
+    searchable: 'file',
   });
 
   // Playlist row - Spotify-style playlist row
@@ -224,6 +226,8 @@ export class AudioFieldSpec extends Spec {
     configuration: {
       presentation: 'playlist-row',
     },
+
+    searchable: 'file',
   });
 
   // Mini player - Podcast-style mini player
@@ -231,6 +235,8 @@ export class AudioFieldSpec extends Spec {
     configuration: {
       presentation: 'mini-player',
     },
+
+    searchable: 'file',
   });
 
   // Album cover - Album cover presentation
@@ -238,6 +244,8 @@ export class AudioFieldSpec extends Spec {
     configuration: {
       presentation: 'album-cover',
     },
+
+    searchable: 'file',
   });
 
   // With volume control
@@ -247,6 +255,8 @@ export class AudioFieldSpec extends Spec {
         showVolume: true,
       },
     },
+
+    searchable: 'file',
   });
 
   // Trim editor - Audio trimming interface
@@ -254,6 +264,8 @@ export class AudioFieldSpec extends Spec {
     configuration: {
       presentation: 'trim-editor',
     },
+
+    searchable: 'file',
   });
 
   // Advanced controls - Volume, speed, and loop controls
@@ -265,6 +277,8 @@ export class AudioFieldSpec extends Spec {
         showLoopControl: true,
       },
     },
+
+    searchable: 'file',
   });
 
   static isolated = AudioFieldSpecIsolated as unknown as typeof Spec.isolated;
