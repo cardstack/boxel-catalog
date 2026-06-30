@@ -2347,9 +2347,13 @@ export class BlogApp extends CardDef {
   @field website = contains(StringField);
   // Manually-pinned posts; if unset, the Site view falls back to the
   // newest-first auto query.
-  @field lead = linksTo(() => BlogPost);
-  @field featured = linksToMany(() => BlogPost);
-  @field games = linksToMany(() => Game);
+  @field lead = linksTo(() => BlogPost, {
+    searchable: ['authors', 'categories'],
+  });
+  @field featured = linksToMany(() => BlogPost, {
+    searchable: ['authors', 'categories'],
+  });
+  @field games = linksToMany(() => Game, { searchable: true });
   static displayName = 'Blog App';
   static icon = BlogAppIcon;
   static prefersWideFormat = true;

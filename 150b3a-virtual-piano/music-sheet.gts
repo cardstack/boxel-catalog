@@ -53,7 +53,7 @@ export class MusicSheet extends CardDef {
   @field tempo = contains(NumberField);
 
   /** Genre tags — linked Genre cards (POP | CLASSICAL | DANCE | INDIE | ROCK) */
-  @field genre = linksToMany(Genre);
+  @field genre = linksToMany(Genre, { searchable: true });
 
   /** Semitone shift for playback transposition, e.g. -2 */
   @field transposition = contains(NumberField);

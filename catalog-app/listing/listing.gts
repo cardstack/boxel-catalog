@@ -565,12 +565,24 @@ export class Listing extends CardDef {
 
   @field name = contains(StringField);
   @field summary = contains(MarkdownField);
-  @field specs = linksToMany(() => Spec);
+  @field specs = linksToMany(() => Spec, {
+    searchable: [
+      'linkedExamples',
+      'linkedExamples.authors.cardInfo.theme',
+      'linkedExamples.cardInfo.theme',
+      'linkedExamples.categories',
+      'linkedExamples.featured.authors.cardInfo.theme',
+      'linkedExamples.featured.categories',
+      'linkedExamples.games',
+      'linkedExamples.lead.authors.cardInfo.theme',
+      'linkedExamples.lead.categories',
+    ],
+  });
   @field publisher = linksTo(() => Publisher);
-  @field categories = linksToMany(() => Category);
-  @field tags = linksToMany(() => Tag);
-  @field license = linksTo(() => License);
-  @field images = linksToMany(ImageDef);
+  @field categories = linksToMany(() => Category, { searchable: 'sphere' });
+  @field tags = linksToMany(() => Tag, { searchable: true });
+  @field license = linksTo(() => License, { searchable: true });
+  @field images = linksToMany(ImageDef, { searchable: true });
   @field examples = linksToMany(() => CardDef);
   @field skills = linksToMany(() => Skill);
 
@@ -701,7 +713,7 @@ export class AppListing extends Listing {
 
 export class CardListing extends Listing {
   static displayName = 'CardListing';
-  @field skills = linksToMany(() => Skill);
+  @field skills = linksToMany(() => Skill, { searchable: true });
 }
 
 export class FieldListing extends Listing {

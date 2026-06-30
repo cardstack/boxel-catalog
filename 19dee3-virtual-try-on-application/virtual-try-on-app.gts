@@ -189,7 +189,10 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
   // field — so results are tied to the model, not to which app linked them.
   resultSearch = this.args.context?.getCards(
     this,
-    () => ({ filter: { type: tryOnResultRef } }) as Query,
+    () =>
+      ({
+        filter: { type: tryOnResultRef },
+      }) as Query,
     () => this.garmentRealms,
     { isLive: true },
   );
@@ -4566,7 +4569,7 @@ export class VirtualTryOnApp extends CardDef {
   static displayName = 'Virtual Try-On App';
   static prefersWideFormat = true;
 
-  @field model = linksTo(() => Model);
+  @field model = linksTo(() => Model, { searchable: 'photo.file' });
 
   static isolated = IsolatedTemplate;
 

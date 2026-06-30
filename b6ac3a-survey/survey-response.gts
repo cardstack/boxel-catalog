@@ -24,7 +24,7 @@ export class SurveyResponse extends CardDef {
   // Real link to the survey (live — reflects later title changes). surveyId is a
   // denormalized copy used for reliable querying; surveyTitle is a display
   // snapshot fallback for when the linked survey can't be loaded.
-  @field survey = linksTo(() => Survey);
+  @field survey = linksTo(() => Survey, { searchable: true });
   @field surveyId = contains(StringField);
   @field surveyTitle = contains(StringField);
   @field answers = containsMany(SurveyAnswer);

@@ -46,7 +46,7 @@ export class WineCellar extends CardDef {
   @field name = contains(StringField);
   @field location = contains(StringField);
   @field owner = contains(StringField);
-  @field bottles = linksToMany(() => WineBottle);
+  @field bottles = linksToMany(() => WineBottle, { searchable: 'label' });
   @field notes = contains(MarkdownField);
 
   @field totalBottles = contains(NumberField, {

@@ -29,7 +29,7 @@ export const CategoryField = enumField(StringField, {
 export class Garment extends CardDef {
   static displayName = 'Garment';
 
-  @field image = contains(ImageSourceField);
+  @field image = contains(ImageSourceField, { searchable: 'file' });
   @field category = contains(CategoryField);
 
   static fitted = class Fitted extends Component<typeof Garment> {

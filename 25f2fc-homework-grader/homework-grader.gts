@@ -2647,7 +2647,7 @@ export class HomeworkGrader extends CardDef {
   @field instructions = contains(TextAreaField);
   @field questions = containsMany(QuestionField);
   @field grade = contains(GradeField);
-  @field gradingSkill = linksTo(() => Skill);
+  @field gradingSkill = linksTo(() => Skill, { searchable: true });
 
   static isolated = HomeworkIsolated;
   static embedded = HomeworkIsolated;

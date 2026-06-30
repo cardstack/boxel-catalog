@@ -1423,8 +1423,10 @@ export class SubmissionWorkflowCard extends CardDef {
   @field catalogRealmUrl = contains(StringField);
 
   // ── Links to real cards ──
-  @field listing = linksTo(() => Listing);
-  @field prCard = linksTo(() => PrCard);
+  @field listing = linksTo(() => Listing, {
+    searchable: ['categories', 'images', 'license', 'skills', 'specs', 'tags'],
+  });
+  @field prCard = linksTo(() => PrCard, { searchable: true });
 
   // ── Lint status ──
   @field lintStatus = contains(StringField); // 'pending' | 'in-progress' | 'passed' | 'failed'

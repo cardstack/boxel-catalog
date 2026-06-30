@@ -12,7 +12,7 @@ export class Category extends CardDef {
   static displayName = 'Category';
   static headerColor = '#00ebac';
   @field name = contains(StringField);
-  @field sphere = linksTo(() => Sphere);
+  @field sphere = linksTo(() => Sphere, { searchable: true });
   @field cardTitle = contains(StringField, {
     computeVia: function (this: Category) {
       return this.name;

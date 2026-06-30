@@ -1720,7 +1720,7 @@ export class BlogPost extends CardDef {
   @field body = contains(RichMarkdownField);
   @field layout = contains(StringField);
   @field published = contains(BooleanField);
-  @field authors = linksToMany(Author);
+  @field authors = linksToMany(Author, { searchable: true });
   @field publishDate = contains(DateTimeField);
   @field status = contains(Status, {
     computeVia: function (this: BlogPost) {
@@ -1728,7 +1728,7 @@ export class BlogPost extends CardDef {
     },
   });
   @field featuredImage = contains(FeaturedImageField);
-  @field categories = linksToMany(BlogCategory);
+  @field categories = linksToMany(BlogCategory, { searchable: true });
   @field lastUpdated = contains(DateTimeField, {
     computeVia: function (this: BlogPost) {
       let lastModified = getCardMeta(this, 'lastModified');
