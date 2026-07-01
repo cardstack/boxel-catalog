@@ -18,7 +18,22 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "./Theme/catalog-storefront"
+        }
+      },
+      "featured.0": {
+        "links": {
+          "self": "./4b6602-wine-cellar-card-definition/CardListing/6152b86e-addc-45b2-a05d-8e971800b846"
+        }
+      },
+      "featured.1": {
+        "links": {
+          "self": "./c7eda3-travel-itinerary-planner/CardListing/bb4c0bbf-7339-4a9f-b5f6-e346a36f6bd1"
+        }
+      },
+      "featured.2": {
+        "links": {
+          "self": "./d8403b-beat-maker-studio-card/CardListing/bb17ec51-1c2b-42a2-86a0-c10fd3dd803c"
         }
       }
     }

@@ -1,6 +1,5 @@
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { on } from '@ember/modifier';
 import { debounce } from 'lodash';
 
 import {
@@ -17,240 +16,79 @@ import type { Query, AnyFilter, Filter } from '@cardstack/runtime-common';
 import { isCardInstance } from '@cardstack/runtime-common';
 import StringField from 'https://cardstack.com/base/string';
 
-import FilterSidebar, { type FilterItem } from './components/filter-section';
-import CategoryFilterGroup, {
-  type SphereConfig,
-} from './components/category-filter-group';
-import ShowcaseView from './components/showcase-view';
-import ListView from './components/list-view';
-import TagFilterGroup from './components/tag-filter-group';
+import LayoutGridPlusIcon from '@cardstack/boxel-icons/layout-grid-plus';
 
 import CatalogLayout from './layouts/catalog-layout';
-
-import BuildingBank from '@cardstack/boxel-icons/building-bank';
-import BuildingIcon from '@cardstack/boxel-icons/building';
-import HealthRecognition from '@cardstack/boxel-icons/health-recognition';
-import LayoutGridPlusIcon from '@cardstack/boxel-icons/layout-grid-plus';
-import UsersIcon from '@cardstack/boxel-icons/users';
-import WorldIcon from '@cardstack/boxel-icons/world';
-import { TabbedHeader, BoxelInput } from '@cardstack/boxel-ui/components';
+import StorefrontHeader from './components/storefront-header';
+import StorefrontHero from './components/storefront-hero';
+import StorefrontHowItWorks from './components/storefront-how-it-works';
+import StorefrontFooter from './components/storefront-footer';
+import TypeFilterPills from './components/type-filter-pills';
+import { CardsGrid } from './components/grid';
 
 import { Listing } from './listing/listing';
 
-const SPHERES: SphereConfig[] = [
-  {
-    name: 'WORK',
-    id: 'work',
-    Icon: BuildingBank,
-    query: {
-      filter: {
-        type: {
-          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-          module: new URL('./listing/category', import.meta.url).href,
-          name: 'Category',
-        },
-        eq: { 'sphere.name': 'WORK' },
-      },
-    },
-  },
-  {
-    name: 'PLAY',
-    id: 'play',
-    Icon: WorldIcon,
-    query: {
-      filter: {
-        type: {
-          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-          module: new URL('./listing/category', import.meta.url).href,
-          name: 'Category',
-        },
-        eq: { 'sphere.name': 'PLAY' },
-      },
-    },
-  },
-  {
-    name: 'LIFE',
-    id: 'life',
-    Icon: HealthRecognition,
-    query: {
-      filter: {
-        type: {
-          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-          module: new URL('./listing/category', import.meta.url).href,
-          name: 'Category',
-        },
-        eq: { 'sphere.name': 'LIFE' },
-      },
-    },
-  },
-  {
-    name: 'LEARN',
-    id: 'learn',
-    Icon: UsersIcon,
-    query: {
-      filter: {
-        type: {
-          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-          module: new URL('./listing/category', import.meta.url).href,
-          name: 'Category',
-        },
-        eq: { 'sphere.name': 'LEARN' },
-      },
-    },
-  },
-  {
-    name: 'BUILD',
-    id: 'build',
-    Icon: BuildingIcon,
-    query: {
-      filter: {
-        type: {
-          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-          module: new URL('./listing/category', import.meta.url).href,
-          name: 'Category',
-        },
-        eq: { 'sphere.name': 'BUILD' },
-      },
-    },
-  },
+const TAB_OPTIONS = [
+  { tabId: 'showcase', displayName: 'Showcase' },
+  { tabId: 'card', displayName: 'Cards' },
+  { tabId: 'field', displayName: 'Fields' },
+  { tabId: 'skill', displayName: 'Skills' },
+  { tabId: 'component', displayName: 'Components' },
+  { tabId: 'theme', displayName: 'Themes' },
 ];
 
-// Catalog App
+const capitalize = (str: string) => str[0].toUpperCase() + str.slice(1);
+
 class Isolated extends Component<typeof Catalog> {
-  tabFilterOptions = [
-    {
-      tabId: 'showcase',
-      displayName: 'Showcase',
-    },
-    {
-      tabId: 'card',
-      displayName: 'Cards',
-    },
-    {
-      tabId: 'field',
-      displayName: 'Fields',
-    },
-    {
-      tabId: 'skill',
-      displayName: 'Skills',
-    },
-    {
-      tabId: 'component',
-      displayName: 'Components',
-    },
-    {
-      tabId: 'theme',
-      displayName: 'Themes',
-    },
-  ];
+  tabFilterOptions = TAB_OPTIONS;
 
-  @tracked activeTabId: string = this.tabFilterOptions[0].tabId;
+  @tracked activeTabId = 'showcase';
+  @tracked searchValue: string | undefined = undefined;
 
-  @action
-  setActiveTab(tabId: string) {
+  @action setActiveTab(tabId: string) {
     this.activeTabId = tabId;
   }
 
-  @tracked activeTags: string[] = [];
-
-  @action
-  handleTagSelect(tagUrl: string) {
-    let id = tagUrl.replace(/\.json$/, '');
-    this.activeTags = this.activeTags.includes(id)
-      ? this.activeTags.filter((u) => u !== id)
-      : [...this.activeTags, id];
+  // Pill 'all' is the Showcase tab; the type pills mirror the nav tabs.
+  get activePillKey() {
+    return this.activeTabId === 'showcase' ? 'all' : this.activeTabId;
   }
 
-  // Filter Search
-  @tracked searchValue: string | undefined = undefined;
+  @action selectPill(key: string) {
+    this.activeTabId = key === 'all' ? 'showcase' : key;
+  }
 
   private debouncedSetSearchKey = debounce((value: string) => {
-    this.searchValue = value;
+    this.searchValue = value || undefined;
   }, 300);
 
-  @action
-  onSearchInput(value: string) {
+  @action onSearchInput(value: string) {
     this.debouncedSetSearchKey(value);
   }
 
-  //query
+  @action resetFilters() {
+    this.activeTabId = 'showcase';
+    this.searchValue = undefined;
+  }
+
+  get listingModule() {
+    // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+    return new URL('./listing/listing', import.meta.url).href;
+  }
+
   get query(): Query {
     return {
       filter: {
         on: {
-          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-          module: new URL('./listing/listing', import.meta.url).href,
+          // @ts-expect-error module href is a string; CodeRef typing is stricter
+          module: this.listingModule,
           name:
             this.activeTabId === 'showcase'
               ? 'Listing'
               : `${capitalize(this.activeTabId)}Listing`,
         },
-        every: [
-          this.sphereOrCategoryFilter,
-          this.tagFilter,
-          this.searchFilter,
-        ].filter(Boolean) as Filter[],
+        every: [this.searchFilter].filter(Boolean) as Filter[],
       },
-    };
-  }
-
-  // Sphere/category filter
-  @tracked activeSphereOrCategory: FilterItem | undefined = undefined;
-
-  @action
-  handleSphereOrCategorySelect(filterItem: FilterItem) {
-    this.activeSphereOrCategory = filterItem;
-  }
-
-  get sphereOrCategoryFilter(): Filter | undefined {
-    if (
-      !this.activeSphereOrCategory ||
-      this.activeSphereOrCategory.kind === 'all'
-    ) {
-      return undefined;
-    }
-
-    if (this.activeSphereOrCategory.kind === 'sphere') {
-      return this.filterListingsBySphere(this.activeSphereOrCategory.id);
-    }
-
-    return this.filterListingsByCategory(this.activeSphereOrCategory.id);
-  }
-
-  private filterListingsBySphere(sphereId: string): Filter {
-    return {
-      eq: { 'categories.sphere.id': sphereId },
-    };
-  }
-
-  private filterListingsByCategory(categoryId: string): Filter {
-    return {
-      eq: { 'categories.id': categoryId },
-    };
-  }
-
-  get tagQuery(): Query {
-    return {
-      filter: {
-        type: {
-          // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-          module: new URL('./listing/tag', import.meta.url).href,
-          name: 'Tag',
-        },
-      },
-    };
-  }
-
-  get tagFilter(): AnyFilter | undefined {
-    if (this.activeTags.length === 0) {
-      return undefined;
-    }
-    return {
-      any: this.activeTags.map((id) => ({
-        eq: {
-          'tags.id': id,
-        },
-      })),
     };
   }
 
@@ -266,51 +104,20 @@ class Isolated extends Component<typeof Catalog> {
     };
   }
 
-  // end of listing query filter values
-
-  @action resetFilters() {
-    this.activeSphereOrCategory = undefined;
-    this.searchValue = undefined;
-    this.activeTags = [];
-  }
-
-  get shouldShowTab() {
-    return (tabId: string) => {
-      return this.activeTabId === tabId;
-    };
-  }
-
   get hasActiveFilters() {
-    return (
-      this.activeSphereOrCategory !== undefined ||
-      this.searchValue !== undefined ||
-      this.activeTags.length > 0
-    );
-  }
-
-  get hasNoActiveFilters() {
-    return !this.hasActiveFilters;
+    return this.searchValue !== undefined;
   }
 
   get isShowcaseView() {
-    return this.activeTabId === 'showcase' && this.hasNoActiveFilters;
+    return this.activeTabId === 'showcase' && !this.hasActiveFilters;
   }
 
-  get navigationButtonText() {
+  get galleryTitle() {
     if (this.activeTabId === 'showcase') {
-      return 'Catalog Home';
+      return 'The Catalog';
     }
-    const tabOption = this.tabFilterOptions.find(
-      (tab) => tab.tabId === this.activeTabId,
-    );
-    return tabOption ? `All ${tabOption.displayName}` : 'Catalog Home';
-  }
-
-  get headerColor() {
-    return (
-      Object.getPrototypeOf(this.args.model).constructor.headerColor ??
-      undefined
-    );
+    let tab = this.tabFilterOptions.find((t) => t.tabId === this.activeTabId);
+    return tab ? tab.displayName : 'The Catalog';
   }
 
   private get realms() {
@@ -321,207 +128,130 @@ class Isolated extends Component<typeof Catalog> {
     return this.realms.map((realm) => realm.href);
   }
 
+  private scrollTo(selector: string) {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    document
+      .querySelector(selector)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  @action scrollToGallery() {
+    this.scrollTo('[data-catalog-gallery]');
+  }
+
+  @action scrollToHowItWorks() {
+    this.scrollTo('[data-catalog-howitworks]');
+  }
+
   <template>
     <CatalogLayout
+      class='catalog-storefront'
+      @showSidebar={{false}}
       data-test-catalog-app
-      class='catalog-layout {{this.activeTabId}}'
     >
       <:header>
-        <TabbedHeader
+        <StorefrontHeader
           @tabs={{this.tabFilterOptions}}
-          @setActiveTab={{this.setActiveTab}}
           @activeTabId={{this.activeTabId}}
-          @headerBackgroundColor={{this.headerColor}}
-          class='catalog-tab-header'
-        >
-          <:sideContent>
-            <BoxelInput
-              @type='search'
-              @value={{this.searchValue}}
-              @onInput={{this.onSearchInput}}
-              placeholder='Search by Keyword'
-              data-test-filter-search-input
-              class='catalog-search-input'
-            />
-          </:sideContent>
-        </TabbedHeader>
+          @onSelectTab={{this.setActiveTab}}
+          @searchValue={{this.searchValue}}
+          @onSearchInput={{this.onSearchInput}}
+        />
       </:header>
-      <:sidebar>
-        <div class='sidebar-content'>
-          <button
-            class='navigation-button
-              {{if this.hasNoActiveFilters "is-selected"}}'
-            {{on 'click' this.resetFilters}}
-            data-test-navigation-reset-button={{this.activeTabId}}
-          >
-            <img
-              src='https://boxel-images.boxel.ai/icons/icon_catalog_rounded.png'
-              alt='Catalog Icon'
-              class='catalog-icon'
-            />
-            <span class='button-text'>{{this.navigationButtonText}}</span>
-          </button>
-
-          <FilterSidebar>
-            <:categories>
-              <CategoryFilterGroup
-                @activeSphereOrCategory={{this.activeSphereOrCategory}}
-                @onSelect={{this.handleSphereOrCategorySelect}}
-                @realmHrefs={{this.realmHrefs}}
-                @spheres={{SPHERES}}
-                @context={{@context}}
-              />
-            </:categories>
-            <:tags>
-              <TagFilterGroup
-                @activeTags={{this.activeTags}}
-                @onTagSelect={{this.handleTagSelect}}
-                @realmHrefs={{this.realmHrefs}}
-                @tagQuery={{this.tagQuery}}
-                @context={{@context}}
-              />
-            </:tags>
-          </FilterSidebar>
-        </div>
-      </:sidebar>
       <:content>
-        <div class='content-area-container {{this.activeTabId}}'>
-          <div class='content-area'>
-            <div class='catalog-content'>
-              <div class='catalog-listing info-box'>
-                {{#if this.isShowcaseView}}
-                  <ShowcaseView
-                    @startHereListings={{@model.startHere}}
-                    @newListings={{@model.new}}
-                    @featuredListings={{@model.featured}}
-                    @context={{@context}}
-                    data-test-showcase-view
-                  />
-                {{else}}
-                  <ListView
-                    @query={{this.query}}
-                    @realms={{this.realmHrefs}}
-                    @context={{@context}}
-                    data-test-catalog-list-view
-                  />
-                {{/if}}
+        <div class='storefront-body'>
+          {{#if this.isShowcaseView}}
+            <StorefrontHero
+              @featured={{@model.featured}}
+              @onBrowse={{this.scrollToGallery}}
+              @onHowItWorks={{this.scrollToHowItWorks}}
+              @context={{@context}}
+            />
+            <StorefrontHowItWorks />
+          {{/if}}
+
+          <section
+            class='gallery'
+            data-catalog-gallery
+            data-test-catalog-gallery
+          >
+            <div class='gallery-head'>
+              <div>
+                <h2 class='gallery-title'>{{this.galleryTitle}}</h2>
+                <p class='gallery-sub'>Hand-built, fork-ready. Hover any card to
+                  preview it live — then remix.</p>
               </div>
+              <TypeFilterPills
+                @listingModule={{this.listingModule}}
+                @activeKey={{this.activePillKey}}
+                @onSelect={{this.selectPill}}
+                @realms={{this.realmHrefs}}
+                @context={{@context}}
+              />
             </div>
-          </div>
+
+            <CardsGrid
+              @query={{this.query}}
+              @realms={{this.realmHrefs}}
+              @selectedView='grid'
+              @onClear={{this.resetFilters}}
+              @context={{@context}}
+              data-test-catalog-grid
+            />
+          </section>
+
+          <StorefrontFooter />
         </div>
       </:content>
     </CatalogLayout>
 
     <style scoped>
-      .catalog-tab-header {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        container-name: catalog-tab-header;
-        container-type: inline-size;
-      }
-      .catalog-tab-header :deep(.app-title-group) {
-        display: none;
-      }
-      .catalog-tab-header :deep(.app-content) {
-        gap: var(--boxel-sp-xxs);
-      }
-      .catalog-search-input {
-        width: 300px;
-        outline: 1px solid var(--boxel-light);
-      }
-
-      .info-box {
-        width: 100%;
-        height: auto;
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-light);
+      .catalog-storefront {
+        /* Catalog-domain signal colors (the general palette/fonts come from the
+           linked Catalog Storefront theme via cardInfo.theme). */
+        --type-card: var(--chart-1, #ff5b9c);
+        --type-component: var(--chart-2, #2bb3ff);
+        --type-field: var(--chart-3, #7b5bff);
+        --type-skill: var(--chart-4, #c2e23f);
+        --type-theme: var(--chart-5, #ff9d3d);
+        --type-app: var(--brand, #6c4bf5);
+        --brand: #6c4bf5;
+        --layout-container-background-color: var(--background, #ece9e1);
+        --layout-content-padding: 0;
+        background: var(--background, #ece9e1);
+        color: var(--foreground, #16161c);
+        font-family: var(--font-sans, 'IBM Plex Sans', sans-serif);
       }
 
-      /* Layout */
-      .catalog-layout {
-        --layout-theme-color: #a66efa;
-        --layout-container-background-color: #eeedf7;
-        --layout-sidebar-background-color: #eeedf7;
-        --layout-content-padding: var(--boxel-sp-xl);
+      .storefront-body {
+        min-height: 100%;
       }
-
-      /* Sidebar */
-      .sidebar-content {
-        padding: var(--boxel-sp);
-        overflow-y: auto;
+      .gallery {
+        max-width: 80rem;
+        margin: 0 auto;
+        padding: 3rem 2rem 5.625rem;
+        scroll-margin-top: 0;
       }
-      .sidebar-content > * + * {
-        margin-top: var(--boxel-sp);
-      }
-
-      /* Container */
-      .content-area-container {
-        flex: 1;
-        height: auto;
-        container-name: content-area-container;
-        container-type: inline-size;
-      }
-
-      .content-area {
-        height: 100%;
-        display: grid;
-        gap: var(--boxel-sp-lg);
-      }
-      .catalog-content {
-        display: block;
-      }
-      .catalog-listing {
-        background-color: transparent;
+      .gallery-head {
         display: flex;
-        flex-direction: column;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.625rem;
       }
-
-      /* Sidebar */
-      .navigation-button {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        width: 100%;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: none;
-        background: var(--boxel-light);
-
-        color: var(--boxel-dark);
-        font: 500 var(--boxel-font-sm);
-        letter-spacing: var(--boxel-lsp-xs);
-        text-align: left;
-        border-radius: var(--boxel-border-radius-sm);
-        cursor: pointer;
+      .gallery-title {
+        margin: 0;
+        font: 700 1.875rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        letter-spacing: -0.025em;
+        color: var(--foreground, #16161c);
       }
-      .navigation-button:hover {
-        background-color: var(--boxel-300);
-      }
-      .navigation-button.is-selected {
-        background-color: var(--boxel-dark);
-        color: var(--boxel-light);
-      }
-      .catalog-icon {
-        width: 16px;
-        height: 16px;
-      }
-      .button-text {
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-      }
-
-      @container catalog-tab-header (inline-size <= 500px) {
-        .catalog-search-input {
-          width: 100cqw;
-        }
-      }
-
-      @container content-area-container (inline-size <= 768px) {
-        .content-area {
-          grid-template-columns: 1fr;
-          overflow-y: auto;
-        }
+      .gallery-sub {
+        margin: 0.5rem 0 0;
+        font: 400 0.875rem/1.4 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #6b675e);
       }
     </style>
   </template>
@@ -554,5 +284,3 @@ export class Catalog extends CardDef {
     return this.displayName;
   }
 }
-
-const capitalize = (str: string) => str[0].toUpperCase() + str.slice(1);

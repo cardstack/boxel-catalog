@@ -1,452 +1,239 @@
-import { Component, realmURL } from 'https://cardstack.com/base/card-api';
-import { commandData } from 'https://cardstack.com/base/resources/command-data';
-import type {
-  GetAllRealmMetasResult,
-  RealmMetaField,
-} from 'https://cardstack.com/base/command';
+import { Component, CardDef } from 'https://cardstack.com/base/card-api';
+
+import { htmlSafe } from '@ember/template';
 
 import { type Listing } from '../listing/listing';
+import { typeMetaForDisplayName } from '../listing/listing-type-meta';
 
-import ChooseRealmAction from './choose-realm-action';
-import GetAllRealmMetasCommand from '@cardstack/boxel-host/commands/get-all-realm-metas';
-
-import { listingActions, isReady } from '../resources/listing-actions';
-
-import { on } from '@ember/modifier';
-import { not } from '@cardstack/boxel-ui/helpers';
-import { CatalogImageOverlay } from './catalog-image-overlay';
+import ListingHoverCard from './listing-hover-card';
 
 export class ListingFittedTemplate extends Component<typeof Listing> {
-  allRealmsInfoResource = commandData<typeof GetAllRealmMetasResult>(
-    this,
-    GetAllRealmMetasCommand,
-  );
-
-  get writableRealms(): { name: string; url: string; iconURL?: string }[] {
-    const commandResource = this.allRealmsInfoResource;
-    if (commandResource?.isSuccess && commandResource) {
-      const result = commandResource.cardResult;
-      if (result?.results) {
-        return result.results
-          .filter(
-            (realmMeta: RealmMetaField) =>
-              realmMeta.canWrite &&
-              realmMeta.realmIdentifier !== this.args.model[realmURL]?.href,
-          )
-          .map((realmMeta: RealmMetaField) => ({
-            name: realmMeta.info.name,
-            url: realmMeta.realmIdentifier,
-            iconURL: realmMeta.info.iconURL,
-          }));
-      }
-    }
-    return [];
+  get listing(): Listing {
+    return this.args.model as Listing;
   }
 
-  actionsResource = listingActions(this, () => ({
-    listing: this.args.model as Listing,
-  }));
+  get typeMeta() {
+    return typeMetaForDisplayName(
+      (this.args.model.constructor as typeof CardDef).displayName,
+    );
+  }
 
-  get images(): string[] {
+  get imageUrl(): string | undefined {
+    // Screenshot only — no thumbnail fallback; the monogram cover handles the
+    // no-screenshot case.
     return (this.args.model.images ?? [])
       .map((image) => image?.url)
-      .filter((url): url is string => Boolean(url));
+      .find((url): url is string => Boolean(url));
   }
 
-  get firstImage() {
-    return this.images[0];
+  get hasNoImage(): 'true' | 'false' {
+    return this.imageUrl ? 'false' : 'true';
   }
 
-  get publisherInfo() {
-    const hasPublisher = Boolean(this.args.model.publisher?.name);
-    return hasPublisher ? 'By ' + this.args.model.publisher?.name : '';
+  get monogram(): string {
+    return (this.args.model.name?.trim()[0] ?? '?').toUpperCase();
   }
 
-  get hasTags() {
-    return this.args.model.tags && this.args.model.tags.length > 0;
+  get publisherHandle(): string {
+    let name = this.args.model.publisher?.name;
+    return name ? '@' + name : '';
   }
 
-  get firstTagName() {
-    return this.args.model.tags?.[0]?.name;
+  get blurb(): string | undefined {
+    // cardDescription is empty on catalog listings; the real prose is in summary.
+    return this.args.model.cardDescription || this.args.model.summary;
   }
 
-  get listingActions() {
-    if (isReady(this.actionsResource)) {
-      return this.actionsResource.actions;
-    }
-    return;
+  get chipDotStyle() {
+    return htmlSafe(`background: var(${this.typeMeta.colorVar}, #ff5b9c);`);
   }
 
-  get skillActions() {
-    return this.listingActions?.type === 'skill'
-      ? this.listingActions
-      : undefined;
+  get coverStyle() {
+    let v = this.typeMeta.colorVar;
+    return htmlSafe(
+      `background: linear-gradient(135deg, color-mix(in srgb, var(${v}, #ff5b9c) 22%, transparent), color-mix(in srgb, var(${v}, #ff5b9c) 6%, transparent)), #fbfaf5;`,
+    );
   }
 
-  get regularActions() {
-    return this.listingActions?.type === 'regular'
-      ? this.listingActions
-      : undefined;
+  get monogramStyle() {
+    return htmlSafe(`color: var(${this.typeMeta.colorVar}, #ff5b9c);`);
   }
-
-  get themeActions() {
-    return this.listingActions?.type === 'theme'
-      ? this.listingActions
-      : undefined;
-  }
-
-  get isInCatalogRealm(): boolean {
-    return this.args.model[realmURL]?.href.endsWith('/catalog/') ?? false;
-  }
-
-  viewDetails = (event: Event) => {
-    event.stopPropagation();
-    this.listingActions?.view();
-  };
 
   <template>
-    {{#if this.listingActions}}
-      <div class='fitted-template'>
-        <div class='display-section'>
-          <CatalogImageOverlay
-            @listingActions={{this.listingActions}}
-            @images={{this.images}}
-          >
-            <:icon>
-              <@model.constructor.icon
-                data-test-card-type-icon
-                class='card-type-icon'
-              />
-            </:icon>
-          </CatalogImageOverlay>
-        </div>
-        <div
-          class='info-section'
-          tabindex='0'
-          data-test-catalog-listing-fitted-details
-          aria-label='View Listing Details'
-          {{on 'click' this.viewDetails}}
-        >
-          <div class='card-content'>
-            <h3 class='card-title' data-test-card-title={{@model.name}}>
-              {{@model.name}}
-            </h3>
-            <p class='card-display-name' data-test-card-display-name>
-              {{this.publisherInfo}}
-            </p>
-          </div>
-          <div class='card-tags-action'>
-            {{#if this.hasTags}}
-              <span class='card-tags'># {{this.firstTagName}}</span>
-            {{/if}}
-            {{#if this.skillActions}}
-              {{#if this.skillActions.remix}}
-                <ChooseRealmAction
-                  @name='Remix'
-                  @writableRealms={{this.writableRealms}}
-                  @onAction={{this.skillActions.remix}}
-                  @context={{@context}}
-                  @size='extra-small'
-                  @hide={{not this.isInCatalogRealm}}
-                />
+    <div
+      class='listing-card'
+      data-test-listing-fitted
+      data-no-image={{this.hasNoImage}}
+    >
+      <ListingHoverCard @listing={{this.listing}} @context={{@context}}>
+        <div class='media'>
+          {{#if this.imageUrl}}
+            <img src={{this.imageUrl}} alt={{@model.name}} class='media-img' />
+          {{else}}
+            <div class='cover' style={{this.coverStyle}}>
+              <span
+                class='monogram'
+                style={{this.monogramStyle}}
+              >{{this.monogram}}</span>
+            </div>
+          {{/if}}
+
+          <span class='type-chip'>
+            <span class='type-dot' style={{this.chipDotStyle}}></span>
+            <span class='type-label'>{{this.typeMeta.label}}</span>
+          </span>
+
+          <div class='caption'>
+            <div class='caption-head'>
+              <h3 class='caption-title' data-test-card-title={{@model.name}}>
+                {{@model.name}}
+              </h3>
+              {{#if this.publisherHandle}}
+                <span class='caption-author'>{{this.publisherHandle}}</span>
               {{/if}}
-            {{else if this.regularActions}}
-              {{#if this.regularActions.remix}}
-                <ChooseRealmAction
-                  @name='Remix'
-                  @writableRealms={{this.writableRealms}}
-                  @onAction={{this.regularActions.remix}}
-                  @context={{@context}}
-                  @size='extra-small'
-                  @hide={{not this.isInCatalogRealm}}
-                />
-              {{/if}}
-            {{else if this.themeActions}}
-              {{#if this.themeActions.remix}}
-                <ChooseRealmAction
-                  @name='Remix'
-                  @writableRealms={{this.writableRealms}}
-                  @onAction={{this.themeActions.remix}}
-                  @context={{@context}}
-                  @size='extra-small'
-                  @hide={{not this.isInCatalogRealm}}
-                />
-              {{/if}}
+            </div>
+            {{#if this.blurb}}
+              <p class='caption-blurb'>{{this.blurb}}</p>
             {{/if}}
           </div>
         </div>
+      </ListingHoverCard>
+    </div>
 
-      </div>
-    {{/if}}
-
-    {{! template-lint-disable no-whitespace-for-layout  }}
-    {{! ignore the above error because ember-template-lint complains about the whitespace in the multi-line comment below }}
     <style scoped>
       @layer {
-        .fitted-template {
+        .listing-card {
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+        }
+        .media {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          background: #1c1c22;
+          overflow: hidden;
+        }
+        .media-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: top center;
+          display: block;
+          transition: transform 240ms ease;
+        }
+        .listing-card:hover .media-img {
+          transform: scale(1.05);
+        }
+        .cover {
           width: 100%;
           height: 100%;
           display: flex;
-          overflow: hidden;
-        }
-        .fitted-template :deep(.ember-basic-dropdown-content-placeholder) {
-          display: none;
-        }
-        .fitted-template :deep(.ember-basic-dropdown-content-wormhole-origin) {
-          position: absolute;
-        }
-        .display-section {
-          flex-shrink: 0;
-          display: flex;
-          justify-content: center;
           align-items: center;
-          overflow: hidden;
-          background-color: var(--boxel-200);
+          justify-content: center;
         }
-        .card-type-icon {
-          aspect-ratio: 1 / 1;
-          width: 52px;
-          height: 52px;
-          max-width: 100%;
-          max-height: 100%;
+        .monogram {
+          font: 600 4rem/1 var(--font-serif, 'IBM Plex Serif', serif);
         }
-        .info-section {
+        .type-chip {
+          position: absolute;
+          top: 0.75rem;
+          left: 0.75rem;
+          z-index: 3;
           display: flex;
-          gap: var(--boxel-sp-sm);
-          width: 100%;
-          overflow: hidden;
-          text-align: left;
-          padding: var(--boxel-sp-xs) var(--boxel-sp);
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.3125rem 0.625rem;
+          background: color-mix(in srgb, var(--card, #fff) 92%, transparent);
+          backdrop-filter: blur(0.25rem);
+          border-radius: 999px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
         }
-        .card-tags-action {
+        .type-dot {
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 50%;
+        }
+        .type-label {
+          font: 600 0.59rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--foreground, #16161c);
+        }
+        .caption {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 2;
+          padding: 2.375rem 0.9375rem 0.875rem;
+          background: linear-gradient(
+            to top,
+            rgba(13, 13, 18, 0.94),
+            rgba(13, 13, 18, 0.74) 42%,
+            rgba(13, 13, 18, 0)
+          );
+          color: #fff;
+          pointer-events: none;
+        }
+        .caption-head {
           display: flex;
-          align-items: end;
-          flex-direction: column;
-          gap: var(--boxel-sp-sm);
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 0.625rem;
         }
-        .card-title {
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
+        .caption-title {
+          margin: 0;
+          font: 600 1rem/1.15 var(--font-sans, 'IBM Plex Sans', sans-serif);
+          color: #fff;
+        }
+        .caption-author {
+          font: 500 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
+          color: #b8b4ab;
+          white-space: nowrap;
+        }
+        .caption-blurb {
+          margin: 0.375rem 0 0;
+          font: 400 0.75rem/1.4 var(--font-sans, 'IBM Plex Sans', sans-serif);
+          color: #d8d5cc;
           overflow: hidden;
-          margin-block: 0;
-          font: 600 var(--boxel-font-sm);
-          letter-spacing: var(--boxel-lsp-sm);
-          line-height: 1.25;
-          text-overflow: ellipsis;
-        }
-        .card-display-name {
-          margin-top: var(--boxel-sp-4xs);
-          margin-bottom: 0;
-          color: var(--boxel-450);
-          font: 500 var(--boxel-font-xs);
-          letter-spacing: var(--boxel-lsp-xs);
           text-overflow: ellipsis;
           white-space: nowrap;
-          overflow: hidden;
-          min-height: 15px;
-        }
-        .card-tags {
-          color: var(--boxel-400);
-          font: 500 var(--boxel-font-xs);
-          letter-spacing: var(--boxel-lsp-xs);
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          flex: 1 1 auto;
-          overflow: hidden;
         }
       }
 
-      /* Aspect Ratio <= 1.0 (Vertical) */
-      @container fitted-card (aspect-ratio <= 1.0) {
-        .fitted-template {
-          flex-direction: column;
-        }
-        .display-section {
-          width: 100%;
-          height: 68cqmax;
-        }
-        .info-section {
-          flex-direction: column;
-          justify-content: space-between;
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-        }
-        .card-tags-action {
-          flex-direction: row;
-          justify-content: space-between;
-        }
-      }
-
-      @container fitted-card (aspect-ratio <= 1.0) and (height <= 118px) {
-        .display-section {
+      /* Degrade for small/strip/badge sizes: caption de-emphasized */
+      @container fitted-card (height <= 170px) {
+        .caption-blurb {
           display: none;
         }
       }
-      /* Vertical Tiles*/
-      /* Small Tile (150 x 170) */
-      @container fitted-card (aspect-ratio <= 1.0) and (150px <= width ) and (170px <= height) {
-        .card-title {
-          font-size: var(--boxel-font-size-sm);
-          -webkit-line-clamp: 3;
+      @container fitted-card (height <= 105px) {
+        .caption {
+          padding: 1rem 0.625rem 0.5rem;
         }
-      }
-      /* CardsGrid Tile (170 x 250) */
-      @container fitted-card (aspect-ratio <= 1.0) and (150px < width < 250px ) and (170px < height < 275px) {
-        .display-section {
-          height: 55cqmax;
-        }
-        .card-title {
-          font-size: var(--boxel-font-size);
-          -webkit-line-clamp: 1;
-        }
-        .card-display-name,
-        .card-tags {
+        .caption-author {
           display: none;
         }
       }
-      /* Tall Tile (150 x 275) */
-      @container fitted-card (aspect-ratio <= 1.0) and (150px <= width ) and (275px <= height) {
-        .card-title {
-          font-size: var(--boxel-font-size);
-          -webkit-line-clamp: 1;
-        }
-      }
-      /* Large Tile (250 x 275) */
-      @container fitted-card (aspect-ratio <= 1.0) and (250px <= width ) and (275px <= height) {
-        .card-title {
-          -webkit-line-clamp: 1;
-        }
-      }
-      /* Vertical Cards */
-      @container fitted-card (aspect-ratio <= 1.0) and (400px <= width) {
-        .card-title {
-          font-size: var(--boxel-font-size-md);
-          -webkit-line-clamp: 4;
-        }
-      }
-
-      /* Expanded Card (400 x 445) */
-      /* 1.0 < Aspect Ratio (Horizontal) */
-      @container fitted-card (1.0 < aspect-ratio) {
-        .display-section {
-          aspect-ratio: 1;
-          max-width: 44%;
-        }
-        .info-section {
-          flex-direction: column;
-          justify-content: space-between;
-        }
-        .card-tags-action {
-          flex-direction: row;
-          justify-content: space-between;
-        }
-        .card-tags {
-          display: none;
-        }
-      }
-      @container fitted-card (1.0 < aspect-ratio) and (height <= 65px) {
-        .info-section {
-          align-self: center;
-        }
-      }
-      /* Badges */
-      @container fitted-card (1.0 < aspect-ratio) and (width < 250px) {
-        .display-section {
-          display: none;
-        }
-      }
-      /* Small Badge (150 x 40) */
-      @container fitted-card (1.0 < aspect-ratio) and (width < 250px) and (height < 65px) {
-        .card-title {
-          -webkit-line-clamp: 1;
-          font: 600 var(--boxel-font-xs);
-        }
-        .card-display-name {
-          margin-top: 0;
-        }
-      }
-      /* Medium Badge (150 x 65) */
-
-      /* Large Badge (150 x 105) */
-      @container fitted-card (1.0 < aspect-ratio) and (width < 250px) and (105px <= height) {
-        .card-title {
-          -webkit-line-clamp: 3;
-        }
-      }
-
-      /* Strips */
-      /* Single Strip (250 x 40) */
-      @container fitted-card (1.0 < aspect-ratio) and (250px <= width) and (height < 65px) {
-        .fitted-template {
-          padding: var(--boxel-sp-xxxs);
-        }
-        .card-display-name {
-          display: none;
-        }
-      }
-
-      /* Horizontal Tiles */
-      /* Regular Tile (250 x 170) */
-      @container fitted-card (1.0 < aspect-ratio) and (250px <= width < 400px) and (170px <= height) {
-        .card-title {
-          -webkit-line-clamp: 4;
-          font-size: var(--boxel-font-size);
-        }
-      }
-
-      /* Horizontal Cards */
-      /* Compact Card  */
-      @container fitted-card (1.0 < aspect-ratio) and (400px <= width) and (170px <= height) {
-        .display-section {
-          height: 100%;
-        }
-        .card-title {
-          -webkit-line-clamp: 4;
-          font-size: var(--boxel-font-size);
-        }
-
-        @container fitted-card (height <= 65px) {
-          .card-title {
-            -webkit-line-clamp: 1;
-            font-size: var(--boxel-font-size);
-          }
-        }
-      }
-
-      /* Full Card (400 x 275) */
-      @container fitted-card (1.0 < aspect-ratio) and (400px <= width) and (275px <= height) {
-        .card-title {
-          font-size: var(--boxel-font-size-md);
-        }
-        .info-section {
-          padding: var(--boxel-sp);
-        }
-      }
-
-      /* Control Card which is Smaller than */
-      @container fitted-card (aspect-ratio <= 1.0) and (width <= 275px) {
-        .card-tags {
-          display: none;
-        }
-      }
-
-      @container fitted-card (aspect-ratio <= 1.0) and (height <= 275px) {
-        .card-title {
-          -webkit-line-clamp: 1;
-        }
-        .card-display-name {
-          display: none;
-        }
-      }
-
-      /* Control linked to many component fitted size */
       @container fitted-card (height <= 65px) {
-        .display-section {
-          padding: var(--boxel-sp-xs);
+        .caption {
+          background: none;
+          position: static;
+          padding: 0.375rem 0.625rem;
+          color: var(--foreground, #16161c);
         }
-        .card-tags-action {
+        .caption-title {
+          color: var(--foreground, #16161c);
+          -webkit-line-clamp: 1;
+        }
+        .type-chip {
           display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .media-img {
+          transition: none;
         }
       }
     </style>
