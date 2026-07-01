@@ -23,12 +23,14 @@ import { restartableTask } from 'ember-concurrency';
 
 import OneShotLlmRequestCommand from '@cardstack/boxel-host/commands/one-shot-llm-request';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
+import FindImageCommand from '../commands/find-image';
+import EnsureImageDefCommand from '../commands/ensure-image-def-exist';
 
 import LayoutRowsIcon from '@cardstack/boxel-icons/layout-rows';
 
 import { Tier } from './tier';
 import { TierItem } from './tier-item';
-import ImageSourceField from './fields/image-source/image-source';
 
 // PATTERN: hand-rolled pointer drag over horizontal tier rows.
 //
@@ -241,6 +243,45 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
     this.genDoneCount = 0;
   };
 
+  // Best-effort: find a real image for the item (verifying the LLM's URL, then
+  // scraping, then Wikipedia/search), persist it as an ImageDef, and link it by
+  // id. Linking by id keeps the item store-backed — no fabricated data model.
+  attachItemImage = async (
+    cx: any,
+    realm: string,
+    item: TierItem,
+    entry: GenItem,
+  ): Promise<void> => {
+    if (!item.id || (!entry.imageUrl && !entry.name)) {
+      return;
+    }
+    try {
+      let found = await new FindImageCommand(cx).execute({
+        sourceUrl: entry.imageUrl,
+        fallbackSearchText: entry.name,
+        preferLogo: true,
+      });
+      if (!found.found || !found.imageUrl) {
+        return;
+      }
+      let ensured = await new EnsureImageDefCommand(cx).execute({
+        imageUrl: found.imageUrl,
+        targetRealmUrl: realm,
+      });
+      await new PatchCardInstanceCommand(cx, { cardType: TierItem }).execute({
+        cardId: item.id,
+        patch: {
+          relationships: {
+            'image.file': { links: { self: ensured.imageDefId } },
+          },
+        },
+      });
+    } catch {
+      // Best-effort — a resolution/persist/patch failure just leaves this
+      // item without an image; it shouldn't abort the whole generate run.
+    }
+  };
+
   generateTask = restartableTask(async () => {
     this.genCanceled = false;
     this.genError = '';
@@ -265,9 +306,11 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
       let systemPrompt =
         'You generate items for a tier-list pool. Output ONLY a JSON array ' +
         '(no markdown, no prose) of objects with keys "name" (string, ' +
-        'required) and "imageUrl" (string, optional). Include "imageUrl" ' +
-        'ONLY when you are confident it is a real, stable, directly-loadable ' +
-        'public image URL (e.g. a Wikimedia upload URL); otherwise omit it. ' +
+        'required) and "imageUrl" (string, optional). For "imageUrl" prefer a ' +
+        'canonical logo CDN when one applies — ' +
+        '"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/<slug>/<slug>-original.svg" ' +
+        'or "https://cdn.simpleicons.org/<slug>" — otherwise a real, stable, ' +
+        'directly-loadable public image URL; omit it if unsure. ' +
         'Return the COMPLETE natural set the request implies — do not pad or ' +
         'truncate to a round number. If the request is open-ended or could ' +
         'be very large, return the ~20 most representative items. Never ' +
@@ -284,7 +327,17 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
       }
       let output =
         (result as any)?.output ?? (result as any)?.attributes?.output ?? '';
-      let entries = parseGenItems(String(output)).slice(0, GEN_MAX);
+      let seenNames = new Set<string>();
+      let entries = parseGenItems(String(output))
+        .filter((entry) => {
+          let key = entry.name.trim().toLowerCase();
+          if (!key || seenNames.has(key)) {
+            return false;
+          }
+          seenNames.add(key);
+          return true;
+        })
+        .slice(0, GEN_MAX);
       if (!entries.length) {
         throw new Error('The model returned no usable items. Try rewording.');
       }
@@ -303,13 +356,9 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
           break;
         }
         let entry = entries[i];
-        let item = new TierItem({
-          name: entry.name,
-          image: entry.imageUrl
-            ? new ImageSourceField({ url: entry.imageUrl, sourceMode: 'url' })
-            : undefined,
-        });
+        let item = new TierItem({ name: entry.name });
         await new SaveCardCommand(cx).execute({ card: item, realm });
+        await this.attachItemImage(cx, realm, item, entry);
         made.push(item);
         if (this.genCanceled) {
           break;
@@ -1211,10 +1260,18 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         cursor: default;
         transition: opacity 0.3s ease;
       }
-      .tile--pending,
       .tile--skel {
         cursor: default;
         opacity: 0.6;
+      }
+      /* Don't dim the image itself — a dark logo (Next.js, GitHub…) at 60%
+         opacity on a dark tile nearly disappears, reading as broken. The
+         shimmer sweep already signals "in progress"; dim just the caption. */
+      .tile--pending {
+        cursor: default;
+      }
+      .tile--pending .tile-cap {
+        opacity: 0.7;
       }
       .tile-shimmer {
         position: absolute;

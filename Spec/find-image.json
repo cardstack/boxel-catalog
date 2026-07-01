@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../commands/find-image",
+        "name": "default"
+      },
+      "specType": "command",
+      "readMe": null,
+      "cardTitle": "Find Image",
+      "cardDescription": "Resolve a directly-loadable image URL from a (possibly fake) URL and/or a search text — verifying the URL, scraping the page, then Wikipedia and image search. Returns a URL only; persists nothing.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
