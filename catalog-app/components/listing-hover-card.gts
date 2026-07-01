@@ -43,9 +43,14 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
 
   openRemix = (event: Event) => {
     event.stopPropagation();
+    if (!this.actions?.view) {
+      // Actions aren't ready yet — bail out without setting the pending
+      // intent, or it could wrongly fire on a later, unrelated visit.
+      return;
+    }
     // Open the detail view and ask it to focus its remix panel on arrival.
     requestRemixFocus(this.args.listing.id);
-    this.actions?.view();
+    this.actions.view();
   };
 
   <template>
@@ -100,7 +105,8 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
         transition: opacity 160ms ease;
         pointer-events: none;
       }
-      .hover-card:hover .hover-layer {
+      .hover-card:hover .hover-layer,
+      .hover-card:focus-within .hover-layer {
         opacity: 1;
         pointer-events: auto;
       }

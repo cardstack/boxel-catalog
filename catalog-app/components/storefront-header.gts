@@ -53,6 +53,7 @@ export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderS
             type='search'
             class='search-input'
             placeholder='Search by keyword'
+            aria-label='Search by keyword'
             value={{@searchValue}}
             data-test-storefront-search
             {{on 'input' this.onInput}}

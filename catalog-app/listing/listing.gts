@@ -231,10 +231,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
     }
     // Only scroll on the stacked one-column layout (panel below the content).
     // On the two-column layout the panel is beside the content, so scrolling
-    // would drag the left column — detect column count from the grid.
+    // would drag the left column — match the `.main` container query
+    // breakpoint (56rem) directly rather than parsing computed grid tracks.
     let main = el.closest('.main') as HTMLElement | null;
-    let cols = main ? getComputedStyle(main).gridTemplateColumns : '';
-    let isOneColumn = cols.trim().split(' ').length <= 1;
+    let isOneColumn = (main?.getBoundingClientRect().width ?? 0) <= 56 * 16;
     if (isOneColumn) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -318,6 +318,8 @@ class EmbeddedTemplate extends Component<typeof Listing> {
               <button
                 type='button'
                 role='tab'
+                aria-selected='{{if (eq this.selectedTab tab) "true" "false"}}'
+                tabindex='{{if (eq this.selectedTab tab) "0" "-1"}}'
                 class='tab {{if (eq this.selectedTab tab) "is-active"}}'
                 data-test-listing-tab={{tab}}
                 {{on 'click' (fn this.setTab tab)}}

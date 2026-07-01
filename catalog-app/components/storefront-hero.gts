@@ -205,22 +205,27 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
         0% {
           opacity: 0;
           transform: scale(1.04);
+          pointer-events: none;
         }
         4% {
           opacity: 1;
           transform: scale(1);
+          pointer-events: auto;
         }
         29% {
           opacity: 1;
           transform: scale(1);
+          pointer-events: auto;
         }
         33% {
           opacity: 0;
           transform: scale(1.04);
+          pointer-events: none;
         }
         100% {
           opacity: 0;
           transform: scale(1.04);
+          pointer-events: none;
         }
       }
       .hero {
