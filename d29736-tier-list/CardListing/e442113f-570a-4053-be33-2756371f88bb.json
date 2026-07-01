@@ -63,6 +63,21 @@
           "self": "../Spec/53d7d3d0-cfab-4103-be31-02bdabbb3a9c"
         }
       },
+      "specs.6": {
+        "links": {
+          "self": "../../Spec/find-image"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../../Spec/ensure-image-def-exist"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../../Spec/image-utils"
+        }
+      },
       "images.0": {
         "links": {
           "self": "../Screenshots/my-language-ranking-dce62586.png"
