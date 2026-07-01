@@ -7,6 +7,8 @@ import {
   searchEntryWireQueryFromQuery,
 } from '@cardstack/runtime-common';
 
+import { on } from '@ember/modifier';
+
 import { CardContainer } from '@cardstack/boxel-ui/components';
 import ListingFittedSkeleton from './listing-fitted-skeleton';
 import { CardWithHydration } from './card-with-hydration';
@@ -17,6 +19,7 @@ interface CardsGridSignature {
     realms: string[];
     selectedView: string;
     context?: CardContext;
+    onClear?: () => void;
   };
   Element: HTMLElement;
 }
@@ -39,6 +42,7 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
   <template>
     <@context.searchResultsComponent
       @query={{this.searchResultsQuery}}
+      @overlays={{false}}
       as |results|
     >
       {{#if results.entries.length}}
@@ -67,24 +71,59 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
           {{/each}}
         </ul>
       {{else}}
-        <p class='no-results' data-test-no-results>No results found</p>
+        <div class='no-results' data-test-no-results>
+          Nothing matches that.
+          {{#if @onClear}}
+            <button type='button' class='clear-link' {{on 'click' @onClear}}>
+              Show everything
+            </button>
+          {{/if}}
+        </div>
       {{/if}}
     </@context.searchResultsComponent>
 
     <style scoped>
       .cards {
-        --default-grid-view-min-width: 224px;
+        --default-grid-view-min-width: 18.75rem;
         --default-grid-view-max-width: 1fr;
-        --default-grid-view-height: 400px;
+        --default-grid-view-height: 22rem;
         --default-strip-view-min-width: 49%;
         --default-strip-view-max-width: 1fr;
         --default-strip-view-height: 180px;
 
         display: grid;
-        gap: var(--boxel-sp);
+        gap: 1.375rem;
         list-style-type: none;
         margin: 0;
         padding: var(--boxel-sp-6xs);
+      }
+
+      /* Card chrome lives on the grid cell (the fitted template must not own
+         radius/background/shadow per delegated-render-control). Height comes
+         from a landscape aspect-ratio so cards stay short and responsive. */
+      .cards.grid-view .grid-view-container {
+        aspect-ratio: 4 / 3;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: var(--card, #fff);
+        box-shadow: var(--shadow-sm, 0 14px 30px -22px rgba(0, 0, 0, 0.4));
+        transition:
+          transform 160ms ease,
+          box-shadow 160ms ease;
+        /* Masonry packing (multicol): keep each card whole, space vertically. */
+        break-inside: avoid;
+        margin-bottom: 1.375rem;
+      }
+      .cards.grid-view .grid-view-container:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg, 0 26px 44px -22px rgba(0, 0, 0, 0.45));
+      }
+      /* No-screenshot (monogram) cards are shorter than screenshot ones.
+         Mirror the codebase's proven `.parent :deep(descendant:has(x))` shape
+         so the child-component marker stays unscoped and :has matches. Placed
+         after the base rule; equal specificity, so source order wins. */
+      .cards.grid-view :deep(.grid-view-container:has([data-no-image='true'])) {
+        aspect-ratio: 16 / 9;
       }
 
       .cards.strip-view {
@@ -101,18 +140,14 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
         );
       }
 
+      /* Masonry via multi-column so short (16:9) cards don't leave gaps. */
       .cards.grid-view {
-        grid-template-columns: repeat(
-          auto-fill,
-          minmax(
-            var(--grid-view-min-width, var(--default-grid-view-min-width)),
-            var(--grid-view-max-width, var(--default-grid-view-max-width))
-          )
+        display: block;
+        column-width: var(
+          --grid-view-min-width,
+          var(--default-grid-view-min-width)
         );
-        grid-auto-rows: var(
-          --grid-view-height,
-          var(--default-grid-view-height)
-        );
+        column-gap: 1.375rem;
       }
 
       .cards li {
@@ -124,9 +159,21 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
       }
 
       .no-results {
-        font: 600 var(--boxel-font-lg);
-        text-align: left;
-        padding: var(--boxel-sp-6xs);
+        grid-column: 1 / -1;
+        border: 1.5px dashed var(--border, #cdc8ba);
+        border-radius: 1rem;
+        padding: 3.5rem;
+        text-align: center;
+        font: 500 0.875rem var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #8a8578);
+      }
+      .clear-link {
+        border: none;
+        background: transparent;
+        color: var(--primary, #00b886);
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
       }
     </style>
   </template>

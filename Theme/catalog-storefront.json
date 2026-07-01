@@ -1,0 +1,23 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Theme",
+        "module": "https://cardstack.com/base/card-api"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "notes": null,
+        "name": "Catalog Storefront",
+        "summary": "Warm-paper storefront identity for the Boxel Catalog — IBM Plex type, paper ground, signal-green accent.",
+        "cardThumbnailURL": null
+      },
+      "cssImports": [
+        "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap"
+      ],
+      "cssVariables": ":root {\n  --background: #ece9e1;\n  --foreground: #16161c;\n  --card: #ffffff;\n  --card-foreground: #16161c;\n  --popover: #ffffff;\n  --popover-foreground: #16161c;\n  --primary: #00ffba;\n  --primary-foreground: #04231a;\n  --secondary: #f1eee6;\n  --secondary-foreground: #16161c;\n  --muted: #f0ede4;\n  --muted-foreground: #8a8578;\n  --accent: #16e098;\n  --accent-foreground: #04231a;\n  --destructive: #ff5f57;\n  --destructive-foreground: #ffffff;\n  --border: #ddd8cb;\n  --input: #ffffff;\n  --ring: #16e098;\n  --chart-1: #ff5b9c;\n  --chart-2: #2bb3ff;\n  --chart-3: #7b5bff;\n  --chart-4: #c2e23f;\n  --chart-5: #ff9d3d;\n  --sidebar: #f0ede4;\n  --sidebar-foreground: #16161c;\n  --sidebar-primary: #11cf8a;\n  --sidebar-primary-foreground: #04231a;\n  --sidebar-accent: #16e098;\n  --sidebar-accent-foreground: #04231a;\n  --sidebar-border: #ddd8cb;\n  --sidebar-ring: #16e098;\n  --font-sans: 'IBM Plex Sans', 'Helvetica Neue', Arial, ui-sans-serif, sans-serif, system-ui;\n  --font-serif: 'IBM Plex Serif', 'Georgia', Times, serif;\n  --font-mono: 'IBM Plex Mono', 'Menlo', 'Courier New', Courier, ui-monospace, monospace;\n  --radius: 1rem;\n  --shadow-color: #000000;\n  --shadow-2xs: 0 1px 0 #e4e0d4;\n  --shadow-xs: 0 1px 0 #e4e0d4;\n  --shadow-sm: 0 1px 0 #e4e0d4, 0 14px 30px -22px rgba(0, 0, 0, 0.4);\n  --shadow: 0 1px 0 #e4e0d4, 0 14px 30px -22px rgba(0, 0, 0, 0.4);\n  --shadow-md: 0 1px 0 #e4e0d4, 0 18px 40px -26px rgba(0, 0, 0, 0.4);\n  --shadow-lg: 0 1px 0 #e4e0d4, 0 26px 44px -22px rgba(0, 0, 0, 0.45);\n  --shadow-xl: 0 1px 0 #e4e0d4, 0 30px 70px -24px rgba(0, 0, 0, 0.4);\n  --shadow-2xl: 0 1px 0 #e4e0d4, 0 40px 80px -28px rgba(0, 0, 0, 0.46);\n  --tracking-normal: 0.01em;\n  --spacing: 0.25rem;\n}\n"
+    }
+  }
+}

@@ -103,7 +103,7 @@ export class CardWithHydration extends GlimmerComponent<CardWithHydrationSignatu
   </template>
 }
 
-function getComponent(
+export function getComponent(
   cardOrField: BaseDef | undefined | null,
 ): BoxComponent | undefined {
   if (!cardOrField) {
