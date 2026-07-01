@@ -45,7 +45,7 @@ export class FindImageResult extends CardDef {
   });
   @field source = contains(StringField, {
     description:
-      "How the image was found: 'direct' | 'scrape' | 'wikipedia' | 'google' | 'none'.",
+      "How the image was found: 'logo' | 'direct' | 'scrape' | 'wikipedia' | 'google' | 'none'.",
   });
 }
 

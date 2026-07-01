@@ -255,32 +255,31 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
     if (!item.id || (!entry.imageUrl && !entry.name)) {
       return;
     }
-    let found = await new FindImageCommand(cx).execute({
-      sourceUrl: entry.imageUrl,
-      fallbackSearchText: entry.name,
-      preferLogo: true,
-    });
-    if (!found.found || !found.imageUrl) {
-      return;
-    }
-    let imageDefId: string;
     try {
+      let found = await new FindImageCommand(cx).execute({
+        sourceUrl: entry.imageUrl,
+        fallbackSearchText: entry.name,
+        preferLogo: true,
+      });
+      if (!found.found || !found.imageUrl) {
+        return;
+      }
       let ensured = await new EnsureImageDefCommand(cx).execute({
         imageUrl: found.imageUrl,
         targetRealmUrl: realm,
       });
-      imageDefId = ensured.imageDefId;
-    } catch {
-      return;
-    }
-    await new PatchCardInstanceCommand(cx, { cardType: TierItem }).execute({
-      cardId: item.id,
-      patch: {
-        relationships: {
-          'image.file': { links: { self: imageDefId } },
+      await new PatchCardInstanceCommand(cx, { cardType: TierItem }).execute({
+        cardId: item.id,
+        patch: {
+          relationships: {
+            'image.file': { links: { self: ensured.imageDefId } },
+          },
         },
-      },
-    });
+      });
+    } catch {
+      // Best-effort — a resolution/persist/patch failure just leaves this
+      // item without an image; it shouldn't abort the whole generate run.
+    }
   };
 
   generateTask = restartableTask(async () => {
