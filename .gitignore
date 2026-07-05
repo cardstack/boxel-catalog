@@ -1,1 +1,4 @@
 .claude/
+.conformance-report.json
+**/.conformance-report.json
+.boxel-history/

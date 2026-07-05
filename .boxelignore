@@ -6,3 +6,6 @@ LICENSE
 tests
 .github
 scripts
+.conformance-waivers.yaml
+.conformance-report.json
+.boxel-history

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Catalog listing conformance report",
+  "type": "object",
+  "required": ["harnessVersion", "listingDir", "phase", "summary", "gates"],
+  "properties": {
+    "harnessVersion": { "type": "string" },
+    "listingDir": { "type": "string" },
+    "phase": { "enum": ["static", "full"] },
+    "summary": {
+      "type": "object",
+      "required": ["result", "errors", "warnings", "waived"],
+      "properties": {
+        "result": { "enum": ["pass", "fail"] },
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "waived": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "properties": {
+        "boxelUiComponentsUsed": { "type": "array", "items": { "type": "string" } },
+        "handRolledFindings": { "type": "integer" }
+      }
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "durationMs", "findings"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "enum": ["pass", "warn", "fail", "harness-error"] },
+          "durationMs": { "type": "integer" },
+          "error": { "type": "string" },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["rule", "severity", "file", "message"],
+              "properties": {
+                "rule": { "type": "string" },
+                "severity": { "enum": ["error", "warn", "info"] },
+                "file": { "type": "string" },
+                "loc": { "type": "string" },
+                "message": { "type": "string" },
+                "suggestion": { "type": "string" },
+                "fixRef": { "type": "string" },
+                "waived": { "type": "boolean" },
+                "waivedReason": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

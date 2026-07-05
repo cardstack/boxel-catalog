@@ -1,0 +1,17 @@
+{
+  "comment": "Components exported from @cardstack/boxel-ui/components — the suggestion targets for reuse findings.",
+  "importPath": "@cardstack/boxel-ui/components",
+  "components": [
+    "Accordion", "AddButton", "Alert", "Avatar", "BasicFitted", "BoxelButton",
+    "BoxelInput", "BoxelInputGroup", "BoxelSelect", "Button", "CardContainer",
+    "CardHeader", "CircleSpinner", "ColorPalette", "ColorPicker", "Container",
+    "ContextButton", "CopyButton", "DateRangePicker", "DndKanbanBoard", "Dropdown",
+    "EmailInput", "EntityDisplayWithIcon", "EntityDisplayWithThumbnail", "FieldContainer",
+    "FilterList", "FittedCard", "GridContainer", "Header", "IconButton", "InputGroup",
+    "Label", "LoadingIndicator", "Menu", "Message", "Modal", "MultiSelect",
+    "PhoneInput", "Pill", "ProgressBar", "ProgressRadial", "RadioInput", "RealmIcon",
+    "ResizablePanelGroup", "SelectionCheckmark", "SelectionMenu", "SkeletonPlaceholder",
+    "SortDropdown", "Swatch", "Switch", "TabbedHeader", "Tag", "TagList", "Tooltip",
+    "ViewSelector"
+  ]
+}

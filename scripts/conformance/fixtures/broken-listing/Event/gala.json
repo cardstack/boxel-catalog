@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "module": "../event",
+        "name": "Event"
+      }
+    },
+    "attributes": {
+      "title": "Item 1",
+      "startDate": "2026-07-04T19:00:00.000Z",
+      "posterData": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "speakers": {
+        "links": {
+          "self": ["../Speaker/ada", "../Speaker/grace"]
+        }
+      },
+      "heroImage": {
+        "links": {
+          "self": "https://images.unsplash.com/photo-1519681393784-d120267933ba.jpg"
+        }
+      },
+      "venue": {
+        "links": {
+          "self": "https://app.boxel.ai/justin-thong/cf-broken/Venue/main"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

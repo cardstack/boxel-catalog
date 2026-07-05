@@ -1,0 +1,22 @@
+{
+  "comment": "Base-realm fields a listing must not re-implement. namePattern is matched (case-insensitive) against locally-defined FieldDef class names.",
+  "fields": [
+    { "name": "EmailField", "module": "https://cardstack.com/base/email", "namePattern": "email" },
+    { "name": "PhoneNumberField", "module": "https://cardstack.com/base/phone-number", "namePattern": "phone" },
+    { "name": "UrlField", "module": "https://cardstack.com/base/url", "namePattern": "^(url|link|website)" },
+    { "name": "AddressField", "module": "https://cardstack.com/base/address", "namePattern": "address" },
+    { "name": "CountryField", "module": "https://cardstack.com/base/country", "namePattern": "country" },
+    { "name": "CurrencyField", "module": "https://cardstack.com/base/currency", "namePattern": "currency" },
+    { "name": "AmountWithCurrencyField", "module": "https://cardstack.com/base/amount-with-currency", "namePattern": "(money|price|amount)" },
+    { "name": "PercentageField", "module": "https://cardstack.com/base/percentage", "namePattern": "percent" },
+    { "name": "ColorField", "module": "https://cardstack.com/base/color", "namePattern": "^colou?r" },
+    { "name": "CoordinateField", "module": "https://cardstack.com/base/coordinate", "namePattern": "(coordinate|latlng|geopoint)" },
+    { "name": "EnumField", "module": "https://cardstack.com/base/enum", "namePattern": "^enum" },
+    { "name": "MarkdownField", "module": "https://cardstack.com/base/markdown", "namePattern": "markdown" },
+    { "name": "TextAreaField", "module": "https://cardstack.com/base/text-area", "namePattern": "^(textarea|longtext)" },
+    { "name": "DateRangeField", "module": "https://cardstack.com/base/date-range-field", "namePattern": "daterange" },
+    { "name": "BigIntegerField", "module": "https://cardstack.com/base/big-integer", "namePattern": "bigint" },
+    { "name": "EthereumAddressField", "module": "https://cardstack.com/base/ethereum-address", "namePattern": "(ethereum|wallet)" },
+    { "name": "TagField", "module": "https://cardstack.com/base/tag", "namePattern": "^tagfield" }
+  ]
+}
