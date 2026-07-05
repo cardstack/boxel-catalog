@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "@cardstack/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "TableSeatingPlanner",
+        "module": "../table-seating-planner"
+      },
+      "readMe": "# Table Seating Planner\n\n## Summary\n\nThe `TableSeatingPlanner` card is a comprehensive tool for managing event seating arrangements. It allows users to plan and organize seating for guests, tables, and other fixtures in a venue. The card provides features for importing guest lists, defining table layouts, and generating personalized invitations and seating information.\n\n## Import\n\n```javascript\nimport { TableSeatingPlanner } from '../table-seating-planner';\n```\n\n## Usage as a Field\n\nThe `TableSeatingPlanner` card can be used as a field within a consuming card or field. This allows you to embed the seating planner functionality directly into your application.\n\n```javascript\nimport {\n  CardDef,\n  field,\n  contains,\n  linksToMany,\n} from 'https://cardstack.com/base/card-api';\n\nexport class EventCard extends CardDef {\n  @field seatingPlanner = contains(TableSeatingPlanner);\n  @field guests = linksToMany(() => Guest);\n}\n```\n\nIn this example, the `EventCard` contains a `seatingPlanner` field of type `TableSeatingPlanner`, allowing the event organizer to manage the seating arrangements directly within the event card.\n\n## Template Usage\n\nTo use the `TableSeatingPlanner` card within a template, you can access its fields and components:\n\n```handlebars\n<BoxelCard>\n  <@title>{{this.seatingPlanner.eventTitle}}</@title>\n  <@body>\n    <TableSeatingPlannerFitted @model={{this.seatingPlanner}} />\n  </@body>\n</BoxelCard>\n```\n\nIn this example, the `TableSeatingPlannerFitted` component is used to render the seating planner within the event card's body. The `@model` parameter is bound to the `seatingPlanner` field of the current card.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Table Seating Planner",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

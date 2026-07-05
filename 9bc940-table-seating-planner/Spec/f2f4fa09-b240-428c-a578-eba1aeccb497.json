@@ -1,0 +1,57 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../table",
+        "name": "Table"
+      },
+      "specType": "field",
+      "containedExamples": [
+        {
+          "name": null,
+          "shape": null,
+          "seatCount": null,
+          "seatingStyle": null,
+          "rows": null,
+          "cols": null,
+          "x": null,
+          "y": null,
+          "width": null,
+          "height": null,
+          "rotation": null,
+          "z": null,
+          "themeColor": null,
+          "vip": false,
+          "locked": false,
+          "note": null
+        }
+      ],
+      "cardTitle": "Table",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../table",
+              "name": "Table"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

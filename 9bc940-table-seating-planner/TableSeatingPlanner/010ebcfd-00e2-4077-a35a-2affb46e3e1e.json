@@ -1,0 +1,66 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TableSeatingPlanner",
+        "module": "../table-seating-planner"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "venue": "Sunway pyramid hotel",
+      "poster": {
+        "url": null,
+        "sourceMode": null
+      },
+      "tables": [],
+      "cardInfo": {
+        "name": "Lucas & Amy’s Wedding Day",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "fixtures": [],
+      "eventDate": "2026-07-31",
+      "eventTitle": "Lucas & Amy’s Wedding Day",
+      "floorPlanX": -333,
+      "floorPlanY": -115,
+      "floorPlanURL": null,
+      "posterAspect": null,
+      "posterPrompt": null,
+      "floorPlanWidth": 860,
+      "seatingMessage": null,
+      "floorPlanHeight": 487,
+      "floorPlanLocked": false,
+      "floorPlanOpacity": 45,
+      "invitationMessage": null
+    },
+    "relationships": {
+      "guests": {
+        "links": {
+          "self": null
+        }
+      },
+      "hosts": {
+        "links": {
+          "self": null
+        }
+      },
+      "poster.file": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
