@@ -1,0 +1,98 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TableSeatingPlanner",
+        "module": "../table-seating-planner"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "venue": "Sunway hotel",
+      "poster": {
+        "url": null,
+        "sourceMode": null
+      },
+      "tables": [
+        {
+          "name": "Round 1",
+          "shape": "round",
+          "seatCount": 8,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": 33,
+          "y": 33,
+          "width": 150,
+          "height": 150,
+          "rotation": 0,
+          "z": 1,
+          "themeColor": null,
+          "reservedCategories": [],
+          "seatSlots": [
+            0,
+            7,
+            6
+          ],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        }
+      ],
+      "cardInfo": {
+        "name": "Lucas & Amy's Wedding Day",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "fixtures": [],
+      "eventDate": "2026-07-06",
+      "eventTitle": "Lucas & Amy's Wedding Day",
+      "floorPlanX": null,
+      "floorPlanY": null,
+      "floorPlanURL": null,
+      "posterAspect": null,
+      "posterPrompt": null,
+      "floorPlanWidth": null,
+      "seatingMessage": null,
+      "floorPlanHeight": null,
+      "floorPlanLocked": false,
+      "floorPlanOpacity": null,
+      "invitationMessage": null
+    },
+    "relationships": {
+      "hosts": {
+        "links": {
+          "self": null
+        }
+      },
+      "guests": {
+        "links": {
+          "self": null
+        }
+      },
+      "poster.file": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "tables.0.seatedGuests": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
