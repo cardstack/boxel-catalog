@@ -54,6 +54,18 @@ finding carries `rule`, `severity`, `file`, `loc`, `message`, `suggestion`, and
 `fixRef` (a pointer into the card-factory skill tree), so an agent can consume
 the report as a fix-list.
 
+## Relationship to `software-factory` (boxel monorepo)
+
+`packages/software-factory` validates cards *functionally* against a **live realm**
+(parse, realm lint, module eval, instantiate-from-Spec, QUnit) as part of its
+autonomous in-realm build loop. This harness is deliberately different: static,
+repo-local, zero-infra checks of **catalog-semantic** rules (realm-bricking JSON
+shapes, date contracts, thunk links, theme tokens, CQ fitted layouts, icon CDN,
+reuse inventory, slop tells) that have no counterpart there. The only echo is
+our dynamic D01–D03 wrappers hitting the same realm endpoints their validators
+use. Keep the boundary: in-realm functional validation belongs in
+software-factory; listing-dir catalog conformance belongs here.
+
 ## Extending
 
 One module per gate in `gates/`, uniform interface `{ id, title, phase, run(ctx) }`
