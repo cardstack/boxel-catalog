@@ -1,0 +1,178 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "@cardstack/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Table Seating Planner",
+      "summary": "The TableSeatingPlanner is a card definition designed to organize and manage seating arrangements for events. It captures key event details such as the event title, date, venue, and hosts. The planner links to guests, tables, and fixtures involved in the event setup. It includes a floor plan with configurable positioning, dimensions, opacity, and lock status to visualize seating arrangements. Additionally, it supports messaging features like invitation and seating messages, and facilitates poster creation with customizable poster images, prompts, and aspect ratios. The primary purpose is to assist event planners in designing, visualizing, and organizing seating plans for successful gatherings.",
+      "cardInfo": {
+        "name": "Table Seating Planner",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/ai"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/669f9525-c047-4d1c-ac55-c21d4fa59e6b"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/4e5135f4-4fd2-4d7d-9d2b-415b227ae77f"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/75b1164d-b241-4fe0-85f9-669f9525c047"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/2fe0c5f9-669f-4525-8047-5d1cec55c21d"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/b1164db2-412f-40c5-b966-9f9525c0475d"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/c5f9669f-9525-4047-9d1c-ec55c21d4fa5"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/e0c5f966-9f95-45c0-875d-1cec55c21d4f"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/412fe0c5-f966-4f95-a5c0-475d1cec55c2"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/f05cd9e9-66b0-45b1-964d-b2412fe0c5f9"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/164db241-2fe0-45f9-a69f-9525c0475d1c"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/b075b116-4db2-412f-a0c5-f9669f9525c0"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/9f9525c0-475d-4cec-95c2-1d4fa59e6bda"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/5cd9e966-b075-4116-8db2-412fe0c5f966"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/7df05cd9-e966-4075-b116-4db2412fe0c5"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../Spec/f9669f95-25c0-475d-9cec-55c21d4fa59e"
+        }
+      },
+      "specs.15": {
+        "links": {
+          "self": "../Spec/1866ca76-7df0-4cd9-a966-b075b1164db2"
+        }
+      },
+      "specs.16": {
+        "links": {
+          "self": "../Spec/d9e966b0-75b1-464d-b241-2fe0c5f9669f"
+        }
+      },
+      "specs.17": {
+        "links": {
+          "self": "../Spec/66ca767d-f05c-49e9-a6b0-75b1164db241"
+        }
+      },
+      "specs.18": {
+        "links": {
+          "self": "../Spec/66b075b1-164d-4241-afe0-c5f9669f9525"
+        }
+      },
+      "specs.19": {
+        "links": {
+          "self": "../Spec/ca767df0-5cd9-4966-b075-b1164db2412f"
+        }
+      },
+      "specs.20": {
+        "links": {
+          "self": "../Spec/e966b075-b116-4db2-812f-e0c5f9669f95"
+        }
+      },
+      "specs.21": {
+        "links": {
+          "self": "../Spec/767df05c-d9e9-46b0-b5b1-164db2412fe0"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8-b6ba6f10.png"
+        }
+      },
+      "skills.0": {
+        "links": {
+          "self": "../Skill/seat-arranger"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../TableSeatingPlanner/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/creative-projects"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/table-seating-b62d23ba.png"
+        }
+      }
+    }
+  }
+}
