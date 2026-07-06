@@ -1,0 +1,1139 @@
+import {
+  contains,
+  field,
+  Component,
+  CardDef,
+  relativeTo,
+  linksToMany,
+  FieldDef,
+  containsMany,
+  getCardMeta,
+  virtualNetworkFor,
+  type CardOrFieldTypeIcon,
+  BaseDef,
+  type CardContext,
+  type PartialBaseInstanceType,
+} from './card-api';
+import StringField from './string';
+import BooleanField from './boolean';
+import CodeRef from './code-ref';
+import MarkdownField from './markdown';
+import {
+  FieldContainer,
+  Pill,
+  RealmIcon,
+  BoxelInput,
+  BoxelButton,
+  BasicFitted,
+} from '@cardstack/boxel-ui/components';
+import {
+  getMenuItems,
+  codeRefWithAbsoluteIdentifier,
+  ensureExtension,
+  isPrimitive,
+  isResolvedCodeRef,
+  isSpec,
+  loadCardDef,
+  Loader,
+  realmURL,
+  type CommandContext,
+  type ResolvedCodeRef,
+} from '@cardstack/runtime-common';
+import { eq, not, type MenuItemOptions } from '@cardstack/boxel-ui/helpers';
+import { AiBw as AiBwIcon } from '@cardstack/boxel-ui/icons';
+
+import GlimmerComponent from '@glimmer/component';
+import { on } from '@ember/modifier';
+import { action } from '@ember/object';
+import { task } from 'ember-concurrency';
+import BoxModel from '@cardstack/boxel-icons/box-model';
+import BookOpenText from '@cardstack/boxel-icons/book-open-text';
+import LayersSubtract from '@cardstack/boxel-icons/layers-subtract';
+import GitBranch from '@cardstack/boxel-icons/git-branch';
+import { DiagonalArrowLeftUp as ExportArrow } from '@cardstack/boxel-ui/icons';
+import StackIcon from '@cardstack/boxel-icons/stack';
+import AppsIcon from '@cardstack/boxel-icons/apps';
+import LayoutList from '@cardstack/boxel-icons/layout-list';
+import { use, resource } from 'ember-resources';
+import { TrackedObject } from 'tracked-built-ins';
+import GenerateReadmeSpecCommand from '@cardstack/boxel-host/commands/generate-readme-spec';
+import PopulateWithSampleDataCommand from '@cardstack/boxel-host/commands/populate-with-sample-data';
+import GenerateExampleCardsCommand from '@cardstack/boxel-host/commands/generate-example-cards';
+import { type GetMenuItemParams } from './menu-items';
+import { provide } from 'ember-provide-consume-context';
+import {
+  PermissionsContextName,
+  type Permissions,
+} from '@cardstack/runtime-common';
+
+export type SpecType = 'card' | 'field' | 'component' | 'app' | 'command';
+
+class PopulateFieldSpecExampleCommand extends PopulateWithSampleDataCommand {
+  constructor(commandContext: CommandContext) {
+    super(commandContext);
+  }
+  protected get prompt() {
+    return `Fill in sample data for this example on the card's spec.`;
+  }
+
+  protected getAttachedFileURLs(card: CardDef) {
+    let codeRef: ResolvedCodeRef | undefined = (card as Spec).ref;
+    if (!codeRef) {
+      return [];
+    }
+    let vn = virtualNetworkFor(card);
+    if (!vn) {
+      return [];
+    }
+    codeRef = codeRefWithAbsoluteIdentifier(
+      codeRef,
+      vn.toURL(card.id!),
+      undefined,
+      vn,
+    )! as ResolvedCodeRef;
+    let cardOrFieldModuleURL = codeRef.module
+      ? ensureExtension(codeRef.module, { default: '.gts' })
+      : undefined;
+    return cardOrFieldModuleURL ? [cardOrFieldModuleURL] : [];
+  }
+}
+
+class GenerateExamplesForFieldSpecCommand extends GenerateExampleCardsCommand {
+  constructor(commandContext: CommandContext) {
+    super(commandContext);
+  }
+  protected getPrompt(count: number) {
+    return `Generate ${count} additional examples on this card's spec.`;
+  }
+}
+
+const GENERATED_EXAMPLE_COUNT = 3;
+
+class SpecTypeField extends StringField {
+  static displayName = 'Spec Type';
+}
+
+const PRIMITIVE_INCOMPATIBILITY_MESSAGE =
+  'Examples are not currently supported for primitive fields';
+
+// Exported Header Component
+interface SpecHeaderSignature {
+  Element: HTMLElement;
+  Args: {
+    model: PartialBaseInstanceType<typeof Spec>;
+    isEditMode?: boolean;
+  };
+  Blocks: {
+    title: [];
+    description: [];
+  };
+}
+
+export class SpecHeader extends GlimmerComponent<SpecHeaderSignature> {
+  get defaultIcon() {
+    if (!this.args.model) {
+      return;
+    }
+    return this.args.model.constructor?.icon;
+  }
+
+  get icon() {
+    return this.cardDef?.icon;
+  }
+
+  @use private loadCardDef = resource(() => {
+    let cardDefObj = new TrackedObject<{ value: typeof BaseDef | undefined }>({
+      value: undefined,
+    });
+    (async () => {
+      try {
+        if (this.args.model.ref && this.args.model.id) {
+          let cardDef = await loadCardDef(this.args.model.ref, {
+            loader: myLoader(),
+            relativeTo: this.args.model.id,
+          });
+          cardDefObj.value = cardDef;
+        }
+      } catch (e) {
+        cardDefObj.value = undefined;
+      }
+    })();
+    return cardDefObj;
+  });
+
+  get cardDef() {
+    return this.loadCardDef.value;
+  }
+
+  <template>
+    <header class='header' aria-labelledby='title'>
+      <div class='box header-icon-container'>
+        {{#if this.icon}}
+          <this.icon width='35' height='35' role='presentation' />
+        {{else if this.defaultIcon}}
+          <this.defaultIcon width='35' height='35' role='presentation' />
+        {{/if}}
+      </div>
+      <div class='header-info-container'>
+        {{#if @isEditMode}}
+          <div class='header-title-container' data-test-title>
+            <label for='spec-title' class='boxel-sr-only'>Title</label>
+            {{yield to='title'}}
+          </div>
+          <div class='header-description-container' data-test-description>
+            <label
+              for='spec-description'
+              class='boxel-sr-only'
+            >Description</label>
+            {{yield to='description'}}
+          </div>
+        {{else}}
+          <h1 class='title' id='title' data-test-title>
+            {{yield to='title'}}
+          </h1>
+          <p class='description' data-test-description>
+            {{yield to='description'}}
+          </p>
+        {{/if}}
+      </div>
+    </header>
+    <style scoped>
+      .box {
+        border: 1px solid var(--boxel-border-color);
+        border-radius: var(--boxel-border-radius-lg);
+        background-color: var(--boxel-light);
+      }
+      .header {
+        display: flex;
+        gap: var(--boxel-sp-sm);
+      }
+      .header-icon-container {
+        flex-shrink: 0;
+        height: var(--boxel-icon-xxl);
+        width: var(--boxel-icon-xxl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--boxel-100);
+      }
+      .header-info-container {
+        flex: 1;
+        align-self: center;
+      }
+      /* Edit mode specific styles */
+      .header-info-container:has(.header-title-container) {
+        background-color: var(--boxel-light);
+        border-radius: var(--boxel-border-radius);
+      }
+      .header-info-container > div + div {
+        border-top: 1px solid var(--boxel-spec-background-color);
+      }
+      .header-title-container,
+      .header-description-container {
+        padding: var(--boxel-sp-xs);
+      }
+      /* Isolated mode specific styles */
+      h1.title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: var(--boxel-lsp-xs);
+        line-height: 1.2;
+      }
+      p.description {
+        margin-top: var(--boxel-sp-4xs);
+        margin-bottom: 0;
+      }
+      .title,
+      .description {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        text-wrap: pretty;
+      }
+    </style>
+  </template>
+}
+
+// Exported Readme Section Component
+interface SpecReadmeSectionSignature {
+  Element: HTMLElement;
+  Args: {
+    model: PartialBaseInstanceType<typeof Spec>;
+    context?: CardContext;
+    isEditMode?: boolean;
+  };
+  Blocks: {
+    default: [];
+  };
+}
+
+export class SpecReadmeSection extends GlimmerComponent<SpecReadmeSectionSignature> {
+  @action
+  generateReadme() {
+    this.generateReadmeTask.perform();
+  }
+
+  generateReadmeTask = task(async () => {
+    if (!this.args.model) {
+      return;
+    }
+
+    let commandContext = this.args.context?.commandContext;
+    if (!commandContext) {
+      console.error('Command context not available');
+      return;
+    }
+
+    try {
+      const generateReadmeSpecCommand = new GenerateReadmeSpecCommand(
+        commandContext,
+      );
+      await generateReadmeSpecCommand.execute({
+        spec: this.args.model as Spec,
+      });
+    } catch (error) {
+      console.error('Error generating README:', error);
+    }
+  });
+
+  <template>
+    <section class='readme section'>
+      <header class='row-header' aria-labelledby='readme'>
+        <div class='row-header-left'>
+          <BookOpenText width='20' height='20' role='presentation' />
+          <h2 id='readme'>Read Me</h2>
+        </div>
+        {{#if @isEditMode}}
+          <BoxelButton
+            @kind='primary'
+            @size='extra-small'
+            @loading={{this.generateReadmeTask.isRunning}}
+            {{on 'click' this.generateReadme}}
+            data-test-generate-readme
+          >
+            {{#if this.generateReadmeTask.isRunning}}
+              Generating...
+            {{else}}
+              Generate README
+            {{/if}}
+          </BoxelButton>
+        {{/if}}
+      </header>
+      <div data-test-readme>
+        {{yield}}
+      </div>
+    </section>
+    <style scoped>
+      .section {
+        margin-top: var(--boxel-sp);
+        padding-top: var(--boxel-sp);
+        border-top: 1px solid var(--boxel-400);
+      }
+      h2 {
+        margin: 0;
+        font: 600 var(--boxel-font-sm);
+        letter-spacing: var(--boxel-lsp-xs);
+      }
+      .row-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+        padding-bottom: var(--boxel-sp-lg);
+      }
+      .row-header-left {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+    </style>
+  </template>
+}
+
+// Exported Examples Section Component
+interface SpecExamplesSectionSignature {
+  Element: HTMLElement;
+  Args: {
+    model: PartialBaseInstanceType<typeof Spec>;
+  };
+  Blocks: {
+    linkedExamples: [];
+    containedExamples: [];
+  };
+}
+
+export class SpecExamplesSection extends GlimmerComponent<SpecExamplesSectionSignature> {
+  get specType() {
+    return this.args.model.specType;
+  }
+
+  get isPrimitiveField() {
+    return isPrimitive(this.cardDef);
+  }
+
+  @use private loadCardDef = resource(() => {
+    let cardDefObj = new TrackedObject<{ value: typeof BaseDef | undefined }>({
+      value: undefined,
+    });
+    (async () => {
+      try {
+        if (this.args.model.ref && this.args.model.id) {
+          let cardDef = await loadCardDef(this.args.model.ref, {
+            loader: myLoader(),
+            relativeTo: this.args.model.id,
+          });
+          cardDefObj.value = cardDef;
+        }
+      } catch (e) {
+        cardDefObj.value = undefined;
+      }
+    })();
+    return cardDefObj;
+  });
+
+  get cardDef() {
+    return this.loadCardDef.value;
+  }
+
+  <template>
+    <section class='examples section'>
+      <header class='row-header' aria-labelledby='examples'>
+        <div class='row-header-left'>
+          <LayersSubtract width='20' height='20' role='presentation' />
+          <h2 id='examples'>Examples</h2>
+        </div>
+      </header>
+      {{#if (eq this.specType 'field')}}
+        {{#if this.isPrimitiveField}}
+          <p
+            class='spec-example-incompatible-message'
+            data-test-spec-example-incompatible-primitives
+          >
+            <span>{{PRIMITIVE_INCOMPATIBILITY_MESSAGE}}</span>
+          </p>
+        {{else}}
+          {{yield to='containedExamples'}}
+        {{/if}}
+      {{else}}
+        {{yield to='linkedExamples'}}
+      {{/if}}
+    </section>
+    <style scoped>
+      .section {
+        margin-top: var(--boxel-sp);
+        padding-top: var(--boxel-sp);
+        border-top: 1px solid var(--boxel-400);
+      }
+      h2 {
+        margin: 0;
+        font: 600 var(--boxel-font-sm);
+        letter-spacing: var(--boxel-lsp-xs);
+      }
+      .row-header {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        padding-bottom: var(--boxel-sp-lg);
+      }
+      .row-header-left {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .spec-example-incompatible-message {
+        font: var(--boxel-font-sm);
+        color: var(--boxel-450);
+        font-weight: 500;
+        margin-block: 0;
+      }
+    </style>
+  </template>
+}
+
+// This component (ExamplesWithInteractive) renders interactive examples for field configuration, shown only in subclass spec UIs.
+// It allows users to interact with the field examples in the UI, but does not permit any data to be written to the server—even if users lack write permissions.
+interface ExamplesWithInteractiveSignature {
+  Args: {};
+  Element: HTMLElement;
+  Blocks: {
+    default: [];
+  };
+}
+
+export class ExamplesWithInteractive extends GlimmerComponent<ExamplesWithInteractiveSignature> {
+  @provide(PermissionsContextName)
+  get permissions(): Permissions | undefined {
+    return { canWrite: true, canRead: true };
+  }
+
+  <template>
+    <section class='examples-with-interactive-preview section'>
+      <header
+        class='row-header'
+        aria-labelledby='examples-with-interactive-preview'
+      >
+        <div class='row-header-left'>
+          <LayoutList width='20' height='20' role='presentation' />
+          <h2 id='examples-with-interactive-preview'>Field Usage Examples</h2>
+        </div>
+      </header>
+      <div class='examples-with-interactive-grid'>
+        {{yield}}
+      </div>
+    </section>
+    <style scoped>
+      .section {
+        margin-top: var(--boxel-sp);
+        padding-top: var(--boxel-sp);
+        border-top: 1px solid var(--boxel-400);
+      }
+      h2 {
+        margin: 0;
+        font: 600 var(--boxel-font-sm);
+        letter-spacing: var(--boxel-lsp-xs);
+      }
+      .row-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+        padding-bottom: var(--boxel-sp-lg);
+      }
+      .row-header-left {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .examples-with-interactive-preview {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+      }
+      .examples-with-interactive-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: var(--boxel-sp);
+      }
+      .examples-with-interactive-card {
+        border: var(--boxel-border);
+        border-radius: var(--boxel-border-radius);
+        background-color: var(--boxel-100);
+        padding: var(--boxel-sp-xs);
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+      }
+    </style>
+  </template>
+}
+
+// Exported Module Section Component
+interface SpecModuleSectionSignature {
+  Element: HTMLElement;
+  Args: {
+    model: PartialBaseInstanceType<typeof Spec>;
+  };
+}
+
+export class SpecModuleSection extends GlimmerComponent<SpecModuleSectionSignature> {
+  get realmInfo() {
+    return getCardMeta(this.args.model as CardDef, 'realmInfo');
+  }
+
+  get moduleHref() {
+    return this.args.model.moduleHref;
+  }
+
+  get refName() {
+    return this.args.model.ref?.name;
+  }
+
+  get specType() {
+    return this.args.model.specType;
+  }
+
+  <template>
+    <section class='module section'>
+      <header class='row-header' aria-labelledby='module'>
+        <div class='row-header-left'>
+          <GitBranch width='20' height='20' role='presentation' />
+          <h2 id='module'>Module</h2>
+        </div>
+      </header>
+      <div class='code-ref-container'>
+        <FieldContainer @label='URL' @vertical={{true}} @labelFontSize='small'>
+          <div class='code-ref-row'>
+            <RealmIcon class='realm-icon' @realmInfo={{this.realmInfo}} />
+            <span class='code-ref-value' data-test-module-href>
+              {{this.moduleHref}}
+            </span>
+          </div>
+        </FieldContainer>
+        <FieldContainer
+          @label='Module Name'
+          @vertical={{true}}
+          @labelFontSize='small'
+        >
+          <div class='code-ref-row'>
+            <ExportArrow class='exported-arrow' width='10' height='10' />
+            <div class='code-ref-value' data-test-exported-name>
+              {{this.refName}}
+            </div>
+            <div class='exported-type' data-test-exported-type>
+              {{this.specType}}
+            </div>
+          </div>
+        </FieldContainer>
+      </div>
+    </section>
+    <style scoped>
+      .section {
+        margin-top: var(--boxel-sp);
+        padding-top: var(--boxel-sp);
+        border-top: 1px solid var(--boxel-400);
+      }
+      h2 {
+        margin: 0;
+        font: 600 var(--boxel-font-sm);
+        letter-spacing: var(--boxel-lsp-xs);
+      }
+      .row-header {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        padding-bottom: var(--boxel-sp-lg);
+      }
+      .row-header-left {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .code-ref-container {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+      }
+      .code-ref-row {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        min-height: var(--boxel-form-control-height);
+        padding: var(--boxel-sp-xs);
+        background-color: var(
+          --boxel-spec-code-ref-background-color,
+          var(--boxel-100)
+        );
+        border: var(--boxel-border);
+        border-radius: var(--boxel-border-radius);
+        color: var(--boxel-spec-code-ref-text-color, var(--boxel-450));
+      }
+      .code-ref-value {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .exported-type {
+        margin-left: auto;
+        color: var(--boxel-450);
+        font: 500 var(--boxel-font-xs);
+        letter-spacing: var(--boxel-lsp);
+        text-transform: uppercase;
+      }
+      .exported-arrow {
+        min-width: 8px;
+        min-height: 8px;
+      }
+      .realm-icon {
+        width: 18px;
+        height: 18px;
+        border: 1px solid var(--boxel-dark);
+      }
+    </style>
+  </template>
+}
+
+class Isolated extends Component<typeof Spec> {
+  get absoluteRef() {
+    if (!this.args.model.ref || !this.args.model.id) {
+      return undefined;
+    }
+    let vn = virtualNetworkFor(this.args.model);
+    if (!vn) {
+      return undefined;
+    }
+    let ref = codeRefWithAbsoluteIdentifier(
+      this.args.model.ref,
+      vn.toURL(this.args.model.id),
+      undefined,
+      vn,
+    );
+    if (!isResolvedCodeRef(ref)) {
+      throw new Error('ref is not a resolved code ref');
+    }
+    return ref;
+  }
+
+  <template>
+    <article class='container'>
+      <SpecHeader @model={{@model}}>
+        <:title><@fields.cardTitle /></:title>
+        <:description><@fields.cardDescription /></:description>
+      </SpecHeader>
+
+      <SpecReadmeSection @model={{@model}} @context={{@context}}>
+        <@fields.readMe />
+      </SpecReadmeSection>
+
+      <SpecExamplesSection @model={{@model}}>
+        <:linkedExamples>
+          <@fields.linkedExamples />
+        </:linkedExamples>
+        <:containedExamples>
+          <@fields.containedExamples />
+        </:containedExamples>
+      </SpecExamplesSection>
+
+      <SpecModuleSection @model={{@model}} />
+    </article>
+    <style scoped>
+      .container {
+        --boxel-spec-background-color: #ebeaed;
+        --boxel-spec-code-ref-background-color: #e2e2e2;
+        --boxel-spec-code-ref-text-color: #646464;
+
+        height: 100%;
+        min-height: max-content;
+        padding: var(--boxel-sp);
+        background-color: var(--boxel-spec-background-color);
+      }
+    </style>
+  </template>
+}
+
+class Fitted extends Component<typeof Spec> {
+  get defaultIcon() {
+    if (!this.args.model) {
+      return;
+    }
+    return this.args.model.constructor?.icon;
+  }
+
+  get icon() {
+    return this.loadCardIcon.value;
+  }
+
+  @use private loadCardIcon = resource(() => {
+    let icon = new TrackedObject<{ value: CardOrFieldTypeIcon | undefined }>({
+      value: undefined,
+    });
+    (async () => {
+      try {
+        if (this.args.model.ref && this.args.model.id) {
+          let card = await loadCardDef(this.args.model.ref, {
+            loader: myLoader(),
+            relativeTo: this.args.model.id,
+          });
+          icon.value = card.icon;
+        }
+      } catch (e) {
+        icon.value = undefined;
+      }
+    })();
+    return icon;
+  });
+
+  <template>
+    <BasicFitted
+      class='spec-fitted'
+      @primary={{@model.cardTitle}}
+      @secondary={{@model.cardDescription}}
+    >
+      <:thumbnail>
+        {{#if this.icon}}
+          <this.icon width='35' height='35' role='presentation' />
+        {{else if this.defaultIcon}}
+          <this.defaultIcon width='35' height='35' role='presentation' />
+        {{/if}}
+      </:thumbnail>
+      <:default>
+        {{#if @model.specType}}
+          <SpecTag @specType={{@model.specType}} />
+        {{/if}}
+      </:default>
+    </BasicFitted>
+    <style scoped>
+      @layer {
+        .spec-fitted {
+          align-items: center;
+        }
+        @container fitted-card (aspect-ratio <= 1 / 1) and (150px <= width) and (170px <= height <= 250px) {
+          .spec-fitted :deep(.thumbnail-section) {
+            flex: 1;
+          }
+        }
+      }
+    </style>
+  </template>
+}
+
+class Edit extends Component<typeof Spec> {
+  get absoluteRef() {
+    if (!this.args.model.ref || !this.args.model.id) {
+      return undefined;
+    }
+    let vn = virtualNetworkFor(this.args.model);
+    if (!vn) {
+      return undefined;
+    }
+    let ref = codeRefWithAbsoluteIdentifier(
+      this.args.model.ref,
+      vn.toURL(this.args.model.id),
+      undefined,
+      vn,
+    );
+    if (!isResolvedCodeRef(ref)) {
+      throw new Error('ref is not a resolved code ref');
+    }
+    return ref;
+  }
+
+  <template>
+    <article class='container'>
+      <SpecHeader @model={{@model}} @isEditMode={{true}}>
+        <:title><@fields.cardTitle /></:title>
+        <:description><@fields.cardDescription /></:description>
+      </SpecHeader>
+
+      <SpecReadmeSection
+        @model={{@model}}
+        @context={{@context}}
+        @isEditMode={{@canEdit}}
+      >
+        <@fields.readMe />
+      </SpecReadmeSection>
+
+      <SpecExamplesSection @model={{@model}}>
+        <:linkedExamples>
+          <@fields.linkedExamples @typeConstraint={{this.absoluteRef}} />
+        </:linkedExamples>
+        <:containedExamples>
+          <@fields.containedExamples @typeConstraint={{this.absoluteRef}} />
+        </:containedExamples>
+      </SpecExamplesSection>
+
+      <SpecModuleSection @model={{@model}} />
+    </article>
+    <style scoped>
+      .container {
+        --boxel-spec-background-color: #ebeaed;
+        --boxel-spec-code-ref-background-color: #e2e2e2;
+        --boxel-spec-code-ref-text-color: #646464;
+
+        height: 100%;
+        min-height: max-content;
+        padding: var(--boxel-sp);
+        background-color: var(--boxel-spec-background-color);
+      }
+      :deep(.add-new) {
+        border: 1px solid var(--border, var(--boxel-border-color));
+      }
+    </style>
+  </template>
+}
+
+class SpecTitleField extends StringField {
+  static displayName = 'Spec Title';
+
+  static edit = class Edit extends Component<typeof this> {
+    get placeholder() {
+      const hasFieldName = Boolean(this.args.fieldName);
+
+      if (hasFieldName) {
+        return 'Enter ' + this.args.fieldName;
+      }
+      return undefined;
+    }
+
+    <template>
+      <BoxelInput
+        @id='spec-title'
+        @value={{@model}}
+        @onInput={{@set}}
+        @placeholder={{this.placeholder}}
+        @disabled={{not @canEdit}}
+        class='spec-title-input'
+      />
+      <style scoped>
+        .spec-title-input {
+          font-size: 18px;
+          font-weight: 600;
+          letter-spacing: var(--boxel-lsp-xs);
+          padding: var(--boxel-sp-4xs) 0 var(--boxel-sp-4xs) var(--boxel-sp-xs);
+        }
+        .spec-title-input::placeholder {
+          color: var(--boxel-400);
+        }
+      </style>
+    </template>
+  };
+}
+
+class SpecDescriptionField extends StringField {
+  static displayName = 'Spec Description';
+
+  static edit = class Edit extends Component<typeof this> {
+    get placeholder() {
+      const hasFieldName = Boolean(this.args.fieldName);
+
+      if (hasFieldName) {
+        return 'Enter ' + this.args.fieldName;
+      }
+      return undefined;
+    }
+
+    <template>
+      <BoxelInput
+        @id='spec-description'
+        @value={{@model}}
+        @onInput={{@set}}
+        @placeholder={{this.placeholder}}
+        @disabled={{not @canEdit}}
+        class='spec-description-input'
+      />
+      <style scoped>
+        .spec-description-input {
+          padding: var(--boxel-sp-4xs) 0 var(--boxel-sp-4xs) var(--boxel-sp-xs);
+        }
+        .spec-description-input::placeholder {
+          color: var(--boxel-400);
+        }
+      </style>
+    </template>
+  };
+}
+
+export class Spec extends CardDef {
+  static displayName = 'Spec';
+  static [isSpec] = true;
+  static icon = BoxModel;
+  @field readMe = contains(MarkdownField);
+
+  @field ref = contains(CodeRef);
+  @field specType = contains(SpecTypeField);
+
+  @field isField = contains(BooleanField, {
+    computeVia: function (this: Spec) {
+      return this.specType === 'field';
+    },
+  });
+
+  @field isCard = contains(BooleanField, {
+    computeVia: function (this: Spec) {
+      return this.specType === 'card' || this.specType === 'app';
+    },
+  });
+
+  @field isComponent = contains(BooleanField, {
+    computeVia: function (this: Spec) {
+      return this.specType === 'component';
+    },
+  });
+
+  @field moduleHref = contains(StringField, {
+    computeVia: function (this: Spec) {
+      if (!this.ref || !this.ref.module) {
+        return undefined;
+      }
+      let vn = virtualNetworkFor(this);
+      if (!vn) {
+        return undefined;
+      }
+      return vn.resolveURL(this.ref.module, this.id ?? this[relativeTo]).href;
+    },
+  });
+  @field linkedExamples = linksToMany(CardDef);
+  @field containedExamples = containsMany(FieldDef);
+  @field cardTitle = contains(SpecTitleField);
+  @field cardDescription = contains(SpecDescriptionField);
+
+  [getMenuItems](params: GetMenuItemParams): MenuItemOptions[] {
+    let menuItems = super[getMenuItems](params);
+    if (this.specType !== 'field') {
+      return menuItems;
+    }
+    let sampleDataStartIndex = menuItems.findIndex((item: MenuItemOptions) =>
+      item.tags?.includes('playground-sample-data'),
+    );
+    let sampleDataItemCount = menuItems.filter((item: MenuItemOptions) =>
+      item.tags?.includes('playground-sample-data'),
+    ).length;
+    menuItems.splice(
+      sampleDataStartIndex,
+      sampleDataItemCount,
+      ...[
+        {
+          label: 'Fill in Sample Data with AI',
+          action: async () => {
+            await new PopulateFieldSpecExampleCommand(
+              params.commandContext,
+            ).execute({
+              cardId: this.id,
+            });
+          },
+          icon: AiBwIcon,
+          tags: ['playground-sample-data'],
+        },
+        {
+          label: `Generate ${GENERATED_EXAMPLE_COUNT} examples with AI`,
+          action: async () => {
+            await new GenerateExamplesForFieldSpecCommand(
+              params.commandContext,
+            ).execute({
+              count: GENERATED_EXAMPLE_COUNT,
+              codeRef: (() => {
+                let vn = virtualNetworkFor(this);
+                if (!vn) {
+                  throw new Error('No VirtualNetwork available');
+                }
+                return codeRefWithAbsoluteIdentifier(
+                  this.ref,
+                  vn.toURL(this.id),
+                  undefined,
+                  vn,
+                ) as ResolvedCodeRef;
+              })(),
+              realm: this[realmURL]?.href,
+              exampleCard: this,
+            });
+          },
+          icon: AiBwIcon,
+          tags: ['playground-sample-data'],
+        },
+      ],
+    );
+    return menuItems;
+  }
+
+  static isolated = Isolated;
+
+  static embedded = class Embedded extends Component<typeof this> {
+    get icon() {
+      return this.args.model.constructor?.icon;
+    }
+    <template>
+      <article class='embedded-spec'>
+        <div class='header-icon-container'>
+          <this.icon width='30' height='30' role='presentation' />
+        </div>
+        <div class='header-info-container'>
+          <h3 class='title'><@fields.cardTitle /></h3>
+          <p class='description'><@fields.cardDescription /></p>
+        </div>
+        {{#if @model.specType}}
+          <SpecTag @specType={{@model.specType}} />
+        {{/if}}
+      </article>
+      <style scoped>
+        .embedded-spec {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs);
+        }
+        .header-icon-container {
+          flex-shrink: 0;
+          height: var(--boxel-icon-xl);
+          width: var(--boxel-icon-xl);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: var(--boxel-100);
+          border: 1px solid var(--boxel-border-color);
+          border-radius: var(--boxel-border-radius-lg);
+          background-color: var(--boxel-light);
+        }
+        .header-info-container {
+          flex: 1;
+        }
+        .title {
+          margin: 0;
+          font: 600 var(--boxel-font-sm);
+          letter-spacing: var(--boxel-lsp-xs);
+        }
+        .description {
+          margin: 0;
+          color: var(--boxel-500);
+          font: var(--boxel-font-size-xs);
+          letter-spacing: var(--boxel-lsp-xs);
+        }
+      </style>
+    </template>
+  };
+
+  static fitted = Fitted;
+
+  static edit = Edit;
+}
+
+interface SpecTagSignature {
+  Element: HTMLDivElement;
+  Args: {
+    specType: string;
+  };
+}
+
+export class SpecTag extends GlimmerComponent<SpecTagSignature> {
+  get icon() {
+    return getIcon(this.args.specType);
+  }
+  <template>
+    {{#if this.icon}}
+      <Pill @variant='muted' class='spec-tag-pill' ...attributes>
+        <:iconLeft>
+          <this.icon width='18px' height='18px' />
+        </:iconLeft>
+        <:default>
+          {{@specType}}
+        </:default>
+      </Pill>
+
+    {{/if}}
+    <style scoped>
+      .spec-tag-pill {
+        --pill-font: 500 var(--boxel-font-xs);
+        --pill-background-color: var(--boxel-200);
+        --pill-icon-size: 18px;
+        word-break: initial;
+        text-transform: uppercase;
+      }
+    </style>
+  </template>
+}
+
+function getIcon(specType: string) {
+  switch (specType) {
+    case 'card':
+      return StackIcon;
+    case 'app':
+      return AppsIcon;
+    case 'field':
+      return LayoutList;
+    case 'component':
+      return LayoutList;
+    default:
+      return;
+  }
+}
+
+function myLoader(): Loader {
+  // we know this code is always loaded by an instance of our Loader, which sets
+  // import.meta.loader.
+
+  // When type-checking realm-server, tsc sees this file and thinks
+  // it will be transpiled to CommonJS and so it complains about this line. But
+  // this file is always loaded through our loader and always has access to import.meta.
+  // @ts-ignore
+  return (import.meta as any).loader;
+}
