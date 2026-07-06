@@ -1,0 +1,33 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Host",
+        "module": "../host"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "role": "Groom",
+      "cardInfo": {
+        "name": "Lucas",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "fullName": "Lucas"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
