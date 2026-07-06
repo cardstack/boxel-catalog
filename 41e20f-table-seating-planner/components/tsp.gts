@@ -4455,8 +4455,12 @@ export class TableSeatingPlannerIsolated extends Component<
                           aria-hidden='true'
                         >
                           <path d='M24 40 C24 30 24 22 24 12' />
-                          <path d='M24 22 C18 18 13 18 8 22 C13 27 20 27 24 22' />
-                          <path d='M24 22 C30 18 35 18 40 22 C35 27 28 27 24 22' />
+                          <path
+                            d='M24 22 C18 18 13 18 8 22 C13 27 20 27 24 22'
+                          />
+                          <path
+                            d='M24 22 C30 18 35 18 40 22 C35 27 28 27 24 22'
+                          />
                           <path d='M24 12 C21 7 21 4 24 1 C27 4 27 7 24 12' />
                           <circle cx='24' cy='40' r='2.5' />
                         </svg>

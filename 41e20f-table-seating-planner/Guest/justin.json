@@ -1,0 +1,48 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Guest",
+        "module": "../guest"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "vip": false,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "fullName": "Justin",
+      "category": "colleagues",
+      "photo": {
+        "url": "https://pngimg.com/uploads/minions/minions_PNG53.png",
+        "sourceMode": "url"
+      }
+    },
+    "relationships": {
+      "parentGuest": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "photo.file": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

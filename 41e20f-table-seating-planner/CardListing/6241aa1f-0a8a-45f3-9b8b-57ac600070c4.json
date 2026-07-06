@@ -20,7 +20,7 @@
     "relationships": {
       "tags.0": {
         "links": {
-          "self": "https://app.boxel.ai/catalog/Tag/ai"
+          "self": "../../catalog/Tag/ai"
         }
       },
       "license": {
@@ -160,7 +160,7 @@
       },
       "categories.0": {
         "links": {
-          "self": "https://app.boxel.ai/catalog/Category/creative-projects"
+          "self": "../../Category/creative-projects"
         }
       },
       "cardInfo.theme": {
