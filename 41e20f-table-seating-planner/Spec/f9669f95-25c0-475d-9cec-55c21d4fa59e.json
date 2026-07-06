@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "@cardstack/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "TableSeatingPlanner",
+        "module": "../table-seating-planner"
+      },
+      "readMe": "# Table Seating Planner\n\n## Summary\nThe `TableSeatingPlanner` spec is a card definition that provides a comprehensive solution for managing table seating arrangements for events. It includes various fields to capture event details, host information, guest lists, table layouts, and related media like floor plans and invitation posters.\n\n## Import\n```javascript\nimport { TableSeatingPlanner } from '../table-seating-planner';\n```\n\n## Usage as a Field\nYou can use the `TableSeatingPlanner` card as a field within a consuming card or field. For example:\n\n```javascript\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport { TableSeatingPlanner } from '../table-seating-planner';\n\nexport class EventCard extends CardDef {\n  @field seatingPlanner = contains(TableSeatingPlanner);\n}\n```\n\nIn this example, the `EventCard` contains a `seatingPlanner` field of type `TableSeatingPlanner`, allowing the user to manage the table seating arrangement as part of the event.\n\n## Template Usage\nTo use the `TableSeatingPlanner` card in a template, you can simply include the field in your template:\n\n```handlebars\n<Card.section>\n  <@fields.seatingPlanner />\n</Card.section>\n```\n\nThis will render the `TableSeatingPlanner` card within the consuming card's template.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Table Seating Planner",
+      "cardDescription": null,
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
