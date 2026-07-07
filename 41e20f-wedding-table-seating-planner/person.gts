@@ -62,7 +62,7 @@ export class Person extends CardDef {
           border: 1px solid var(--border, rgba(220, 193, 136, 0.3));
           border-radius: 11px;
           background: var(--background, #ffffff);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
           color: var(--foreground, #22283f);
         }
         .p-avatar {
@@ -79,8 +79,8 @@ export class Person extends CardDef {
           font:
             600 13px 'Cormorant Garamond',
             serif;
-          color: #22283f;
-          background: linear-gradient(135deg, #dcc188, #c5a35c);
+          color: var(--ink, #22283f);
+          background: linear-gradient(135deg, #dcc188, var(--gold, #c5a35c));
         }
         .p-main {
           flex: 1;

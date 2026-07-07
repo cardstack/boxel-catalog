@@ -146,6 +146,23 @@ type DragMode =
   | 'floorplan'
   | 'marquee'
   | 'move';
+
+// A linked theme's variables, returned as an inline-style declaration string to
+// apply on the planner root. Empty when no theme is linked — in which case every
+// `var(--token, fallback)` in the scoped styles simply uses its fallback. Only
+// the light `:root` block is read, and it is applied inline on the element, so
+// the theme can never leak onto sibling cards or the surrounding listing.
+function buildThemeVars(theme: any): string {
+  let css = theme?.cssVariables;
+  if (!css) return '';
+  let m = String(css).match(/:root\s*\{([\s\S]*?)\}/);
+  if (!m) return '';
+  return m[1]
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export class TableSeatingPlannerIsolated extends Component<
   typeof TableSeatingPlanner
 > {
@@ -506,18 +523,23 @@ export class TableSeatingPlannerIsolated extends Component<
   get seatingStyles() {
     return SEATING_STYLES;
   }
-  get rootStyle() {
-    return htmlSafe(
-      '--paper:#faf6ec;--paper-2:#f4eddb;--grid:rgba(191,155,90,.07);' +
-        '--acc:#c5a35c;--acc-deep:#a5854a;--ink:#22283f;' +
-        '--surface:#ffffff;--surface-edge:rgba(197,163,92,.35);' +
-        '--outline:#c5a35c;' +
-        '--navy:#141b33;--navy-2:#1a2238;--navy-edge:rgba(255,255,255,.10);' +
-        '--navy-ink:#f3ead6;--gold:#c5a35c;--gold-soft:#e6cf9a;' +
-        '--gold-grad:linear-gradient(135deg,#e6cf9a,#c5a35c 55%,#a5854a);' +
-        '--popover:#fdfaf2;--bx-popover-edit-bg:#fdfaf2;' +
-        '--bx-popover-edit-border:rgba(197,163,92,.4);',
-    );
+  // The linked theme (cardInfo.theme) as inline vars applied on the planner
+  // root — affects this card's subtree only, never the surrounding listing.
+  get themeVars() {
+    return htmlSafe(buildThemeVars((this.args.model as any)?.cardInfo?.theme));
+  }
+  get eventLogoURL(): string {
+    return (this.args.model as any)?.eventLogo?.resolvedUrl ?? '';
+  }
+  get eventInitials(): string {
+    let t = (this.args.model?.eventTitle ?? '').trim();
+    if (!t) return '';
+    let words = t.split(/\s+/).filter(Boolean);
+    let letters = words
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join('');
+    return (letters || t.slice(0, 2)).toUpperCase();
   }
   get seatedGuestIds(): Set<string> {
     let s = new Set<string>();
@@ -590,7 +612,9 @@ export class TableSeatingPlannerIsolated extends Component<
           filled: !!g,
           label: g ? initialsOf(g.fullName) : `${i + 1}`,
           photoURL: (g as any)?.photoURL || '',
-          color: g?.category ? categoryColor(g.category) : 'var(--acc)',
+          color: g?.category
+            ? categoryColor(g.category)
+            : 'var(--acc, #c5a35c)',
           isDrop: dropping && this.dropSeatIndex === i,
           guest: g ?? null,
         };
@@ -1289,6 +1313,30 @@ export class TableSeatingPlannerIsolated extends Component<
       fixtures.forEach((f, i) => (f.color = prevF[i]));
     }, apply);
   };
+  selectionColorCommit = (e: Event) => {
+    this.setSelectionColor((e.target as HTMLInputElement).value);
+  };
+  get selectionColorValue(): string {
+    let t = this.selectedTables[0];
+    if (t?.themeColor) return t.themeColor;
+    let f = this.selectedFixtures[0];
+    return f?.color || '#c5a35c';
+  }
+  clearSelectionSeats = () => {
+    let tables = this.selectedTables.filter(
+      (t) => (t.seatedGuests ?? []).length,
+    );
+    if (!tables.length) return;
+    this.recordSeatChange(() => {
+      tables.forEach((t) => {
+        t.seatedGuests = [];
+        t.seatSlots = [];
+      });
+    });
+  };
+  get selectionHasSeated(): boolean {
+    return this.selectedTables.some((t) => (t.seatedGuests ?? []).length > 0);
+  }
   setSelectionShape = (shape: string) => {
     let tables = this.selectedTables;
     if (!tables.length) return;
@@ -3593,15 +3641,15 @@ export class TableSeatingPlannerIsolated extends Component<
     return this.args.model?.poster?.resolvedUrl || '';
   }
   @tracked posterBusy = false;
-  private linkPosterFile = async (fileId: string) => {
-    let store = (this.args as any).context?.store;
-    let imageDef = await store?.get(fileId);
-    if (!imageDef || !(imageDef as any).id) {
+  private linkPosterFile = async (fileUrl: string) => {
+    if (!fileUrl) {
       throw new Error('could not load the saved image');
     }
+    // The command writes a raw image file and returns its URL — not a card id —
+    // so we point the poster at it via url mode rather than a linked ImageDef.
     this.args.model.poster = new ImageSourceField({
-      file: imageDef,
-      sourceMode: 'file',
+      url: fileUrl,
+      sourceMode: 'url',
     });
   };
   downloadPoster = async () => {
@@ -3726,8 +3774,18 @@ export class TableSeatingPlannerIsolated extends Component<
   }
   <template>
     {{! template-lint-disable no-pointer-down-event-binding no-invalid-interactive }}
-    <div class='tsp' style={{this.rootStyle}} data-tsp-root {{this.keyboard}}>
+    <div class='tsp' data-tsp-root style={{this.themeVars}} {{this.keyboard}}>
       <header class='tsp-head' aria-label='Event details'>
+        <div class='tsp-brand' aria-hidden='true'>
+          {{#if this.eventLogoURL}}
+            <img class='tsp-brand-img' src={{this.eventLogoURL}} alt='' />
+          {{else}}
+            <span
+              class='tsp-brand-mark'
+              data-initials={{this.eventInitials}}
+            ></span>
+          {{/if}}
+        </div>
         <div class='tsp-event'>
           <input
             class='tsp-event-title'
@@ -4445,6 +4503,7 @@ export class TableSeatingPlannerIsolated extends Component<
                       {{#if tv.vip}}<span class='t-vipdot'>VIP</span>{{/if}}
                     {{else}}
                       <div class={{tv.surfaceClass}}>
+                        <span class='t-motif' aria-hidden='true'></span>
                         <svg
                           class='t-center'
                           viewBox='0 0 48 48'
@@ -4964,6 +5023,13 @@ export class TableSeatingPlannerIsolated extends Component<
                 {{/if}}
                 <div class='insp-label'>Colour</div>
                 <div class='insp-swatches'>
+                  <label class='insp-fxpick' title='Custom colour'>
+                    <input
+                      type='color'
+                      value={{this.selectionColorValue}}
+                      {{on 'change' this.selectionColorCommit}}
+                    />
+                  </label>
                   {{#each this.themeSwatches as |sw|}}
                     <button
                       type='button'
@@ -4974,6 +5040,16 @@ export class TableSeatingPlannerIsolated extends Component<
                     ></button>
                   {{/each}}
                 </div>
+                {{#if this.selectionHasSeated}}
+                  <div class='insp-label'>Seating</div>
+                  <div class='insp-layer'>
+                    <button
+                      type='button'
+                      class='insp-opt'
+                      {{on 'click' this.clearSelectionSeats}}
+                    >Clear seats</button>
+                  </div>
+                {{/if}}
                 <div class='insp-actions'>
                   <button
                     type='button'
@@ -5044,7 +5120,18 @@ export class TableSeatingPlannerIsolated extends Component<
                   />
                 {{else}}
                   <div class='poster-empty' style={{this.posterAspectStyle}}>
-                    <span class='poster-empty-ico'>✦</span>
+                    {{#if this.eventLogoURL}}
+                      <img
+                        class='poster-empty-logo'
+                        src={{this.eventLogoURL}}
+                        alt=''
+                      />
+                    {{else}}
+                      <span
+                        class='poster-empty-mark'
+                        data-initials={{this.eventInitials}}
+                      ></span>
+                    {{/if}}
                     <span class='poster-empty-title'>No poster yet</span>
                     <span class='poster-empty-hint'>Generate one with AI on the
                       right, or paste an image in the edit view.</span>
@@ -5498,9 +5585,9 @@ export class TableSeatingPlannerIsolated extends Component<
         min-height: 720px;
         display: flex;
         flex-direction: column;
-        background: var(--paper);
-        color: var(--ink);
-        font-family: 'Jost', system-ui, sans-serif;
+        background: var(--paper, #faf6ec);
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         overflow: hidden;
         container-type: inline-size;
         container-name: tsp;
@@ -5511,13 +5598,13 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-head,
       .tsp-rail {
-        --surface: var(--navy-2);
-        --surface-edge: var(--navy-edge);
-        --ink: var(--navy-ink);
+        --surface: var(--navy-2, #1a2238);
+        --surface-edge: var(--navy-edge, rgba(255, 255, 255, 0.1));
+        --ink: var(--navy-ink, #f3ead6);
         --gold: #e3c27d;
         --gold-soft: #f4e4b6;
         --gold-grad: linear-gradient(135deg, #f6e7b8, #e3c27d 55%, #c09a55);
-        color: var(--ink);
+        color: var(--ink, #22283f);
       }
       .tsp-head {
         min-height: 70px;
@@ -5527,8 +5614,36 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         gap: 10px 26px;
         padding: 10px 26px;
-        background: var(--navy);
+        background: var(--navy, #141b33);
         border-bottom: 1px solid rgba(197, 163, 92, 0.45);
+      }
+      .tsp-brand {
+        flex: none;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: var(
+          --gold-grad,
+          linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
+        );
+        color: var(--navy, #141b33);
+        border: 1px solid var(--gold-soft, #e6cf9a);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      }
+      .tsp-brand-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .tsp-brand-mark::before {
+        content: var(--tsp-motif, attr(data-initials));
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-weight: 700;
+        font-size: 22px;
+        line-height: 1;
       }
       .tsp-event {
         flex: 1 1 auto;
@@ -5549,25 +5664,23 @@ export class TableSeatingPlannerIsolated extends Component<
         border-bottom: 1px solid transparent;
         border-radius: 0;
         padding: 0 0 2px;
-        color: var(--gold-soft);
-        font-family: 'Cormorant Garamond', Georgia, serif;
-        font-style: italic;
+        color: var(--gold-soft, #e6cf9a);
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-weight: 600;
         font-size: 28px;
         line-height: 1.15;
         transition: border-color 0.15s;
       }
       .tsp-event-title::placeholder {
-        color: var(--gold-soft);
+        color: var(--gold-soft, #e6cf9a);
         opacity: 0.55;
-        font-style: italic;
       }
       .tsp-event-title:hover {
         border-bottom-color: rgba(197, 163, 92, 0.35);
       }
       .tsp-event-title:focus {
         outline: none;
-        border-bottom-color: var(--gold);
+        border-bottom-color: var(--gold, #c5a35c);
       }
       .tsp-meta-card {
         display: flex;
@@ -5576,7 +5689,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 8px 20px;
         border-radius: 14px;
         background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--navy-edge);
+        border: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
       }
       .tsp-meta-col {
         display: flex;
@@ -5586,7 +5699,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-meta-div {
         width: 1px;
-        background: var(--navy-edge);
+        background: var(--navy-edge, rgba(255, 255, 255, 0.1));
       }
       .tsp-meta-label {
         font-size: 8.5px;
@@ -5608,9 +5721,9 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        border: 1.5px solid var(--gold);
-        background: var(--navy-2);
-        color: var(--gold-soft);
+        border: 1.5px solid var(--gold, #c5a35c);
+        background: var(--navy-2, #1a2238);
+        color: var(--gold-soft, #e6cf9a);
         font:
           600 12px 'Cormorant Garamond',
           serif;
@@ -5639,8 +5752,8 @@ export class TableSeatingPlannerIsolated extends Component<
         border-style: dashed;
         border-color: rgba(197, 163, 92, 0.55);
         background: transparent;
-        color: var(--gold);
-        font-family: 'Jost', sans-serif;
+        color: var(--gold, #c5a35c);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 14px;
       }
       .tsp-host-add-hint {
@@ -5656,8 +5769,8 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0 10px;
       }
       .tsp-host-add:hover {
-        border-color: var(--gold);
-        color: var(--gold-soft);
+        border-color: var(--gold, #c5a35c);
+        color: var(--gold-soft, #e6cf9a);
       }
       .tsp-date {
         position: relative;
@@ -5687,8 +5800,8 @@ export class TableSeatingPlannerIsolated extends Component<
       .tsp-date input[type='date'] {
         border: none;
         background: transparent;
-        color: var(--gold);
-        font-family: 'Jost', sans-serif;
+        color: var(--gold, #c5a35c);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10.5px;
         font-weight: 500;
         letter-spacing: 0.14em;
@@ -5706,8 +5819,8 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 150px;
         border: none;
         background: transparent;
-        color: var(--gold);
-        font-family: 'Jost', sans-serif;
+        color: var(--gold, #c5a35c);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10.5px;
         font-weight: 500;
         letter-spacing: 0.14em;
@@ -5731,8 +5844,8 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 30px;
         border: 1px solid transparent;
         background: transparent;
-        color: var(--gold);
-        font-family: 'Jost', system-ui, sans-serif;
+        color: var(--gold, #c5a35c);
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         font-size: 11px;
         font-weight: 500;
         letter-spacing: 0.22em;
@@ -5741,12 +5854,12 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .tsp-navbtn:hover {
-        color: var(--gold-soft);
+        color: var(--gold-soft, #e6cf9a);
         border-color: rgba(197, 163, 92, 0.5);
       }
       .tsp-navbtn.is-on {
-        background: #fdfaf2;
-        color: var(--navy);
+        background: var(--popover, #fdfaf2);
+        color: var(--navy, #141b33);
       }
       .tsp-body {
         flex: 1;
@@ -5756,7 +5869,7 @@ export class TableSeatingPlannerIsolated extends Component<
       @container tsp (max-width: 1100px) {
         .tsp-head {
           gap: 16px;
-          padding: 0 16px;
+          padding: 8px 16px;
         }
         .tsp-rail {
           width: 260px;
@@ -5814,7 +5927,7 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         flex-direction: column;
         min-height: 0;
-        background: var(--navy);
+        background: var(--navy, #141b33);
         border-right: 1px solid rgba(197, 163, 92, 0.35);
       }
       .rail-head {
@@ -5824,15 +5937,15 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 20px 20px 10px;
       }
       .rail-title {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 28px;
         font-weight: 600;
       }
       .rail-total {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 28px;
         font-weight: 600;
-        color: var(--gold);
+        color: var(--gold, #c5a35c);
       }
       .rail-seated {
         margin-left: auto;
@@ -5840,20 +5953,23 @@ export class TableSeatingPlannerIsolated extends Component<
         font-weight: 500;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--gold);
+        color: var(--gold, #c5a35c);
         text-align: right;
       }
       .rail-bar {
         height: 2px;
         margin: 0 20px;
-        background: var(--navy-edge);
+        background: var(--navy-edge, rgba(255, 255, 255, 0.1));
         border-radius: 2px;
         overflow: hidden;
       }
       .rail-bar-fill {
         display: block;
         height: 100%;
-        background: var(--gold-grad);
+        background: var(
+          --gold-grad,
+          linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
+        );
         transition: width 0.4s ease;
       }
       .rail-search {
@@ -5864,15 +5980,15 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 38px;
         padding: 0 14px;
         border-radius: 9px;
-        border: 1px solid var(--navy-edge);
+        border: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
         background: rgba(255, 255, 255, 0.06);
-        color: var(--ink);
-        font-family: 'Jost', system-ui, sans-serif;
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         font-size: 14px;
         outline: none;
       }
       .rail-search input::placeholder {
-        color: var(--ink);
+        color: var(--ink, #22283f);
         opacity: 0.5;
       }
       .rail-search input:focus {
@@ -5890,20 +6006,23 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 6px;
         padding: 5px 10px;
         border-radius: 999px;
-        border: 1px solid var(--navy-edge);
+        border: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
         background: rgba(255, 255, 255, 0.04);
-        color: var(--ink);
-        font-family: 'Jost', system-ui, sans-serif;
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         font-size: 12px;
         cursor: pointer;
         transition: 0.15s;
       }
       .cat-pill:hover {
-        border-color: var(--gold);
+        border-color: var(--gold, #c5a35c);
       }
       .cat-pill.is-on {
-        background: var(--gold-grad);
-        color: var(--navy);
+        background: var(
+          --gold-grad,
+          linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
+        );
+        color: var(--navy, #141b33);
         border-color: transparent;
       }
       .cat-pill .dim {
@@ -5932,16 +6051,16 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         gap: 12px;
         padding: 9px 12px;
-        border: 1px solid var(--navy-edge);
+        border: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
         border-radius: 11px;
-        background: var(--navy-2);
-        font-family: 'Jost', system-ui, sans-serif;
-        color: var(--ink);
+        background: var(--navy-2, #1a2238);
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        color: var(--ink, #22283f);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
       }
       .rail-guest:hover {
         transform: translateY(-1px);
-        border-color: var(--gold);
+        border-color: var(--gold, #c5a35c);
       }
       .rail-guest:active {
         cursor: grabbing;
@@ -5960,8 +6079,11 @@ export class TableSeatingPlannerIsolated extends Component<
         font:
           600 13px 'Cormorant Garamond',
           serif;
-        color: var(--navy);
-        background: var(--gold-grad);
+        color: var(--navy, #141b33);
+        background: var(
+          --gold-grad,
+          linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
+        );
       }
       .rg-main {
         flex: 1;
@@ -5987,8 +6109,8 @@ export class TableSeatingPlannerIsolated extends Component<
           600 8px 'Jost',
           sans-serif;
         letter-spacing: 0.12em;
-        color: var(--navy);
-        background: var(--gold);
+        color: var(--navy, #141b33);
+        background: var(--gold, #c5a35c);
         border-radius: 4px;
         padding: 2px 5px;
       }
@@ -6010,7 +6132,7 @@ export class TableSeatingPlannerIsolated extends Component<
         font:
           11px 'Jost',
           sans-serif;
-        color: var(--gold);
+        color: var(--gold, #c5a35c);
         border: 1px solid rgba(197, 163, 92, 0.45);
         border-radius: 999px;
         padding: 2px 8px;
@@ -6030,8 +6152,8 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .rg-edit:hover {
-        border-color: var(--gold);
-        color: var(--gold);
+        border-color: var(--gold, #c5a35c);
+        color: var(--gold, #c5a35c);
       }
       .rg-remove {
         flex: none;
@@ -6052,25 +6174,28 @@ export class TableSeatingPlannerIsolated extends Component<
         color: #a8543f;
       }
       .rail-empty {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-style: italic;
         font-size: 15px;
-        color: var(--gold);
+        color: var(--gold, #c5a35c);
         padding: 8px 4px;
       }
       .rail-foot {
         flex: none;
         padding: 14px 20px;
-        border-top: 1px solid var(--navy-edge);
+        border-top: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
       }
       .rail-add {
         width: 100%;
         height: 44px;
         border: none;
-        background: var(--gold-grad);
-        color: var(--navy);
+        background: var(
+          --gold-grad,
+          linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
+        );
+        color: var(--navy, #141b33);
         border-radius: 30px;
-        font-family: 'Jost', system-ui, sans-serif;
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.22em;
@@ -6087,8 +6212,8 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-top: 8px;
         border: none;
         background: transparent;
-        color: var(--gold);
-        font-family: 'Jost', system-ui, sans-serif;
+        color: var(--gold, #c5a35c);
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         font-size: 10px;
         font-weight: 500;
         letter-spacing: 0.2em;
@@ -6124,11 +6249,11 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         justify-content: center;
         padding: 0;
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-right: none;
         border-radius: 10px 0 0 10px;
-        background: var(--surface);
-        color: var(--acc-deep);
+        background: var(--surface, #ffffff);
+        color: var(--acc-deep, #a5854a);
         font-size: 19px;
         line-height: 1;
         cursor: pointer;
@@ -6139,18 +6264,18 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .insp-handle:hover {
         background: #f5ecd9;
-        color: var(--ink);
+        color: var(--ink, #22283f);
       }
       .insp-handle-ico {
         display: inline-block;
       }
       .insp-handle.has-selection {
-        background: var(--navy);
-        border-color: var(--navy);
+        background: var(--navy, #141b33);
+        border-color: var(--navy, #141b33);
         color: #ffffff;
       }
       .insp-handle.has-selection:hover {
-        background: var(--navy-2);
+        background: var(--navy-2, #1a2238);
         color: #ffffff;
       }
       .insp-handle.is-beckoning {
@@ -6241,7 +6366,7 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 18px;
         padding: 10px 22px;
         border-bottom: 1px solid rgba(197, 163, 92, 0.25);
-        background: var(--paper);
+        background: var(--paper, #faf6ec);
       }
       .ct-group {
         display: flex;
@@ -6265,16 +6390,16 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0 14px;
         border-radius: 30px;
         border: 1px solid rgba(34, 40, 63, 0.1);
-        background: var(--surface);
-        color: var(--ink);
-        font-family: 'Jost', sans-serif;
+        background: var(--surface, #ffffff);
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.08em;
         cursor: pointer;
         transition: 0.15s;
       }
       .ct-btn:hover {
-        border-color: var(--acc);
+        border-color: var(--acc, #c5a35c);
       }
       @container tsp (max-width: 860px) {
         .canvas-toolbar {
@@ -6310,10 +6435,10 @@ export class TableSeatingPlannerIsolated extends Component<
       .ct-secondary {
         background: transparent;
         border-color: rgba(197, 163, 92, 0.55);
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
       }
       .ct-secondary:hover {
-        border-color: var(--acc);
+        border-color: var(--acc, #c5a35c);
         background: rgba(197, 163, 92, 0.12);
       }
       .ct-ghost {
@@ -6323,7 +6448,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .ct-ghost:hover {
         border-color: rgba(197, 163, 92, 0.55);
-        color: var(--ink);
+        color: var(--ink, #22283f);
       }
       .ct-ghost:disabled {
         opacity: 0.5;
@@ -6334,9 +6459,9 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0 18px;
         border-radius: 30px;
         border: none;
-        background: var(--navy);
+        background: var(--navy, #141b33);
         color: #ffffff;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.1em;
         font-weight: 500;
@@ -6376,8 +6501,8 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: transform 0.18s ease;
       }
       .ct-add.is-open {
-        border-color: var(--acc);
-        color: var(--acc-deep);
+        border-color: var(--acc, #c5a35c);
+        color: var(--acc-deep, #a5854a);
       }
       .ct-add.is-open .ct-caret {
         transform: rotate(180deg);
@@ -6396,8 +6521,8 @@ export class TableSeatingPlannerIsolated extends Component<
         left: 0;
         z-index: 40;
         width: 248px;
-        background: var(--surface);
-        border: 1px solid var(--surface-edge);
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 16px;
         box-shadow: 0 18px 48px rgba(34, 40, 63, 0.16);
         padding: 0 8px 8px;
@@ -6412,7 +6537,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 8px;
       }
       .ct-pop::-webkit-scrollbar-thumb {
-        background: var(--surface-edge);
+        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 999px;
       }
       @keyframes ct-pop-in {
@@ -6431,11 +6556,11 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 16px 16px 0 0;
       }
       .ct-pop-title {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 9px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
         padding: 10px 10px 6px;
       }
       .ct-pop-item {
@@ -6450,7 +6575,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 11px;
         cursor: pointer;
         font-size: 13px;
-        color: var(--ink);
+        color: var(--ink, #22283f);
         transition: 0.13s;
       }
       .ct-pop-item:hover {
@@ -6466,14 +6591,14 @@ export class TableSeatingPlannerIsolated extends Component<
         min-width: 0;
       }
       .ct-pop-name {
-        font-family: 'Cormorant Garamond', serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', serif);
         font-size: 14px;
-        color: var(--ink);
+        color: var(--ink, #22283f);
       }
       .ct-pop-desc {
         font-size: 10.5px;
         letter-spacing: 0.02em;
-        color: var(--ink);
+        color: var(--ink, #22283f);
         opacity: 0.55;
       }
       .ct-table-glyph {
@@ -6481,20 +6606,20 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         justify-content: center;
         font-size: 18px;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
       }
       .ct-pop-empty {
         padding: 10px 12px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
-        color: color-mix(in srgb, var(--ink) 55%, transparent);
+        color: color-mix(in srgb, var(--ink, #22283f) 55%, transparent);
       }
       .ct-branch {
         position: relative;
       }
       .ct-branch-caret {
         margin-left: auto;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
         font-size: 15px;
       }
       .ct-branch.is-open {
@@ -6507,8 +6632,8 @@ export class TableSeatingPlannerIsolated extends Component<
         z-index: 41;
         width: 210px;
         padding: 8px;
-        background: var(--surface);
-        border: 1px solid var(--surface-edge);
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 16px;
         box-shadow: 0 18px 48px rgba(34, 40, 63, 0.16);
         animation: ct-pop-in 0.12s ease;
@@ -6517,11 +6642,11 @@ export class TableSeatingPlannerIsolated extends Component<
         top: 110px;
       }
       .ct-flyout-title {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 9px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
         padding: 8px 8px 6px;
       }
       .ct-flyout-grid {
@@ -6538,8 +6663,8 @@ export class TableSeatingPlannerIsolated extends Component<
         border: 1px solid transparent;
         background: none;
         border-radius: 11px;
-        color: var(--ink);
-        font-family: 'Jost', sans-serif;
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11.5px;
         cursor: pointer;
         transition: 0.13s;
@@ -6551,7 +6676,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .ct-shape-g {
         width: 30px;
         height: 24px;
-        border: 2px solid var(--acc-deep);
+        border: 2px solid var(--acc-deep, #a5854a);
         background: rgba(197, 163, 92, 0.14);
       }
       .sg-round {
@@ -6573,7 +6698,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .sg-curved {
         width: 28px;
         height: 16px;
-        border: 5px solid var(--acc-deep);
+        border: 5px solid var(--acc-deep, #a5854a);
         border-bottom: none;
         border-radius: 26px 26px 0 0;
         background: transparent;
@@ -6593,7 +6718,7 @@ export class TableSeatingPlannerIsolated extends Component<
         background: none;
         border-radius: 11px;
         cursor: pointer;
-        color: var(--ink);
+        color: var(--ink, #22283f);
         transition: 0.13s;
       }
       .ct-pop-tile:hover {
@@ -6616,7 +6741,7 @@ export class TableSeatingPlannerIsolated extends Component<
         flex: 1;
         position: relative;
         overflow: hidden;
-        background: var(--paper);
+        background: var(--paper, #faf6ec);
         touch-action: none;
         cursor: default;
       }
@@ -6629,7 +6754,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .marquee {
         position: absolute;
         z-index: 25;
-        border: 1px solid var(--acc);
+        border: 1px solid var(--acc, #c5a35c);
         background: rgba(197, 163, 92, 0.14);
         pointer-events: none;
         border-radius: 2px;
@@ -6644,8 +6769,15 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 6000px;
         height: 6000px;
         background-image:
-          linear-gradient(var(--grid) 1px, transparent 1px),
-          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+          linear-gradient(
+            var(--grid, rgba(191, 155, 90, 0.07)) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            var(--grid, rgba(191, 155, 90, 0.07)) 1px,
+            transparent 1px
+          );
         background-size: 40px 40px;
       }
       .floorplan {
@@ -6739,26 +6871,26 @@ export class TableSeatingPlannerIsolated extends Component<
         pointer-events: none;
       }
       .fp-broken-msg {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 13px;
         letter-spacing: 0.02em;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
         padding: 4px 12px;
         border-radius: 999px;
-        background: var(--surface);
-        border: 1px solid var(--surface-edge);
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
       }
       .fp-broken-btn {
         pointer-events: auto;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 13px;
         font-weight: 500;
         letter-spacing: 0.02em;
         color: #ffffff;
-        background: var(--navy);
+        background: var(--navy, #141b33);
         border: none;
         border-radius: 999px;
         padding: 8px 18px;
@@ -6766,7 +6898,7 @@ export class TableSeatingPlannerIsolated extends Component<
         box-shadow: 0 8px 24px rgba(34, 40, 63, 0.18);
       }
       .fp-broken-btn:hover {
-        background: var(--navy-2);
+        background: var(--navy-2, #1a2238);
       }
       .fp-broken-btn .ico {
         width: 15px;
@@ -6782,8 +6914,8 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 8px;
         padding: 5px 8px;
         border-radius: 999px;
-        background: var(--surface);
-        border: 1px solid var(--surface-edge);
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         box-shadow: 0 8px 24px rgba(34, 40, 63, 0.14);
         max-width: min(680px, 100%);
         overflow-x: auto;
@@ -6796,29 +6928,29 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 5px;
       }
       .fp-toolbar::-webkit-scrollbar-thumb {
-        background: var(--surface-edge);
+        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 999px;
       }
       .fp-tool-div {
         width: 1px;
         align-self: stretch;
         margin: 3px 0;
-        background: var(--surface-edge);
+        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
       }
       .fp-build-btn {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 13px;
         font-weight: 500;
         letter-spacing: 0.02em;
         color: #ffffff;
-        background: var(--navy);
+        background: var(--navy, #141b33);
         border: none;
         border-radius: 999px;
         padding: 7px 16px;
         cursor: pointer;
       }
       .fp-build-btn:hover:not(:disabled) {
-        background: var(--navy-2);
+        background: var(--navy-2, #1a2238);
       }
       .fp-build-btn:disabled {
         cursor: default;
@@ -6832,13 +6964,13 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .fp-tool-ico {
         font-size: 13px;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
       }
       .fp-tool-val {
         min-width: 34px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
-        color: var(--ink);
+        color: var(--ink, #22283f);
         text-align: right;
       }
       .fp-tool-btn {
@@ -6848,21 +6980,21 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 30px;
         height: 30px;
         border-radius: 50%;
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         background: rgba(34, 40, 63, 0.04);
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
         font-size: 14px;
         cursor: pointer;
         transition: 0.15s;
       }
       .fp-tool-btn:hover {
-        border-color: var(--acc);
-        color: var(--ink);
+        border-color: var(--acc, #c5a35c);
+        color: var(--ink, #22283f);
       }
       .fp-tool-btn.is-on {
-        background: var(--acc);
+        background: var(--acc, #c5a35c);
         color: #ffffff;
-        border-color: var(--acc);
+        border-color: var(--acc, #c5a35c);
       }
       .fp-tool-btn.is-del:hover {
         border-color: #a8663f;
@@ -6872,10 +7004,10 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 30px;
         padding: 0 12px;
         border-radius: 999px;
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         background: rgba(34, 40, 63, 0.04);
-        color: var(--ink);
-        font-family: 'Jost', sans-serif;
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10.5px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
@@ -6883,7 +7015,7 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .fp-tool-confirm:hover {
-        border-color: var(--acc);
+        border-color: var(--acc, #c5a35c);
       }
       .fp-tool-confirm.is-danger {
         border-color: rgba(217, 138, 106, 0.6);
@@ -6896,7 +7028,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .fp-frame {
         position: absolute;
         z-index: 9990;
-        border: 1.5px dashed var(--acc);
+        border: 1.5px dashed var(--acc, #c5a35c);
         background: rgba(197, 163, 92, 0.06);
         cursor: grab;
         touch-action: none;
@@ -6908,12 +7040,12 @@ export class TableSeatingPlannerIsolated extends Component<
         position: absolute;
         top: -22px;
         left: 0;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--acc-deep);
-        background: var(--paper);
+        color: var(--acc-deep, #a5854a);
+        background: var(--paper, #faf6ec);
         padding: 2px 6px;
         border-radius: 4px;
       }
@@ -6925,7 +7057,7 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 18px;
         border-radius: 50%;
         background: #fff;
-        border: 2px solid var(--acc);
+        border: 2px solid var(--acc, #c5a35c);
         box-shadow: 0 2px 6px rgba(34, 40, 63, 0.14);
         cursor: nwse-resize;
         touch-action: none;
@@ -6945,7 +7077,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 14px;
         height: 14px;
         border-radius: 50%;
-        background: var(--acc);
+        background: var(--acc, #c5a35c);
         cursor: pointer;
       }
       .fp-opacity::-moz-range-thumb {
@@ -6953,7 +7085,7 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 14px;
         border: none;
         border-radius: 50%;
-        background: var(--acc);
+        background: var(--acc, #c5a35c);
         cursor: pointer;
       }
       .t-node {
@@ -6962,10 +7094,10 @@ export class TableSeatingPlannerIsolated extends Component<
         z-index: 2;
       }
       .t-node.is-sel .t-surface {
-        box-shadow: 0 0 0 2px var(--acc);
+        box-shadow: 0 0 0 2px var(--acc, #c5a35c);
       }
       .t-node.is-targeting .t-surface {
-        box-shadow: 0 0 0 2px var(--acc-deep);
+        box-shadow: 0 0 0 2px var(--acc-deep, #a5854a);
       }
       .fx-node.is-targeting {
         outline: 2px solid rgba(197, 163, 92, 0.55);
@@ -6977,19 +7109,34 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #fdfaf2;
+        background: var(--popover, #fdfaf2);
         border: 1.5px solid var(--outline, #c5a35c);
         box-shadow: 0 6px 18px rgba(34, 40, 63, 0.08);
-        color: var(--ink);
+        color: var(--ink, #22283f);
       }
       .t-center {
         width: 42%;
         height: 42%;
         max-width: 46px;
         max-height: 46px;
-        color: var(--gold);
-        opacity: 0.5;
+        color: var(--gold, #c5a35c);
+        opacity: var(--tsp-center-opacity, 0.5);
         pointer-events: none;
+      }
+      .t-motif {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+      }
+      .t-motif::before {
+        content: var(--tsp-motif, '');
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-weight: 700;
+        font-size: 34%;
+        line-height: 1;
+        color: var(--gold, #c5a35c);
       }
       .shape-round {
         border-radius: 50%;
@@ -7006,7 +7153,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .t-section {
         position: absolute;
         inset: 0;
-        border: 1px dashed var(--outline);
+        border: 1px dashed var(--outline, #c5a35c);
         border-radius: 6px;
         background: transparent;
         opacity: 0.5;
@@ -7018,13 +7165,13 @@ export class TableSeatingPlannerIsolated extends Component<
         top: 0;
         transform: translateY(-100%);
         padding-bottom: 3px;
-        border-bottom: 3px solid var(--outline);
+        border-bottom: 3px solid var(--outline, #c5a35c);
         text-align: center;
         font:
           700 9px 'Jost',
           monospace;
         letter-spacing: 0.12em;
-        color: var(--outline);
+        color: var(--outline, #c5a35c);
         pointer-events: none;
       }
       .t-node.is-section.is-sel,
@@ -7040,14 +7187,14 @@ export class TableSeatingPlannerIsolated extends Component<
         overflow: visible;
       }
       .t-curvedband {
-        fill: #fdfaf2;
-        stroke: var(--outline);
+        fill: var(--popover, #fdfaf2);
+        stroke: var(--outline, #c5a35c);
       }
       .t-node.is-sel .t-curvedband {
-        stroke: var(--acc);
+        stroke: var(--acc, #c5a35c);
       }
       .t-node.is-targeting .t-curvedband {
-        stroke: var(--acc-deep);
+        stroke: var(--acc-deep, #a5854a);
       }
       .t-node.is-sel {
         outline: 2px solid rgba(197, 163, 92, 0.45);
@@ -7078,10 +7225,10 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 28px;
         padding: 0 13px;
         border-radius: 30px;
-        border: 1px solid var(--surface-edge);
-        background: var(--acc);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--acc, #c5a35c);
         color: #ffffff;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10.5px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
@@ -7104,7 +7251,7 @@ export class TableSeatingPlannerIsolated extends Component<
         left: 50%;
         transform: translateX(-50%);
         border: 5px solid transparent;
-        border-top-color: var(--acc);
+        border-top-color: var(--acc, #c5a35c);
       }
       .t-node.is-sel .t-edit {
         opacity: 1;
@@ -7128,11 +7275,11 @@ export class TableSeatingPlannerIsolated extends Component<
         position: absolute;
         top: 8px;
         right: 10px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 8px;
         letter-spacing: 0.12em;
-        color: #22283f;
-        background: var(--acc);
+        color: var(--ink, #22283f);
+        background: var(--acc, #c5a35c);
         border-radius: 4px;
         padding: 2px 5px;
       }
@@ -7148,12 +7295,12 @@ export class TableSeatingPlannerIsolated extends Component<
         bottom: -22px;
         transform: translateX(-50%);
         white-space: nowrap;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         font-weight: 500;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--ink);
+        color: var(--ink, #22283f);
         opacity: 0.75;
       }
       .t-node.is-sel .t-name {
@@ -7168,10 +7315,10 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
-        color: var(--acc-deep);
-        background: #fdfaf2;
+        color: var(--acc-deep, #a5854a);
+        background: var(--popover, #fdfaf2);
         border: 1.5px solid var(--outline, #c5a35c);
         cursor: grab;
         z-index: 3;
@@ -7185,10 +7332,10 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .seat.is-filled {
         border-style: solid;
-        color: #22283f;
-        background: var(--seatcol, var(--acc));
-        border-color: var(--seatcol, var(--acc));
-        font-family: 'Jost', sans-serif;
+        color: var(--ink, #22283f);
+        background: var(--seatcol, var(--acc, #c5a35c));
+        border-color: var(--seatcol, var(--acc, #c5a35c));
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-weight: 600;
         cursor: grab;
         animation: seat-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -7200,11 +7347,11 @@ export class TableSeatingPlannerIsolated extends Component<
         transform: translate(-50%, -50%) scale(1.35);
         z-index: 6;
         overflow: hidden;
-        color: #22283f;
-        background: var(--acc);
-        border: 2px solid var(--acc-deep);
+        color: var(--ink, #22283f);
+        background: var(--acc, #c5a35c);
+        border: 2px solid var(--acc-deep, #a5854a);
         box-shadow: 0 4px 14px rgba(34, 40, 63, 0.15);
-        font-family: 'Cormorant Garamond', serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', serif);
         font-weight: 600;
       }
       .seat-img {
@@ -7254,7 +7401,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 14px;
         height: 14px;
         background: #fff;
-        border: 1.5px solid var(--acc-deep);
+        border: 1.5px solid var(--acc-deep, #a5854a);
         border-radius: 4px;
         box-shadow: 0 2px 6px rgba(34, 40, 63, 0.14);
         z-index: 6;
@@ -7265,8 +7412,8 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .rz:hover,
       .rz:active {
-        background: var(--acc-deep);
-        border-color: var(--acc-deep);
+        background: var(--acc-deep, #a5854a);
+        border-color: var(--acc-deep, #a5854a);
       }
       .rz-e {
         right: -32px;
@@ -7305,8 +7452,8 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 22px;
         border-radius: 50%;
         background: #fff;
-        border: 1.5px solid var(--acc-deep);
-        color: var(--acc-deep);
+        border: 1.5px solid var(--acc-deep, #a5854a);
+        color: var(--acc-deep, #a5854a);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -7319,7 +7466,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .rz-locked {
         cursor: pointer;
         font-size: 11px;
-        border-color: var(--acc);
+        border-color: var(--acc, #c5a35c);
         background: rgba(197, 163, 92, 0.18);
       }
       .rz-locked:active {
@@ -7331,10 +7478,10 @@ export class TableSeatingPlannerIsolated extends Component<
         bottom: -20px;
         transform: translateX(-50%);
         white-space: nowrap;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 9px;
         letter-spacing: 0.08em;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
         opacity: 0.8;
       }
       .align-bar {
@@ -7346,20 +7493,24 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         gap: 2px;
         padding: 4px 8px;
-        background: color-mix(in srgb, var(--surface) 92%, transparent);
+        background: color-mix(
+          in srgb,
+          var(--surface, #ffffff) 92%,
+          transparent
+        );
         -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 999px;
         box-shadow: 0 8px 22px rgba(34, 40, 63, 0.15);
         z-index: 21;
       }
       .align-cap {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 9px;
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
         padding: 0 6px 0 2px;
       }
       .align-btn {
@@ -7371,7 +7522,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border: none;
         background: none;
         border-radius: 8px;
-        color: var(--ink);
+        color: var(--ink, #22283f);
         font-size: 16px;
         line-height: 1;
         cursor: pointer;
@@ -7384,7 +7535,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1px;
         height: 18px;
         margin: 0 4px;
-        background: var(--surface-edge);
+        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
       }
       .zoom-ctl {
         position: absolute;
@@ -7394,10 +7545,14 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         gap: 1px;
-        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        background: color-mix(
+          in srgb,
+          var(--surface, #ffffff) 88%,
+          transparent
+        );
         -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 999px;
         padding: 4px;
         box-shadow:
@@ -7412,7 +7567,7 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 28px;
         border: none;
         background: none;
-        color: var(--ink);
+        color: var(--ink, #22283f);
         border-radius: 999px;
         cursor: pointer;
         transition:
@@ -7437,32 +7592,32 @@ export class TableSeatingPlannerIsolated extends Component<
       .zoom-pct {
         min-width: 46px;
         padding: 0 4px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         font-variant-numeric: tabular-nums;
         letter-spacing: 0.02em;
-        color: var(--ink);
+        color: var(--ink, #22283f);
       }
       .zoom-pct:hover {
-        color: var(--acc);
+        color: var(--acc, #c5a35c);
       }
       .zoom-div {
         width: 1px;
         height: 16px;
-        background: var(--surface-edge);
+        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
         margin: 0 3px;
       }
       .zoom-fit {
         gap: 5px;
         padding: 0 12px 0 10px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--ink-2, #57534b);
       }
       .zoom-fit:not(:disabled):hover {
-        color: var(--acc);
+        color: var(--acc, #c5a35c);
       }
       .zoom-fit-ico {
         font-size: 14px;
@@ -7475,8 +7630,12 @@ export class TableSeatingPlannerIsolated extends Component<
         z-index: var(--z-inspector);
         overflow-y: auto;
         contain: size;
-        background: linear-gradient(180deg, #fdfaf2, #f4eddb);
-        color: #22283f;
+        background: linear-gradient(
+          180deg,
+          var(--popover, #fdfaf2),
+          var(--paper-2, #f4eddb)
+        );
+        color: var(--ink, #22283f);
         border-left: 1px solid rgba(0, 0, 0, 0.1);
         transition: width 0.2s ease;
       }
@@ -7514,12 +7673,12 @@ export class TableSeatingPlannerIsolated extends Component<
       .insp-name {
         flex: 1;
         min-width: 0;
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 25px;
         border: none;
         background: none;
         outline: none;
-        color: #22283f;
+        color: var(--ink, #22283f);
       }
       .insp-x {
         flex: none;
@@ -7532,7 +7691,7 @@ export class TableSeatingPlannerIsolated extends Component<
         color: #8f887b;
       }
       .insp-status {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         letter-spacing: 0.08em;
         color: #6f6a61;
@@ -7548,16 +7707,16 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-bottom: 8px;
       }
       .insp-progress-label {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: #6f6a61;
       }
       .insp-progress-count {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 16px;
-        color: #22283f;
+        color: var(--ink, #22283f);
       }
       .insp-progress-bar {
         height: 6px;
@@ -7568,7 +7727,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .insp-progress-fill {
         display: block;
         height: 100%;
-        background: #c5a35c;
+        background: var(--gold, #c5a35c);
         transition: width 0.4s ease;
       }
       .insp-seatmap-hint {
@@ -7660,7 +7819,7 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 12px;
         color: #9a7d44;
         background: #fff;
@@ -7672,14 +7831,14 @@ export class TableSeatingPlannerIsolated extends Component<
           background 0.15s ease;
       }
       .insp-seat:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .insp-seat.is-filled {
         border-style: solid;
-        color: #22283f;
+        color: var(--ink, #22283f);
         background: var(--seatcol, #c5a35c);
         border-color: var(--seatcol, #c5a35c);
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-weight: 600;
         cursor: grab;
       }
@@ -7689,8 +7848,8 @@ export class TableSeatingPlannerIsolated extends Component<
       .insp-seat.is-drop {
         transform: scale(1.18);
         overflow: hidden;
-        color: #22283f;
-        background: #c5a35c;
+        color: var(--ink, #22283f);
+        background: var(--gold, #c5a35c);
         border: 2px solid #9a7d44;
         box-shadow: 0 4px 14px rgba(154, 125, 68, 0.4);
       }
@@ -7710,7 +7869,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0;
         border: 1px solid rgba(255, 255, 255, 0.75);
         border-radius: 50%;
-        background: #22283f;
+        background: var(--ink, #22283f);
         color: #fff;
         font-size: 9px;
         line-height: 1;
@@ -7729,14 +7888,14 @@ export class TableSeatingPlannerIsolated extends Component<
         border-color: #b3261e;
       }
       .insp-kicker {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.24em;
         text-transform: uppercase;
         color: #9a7d44;
       }
       .insp-hero {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 27px;
         margin-top: 8px;
       }
@@ -7747,7 +7906,7 @@ export class TableSeatingPlannerIsolated extends Component<
         margin: 12px 0 0;
       }
       .insp-label {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
@@ -7766,16 +7925,16 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 10px;
         cursor: pointer;
         font-size: 12px;
-        color: #22283f;
+        color: var(--ink, #22283f);
         transition: 0.15s;
       }
       .insp-opt:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .insp-opt.is-on {
-        background: #22283f;
+        background: var(--ink, #22283f);
         color: #fff;
-        border-color: #22283f;
+        border-color: var(--ink, #22283f);
       }
       .insp-opt:disabled {
         opacity: 0.45;
@@ -7832,18 +7991,18 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-top: 20px;
         height: 44px;
         border-radius: 12px;
-        border: 1px solid #c5a35c;
+        border: 1px solid var(--gold, #c5a35c);
         background: rgba(197, 163, 92, 0.14);
         color: #9a7d44;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         cursor: pointer;
       }
       .insp-vip.is-on {
-        background: #c5a35c;
-        color: #22283f;
+        background: var(--gold, #c5a35c);
+        color: var(--ink, #22283f);
       }
       .insp-fxart {
         width: 100%;
@@ -7868,14 +8027,14 @@ export class TableSeatingPlannerIsolated extends Component<
         background: #fff;
         border-radius: 10px;
         cursor: pointer;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.06em;
-        color: #22283f;
+        color: var(--ink, #22283f);
         transition: 0.15s;
       }
       .insp-clear:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .insp-actions {
         display: flex;
@@ -7891,7 +8050,7 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 8px;
         margin: 26px -22px -30px;
         padding: 14px 22px 16px;
-        background: #f4eddb;
+        background: var(--paper-2, #f4eddb);
         border-top: 1px solid rgba(197, 163, 92, 0.25);
       }
       .insp-actionbar .insp-clear,
@@ -7906,17 +8065,17 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 10px;
         cursor: pointer;
         font-size: 12px;
-        color: #22283f;
+        color: var(--ink, #22283f);
       }
       .insp-actions button:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .insp-actions .danger {
         color: #8e3a46;
         border-color: rgba(179, 67, 63, 0.4);
       }
       .insp-legend-title {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         letter-spacing: 0.22em;
         text-transform: uppercase;
@@ -7938,7 +8097,7 @@ export class TableSeatingPlannerIsolated extends Component<
         font-size: 14px;
       }
       .ilr-count {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 12px;
         color: #6f6a61;
       }
@@ -7946,16 +8105,20 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-top: 26px;
         padding: 18px 18px 16px;
         border-radius: 14px;
-        background: linear-gradient(168deg, var(--navy), var(--navy-2));
+        background: linear-gradient(
+          168deg,
+          var(--navy, #141b33),
+          var(--navy-2, #1a2238)
+        );
         border: 1px solid rgba(197, 163, 92, 0.5);
-        color: var(--navy-ink);
+        color: var(--navy-ink, #f3ead6);
         box-shadow: 0 10px 26px rgba(20, 27, 51, 0.22);
       }
       .insp-help-title {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-style: italic;
         font-size: 21px;
-        color: var(--gold-soft);
+        color: var(--gold-soft, #e6cf9a);
       }
       .insp-help-lead {
         margin: 8px 0 0;
@@ -7964,15 +8127,15 @@ export class TableSeatingPlannerIsolated extends Component<
         color: rgba(243, 234, 214, 0.85);
       }
       .insp-help-lead b {
-        color: var(--gold);
+        color: var(--gold, #c5a35c);
         font-weight: 500;
       }
       .tsp-invites {
         flex: 1;
         display: flex;
         min-height: 0;
-        background: var(--paper);
-        color: var(--ink);
+        background: var(--paper, #faf6ec);
+        color: var(--ink, #22283f);
       }
       .inv-studio {
         flex: 1;
@@ -7982,14 +8145,14 @@ export class TableSeatingPlannerIsolated extends Component<
         border-right: 1px solid rgba(34, 40, 63, 0.06);
       }
       .inv-kicker {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.24em;
         text-transform: uppercase;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
       }
       .inv-h {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 30px;
         margin: 8px 0 0;
       }
@@ -8030,15 +8193,39 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 8px;
         color: var(--ink-2, #7c766c);
       }
-      .poster-empty-ico {
-        font-size: 20px;
-        color: var(--gold);
+      .poster-empty-logo {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid var(--gold-soft, #e6cf9a);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      .poster-empty-mark {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(
+          --gold-grad,
+          linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
+        );
+        color: var(--navy, #141b33);
+        border: 1px solid var(--gold-soft, #e6cf9a);
+      }
+      .poster-empty-mark::before {
+        content: var(--tsp-motif, attr(data-initials));
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-weight: 700;
+        font-size: 30px;
+        line-height: 1;
       }
       .poster-empty-title {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-style: italic;
         font-size: 19px;
-        color: var(--ink);
+        color: var(--ink, #22283f);
       }
       .poster-empty-hint {
         font-size: 11.5px;
@@ -8060,7 +8247,7 @@ export class TableSeatingPlannerIsolated extends Component<
         color: var(--ink-2, #57534b);
       }
       .inv-ai-lead b {
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
         font-weight: 500;
       }
       .inv-ai-clear {
@@ -8070,13 +8257,13 @@ export class TableSeatingPlannerIsolated extends Component<
         border: none;
         background: none;
         color: var(--ink-2, #7c766c);
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         text-decoration: underline;
         cursor: pointer;
       }
       .inv-label {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
@@ -8088,11 +8275,11 @@ export class TableSeatingPlannerIsolated extends Component<
         max-width: 560px;
         height: 96px;
         padding: 13px 14px;
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 11px;
-        background: var(--surface);
-        color: var(--ink);
-        font-family: 'Jost', sans-serif;
+        background: var(--surface, #ffffff);
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 13.5px;
         line-height: 1.5;
         outline: none;
@@ -8102,18 +8289,18 @@ export class TableSeatingPlannerIsolated extends Component<
         display: block;
         margin-top: 14px;
         padding: 9px 18px;
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 11px;
         background: none;
-        color: var(--ink);
-        font-family: 'Jost', sans-serif;
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 12px;
         letter-spacing: 0.04em;
         cursor: pointer;
       }
       .inv-download:hover {
-        border-color: var(--acc);
-        color: var(--acc);
+        border-color: var(--acc, #c5a35c);
+        color: var(--acc, #c5a35c);
       }
       .inv-aspects {
         display: flex;
@@ -8123,24 +8310,24 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .inv-aspect {
         padding: 6px 14px;
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 20px;
-        background: var(--surface);
+        background: var(--surface, #ffffff);
         color: var(--ink-2, #7c766c);
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.04em;
         cursor: pointer;
         transition: 0.15s;
       }
       .inv-aspect:hover {
-        border-color: var(--acc);
-        color: var(--ink);
+        border-color: var(--acc, #c5a35c);
+        color: var(--ink, #22283f);
       }
       .inv-aspect.is-on {
-        border-color: var(--acc);
-        background: color-mix(in oklab, var(--acc) 16%, transparent);
-        color: var(--acc);
+        border-color: var(--acc, #c5a35c);
+        background: color-mix(in oklab, var(--acc, #c5a35c) 16%, transparent);
+        color: var(--acc, #c5a35c);
       }
       .inv-ai-prompt {
         height: 64px;
@@ -8149,17 +8336,17 @@ export class TableSeatingPlannerIsolated extends Component<
         display: block;
         margin-top: 10px;
         padding: 9px 18px;
-        border: 1px solid var(--acc);
+        border: 1px solid var(--acc, #c5a35c);
         border-radius: 11px;
         background: none;
-        color: var(--acc);
-        font-family: 'Jost', sans-serif;
+        color: var(--acc, #c5a35c);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 12px;
         letter-spacing: 0.04em;
         cursor: pointer;
       }
       .inv-ai-generate:hover:not(:disabled) {
-        background: var(--acc);
+        background: var(--acc, #c5a35c);
         color: var(--paper, #17140f);
       }
       .inv-ai-generate:disabled {
@@ -8167,7 +8354,7 @@ export class TableSeatingPlannerIsolated extends Component<
         cursor: progress;
       }
       .inv-tokens {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10.5px;
         color: var(--ink-2, #7c766c);
         margin: 9px 0 0;
@@ -8183,7 +8370,7 @@ export class TableSeatingPlannerIsolated extends Component<
         flex: none;
         overflow-y: auto;
         padding: 24px 22px 30px;
-        background: var(--paper-2);
+        background: var(--paper-2, #f4eddb);
       }
       .inv-search {
         position: relative;
@@ -8232,7 +8419,7 @@ export class TableSeatingPlannerIsolated extends Component<
         color: inherit;
       }
       .inv-list-head {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 20px;
       }
       .inv-list-note {
@@ -8258,8 +8445,12 @@ export class TableSeatingPlannerIsolated extends Component<
         font:
           600 12px 'Cormorant Garamond',
           serif;
-        color: #22283f;
-        background: linear-gradient(135deg, #a5854a, #c5a35c);
+        color: var(--ink, #22283f);
+        background: linear-gradient(
+          135deg,
+          var(--acc-deep, #a5854a),
+          var(--gold, #c5a35c)
+        );
       }
       .inv-row-main {
         flex: 1;
@@ -8278,10 +8469,10 @@ export class TableSeatingPlannerIsolated extends Component<
         display: inline-flex;
         align-items: center;
         border-radius: 20px;
-        border: 1px solid var(--surface-edge);
-        background: var(--surface);
-        color: var(--ink);
-        font-family: 'Jost', sans-serif;
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--surface, #ffffff);
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 9.5px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
@@ -8290,7 +8481,7 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .inv-btn:hover {
-        border-color: var(--acc);
+        border-color: var(--acc, #c5a35c);
       }
       .inv-edit {
         flex: none;
@@ -8307,9 +8498,9 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .inv-edit:hover {
-        border-color: var(--acc);
-        color: var(--acc);
-        background: color-mix(in oklab, var(--acc) 12%, transparent);
+        border-color: var(--acc, #c5a35c);
+        color: var(--acc, #c5a35c);
+        background: color-mix(in oklab, var(--acc, #c5a35c) 12%, transparent);
       }
       .inv-edit-ico {
         width: 15px;
@@ -8327,7 +8518,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 14px;
         background: rgba(197, 163, 92, 0.08);
         color: var(--acc-deep, #9a7d44);
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 12px;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -8385,8 +8576,8 @@ export class TableSeatingPlannerIsolated extends Component<
         border: 1px solid transparent;
         border-radius: 8px;
         outline: none;
-        color: #f3ead6;
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        color: var(--navy-ink, #f3ead6);
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 21px;
         line-height: 1.2;
         text-overflow: ellipsis;
@@ -8417,23 +8608,23 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .tpop-vip:hover {
-        border-color: #c5a35c;
-        color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
+        color: var(--gold, #c5a35c);
       }
       .tpop-vip.is-on {
-        background: #c5a35c;
-        border-color: #c5a35c;
-        color: #22283f;
+        background: var(--gold, #c5a35c);
+        border-color: var(--gold, #c5a35c);
+        color: var(--ink, #22283f);
       }
       .tpop-status {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         letter-spacing: 0.08em;
-        color: #c5a35c;
+        color: var(--gold, #c5a35c);
         margin-top: 4px;
       }
       .tpop-label {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 9.5px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
@@ -8449,19 +8640,19 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 34px;
         border: 1px solid rgba(34, 40, 63, 0.1);
         background: rgba(34, 40, 63, 0.04);
-        color: #22283f;
+        color: var(--ink, #22283f);
         border-radius: 8px;
         font-size: 10.5px;
         cursor: pointer;
         transition: 0.15s;
       }
       .tpop-shape:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .tpop-shape.is-on {
-        background: #c5a35c;
-        color: #22283f;
-        border-color: #c5a35c;
+        background: var(--gold, #c5a35c);
+        color: var(--ink, #22283f);
+        border-color: var(--gold, #c5a35c);
       }
       .tpop-row {
         display: flex;
@@ -8484,18 +8675,18 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 8px;
         border: 1px solid rgba(34, 40, 63, 0.12);
         background: rgba(34, 40, 63, 0.04);
-        color: #22283f;
+        color: var(--ink, #22283f);
         font-size: 17px;
         cursor: pointer;
       }
       .tpop-step button:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .tpop-num {
         min-width: 30px;
         width: 44px;
         text-align: center;
-        font-family: 'Cormorant Garamond', serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', serif);
         font-size: 19px;
         border: none;
         background: transparent;
@@ -8522,21 +8713,21 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 30px;
         border: 1px solid rgba(34, 40, 63, 0.1);
         background: rgba(34, 40, 63, 0.04);
-        color: #22283f;
+        color: var(--ink, #22283f);
         border-radius: 8px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 9.5px;
         letter-spacing: 0.02em;
         cursor: pointer;
         transition: 0.15s;
       }
       .tpop-order:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .tpop-order.is-on {
-        background: #c5a35c;
-        color: #22283f;
-        border-color: #c5a35c;
+        background: var(--gold, #c5a35c);
+        color: var(--ink, #22283f);
+        border-color: var(--gold, #c5a35c);
       }
       .tpop-layer {
         display: grid;
@@ -8548,14 +8739,14 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 8px;
         border: 1px solid rgba(34, 40, 63, 0.12);
         background: rgba(34, 40, 63, 0.04);
-        color: #22283f;
-        font-family: 'Jost', sans-serif;
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         cursor: pointer;
         transition: 0.15s;
       }
       .tpop-layer button:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .tpop-layer button:disabled {
         opacity: 0.5;
@@ -8565,7 +8756,7 @@ export class TableSeatingPlannerIsolated extends Component<
         grid-column: 1 / -1;
       }
       .tpop-lock.is-on {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
         background: rgba(197, 163, 92, 0.16);
         color: #9a7d44;
       }
@@ -8584,14 +8775,14 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 9px;
         border: 1px solid rgba(34, 40, 63, 0.12);
         background: rgba(34, 40, 63, 0.04);
-        color: #22283f;
-        font-family: 'Jost', sans-serif;
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10.5px;
         cursor: pointer;
         transition: 0.15s;
       }
       .tpop-actions button:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .tpop-actions .danger {
         color: #b05a48;
@@ -8606,7 +8797,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 1px 7px;
         border-radius: 20px;
         background: rgba(197, 163, 92, 0.18);
-        color: #c5a35c;
+        color: var(--gold, #c5a35c);
         letter-spacing: 0.04em;
       }
       .tpop-rank {
@@ -8621,13 +8812,13 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 8px;
         border: 1px solid rgba(34, 40, 63, 0.1);
         background: rgba(34, 40, 63, 0.04);
-        color: #22283f;
-        font-family: 'Jost', sans-serif;
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 12px;
       }
       .tpop-rank-input:focus {
         outline: none;
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .tpop-rank-auto {
         flex: none;
@@ -8636,22 +8827,22 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 8px;
         border: 1px solid rgba(34, 40, 63, 0.1);
         background: rgba(34, 40, 63, 0.04);
-        color: #22283f;
+        color: var(--ink, #22283f);
         font-size: 10.5px;
         cursor: pointer;
         transition: 0.15s;
       }
       .tpop-rank-auto:hover {
-        border-color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
       }
       .tpop-rank-auto.is-on {
-        background: #c5a35c;
-        border-color: #c5a35c;
-        color: #22283f;
+        background: var(--gold, #c5a35c);
+        border-color: var(--gold, #c5a35c);
+        color: var(--ink, #22283f);
       }
       .tpop-hint {
         margin-top: 8px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10.5px;
         line-height: 1.5;
         color: #7c766c;
@@ -8663,11 +8854,11 @@ export class TableSeatingPlannerIsolated extends Component<
         transform: translateX(-50%);
         z-index: 9000;
         padding: 12px 22px;
-        background: var(--navy);
-        border: 1px solid var(--gold);
-        color: var(--navy-ink);
+        background: var(--navy, #141b33);
+        border: 1px solid var(--gold, #c5a35c);
+        color: var(--navy-ink, #f3ead6);
         border-radius: 30px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.08em;
         box-shadow: 0 12px 34px rgba(34, 40, 63, 0.15);
@@ -8678,24 +8869,24 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-toast-action {
         border: none;
-        background: var(--gold);
-        color: var(--navy);
+        background: var(--gold, #c5a35c);
+        color: var(--navy, #141b33);
         border-radius: 20px;
         padding: 5px 14px;
         cursor: pointer;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.1em;
         text-transform: uppercase;
         font-weight: 600;
       }
       .tsp-toast-action:hover {
-        background: var(--gold-soft);
+        background: var(--gold-soft, #e6cf9a);
       }
       .tsp-toast-close {
         border: none;
         background: none;
-        color: var(--navy-ink);
+        color: var(--navy-ink, #f3ead6);
         opacity: 0.6;
         cursor: pointer;
         font-size: 12px;
@@ -8723,7 +8914,7 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 38px;
         border-radius: 50%;
         overflow: hidden;
-        border: 2px solid var(--acc);
+        border: 2px solid var(--acc, #c5a35c);
         box-shadow: 0 10px 26px rgba(34, 40, 63, 0.15);
       }
       .dg-photo {
@@ -8741,8 +8932,12 @@ export class TableSeatingPlannerIsolated extends Component<
         font:
           600 14px 'Cormorant Garamond',
           serif;
-        color: #22283f;
-        background: linear-gradient(135deg, #a5854a, #c5a35c);
+        color: var(--ink, #22283f);
+        background: linear-gradient(
+          135deg,
+          var(--acc-deep, #a5854a),
+          var(--gold, #c5a35c)
+        );
       }
       .seat-info {
         position: absolute;
@@ -8752,11 +8947,11 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 214px;
         padding: 12px 13px;
         background: linear-gradient(168deg, #ffffff, #f0eee7 75%);
-        border: 1px solid var(--acc);
+        border: 1px solid var(--acc, #c5a35c);
         border-radius: 12px;
-        color: #22283f;
+        color: var(--ink, #22283f);
         box-shadow: 0 16px 40px rgba(34, 40, 63, 0.16);
-        font-family: 'Jost', system-ui, sans-serif;
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
       }
       .si-top {
         display: flex;
@@ -8778,14 +8973,18 @@ export class TableSeatingPlannerIsolated extends Component<
         font:
           600 15px 'Cormorant Garamond',
           serif;
-        color: #22283f;
-        background: linear-gradient(135deg, #a5854a, #c5a35c);
+        color: var(--ink, #22283f);
+        background: linear-gradient(
+          135deg,
+          var(--acc-deep, #a5854a),
+          var(--gold, #c5a35c)
+        );
       }
       .si-id {
         min-width: 0;
       }
       .si-name {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 15px;
         line-height: 1.2;
       }
@@ -8793,11 +8992,11 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-left: 4px;
         padding: 1px 5px;
         border-radius: 4px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 8px;
         letter-spacing: 0.1em;
-        color: #22283f;
-        background: var(--acc);
+        color: var(--ink, #22283f);
+        background: var(--acc, #c5a35c);
         vertical-align: middle;
       }
       .si-cat {
@@ -8816,20 +9015,20 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .si-line {
         margin-top: 8px;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10.5px;
         letter-spacing: 0.04em;
-        color: #c5a35c;
+        color: var(--gold, #c5a35c);
       }
       .modal-cancel {
         flex: 1;
         height: 46px;
         border: 1px solid rgba(34, 40, 63, 0.1);
         background: none;
-        color: #22283f;
+        color: var(--ink, #22283f);
         border-radius: 30px;
         cursor: pointer;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -8838,18 +9037,18 @@ export class TableSeatingPlannerIsolated extends Component<
         flex: 1;
         height: 46px;
         border: none;
-        background: #141b33;
-        color: #f3ead6;
+        background: var(--navy, #141b33);
+        color: var(--navy-ink, #f3ead6);
         border-radius: 30px;
         cursor: pointer;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         font-weight: 600;
       }
       .modal-save:hover:not(:disabled) {
-        background: #1a2238;
+        background: var(--navy-2, #1a2238);
       }
       .modal-save:disabled {
         opacity: 0.4;
@@ -8865,14 +9064,18 @@ export class TableSeatingPlannerIsolated extends Component<
         justify-content: space-between;
         gap: 10px;
         padding: 11px 12px 10px 16px;
-        background: linear-gradient(168deg, #141b33, #1a2238);
+        background: linear-gradient(
+          168deg,
+          var(--navy, #141b33),
+          var(--navy-2, #1a2238)
+        );
         border-bottom: 1px solid rgba(197, 163, 92, 0.25);
       }
       .pop-title {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 15px;
         font-weight: 600;
-        color: #f3ead6;
+        color: var(--navy-ink, #f3ead6);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -8887,7 +9090,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 50%;
         border: 1px solid rgba(255, 255, 255, 0.14);
         background: rgba(255, 255, 255, 0.05);
-        color: #f3ead6;
+        color: var(--navy-ink, #f3ead6);
         font-size: 13px;
         cursor: pointer;
         transition: 0.14s;
@@ -8900,7 +9103,7 @@ export class TableSeatingPlannerIsolated extends Component<
         margin: 0 0 12px;
         font-size: 12.5px;
         line-height: 1.5;
-        color: color-mix(in srgb, var(--ink) 65%, transparent);
+        color: color-mix(in srgb, var(--ink, #22283f) 65%, transparent);
       }
       .confirm-detail {
         margin: 8px 0 4px;
@@ -8916,7 +9119,7 @@ export class TableSeatingPlannerIsolated extends Component<
         color: #ffffff;
         border-radius: 30px;
         cursor: pointer;
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -8940,25 +9143,25 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 7px;
       }
       .save-field-label {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 10px;
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
       }
       .save-input {
         height: 44px;
         padding: 0 14px;
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 12px;
         background: rgba(34, 40, 63, 0.03);
-        color: var(--ink);
-        font-family: 'Cormorant Garamond', serif;
+        color: var(--ink, #22283f);
+        font-family: var(--font-serif, 'Cormorant Garamond', serif);
         font-size: 15px;
       }
       .save-input:focus {
         outline: none;
-        border-color: var(--acc);
+        border-color: var(--acc, #c5a35c);
       }
       .save-error {
         margin: 10px 0 0;
@@ -8972,7 +9175,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 100%;
         height: 200px;
         background: rgba(34, 40, 63, 0.03);
-        border: 1px solid var(--surface-edge);
+        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
         border-radius: 10px;
       }
       .preview-foot {
@@ -8983,7 +9186,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 100%;
       }
       .preview-meta {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         white-space: nowrap;
         color: rgba(34, 40, 63, 0.6);
@@ -9013,14 +9216,14 @@ export class TableSeatingPlannerIsolated extends Component<
         border: none;
         background: none;
         border-radius: 10px;
-        color: var(--acc-deep);
+        color: var(--acc-deep, #a5854a);
         font-size: 15px;
         cursor: pointer;
         transition: 0.13s;
       }
       .ct-tpl-eye:hover {
         background: rgba(197, 163, 92, 0.16);
-        color: var(--ink);
+        color: var(--ink, #22283f);
       }
     </style>
   </template>
@@ -9155,6 +9358,162 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       {{on 'click' @c.clearTableRank}}
     >Auto</button>
   </div>
+  <style scoped>
+    .tpop-label {
+      font-family: var(--font-sans, 'Jost', sans-serif);
+      font-size: 9.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #7c766c;
+      margin: 16px 0 9px;
+    }
+    .tpop-shapes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .tpop-shape {
+      height: 34px;
+      border: 1px solid rgba(34, 40, 63, 0.1);
+      background: rgba(34, 40, 63, 0.04);
+      color: var(--ink, #22283f);
+      border-radius: 8px;
+      font-size: 10.5px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .tpop-shape:hover {
+      border-color: var(--gold, #c5a35c);
+    }
+    .tpop-shape.is-on {
+      background: var(--gold, #c5a35c);
+      color: var(--ink, #22283f);
+      border-color: var(--gold, #c5a35c);
+    }
+    .tpop-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+    .tpop-row .tpop-label {
+      margin: 16px 0 0;
+    }
+    .tpop-step {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 12px;
+    }
+    .tpop-step button {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid rgba(34, 40, 63, 0.12);
+      background: rgba(34, 40, 63, 0.04);
+      color: var(--ink, #22283f);
+      font-size: 17px;
+      cursor: pointer;
+    }
+    .tpop-step button:hover {
+      border-color: var(--gold, #c5a35c);
+    }
+    .tpop-num {
+      min-width: 30px;
+      width: 44px;
+      text-align: center;
+      font-family: var(--font-serif, 'Cormorant Garamond', serif);
+      font-size: 19px;
+      border: none;
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+    .tpop-num:focus {
+      outline: 1px solid var(--tsp-gold, #c5a35c);
+      border-radius: 6px;
+    }
+    .tpop-num::-webkit-outer-spin-button,
+    .tpop-num::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+    .tpop-orders {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .tpop-order {
+      height: 30px;
+      border: 1px solid rgba(34, 40, 63, 0.1);
+      background: rgba(34, 40, 63, 0.04);
+      color: var(--ink, #22283f);
+      border-radius: 8px;
+      font-family: var(--font-sans, 'Jost', sans-serif);
+      font-size: 9.5px;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .tpop-order:hover {
+      border-color: var(--gold, #c5a35c);
+    }
+    .tpop-order.is-on {
+      background: var(--gold, #c5a35c);
+      color: var(--ink, #22283f);
+      border-color: var(--gold, #c5a35c);
+    }
+    .tpop-rank-badge {
+      margin-left: 6px;
+      padding: 1px 7px;
+      border-radius: 20px;
+      background: rgba(197, 163, 92, 0.18);
+      color: var(--gold, #c5a35c);
+      letter-spacing: 0.04em;
+    }
+    .tpop-rank {
+      display: flex;
+      gap: 8px;
+    }
+    .tpop-rank-input {
+      flex: 1;
+      min-width: 0;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(34, 40, 63, 0.1);
+      background: rgba(34, 40, 63, 0.04);
+      color: var(--ink, #22283f);
+      font-family: var(--font-sans, 'Jost', sans-serif);
+      font-size: 12px;
+    }
+    .tpop-rank-input:focus {
+      outline: none;
+      border-color: var(--gold, #c5a35c);
+    }
+    .tpop-rank-auto {
+      flex: none;
+      padding: 0 14px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(34, 40, 63, 0.1);
+      background: rgba(34, 40, 63, 0.04);
+      color: var(--ink, #22283f);
+      font-size: 10.5px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .tpop-rank-auto:hover {
+      border-color: var(--gold, #c5a35c);
+    }
+    .tpop-rank-auto.is-on {
+      background: var(--gold, #c5a35c);
+      border-color: var(--gold, #c5a35c);
+      color: var(--ink, #22283f);
+    }
+  </style>
 </template>;
 let _keySeq = 0;
 const _keys = new WeakMap<object, string>();
@@ -9368,8 +9727,11 @@ export class TableSeatingPlannerFitted extends Component<
     }
     return ids.size;
   }
+  get themeVars() {
+    return htmlSafe(buildThemeVars((this.args.model as any)?.cardInfo?.theme));
+  }
   <template>
-    <div class='cq'>
+    <div class='cq' style={{this.themeVars}}>
       <div class='fit'>
         <div class='r-head'>
           <span class='title'>{{if
@@ -9405,9 +9767,13 @@ export class TableSeatingPlannerFitted extends Component<
         padding: 16px;
         box-sizing: border-box;
         overflow: hidden;
-        background: linear-gradient(168deg, #141b33, #1a2238);
-        color: #f3ead6;
-        font-family: 'Jost', system-ui, sans-serif;
+        background: linear-gradient(
+          168deg,
+          var(--navy, #141b33),
+          var(--navy-2, #1a2238)
+        );
+        color: var(--navy-ink, #f3ead6);
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
       }
       .r-head {
         overflow: hidden;
@@ -9415,10 +9781,10 @@ export class TableSeatingPlannerFitted extends Component<
       }
       .title {
         display: block;
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-style: italic;
         font-size: 19px;
-        color: #e6cf9a;
+        color: var(--gold-soft, #e6cf9a);
         margin-top: 4px;
         white-space: nowrap;
         overflow: hidden;
@@ -9431,12 +9797,12 @@ export class TableSeatingPlannerFitted extends Component<
         min-height: 0;
       }
       .stat {
-        font-family: 'Jost', sans-serif;
+        font-family: var(--font-sans, 'Jost', sans-serif);
         font-size: 11px;
         color: rgba(243, 234, 214, 0.7);
       }
       .stat b {
-        color: #c5a35c;
+        color: var(--gold, #c5a35c);
         font-size: 15px;
       }
       @container plan (height <= 70px) {

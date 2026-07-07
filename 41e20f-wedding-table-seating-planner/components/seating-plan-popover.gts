@@ -172,9 +172,9 @@ export default class SeatingPlanPopover extends Component<Signature> {
         display: flex;
         flex-direction: column;
         max-height: min(480px, calc(100vh - 48px));
-        background: #fdfaf2;
-        color: #22283f;
-        font-family: 'Jost', system-ui, sans-serif;
+        background: var(--popover, #fdfaf2);
+        color: var(--ink, #22283f);
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         overflow: hidden;
       }
       .spp-glow {
@@ -203,7 +203,11 @@ export default class SeatingPlanPopover extends Component<Signature> {
         align-items: flex-start;
         gap: 8px;
         padding: 16px 16px 12px;
-        background: linear-gradient(168deg, #141b33, #1a2238);
+        background: linear-gradient(
+          168deg,
+          var(--navy, #141b33),
+          var(--navy-2, #1a2238)
+        );
         border-bottom: 1px solid rgba(197, 163, 92, 0.25);
       }
       .spp-titles {
@@ -211,22 +215,22 @@ export default class SeatingPlanPopover extends Component<Signature> {
         min-width: 0;
       }
       .spp-kicker {
-        font-family: 'Jost', system-ui, sans-serif;
+        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         font-size: 9.5px;
         font-weight: 500;
         letter-spacing: 0.3em;
         text-transform: uppercase;
-        color: #c5a35c;
+        color: var(--gold, #c5a35c);
       }
       .spp-title {
-        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
         font-size: 22px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .spp-head .spp-title {
-        color: #f3ead6;
+        color: var(--navy-ink, #f3ead6);
       }
       .spp-close {
         flex: none;
@@ -238,15 +242,15 @@ export default class SeatingPlanPopover extends Component<Signature> {
         border-radius: 50%;
         border: 1px solid rgba(255, 255, 255, 0.14);
         background: rgba(255, 255, 255, 0.05);
-        color: #f3ead6;
+        color: var(--navy-ink, #f3ead6);
         font-size: 12px;
         line-height: 1;
         cursor: pointer;
         transition: 0.15s;
       }
       .spp-close:hover {
-        border-color: #c5a35c;
-        color: #c5a35c;
+        border-color: var(--gold, #c5a35c);
+        color: var(--gold, #c5a35c);
       }
       .spp-body {
         position: relative;
@@ -259,7 +263,7 @@ export default class SeatingPlanPopover extends Component<Signature> {
         flex: none;
         padding: 12px 18px;
         border-top: 1px solid rgba(197, 163, 92, 0.25);
-        background: #f4eddb;
+        background: var(--paper-2, #f4eddb);
       }
     </style>
   </template>

@@ -1,0 +1,245 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TableSeatingPlanner",
+        "module": "../table-seating-planner"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "venue": "St. Peter's Catholic Church",
+      "poster": {
+        "url": null,
+        "sourceMode": null
+      },
+      "tables": [
+        {
+          "name": "Top Seating",
+          "shape": "section",
+          "seatCount": 48,
+          "seatingStyle": "around",
+          "rows": 8,
+          "cols": 6,
+          "seatOrder": "col-lr",
+          "x": 157,
+          "y": -136,
+          "width": 430,
+          "height": 230,
+          "rotation": 0,
+          "z": 11,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Bottom Seating",
+          "shape": "section",
+          "seatCount": 48,
+          "seatingStyle": "around",
+          "rows": 8,
+          "cols": 6,
+          "seatOrder": "col-lr",
+          "x": 145,
+          "y": 328,
+          "width": 430,
+          "height": 230,
+          "rotation": 0,
+          "z": 12,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [
+            0,
+            1,
+            2
+          ],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        }
+      ],
+      "cardInfo": {
+        "name": "Church Wedding Ceremony",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "fixtures": [
+        {
+          "label": "Red carpet",
+          "kind": "red-carpet",
+          "pattern": "outline",
+          "x": -18,
+          "y": 122,
+          "width": 602,
+          "height": 175,
+          "rotation": 0,
+          "z": 1,
+          "locked": false,
+          "color": "#c65d5d"
+        },
+        {
+          "label": "Plant",
+          "kind": "plant",
+          "pattern": "outline",
+          "x": -173,
+          "y": -73,
+          "width": 135,
+          "height": 140,
+          "rotation": 0,
+          "z": 2,
+          "locked": false,
+          "color": "#2d8b49"
+        },
+        {
+          "label": "Plant",
+          "kind": "plant",
+          "pattern": "outline",
+          "x": -173,
+          "y": 345,
+          "width": 135,
+          "height": 140,
+          "rotation": 0,
+          "z": 3,
+          "locked": false,
+          "color": "#2d8b49"
+        },
+        {
+          "label": "Stage",
+          "kind": "stage",
+          "pattern": "outline",
+          "x": -250.41002044989776,
+          "y": 138.5,
+          "width": 260,
+          "height": 140,
+          "rotation": 270,
+          "z": 13,
+          "locked": false,
+          "color": "#7592cc"
+        },
+        {
+          "label": "Ceremony arch",
+          "kind": "arch",
+          "pattern": "outline",
+          "x": 567.5899795501023,
+          "y": 150.87525562372187,
+          "width": 160,
+          "height": 120,
+          "rotation": 90,
+          "z": 14,
+          "locked": false,
+          "color": "#c5a35c"
+        }
+      ],
+      "eventDate": "2026-07-12",
+      "eventLogo": {
+        "url": null,
+        "sourceMode": null
+      },
+      "eventTitle": "Church Wedding Ceremony",
+      "floorPlanX": -190,
+      "floorPlanY": -95,
+      "floorPlanURL": null,
+      "posterAspect": null,
+      "posterPrompt": null,
+      "floorPlanWidth": 860,
+      "seatingMessage": null,
+      "floorPlanHeight": 551,
+      "floorPlanLocked": false,
+      "floorPlanOpacity": 10,
+      "invitationMessage": null
+    },
+    "relationships": {
+      "hosts.0": {
+        "links": {
+          "self": "../Host/lucas"
+        }
+      },
+      "hosts.1": {
+        "links": {
+          "self": "../Host/amy"
+        }
+      },
+      "guests.0": {
+        "links": {
+          "self": "../Guest/chuan"
+        }
+      },
+      "guests.1": {
+        "links": {
+          "self": "../Guest/justin"
+        }
+      },
+      "guests.2": {
+        "links": {
+          "self": "../Guest/richy"
+        }
+      },
+      "guests.3": {
+        "links": {
+          "self": "../Guest/cheche"
+        }
+      },
+      "guests.4": {
+        "links": {
+          "self": "../Guest/andy"
+        }
+      },
+      "guests.5": {
+        "links": {
+          "self": "../Guest/nana"
+        }
+      },
+      "guests.6": {
+        "links": {
+          "self": "../Guest/chuan"
+        }
+      },
+      "guests.7": {
+        "links": {
+          "self": "../Guest/richy"
+        }
+      },
+      "guests.8": {
+        "links": {
+          "self": "../Guest/robin"
+        }
+      },
+      "guests.9": {
+        "links": {
+          "self": "../Guest/yvonne"
+        }
+      },
+      "guests.10": {
+        "links": {
+          "self": "../Guest/justin"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "tables.1.seatedGuests.0": {
+        "links": {
+          "self": "../Guest/chuan"
+        }
+      },
+      "tables.1.seatedGuests.1": {
+        "links": {
+          "self": "../Guest/justin"
+        }
+      },
+      "tables.1.seatedGuests.2": {
+        "links": {
+          "self": "../Guest/richy"
+        }
+      }
+    }
+  }
+}

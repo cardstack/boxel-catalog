@@ -20,7 +20,7 @@
     "relationships": {
       "tags.0": {
         "links": {
-          "self": "../../catalog/Tag/ai"
+          "self": "../../Tag/ai"
         }
       },
       "license": {
@@ -35,105 +35,110 @@
       },
       "specs.1": {
         "links": {
-          "self": "../Spec/4e5135f4-4fd2-4d7d-9d2b-415b227ae77f"
+          "self": "../Spec/0ec5868a-22d5-46ff-9ff0-4018ebbd3d57"
         }
       },
       "specs.2": {
         "links": {
-          "self": "../Spec/75b1164d-b241-4fe0-85f9-669f9525c047"
+          "self": "../Spec/4e5135f4-4fd2-4d7d-9d2b-415b227ae77f"
         }
       },
       "specs.3": {
         "links": {
-          "self": "../Spec/2fe0c5f9-669f-4525-8047-5d1cec55c21d"
+          "self": "../Spec/75b1164d-b241-4fe0-85f9-669f9525c047"
         }
       },
       "specs.4": {
         "links": {
-          "self": "../Spec/b1164db2-412f-40c5-b966-9f9525c0475d"
+          "self": "../Spec/2fe0c5f9-669f-4525-8047-5d1cec55c21d"
         }
       },
       "specs.5": {
         "links": {
-          "self": "../Spec/c5f9669f-9525-4047-9d1c-ec55c21d4fa5"
+          "self": "../Spec/b1164db2-412f-40c5-b966-9f9525c0475d"
         }
       },
       "specs.6": {
         "links": {
-          "self": "../Spec/e0c5f966-9f95-45c0-875d-1cec55c21d4f"
+          "self": "../Spec/c5f9669f-9525-4047-9d1c-ec55c21d4fa5"
         }
       },
       "specs.7": {
         "links": {
-          "self": "../Spec/412fe0c5-f966-4f95-a5c0-475d1cec55c2"
+          "self": "../Spec/e0c5f966-9f95-45c0-875d-1cec55c21d4f"
         }
       },
       "specs.8": {
         "links": {
-          "self": "../Spec/f05cd9e9-66b0-45b1-964d-b2412fe0c5f9"
+          "self": "../Spec/412fe0c5-f966-4f95-a5c0-475d1cec55c2"
         }
       },
       "specs.9": {
         "links": {
-          "self": "../Spec/164db241-2fe0-45f9-a69f-9525c0475d1c"
+          "self": "../Spec/f05cd9e9-66b0-45b1-964d-b2412fe0c5f9"
         }
       },
       "specs.10": {
         "links": {
-          "self": "../Spec/b075b116-4db2-412f-a0c5-f9669f9525c0"
+          "self": "../Spec/164db241-2fe0-45f9-a69f-9525c0475d1c"
         }
       },
       "specs.11": {
         "links": {
-          "self": "../Spec/9f9525c0-475d-4cec-95c2-1d4fa59e6bda"
+          "self": "../Spec/b075b116-4db2-412f-a0c5-f9669f9525c0"
         }
       },
       "specs.12": {
         "links": {
-          "self": "../Spec/5cd9e966-b075-4116-8db2-412fe0c5f966"
+          "self": "../Spec/9f9525c0-475d-4cec-95c2-1d4fa59e6bda"
         }
       },
       "specs.13": {
         "links": {
-          "self": "../Spec/7df05cd9-e966-4075-b116-4db2412fe0c5"
+          "self": "../Spec/5cd9e966-b075-4116-8db2-412fe0c5f966"
         }
       },
       "specs.14": {
         "links": {
-          "self": "../Spec/f9669f95-25c0-475d-9cec-55c21d4fa59e"
+          "self": "../Spec/7df05cd9-e966-4075-b116-4db2412fe0c5"
         }
       },
       "specs.15": {
         "links": {
-          "self": "../Spec/1866ca76-7df0-4cd9-a966-b075b1164db2"
+          "self": "../Spec/f9669f95-25c0-475d-9cec-55c21d4fa59e"
         }
       },
       "specs.16": {
         "links": {
-          "self": "../Spec/d9e966b0-75b1-464d-b241-2fe0c5f9669f"
+          "self": "../Spec/1866ca76-7df0-4cd9-a966-b075b1164db2"
         }
       },
       "specs.17": {
         "links": {
-          "self": "../Spec/66ca767d-f05c-49e9-a6b0-75b1164db241"
+          "self": "../Spec/d9e966b0-75b1-464d-b241-2fe0c5f9669f"
         }
       },
       "specs.18": {
         "links": {
-          "self": "../Spec/66b075b1-164d-4241-afe0-c5f9669f9525"
+          "self": "../Spec/66ca767d-f05c-49e9-a6b0-75b1164db241"
         }
       },
       "specs.19": {
         "links": {
-          "self": "../Spec/ca767df0-5cd9-4966-b075-b1164db2412f"
+          "self": "../Spec/66b075b1-164d-4241-afe0-c5f9669f9525"
         }
       },
       "specs.20": {
         "links": {
-          "self": "../Spec/e966b075-b116-4db2-812f-e0c5f9669f95"
+          "self": "../Spec/ca767df0-5cd9-4966-b075-b1164db2412f"
         }
       },
       "specs.21": {
+        "links": {
+          "self": "../Spec/e966b075-b116-4db2-812f-e0c5f9669f95"
+        }
+      },
+      "specs.22": {
         "links": {
           "self": "../Spec/767df05c-d9e9-46b0-b5b1-164db2412fe0"
         }
@@ -158,9 +163,84 @@
           "self": "../TableSeatingPlanner/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8"
         }
       },
+      "examples.1": {
+        "links": {
+          "self": "../TableSeatingPlanner/8b596412-e2ed-4d38-877b-40d12c1876dc"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../Guest/andy"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../Guest/cheche"
+        }
+      },
+      "examples.4": {
+        "links": {
+          "self": "../Guest/chuan"
+        }
+      },
+      "examples.5": {
+        "links": {
+          "self": "../Guest/justin"
+        }
+      },
+      "examples.6": {
+        "links": {
+          "self": "../Guest/nana"
+        }
+      },
+      "examples.7": {
+        "links": {
+          "self": "../Guest/richy"
+        }
+      },
+      "examples.8": {
+        "links": {
+          "self": "../Guest/robin"
+        }
+      },
+      "examples.9": {
+        "links": {
+          "self": "../Guest/yvonne"
+        }
+      },
+      "examples.10": {
+        "links": {
+          "self": "../Host/amy"
+        }
+      },
+      "examples.11": {
+        "links": {
+          "self": "../Host/lucas"
+        }
+      },
+      "examples.12": {
+        "links": {
+          "self": "../LayoutTemplate/ceremony"
+        }
+      },
+      "examples.13": {
+        "links": {
+          "self": "../LayoutTemplate/reception"
+        }
+      },
+      "examples.14": {
+        "links": {
+          "self": "../Theme/double-happiness-banquet"
+        }
+      },
       "categories.0": {
         "links": {
           "self": "../../Category/creative-projects"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "../../Category/ai-automation"
         }
       },
       "cardInfo.theme": {

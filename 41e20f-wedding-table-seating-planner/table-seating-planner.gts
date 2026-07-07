@@ -30,9 +30,10 @@ export class TableSeatingPlanner extends CardDef {
   static icon = LayoutIcon;
   static prefersWideFormat = true;
 
+  @field eventLogo = contains(ImageSourceField);
   @field eventTitle = contains(StringField);
-  @field hosts = linksToMany(() => Host);
   @field eventDate = contains(DateField);
+  @field hosts = linksToMany(() => Host);
   @field venue = contains(StringField);
 
   @field hostNames = contains(StringField, {
