@@ -100,7 +100,7 @@ export class InvitationPosterCommand extends Command<
     }
 
     let aspect = input.aspect?.trim() || '1:1';
-    let fullPrompt = `${input.prompt.trim()}\n\nProduce a single poster image with an aspect ratio of ${aspect}. Any text on the poster must be spelled exactly as given above — no gibberish or invented lettering.`;
+    let fullPrompt = `${input.prompt.trim()}\n\nProduce a single poster image with an aspect ratio of ${aspect}. The artwork must FILL THE ENTIRE FRAME edge to edge, full-bleed, at every aspect ratio — the image IS the poster paper itself. The design (background, florals, and lettering) extends all the way to all four edges with NO margin, NO border, NO frame, and NO empty spacing around it. Do NOT render the poster as a physical card, sheet, or print resting on a surface, table, wall, or background; no drop shadow, no mockup, no second surface visible around the design — every single pixel is the poster. Any text on the poster must be spelled exactly as given above — no gibberish or invented lettering.`;
 
     let result = await new SendRequestViaProxyCommand(
       this.commandContext,

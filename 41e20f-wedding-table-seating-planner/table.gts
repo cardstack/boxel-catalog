@@ -113,7 +113,7 @@ export class Table extends FieldDef {
           border-radius: 11px;
           background: var(--background, #fff);
           color: var(--foreground, #22283f);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .t-glyph {
           width: 40px;
@@ -125,8 +125,8 @@ export class Table extends FieldDef {
           font:
             600 14px 'Cormorant Garamond',
             serif;
-          color: #22283f;
-          background: linear-gradient(135deg, #dcc188, #c5a35c);
+          color: var(--ink, #22283f);
+          background: linear-gradient(135deg, #dcc188, var(--gold, #c5a35c));
           border-radius: 50%;
         }
         .t-rect,
@@ -154,8 +154,8 @@ export class Table extends FieldDef {
             600 8px 'Jost',
             monospace;
           letter-spacing: 0.12em;
-          color: #22283f;
-          background: #c5a35c;
+          color: var(--ink, #22283f);
+          background: var(--gold, #c5a35c);
           border-radius: 4px;
           padding: 2px 5px;
         }
@@ -226,7 +226,7 @@ export class Table extends FieldDef {
           grid-template-areas: 'glyph head' 'glyph meta';
           background: var(--background, #fff);
           color: var(--foreground, #22283f);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .r-glyph {
           grid-area: glyph;
@@ -256,8 +256,8 @@ export class Table extends FieldDef {
           font:
             600 15px 'Cormorant Garamond',
             serif;
-          color: #22283f;
-          background: linear-gradient(135deg, #dcc188, #c5a35c);
+          color: var(--ink, #22283f);
+          background: linear-gradient(135deg, #dcc188, var(--gold, #c5a35c));
           border-radius: 50%;
         }
         .t-rect,
@@ -285,8 +285,8 @@ export class Table extends FieldDef {
             600 8px 'Jost',
             monospace;
           letter-spacing: 0.12em;
-          color: #22283f;
-          background: #c5a35c;
+          color: var(--ink, #22283f);
+          background: var(--gold, #c5a35c);
           border-radius: 4px;
           padding: 2px 5px;
         }
@@ -358,11 +358,11 @@ export class Table extends FieldDef {
           box-sizing: border-box;
           background: var(--background, #faf5ec);
           color: var(--foreground, #22283f);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         h1 {
           margin: 0;
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-size: 28px;
           display: flex;
           align-items: center;
@@ -373,8 +373,8 @@ export class Table extends FieldDef {
             600 9px 'Jost',
             monospace;
           letter-spacing: 0.14em;
-          color: #22283f;
-          background: #c5a35c;
+          color: var(--ink, #22283f);
+          background: var(--gold, #c5a35c);
           border-radius: 5px;
           padding: 3px 7px;
         }

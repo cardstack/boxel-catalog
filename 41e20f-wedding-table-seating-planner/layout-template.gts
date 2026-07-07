@@ -65,7 +65,7 @@ export class LayoutTemplate extends CardDef {
       </div>
       <style scoped>
         .lt-iso {
-          --lt-accent: #c5a35c;
+          --lt-accent: var(--gold, #c5a35c);
           --lt-accent-deep: #a8894f;
           --lt-paper: #f0eee7;
           box-sizing: border-box;
@@ -77,8 +77,8 @@ export class LayoutTemplate extends CardDef {
           min-height: 0;
           padding: 24px;
           background: #f7f5f0;
-          color: #22283f;
-          font-family: 'Jost', system-ui, sans-serif;
+          color: var(--ink, #22283f);
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .lt-iso-head {
           flex: none;
@@ -88,7 +88,7 @@ export class LayoutTemplate extends CardDef {
           gap: 16px;
         }
         .lt-iso-title {
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-size: 28px;
           font-weight: 600;
           letter-spacing: -0.01em;
@@ -98,9 +98,9 @@ export class LayoutTemplate extends CardDef {
           flex: none;
           display: flex;
           gap: 16px;
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 12px;
-          color: color-mix(in srgb, #22283f 55%, transparent);
+          color: color-mix(in srgb, var(--ink, #22283f) 55%, transparent);
           white-space: nowrap;
         }
         .lt-iso-stats b {
@@ -147,14 +147,14 @@ export class LayoutTemplate extends CardDef {
       </div>
       <style scoped>
         .lt-card {
-          --lt-accent: #c5a35c;
+          --lt-accent: var(--gold, #c5a35c);
           --lt-accent-deep: #a8894f;
           display: flex;
           align-items: center;
           gap: 11px;
           padding: 8px 10px;
           color: inherit;
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .lt-thumb {
           flex-shrink: 0;
@@ -173,7 +173,7 @@ export class LayoutTemplate extends CardDef {
           min-width: 0;
         }
         .lt-name {
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-size: 15px;
           font-weight: 600;
           letter-spacing: -0.01em;
@@ -182,7 +182,7 @@ export class LayoutTemplate extends CardDef {
           white-space: nowrap;
         }
         .lt-meta {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 11px;
           color: color-mix(in srgb, currentColor 55%, transparent);
         }
@@ -293,12 +293,12 @@ export class LayoutTemplate extends CardDef {
 
       <style scoped>
         .lt-fitted {
-          --lt-accent: #c5a35c;
+          --lt-accent: var(--gold, #c5a35c);
           --lt-accent-deep: #a8894f;
           width: 100%;
           height: 100%;
           color: inherit;
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .badge,
         .strip,
@@ -327,7 +327,7 @@ export class LayoutTemplate extends CardDef {
           padding: 8px;
         }
         .lt-title {
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-weight: 600;
           letter-spacing: -0.01em;
           color: inherit;
@@ -337,7 +337,7 @@ export class LayoutTemplate extends CardDef {
           white-space: nowrap;
         }
         .lt-kicker {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 9px;
           letter-spacing: 0.18em;
           text-transform: uppercase;
@@ -351,7 +351,7 @@ export class LayoutTemplate extends CardDef {
           min-width: 0;
         }
         .lt-meta {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 11px;
           color: color-mix(in srgb, currentColor 55%, transparent);
         }
@@ -360,12 +360,12 @@ export class LayoutTemplate extends CardDef {
           flex-wrap: wrap;
           gap: 4px 12px;
           margin-top: 4px;
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 11px;
           color: color-mix(in srgb, currentColor 55%, transparent);
         }
         .lt-stat b {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 14px;
           font-weight: 700;
           color: var(--lt-accent-deep);

@@ -76,7 +76,7 @@ export class Fixture extends FieldDef {
           border-radius: 11px;
           background: var(--background, #fff);
           color: var(--foreground, #22283f);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .fx-thumb {
           width: 40px;
@@ -141,7 +141,7 @@ export class Fixture extends FieldDef {
           grid-template-areas: 'thumb head' 'thumb meta';
           background: var(--background, #fff);
           color: var(--foreground, #22283f);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .r-thumb {
           grid-area: thumb;
@@ -217,7 +217,7 @@ export class Fixture extends FieldDef {
           box-sizing: border-box;
           background: var(--background, #faf5ec);
           color: var(--foreground, #22283f);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .fx-iso-art {
           width: 160px;
@@ -225,7 +225,7 @@ export class Fixture extends FieldDef {
         }
         h1 {
           margin: 0;
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-size: 26px;
         }
         .fx-iso-kind {

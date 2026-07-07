@@ -1,0 +1,362 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "default",
+        "module": "@cardstack/base/brand-guide"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "version": null,
+      "cardInfo": {
+        "name": "Double Happiness Banquet",
+        "notes": "Concept 4 — 囍 Imperial Banquet. Red (joy) + gilt gold (wealth) traditional Chinese wedding theme for the Table Seating Planner.",
+        "summary": "A lacquer-red and gilt-gold theme for the Table Seating Planner. Drives both the semantic theme slots (--primary, --foreground, --muted, …) and the app's own knobs (--navy* chrome, --gold*, --paper, --ink), flipping the dark navy chrome of the header and rails to imperial lacquer red while keeping gilt-gold metallics — 囍 double-happiness banquet mood on warm porcelain.",
+        "cardThumbnailURL": null
+      },
+      "markUsage": {
+        "primaryMark1": null,
+        "primaryMark2": null,
+        "secondaryMark1": null,
+        "secondaryMark2": null,
+        "primaryMarkMinHeight": null,
+        "primaryMarkGreyscale1": null,
+        "primaryMarkGreyscale2": null,
+        "secondaryMarkMinHeight": null,
+        "socialMediaProfileIcon": null,
+        "secondaryMarkGreyscale1": null,
+        "secondaryMarkGreyscale2": null,
+        "primaryMarkClearanceRatio": null,
+        "secondaryMarkClearanceRatio": null
+      },
+      "styleName": "Double Happiness Banquet",
+      "visualDNA": "Imperial banquet — lacquer red means joy, gilt gold means wealth. Deep lacquer-red chrome with gilt hairlines and a 囍 double-happiness medallion, warm porcelain ground, Ming-style Noto Serif SC type, hongbao-red guest cards. Ceremonial, warm, handcrafted.",
+      "cssImports": [
+        "https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700&display=swap"
+      ],
+      "typography": {
+        "body": {
+          "fontSize": "0.9375rem",
+          "fontFamily": "'Noto Serif SC', 'Noto Serif', Georgia, serif",
+          "fontWeight": "400",
+          "lineHeight": "1.6",
+          "sampleText": "Seat every guest with grace and good fortune."
+        },
+        "caption": {
+          "fontSize": "0.6875rem",
+          "fontFamily": "'Noto Serif SC', 'Noto Serif', Georgia, serif",
+          "fontWeight": "600",
+          "lineHeight": "1.2",
+          "sampleText": "座位 · SEATING"
+        },
+        "heading": {
+          "fontSize": "clamp(1.75rem, 4vw, 2.75rem)",
+          "fontFamily": "'Noto Serif SC', 'Noto Serif', Georgia, serif",
+          "fontWeight": "700",
+          "lineHeight": "1.15",
+          "sampleText": "Lucas & Amy's Wedding Day"
+        },
+        "subheading": {
+          "fontSize": "1.375rem",
+          "fontFamily": "'Noto Serif SC', 'Noto Serif', Georgia, serif",
+          "fontWeight": "600",
+          "lineHeight": "1.4",
+          "sampleText": "Arrange the banquet"
+        },
+        "sectionHeading": {
+          "fontSize": "0.75rem",
+          "fontFamily": "'Noto Serif', Georgia, serif",
+          "fontWeight": "600",
+          "lineHeight": "1",
+          "sampleText": "喜宴 · COMPOSE"
+        }
+      },
+      "colorPalette": "# Red for Joy, Gold for Wealth\n\nThe palette is built on two ceremonial anchors of a traditional Chinese wedding.\n\n## Lacquer Red — 红 (Joy)\n- **Header / chrome:** `#6E1A16` — deep lacquer red, the ceremonial ground.\n- **Rail & card surface:** `#8C2420` — brighter lacquer for hongbao-style guest cards.\n- **Ink on light:** `#4A1512` — dark red-brown for headings and body over porcelain.\n\n## Gilt Gold — 金 (Wealth)\n- **Gilt:** `#C4A053` — avatars, medallion, borders, primary buttons.\n- **Soft gold:** `#E6CF9A` — highlights and gradient top.\n- **Gold gradient:** `linear-gradient(135deg, #EBD9A0, #C4A053 55%, #A07A3C)`.\n\n## Porcelain Ground — 瓷 (Calm)\n- **Paper:** `#FBF4E6` — warm rice-paper canvas.\n- **Surface:** `#FFFDF8` — porcelain-white panels that let red and gold sing.\n\nGold is the metal, red is the mood. Reserve saturated red for the chrome and guest cards; keep the working surfaces porcelain so dense seating information stays legible.",
+      "contentVoice": null,
+      "inspirations": [
+        "囍 double-happiness paper-cuts",
+        "Hongbao (red envelopes) — lacquer red with gold foil",
+        "Ming lacquerware and gilt hairlines",
+        "Imperial banquet scrolls — Noto Serif SC brush weight",
+        "Red-and-gold wedding poster typography"
+      ],
+      "designMindset": "# Ceremony Without Clutter\n\nThe banquet is festive, but a seating tool must stay readable. Concentrate the saturated lacquer red in the chrome (header, rails) and the hongbao guest cards; keep every working surface on warm porcelain so the room chart and roster remain scannable. Gold is a hairline and a medallion, not a fill — it accents structure rather than shouting. Every red is warm, every gold is aged rather than brassy: the effect should feel like an heirloom invitation, not a decoration store.",
+      "rootVariables": {
+        "card": "#FFFDF8",
+        "ring": "#C4A053",
+        "input": "#FFFDF8",
+        "muted": "#F4E9D2",
+        "accent": "#C4A053",
+        "border": "#E4D4AE",
+        "chart1": "#C0392B",
+        "chart2": "#C4A053",
+        "chart3": "#4E7A5B",
+        "chart4": "#3E5C86",
+        "chart5": "#8A7261",
+        "radius": "0.75rem",
+        "shadow": "0 1px 2px 0 rgb(74 21 18 / 0.08)",
+        "popover": "#FFFDF8",
+        "primary": "#8E1F1A",
+        "sidebar": null,
+        "spacing": "0.25rem",
+        "fontMono": "'IBM Plex Mono', Menlo, monospace",
+        "fontSans": "'Noto Serif SC', 'Noto Serif', Georgia, serif",
+        "shadowLg": null,
+        "shadowMd": null,
+        "shadowSm": null,
+        "shadowXl": null,
+        "shadowXs": null,
+        "fontSerif": "'Noto Serif SC', 'Noto Serif', Georgia, serif",
+        "secondary": "#C4A053",
+        "shadow2xl": null,
+        "shadow2xs": null,
+        "background": "#FBF4E6",
+        "foreground": "#4A1512",
+        "themeScale": null,
+        "destructive": "#B0201F",
+        "sidebarRing": null,
+        "sidebarAccent": null,
+        "sidebarBorder": null,
+        "themeFontSize": null,
+        "cardForeground": "#4A1512",
+        "sidebarPrimary": null,
+        "trackingNormal": null,
+        "mutedForeground": "#8A7261",
+        "accentForeground": "#3A100E",
+        "popoverForeground": "#4A1512",
+        "primaryForeground": "#FBF4E6",
+        "sidebarForeground": null,
+        "secondaryForeground": "#3A100E",
+        "destructiveForeground": "#FFFFFF",
+        "sidebarAccentForeground": null,
+        "sidebarPrimaryForeground": null
+      },
+      "motionLanguage": null,
+      "technicalSpecs": null,
+      "wallpaperImages": [],
+      "compositionRules": null,
+      "qualityStandards": null,
+      "typographySystem": null,
+      "brandColorPalette": [
+        {
+          "name": "Lacquer Red",
+          "value": "#6E1A16"
+        },
+        {
+          "name": "Hongbao Red",
+          "value": "#8C2420"
+        },
+        {
+          "name": "Cinnabar",
+          "value": "#C0392B"
+        },
+        {
+          "name": "Red Ink",
+          "value": "#4A1512"
+        },
+        {
+          "name": "Gilt Gold",
+          "value": "#C4A053"
+        },
+        {
+          "name": "Deep Gold",
+          "value": "#A07A3C"
+        },
+        {
+          "name": "Soft Gold",
+          "value": "#E6CF9A"
+        },
+        {
+          "name": "Porcelain",
+          "value": "#FBF4E6"
+        },
+        {
+          "name": "Porcelain White",
+          "value": "#FFFDF8"
+        },
+        {
+          "name": "Warm Cream",
+          "value": "#F7ECD5"
+        }
+      ],
+      "darkModeVariables": {
+        "card": "#3A1512",
+        "ring": "#E3C27D",
+        "input": "#3A1512",
+        "muted": "#3A1E17",
+        "accent": "#E3C27D",
+        "border": "#5A2A20",
+        "chart1": "#E06B5F",
+        "chart2": "#E3C27D",
+        "chart3": "#7FB08C",
+        "chart4": "#8AA6CE",
+        "chart5": "#C9B48C",
+        "radius": "0.75rem",
+        "shadow": "0 1px 2px 0 rgb(0 0 0 / 0.5)",
+        "popover": "#3A1512",
+        "primary": "#E3C27D",
+        "sidebar": null,
+        "spacing": "0.25rem",
+        "fontMono": "'IBM Plex Mono', Menlo, monospace",
+        "fontSans": "'Noto Serif SC', 'Noto Serif', Georgia, serif",
+        "shadowLg": null,
+        "shadowMd": null,
+        "shadowSm": null,
+        "shadowXl": null,
+        "shadowXs": null,
+        "fontSerif": "'Noto Serif SC', 'Noto Serif', Georgia, serif",
+        "secondary": "#8C2420",
+        "shadow2xl": null,
+        "shadow2xs": null,
+        "background": "#241009",
+        "foreground": "#F7ECD5",
+        "themeScale": null,
+        "destructive": "#E0605A",
+        "sidebarRing": null,
+        "sidebarAccent": null,
+        "sidebarBorder": null,
+        "themeFontSize": null,
+        "cardForeground": "#F7ECD5",
+        "sidebarPrimary": null,
+        "trackingNormal": null,
+        "mutedForeground": "#C9B48C",
+        "accentForeground": "#241009",
+        "popoverForeground": "#F7ECD5",
+        "primaryForeground": "#241009",
+        "sidebarForeground": null,
+        "secondaryForeground": "#F7ECD5",
+        "destructiveForeground": "#241009",
+        "sidebarAccentForeground": null,
+        "sidebarPrimaryForeground": null
+      },
+      "functionalPalette": {
+        "dark": "#6E1A16",
+        "light": "#FBF4E6",
+        "accent": "#C4A053",
+        "primary": "#8E1F1A",
+        "secondary": "#C4A053"
+      },
+      "geometricLanguage": null,
+      "historicalContext": null,
+      "customCssVariables": [
+        {
+          "name": "paper",
+          "value": "#FBF4E6"
+        },
+        {
+          "name": "paper-2",
+          "value": "#F4E9D2"
+        },
+        {
+          "name": "grid",
+          "value": "rgba(160, 26, 22, 0.06)"
+        },
+        {
+          "name": "acc",
+          "value": "#C4A053"
+        },
+        {
+          "name": "acc-deep",
+          "value": "#A07A3C"
+        },
+        {
+          "name": "ink",
+          "value": "#4A1512"
+        },
+        {
+          "name": "ink-2",
+          "value": "#6E1A16"
+        },
+        {
+          "name": "surface",
+          "value": "#FFFDF8"
+        },
+        {
+          "name": "surface-edge",
+          "value": "rgba(197, 163, 92, 0.35)"
+        },
+        {
+          "name": "outline",
+          "value": "#C4A053"
+        },
+        {
+          "name": "navy",
+          "value": "#6E1A16"
+        },
+        {
+          "name": "navy-2",
+          "value": "#8C2420"
+        },
+        {
+          "name": "navy-edge",
+          "value": "rgba(233, 207, 154, 0.22)"
+        },
+        {
+          "name": "navy-ink",
+          "value": "#F7ECD5"
+        },
+        {
+          "name": "gold",
+          "value": "#C4A053"
+        },
+        {
+          "name": "gold-soft",
+          "value": "#E6CF9A"
+        },
+        {
+          "name": "gold-grad",
+          "value": "linear-gradient(135deg, #EBD9A0, #C4A053 55%, #A07A3C)"
+        },
+        {
+          "name": "tsp-gold",
+          "value": "#C4A053"
+        },
+        {
+          "name": "tsp-motif",
+          "value": "'囍'"
+        },
+        {
+          "name": "tsp-center-opacity",
+          "value": "0"
+        },
+        {
+          "name": "muted",
+          "value": "#F4E9D2"
+        },
+        {
+          "name": "muted-foreground",
+          "value": "#8A7261"
+        },
+        {
+          "name": "foreground",
+          "value": "#4A1512"
+        },
+        {
+          "name": "background",
+          "value": "#FBF4E6"
+        },
+        {
+          "name": "border",
+          "value": "rgba(110, 26, 22, 0.16)"
+        }
+      ],
+      "materialVocabulary": null,
+      "componentVocabulary": null,
+      "applicationScenarios": null,
+      "brandImageAttachments": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

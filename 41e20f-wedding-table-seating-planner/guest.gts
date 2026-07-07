@@ -86,7 +86,7 @@ export class Guest extends Person {
           border: 1px solid var(--border, rgba(220, 193, 136, 0.3));
           border-radius: 11px;
           background: var(--background, #ffffff);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
           color: var(--foreground, #22283f);
         }
         .g-avatar {
@@ -103,8 +103,8 @@ export class Guest extends Person {
           font:
             600 13px 'Cormorant Garamond',
             serif;
-          color: #22283f;
-          background: linear-gradient(135deg, #dcc188, #c5a35c);
+          color: var(--ink, #22283f);
+          background: linear-gradient(135deg, #dcc188, var(--gold, #c5a35c));
         }
         .g-main {
           flex: 1;
@@ -130,8 +130,8 @@ export class Guest extends Person {
             600 8px 'Jost',
             monospace;
           letter-spacing: 0.12em;
-          color: #22283f;
-          background: #c5a35c;
+          color: var(--ink, #22283f);
+          background: var(--gold, #c5a35c);
           border-radius: 4px;
           padding: 2px 5px;
         }
@@ -240,14 +240,10 @@ export class Guest extends Person {
       </article>
       <style scoped>
         .mag {
-          --background: #fffdf8;
-          --foreground: #22283f;
-          --border: rgba(41, 26, 35, 0.18);
-          --muted-foreground: #8a7f6c;
+          --background: var(--surface, #fffdf8);
+          --foreground: var(--ink, #22283f);
+          --border: var(--surface-edge, rgba(41, 26, 35, 0.18));
           --boxel-form-control-border-color: rgba(41, 26, 35, 0.22);
-          --ink: #22283f;
-          --gold: #a5854a;
-          --paper: #f7f1e4;
           container-type: inline-size;
           container-name: mag;
           height: 100%;
@@ -260,9 +256,9 @@ export class Guest extends Person {
               rgba(197, 163, 92, 0.16),
               transparent 60%
             ),
-            var(--paper);
-          color: var(--ink);
-          font-family: 'Jost', system-ui, sans-serif;
+            var(--paper, #f7f1e4);
+          color: var(--ink, #22283f);
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .mag-mast,
         .mag-colophon {
@@ -282,11 +278,11 @@ export class Guest extends Person {
         }
         .mag-mast-title {
           flex: none;
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 10px;
           letter-spacing: 0.34em;
           text-transform: uppercase;
-          color: var(--gold);
+          color: var(--gold, #a5854a);
         }
         .mag-colophon {
           margin-top: 30px;
@@ -294,7 +290,7 @@ export class Guest extends Person {
         .mag-colophon-mark {
           flex: none;
           font-size: 12px;
-          color: var(--gold);
+          color: var(--gold, #a5854a);
         }
         .mag-ident {
           min-width: 0;
@@ -310,11 +306,11 @@ export class Guest extends Person {
           gap: 12px;
         }
         .mag-kicker {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 9.5px;
           letter-spacing: 0.3em;
           text-transform: uppercase;
-          color: var(--gold);
+          color: var(--gold, #a5854a);
         }
         .mag-vip {
           flex: none;
@@ -325,11 +321,11 @@ export class Guest extends Person {
           border: 1px solid rgba(41, 26, 35, 0.28);
           border-radius: 999px;
           background: transparent;
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 9.5px;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--muted-foreground);
+          color: var(--muted-foreground, #8a7f6c);
           cursor: pointer;
           transition:
             background 0.15s,
@@ -337,19 +333,19 @@ export class Guest extends Person {
             border-color 0.15s;
         }
         .mag-vip:hover {
-          border-color: var(--gold);
-          color: var(--gold);
+          border-color: var(--gold, #a5854a);
+          color: var(--gold, #a5854a);
         }
         .mag-vip.is-on {
-          background: var(--gold);
-          border-color: var(--gold);
-          color: #fffdf8;
+          background: var(--gold, #a5854a);
+          border-color: var(--gold, #a5854a);
+          color: var(--surface, #fffdf8);
         }
         .mag-vip-star {
           font-size: 11px;
         }
         .mag-name :deep(.boxel-input) {
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-size: clamp(24px, 5cqw, 34px);
           font-weight: 500;
           line-height: 1.15;
@@ -358,11 +354,11 @@ export class Guest extends Person {
           border: none;
           border-radius: 0;
           border-bottom: 1px solid rgba(41, 26, 35, 0.3);
-          color: var(--ink);
+          color: var(--ink, #22283f);
         }
         .mag-name :deep(.boxel-input:focus) {
           outline: none;
-          border-bottom-color: var(--gold);
+          border-bottom-color: var(--gold, #a5854a);
           box-shadow: none;
         }
         .mag-cats {
@@ -377,12 +373,12 @@ export class Guest extends Person {
           padding: 6px 14px;
           border: 1px solid rgba(41, 26, 35, 0.28);
           border-radius: 999px;
-          background: #fffdf8;
-          font-family: 'Jost', sans-serif;
+          background: var(--surface, #fffdf8);
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 9.5px;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--muted-foreground);
+          color: var(--muted-foreground, #8a7f6c);
           cursor: pointer;
           transition:
             background 0.15s,
@@ -390,13 +386,13 @@ export class Guest extends Person {
             border-color 0.15s;
         }
         .mag-cat:hover {
-          border-color: var(--ink);
-          color: var(--ink);
+          border-color: var(--ink, #22283f);
+          color: var(--ink, #22283f);
         }
         .mag-cat.is-on {
-          background: var(--ink);
-          border-color: var(--ink);
-          color: #f7f1e4;
+          background: var(--ink, #22283f);
+          border-color: var(--ink, #22283f);
+          color: var(--paper, #f7f1e4);
         }
         .mag-cat-dot {
           width: 9px;
@@ -412,18 +408,18 @@ export class Guest extends Person {
         }
         .mag-sect-no {
           flex: none;
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-style: italic;
           font-size: 15px;
-          color: var(--gold);
+          color: var(--gold, #a5854a);
         }
         .mag-sect-title {
           flex: none;
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 10px;
           letter-spacing: 0.3em;
           text-transform: uppercase;
-          color: var(--ink);
+          color: var(--ink, #22283f);
         }
         .mag-sect .mag-rule {
           align-self: center;
@@ -435,11 +431,11 @@ export class Guest extends Person {
           gap: 6px;
         }
         .mag-lbl {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 9px;
           letter-spacing: 0.24em;
           text-transform: uppercase;
-          color: var(--muted-foreground);
+          color: var(--muted-foreground, #8a7f6c);
         }
         .mag-hint {
           letter-spacing: 0.05em;
@@ -521,10 +517,10 @@ export class Guest extends Person {
             #ffffff,
             #f0eee7 72%
           );
-          color: #22283f;
+          color: var(--ink, #22283f);
           border: 1px solid rgba(220, 193, 136, 0.3);
           border-radius: 14px;
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .gx {
           position: absolute;
@@ -562,8 +558,8 @@ export class Guest extends Person {
             600 22px 'Cormorant Garamond',
             Georgia,
             serif;
-          color: #22283f;
-          background: linear-gradient(135deg, #f0dca4, #c5a35c);
+          color: var(--ink, #22283f);
+          background: linear-gradient(135deg, #f0dca4, var(--gold, #c5a35c));
         }
         .star {
           position: absolute;
@@ -572,22 +568,22 @@ export class Guest extends Person {
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          background: #c5a35c;
-          color: #22283f;
+          background: var(--gold, #c5a35c);
+          color: var(--ink, #22283f);
           font-size: 11px;
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 2px solid #22283f;
+          border: 2px solid var(--ink, #22283f);
         }
         .r-name {
           grid-area: name;
           min-height: 0;
           overflow: hidden;
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-size: 17px;
           line-height: 1.16;
-          color: #22283f;
+          color: var(--ink, #22283f);
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -608,7 +604,7 @@ export class Guest extends Person {
           flex: none;
         }
         .cat {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 9.5px;
           letter-spacing: 0.18em;
           text-transform: uppercase;
@@ -628,7 +624,7 @@ export class Guest extends Person {
           gap: 6px;
         }
         .pill {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 8.5px;
           letter-spacing: 0.12em;
           text-transform: uppercase;
@@ -639,9 +635,9 @@ export class Guest extends Person {
           white-space: nowrap;
         }
         .pill.is-vip {
-          background: #c5a35c;
-          color: #22283f;
-          border-color: #c5a35c;
+          background: var(--gold, #c5a35c);
+          color: var(--ink, #22283f);
+          border-color: var(--gold, #c5a35c);
         }
         @container guest (max-height: 132px) and (min-width: 168px) {
           .fit {
@@ -778,10 +774,6 @@ export class Guest extends Person {
       </article>
       <style scoped>
         .iso {
-          --ink: #22283f;
-          --gold: #a5854a;
-          --paper: #f7f1e4;
-          --muted: #8a7f6c;
           container-type: inline-size;
           container-name: iso;
           height: 100%;
@@ -794,9 +786,9 @@ export class Guest extends Person {
               rgba(197, 163, 92, 0.16),
               transparent 60%
             ),
-            var(--paper);
-          color: var(--ink);
-          font-family: 'Jost', system-ui, sans-serif;
+            var(--paper, #f7f1e4);
+          color: var(--ink, #22283f);
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
         }
         .iso-mast,
         .iso-colophon {
@@ -816,11 +808,11 @@ export class Guest extends Person {
         }
         .iso-mast-title {
           flex: none;
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 10px;
           letter-spacing: 0.34em;
           text-transform: uppercase;
-          color: var(--gold);
+          color: var(--gold, #a5854a);
         }
         .iso-colophon {
           margin-top: 34px;
@@ -828,7 +820,7 @@ export class Guest extends Person {
         .iso-colophon-mark {
           flex: none;
           font-size: 12px;
-          color: var(--gold);
+          color: var(--gold, #a5854a);
         }
         .iso-hero {
           display: flex;
@@ -854,7 +846,7 @@ export class Guest extends Person {
           border-radius: 50%;
           object-fit: cover;
           display: block;
-          background: var(--paper);
+          background: var(--paper, #f7f1e4);
         }
         .iso-initials {
           display: flex;
@@ -864,8 +856,8 @@ export class Guest extends Person {
             600 30px 'Cormorant Garamond',
             Georgia,
             serif;
-          color: #22283f;
-          background: linear-gradient(135deg, #f0dca4, #c5a35c);
+          color: var(--ink, #22283f);
+          background: linear-gradient(135deg, #f0dca4, var(--gold, #c5a35c));
         }
         .iso-star {
           position: absolute;
@@ -874,13 +866,13 @@ export class Guest extends Person {
           width: 26px;
           height: 26px;
           border-radius: 50%;
-          background: var(--gold);
-          color: #fffdf8;
+          background: var(--gold, #a5854a);
+          color: var(--surface, #fffdf8);
           font-size: 13px;
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 2px solid var(--paper);
+          border: 2px solid var(--paper, #f7f1e4);
         }
         .iso-ident {
           min-width: 0;
@@ -889,15 +881,15 @@ export class Guest extends Person {
           gap: 8px;
         }
         .iso-kicker {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 9.5px;
           letter-spacing: 0.3em;
           text-transform: uppercase;
-          color: var(--gold);
+          color: var(--gold, #a5854a);
         }
         .iso-name {
           margin: 0;
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-size: clamp(26px, 5.5cqw, 38px);
           font-weight: 500;
           line-height: 1.12;
@@ -917,17 +909,17 @@ export class Guest extends Person {
           padding: 5px 13px;
           border: 1px solid rgba(41, 26, 35, 0.28);
           border-radius: 999px;
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 9.5px;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--ink);
-          background: #fffdf8;
+          color: var(--ink, #22283f);
+          background: var(--surface, #fffdf8);
         }
         .iso-pill.is-vip {
-          background: var(--gold);
-          border-color: var(--gold);
-          color: #fffdf8;
+          background: var(--gold, #a5854a);
+          border-color: var(--gold, #a5854a);
+          color: var(--surface, #fffdf8);
         }
         .iso-dot {
           width: 9px;
@@ -943,18 +935,18 @@ export class Guest extends Person {
         }
         .iso-sect-no {
           flex: none;
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-style: italic;
           font-size: 15px;
-          color: var(--gold);
+          color: var(--gold, #a5854a);
         }
         .iso-sect-title {
           flex: none;
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 10px;
           letter-spacing: 0.3em;
           text-transform: uppercase;
-          color: var(--ink);
+          color: var(--ink, #22283f);
         }
         .iso-sect .iso-rule {
           align-self: center;
@@ -965,21 +957,21 @@ export class Guest extends Person {
           gap: 8px;
         }
         .iso-lbl {
-          font-family: 'Jost', sans-serif;
+          font-family: var(--font-sans, 'Jost', sans-serif);
           font-size: 9px;
           letter-spacing: 0.24em;
           text-transform: uppercase;
-          color: var(--muted);
+          color: var(--muted, #8a7f6c);
         }
         .iso-party-card {
           max-width: 460px;
         }
         .iso-empty-line {
           margin: 0;
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-style: italic;
           font-size: 13.5px;
-          color: var(--muted);
+          color: var(--muted, #8a7f6c);
         }
         @container iso (max-width: 480px) {
           .iso-hero {

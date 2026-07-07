@@ -47,7 +47,7 @@ export class Host extends Person {
           border: 1px solid rgba(220, 193, 136, 0.55);
           border-radius: 11px;
           background: var(--background, #ffffff);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
           color: var(--foreground, #22283f);
         }
         .h-avatar {
@@ -64,8 +64,8 @@ export class Host extends Person {
           font:
             600 13px 'Cormorant Garamond',
             serif;
-          color: #22283f;
-          background: linear-gradient(135deg, #f0dca4, #c5a35c);
+          color: var(--ink, #22283f);
+          background: linear-gradient(135deg, #f0dca4, var(--gold, #c5a35c));
         }
         .h-main {
           flex: 1;
@@ -95,8 +95,8 @@ export class Host extends Person {
             monospace;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: #22283f;
-          background: #c5a35c;
+          color: var(--ink, #22283f);
+          background: var(--gold, #c5a35c);
           border-radius: 4px;
           padding: 3px 7px;
         }

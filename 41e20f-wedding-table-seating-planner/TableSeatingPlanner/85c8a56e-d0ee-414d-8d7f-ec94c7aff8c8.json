@@ -1,0 +1,571 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TableSeatingPlanner",
+        "module": "../table-seating-planner"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "venue": "Sunway hotel",
+      "poster": {
+        "url": null,
+        "sourceMode": null
+      },
+      "tables": [
+        {
+          "name": "Table 1",
+          "shape": "rect",
+          "seatCount": 16,
+          "seatingStyle": "opposite",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": -157,
+          "y": -32,
+          "width": 230,
+          "height": 45,
+          "rotation": 0,
+          "z": 11,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": true,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 2",
+          "shape": "rect",
+          "seatCount": 16,
+          "seatingStyle": "opposite",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": -157,
+          "y": 209,
+          "width": 230,
+          "height": 45,
+          "rotation": 0,
+          "z": 12,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": true,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 3",
+          "shape": "rect",
+          "seatCount": 14,
+          "seatingStyle": "opposite",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": -234.66666666666669,
+          "y": 87.5,
+          "width": 150,
+          "height": 45,
+          "rotation": 90,
+          "z": 13,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": true,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 4",
+          "shape": "rect",
+          "seatCount": 14,
+          "seatingStyle": "opposite",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": 17.66666666666663,
+          "y": 87.5,
+          "width": 150,
+          "height": 45,
+          "rotation": 90,
+          "z": 14,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": true,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 5",
+          "shape": "square",
+          "seatCount": 4,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": -284,
+          "y": -107,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "z": 15,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 6",
+          "shape": "square",
+          "seatCount": 4,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": -368,
+          "y": -39,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "z": 16,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 7",
+          "shape": "square",
+          "seatCount": 4,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": 166,
+          "y": -107,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "z": 17,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 8",
+          "shape": "square",
+          "seatCount": 4,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": 238,
+          "y": -39,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "z": 18,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 9",
+          "shape": "square",
+          "seatCount": 4,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": -363,
+          "y": 217,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "z": 19,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 10",
+          "shape": "square",
+          "seatCount": 4,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": -294,
+          "y": 285,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "z": 20,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 11",
+          "shape": "square",
+          "seatCount": 4,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": 238,
+          "y": 217,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "z": 21,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Table 12",
+          "shape": "square",
+          "seatCount": 4,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": 181,
+          "y": 285,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "z": 22,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        }
+      ],
+      "cardInfo": {
+        "name": "Lucas & Amy's Wedding Day",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "fixtures": [
+        {
+          "label": "Curved wall",
+          "kind": "curved-wall",
+          "pattern": "outline",
+          "x": -325,
+          "y": -49,
+          "width": 110,
+          "height": 100,
+          "rotation": 0,
+          "z": 1,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Curved wall",
+          "kind": "curved-wall",
+          "pattern": "outline",
+          "x": 125,
+          "y": -49,
+          "width": 110,
+          "height": 100,
+          "rotation": 90,
+          "z": 2,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Curved wall",
+          "kind": "curved-wall",
+          "pattern": "outline",
+          "x": -325,
+          "y": 171,
+          "width": 110,
+          "height": 100,
+          "rotation": 270,
+          "z": 3,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Curved wall",
+          "kind": "curved-wall",
+          "pattern": "outline",
+          "x": 125,
+          "y": 171,
+          "width": 110,
+          "height": 100,
+          "rotation": 180,
+          "z": 4,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Circle",
+          "kind": "round-decor",
+          "pattern": "outline",
+          "x": -285,
+          "y": -4,
+          "width": 50,
+          "height": 50,
+          "rotation": 0,
+          "z": 5,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Circle",
+          "kind": "round-decor",
+          "pattern": "outline",
+          "x": 140,
+          "y": -4,
+          "width": 55,
+          "height": 55,
+          "rotation": 0,
+          "z": 6,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Circle",
+          "kind": "round-decor",
+          "pattern": "outline",
+          "x": -285,
+          "y": 176,
+          "width": 50,
+          "height": 50,
+          "rotation": 0,
+          "z": 7,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Circle",
+          "kind": "round-decor",
+          "pattern": "outline",
+          "x": 140,
+          "y": 176,
+          "width": 55,
+          "height": 55,
+          "rotation": 0,
+          "z": 8,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Rectangle",
+          "kind": "rect-decor",
+          "pattern": "outline",
+          "x": -357,
+          "y": 55,
+          "width": 20,
+          "height": 110,
+          "rotation": 0,
+          "z": 9,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Rectangle",
+          "kind": "rect-decor",
+          "pattern": "outline",
+          "x": 269.99999999999994,
+          "y": 55,
+          "width": 20,
+          "height": 110,
+          "rotation": 0,
+          "z": 10,
+          "locked": false,
+          "color": "#c5a35c"
+        }
+      ],
+      "eventDate": "2026-08-01",
+      "eventLogo": {
+        "url": null,
+        "sourceMode": "url"
+      },
+      "eventTitle": "Lucas & Amy's Wedding Day",
+      "floorPlanX": -435,
+      "floorPlanY": -119,
+      "floorPlanURL": null,
+      "posterAspect": null,
+      "posterPrompt": null,
+      "floorPlanWidth": 860,
+      "seatingMessage": null,
+      "floorPlanHeight": 487,
+      "floorPlanLocked": false,
+      "floorPlanOpacity": 41,
+      "invitationMessage": null
+    },
+    "relationships": {
+      "hosts.0": {
+        "links": {
+          "self": "../Host/amy"
+        }
+      },
+      "hosts.1": {
+        "links": {
+          "self": "../Host/lucas"
+        }
+      },
+      "guests.0": {
+        "links": {
+          "self": "../Guest/andy"
+        }
+      },
+      "guests.1": {
+        "links": {
+          "self": "../Guest/cheche"
+        }
+      },
+      "guests.2": {
+        "links": {
+          "self": "../Guest/chuan"
+        }
+      },
+      "guests.3": {
+        "links": {
+          "self": "../Guest/justin"
+        }
+      },
+      "guests.4": {
+        "links": {
+          "self": "../Guest/nana"
+        }
+      },
+      "guests.5": {
+        "links": {
+          "self": "../Guest/yvonne"
+        }
+      },
+      "guests.6": {
+        "links": {
+          "self": "../Guest/robin"
+        }
+      },
+      "guests.7": {
+        "links": {
+          "self": "../Guest/richy"
+        }
+      },
+      "poster.file": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/double-happiness-banquet"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "tables.0.seatedGuests.0": {
+        "links": {
+          "self": "../Guest/andy"
+        }
+      },
+      "tables.0.seatedGuests.1": {
+        "links": {
+          "self": "../Guest/yvonne"
+        }
+      },
+      "tables.0.seatedGuests.2": {
+        "links": {
+          "self": "../Guest/robin"
+        }
+      },
+      "tables.2.seatedGuests.0": {
+        "links": {
+          "self": "../Guest/cheche"
+        }
+      },
+      "tables.2.seatedGuests.1": {
+        "links": {
+          "self": "../Guest/nana"
+        }
+      },
+      "tables.3.seatedGuests.0": {
+        "links": {
+          "self": "../Guest/chuan"
+        }
+      },
+      "tables.3.seatedGuests.1": {
+        "links": {
+          "self": "../Guest/justin"
+        }
+      },
+      "tables.3.seatedGuests.2": {
+        "links": {
+          "self": "../Guest/richy"
+        }
+      },
+      "tables.4.seatedGuests.0": {
+        "links": {
+          "self": "../Guest/andy"
+        }
+      },
+      "tables.4.seatedGuests.1": {
+        "links": {
+          "self": "../Guest/yvonne"
+        }
+      },
+      "tables.4.seatedGuests.2": {
+        "links": {
+          "self": "../Guest/robin"
+        }
+      },
+      "tables.5.seatedGuests.0": {
+        "links": {
+          "self": "../Guest/cheche"
+        }
+      },
+      "tables.5.seatedGuests.1": {
+        "links": {
+          "self": "../Guest/nana"
+        }
+      }
+    }
+  }
+}
