@@ -153,6 +153,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
     return this.images.length > 0;
   }
 
+  get hasMultipleImages() {
+    return this.images.length > 1;
+  }
+
   get hasExamples() {
     return Boolean(this.args.model.examples?.length);
   }
@@ -299,7 +303,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
             </div>
           </div>
 
-          {{#if this.hasImages}}
+          {{#if this.hasMultipleImages}}
             <div class='thumbs'>
               {{#each this.images as |shot index|}}
                 <button
