@@ -368,7 +368,16 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                     <div class='include-cards'>
                       {{#each specs as |spec|}}
                         {{#let (this.getComponent spec) as |SpecComponent|}}
-                          <CardContainer class='include-card'>
+                          <CardContainer
+                            class='include-card'
+                            {{@context.cardComponentModifier
+                              cardId=spec.id
+                              format='data'
+                              fieldType=undefined
+                              fieldName=undefined
+                            }}
+                            data-test-spec-card={{spec.id}}
+                          >
                             <SpecComponent @format='fitted' />
                           </CardContainer>
                         {{/let}}
@@ -723,6 +732,11 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       }
       .include-card {
         height: 4.5rem;
+        transition: box-shadow 0.2s ease;
+      }
+      .include-card:hover {
+        cursor: pointer;
+        box-shadow: 0 0 0 1px var(--primary, #6c4bf5);
       }
 
       .examples-grid {
