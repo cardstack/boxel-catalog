@@ -1,0 +1,27 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ScreenshotCardDemo",
+        "module": "@cardstack/catalog/screenshot-card-demo"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "format": "isolated",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "cards": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
