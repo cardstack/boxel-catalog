@@ -1,0 +1,44 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AvatarExample",
+        "module": "@cardstack/catalog/fields/avatar/example/avatar-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Avatar Example",
+      "avatar": {
+        "eyeType": "Default",
+        "topType": "ShortHairShortFlat",
+        "hairColor": "BrownDark",
+        "mouthType": "Smile",
+        "skinColor": "Light",
+        "clotheType": "Hoodie",
+        "eyebrowType": "Default",
+        "facialHairType": "Blank",
+        "accessoriesType": "Blank"
+      },
+      "cardInfo": {
+        "name": "Avatar Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": "The Avatar field defines a customizable avatar component for user representation, allowing selection of hair style, accessories, hair color, facial hair, clothing, eye..."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

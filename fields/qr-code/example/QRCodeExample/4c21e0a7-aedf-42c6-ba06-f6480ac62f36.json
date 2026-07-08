@@ -1,0 +1,36 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "QRCodeExample",
+        "module": "@cardstack/catalog/fields/qr-code/example/qr-code-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "QR Code Example",
+      "qrCode": {
+        "data": "https://cardstack.com"
+      },
+      "cardInfo": {
+        "name": "QR Code Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": "The QR Code field provides a way to generate customizable QR codes within a card."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

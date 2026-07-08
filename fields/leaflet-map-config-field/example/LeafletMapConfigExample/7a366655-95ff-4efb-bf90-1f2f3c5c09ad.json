@@ -1,0 +1,36 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "LeafletMapConfigExample",
+        "module": "@cardstack/catalog/fields/leaflet-map-config-field/example/leaflet-map-config-field-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Leaflet Map Config Example",
+      "cardInfo": {
+        "name": "Leaflet Map Config Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "mapConfig": {
+        "tileserverUrl": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      },
+      "description": "The Leaflet Map Configuration defines a field type for customizing map display settings within a card or form."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

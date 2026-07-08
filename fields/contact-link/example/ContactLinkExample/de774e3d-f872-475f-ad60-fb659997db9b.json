@@ -1,0 +1,37 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ContactLinkExample",
+        "module": "@cardstack/catalog/fields/contact-link/example/contact-link-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Contact Link Example",
+      "cardInfo": {
+        "name": "Contact Link Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "contactLink": {
+        "label": "Email",
+        "value": "hello@example.com"
+      },
+      "description": "The Contact Link definition provides a component for managing and displaying contact methods such as email, phone, and external links."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "QuantityExample",
+        "module": "@cardstack/catalog/fields/quantity/example/quantity-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Quantity Example",
+      "cardInfo": {
+        "name": "Quantity Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "quantity": 12,
+      "description": "A quantity number field component designed for flexible input and display of numeric quantities, with configurable minimum and maximum bounds.",
+      "configuredQuantity": 40
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

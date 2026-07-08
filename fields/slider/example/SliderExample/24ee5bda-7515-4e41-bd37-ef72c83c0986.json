@@ -1,0 +1,35 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "SliderExample",
+        "module": "@cardstack/catalog/fields/slider/example/slider-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "level": 70,
+      "title": "Slider Example",
+      "cardInfo": {
+        "name": "Slider Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": "The Slider Number Field provides a user interface component for selecting numerical values via a slider control.",
+      "configuredSlider": 60
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

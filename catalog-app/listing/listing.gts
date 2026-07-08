@@ -369,6 +369,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                       {{#each specs as |spec|}}
                         {{#let (this.getComponent spec) as |SpecComponent|}}
                           <CardContainer
+                            class='include-card'
                             {{@context.cardComponentModifier
                               cardId=spec.id
                               format='data'
@@ -728,6 +729,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
         gap: 0.75rem;
+      }
+      .include-card {
+        border: 1px solid var(--border, #e7e3d8);
+        border-radius: 0.5rem;
       }
 
       .examples-grid {

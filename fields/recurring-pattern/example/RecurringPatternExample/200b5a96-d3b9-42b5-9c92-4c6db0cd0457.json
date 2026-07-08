@@ -1,0 +1,44 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "RecurringPatternExample",
+        "module": "@cardstack/catalog/fields/recurring-pattern/example/recurring-pattern-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Recurring Pattern Example",
+      "pattern": {
+        "endDate": null,
+        "pattern": "weekly",
+        "interval": 1,
+        "startDate": "2026-01-05",
+        "customRule": null,
+        "dayOfMonth": null,
+        "daysOfWeek": "1,3,5",
+        "monthOfYear": null,
+        "occurrences": null
+      },
+      "cardInfo": {
+        "name": "Recurring Pattern Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": "The recurring pattern definition specifies a field type for modeling repeating events or tasks with various recurrence patterns such as daily, weekly, monthly, or yearly."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

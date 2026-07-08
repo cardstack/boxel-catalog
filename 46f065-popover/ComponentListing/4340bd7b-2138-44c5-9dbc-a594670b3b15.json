@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "ComponentListing",
-        "module": "../../catalog-app/listing/listing"
+        "module": "@cardstack/catalog/catalog-app/listing/listing"
       }
     },
     "type": "card",
@@ -18,9 +18,9 @@
       }
     },
     "relationships": {
-      "images": {
+      "images.0": {
         "links": {
-          "self": null
+          "self": "../Screenshots/fa9c0fa1-44e2-4cd6-a5d3-6e249c09b53f-eca04a49.png"
         }
       },
       "skills": {

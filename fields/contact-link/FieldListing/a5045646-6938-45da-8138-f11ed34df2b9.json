@@ -9,7 +9,7 @@
     "type": "card",
     "attributes": {
       "name": "Contact Link",
-      "summary": "The Contact Link definition provides a component for managing and displaying contact methods such as email, phone, and external links. It offers a structured way to specify contact details—including labels, icons, and call-to-action text—and generates appropriate URLs for email, telephone, or external links. The component supports display modes with visual elements like icons and clickable pills, and includes editing capabilities for selecting contact types and inputting details. Its primary purpose is to facilitate the inclusion of contact methods in user interfaces, ensuring consistency and ease of use across applications.",
+      "summary": "The Contact Link definition provides a component for managing and displaying contact methods such as email, phone, and external links. It offers a structured way to specify contact details\u2014including labels, icons, and call-to-action text\u2014and generates appropriate URLs for email, telephone, or external links. The component supports display modes with visual elements like icons and clickable pills, and includes editing capabilities for selecting contact types and inputting details. Its primary purpose is to facilitate the inclusion of contact methods in user interfaces, ensuring consistency and ease of use across applications.",
       "cardInfo": {
         "name": null,
         "notes": null,
@@ -18,11 +18,6 @@
       }
     },
     "relationships": {
-      "images": {
-        "links": {
-          "self": null
-        }
-      },
       "skills": {
         "links": {
           "self": null
@@ -34,11 +29,6 @@
         }
       },
       "license": {
-        "links": {
-          "self": null
-        }
-      },
-      "examples": {
         "links": {
           "self": null
         }
@@ -66,6 +56,16 @@
       "specs.0": {
         "links": {
           "self": "../Spec/contact-link-field"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../example/ContactLinkExample/de774e3d-f872-475f-ad60-fb659997db9b"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/de774e3d-f872-475f-ad60-fb659997db9b-272cc949.png"
         }
       }
     }

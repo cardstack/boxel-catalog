@@ -1,0 +1,35 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "RatingExample",
+        "module": "@cardstack/catalog/fields/rating/example/rating-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Rating Example",
+      "rating": 4,
+      "cardInfo": {
+        "name": "Rating Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": "A field component that provides a numerical rating input interface with star icons, allowing users to select a rating up to a configurable maximum (defaulting to 5 sta...",
+      "configuredRating": 7
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

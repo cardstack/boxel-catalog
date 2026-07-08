@@ -1,0 +1,43 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "GeoSearchPointExample",
+        "module": "@cardstack/catalog/fields/geo-search-point/example/geo-search-point-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Geo Search Point Example",
+      "cardInfo": {
+        "name": "Geo Search Point Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "location": {
+        "lat": 40.7127281,
+        "lon": -74.0060152,
+        "searchKey": "New York City, USA"
+      },
+      "description": "The Geo Search Point field allows for capturing and displaying geographic locations with optional search capabilities.",
+      "configuredLocation": {
+        "lat": 48.8566,
+        "lon": 2.3522,
+        "searchKey": "Paris, France"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
