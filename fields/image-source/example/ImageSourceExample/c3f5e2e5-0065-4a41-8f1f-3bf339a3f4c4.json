@@ -1,0 +1,37 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "ImageSourceExample",
+        "module": "@cardstack/catalog/fields/image-source/example/image-source-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "image": {
+        "url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800",
+        "sourceMode": "url"
+      },
+      "title": "Image Source Example",
+      "cardInfo": {
+        "name": "Image Source Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": "The Image Source definition manages different methods of specifying images within cards, supporting either direct URL input or uploaded file linkage."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

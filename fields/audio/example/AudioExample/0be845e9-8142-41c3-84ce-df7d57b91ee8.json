@@ -1,0 +1,66 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AudioExample",
+        "module": "@cardstack/catalog/fields/audio/example/audio-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "audio": {
+        "liked": false,
+        "artist": null,
+        "loopEnd": null,
+        "trimEnd": null,
+        "cardTitle": "Testing Audio",
+        "loopStart": null,
+        "playCount": null,
+        "trimStart": null,
+        "lastPlayed": null,
+        "loopEnabled": false,
+        "playbackRate": null,
+        "waveformData": "[20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,22.5799633886979,24.917344868524722,22.433721619440863,20,20.19074798955257,20.33499733056403,20,21.391119472973593,22.18980851139595,21.58209628839537,20,22.479447362294238,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20]"
+      },
+      "title": "Audio Example",
+      "cardInfo": {
+        "name": "Audio Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": "The default export defines an Audio field type for use in card-based interfaces, representing audio files with associated metadata and various presentation styles.",
+      "configuredAudio": {
+        "liked": false,
+        "artist": null,
+        "loopEnd": null,
+        "trimEnd": null,
+        "cardTitle": null,
+        "loopStart": null,
+        "playCount": null,
+        "trimStart": null,
+        "lastPlayed": null,
+        "loopEnabled": false,
+        "playbackRate": null,
+        "waveformData": null
+      }
+    },
+    "relationships": {
+      "audio.file": {
+        "links": {
+          "self": "../../sources/file_example_MP3_700KB.mp3"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

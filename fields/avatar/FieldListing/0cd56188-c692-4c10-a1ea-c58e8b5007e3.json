@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "FieldListing",
-        "module": "../../../catalog-app/listing/listing"
+        "module": "@cardstack/catalog/catalog-app/listing/listing"
       }
     },
     "type": "card",
@@ -18,11 +18,6 @@
       }
     },
     "relationships": {
-      "images": {
-        "links": {
-          "self": null
-        }
-      },
       "skills": {
         "links": {
           "self": null
@@ -36,31 +31,6 @@
       "license": {
         "links": {
           "self": null
-        }
-      },
-      "examples": {
-        "links": {
-          "self": null
-        }
-      },
-      "publisher": {
-        "links": {
-          "self": null
-        }
-      },
-      "categories.0": {
-        "links": {
-          "self": "../../../Category/social-networking"
-        }
-      },
-      "cardInfo.theme": {
-        "links": {
-          "self": null
-        }
-      },
-      "cardInfo.cardThumbnail": {
-        "links": {
-          "self": "../ListingThumbnails/avatar-cd224588.png"
         }
       },
       "specs.0": {
@@ -81,6 +51,36 @@
       "specs.3": {
         "links": {
           "self": "../../../Spec/suggest-avatar"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/ee9bea8a-1b29-4f5b-ba2c-501a99bb9103-568fb08b.png"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../example/AvatarExample/ee9bea8a-1b29-4f5b-ba2c-501a99bb9103"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../../Category/social-networking"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/avatar-cd224588.png"
         }
       }
     }

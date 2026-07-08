@@ -1,0 +1,40 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "DiscreteRangeExample",
+        "module": "@cardstack/catalog/fields/discrete-range-field/example/discrete-range-field-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "range": {
+        "max": 100,
+        "min": 0,
+        "endValue": 80,
+        "interval": 5,
+        "startValue": 20
+      },
+      "title": "Discrete Range Example",
+      "cardInfo": {
+        "name": "Discrete Range Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": "The Discrete Range definition creates a field component for selecting and displaying a range of numeric values with discrete steps."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

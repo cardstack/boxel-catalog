@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "FieldListing",
-        "module": "../../../catalog-app/listing/listing"
+        "module": "@cardstack/catalog/catalog-app/listing/listing"
       }
     },
     "type": "card",
@@ -18,11 +18,6 @@
       }
     },
     "relationships": {
-      "images": {
-        "links": {
-          "self": null
-        }
-      },
       "skills": {
         "links": {
           "self": null
@@ -48,14 +43,19 @@
           "self": "../../../Spec/code-snippet"
         }
       },
-      "examples": {
+      "images.0": {
         "links": {
-          "self": null
+          "self": "../Screenshots/200b5a96-d3b9-42b5-9c92-4c6db0cd0457-d324bd6f.png"
         }
       },
       "publisher": {
         "links": {
           "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../example/RecurringPatternExample/200b5a96-d3b9-42b5-9c92-4c6db0cd0457"
         }
       },
       "categories.0": {

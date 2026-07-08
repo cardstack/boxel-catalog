@@ -1,0 +1,41 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "GeoPointExample",
+        "module": "@cardstack/catalog/fields/geo-point/example/geo-point-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Geo Point Example",
+      "cardInfo": {
+        "name": "Geo Point Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "location": {
+        "lat": 40.7128,
+        "lon": -74.006
+      },
+      "description": "The default export defines a Geo Point field type for use within card-based data models.",
+      "configuredLocation": {
+        "lat": 48.8566,
+        "lon": 2.3522
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
