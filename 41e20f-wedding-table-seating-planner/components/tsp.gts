@@ -3439,6 +3439,7 @@ export class TableSeatingPlannerIsolated extends Component<
     let chosen = await chooseCard(
       { filter: { every: [{ type }, ...existingQuery] } },
       {
+        createNewCard: (this.args as any).createCard,
         offerToCreate: {
           ref: type,
           relativeTo: undefined,
@@ -3480,6 +3481,7 @@ export class TableSeatingPlannerIsolated extends Component<
     let chosen = await chooseCard(
       { filter: { every: [{ type }, ...existingQuery] } },
       {
+        createNewCard: (this.args as any).createCard,
         offerToCreate: {
           ref: type,
           relativeTo: undefined,
