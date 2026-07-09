@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "TravelItinerary",
-        "module": "../travel-itinerary"
+        "module": "@cardstack/catalog/c7eda3-travel-itinerary-planner/travel-itinerary"
       }
     },
     "type": "card",
@@ -177,7 +177,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/airbnb"
         }
       },
       "cardInfo.cardThumbnail": {

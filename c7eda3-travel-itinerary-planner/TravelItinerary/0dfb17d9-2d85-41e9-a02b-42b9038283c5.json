@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "TravelItinerary",
-        "module": "../travel-itinerary"
+        "module": "@cardstack/catalog/c7eda3-travel-itinerary-planner/travel-itinerary"
       }
     },
     "type": "card",
@@ -11,9 +11,9 @@
       "stops": [
         {
           "location": {
-            "searchKey": "Bajra Sandhi Monument",
-            "lat": -8.6717521,
-            "lon": 115.2338937
+            "searchKey": "Tegallalang Rice Terraces",
+            "lat": -8.4335822,
+            "lon": 115.2794557
           },
           "day": 1,
           "startTime": {
@@ -22,14 +22,14 @@
           "endTime": {
             "value": "09:30"
           },
-          "category": "Culture & History",
-          "notes": "Arrive early to beat the heat and enjoy the monument gardens before crowds arrive."
+          "category": "Nature & Outdoors",
+          "notes": "Arrive early to beat the crowds and catch the best morning light over the terraces."
         },
         {
           "location": {
-            "searchKey": "Bali Museum",
-            "lat": -8.6576485,
-            "lon": 115.2186753
+            "searchKey": "Tirta Empul Temple",
+            "lat": -8.4149338,
+            "lon": 115.3160258
           },
           "day": 1,
           "startTime": {
@@ -38,136 +38,120 @@
           "endTime": {
             "value": "11:30"
           },
-          "category": "Museum",
-          "notes": "Explore four pavilions showcasing Balinese history, art, and traditional artifacts."
+          "category": "Culture & History",
+          "notes": "Sacred Hindu water temple — dress modestly and rent a sarong at the entrance if needed."
         },
         {
           "location": {
-            "searchKey": "Pura Jagatnatha",
-            "lat": -8.8000007,
-            "lon": 115.2145114
+            "searchKey": "Ubud Palace",
+            "lat": -8.5069503,
+            "lon": 115.2627374
           },
           "day": 1,
           "startTime": {
-            "value": "11:45"
-          },
-          "endTime": {
             "value": "12:30"
           },
+          "endTime": {
+            "value": "13:30"
+          },
           "category": "Culture & History",
-          "notes": "Dress respectfully with a sarong; this active Hindu temple is right next to the Bali Museum."
+          "notes": "Stroll the ornate royal palace grounds right in the heart of Ubud town."
         },
         {
           "location": {
-            "searchKey": "Pasar Badung",
-            "lat": -8.6565446,
-            "lon": 115.2124325
+            "searchKey": "Ubud Traditional Art Market",
+            "lat": -8.5065357,
+            "lon": 115.2616505
           },
           "day": 1,
           "startTime": {
             "value": "13:30"
           },
           "endTime": {
-            "value": "15:00"
+            "value": "14:30"
           },
           "category": "Shopping",
-          "notes": "Denpasar's largest traditional market — great for local snacks, spices, and souvenirs at bargain prices."
+          "notes": "Browse local crafts, textiles and souvenirs — bargaining is expected and part of the fun."
         },
         {
           "location": {
-            "searchKey": "Warung Mak Beng",
-            "lat": -8.6737273,
-            "lon": 115.2630457
+            "searchKey": "Kafe Ubud",
+            "lat": -8.5139077,
+            "lon": 115.2641339
           },
           "day": 1,
           "startTime": {
-            "value": "18:00"
-          },
-          "endTime": {
-            "value": "19:30"
-          },
-          "category": "Food & Dining",
-          "notes": "Legendary local spot famous for its Balinese fried fish set; arrive early as it sells out fast."
-        },
-        {
-          "location": {
-            "searchKey": "Pura Maospahit",
-            "lat": -8.2271303,
-            "lon": 115.1919203
-          },
-          "day": 2,
-          "startTime": {
-            "value": "08:30"
-          },
-          "endTime": {
-            "value": "09:30"
-          },
-          "category": "Culture & History",
-          "notes": "One of Denpasar's oldest temples with unique Majapahit-era architectural details."
-        },
-        {
-          "location": {
-            "searchKey": "Taman Budaya Bali (Bali Arts Centre)",
-            "lat": -8.6555877,
-            "lon": 115.2346829
-          },
-          "day": 2,
-          "startTime": {
-            "value": "10:00"
-          },
-          "endTime": {
-            "value": "11:30"
-          },
-          "category": "Performance",
-          "notes": "Check the June schedule — the annual Bali Arts Festival runs through June, with performances and exhibitions."
-        },
-        {
-          "location": {
-            "searchKey": "Taman Puputan Badung",
-            "lat": -8.5099348,
-            "lon": 115.206718
-          },
-          "day": 2,
-          "startTime": {
-            "value": "12:00"
-          },
-          "endTime": {
-            "value": "13:00"
-          },
-          "category": "Relaxation",
-          "notes": "Stroll this historic central square and relax under the shade trees before lunch."
-        },
-        {
-          "location": {
-            "searchKey": "Pasar Kumbasari",
-            "lat": -8.6560993,
-            "lon": 115.2118033
-          },
-          "day": 2,
-          "startTime": {
-            "value": "13:30"
-          },
-          "endTime": {
             "value": "15:00"
           },
-          "category": "Shopping",
-          "notes": "Cross the river from Pasar Badung for handicrafts, batik, and traditional Balinese goods."
+          "endTime": {
+            "value": "16:00"
+          },
+          "category": "Café & Coffee",
+          "notes": "A beloved local café for a relaxed afternoon coffee and Indonesian snacks after a full morning."
         },
         {
           "location": {
-            "searchKey": "Warung Nasi Bali Men Weti",
-            "lat": -8.6959198,
-            "lon": 115.2628241
+            "searchKey": "Tanah Lot Temple",
+            "lat": -8.6212286,
+            "lon": 115.0868849
           },
-          "day": 2,
+          "day": 1,
           "startTime": {
             "value": "17:30"
           },
           "endTime": {
             "value": "19:00"
           },
+          "category": "Sightseeing",
+          "notes": "One of Bali's most iconic sea temples — time your visit for the spectacular sunset view."
+        },
+        {
+          "location": {
+            "searchKey": "Uluwatu Temple",
+            "lat": -8.8293693,
+            "lon": 115.0843428
+          },
+          "day": 2,
+          "startTime": {
+            "value": "09:00"
+          },
+          "endTime": {
+            "value": "11:00"
+          },
+          "category": "Culture & History",
+          "notes": "Perched on a clifftop 70 m above the ocean — watch out for cheeky monkeys and keep valuables tucked away."
+        },
+        {
+          "location": {
+            "searchKey": "Single Fin Bali",
+            "lat": -8.8150084,
+            "lon": 115.0889214
+          },
+          "day": 2,
+          "startTime": {
+            "value": "12:00"
+          },
+          "endTime": {
+            "value": "13:30"
+          },
           "category": "Food & Dining",
-          "notes": "Authentic Balinese rice plate with rotating daily dishes — a true local dinner experience in Denpasar."
+          "notes": "Relaxed clifftop restaurant above Uluwatu with great food and sweeping ocean views — perfect for a long lunch."
+        },
+        {
+          "location": {
+            "searchKey": "Seminyak Beach",
+            "lat": -8.6901643,
+            "lon": 115.1565532
+          },
+          "day": 2,
+          "startTime": {
+            "value": "15:30"
+          },
+          "endTime": {
+            "value": "18:00"
+          },
+          "category": "Relaxation",
+          "notes": "Wind down the trip with a leisurely afternoon on one of Bali's most beautiful beaches — catch the sunset from the shore."
         }
       ],
       "cardInfo": {
@@ -180,10 +164,10 @@
         "end": "2026-06-25",
         "start": "2026-06-24"
       },
-      "tripTitle": "2 Days in Denpasar, Bali",
+      "tripTitle": "2 Days in Bali",
       "destination": {
-        "lat": null,
-        "lon": null,
+        "lat": -8.2271303,
+        "lon": 115.1919203,
         "searchKey": "Bali, Indonesia"
       },
       "shareTripCode": {
@@ -193,7 +177,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": "../Theme/coastal-voyage"
+          "self": "../Theme/airbnb"
         }
       },
       "cardInfo.cardThumbnail": {

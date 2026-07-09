@@ -5,22 +5,18 @@ import { array, fn } from '@ember/helper';
 
 import ChevronDownIcon from '@cardstack/boxel-icons/chevron-down';
 import CopyIcon from '@cardstack/boxel-icons/copy';
-import EyeIcon from '@cardstack/boxel-icons/eye';
 import GripIcon from '@cardstack/boxel-icons/grip-vertical';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 import PencilIcon from '@cardstack/boxel-icons/pencil';
 import PlaneIcon from '@cardstack/boxel-icons/plane';
-import SendIcon from '@cardstack/boxel-icons/send';
 import ShareIcon from '@cardstack/boxel-icons/share-2';
 import SparklesIcon from '@cardstack/boxel-icons/sparkles';
 import TrashIcon from '@cardstack/boxel-icons/trash';
 import XIcon from '@cardstack/boxel-icons/x';
 
-import { TravelPlannerCommand } from '../commands/travel-planner-command';
-import { Button, DateRangePicker } from '@cardstack/boxel-ui/components';
-import { add, eq, not } from '@cardstack/boxel-ui/helpers';
-import { Component, getComponent } from 'https://cardstack.com/base/card-api';
-import DateRangeField from 'https://cardstack.com/base/date-range-field';
+import { Button } from '@cardstack/boxel-ui/components';
+import { add, eq } from '@cardstack/boxel-ui/helpers';
+import { Component } from 'https://cardstack.com/base/card-api';
 import TimeField from 'https://cardstack.com/base/time';
 
 import {
@@ -28,39 +24,13 @@ import {
   type Coordinate,
   type Route,
 } from '@cardstack/catalog/components/map-render';
-import GeoSearchPointField from '@cardstack/catalog/fields/geo-search-point/geo-search-point';
 
 import Popover from '@cardstack/catalog/46f065-popover/popover';
 
-import AiChatPanel from './ti-ai-chat-panel';
+import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
 import { ItineraryStop } from '../travel-itinerary';
 import type { TravelItinerary } from '../travel-itinerary';
-import {
-  addHours,
-  categoryStyle,
-  formatShortDate,
-  geocodePlannedStops,
-  matchCategory,
-  parsePlanJson,
-  CATEGORY_NAMES,
-  TRIP_CATEGORIES,
-  OTHER_DESTINATION,
-} from '../utils/index';
-import type {
-  ChatMessage,
-  ChipOption,
-  PlannedStop,
-  PlannerAnswers,
-  PlannerStep,
-} from '../utils/index';
-
-// Trip-category chips for the vibe step — derived from the fixed category
-// enum so the chips, the `category` field options, and the list handed to
-// the LLM all stay in lockstep.
-const CATEGORY_CHIPS: ChipOption[] = TRIP_CATEGORIES.map((c) => ({
-  label: c.label,
-  value: c.value,
-}));
+import { addHours, categoryStyle } from '../utils/index';
 
 export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
   @tracked selectedIndex = -1;
@@ -71,31 +41,9 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
   @tracked mapDay: number | null = null;
   @tracked showShare = false;
   @tracked copied = false;
-  @tracked showAiPlanner = false;
-  @tracked aiStatus: 'chat' | 'loading' | 'preview' | 'success' | 'error' =
-    'chat';
-  @tracked outOfCredits = false;
-  @tracked chatMessages: ChatMessage[] = [];
-  @tracked plannerStep: PlannerStep = 'destination';
-  @tracked chatInput = '';
-  @tracked selectedVibes: ChipOption[] = [];
-  @tracked pendingStops: ItineraryStop[] | null = null;
-  @tracked pendingTitle: string | null = null;
-  @tracked expandedStopIndex: number | null = null;
-  @tracked wantsCustomDestination = false;
-  @tracked reviseInput = '';
-  @tracked isEditingCurrentTrip = false;
-  // Recap of the just-generated/revised plan, shown as a caption BELOW the
-  // preview list (so it's visible without scrolling up to the chat).
-  @tracked planRecap: string | null = null;
-  // Local edit buffer for the planner's date step — the card's own dateRange
-  // is not touched until the plan is applied.
-  @tracked plannerDateRange: DateRangeField | null = null;
-  initialPlanSignature: string | null = null;
-  // Category names the traveller picked in the vibe step; drives the pool of
-  // categories the LLM may assign to stops.
-  chosenCategories: string[] = [];
-  plannerAnswers: PlannerAnswers = {};
+  // True while the AI Assistant room is being opened from the "Plan with AI"
+  // button, so the trigger can show a brief busy label.
+  @tracked aiLaunching = false;
   scrollerEl: HTMLElement | null = null;
 
   registerScroller = modifier((element: HTMLElement) => {
@@ -237,9 +185,9 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       // day-filter bar (sits at top:14px, ~40px tall).
       popupTopInset: 64,
       routeStyle: 'road' as const,
-      // High-contrast violet so the route line stands apart from the
-      // green/blue/red stop pins and the map tiles underneath.
-      routeColor: '#555555',
+      // High-contrast dark slate so the route line stands apart from the
+      // colourful stop pins and the light map tiles underneath.
+      routeColor: '#1f2937',
     };
   }
 
@@ -388,176 +336,48 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
     this.dragOverIndex = -1;
   };
 
-  // --- One-shot AI planner (chat-style popover) ---
-  get planDayCount() {
-    return this.tripDays || this.dayCount || 3;
-  }
-
-  // The fixed trip-category chips shown in the vibe step.
-  get categoryChips(): ChipOption[] {
-    return CATEGORY_CHIPS;
-  }
-
-  private pushChatMessage(role: 'ai' | 'user', text: string, kind?: 'error') {
-    this.chatMessages = [...this.chatMessages, { role, text, kind }];
-  }
-
-  toggleAiPlanner = () => {
-    this.showAiPlanner = !this.showAiPlanner;
-    if (this.showAiPlanner && this.aiStatus !== 'loading') {
-      this.startPlannerChat();
-    }
-  };
-
-  closeAiPlanner = () => {
-    this.showAiPlanner = false;
-  };
-
-  // Build the planner's local date buffer, seeded from the card's current
-  // dates when it already has them. Editing this buffer never touches the
-  // card — the dates land on the card only when the plan is applied.
-  private seedPlannerDateRange() {
-    let start = this.args.model?.dateRange?.start;
-    let end = this.args.model?.dateRange?.end;
-    this.plannerDateRange = new DateRangeField(
-      start && end ? { start, end } : {},
-    );
-  }
-
-  private startPlannerChat() {
-    this.aiStatus = 'chat';
-    this.outOfCredits = false;
-    this.chatMessages = [];
-    this.chatInput = '';
-    this.selectedVibes = [];
-    this.chosenCategories = [];
-    this.pendingStops = null;
-    this.pendingTitle = null;
-    this.expandedStopIndex = null;
-    this.wantsCustomDestination = false;
-    this.reviseInput = '';
-    this.isEditingCurrentTrip = false;
-    this.planRecap = null;
-    this.initialPlanSignature = null;
-    this.plannerAnswers = {};
-    this.seedPlannerDateRange();
-    if (this.destinationLabel) {
-      this.plannerAnswers.destination = this.destinationLabel;
-    }
-    if (this.tripDays) {
-      this.plannerAnswers.days = this.tripDays;
-      let start = this.args.model?.dateRange?.start;
-      let end = this.args.model?.dateRange?.end;
-      if (start && end) {
-        this.plannerAnswers.dates = { start, end };
-      }
-    }
-    // With a trip already on the card, skip the wizard: open straight into
-    // an editable CLONE of the current trip plus the AI prompt box. Edits
-    // stay local until Apply.
-    if (this.stops.length) {
-      this.pendingStops = this.buildStops(this.toPlainStops([...this.stops]));
-      this.initialPlanSignature = this.planSignature(this.pendingStops);
-      this.planRecap =
-        "Here's your current trip 👆 Edit any stop directly, or tell me below what you'd like changed — change day 2, fewer stops, a different vibe, add famous cafés…";
-      this.isEditingCurrentTrip = true;
-      this.aiStatus = 'preview';
+  // Open the real Boxel AI Assistant on this trip: attach the travel-planner
+  // skill + this card as context, in 'act' mode so the assistant applies its
+  // plan by calling the Apply Itinerary command (which patches this card).
+  planWithAssistant = async () => {
+    let commandContext = this.args.context?.commandContext;
+    let model = this.args.model;
+    if (!commandContext || !model?.id) {
       return;
     }
-    this.pushChatMessage('ai', "Hi! Let's plan your trip together.");
-    this.askNextQuestion();
-  }
-
-  // Abandon the current trip in the planner and walk the wizard from the
-  // top; the card itself is only replaced if the new plan gets applied.
-  startFresh = () => {
-    this.pendingStops = null;
-    this.pendingTitle = null;
-    this.expandedStopIndex = null;
-    this.reviseInput = '';
-    this.isEditingCurrentTrip = false;
-    this.planRecap = null;
-    this.initialPlanSignature = null;
-    this.wantsCustomDestination = false;
-    this.chosenCategories = [];
-    this.selectedVibes = [];
-    this.plannerAnswers = {};
-    this.plannerDateRange = new DateRangeField({});
-    this.aiStatus = 'chat';
-    this.pushChatMessage(
-      'ai',
-      "Fresh start it is — let's plan from scratch. Your current trip stays untouched until you apply a new plan.",
-    );
-    this.askNextQuestion();
+    this.aiLaunching = true;
+    try {
+      // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+      let here: string = import.meta.url;
+      let skillCardId = new URL('../Skill/travel-planner-skill', here).href;
+      await new UseAiAssistantCommand(commandContext).execute({
+        roomName: model.tripTitle || model.title || 'Plan this trip',
+        openRoom: true,
+        llmModel: 'anthropic/claude-sonnet-4.6',
+        // 'ask' so the assistant proposes the Apply Itinerary command and the
+        // traveller approves it before the card changes (paired with the
+        // command's requiresApproval: true in the skill).
+        llmMode: 'ask',
+        skillCardIds: [skillCardId],
+        attachedCardIds: [model.id],
+        openCardIds: [model.id],
+        prompt: this.buildAssistantPrompt(),
+      });
+    } finally {
+      this.aiLaunching = false;
+    }
   };
 
-  private nextPlannerStep(): PlannerStep {
-    if (!this.plannerAnswers.destination) return 'destination';
-    if (!this.plannerAnswers.days) return 'days';
-    if (!this.plannerAnswers.vibe) return 'vibe';
-    return 'ready';
-  }
-
-  private askNextQuestion() {
-    let step = this.nextPlannerStep();
-    this.plannerStep = step;
-    let questions: Record<PlannerStep, string> = {
-      destination: 'First things first — where do you want to go?',
-      days: `When do you plan to be in ${
-        this.plannerAnswers.destination ?? 'your destination'
-      }? Pick your dates below.`,
-      vibe: "Last one — what's the vibe you're after? Pick as many as you like.",
-      ready:
-        "Perfect, that's everything I need. Hit Generate whenever you're ready ✨",
-    };
-    this.pushChatMessage('ai', questions[step]);
-  }
-
-  get stepChips(): ChipOption[] {
-    switch (this.plannerStep) {
-      case 'destination':
-        // Always lead with suggested picks; "Somewhere else…" reveals the
-        // free-text input instead of answering directly.
-        return [
-          { label: 'Tokyo, Japan 🇯🇵', value: 'Tokyo, Japan' },
-          { label: 'Paris, France 🇫🇷', value: 'Paris, France' },
-          { label: 'Bali, Indonesia 🇮🇩', value: 'Bali, Indonesia' },
-          { label: 'Somewhere else…', value: OTHER_DESTINATION },
-        ];
-      case 'vibe':
-        return CATEGORY_CHIPS;
-      default:
-        return [];
+  // A short, natural opening message — this shows in the chat as the
+  // traveller's own message, so it must NOT contain steering. All the
+  // behaviour (summarise + ask revise/start-fresh, or run the intake) lives in
+  // the skill instructions instead.
+  private buildAssistantPrompt(): string {
+    let dest = this.destinationLabel;
+    if (this.stops.length) {
+      return `Let's review my current trip${dest ? ` to ${dest}` : ''}.`;
     }
-  }
-
-  get showVibeConfirm() {
-    return this.plannerStep === 'vibe' && this.selectedVibes.length > 0;
-  }
-
-  // Where the input shows: days is a plain typed answer; destination only
-  // after "Somewhere else…"; vibe is pick-only (no inventing new categories);
-  // preview accepts free-form revision requests.
-  // The single-line input only serves the custom-destination answer; dates
-  // use the embedded DateRangeField editor and revisions use the textarea.
-  get showChatInput() {
-    return (
-      this.aiStatus === 'chat' &&
-      this.plannerStep === 'destination' &&
-      this.wantsCustomDestination
-    );
-  }
-
-  get chatInputPlaceholder() {
-    return 'Type a city or region — e.g. Lisbon, Portugal';
-  }
-
-  get showDatePicker() {
-    return this.aiStatus === 'chat' && this.plannerStep === 'days';
-  }
-
-  get datesChosen() {
-    return Boolean(this.plannerDateRange?.start && this.plannerDateRange?.end);
+    return dest ? `Help me plan a trip to ${dest}.` : 'Help me plan a trip.';
   }
 
   // Identity for the sidebar dateRange editor. When the plan apply replaces
@@ -570,462 +390,6 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
     let e = this.args.model?.dateRange?.end;
     return `${s ? s.getTime() : ''}-${e ? e.getTime() : ''}`;
   }
-
-  // The planner's date step can't reach before today. The @field dateRange
-  // gets this from its `minDate: 'today'` configuration; the planner drives
-  // the boxel-ui DateRangePicker directly, so the floor is set here.
-  get plannerMinDate(): Date {
-    let today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
-  }
-
-  // Current planner selection in the shape DateRangePicker expects.
-  get plannerRange(): { start: Date | null; end: Date | null } {
-    return {
-      start: this.plannerDateRange?.start ?? null,
-      end: this.plannerDateRange?.end ?? null,
-    };
-  }
-
-  onPlannerDateSelect = (selected: { date: { start?: Date; end?: Date } }) => {
-    if (!this.plannerDateRange) return;
-    // start/end are typed Date but the field accepts undefined at runtime to
-    // clear (as the base editor's reset does); cast so partial selections
-    // (start picked, end not yet) type-check.
-    this.plannerDateRange.start = selected?.date?.start as Date;
-    this.plannerDateRange.end = selected?.date?.end as Date;
-  };
-
-  confirmDates = () => {
-    let start = this.plannerDateRange?.start;
-    let end = this.plannerDateRange?.end;
-    if (!start || !end) return;
-    if (end < start) {
-      [start, end] = [end, start];
-    }
-    let today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (end < today) {
-      this.pushChatMessage(
-        'ai',
-        'Those dates are already in the past — pick upcoming dates 🙂',
-      );
-      return;
-    }
-    this.plannerAnswers.dates = { start, end };
-    this.plannerAnswers.days = Math.min(
-      30,
-      Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1),
-    );
-    this.pushChatMessage(
-      'user',
-      `${formatShortDate(start)} – ${formatShortDate(end)}`,
-    );
-    this.askNextQuestion();
-  };
-
-  updateChatInput = (event: Event) => {
-    this.chatInput = (event.target as HTMLInputElement).value;
-  };
-
-  submitChatInput = (event: Event) => {
-    event.preventDefault();
-    let text = this.chatInput.trim();
-    if (!text) return;
-    this.chatInput = '';
-    this.applyPlannerAnswer(text, text);
-  };
-
-  updateReviseInput = (event: Event) => {
-    this.reviseInput = (event.target as HTMLTextAreaElement).value;
-  };
-
-  submitRevise = () => {
-    let text = this.reviseInput.trim();
-    if (!text) return;
-    this.reviseInput = '';
-    this.revisePlan(text);
-  };
-
-  // The vibe step is multi-select: chips toggle, then Continue confirms.
-  // Every other step treats a chip tap as the final answer.
-  answerChip = (chip: ChipOption) => {
-    if (this.plannerStep === 'vibe') {
-      this.selectedVibes = this.isChipSelected(chip)
-        ? this.selectedVibes.filter((c) => c.value !== chip.value)
-        : [...this.selectedVibes, chip];
-      return;
-    }
-    if (
-      this.plannerStep === 'destination' &&
-      chip.value === OTHER_DESTINATION
-    ) {
-      this.wantsCustomDestination = true;
-      this.pushChatMessage('ai', 'Sure — type your destination below 👇');
-      return;
-    }
-    this.applyPlannerAnswer(chip.label, chip.value);
-  };
-
-  isChipSelected = (chip: ChipOption) => {
-    return this.selectedVibes.some((c) => c.value === chip.value);
-  };
-
-  confirmVibes = () => {
-    this.confirmVibeSelection();
-  };
-
-  private confirmVibeSelection(extraText?: string) {
-    let labels: string[] = [];
-    let values: string[] = [];
-    for (let chip of this.selectedVibes) {
-      labels.push(chip.label);
-      values.push(chip.value);
-    }
-    // Remember the picked categories so the LLM assigns from just these.
-    this.chosenCategories = this.selectedVibes.map((c) => c.value);
-    if (extraText) {
-      labels.push(extraText);
-      values.push(extraText);
-    }
-    if (!labels.length) return;
-    this.selectedVibes = [];
-    this.applyPlannerAnswer(labels.join(' + '), values.join(', '));
-  }
-
-  private applyPlannerAnswer(label: string, value: string) {
-    this.pushChatMessage('user', label);
-    let step = this.plannerStep;
-    if (step === 'destination') {
-      // Re-ask on abstract answers — a place needs at least one real word
-      // and shouldn't be just a number.
-      let cleaned = value.trim();
-      if (!/\p{L}{2,}/u.test(cleaned) || /^\d+$/.test(cleaned)) {
-        this.pushChatMessage(
-          'ai',
-          "Hmm, that doesn't look like a place I can plan around — give me a city or region, like 'Tokyo, Japan'.",
-        );
-        return;
-      }
-      this.plannerAnswers.destination = cleaned;
-      this.wantsCustomDestination = false;
-      // The answer stays in planner state only — the card's destination is
-      // not touched until the plan is applied.
-    } else if (step === 'vibe') {
-      this.plannerAnswers.vibe = value;
-    }
-    this.askNextQuestion();
-  }
-
-  // The category pool the LLM may assign from: the traveller's picks, or
-  // every category when none were picked.
-  private get categoryPool(): string[] {
-    return this.chosenCategories.length
-      ? this.chosenCategories
-      : CATEGORY_NAMES;
-  }
-
-  private pushAiError(error: any) {
-    console.error('Error planning trip:', error);
-    // The realm-server proxy rejects with 403 Forbidden when the user's
-    // AI credits are exhausted — that's the only credit signal a card sees.
-    if (/forbidden|credit/i.test(error?.message ?? '')) {
-      this.outOfCredits = true;
-      this.pushChatMessage(
-        'ai',
-        "I'd love to keep planning, but you're out of AI credits 😔 Top up your plan and come back — your answers are saved on this card.",
-        'error',
-      );
-    } else {
-      this.pushChatMessage(
-        'ai',
-        `Something went wrong while planning: ${
-          error?.message ?? 'unknown error'
-        } — want to try again?`,
-        'error',
-      );
-    }
-    this.aiStatus = 'error';
-  }
-
-  private buildPlanUserPrompt(): string | null {
-    let destination = this.plannerAnswers.destination ?? this.destinationLabel;
-    if (!destination) return null;
-    let days = this.plannerAnswers.days ?? this.planDayCount;
-    let dates = this.plannerAnswers.dates;
-    let categoryNames = this.categoryPool;
-    return [
-      `Destination: ${destination}`,
-      `Trip length: ${days} days`,
-      dates
-        ? `Travel dates: ${formatShortDate(dates.start)} – ${formatShortDate(
-            dates.end,
-          )} (plan for the season/weekday context)`
-        : '',
-      this.plannerAnswers.vibe
-        ? `Traveller preferences: ${this.plannerAnswers.vibe}`
-        : '',
-      categoryNames.length ? `Category list: ${categoryNames.join(', ')}` : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
-  }
-
-  private async requestPlan(userPrompt: string) {
-    let commandContext = this.args.context?.commandContext;
-    if (!commandContext) {
-      throw new Error('Switch to Interact mode to plan with AI.');
-    }
-    let command = new TravelPlannerCommand(commandContext);
-    let result = await command.execute({
-      userPrompt,
-      llmModel: 'anthropic/claude-sonnet-4.6',
-    });
-    let raw = (result as any)?.output ?? '';
-    let planned = parsePlanJson(String(raw));
-    if (!planned) {
-      throw new Error(
-        'Could not read an itinerary from the AI response. Please try again.',
-      );
-    }
-    // The model is unreliable at exact coordinates, so resolve real ones from
-    // the place names (its strong suit), disambiguated by the trip destination.
-    // Geocoding degrades to the model's own coordinates per-stop on failure, so
-    // this never blocks a plan.
-    let destination = this.plannerAnswers.destination ?? this.destinationLabel;
-    let stops = await geocodePlannedStops(
-      planned.stops,
-      destination ?? undefined,
-    );
-    return { ...planned, stops };
-  }
-
-  generatePlan = async () => {
-    if (this.aiStatus === 'loading') return;
-    let basePrompt = this.buildPlanUserPrompt();
-    if (!basePrompt) {
-      this.pushAiError(new Error('Set a destination first.'));
-      return;
-    }
-    this.aiStatus = 'loading';
-    this.outOfCredits = false;
-    this.pendingStops = null;
-    this.pendingTitle = null;
-    this.planRecap = null;
-    this.expandedStopIndex = null;
-    this.isEditingCurrentTrip = false;
-    try {
-      let planned = await this.requestPlan(basePrompt);
-      this.pendingStops = this.buildStops(planned.stops);
-      this.pendingTitle = planned.tripTitle ?? null;
-      let planDays = new Set(planned.stops.map((p) => p.day)).size;
-      let recap = `Here's what I've planned — ${planned.stops.length} stops across ${planDays} ${
-        planDays === 1 ? 'day' : 'days'
-      }.`;
-      if (planned.summary) recap += ` ${planned.summary}`;
-      this.planRecap = `${recap} Happy with it? Tell me any changes below, or apply it.`;
-      this.aiStatus = 'preview';
-    } catch (error: any) {
-      this.pushAiError(error);
-    }
-  };
-
-  // Free-form revision while previewing: "less packed", "add a famous café",
-  // "remove a few stops but keep the museum" — the current pending plan goes
-  // back to the LLM with the request and the whole preview is replaced.
-  revisePlan = async (feedback: string) => {
-    if (this.aiStatus === 'loading' || !this.pendingStops) return;
-    let basePrompt = this.buildPlanUserPrompt() ?? '';
-    this.pushChatMessage('user', feedback);
-    let currentPlan = JSON.stringify({
-      stops: this.toPlainStops(this.pendingStops),
-    });
-    this.aiStatus = 'loading';
-    this.expandedStopIndex = null;
-    try {
-      let planned = await this.requestPlan(
-        [
-          basePrompt,
-          `Current plan JSON:\n${currentPlan}`,
-          `Revision request from the traveller: ${feedback}`,
-          'Apply the revision request to the current plan — keep everything the traveller did not ask to change — and return the COMPLETE revised itinerary. If the traveller names a category for a specific stop (e.g. "sightseeing for day 2 first stop"), set that stop\'s "category" to exactly that name from the Category list. Make sure EVERY stop has a "category" from the list.',
-        ].join('\n'),
-      );
-      this.pendingStops = this.buildStops(planned.stops);
-      if (planned.tripTitle) this.pendingTitle = planned.tripTitle;
-      let recap =
-        planned.summary ??
-        `Updated the plan — ${planned.stops.length} stops now.`;
-      this.planRecap = `${recap} Better? You can keep tweaking, or apply it.`;
-      this.aiStatus = 'preview';
-    } catch (error: any) {
-      this.pushAiError(error);
-    }
-  };
-
-  get pendingPlanByDay() {
-    let plan = this.pendingStops ?? [];
-    let byDay = new Map<number, { stop: ItineraryStop; index: number }[]>();
-    plan.forEach((stop, index) => {
-      let day = stop.day ?? 1;
-      if (!byDay.has(day)) byDay.set(day, []);
-      byDay.get(day)!.push({ stop, index });
-    });
-    return [...byDay.keys()]
-      .sort((a, b) => a - b)
-      .map((day) => ({ day, stops: byDay.get(day)! }));
-  }
-
-  // Bumps whenever new content lands at the bottom of the panel — a chat
-  // message, the preview list, or the recap caption — so it auto-scrolls.
-  get scrollKey(): string {
-    return `${this.chatMessages.length}-${this.pendingStops?.length ?? 0}-${
-      this.planRecap ? 1 : 0
-    }-${this.aiStatus}`;
-  }
-
-  get userIsTyping() {
-    if (this.aiStatus === 'chat') {
-      return this.chatInput.trim().length > 0;
-    }
-    if (this.aiStatus === 'preview') {
-      return this.reviseInput.trim().length > 0;
-    }
-    return false;
-  }
-
-  toggleExpandStop = (index: number) => {
-    this.expandedStopIndex = this.expandedStopIndex === index ? null : index;
-  };
-
-  closeStopPopover = () => {
-    this.expandedStopIndex = null;
-  };
-
-  // The stop whose edit popover is open (null when none). Drives a single
-  // shared <Popover> anchored to the open row's view button.
-  get expandedPendingStop(): ItineraryStop | null {
-    if (this.expandedStopIndex == null) return null;
-    return this.pendingStops?.[this.expandedStopIndex] ?? null;
-  }
-
-  // CSS selector for the open row's view button — each row tags its button
-  // with data-ti-stop-anchor=<index> so the popover velcros to the right one.
-  get stopPopoverAnchor(): string {
-    return `[data-ti-stop-anchor='${this.expandedStopIndex}']`;
-  }
-
-  removePendingStop = (index: number) => {
-    if (!this.pendingStops) return;
-    this.expandedStopIndex = null;
-    this.pendingStops = this.pendingStops.filter((_, i) => i !== index);
-  };
-
-  // Remove whichever stop's edit popover is currently open.
-  removeExpandedStop = () => {
-    if (this.expandedStopIndex == null) return;
-    this.removePendingStop(this.expandedStopIndex);
-  };
-
-  // Build real ItineraryStop instances from the LLM's plan so the preview
-  // can use each field's own edit component.
-  private buildStops(planned: PlannedStop[]): ItineraryStop[] {
-    return planned.map(
-      (p) =>
-        new ItineraryStop({
-          day: p.day,
-          location: new GeoSearchPointField({
-            searchKey: p.name,
-            ...(p.lat != null && p.lon != null
-              ? { lat: p.lat, lon: p.lon }
-              : {}),
-          }),
-          startTime: new TimeField({ value: p.startTime }),
-          endTime: new TimeField({ value: p.endTime }),
-          notes: p.notes,
-          // Tolerant mapping back to a canonical enum value — handles case,
-          // accents, emoji, and common synonyms so near-misses still stick.
-          category: matchCategory(p.category),
-        }),
-    );
-  }
-
-  private toPlainStops(stops: ItineraryStop[]): PlannedStop[] {
-    return stops.map((s) => ({
-      day: s.day ?? 1,
-      name: s.location?.searchKey?.trim() || 'Untitled stop',
-      lat: s.location?.lat ?? null,
-      lon: s.location?.lon ?? null,
-      startTime: s.startTime?.value?.trim() || '09:00',
-      endTime: s.endTime?.value?.trim() || '11:00',
-      notes: s.notes ?? undefined,
-      category: s.category?.trim() || undefined,
-    }));
-  }
-
-  private planSignature(stops: ItineraryStop[]): string {
-    return JSON.stringify(this.toPlainStops(stops));
-  }
-
-  // Applying is pointless until something differs from the card: a field
-  // edit, a removal, or an AI revision all change the signature.
-  get applyDisabled() {
-    if (!this.isEditingCurrentTrip) return false;
-    if (!this.pendingStops) return true;
-    return this.planSignature(this.pendingStops) === this.initialPlanSignature;
-  }
-
-  // Confirming the preview is the only point the card gets patched: the
-  // edited stop instances move onto the card wholesale, category links
-  // included.
-  applyPendingPlan = () => {
-    if (!this.pendingStops) return;
-    this.args.model.stops = this.pendingStops;
-    // A wizard-built plan also carries the destination + dates the traveller
-    // chose in the planner — commit them now. (Editing an existing trip leaves
-    // the card's Where/When untouched; those aren't edited in the planner.)
-    if (!this.isEditingCurrentTrip) {
-      if (this.plannerAnswers.destination) {
-        this.args.model.destination = new GeoSearchPointField({
-          searchKey: this.plannerAnswers.destination,
-        });
-      }
-      let dates = this.plannerAnswers.dates;
-      if (dates?.start && dates?.end) {
-        this.args.model.dateRange = new DateRangeField({
-          start: dates.start,
-          end: dates.end,
-        });
-      }
-    }
-    // tripTitle and the card's own name (cardInfo.name) are the same thing —
-    // patch both so the card stops reading "Untitled Travel Itinerary".
-    if (this.pendingTitle) {
-      this.args.model.tripTitle = this.pendingTitle;
-      if (this.args.model.cardInfo) {
-        this.args.model.cardInfo.name = this.pendingTitle;
-      }
-    }
-    this.selectedIndex = -1;
-    this.editingIndex = -1;
-    this.mapDay = null;
-    this.pendingTitle = null;
-    this.expandedStopIndex = null;
-    // Keep the chat open for continued planning: re-seed the preview from the
-    // just-applied trip so the revise textarea stays available. Nothing more is
-    // written to the card until the traveller applies again (Apply stays
-    // disabled until the plan actually differs).
-    this.pendingStops = this.buildStops(this.toPlainStops([...this.stops]));
-    this.initialPlanSignature = this.planSignature(this.pendingStops);
-    this.isEditingCurrentTrip = true;
-    // Shown as a caption BELOW the preview list, so it stays in view when the
-    // panel auto-scrolls to the bottom (a chat message would render above the
-    // preview and scroll out of sight).
-    this.planRecap =
-      '🎉 Done — changes applied! Have an amazing trip ✈️ Want to keep tweaking? Tell me below, or close the chat when you’re done.';
-    this.aiStatus = 'preview';
-  };
 
   <template>
     <article class='ti-app'>
@@ -1090,275 +454,14 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
               </Popover>
             </div>
           {{/if}}
-          <AiChatPanel
-            @open={{this.showAiPlanner}}
-            @onToggle={{this.toggleAiPlanner}}
-            @onClose={{this.closeAiPlanner}}
-            @triggerLabel={{if
-              (eq this.aiStatus 'loading')
-              'Planning…'
-              'Plan with AI'
-            }}
-            @title='Trip Planner'
-            @subtitle='Powered by AI'
-            @scrollKey={{this.scrollKey}}
-            @isAssistantTyping={{eq this.aiStatus 'loading'}}
-            @isUserTyping={{this.userIsTyping}}
+          <Button
+            class='ti-ai-trigger'
+            data-test-plan-with-ai
+            {{on 'click' this.planWithAssistant}}
           >
-            <:messages as |Chat|>
-              {{#each this.chatMessages as |m|}}
-                <Chat.Message
-                  @role={{m.role}}
-                  @kind={{m.kind}}
-                >{{m.text}}</Chat.Message>
-              {{/each}}
-              {{#if this.pendingStops}}
-                <div class='ti-ai-preview'>
-                  {{#each this.pendingPlanByDay as |group|}}
-                    <div class='ti-ai-preview-day'>
-                      <span class='ti-ai-preview-badge'>Day
-                        {{group.day}}</span>
-                      <ul class='ti-ai-preview-stops'>
-                        {{#each group.stops as |entry|}}
-                          <li
-                            class='ti-ai-preview-stop
-                              {{if
-                                (eq entry.index this.expandedStopIndex)
-                                "is-open"
-                              }}'
-                          >
-                            <div class='ti-ai-preview-row'>
-                              {{#if entry.stop.startTime.value}}
-                                <span
-                                  class='ti-ai-preview-time'
-                                >{{entry.stop.startTime.value}}</span>
-                              {{/if}}
-                              <span class='ti-ai-preview-name'>{{if
-                                  entry.stop.location.searchKey
-                                  entry.stop.location.searchKey
-                                  'Untitled stop'
-                                }}</span>
-                              {{#if entry.stop.category}}
-                                <span
-                                  class='ti-ai-preview-cat'
-                                >{{entry.stop.category}}</span>
-                              {{/if}}
-                              <button
-                                type='button'
-                                class='ti-ai-preview-view'
-                                data-ti-stop-anchor={{entry.index}}
-                                data-bx-popover-anchor
-                                aria-label='View & edit this stop'
-                                {{on
-                                  'click'
-                                  (fn this.toggleExpandStop entry.index)
-                                }}
-                              >
-                                <EyeIcon width='14' height='14' />
-                              </button>
-                            </div>
-                          </li>
-                        {{/each}}
-                      </ul>
-                    </div>
-                  {{/each}}
-                </div>
-                {{#if this.planRecap}}
-                  <Chat.Message @role='ai'>{{this.planRecap}}</Chat.Message>
-                {{/if}}
-                {{#let this.expandedPendingStop as |expandedStop|}}
-                  {{#if expandedStop}}
-                    <Popover
-                      @anchor={{this.stopPopoverAnchor}}
-                      @open={{true}}
-                      @kind='edit'
-                      @anchoring='beside'
-                      @placement='left'
-                      @size='spacious'
-                      @backdrop='dim'
-                      @elevation='floating'
-                      @trapFocus={{true}}
-                      @keyboardModel='edit'
-                      @label='Edit stop'
-                    >
-                      <:edit>
-                        <div class='ti-ai-stop-pop'>
-                          <div class='ti-ai-stop-head'>
-                            <span class='ti-ai-stop-head-title'>Edit</span>
-                            <div class='ti-ai-stop-head-actions'>
-                              <button
-                                type='button'
-                                class='ti-ai-preview-remove'
-                                {{on 'click' this.removeExpandedStop}}
-                              >
-                                <TrashIcon width='12' height='12' />
-                                Remove this stop
-                              </button>
-                              <button
-                                type='button'
-                                class='ti-ai-stop-close'
-                                aria-label='Close'
-                                {{on 'click' this.closeStopPopover}}
-                              ><XIcon width='15' height='15' /></button>
-                            </div>
-                          </div>
-                          <div class='ti-ai-stop-body'>
-                            {{#let (getComponent expandedStop) as |StopEdit|}}
-                              <div class='ti-ai-stop-edit'>
-                                <StopEdit @format='edit' />
-                              </div>
-                            {{/let}}
-                          </div>
-                        </div>
-                      </:edit>
-                    </Popover>
-                  {{/if}}
-                {{/let}}
-              {{/if}}
-              {{#if (eq this.aiStatus 'chat')}}
-                {{#if this.showDatePicker}}
-                  {{#if this.plannerDateRange}}
-                    <div class='ti-ai-daterange'>
-                      <DateRangePicker
-                        @start={{this.plannerRange.start}}
-                        @end={{this.plannerRange.end}}
-                        @selected={{this.plannerRange}}
-                        @minDate={{this.plannerMinDate}}
-                        @onSelect={{this.onPlannerDateSelect}}
-                      />
-                    </div>
-                  {{/if}}
-                {{/if}}
-              {{/if}}
-            </:messages>
-            <:footer>
-              {{#if (eq this.aiStatus 'chat')}}
-                {{#if this.stepChips.length}}
-                  <div class='ti-ai-chips'>
-                    {{#each this.stepChips as |chip|}}
-                      <button
-                        type='button'
-                        class='ti-ai-chip
-                          {{if (this.isChipSelected chip) "is-selected"}}'
-                        {{on 'click' (fn this.answerChip chip)}}
-                      >{{chip.label}}</button>
-                    {{/each}}
-                  </div>
-                {{/if}}
-                {{#if this.showVibeConfirm}}
-                  <button
-                    type='button'
-                    class='ti-ai-chip-confirm'
-                    {{on 'click' this.confirmVibes}}
-                  >Continue →</button>
-                {{/if}}
-              {{/if}}
-              {{#if this.showChatInput}}
-                <form
-                  class='ti-ai-inputrow'
-                  {{on 'submit' this.submitChatInput}}
-                >
-                  <input
-                    class='ti-ai-input'
-                    aria-label='Your answer'
-                    placeholder={{this.chatInputPlaceholder}}
-                    value={{this.chatInput}}
-                    {{on 'input' this.updateChatInput}}
-                  />
-                  <button
-                    type='submit'
-                    class='ti-ai-send'
-                    aria-label='Send answer'
-                    disabled={{not this.chatInput}}
-                  ><SendIcon width='14' height='14' /></button>
-                </form>
-              {{/if}}
-              {{#if (eq this.aiStatus 'chat')}}
-                {{#if this.showDatePicker}}
-                  <button
-                    type='button'
-                    class='ti-ai-generate'
-                    disabled={{not this.datesChosen}}
-                    {{on 'click' this.confirmDates}}
-                  >Confirm dates →</button>
-                {{/if}}
-                {{#if (eq this.plannerStep 'ready')}}
-                  <button
-                    type='button'
-                    class='ti-ai-generate'
-                    {{on 'click' this.generatePlan}}
-                  >
-                    <SparklesIcon width='14' height='14' />
-                    Generate itinerary
-                  </button>
-                {{/if}}
-              {{else if (eq this.aiStatus 'loading')}}
-                <button type='button' class='ti-ai-generate is-busy' disabled>
-                  <SparklesIcon width='14' height='14' />
-                  Generating…
-                </button>
-              {{else if (eq this.aiStatus 'preview')}}
-                <textarea
-                  class='ti-ai-textarea'
-                  rows='2'
-                  aria-label='Tell the AI what to change'
-                  placeholder='Tell me what to change — change day 2, fewer stops, a different vibe, add famous cafés…'
-                  value={{this.reviseInput}}
-                  {{on 'input' this.updateReviseInput}}
-                ></textarea>
-                {{#if this.reviseInput}}
-                  <button
-                    type='button'
-                    class='ti-ai-generate'
-                    {{on 'click' this.submitRevise}}
-                  >
-                    <SparklesIcon width='14' height='14' />
-                    Revise with AI
-                  </button>
-                {{else}}
-                  <button
-                    type='button'
-                    class='ti-ai-generate'
-                    disabled={{this.applyDisabled}}
-                    {{on 'click' this.applyPendingPlan}}
-                  >
-                    {{if
-                      this.isEditingCurrentTrip
-                      'Apply changes'
-                      'Looks good — add to my trip'
-                    }}
-                  </button>
-                {{/if}}
-                {{#if this.isEditingCurrentTrip}}
-                  <button
-                    type='button'
-                    class='ti-ai-chip-confirm is-secondary'
-                    {{on 'click' this.startFresh}}
-                  >Start fresh</button>
-                {{/if}}
-              {{else if (eq this.aiStatus 'success')}}
-                <button
-                  type='button'
-                  class='ti-ai-generate'
-                  {{on 'click' this.closeAiPlanner}}
-                >Done</button>
-              {{else if (eq this.aiStatus 'error')}}
-                {{#if this.outOfCredits}}
-                  <button
-                    type='button'
-                    class='ti-ai-chip-confirm is-secondary'
-                    {{on 'click' this.closeAiPlanner}}
-                  >Close</button>
-                {{else}}
-                  <button
-                    type='button'
-                    class='ti-ai-generate'
-                    {{on 'click' this.generatePlan}}
-                  >Try again</button>
-                {{/if}}
-              {{/if}}
-            </:footer>
-          </AiChatPanel>
+            <SparklesIcon width='16' height='16' />
+            {{if this.aiLaunching 'Opening…' 'Plan with AI'}}
+          </Button>
         </div>
       </header>
 
@@ -1568,22 +671,21 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
 
     <style scoped>
       .ti-app {
-        /* Brand palette, resolved theme-first: a public --ti-* override wins,
-           else the active design-system theme token (--primary, --foreground,
-           …), else the literal brand default. (--accent-dark / --accent-bg have
-           no semantic slot, so they theme only via their --ti-* override.) */
-        --c-accent: var(--ti-accent, var(--primary, #ff385c));
-        --c-accent-dark: var(--ti-accent-dark, #e00b41);
-        --c-accent-bg: var(--ti-accent-bg, #fff0f3);
-        --c-text: var(--ti-text, var(--foreground, #222222));
-        --c-text-light: var(
-          --ti-text-light,
-          var(--primary-foreground, #ffffff)
-        );
-        --c-muted: var(--ti-muted, var(--muted-foreground, #717171));
-        --c-border: var(--ti-border, var(--border, #dddddd));
-        --c-border-light: var(--ti-border-light, var(--border, #ebebeb));
-        --c-bg: var(--ti-bg, var(--muted, #f7f7f7));
+        /* Brand palette: each token resolves to the active design-system
+           theme token (--primary, --foreground, …) so a linked brand-guide
+           Theme (cardInfo.theme) can re-skin the card, else the literal
+           Airbnb brand default (rausch accent, charcoal text, warm neutrals).
+           (--accent-dark / --accent-bg have no semantic slot, so they stay at
+           the literal Airbnb value regardless of theme.) */
+        --c-accent: var(--primary, #ff385c);
+        --c-accent-dark: #bd1e59;
+        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
+        --c-text: var(--foreground, #222222);
+        --c-text-light: #ffffff;
+        --c-muted: var(--muted-foreground, #717171);
+        --c-border: var(--border, #dddddd);
+        --c-border-light: var(--border, #ebebeb);
+        --c-bg: var(--muted, #f7f7f7);
         height: 100%;
         min-height: 100%;
         display: flex;
@@ -1801,16 +903,16 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       /* The stop edit popover portals to document.body, OUTSIDE the host
          card, so the --c-* palette must be re-declared here or every var()
-         resolves to nothing. Same --ti-* override contract as the host. */
+         resolves to nothing. Same design-system-token contract as the host. */
       .ti-ai-stop-pop {
-        --c-accent: var(--ti-accent, var(--primary, #ff385c));
-        --c-accent-dark: var(--ti-accent-dark, #e00b41);
-        --c-accent-bg: var(--ti-accent-bg, #fff0f3);
-        --c-text: var(--ti-text, var(--foreground, #222222));
-        --c-muted: var(--ti-muted, var(--muted-foreground, #717171));
-        --c-border: var(--ti-border, var(--border, #dddddd));
-        --c-border-light: var(--ti-border-light, var(--border, #ebebeb));
-        --c-bg: var(--ti-bg, var(--muted, #f7f7f7));
+        --c-accent: var(--primary, #ff385c);
+        --c-accent-dark: #bd1e59;
+        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
+        --c-text: var(--foreground, #222222);
+        --c-muted: var(--muted-foreground, #717171);
+        --c-border: var(--border, #dddddd);
+        --c-border-light: var(--border, #ebebeb);
+        --c-bg: var(--muted, #f7f7f7);
         display: flex;
         flex-direction: column;
         width: 320px;
@@ -2098,6 +1200,11 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         gap: 8px;
         position: relative;
       }
+      .ti-ai-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
       .ti-share-btn {
         display: flex;
         align-items: center;
@@ -2129,17 +1236,14 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
          re-declare the --c-* palette, since the portaled node no longer
          inherits it from .ti-app. */
       .ti-share-pop {
-        --c-accent: var(--ti-accent, var(--primary, #ff385c));
-        --c-accent-dark: var(--ti-accent-dark, #e00b41);
-        --c-accent-bg: var(--ti-accent-bg, #fff0f3);
-        --c-text: var(--ti-text, var(--foreground, #222222));
-        --c-text-light: var(
-          --ti-text-light,
-          var(--primary-foreground, #ffffff)
-        );
-        --c-muted: var(--ti-muted, var(--muted-foreground, #717171));
-        --c-border-light: var(--ti-border-light, var(--border, #ebebeb));
-        --c-bg: var(--ti-bg, var(--muted, #f7f7f7));
+        --c-accent: var(--primary, #ff385c);
+        --c-accent-dark: #bd1e59;
+        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
+        --c-text: var(--foreground, #222222);
+        --c-text-light: #ffffff;
+        --c-muted: var(--muted-foreground, #717171);
+        --c-border-light: var(--border, #ebebeb);
+        --c-bg: var(--muted, #f7f7f7);
         width: 200px;
         max-width: 100%;
         display: flex;
@@ -2778,17 +1882,14 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
 
     <style scoped>
       .fitted-trip {
-        /* See TravelItineraryIsolated above for the theme-first --ti-* / semantic chain. */
-        --c-accent: var(--ti-accent, var(--primary, #ff385c));
-        --c-accent-dark: var(--ti-accent-dark, #b8003e);
-        --c-accent-bg: var(--ti-accent-bg, #fff0f3);
-        --c-text: var(--ti-text, var(--foreground, #222222));
-        --c-text-light: var(
-          --ti-text-light,
-          var(--primary-foreground, #ffffff)
-        );
-        --c-muted: var(--ti-muted, var(--muted-foreground, #717171));
-        --c-bg: var(--ti-bg, var(--muted, #f7f7f7));
+        /* See TravelItineraryIsolated above for the design-system-token / literal palette. */
+        --c-accent: var(--primary, #ff385c);
+        --c-accent-dark: #bd1e59;
+        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
+        --c-text: var(--foreground, #222222);
+        --c-text-light: #ffffff;
+        --c-muted: var(--muted-foreground, #717171);
+        --c-bg: var(--muted, #f7f7f7);
         width: 100%;
         height: 100%;
         font-family:

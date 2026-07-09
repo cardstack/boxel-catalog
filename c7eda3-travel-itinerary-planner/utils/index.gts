@@ -2,14 +2,9 @@ import { htmlSafe } from '@ember/template';
 
 export const DEFAULT_STOP_COLOR = '#ff385c';
 
-// Sentinel chip value on the destination step that reveals the free-text
-// input instead of answering directly.
-export const OTHER_DESTINATION = '__other__';
-
 // The fixed set of trip categories. These drive the `category` enum field on
-// each stop, the vibe chips in the AI planner, and the colour-coding on the
-// map and stop rows. `value` is what's stored on the card; `label` (with the
-// emoji) is what the dropdown / chips show.
+// each stop and the colour-coding on the map and stop rows. `value` is what's
+// stored on the card; `label` (with the emoji) is what the dropdown shows.
 export interface CategoryOption {
   value: string;
   label: string;
@@ -29,8 +24,6 @@ export const TRIP_CATEGORIES: CategoryOption[] = [
   { value: 'Performance', emoji: '🎭', color: '#EC4899' },
   { value: 'Shopping', emoji: '🛍️', color: '#DB2777' },
 ].map((c) => ({ ...c, label: `${c.value} ${c.emoji}` }));
-
-export const CATEGORY_NAMES: string[] = TRIP_CATEGORIES.map((c) => c.value);
 
 export function categoryOption(
   value?: string | null,
@@ -122,10 +115,6 @@ export function categoryColor(value?: string | null): string {
   return categoryOption(value)?.color || DEFAULT_STOP_COLOR;
 }
 
-export function categoryEmoji(value?: string | null): string {
-  return categoryOption(value)?.emoji || '';
-}
-
 export function accentStyle(color: string | undefined | null) {
   return htmlSafe(`--stop-color:${color || DEFAULT_STOP_COLOR}`);
 }
@@ -153,34 +142,6 @@ export interface PlannedStop {
   endTime: string;
   notes?: string;
   category?: string;
-}
-
-export interface ChatMessage {
-  role: 'ai' | 'user';
-  text: string;
-  kind?: 'error';
-}
-
-export interface ChipOption {
-  label: string;
-  value: string;
-}
-
-export type PlannerStep = 'destination' | 'days' | 'vibe' | 'ready';
-
-export interface PlannerAnswers {
-  destination?: string;
-  days?: number;
-  dates?: { start: Date; end: Date };
-  vibe?: string;
-}
-
-export function formatShortDate(d: Date): string {
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 }
 
 export function normalizeTime(value: unknown, fallback: string): string {
@@ -263,18 +224,43 @@ export function parsePlanJson(raw: string): PlannedTrip | null {
   return { tripTitle, summary, stops: out };
 }
 
+// Great-circle distance in km between two points.
+function haversineKm(
+  a: { lat: number; lon: number },
+  b: { lat: number; lon: number },
+): number {
+  let R = 6371;
+  let toRad = (d: number) => (d * Math.PI) / 180;
+  let dLat = toRad(b.lat - a.lat);
+  let dLon = toRad(b.lon - a.lon);
+  let h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+function isFiniteNum(n: unknown): n is number {
+  return typeof n === 'number' && Number.isFinite(n);
+}
+
 // Resolve a place name to precise coordinates via Photon (komoot's free,
-// CORS-enabled, OpenStreetMap-based geocoder — no API key, lenient limits). An
-// optional bias point nudges the search toward the right area when a name is
-// ambiguous (e.g. a café chain). LLMs are unreliable at recalling exact
-// lat/lon, so we trust them only for the place NAME and resolve real
-// coordinates here. Resolves to null on any failure so callers can fall back to
-// whatever coordinates they already have.
+// CORS-enabled, OpenStreetMap-based geocoder — no API key, lenient limits).
+// LLMs are unreliable at recalling exact lat/lon, so we trust them only for the
+// place NAME and resolve real coordinates here. To stop a same-named place on
+// another continent from winning (e.g. an "Imbi Market" in Kenya beating the
+// one in Kuala Lumpur), pass an `anchor` (the trip's region centre) and a
+// `maxKm` radius: candidates outside the radius are discarded, and proximity to
+// the anchor breaks ties between equally-good name matches. Resolves to null on
+// any failure (or when nothing falls inside the radius) so callers can fall
+// back to whatever coordinates they already have.
 export async function geocodePlace(
   name: string,
   opts?: {
     bias?: { lat?: number | null; lon?: number | null };
     context?: string; // destination/region to disambiguate (e.g. "Lombok, Indonesia")
+    anchor?: { lat: number; lon: number }; // region centre to keep results near
+    maxKm?: number; // discard candidates farther than this from the anchor
+    maxBiasKm?: number; // when biased, reject a match that jumps farther than this from the bias (refine, don't relocate)
   },
 ): Promise<{ lat: number; lon: number } | null> {
   let name0 = name.trim();
@@ -283,25 +269,29 @@ export async function geocodePlace(
   // of a same-named place on the other side of the world.
   let context = opts?.context?.trim();
   let q = context ? `${name0}, ${context}` : name0;
-  let url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5`;
+  let url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10`;
   let bias = opts?.bias;
-  if (
-    bias &&
-    typeof bias.lat === 'number' &&
-    typeof bias.lon === 'number' &&
-    Number.isFinite(bias.lat) &&
-    Number.isFinite(bias.lon)
-  ) {
+  if (bias && isFiniteNum(bias.lat) && isFiniteNum(bias.lon)) {
     url += `&lat=${bias.lat}&lon=${bias.lon}`;
   }
+  let anchor =
+    opts?.anchor && isFiniteNum(opts.anchor.lat) && isFiniteNum(opts.anchor.lon)
+      ? opts.anchor
+      : undefined;
+  // The per-stop bias (the LLM's rough coords for THIS place) locates the right
+  // neighbourhood. Use it to break ties — never the region centre, which would
+  // wrongly drag every ambiguous pin toward downtown.
+  let biasPoint =
+    bias && isFiniteNum(bias.lat) && isFiniteNum(bias.lon)
+      ? { lat: bias.lat, lon: bias.lon }
+      : undefined;
   try {
     let res = await fetch(url);
     if (!res.ok) return null;
     let data = await res.json();
     let features: any[] = Array.isArray(data?.features) ? data.features : [];
     if (!features.length) return null;
-    // Prefer the feature whose own name best matches the place name; the raw
-    // first result is often a broader area or a weaker match.
+
     let target = name0.toLowerCase();
     let nameScore = (f: any): number => {
       let fname = String(f?.properties?.name ?? '').toLowerCase();
@@ -310,32 +300,94 @@ export async function geocodePlace(
       if (fname.includes(target) || target.includes(fname)) return 2;
       return 1;
     };
-    let best = features
-      .map((f) => ({ f, score: nameScore(f) }))
-      .sort((a, b) => b.score - a.score)[0];
-    let coords = best?.f?.geometry?.coordinates;
-    if (!Array.isArray(coords) || coords.length < 2) return null;
-    let lon = Number(coords[0]);
-    let lat = Number(coords[1]);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-    return { lat, lon };
+
+    let scored = features
+      .map((f) => {
+        let coords = f?.geometry?.coordinates;
+        let lon = Number(coords?.[0]);
+        let lat = Number(coords?.[1]);
+        let valid = isFiniteNum(lat) && isFiniteNum(lon);
+        // distAnchor: distance to the region centre — used only for the radius
+        // gate. tieDist: distance to the per-stop bias (fallback: the anchor) —
+        // used to pick among equally-good name matches.
+        let distAnchor =
+          valid && anchor ? haversineKm({ lat, lon }, anchor) : Infinity;
+        let tieDist = valid
+          ? biasPoint
+            ? haversineKm({ lat, lon }, biasPoint)
+            : distAnchor
+          : Infinity;
+        return { lat, lon, valid, score: nameScore(f), distAnchor, tieDist };
+      })
+      .filter((c) => c.valid);
+    if (!scored.length) return null;
+
+    // With a trusted region anchor, drop anything outside the radius — better
+    // to return null (and keep the caller's existing coords) than a far-flung
+    // namesake.
+    if (anchor && opts?.maxKm != null) {
+      let inRegion = scored.filter((c) => c.distAnchor <= opts!.maxKm!);
+      if (!inRegion.length) return null;
+      scored = inRegion;
+    }
+
+    // Best name match wins; proximity to the stop's own rough coords breaks ties.
+    let best = scored.sort(
+      (a, b) => b.score - a.score || a.tieDist - b.tieDist,
+    )[0];
+
+    // When the stop already has rough coords, geocoding should only REFINE them,
+    // not relocate the pin. If the only matches are weak (no real name match) or
+    // the best match jumps far from the stop's own position, trust the existing
+    // coords instead of a guess (return null → caller keeps them).
+    if (biasPoint) {
+      if (best.score < 2) return null;
+      if (best.tieDist > (opts?.maxBiasKm ?? 25)) return null;
+    }
+    return { lat: best.lat, lon: best.lon };
   } catch {
     return null;
   }
 }
 
-// Refine a plan's stops with real coordinates: geocode each stop by name
-// (disambiguated by the trip destination, biased to the LLM's rough
-// coordinates). A stop that fails to geocode keeps its original coordinates.
+// Drop accidental repeats — the same place named twice on the same day — while
+// allowing the same place to legitimately recur on a different day.
+function dedupeStops(stops: PlannedStop[]): PlannedStop[] {
+  let seen = new Set<string>();
+  let out: PlannedStop[] = [];
+  for (let s of stops) {
+    let key = `${s.day}::${(s.name ?? '').trim().toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(s);
+  }
+  return out;
+}
+
+// Refine a plan's stops with real coordinates. First resolve the destination
+// itself to a region centre, then geocode every stop anchored to that centre
+// (within ~100km) so each lands on the correct same-named place. A stop that
+// can't be resolved inside the region keeps its original coordinates.
 export async function geocodePlannedStops(
   stops: PlannedStop[],
   context?: string,
 ): Promise<PlannedStop[]> {
+  let deduped = dedupeStops(stops);
+  let destAnchor = context ? await geocodePlace(context) : null;
   return Promise.all(
-    stops.map(async (s) => {
+    deduped.map(async (s) => {
+      let perStop =
+        isFiniteNum(s.lat) && isFiniteNum(s.lon)
+          ? { lat: s.lat, lon: s.lon }
+          : undefined;
+      let anchor = destAnchor ?? perStop;
       let resolved = await geocodePlace(s.name, {
-        bias: { lat: s.lat, lon: s.lon },
         context,
+        bias: { lat: s.lat, lon: s.lon },
+        anchor: anchor ?? undefined,
+        // Only hard-filter by radius when we trust the destination centre; a
+        // per-stop fallback anchor just guides tie-breaking.
+        maxKm: destAnchor ? 100 : undefined,
       });
       return resolved ? { ...s, lat: resolved.lat, lon: resolved.lon } : s;
     }),

@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "TravelItinerary",
-        "module": "../travel-itinerary"
+        "module": "@cardstack/catalog/c7eda3-travel-itinerary-planner/travel-itinerary"
       }
     },
     "type": "card",
@@ -27,7 +27,7 @@
         },
         {
           "location": {
-            "searchKey": "Café Marly",
+            "searchKey": "Caf\u00e9 Marly",
             "lat": 48.8609,
             "lon": 2.337
           },
@@ -38,7 +38,7 @@
           "endTime": {
             "value": "14:00"
           },
-          "category": "Café & Coffee",
+          "category": "Caf\u00e9 & Coffee",
           "notes": "Overlooks the Louvre courtyard; reserve a table by the window for views while you eat."
         },
         {
@@ -75,7 +75,7 @@
         },
         {
           "location": {
-            "searchKey": "Musée de l'Orangerie",
+            "searchKey": "Mus\u00e9e de l'Orangerie",
             "lat": 48.8637,
             "lon": 2.3227
           },
@@ -113,7 +113,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/airbnb"
         }
       },
       "cardInfo.cardThumbnail": {
