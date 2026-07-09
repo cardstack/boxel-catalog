@@ -177,7 +177,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/airbnb"
         }
       },
       "cardInfo.cardThumbnail": {

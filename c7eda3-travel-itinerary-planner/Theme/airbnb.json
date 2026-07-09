@@ -1,0 +1,33 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Theme",
+        "module": "@cardstack/base/card-api"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Airbnb",
+        "notes": null,
+        "summary": "Airbnb brand palette — rausch #FF385C accent, Hof #222 text, foggy neutrals.",
+        "cardThumbnailURL": null
+      },
+      "cssImports": [],
+      "cssVariables": ":root {\n  --background: #ffffff;\n  --foreground: #222222;\n  --card: #ffffff;\n  --card-foreground: #222222;\n  --popover: #ffffff;\n  --popover-foreground: #222222;\n  --primary: #ff385c;\n  --primary-foreground: #ffffff;\n  --secondary: #f7f7f7;\n  --secondary-foreground: #222222;\n  --muted: #f7f7f7;\n  --muted-foreground: #717171;\n  --accent: #ff385c;\n  --accent-foreground: #ffffff;\n  --destructive: #c13515;\n  --destructive-foreground: #ffffff;\n  --border: #dddddd;\n  --input: #ffffff;\n  --ring: #ff385c;\n  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;\n  --radius: 12px;\n}"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -671,23 +671,24 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
 
     <style scoped>
       .ti-app {
-        /* Brand palette, Airbnb-first: the literal Airbnb brand values are the
-           default look (rausch accent, charcoal text, warm neutrals), so the
-           card reads as Airbnb regardless of any surrounding design-system
-           theme. Only an explicit public --ti-* override changes them — the
-           card intentionally does NOT defer to --primary/--foreground/etc. */
-        --c-accent: var(--ti-accent, #ff385c);
+        /* Brand palette, resolved theme-first: a public --ti-* override wins,
+           else the active design-system theme token (--primary, --foreground,
+           …) so a linked brand-guide Theme can re-skin the card, else the
+           literal Airbnb brand default (rausch accent, charcoal text, warm
+           neutrals). (--accent-dark / --accent-bg have no semantic slot, so
+           they theme only via their --ti-* override.) */
+        --c-accent: var(--ti-accent, var(--primary, #ff385c));
         --c-accent-dark: var(--ti-accent-dark, #bd1e59);
         --c-accent-bg: var(
           --ti-accent-bg,
           color-mix(in srgb, var(--c-accent) 10%, #ffffff)
         );
-        --c-text: var(--ti-text, #222222);
+        --c-text: var(--ti-text, var(--foreground, #222222));
         --c-text-light: var(--ti-text-light, #ffffff);
-        --c-muted: var(--ti-muted, #717171);
-        --c-border: var(--ti-border, #dddddd);
-        --c-border-light: var(--ti-border-light, #ebebeb);
-        --c-bg: var(--ti-bg, #f7f7f7);
+        --c-muted: var(--ti-muted, var(--muted-foreground, #717171));
+        --c-border: var(--ti-border, var(--border, #dddddd));
+        --c-border-light: var(--ti-border-light, var(--border, #ebebeb));
+        --c-bg: var(--ti-bg, var(--muted, #f7f7f7));
         height: 100%;
         min-height: 100%;
         display: flex;
@@ -907,17 +908,17 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
          card, so the --c-* palette must be re-declared here or every var()
          resolves to nothing. Same --ti-* override contract as the host. */
       .ti-ai-stop-pop {
-        --c-accent: var(--ti-accent, #ff385c);
+        --c-accent: var(--ti-accent, var(--primary, #ff385c));
         --c-accent-dark: var(--ti-accent-dark, #bd1e59);
         --c-accent-bg: var(
           --ti-accent-bg,
           color-mix(in srgb, var(--c-accent) 10%, #ffffff)
         );
-        --c-text: var(--ti-text, #222222);
-        --c-muted: var(--ti-muted, #717171);
-        --c-border: var(--ti-border, #dddddd);
-        --c-border-light: var(--ti-border-light, #ebebeb);
-        --c-bg: var(--ti-bg, #f7f7f7);
+        --c-text: var(--ti-text, var(--foreground, #222222));
+        --c-muted: var(--ti-muted, var(--muted-foreground, #717171));
+        --c-border: var(--ti-border, var(--border, #dddddd));
+        --c-border-light: var(--ti-border-light, var(--border, #ebebeb));
+        --c-bg: var(--ti-bg, var(--muted, #f7f7f7));
         display: flex;
         flex-direction: column;
         width: 320px;
@@ -1241,17 +1242,17 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
          re-declare the --c-* palette, since the portaled node no longer
          inherits it from .ti-app. */
       .ti-share-pop {
-        --c-accent: var(--ti-accent, #ff385c);
+        --c-accent: var(--ti-accent, var(--primary, #ff385c));
         --c-accent-dark: var(--ti-accent-dark, #bd1e59);
         --c-accent-bg: var(
           --ti-accent-bg,
           color-mix(in srgb, var(--c-accent) 10%, #ffffff)
         );
-        --c-text: var(--ti-text, #222222);
+        --c-text: var(--ti-text, var(--foreground, #222222));
         --c-text-light: var(--ti-text-light, #ffffff);
-        --c-muted: var(--ti-muted, #717171);
-        --c-border-light: var(--ti-border-light, #ebebeb);
-        --c-bg: var(--ti-bg, #f7f7f7);
+        --c-muted: var(--ti-muted, var(--muted-foreground, #717171));
+        --c-border-light: var(--ti-border-light, var(--border, #ebebeb));
+        --c-bg: var(--ti-bg, var(--muted, #f7f7f7));
         width: 200px;
         max-width: 100%;
         display: flex;
@@ -1890,17 +1891,17 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
 
     <style scoped>
       .fitted-trip {
-        /* See TravelItineraryIsolated above for the Airbnb-first --ti-* / literal palette. */
-        --c-accent: var(--ti-accent, #ff385c);
+        /* See TravelItineraryIsolated above for the theme-first --ti-* / semantic chain. */
+        --c-accent: var(--ti-accent, var(--primary, #ff385c));
         --c-accent-dark: var(--ti-accent-dark, #bd1e59);
         --c-accent-bg: var(
           --ti-accent-bg,
           color-mix(in srgb, var(--c-accent) 10%, #ffffff)
         );
-        --c-text: var(--ti-text, #222222);
+        --c-text: var(--ti-text, var(--foreground, #222222));
         --c-text-light: var(--ti-text-light, #ffffff);
-        --c-muted: var(--ti-muted, #717171);
-        --c-bg: var(--ti-bg, #f7f7f7);
+        --c-muted: var(--ti-muted, var(--muted-foreground, #717171));
+        --c-bg: var(--ti-bg, var(--muted, #f7f7f7));
         width: 100%;
         height: 100%;
         font-family:
