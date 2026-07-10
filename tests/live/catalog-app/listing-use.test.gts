@@ -80,7 +80,7 @@ export function runTests() {
         listingUrl: string,
         realm: string,
       ) {
-        const commandService = getService('command-service');
+        const commandService = getService('tool-service');
         const store = getService('store');
 
         const command = new commandClass(commandService.commandContext);
