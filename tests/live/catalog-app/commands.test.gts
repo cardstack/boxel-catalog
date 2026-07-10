@@ -125,7 +125,7 @@ export function runTests() {
         listingUrl: string,
         realm: string,
       ) {
-        const commandService = getService('command-service');
+        const commandService = getService('tool-service');
         const store = getService('store');
 
         const command = new commandClass(commandService.commandContext);
@@ -265,7 +265,7 @@ export function runTests() {
           ]);
           skip('card listing with single dependency module', async function (assert) {
             const cardId = mockCatalogURL + 'author/Author/example';
-            const commandService = getService('command-service');
+            const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
               commandService.commandContext,
             );
@@ -359,7 +359,7 @@ export function runTests() {
 
           skip('listing will only create specs with recognised imports from realms it can read from', async function (assert) {
             const cardId = mockCatalogURL + 'UnrecognisedImports/example';
-            const commandService = getService('command-service');
+            const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
               commandService.commandContext,
             );
@@ -403,7 +403,7 @@ export function runTests() {
 
           skip('app listing', async function (assert) {
             const cardId = mockCatalogURL + 'blog-app/BlogApp/example';
-            const commandService = getService('command-service');
+            const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
               commandService.commandContext,
             );
@@ -632,7 +632,7 @@ export function runTests() {
 
           skip('after create command, listing card opens on stack in interact mode', async function (assert) {
             const cardId = mockCatalogURL + 'author/Author/example';
-            const commandService = getService('command-service');
+            const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
               commandService.commandContext,
             );
