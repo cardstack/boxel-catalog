@@ -1,0 +1,78 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "FieldListing",
+        "module": "@cardstack/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Aspect Ratio",
+      "summary": "A string field for picking an image aspect ratio. Its custom edit template shows a compact grid of tiles — each a transparent square box containing an SVG rectangle proportioned to the ratio (1:1, 16:9, 9:16, 4:3, 3:4, 3:2, 2:3, 21:9) with the ratio label beneath. Stores the plain ratio token, ideal for feeding image-generation requests.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "skills": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../../Tag/field"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/aspect-ratio-field-spec"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/b5b018fc-1f70-476d-8db1-49e82afea93f-56b01670.png"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../example/AspectRatioExample/b5b018fc-1f70-476d-8db1-49e82afea93f"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../../Category/ui-components-design"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

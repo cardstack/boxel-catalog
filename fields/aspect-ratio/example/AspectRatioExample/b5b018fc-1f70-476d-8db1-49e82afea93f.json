@@ -1,0 +1,34 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AspectRatioExample",
+        "module": "@cardstack/catalog/fields/aspect-ratio/example/aspect-ratio-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "title": "Aspect Ratio Example",
+      "cardInfo": {
+        "name": "Aspect Ratio Example",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "aspectRatio": "1:1",
+      "description": "A string field for choosing an image aspect ratio. Its custom edit template renders a grid of tiles, each an SVG rectangle proportioned to the ratio with the label beneath — a nicer alternative to a plain dropdown."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
