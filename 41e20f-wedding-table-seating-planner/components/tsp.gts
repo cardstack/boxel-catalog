@@ -3677,16 +3677,59 @@ export class TableSeatingPlannerIsolated extends Component<
   // (cardInfo.theme) so the generated artwork follows the same palette and mood
   // as the rest of the planner. Falls back to a tasteful neutral style when no
   // theme is linked.
+  // The linked theme's concrete colour values, keyed by CSS variable name
+  // (without the leading `--`), parsed from the same computed `:root { … }`
+  // block that skins the planner itself. Empty when no theme is linked.
+  private themeColors(): Record<string, string> {
+    let css = (this.args.model as any)?.cardInfo?.theme?.cssVariables;
+    if (!css) return {};
+    let block = String(css).match(/:root\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+    let out: Record<string, string> = {};
+    let re = /--([\w-]+)\s*:\s*([^;]+);/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(block))) out[m[1]] = m[2].trim();
+    return out;
+  }
+
   private get posterThemeStyle(): string {
     let theme = (this.args.model as any)?.cardInfo?.theme;
     let name = (theme?.title || theme?.cardInfo?.name || '').trim();
     let desc = (theme?.description || theme?.cardInfo?.summary || '').trim();
-    if (name || desc) {
+    let c = this.themeColors();
+    // The poster ground is the theme's signature colour (its primary / chrome
+    // hue) so the artwork reads as the theme at a glance — e.g. a red theme
+    // yields a red poster. Lettering uses the theme's own on-primary contrast
+    // colour; decorative motifs use the accent (metallic) hue.
+    let bg = c['primary'] || c['navy'] || c['ink-2'];
+    let fg =
+      c['primary-foreground'] ||
+      c['gold-soft'] ||
+      c['navy-ink'] ||
+      c['paper'] ||
+      c['background'];
+    let accent = c['accent'] || c['gold'] || c['acc'];
+    if (name || desc || bg) {
       let intro = name
         ? `follow the “${name}” theme`
         : 'follow the linked theme';
       let body = desc ? ` — ${desc}` : '';
-      return `Visual style: ${intro}${body}. Let this palette and mood govern the whole poster — the background tone, the decorative motifs behind the text, and the lettering colours all come from this theme.`;
+      let colorParts: string[] = [];
+      if (bg)
+        colorParts.push(
+          `the poster background MUST be exactly ${bg} — this is the theme's signature colour; fill every pixel edge to edge with it (or a subtle richer/darker tonal variation of it), and never fall back to plain white or cream unless ${bg} itself is that light`,
+        );
+      if (fg)
+        colorParts.push(
+          `lettering colour ${fg}, chosen to stay legible on that background`,
+        );
+      if (accent)
+        colorParts.push(`decorative motif and accent colour ${accent}`);
+      let colorLine = colorParts.length
+        ? ` Use this EXACT colour palette, do not substitute other colours: ${colorParts.join(
+            '; ',
+          )}.`
+        : '';
+      return `Visual style: ${intro}${body}. Let this palette and mood govern the whole poster — the saturated background ground, the decorative motifs behind the text, and the lettering colours all come from this theme.${colorLine}`;
     }
     return 'Background: warm white — a soft, warm-toned white like fine letterpress stationery, with a delicate faded decorative motif behind the text (light watercolor florals or fine line-art) in muted, low-contrast tones so the lettering stays crisp and dominant.';
   }
