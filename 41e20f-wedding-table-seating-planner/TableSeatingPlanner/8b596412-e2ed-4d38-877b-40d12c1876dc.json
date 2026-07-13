@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "TableSeatingPlanner",
-        "module": "../table-seating-planner"
+        "module": "@cardstack/catalog/41e20f-wedding-table-seating-planner/table-seating-planner"
       }
     },
     "type": "card",
@@ -64,7 +64,7 @@
         }
       ],
       "cardInfo": {
-        "name": "Church Wedding Ceremony",
+        "name": "Lucas & Amy's Wedding Day",
         "notes": null,
         "summary": null,
         "cardThumbnailURL": null
@@ -141,7 +141,7 @@
         "url": null,
         "sourceMode": null
       },
-      "eventTitle": "Church Wedding Ceremony",
+      "eventTitle": "Lucas & Amy's Wedding Day",
       "floorPlanX": -190,
       "floorPlanY": -95,
       "floorPlanURL": null,
@@ -222,7 +222,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/italian-cathedral"
         }
       },
       "tables.1.seatedGuests.0": {

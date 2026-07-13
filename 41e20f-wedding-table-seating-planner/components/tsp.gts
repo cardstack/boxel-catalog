@@ -3673,13 +3673,31 @@ export class TableSeatingPlannerIsolated extends Component<
       window.open(url, '_blank', 'noopener');
     }
   };
+  // Visual-style line for the poster, derived from the linked theme
+  // (cardInfo.theme) so the generated artwork follows the same palette and mood
+  // as the rest of the planner. Falls back to a tasteful neutral style when no
+  // theme is linked.
+  private get posterThemeStyle(): string {
+    let theme = (this.args.model as any)?.cardInfo?.theme;
+    let name = (theme?.title || theme?.cardInfo?.name || '').trim();
+    let desc = (theme?.description || theme?.cardInfo?.summary || '').trim();
+    if (name || desc) {
+      let intro = name
+        ? `follow the “${name}” theme`
+        : 'follow the linked theme';
+      let body = desc ? ` — ${desc}` : '';
+      return `Visual style: ${intro}${body}. Let this palette and mood govern the whole poster — the background tone, the decorative motifs behind the text, and the lettering colours all come from this theme.`;
+    }
+    return 'Background: warm white — a soft, warm-toned white like fine letterpress stationery, with a delicate faded decorative motif behind the text (light watercolor florals or fine line-art) in muted, low-contrast tones so the lettering stays crisp and dominant.';
+  }
+
   private get posterBasePrompt(): string {
     let m = this.args.model;
     let lines = [
       'Design an elegant event invitation poster.',
       'IMPORTANT: the image IS the poster artwork itself, full-bleed edge to edge. Do NOT draw a card, sheet of paper, or frame placed on a surface or background — no mockup, no drop shadow, no table, no border of a second surface showing around the design. Every pixel of the image is the poster.',
-      'Background: warm white — a soft, warm-toned white like fine letterpress stationery, with a delicate faded decorative motif behind the text — light watercolor florals or fine French line-art (sprigs, laurel, subtle Parisian flourishes) in muted gold and soft tones, very low contrast so the lettering stays crisp and dominant.',
-      'Set the hosts’ names largest in a graceful handwritten script; set every other line in small, letter-spaced serif capitals. Centered composition with generous breathing room.',
+      this.posterThemeStyle,
+      'Set the hosts’ names largest in a graceful handwritten script; set every other line in small, letter-spaced serif capitals. Centered composition with generous breathing room, keeping any decorative motif at very low contrast so the lettering stays crisp and dominant.',
       'Letter ONLY the following lines on the poster, in exactly this top-to-bottom order, each line appearing exactly once — do not add, repeat, or reorder any words:',
     ];
     let n = 1;
@@ -4643,38 +4661,86 @@ export class TableSeatingPlannerIsolated extends Component<
                     class='align-btn'
                     title='Align left'
                     {{on 'click' (fn this.alignSelected 'left')}}
-                  >⇤</button>
+                  ><svg
+                      class='align-ico'
+                      viewBox='0 0 24 24'
+                      aria-hidden='true'
+                    ><line x1='4' y1='5' x2='4' y2='19' /><line
+                        x1='21'
+                        y1='12'
+                        x2='9'
+                        y2='12'
+                      /><polyline points='13,8 9,12 13,16' /></svg></button>
                   <button
                     type='button'
                     class='align-btn'
                     title='Align horizontal centres'
                     {{on 'click' (fn this.alignSelected 'hcenter')}}
-                  >⇔</button>
+                  ><svg
+                      class='align-ico'
+                      viewBox='0 0 24 24'
+                      aria-hidden='true'
+                    ><line x1='4' y1='12' x2='20' y2='12' /><polyline
+                        points='8,8 4,12 8,16'
+                      /><polyline points='16,8 20,12 16,16' /></svg></button>
                   <button
                     type='button'
                     class='align-btn'
                     title='Align right'
                     {{on 'click' (fn this.alignSelected 'right')}}
-                  >⇥</button>
+                  ><svg
+                      class='align-ico'
+                      viewBox='0 0 24 24'
+                      aria-hidden='true'
+                    ><line x1='20' y1='5' x2='20' y2='19' /><line
+                        x1='3'
+                        y1='12'
+                        x2='15'
+                        y2='12'
+                      /><polyline points='11,8 15,12 11,16' /></svg></button>
                   <span class='align-div'></span>
                   <button
                     type='button'
                     class='align-btn'
                     title='Align top'
                     {{on 'click' (fn this.alignSelected 'top')}}
-                  >⤒</button>
+                  ><svg
+                      class='align-ico'
+                      viewBox='0 0 24 24'
+                      aria-hidden='true'
+                    ><line x1='5' y1='4' x2='19' y2='4' /><line
+                        x1='12'
+                        y1='21'
+                        x2='12'
+                        y2='9'
+                      /><polyline points='8,13 12,9 16,13' /></svg></button>
                   <button
                     type='button'
                     class='align-btn'
                     title='Align vertical centres'
                     {{on 'click' (fn this.alignSelected 'vcenter')}}
-                  >⇕</button>
+                  ><svg
+                      class='align-ico'
+                      viewBox='0 0 24 24'
+                      aria-hidden='true'
+                    ><line x1='12' y1='4' x2='12' y2='20' /><polyline
+                        points='8,8 12,4 16,8'
+                      /><polyline points='8,16 12,20 16,16' /></svg></button>
                   <button
                     type='button'
                     class='align-btn'
                     title='Align bottom'
                     {{on 'click' (fn this.alignSelected 'bottom')}}
-                  >⤓</button>
+                  ><svg
+                      class='align-ico'
+                      viewBox='0 0 24 24'
+                      aria-hidden='true'
+                    ><line x1='5' y1='20' x2='19' y2='20' /><line
+                        x1='12'
+                        y1='3'
+                        x2='12'
+                        y2='15'
+                      /><polyline points='8,11 12,15 16,11' /></svg></button>
                   {{#if this.canDistribute}}
                     <span class='align-div'></span>
                     <button
@@ -4682,13 +4748,31 @@ export class TableSeatingPlannerIsolated extends Component<
                       class='align-btn'
                       title='Distribute evenly across (equal horizontal gaps)'
                       {{on 'click' (fn this.distributeSelected 'h')}}
-                    >⇹</button>
+                    ><svg
+                        class='align-ico'
+                        viewBox='0 0 24 24'
+                        aria-hidden='true'
+                      ><line x1='4' y1='5' x2='4' y2='19' /><line
+                          x1='12'
+                          y1='5'
+                          x2='12'
+                          y2='19'
+                        /><line x1='20' y1='5' x2='20' y2='19' /></svg></button>
                     <button
                       type='button'
                       class='align-btn'
                       title='Distribute evenly down (equal vertical gaps)'
                       {{on 'click' (fn this.distributeSelected 'v')}}
-                    >⤟</button>
+                    ><svg
+                        class='align-ico'
+                        viewBox='0 0 24 24'
+                        aria-hidden='true'
+                      ><line x1='5' y1='4' x2='19' y2='4' /><line
+                          x1='5'
+                          y1='12'
+                          x2='19'
+                          y2='12'
+                        /><line x1='5' y1='20' x2='19' y2='20' /></svg></button>
                   {{/if}}
                 </div>
               {{/if}}
@@ -7532,6 +7616,16 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .align-btn:hover {
         background: rgba(197, 163, 92, 0.18);
+      }
+      .align-ico {
+        width: 18px;
+        height: 18px;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .align-div {
         width: 1px;

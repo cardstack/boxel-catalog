@@ -961,7 +961,7 @@ export class Guest extends Person {
           font-size: 9px;
           letter-spacing: 0.24em;
           text-transform: uppercase;
-          color: var(--muted, #8a7f6c);
+          color: var(#8a7f6c);
         }
         .iso-party-card {
           max-width: 460px;
@@ -971,7 +971,7 @@ export class Guest extends Person {
           font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
           font-style: italic;
           font-size: 13.5px;
-          color: var(--muted, #8a7f6c);
+          color: var(#8a7f6c);
         }
         @container iso (max-width: 480px) {
           .iso-hero {

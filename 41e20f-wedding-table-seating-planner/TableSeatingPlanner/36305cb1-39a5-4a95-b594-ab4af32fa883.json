@@ -1,0 +1,285 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TableSeatingPlanner",
+        "module": "@cardstack/catalog/41e20f-wedding-table-seating-planner/table-seating-planner"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "venue": "Sunway hotel",
+      "poster": {
+        "url": null,
+        "sourceMode": null
+      },
+      "tables": [
+        {
+          "name": "Registrar",
+          "shape": "rect",
+          "seatCount": 3,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": -78,
+          "y": -271,
+          "width": 240,
+          "height": 78,
+          "rotation": 0,
+          "z": 1,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Bride's Parents & Family",
+          "shape": "section",
+          "seatCount": 18,
+          "seatingStyle": "around",
+          "rows": 3,
+          "cols": 6,
+          "seatOrder": "lr-tb",
+          "x": -336,
+          "y": -133,
+          "width": 330,
+          "height": 220,
+          "rotation": 0,
+          "z": 4,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [
+            5
+          ],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Groom's Parents & Family",
+          "shape": "section",
+          "seatCount": 18,
+          "seatingStyle": "around",
+          "rows": 3,
+          "cols": 6,
+          "seatOrder": "lr-tb",
+          "x": 91,
+          "y": -133,
+          "width": 330,
+          "height": 220,
+          "rotation": 0,
+          "z": 5,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [
+            0,
+            1
+          ],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Bride's Family & Relative",
+          "shape": "section",
+          "seatCount": 18,
+          "seatingStyle": "around",
+          "rows": 3,
+          "cols": 6,
+          "seatOrder": "lr-tb",
+          "x": -338,
+          "y": 163,
+          "width": 330,
+          "height": 220,
+          "rotation": 0,
+          "z": 6,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Groom's Family & Relative",
+          "shape": "section",
+          "seatCount": 18,
+          "seatingStyle": "around",
+          "rows": 3,
+          "cols": 6,
+          "seatOrder": "lr-tb",
+          "x": 88,
+          "y": 163,
+          "width": 330,
+          "height": 220,
+          "rotation": 0,
+          "z": 7,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Bride's Friends & Guest",
+          "shape": "section",
+          "seatCount": 18,
+          "seatingStyle": "around",
+          "rows": 3,
+          "cols": 6,
+          "seatOrder": "lr-tb",
+          "x": -338,
+          "y": 407,
+          "width": 330,
+          "height": 220,
+          "rotation": 0,
+          "z": 8,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        },
+        {
+          "name": "Groom's Friends & Guest",
+          "shape": "section",
+          "seatCount": 18,
+          "seatingStyle": "around",
+          "rows": 3,
+          "cols": 6,
+          "seatOrder": "lr-tb",
+          "x": 88,
+          "y": 407,
+          "width": 330,
+          "height": 220,
+          "rotation": 0,
+          "z": 9,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        }
+      ],
+      "cardInfo": {
+        "name": "Seating Plan — Unstyled (no theme)",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "fixtures": [],
+      "eventDate": "2026-08-01",
+      "eventLogo": {
+        "url": null,
+        "sourceMode": "url"
+      },
+      "eventTitle": "Lucas & Amy's Wedding Day",
+      "floorPlanX": -390,
+      "floorPlanY": -521,
+      "floorPlanURL": null,
+      "posterAspect": null,
+      "posterPrompt": null,
+      "floorPlanWidth": 860,
+      "seatingMessage": null,
+      "floorPlanHeight": 1221,
+      "floorPlanLocked": false,
+      "floorPlanOpacity": 45,
+      "invitationMessage": null
+    },
+    "relationships": {
+      "hosts.0": {
+        "links": {
+          "self": "../Host/amy"
+        }
+      },
+      "hosts.1": {
+        "links": {
+          "self": "../Host/lucas"
+        }
+      },
+      "guests.0": {
+        "links": {
+          "self": "../Guest/andy"
+        }
+      },
+      "guests.1": {
+        "links": {
+          "self": "../Guest/cheche"
+        }
+      },
+      "guests.2": {
+        "links": {
+          "self": "../Guest/chuan"
+        }
+      },
+      "guests.3": {
+        "links": {
+          "self": "../Guest/justin"
+        }
+      },
+      "guests.4": {
+        "links": {
+          "self": "../Guest/nana"
+        }
+      },
+      "guests.5": {
+        "links": {
+          "self": "../Guest/yvonne"
+        }
+      },
+      "guests.6": {
+        "links": {
+          "self": "../Guest/robin"
+        }
+      },
+      "guests.7": {
+        "links": {
+          "self": "../Guest/richy"
+        }
+      },
+      "poster.file": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "tables.1.seatedGuests.0": {
+        "links": {
+          "self": "../Guest/andy"
+        }
+      },
+      "tables.2.seatedGuests.0": {
+        "links": {
+          "self": "../Guest/robin"
+        }
+      },
+      "tables.2.seatedGuests.1": {
+        "links": {
+          "self": "../Guest/yvonne"
+        }
+      }
+    }
+  }
+}

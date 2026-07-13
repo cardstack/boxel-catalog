@@ -953,7 +953,7 @@ export class Listing extends CardDef {
   protected getGenerateExampleMenuItem(
     params: GetMenuItemParams,
   ): MenuItemOptions | undefined {
-    if (!params.commandContext || !params.canEdit) {
+    if (!params.toolContext || !params.canEdit) {
       return;
     }
     const firstExample =
@@ -966,9 +966,7 @@ export class Listing extends CardDef {
     return {
       label: 'Generate Example with AI',
       action: async () => {
-        const command = new ListingGenerateExampleCommand(
-          params.commandContext,
-        );
+        const command = new ListingGenerateExampleCommand(params.toolContext);
         try {
           await command.execute({
             listing: this,
@@ -986,7 +984,7 @@ export class Listing extends CardDef {
   private getUpdateSpecsMenuItem(
     params: GetMenuItemParams,
   ): MenuItemOptions | undefined {
-    if (!params.commandContext || !params.canEdit) {
+    if (!params.toolContext || !params.canEdit) {
       return;
     }
     const targetRealm = this[realmURL]?.href;
@@ -999,7 +997,7 @@ export class Listing extends CardDef {
       id: 'update-listing-specs',
       icon: Refresh,
       action: () =>
-        new ListingUpdateSpecsCommand(params.commandContext).execute({
+        new ListingUpdateSpecsCommand(params.toolContext).execute({
           listing: this,
         }),
     };
@@ -1027,7 +1025,7 @@ export class Listing extends CardDef {
   private getCreatePRMenuItem(
     params: GetMenuItemParams,
   ): MenuItemOptions | undefined {
-    if (!params.commandContext || !params.canEdit) {
+    if (!params.toolContext || !params.canEdit) {
       return;
     }
     if (!params.canEdit) {
@@ -1041,7 +1039,7 @@ export class Listing extends CardDef {
       label: 'Submit to Catalog',
       action: async () => {
         await new CreateAndOpenSubmissionWorkflowCardCommand(
-          params.commandContext,
+          params.toolContext,
         ).execute({
           listingId: this.id,
           realm: this[realmURL]!.href,
