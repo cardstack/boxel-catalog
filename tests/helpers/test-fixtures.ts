@@ -543,10 +543,10 @@ export function makeMockCatalogContents(
               self: pirateSkillId,
             },
           },
-        },
-        'categories.0': {
-          links: {
-            self: writingCategoryId,
+          'categories.0': {
+            links: {
+              self: writingCategoryId,
+            },
           },
         },
         meta: {

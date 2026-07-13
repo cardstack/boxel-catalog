@@ -67,6 +67,7 @@ export function buildInstanceOperation(
   delete (doc as any).data.id;
   delete (doc as any).included;
   let cardResource = (doc as any).data as LooseCardResource;
+  cardResource.meta.adoptsFrom = copyInstanceMeta.targetCodeRef;
   let href = join(realmIdentifier, copyInstanceMeta.lid) + '.json';
   return { op: 'add', href, data: cardResource };
 }

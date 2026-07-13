@@ -1,6 +1,8 @@
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
+import { identifyCard, isResolvedCodeRef } from '@cardstack/runtime-common';
+
 import ListingInstallCommand from '../../../commands/listing-install';
 
 import type { CardDef } from 'https://cardstack.com/base/card-api';
@@ -38,7 +40,7 @@ const authorListingId = `${mockCatalogURL}Listing/author`;
 const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;
 
 export function runTests() {
-  module.skip(
+  module(
     'Acceptance | Catalog | catalog app - listing install',
     function (hooks) {
       setupApplicationTest(hooks);
@@ -107,7 +109,7 @@ export function runTests() {
           test('card listing', async function (assert) {
             const listingName = 'author';
 
-            await executeCommand(
+            let result = await executeCommand(
               ListingInstallCommand,
               authorListingId,
               testDestinationRealmURL,
@@ -128,6 +130,28 @@ export function runTests() {
             let examplePath = `${outerFolder}${listingName}/Author/example.json`;
             await openDir(assert, examplePath);
             await verifyFileInFileTree(assert, examplePath);
+
+            // Author/example.json's own adoptsFrom is an absolute URL into
+            // the catalog realm (see makeMockCatalogContents), so this
+            // catches the install pipeline leaving the copied instance
+            // pointed at the source realm instead of rewriting it into the
+            // newly installed module.
+            let store = getService('store');
+            let installedCard = (await store.get(
+              result.exampleCardId as string,
+            )) as CardDef;
+            let installedRef = identifyCard(installedCard.constructor);
+            if (!installedRef || !isResolvedCodeRef(installedRef)) {
+              throw new Error('expected a resolved code ref');
+            }
+            assert.ok(
+              installedRef.module.startsWith(testDestinationRealmURL),
+              `installed card module "${installedRef.module}" resolves into the destination realm`,
+            );
+            assert.false(
+              installedRef.module.startsWith(mockCatalogURL),
+              `installed card module "${installedRef.module}" should not still point at the catalog realm`,
+            );
           });
 
           test('listing installs relationships of examples and its modules', async function (assert) {
