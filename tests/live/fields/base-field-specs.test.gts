@@ -1,4 +1,4 @@
-import { module, skip } from 'qunit';
+import { module, test } from 'qunit';
 
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
@@ -11,7 +11,11 @@ export function runTests() {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
 
-    skip('base realm field specs in catalog have correct shape and refs', async function (assert) {
+    test('base realm field specs in catalog have correct shape and refs', async function (assert) {
+      // _search speaks the entry wire grammar: the type anchor is `item.on`,
+      // field paths inside operators are `item.`-prefixed, and card
+      // attributes come back on `included` card resources selected by the
+      // `fields[entry]` sparse fieldset.
       let response = await fetch(`${realmURL}_search`, {
         method: 'QUERY',
         headers: {
@@ -20,14 +24,20 @@ export function runTests() {
         },
         body: JSON.stringify({
           filter: {
-            on: { module: 'https://cardstack.com/base/spec', name: 'Spec' },
-            every: [{ eq: { specType: 'field' } }],
+            'item.on': {
+              module: 'https://cardstack.com/base/spec',
+              name: 'Spec',
+            },
+            every: [{ eq: { 'item.specType': 'field' } }],
           },
+          fields: { entry: ['item.specType', 'item.ref'] },
+          page: { size: 100 },
         }),
       });
       assert.ok(response.ok, `_search returned ${response.status}`);
 
-      let { data: specs = [] } = await response.json();
+      let { included = [] } = await response.json();
+      let specs = included.filter((resource: any) => resource.type === 'card');
 
       assert.ok(
         specs.length >= 1,
