@@ -1,0 +1,113 @@
+name: Push PR to Submissions Realm
+
+# Temporary review aid: mirrors each open PR's tree into the shared staging
+# submissions realm so reviewers can see the content running before merge.
+# Push-only by design — the realm also holds PrCard instances and other PRs'
+# pushes, so never sync with --delete. Decommission by deleting this file.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: submissions-push-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+env:
+  SUBMISSIONS_REALM_URL: https://realms-staging.stack.cards/submissions/
+
+jobs:
+  push:
+    name: Push to Submissions Realm
+    # Fork PRs have no access to secrets; skip rather than fail.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      MATRIX_URL: https://matrix-staging.stack.cards
+      MATRIX_USERNAME: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_USERNAME }}
+      MATRIX_PASSWORD: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_PASSWORD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install Boxel CLI
+        run: npm install -g @cardstack/boxel-cli@latest
+
+      - name: Configure Boxel profile
+        run: |
+          if echo "$MATRIX_URL" | grep -q "boxel.ai"; then
+            DOMAIN="boxel.ai"
+          elif echo "$MATRIX_URL" | grep -q "stack.cards"; then
+            DOMAIN="stack.cards"
+          else
+            DOMAIN="localhost"
+          fi
+          boxel profile add \
+            --user "@${MATRIX_USERNAME}:${DOMAIN}" \
+            --password "${MATRIX_PASSWORD}" \
+            --matrix-url "${MATRIX_URL}"
+
+      - name: Strip catalog realm-config files
+        # The submissions realm has its own realm.json and index.json; pushing
+        # the catalog's copies would overwrite the realm's identity and index
+        # card. A stray local sync manifest would make the CLI misclassify
+        # add-vs-update operations, so drop it too.
+        run: rm -f realm.json index.json .boxel-sync.json
+
+      - name: Push to submissions realm
+        run: |
+          echo "Target workspace: ${SUBMISSIONS_REALM_URL}"
+          echo "Commit: ${{ github.event.pull_request.head.sha }}"
+          boxel realm push . "${SUBMISSIONS_REALM_URL}" --force
+
+      - name: Compose PR comment
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          COMMENT="${RUNNER_TEMP}/submissions-comment.md"
+          CHANGED=$(git diff --name-only --diff-filter=d "origin/${BASE_REF}...HEAD")
+
+          {
+            echo "## Staging Submissions Preview"
+            echo ""
+            echo "This PR's content is pushed to the staging submissions realm: **${SUBMISSIONS_REALM_URL}**"
+            echo ""
+
+            LISTINGS=$(echo "$CHANGED" | grep -E '/CardListing/[^/]+\.json$' || true)
+            if [ -n "$LISTINGS" ]; then
+              echo "Changed listings:"
+              while IFS= read -r f; do
+                echo "- ${SUBMISSIONS_REALM_URL}${f%.json}"
+              done <<< "$LISTINGS"
+              echo ""
+            fi
+
+            FOLDERS=$(echo "$CHANGED" | grep '/' | cut -d/ -f1 | sort -u)
+            if [ -n "$FOLDERS" ]; then
+              echo "Changed folders:"
+              while IFS= read -r d; do
+                echo "- \`${d}/\`"
+              done <<< "$FOLDERS"
+              echo ""
+            fi
+
+            echo "_Updated at $(date -u '+%Y-%m-%d %H:%M:%S') UTC for commit \`${HEAD_SHA::7}\`. Shared realm: content reflects whichever PR pushed last._"
+          } > "$COMMENT"
+
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
+        with:
+          header: catalog-submissions-push
+          path: ${{ runner.temp }}/submissions-comment.md
