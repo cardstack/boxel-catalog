@@ -23,6 +23,11 @@
           "self": "../../Tag/ai"
         }
       },
+      "tags.1": {
+        "links": {
+          "self": "../../Tag/app"
+        }
+      },
       "license": {
         "links": {
           "self": null
