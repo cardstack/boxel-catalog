@@ -45,6 +45,7 @@ import CameraIcon from '@cardstack/boxel-icons/camera';
 import ArrowsMoveIcon from '@cardstack/boxel-icons/arrows-move';
 import TemplateIcon from '@cardstack/boxel-icons/template';
 import RefreshIcon from '@cardstack/boxel-icons/refresh';
+import FloorPlanIcon from '@cardstack/boxel-icons/floor-plan';
 import {
   FIXTURE_KINDS,
   FIXTURE_KIND_LABELS,
@@ -4295,7 +4296,11 @@ export class TableSeatingPlannerIsolated extends Component<
                   class='ct-btn ct-secondary'
                   title='Import a floor plan / venue drawing to trace'
                   {{on 'click' this.openFloorLibrary}}
-                >⬚ Import floor plan</button>
+                ><FloorPlanIcon
+                    width='14'
+                    height='14'
+                  />
+                  Import floor plan</button>
               </div>
               <div class='ct-spacer'></div>
               <div class='ct-group ct-group-arrange'>
@@ -5508,7 +5513,7 @@ export class TableSeatingPlannerIsolated extends Component<
                 disabled={{this.fpImporting}}
                 {{on 'change' this.importFloorPlanCard}}
               />
-              <span class='fp-import-glyph'>⬚</span>
+              <FloorPlanIcon class='fp-import-glyph' width='20' height='20' />
               <span class='fp-import-text'>{{if
                   this.fpImporting
                   'Adding…'
@@ -7608,7 +7613,7 @@ export class TableSeatingPlannerIsolated extends Component<
         transform: translateX(-50%);
         white-space: nowrap;
         font-family: var(--font-sans, 'Jost', sans-serif);
-        font-size: 9px;
+        font-size: 11px;
         letter-spacing: 0.08em;
         color: var(--acc-deep, #a5854a);
         opacity: 0.8;
@@ -8676,6 +8681,9 @@ export class TableSeatingPlannerIsolated extends Component<
         display: none;
       }
       .fp-import-glyph {
+        width: 20px;
+        height: 20px;
+        flex: none;
         font-size: 20px;
         line-height: 1;
       }
