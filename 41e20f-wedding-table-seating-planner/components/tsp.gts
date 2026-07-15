@@ -46,6 +46,8 @@ import ArrowsMoveIcon from '@cardstack/boxel-icons/arrows-move';
 import TemplateIcon from '@cardstack/boxel-icons/template';
 import RefreshIcon from '@cardstack/boxel-icons/refresh';
 import FloorPlanIcon from '@cardstack/boxel-icons/floor-plan';
+import ArrowBackUpIcon from '@cardstack/boxel-icons/arrow-back-up';
+import ArrowForwardUpIcon from '@cardstack/boxel-icons/arrow-forward-up';
 import {
   FIXTURE_KINDS,
   FIXTURE_KIND_LABELS,
@@ -550,12 +552,6 @@ export class TableSeatingPlannerIsolated extends Component<
       }
     }
     return s;
-  }
-  get allRosterSeated(): boolean {
-    return (
-      this.guests.length > 0 &&
-      this.guests.every((g) => this.seatedGuestSet.has(g as Guest))
-    );
   }
   get totalGuests() {
     try {
@@ -3935,7 +3931,6 @@ export class TableSeatingPlannerIsolated extends Component<
           <aside class='tsp-rail' aria-label='Guests'>
             <div class='rail-head'>
               <span class='rail-title'>Guests</span>
-              <span class='rail-total'>{{this.totalGuests}}</span>
               <span class='rail-seated'>{{this.seatedCount}}
                 of
                 {{this.totalGuests}}
@@ -4028,9 +4023,6 @@ export class TableSeatingPlannerIsolated extends Component<
                     </div>
                   {{/if}}
                 {{/each}}
-                {{#if this.allRosterSeated}}
-                  <p class='rail-empty'>All guests seated 🎉</p>
-                {{/if}}
               {{else}}
                 <p class='rail-empty'>No guests yet — add one below.</p>
               {{/if}}
@@ -4056,6 +4048,25 @@ export class TableSeatingPlannerIsolated extends Component<
           </aside>
           <section class='tsp-canvas-wrap'>
             <div class='canvas-toolbar'>
+              <div class='ct-group ct-group-history'>
+                <button
+                  type='button'
+                  class='ct-btn ct-icon-btn'
+                  title='Undo (⌘Z)'
+                  aria-label='Undo'
+                  disabled={{eq this.undoDepth 0}}
+                  {{on 'click' this.undo}}
+                ><ArrowBackUpIcon class='ico' /></button>
+                <button
+                  type='button'
+                  class='ct-btn ct-icon-btn'
+                  title='Redo (⇧⌘Z)'
+                  aria-label='Redo'
+                  disabled={{eq this.redoDepth 0}}
+                  {{on 'click' this.redo}}
+                ><ArrowForwardUpIcon class='ico' /></button>
+              </div>
+              <div class='ct-divider'></div>
               <div class='ct-group ct-group-build'>
                 <div class='ct-menu'>
                   <button
@@ -6071,12 +6082,6 @@ export class TableSeatingPlannerIsolated extends Component<
         font-size: 28px;
         font-weight: 600;
       }
-      .rail-total {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
-        font-size: 28px;
-        font-weight: 600;
-        color: var(--gold, #c5a35c);
-      }
       .rail-seated {
         margin-left: auto;
         font-size: 10px;
@@ -6527,6 +6532,18 @@ export class TableSeatingPlannerIsolated extends Component<
         letter-spacing: 0.08em;
         cursor: pointer;
         transition: 0.15s;
+      }
+      .ct-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        padding: 0;
+        color: var(--acc-deep, #a5854a);
+      }
+      .ct-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
       }
       .ct-btn:hover {
         border-color: var(--acc, #c5a35c);
