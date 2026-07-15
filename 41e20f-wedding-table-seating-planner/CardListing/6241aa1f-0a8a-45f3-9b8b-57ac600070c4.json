@@ -263,6 +263,21 @@
           "self": "../../index"
         }
       },
+      "examples.18": {
+        "links": {
+          "self": "../PlaceCard/andy"
+        }
+      },
+      "examples.19": {
+        "links": {
+          "self": "../PlaceCard/nana"
+        }
+      },
+      "examples.20": {
+        "links": {
+          "self": "../TableCard/rose"
+        }
+      },
       "categories.0": {
         "links": {
           "self": "../../Category/creative-projects"
