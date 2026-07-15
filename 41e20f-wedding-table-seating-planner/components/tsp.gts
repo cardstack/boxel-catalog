@@ -925,7 +925,7 @@ export class TableSeatingPlannerIsolated extends Component<
   popoverDelete = () => {
     this.requestDelete(
       'Delete this table?',
-      `“${this.selectedTable?.name || 'Table'}” will be removed and its guests unseated. You can undo afterwards.`,
+      `“${this.selectedTable?.name || 'Table'}” will be removed and its guests unassigned. You can undo afterwards.`,
       () => {
         this.removeTable();
         this.closeTablePopover();
@@ -951,7 +951,7 @@ export class TableSeatingPlannerIsolated extends Component<
   confirmDeleteTable = () => {
     this.requestDelete(
       'Delete this table?',
-      `“${this.selectedTable?.name || 'Table'}” will be removed and its guests unseated. You can undo afterwards.`,
+      `“${this.selectedTable?.name || 'Table'}” will be removed and its guests unassigned. You can undo afterwards.`,
       () => this.removeTable(),
     );
   };
@@ -965,7 +965,7 @@ export class TableSeatingPlannerIsolated extends Component<
   confirmDeleteSelected = () => {
     this.requestDelete(
       `Delete ${this.selCount} selected?`,
-      'The selected tables and elements will be removed and their guests unseated. You can undo afterwards.',
+      'The selected tables and elements will be removed and their guests unassigned. You can undo afterwards.',
       () => this.deleteSelected(),
     );
   };
@@ -3934,7 +3934,7 @@ export class TableSeatingPlannerIsolated extends Component<
               <span class='rail-seated'>{{this.seatedCount}}
                 of
                 {{this.totalGuests}}
-                seated</span>
+                assigned</span>
             </div>
             <div class='rail-bar'><span
                 class='rail-bar-fill'
@@ -4336,7 +4336,7 @@ export class TableSeatingPlannerIsolated extends Component<
               <button
                 type='button'
                 class='ct-btn ct-ghost'
-                title='Save a copy of this plan with everyone seated — reopen and edit it any time'
+                title='Save a copy of this plan with everyone assigned — reopen and edit it any time'
                 disabled={{this.savingSnapshot}}
                 {{on 'click' this.saveSnapshot}}
               ><CameraIcon class='ico' />
@@ -5206,7 +5206,7 @@ export class TableSeatingPlannerIsolated extends Component<
                 <div class='insp-hero'>Arrange the room</div>
                 <div class='insp-progress'>
                   <div class='insp-progress-head'>
-                    <span class='insp-progress-label'>Seated</span>
+                    <span class='insp-progress-label'>Assigned</span>
                     <span class='insp-progress-count'>{{this.seatedCount}}
                       of
                       {{this.totalGuests}}</span>
@@ -5663,7 +5663,7 @@ export class TableSeatingPlannerIsolated extends Component<
                 <div class='tpop-status'>{{this.selectedTable.seatedCount}}
                   of
                   {{this.selectedTable.seatCount}}
-                  seated</div>
+                  assigned</div>
               </div>
             </:header>
             <:body>
@@ -9904,7 +9904,7 @@ export class TableSeatingPlannerFitted extends Component<
           <span class='stat'><b>{{@model.tables.length}}</b> tables</span>
           <span class='stat'><b
             >{{this.seatedCount}}</b>/{{@model.guests.length}}
-            seated</span>
+            assigned</span>
         </div>
       </div>
     </div>
