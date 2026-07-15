@@ -33,6 +33,7 @@ import LayoutPreview from './layout-preview';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 import SeatingPlanPopover from './seating-plan-popover';
 import { PlaceCardView, TableCardView } from '../card-views';
+import SetupWizard from '../setup-wizard';
 import PencilIcon from '@cardstack/boxel-icons/pencil';
 import XIcon from '@cardstack/boxel-icons/x';
 import LockIcon from '@cardstack/boxel-icons/lock';
@@ -572,6 +573,33 @@ export class TableSeatingPlannerIsolated extends Component<
   get tableCount() {
     return this.tables.length;
   }
+  get hasCanvasContent(): boolean {
+    return (
+      this.tables.length > 0 || this.fixtures.length > 0 || this.hasFloorPlan
+    );
+  }
+  get hasEventInfo(): boolean {
+    return !!this.args.model?.eventTitle?.trim();
+  }
+
+  // --- First-run setup wizard (steps live in the SetupWizard component) ---
+  // Decided once at construction: the wizard opens only for a brand-new planner
+  // (empty canvas, no event info, no guests). Because it is NOT re-derived from
+  // those fields, typing the event name or adding a guest inside the wizard does
+  // not make it close itself. It closes only on Skip / ✕ / Create tables.
+  @tracked wizardDismissed =
+    this.hasCanvasContent || this.hasEventInfo || this.guests.length > 0;
+  get showWizard(): boolean {
+    return !this.wizardDismissed;
+  }
+  skipWizard = () => {
+    this.wizardDismissed = true;
+  };
+  applyTemplateFromWizard = (index: number) => {
+    let tpl = this.templates[index];
+    if (tpl) this.applyTemplate(tpl);
+    this.wizardDismissed = true;
+  };
   get tableVMs(): TableVM[] {
     let rankMap = this.tableRank;
     return this.tables.map((t) => {
@@ -5742,6 +5770,23 @@ export class TableSeatingPlannerIsolated extends Component<
             </:foot>
           </SeatingPlanPopover>
         {{/if}}
+      {{/if}}
+      {{#if this.showWizard}}
+        <SetupWizard
+          @eventTitle={{@model.eventTitle}}
+          @venue={{@model.venue}}
+          @eventDate={{this.eventDateInput}}
+          @guestCount={{this.totalGuests}}
+          @templates={{this.templates}}
+          @templatesLoading={{this.templatesLoading}}
+          @onEventTitle={{this.setEventTitle}}
+          @onVenue={{this.setVenue}}
+          @onEventDate={{this.setEventDate}}
+          @onAddGuests={{this.addGuests}}
+          @onLoadTemplates={{this.loadTemplates}}
+          @onApplyTemplate={{this.applyTemplateFromWizard}}
+          @onSkip={{this.skipWizard}}
+        />
       {{/if}}
       <div class='print-sheet' aria-hidden='true'>
         {{#each this.tablesToPrint as |t|}}
