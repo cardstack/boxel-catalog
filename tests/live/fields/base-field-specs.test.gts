@@ -35,6 +35,9 @@ export function runTests() {
         }),
       });
       assert.ok(response.ok, `_search returned ${response.status}`);
+      if (!response.ok) {
+        return;
+      }
 
       let { included = [] } = await response.json();
       let specs = included.filter((resource: any) => resource.type === 'card');
