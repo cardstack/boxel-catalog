@@ -4,6 +4,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import CalendarHeartIcon from '@cardstack/boxel-icons/calendar-heart';
+import CrownIcon from '@cardstack/boxel-icons/crown';
 import UsersIcon from '@cardstack/boxel-icons/users';
 import LayoutPreview from './components/layout-preview';
 import type { Table } from './table';
@@ -12,9 +13,8 @@ import type { Fixture } from './fixture';
 // First-run setup wizard for the Table Seating Planner. Self-contained and
 // composable: owns its own step state + styling, talks to the host planner only
 // through args. Two-pane layout — a vertical stepper on the left, the active
-// step's content on the right. The last step previews saved layout templates
-// (rendered with the same LayoutPreview SVG as the Add-template feature) so the
-// user can start from one, or start blank.
+// step's content on the right. Steps: event details → hosts (the couple) →
+// guests → start from a template (previewed with the LayoutPreview SVG) or blank.
 interface TemplateLike {
   name?: string | null;
   tableCount?: number | null;
@@ -29,18 +29,22 @@ interface Signature {
     eventTitle?: string | null;
     venue?: string | null;
     eventDate?: string | null;
+    hostCount?: number;
     guestCount?: number;
     templates?: TemplateLike[];
     templatesLoading?: boolean;
     onEventTitle?: (e: Event) => void;
     onVenue?: (e: Event) => void;
     onEventDate?: (e: Event) => void;
+    onAddHosts?: () => void;
     onAddGuests?: () => void;
     onLoadTemplates?: () => void;
     onApplyTemplate?: (index: number) => void;
     onSkip?: () => void;
   };
 }
+
+const LAST_STEP = 4;
 
 export default class SetupWizard extends Component<Signature> {
   @tracked step = 1;
@@ -49,29 +53,36 @@ export default class SetupWizard extends Component<Signature> {
     return !!this.args.eventTitle && this.args.eventTitle.trim().length > 0;
   }
   get step2Done(): boolean {
+    return (this.args.hostCount ?? 0) > 0;
+  }
+  get step3Done(): boolean {
     return (this.args.guestCount ?? 0) > 0;
   }
   get canProceed(): boolean {
     if (this.step === 1) return this.step1Done;
     if (this.step === 2) return this.step2Done;
+    if (this.step === 3) return this.step3Done;
     return true;
   }
   get nextDisabled(): boolean {
     return !this.canProceed;
   }
+  get isLastStep(): boolean {
+    return this.step === LAST_STEP;
+  }
 
   private enter = (step: number) => {
     this.step = step;
-    if (step === 3) this.args.onLoadTemplates?.();
+    if (step === LAST_STEP) this.args.onLoadTemplates?.();
   };
   next = () => {
-    if (this.step < 3) this.enter(this.step + 1);
+    if (this.step < LAST_STEP) this.enter(this.step + 1);
   };
   back = () => {
     if (this.step > 1) this.step -= 1;
   };
   skipStep = () => {
-    if (this.step < 3) this.enter(this.step + 1);
+    if (this.step < LAST_STEP) this.enter(this.step + 1);
     else this.args.onSkip?.();
   };
   applyTpl = (index: number) => {
@@ -133,18 +144,34 @@ export default class SetupWizard extends Component<Signature> {
               <span class='wz-dot'>{{if this.step2Done '✓' '2'}}</span>
               <span class='wz-step-txt'>
                 <span class='wz-step-k'>Step 02</span>
-                <span class='wz-step-l'>Guests</span>
+                <span class='wz-step-l'>Hosts</span>
                 <span class='wz-step-s'>{{if
                     this.step2Done
+                    'Completed'
+                    'The couple'
+                  }}</span>
+              </span>
+            </li>
+            <li
+              class='wz-step
+                {{if this.step3Done "is-done"}}
+                {{if (eq this.step 3) "is-active"}}'
+            >
+              <span class='wz-dot'>{{if this.step3Done '✓' '3'}}</span>
+              <span class='wz-step-txt'>
+                <span class='wz-step-k'>Step 03</span>
+                <span class='wz-step-l'>Guests</span>
+                <span class='wz-step-s'>{{if
+                    this.step3Done
                     'Completed'
                     'Your guest list'
                   }}</span>
               </span>
             </li>
-            <li class='wz-step {{if (eq this.step 3) "is-active"}}'>
-              <span class='wz-dot'>3</span>
+            <li class='wz-step {{if (eq this.step 4) "is-active"}}'>
+              <span class='wz-dot'>4</span>
               <span class='wz-step-txt'>
-                <span class='wz-step-k'>Step 03</span>
+                <span class='wz-step-k'>Step 04</span>
                 <span class='wz-step-l'>Template</span>
                 <span class='wz-step-s'>Choose a layout</span>
               </span>
@@ -185,6 +212,20 @@ export default class SetupWizard extends Component<Signature> {
                 </label>
               </div>
             {{else if (eq this.step 2)}}
+              <div class='wz-lead'><CrownIcon width='26' height='26' /></div>
+              <h1 class='wz-title'>Hosts</h1>
+              <p class='wz-sub'>Who's hosting? Add the couple or hosts of the
+                celebration.</p>
+              <div class='wz-panel wz-guest-panel'>
+                <span class='wz-guest-count'>{{if @hostCount @hostCount 0}}
+                  host(s) added</span>
+                <button
+                  type='button'
+                  class='wz-btn wz-secondary'
+                  {{on 'click' @onAddHosts}}
+                >Add hosts</button>
+              </div>
+            {{else if (eq this.step 3)}}
               <div class='wz-lead'><UsersIcon width='26' height='26' /></div>
               <h1 class='wz-title'>Guests</h1>
               <p class='wz-sub'>Add your guest list now, or skip and add them
@@ -243,27 +284,20 @@ export default class SetupWizard extends Component<Signature> {
             {{/if}}
 
             <div class='wz-actions'>
-              {{#if (eq this.step 3)}}
-                {{#unless (eq this.step 1)}}
-                  <button
-                    type='button'
-                    class='wz-ghost'
-                    {{on 'click' this.back}}
-                  >Back</button>
-                {{/unless}}
+              {{#unless (eq this.step 1)}}
+                <button
+                  type='button'
+                  class='wz-ghost'
+                  {{on 'click' this.back}}
+                >Back</button>
+              {{/unless}}
+              {{#if this.isLastStep}}
                 <button
                   type='button'
                   class='wz-btn wz-primary'
                   {{on 'click' @onSkip}}
                 >Start blank</button>
               {{else}}
-                {{#unless (eq this.step 1)}}
-                  <button
-                    type='button'
-                    class='wz-ghost'
-                    {{on 'click' this.back}}
-                  >Back</button>
-                {{/unless}}
                 <button
                   type='button'
                   class='wz-ghost'
@@ -372,7 +406,7 @@ export default class SetupWizard extends Component<Signature> {
         list-style: none;
         display: flex;
         flex-direction: column;
-        gap: 26px;
+        gap: 24px;
         border: 1px solid rgba(34, 40, 63, 0.1);
         border-radius: 16px;
         background: #fdfaf2;
@@ -387,7 +421,7 @@ export default class SetupWizard extends Component<Signature> {
         position: absolute;
         left: 15px;
         top: 34px;
-        bottom: -26px;
+        bottom: -24px;
         width: 2px;
         background: rgba(34, 40, 63, 0.12);
       }

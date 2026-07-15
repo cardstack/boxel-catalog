@@ -45,6 +45,7 @@ import DownloadIcon from '@cardstack/boxel-icons/download';
 import SearchIcon from '@cardstack/boxel-icons/search';
 import CameraIcon from '@cardstack/boxel-icons/camera';
 import PrinterIcon from '@cardstack/boxel-icons/printer';
+import LayoutIcon from '@cardstack/boxel-icons/layout-dashboard';
 import ArrowsMoveIcon from '@cardstack/boxel-icons/arrows-move';
 import TemplateIcon from '@cardstack/boxel-icons/template';
 import RefreshIcon from '@cardstack/boxel-icons/refresh';
@@ -581,6 +582,9 @@ export class TableSeatingPlannerIsolated extends Component<
   get hasEventInfo(): boolean {
     return !!this.args.model?.eventTitle?.trim();
   }
+  get hostsCount(): number {
+    return (this.args.model?.hosts ?? []).length;
+  }
 
   // --- First-run setup wizard (steps live in the SetupWizard component) ---
   // Decided once at construction: the wizard opens only for a brand-new planner
@@ -947,6 +951,12 @@ export class TableSeatingPlannerIsolated extends Component<
   };
   closeTablePopover = () => {
     this.popoverTableKey = null;
+  };
+  // Right-click a fixture to select it (opens its inspector editor).
+  openFixtureEdit = (id: string, e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.selectOnly(id);
   };
   popoverDuplicate = () => {
     this.duplicateTable();
@@ -3312,6 +3322,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
   };
   @tracked printOnlyTable: Table | null = null;
+  @tracked printMode: 'cards' | 'chart' = 'cards';
   get tablesToPrint(): Table[] {
     return this.printOnlyTable ? [this.printOnlyTable] : this.tables;
   }
@@ -3320,18 +3331,36 @@ export class TableSeatingPlannerIsolated extends Component<
       requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
     );
   }
-  printCards = async () => {
-    if (this.printOnlyTable) {
-      this.printOnlyTable = null;
-      await this.nextFrame();
-    }
-    window.print();
-  };
-  printTable = async (t: Table) => {
-    this.printOnlyTable = t;
+  private printWith = async (
+    mode: 'cards' | 'chart',
+    onlyTable: Table | null,
+  ) => {
+    this.printMode = mode;
+    this.printOnlyTable = onlyTable;
     await this.nextFrame(); // let the print sheet re-render before printing
     window.print();
     this.printOnlyTable = null;
+  };
+  // Print all tables' cards (table card + each guest's place card).
+  printCards = () => this.printWith('cards', null);
+  // Print a single table's cards.
+  printTable = (t: Table) => this.printWith('cards', t);
+  // Print the whole seating chart as one scaled overview page.
+  printChart = () => this.printWith('chart', null);
+  @tracked printMenuOpen = false;
+  togglePrintMenu = () => {
+    this.printMenuOpen = !this.printMenuOpen;
+  };
+  closePrintMenu = () => {
+    this.printMenuOpen = false;
+  };
+  printCardsFromMenu = () => {
+    this.printMenuOpen = false;
+    this.printCards();
+  };
+  printChartFromMenu = () => {
+    this.printMenuOpen = false;
+    this.printChart();
   };
   private partyChildren(roster: Guest[]): Map<Guest, Guest[]> {
     let inRoster = new Set(roster);
@@ -3551,7 +3580,10 @@ export class TableSeatingPlannerIsolated extends Component<
   };
   removeHost = (h: Host) => {
     let hosts = ((this.args.model?.hosts ?? []) as Host[]).filter(Boolean);
-    this.args.model.hosts = hosts.filter((x) => x !== h);
+    let hid = (h as any).id;
+    this.args.model.hosts = hosts.filter((x) =>
+      hid ? (x as any).id !== hid : x !== h,
+    );
     this.showToast(`${h.fullName || 'Host'} removed from hosts`);
   };
   get eventDateInput(): string {
@@ -3577,24 +3609,29 @@ export class TableSeatingPlannerIsolated extends Component<
     e.stopPropagation();
   };
   removeGuest = (g: Guest) => {
-    let party = new Set<Guest>([
-      g,
-      ...(this.partyChildren(this.guests).get(g) ?? []),
-    ]);
+    let members = [g, ...(this.partyChildren(this.guests).get(g) ?? [])];
+    let party = new Set<Guest>(members);
+    let partyIds = new Set(
+      members.map((m) => (m as any).id).filter(Boolean) as string[],
+    );
+    // Match by id when available (store proxies aren't reference-stable), and
+    // fall back to identity for not-yet-saved cards.
+    let inParty = (x: Guest) =>
+      party.has(x) || (!!(x as any).id && partyIds.has((x as any).id));
     let roster = [...this.guests];
     let seats = this.snapshotSeats();
     let apply = () => {
       for (let t of this.tables) {
         let arr = (t.seatedGuests ?? []) as Guest[];
-        if (!arr.some((x) => party.has(x as Guest))) continue;
+        if (!arr.some((x) => inParty(x as Guest))) continue;
         let slots = this.slotsOf(t);
         let keep = arr
           .map((x, i) => ({ g: x as Guest, slot: slots[i] }))
-          .filter((e) => !party.has(e.g));
+          .filter((e) => !inParty(e.g));
         t.seatedGuests = keep.map((e) => e.g);
         t.seatSlots = keep.map((e) => e.slot);
       }
-      this.args.model.guests = roster.filter((x) => !party.has(x));
+      this.args.model.guests = roster.filter((x) => !inParty(x));
     };
     apply();
     this.pushUndo(() => {
@@ -4100,25 +4137,6 @@ export class TableSeatingPlannerIsolated extends Component<
           </aside>
           <section class='tsp-canvas-wrap'>
             <div class='canvas-toolbar'>
-              <div class='ct-group ct-group-history'>
-                <button
-                  type='button'
-                  class='ct-btn ct-icon-btn'
-                  title='Undo (⌘Z)'
-                  aria-label='Undo'
-                  disabled={{eq this.undoDepth 0}}
-                  {{on 'click' this.undo}}
-                ><ArrowBackUpIcon class='ico' /></button>
-                <button
-                  type='button'
-                  class='ct-btn ct-icon-btn'
-                  title='Redo (⇧⌘Z)'
-                  aria-label='Redo'
-                  disabled={{eq this.redoDepth 0}}
-                  {{on 'click' this.redo}}
-                ><ArrowForwardUpIcon class='ico' /></button>
-              </div>
-              <div class='ct-divider'></div>
               <div class='ct-group ct-group-build'>
                 <div class='ct-menu'>
                   <button
@@ -4396,9 +4414,46 @@ export class TableSeatingPlannerIsolated extends Component<
               <button
                 type='button'
                 class='ct-btn ct-ghost'
-                title='Print place cards & table cards (save as PDF from the print dialog)'
-                {{on 'click' this.printCards}}
-              ><PrinterIcon class='ico' /> Print cards</button>
+                title='Print place/table cards or the seating chart'
+                data-print-anchor
+                {{on 'click' this.togglePrintMenu}}
+              ><PrinterIcon class='ico' /> Print</button>
+              {{#if this.printMenuOpen}}
+                <SeatingPlanPopover
+                  @anchor='[data-print-anchor]'
+                  @onClose={{this.closePrintMenu}}
+                  @kicker='Export'
+                  @title='Print'
+                  @width={{300}}
+                >
+                  <:body>
+                    <button
+                      type='button'
+                      class='pr-opt'
+                      {{on 'click' this.printCardsFromMenu}}
+                    >
+                      <PrinterIcon class='ico' />
+                      <span class='pr-opt-txt'>
+                        <span class='pr-opt-name'>Place &amp; table cards</span>
+                        <span class='pr-opt-desc'>One card per guest and per
+                          table — cut out and place</span>
+                      </span>
+                    </button>
+                    <button
+                      type='button'
+                      class='pr-opt'
+                      {{on 'click' this.printChartFromMenu}}
+                    >
+                      <LayoutIcon class='ico' />
+                      <span class='pr-opt-txt'>
+                        <span class='pr-opt-name'>Seating chart</span>
+                        <span class='pr-opt-desc'>The whole layout on one
+                          overview page</span>
+                      </span>
+                    </button>
+                  </:body>
+                </SeatingPlanPopover>
+              {{/if}}
             </div>
             <div
               class='canvas {{if this.spaceDown "is-pan"}}'
@@ -4406,6 +4461,24 @@ export class TableSeatingPlannerIsolated extends Component<
               {{on 'pointerdown' this.onCanvasDown}}
               {{on 'wheel' this.onWheel}}
             >
+              <div class='cv-history' {{on 'pointerdown' this.stopProp}}>
+                <button
+                  type='button'
+                  class='cv-hist-btn'
+                  title='Undo (⌘Z)'
+                  aria-label='Undo'
+                  disabled={{eq this.undoDepth 0}}
+                  {{on 'click' this.undo}}
+                ><ArrowBackUpIcon class='ico' /></button>
+                <button
+                  type='button'
+                  class='cv-hist-btn'
+                  title='Redo (⇧⌘Z)'
+                  aria-label='Redo'
+                  disabled={{eq this.redoDepth 0}}
+                  {{on 'click' this.redo}}
+                ><ArrowForwardUpIcon class='ico' /></button>
+              </div>
               {{#if @model.floorPlanURL}}
                 <div class='fp-build'>
                   <div
@@ -4531,6 +4604,7 @@ export class TableSeatingPlannerIsolated extends Component<
                     data-fixture={{fx.id}}
                     style={{htmlWorld fx.wrapStyle}}
                     {{on 'pointerdown' (fn this.grabFixture fx.id)}}
+                    {{on 'contextmenu' (fn this.openFixtureEdit fx.id)}}
                   >
                     <FixtureGlyph
                       @kind={{fx.model.kind}}
@@ -4612,6 +4686,7 @@ export class TableSeatingPlannerIsolated extends Component<
                     data-table={{tv.id}}
                     style={{htmlWorld tv.wrapStyle}}
                     {{on 'pointerdown' (fn this.grabTable tv.id)}}
+                    {{on 'contextmenu' (fn this.openTablePopover tv.id)}}
                   >
                     {{#if tv.curved}}
                       <svg
@@ -5777,37 +5852,53 @@ export class TableSeatingPlannerIsolated extends Component<
           @venue={{@model.venue}}
           @eventDate={{this.eventDateInput}}
           @guestCount={{this.totalGuests}}
+          @hostCount={{this.hostsCount}}
           @templates={{this.templates}}
           @templatesLoading={{this.templatesLoading}}
           @onEventTitle={{this.setEventTitle}}
           @onVenue={{this.setVenue}}
           @onEventDate={{this.setEventDate}}
+          @onAddHosts={{this.addHosts}}
           @onAddGuests={{this.addGuests}}
           @onLoadTemplates={{this.loadTemplates}}
           @onApplyTemplate={{this.applyTemplateFromWizard}}
           @onSkip={{this.skipWizard}}
         />
       {{/if}}
-      <div class='print-sheet' aria-hidden='true'>
-        {{#each this.tablesToPrint as |t|}}
-          <section class='ps-group'>
-            <div class='ps-cell ps-cell-table'>
-              <TableCardView
-                @eventTitle={{@model.eventTitle}}
-                @tableName={{t.name}}
+      <div class='print-sheet print-{{this.printMode}}' aria-hidden='true'>
+        {{#if (eq this.printMode 'chart')}}
+          <div class='ps-chart'>
+            {{#if @model.eventTitle}}
+              <div class='ps-chart-title'>{{@model.eventTitle}}</div>
+            {{/if}}
+            <div class='ps-chart-figure'>
+              <LayoutPreview
+                @tables={{this.tables}}
+                @fixtures={{this.fixtures}}
               />
             </div>
-            {{#each t.seatedGuests as |g|}}
-              <div class='ps-cell'>
-                <PlaceCardView
+          </div>
+        {{else}}
+          {{#each this.tablesToPrint as |t|}}
+            <section class='ps-group'>
+              <div class='ps-cell ps-cell-table'>
+                <TableCardView
                   @eventTitle={{@model.eventTitle}}
-                  @guestName={{g.fullName}}
                   @tableName={{t.name}}
                 />
               </div>
-            {{/each}}
-          </section>
-        {{/each}}
+              {{#each t.seatedGuests as |g|}}
+                <div class='ps-cell'>
+                  <PlaceCardView
+                    @eventTitle={{@model.eventTitle}}
+                    @guestName={{g.fullName}}
+                    @tableName={{t.name}}
+                  />
+                </div>
+              {{/each}}
+            </section>
+          {{/each}}
+        {{/if}}
       </div>
     </div>
     <style scoped>
@@ -5815,27 +5906,69 @@ export class TableSeatingPlannerIsolated extends Component<
         display: none;
       }
       @media print {
+        /* The planner shell is height-capped + overflow-hidden on screen; let
+           it grow so the whole print sheet flows across pages instead of being
+           clipped to one screenful. */
+        .tsp {
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+          display: block !important;
+        }
         .tsp > :not(.print-sheet) {
           display: none !important;
         }
-        .print-sheet {
+        /* Cards mode: paginated grid of table + place cards. */
+        .print-cards {
           display: grid !important;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-          padding: 12px;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          padding: 0;
           background: #ffffff;
         }
         .ps-group {
           display: contents;
         }
+        /* Fixed print sizes (not aspect-ratio) so cards paginate predictably;
+           break-inside keeps each card whole across page boundaries. */
         .ps-cell {
-          aspect-ratio: 5 / 3;
+          height: 2.1in;
           break-inside: avoid;
         }
         .ps-cell-table {
           grid-column: 1 / -1;
-          aspect-ratio: 4 / 1;
+          height: 1.15in;
+          break-inside: avoid;
         }
+        /* Chart mode: the whole seating layout scaled to one overview page. */
+        .print-chart {
+          display: block !important;
+          background: #ffffff;
+        }
+        .ps-chart {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          height: 96vh;
+        }
+        .ps-chart-title {
+          text-align: center;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+          font-size: 26px;
+          font-weight: 600;
+          color: #22283f;
+        }
+        .ps-chart-figure {
+          flex: 1;
+          min-height: 0;
+        }
+        .ps-chart-figure :deep(svg) {
+          width: 100%;
+          height: 100%;
+        }
+      }
+      @page {
+        margin: 12mm;
       }
       @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Jost:ital,wght@0,300..600;1,300..600&display=swap');
       .ico {
@@ -7821,6 +7954,83 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 18px;
         margin: 0 4px;
         background: var(--surface-edge, rgba(197, 163, 92, 0.35));
+      }
+      .cv-history {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: var(--z-canvas-overlay, 60);
+        display: inline-flex;
+        background: var(--surface, #ffffff);
+        border: 1px solid rgba(34, 40, 63, 0.1);
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(20, 27, 51, 0.14);
+        overflow: hidden;
+      }
+      .cv-hist-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 36px;
+        border: none;
+        background: transparent;
+        color: var(--ink, #22283f);
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .cv-hist-btn + .cv-hist-btn {
+        border-left: 1px solid rgba(34, 40, 63, 0.1);
+      }
+      .cv-hist-btn svg {
+        width: 17px;
+        height: 17px;
+      }
+      .cv-hist-btn:not(:disabled):hover {
+        background: color-mix(in srgb, var(--gold, #a5854a) 14%, transparent);
+        color: var(--gold, #a5854a);
+      }
+      .cv-hist-btn:disabled {
+        opacity: 0.32;
+        cursor: not-allowed;
+      }
+      .pr-opt {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 12px;
+        border: 1px solid rgba(197, 163, 92, 0.35);
+        border-radius: 12px;
+        background: var(--surface, #fffdf8);
+        color: var(--ink, #22283f);
+        cursor: pointer;
+        text-align: left;
+        font-family: var(--font-sans, 'Jost', sans-serif);
+      }
+      .pr-opt + .pr-opt {
+        margin-top: 8px;
+      }
+      .pr-opt:hover {
+        border-color: var(--gold, #a5854a);
+      }
+      .pr-opt-txt {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .pr-opt-name {
+        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .pr-opt-desc {
+        font-size: 11px;
+        color: var(--ink, #22283f);
+        opacity: 0.6;
       }
       .zoom-ctl {
         position: absolute;
