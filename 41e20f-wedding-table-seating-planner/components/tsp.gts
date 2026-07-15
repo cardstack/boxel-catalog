@@ -4296,10 +4296,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   class='ct-btn ct-secondary'
                   title='Import a floor plan / venue drawing to trace'
                   {{on 'click' this.openFloorLibrary}}
-                ><FloorPlanIcon
-                    width='14'
-                    height='14'
-                  />
+                ><FloorPlanIcon width='14' height='14' />
                   Import floor plan</button>
               </div>
               <div class='ct-spacer'></div>
