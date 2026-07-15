@@ -32,6 +32,7 @@ import FixtureGlyph from './fixture-glyph';
 import LayoutPreview from './layout-preview';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 import SeatingPlanPopover from './seating-plan-popover';
+import { PlaceCardView, TableCardView } from '../card-views';
 import PencilIcon from '@cardstack/boxel-icons/pencil';
 import XIcon from '@cardstack/boxel-icons/x';
 import LockIcon from '@cardstack/boxel-icons/lock';
@@ -42,6 +43,7 @@ import StarIcon from '@cardstack/boxel-icons/star';
 import DownloadIcon from '@cardstack/boxel-icons/download';
 import SearchIcon from '@cardstack/boxel-icons/search';
 import CameraIcon from '@cardstack/boxel-icons/camera';
+import PrinterIcon from '@cardstack/boxel-icons/printer';
 import ArrowsMoveIcon from '@cardstack/boxel-icons/arrows-move';
 import TemplateIcon from '@cardstack/boxel-icons/template';
 import RefreshIcon from '@cardstack/boxel-icons/refresh';
@@ -1066,7 +1068,7 @@ export class TableSeatingPlannerIsolated extends Component<
   addTableShape = (shape: string) => {
     this.addMenuOpen = false;
     let { x, y } = this.worldCenter();
-    let n = this.tables.filter((t) => t.shape === shape).length + 1;
+    let n = this.tables.length + 1;
     let w = 150;
     let h = 150;
     let seatCount = 8;
@@ -1090,7 +1092,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     let label = TABLE_SHAPE_LABELS[shape] ?? 'Table';
     let t = new Table({
-      name: `${label} ${n}`,
+      name: label === 'Table' ? `Table ${n}` : `${label} Table ${n}`,
       shape,
       seatCount,
       seatingStyle: style,
@@ -3281,6 +3283,28 @@ export class TableSeatingPlannerIsolated extends Component<
       this.savingSnapshot = false;
     }
   };
+  @tracked printOnlyTable: Table | null = null;
+  get tablesToPrint(): Table[] {
+    return this.printOnlyTable ? [this.printOnlyTable] : this.tables;
+  }
+  private nextFrame(): Promise<void> {
+    return new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+  }
+  printCards = async () => {
+    if (this.printOnlyTable) {
+      this.printOnlyTable = null;
+      await this.nextFrame();
+    }
+    window.print();
+  };
+  printTable = async (t: Table) => {
+    this.printOnlyTable = t;
+    await this.nextFrame(); // let the print sheet re-render before printing
+    window.print();
+    this.printOnlyTable = null;
+  };
   private partyChildren(roster: Guest[]): Map<Guest, Guest[]> {
     let inRoster = new Set(roster);
     let rootOf = (g: Guest): Guest => {
@@ -4341,6 +4365,12 @@ export class TableSeatingPlannerIsolated extends Component<
                 {{on 'click' this.saveSnapshot}}
               ><CameraIcon class='ico' />
                 {{if this.savingSnapshot 'Saving…' 'Save snapshot'}}</button>
+              <button
+                type='button'
+                class='ct-btn ct-ghost'
+                title='Print place cards & table cards (save as PDF from the print dialog)'
+                {{on 'click' this.printCards}}
+              ><PrinterIcon class='ico' /> Print cards</button>
             </div>
             <div
               class='canvas {{if this.spaceDown "is-pan"}}'
@@ -5659,6 +5689,12 @@ export class TableSeatingPlannerIsolated extends Component<
                     title='Toggle VIP'
                     {{on 'click' this.toggleVip}}
                   ><StarIcon class='ico' /></button>
+                  <button
+                    type='button'
+                    class='tpop-vip'
+                    title='Print this table (table card + its place cards)'
+                    {{on 'click' (fn this.printTable this.selectedTable)}}
+                  ><PrinterIcon class='ico' /></button>
                 </div>
                 <div class='tpop-status'>{{this.selectedTable.seatedCount}}
                   of
@@ -5707,8 +5743,55 @@ export class TableSeatingPlannerIsolated extends Component<
           </SeatingPlanPopover>
         {{/if}}
       {{/if}}
+      <div class='print-sheet' aria-hidden='true'>
+        {{#each this.tablesToPrint as |t|}}
+          <section class='ps-group'>
+            <div class='ps-cell ps-cell-table'>
+              <TableCardView
+                @eventTitle={{@model.eventTitle}}
+                @tableName={{t.name}}
+              />
+            </div>
+            {{#each t.seatedGuests as |g|}}
+              <div class='ps-cell'>
+                <PlaceCardView
+                  @eventTitle={{@model.eventTitle}}
+                  @guestName={{g.fullName}}
+                  @tableName={{t.name}}
+                />
+              </div>
+            {{/each}}
+          </section>
+        {{/each}}
+      </div>
     </div>
     <style scoped>
+      .print-sheet {
+        display: none;
+      }
+      @media print {
+        .tsp > :not(.print-sheet) {
+          display: none !important;
+        }
+        .print-sheet {
+          display: grid !important;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+          padding: 12px;
+          background: #ffffff;
+        }
+        .ps-group {
+          display: contents;
+        }
+        .ps-cell {
+          aspect-ratio: 5 / 3;
+          break-inside: avoid;
+        }
+        .ps-cell-table {
+          grid-column: 1 / -1;
+          aspect-ratio: 4 / 1;
+        }
+      }
       @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Jost:ital,wght@0,300..600;1,300..600&display=swap');
       .ico {
         width: 14px;
