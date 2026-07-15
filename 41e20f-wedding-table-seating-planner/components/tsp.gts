@@ -4296,7 +4296,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   class='ct-btn ct-secondary'
                   title='Import a floor plan / venue drawing to trace'
                   {{on 'click' this.openFloorLibrary}}
-                ><FloorPlanIcon width='14' height='14' />Import floor plan</button>
+                ><FloorPlanIcon class='ico' /> Import floor plan</button>
               </div>
               <div class='ct-spacer'></div>
               <div class='ct-group ct-group-arrange'>
@@ -6516,10 +6516,6 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .ct-btn {
         position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
         height: 36px;
         padding: 0 14px;
         border-radius: 30px;
