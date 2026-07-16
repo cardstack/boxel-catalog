@@ -759,6 +759,7 @@ export class Guest extends Person {
             <div class='iso-tags'>
               <button
                 type='button'
+                aria-pressed={{if @model.vip 'true' 'false'}}
                 class='iso-vip-toggle {{if @model.vip "is-on"}}'
                 title='Mark as a VIP guest'
                 {{on 'click' this.toggleVip}}
