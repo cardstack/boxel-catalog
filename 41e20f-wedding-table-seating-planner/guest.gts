@@ -746,7 +746,11 @@ export class Guest extends Person {
               {{#each this.categoryOptions as |cat|}}
                 <button
                   type='button'
-                  aria-pressed={{if (eq @model.category cat.value) 'true' 'false'}}
+                  aria-pressed={{if
+                    (eq @model.category cat.value)
+                    'true'
+                    'false'
+                  }}
                   class='iso-catchip
                     {{if (eq @model.category cat.value) "is-on"}}'
                   {{on 'click' (fn this.setCategory cat.value)}}
