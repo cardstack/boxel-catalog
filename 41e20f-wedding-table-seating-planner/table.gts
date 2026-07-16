@@ -342,7 +342,7 @@ export class Table extends FieldDef {
         {{/if}}
         {{#if @model.seatedGuests.length}}
           <section>
-            <h2>Seated</h2>
+            <h2>Assigned</h2>
             <@fields.seatedGuests @format='embedded' />
           </section>
         {{/if}}

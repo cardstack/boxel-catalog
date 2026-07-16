@@ -697,9 +697,20 @@ export class Guest extends Person {
   };
 
   static isolated = class Isolated extends Component<typeof Guest> {
+    categoryOptions = GUEST_CATEGORIES;
     get initials() {
       return initialsOf(this.args.model?.fullName);
     }
+    setName = (e: Event) => {
+      this.args.model.fullName = (e.target as HTMLInputElement).value;
+    };
+    setCategory = (value: string) => {
+      this.args.model.category =
+        this.args.model.category === value ? undefined : value;
+    };
+    toggleVip = () => {
+      this.args.model.vip = !this.args.model.vip;
+    };
     <template>
       <article class='iso'>
 
@@ -724,24 +735,39 @@ export class Guest extends Person {
           </div>
           <div class='iso-ident'>
             <span class='iso-kicker'>Guest Profile</span>
-            <h1 class='iso-name'>{{if
-                @model.fullName
-                @model.fullName
-                'Unnamed Guest'
-              }}</h1>
+            <input
+              class='iso-name-input'
+              value={{@model.fullName}}
+              placeholder='Unnamed Guest'
+              aria-label='Guest name'
+              {{on 'input' this.setName}}
+            />
+            <div class='iso-cats' aria-label='Category'>
+              {{#each this.categoryOptions as |cat|}}
+                <button
+                  type='button'
+                  aria-pressed={{if
+                    (eq @model.category cat.value)
+                    'true'
+                    'false'
+                  }}
+                  class='iso-catchip
+                    {{if (eq @model.category cat.value) "is-on"}}'
+                  {{on 'click' (fn this.setCategory cat.value)}}
+                >
+                  <span class='iso-dot' style={{swatch cat.color}}></span>
+                  {{cat.label}}
+                </button>
+              {{/each}}
+            </div>
             <div class='iso-tags'>
-              {{#if @model.category}}
-                <span class='iso-pill'>
-                  <span
-                    class='iso-dot'
-                    style={{swatch (categoryColor @model.category)}}
-                  ></span>
-                  {{categoryLabel @model.category}}
-                </span>
-              {{/if}}
-              {{#if @model.vip}}
-                <span class='iso-pill is-vip'>&#10022; VIP</span>
-              {{/if}}
+              <button
+                type='button'
+                aria-pressed={{if @model.vip 'true' 'false'}}
+                class='iso-vip-toggle {{if @model.vip "is-on"}}'
+                title='Mark as a VIP guest'
+                {{on 'click' this.toggleVip}}
+              >&#10022; VIP</button>
               {{#if @model.parentGuest}}
                 <span class='iso-pill'>+1 of
                   {{@model.parentGuest.fullName}}</span>
@@ -894,6 +920,70 @@ export class Guest extends Person {
           font-weight: 500;
           line-height: 1.12;
           overflow-wrap: anywhere;
+        }
+        .iso-name-input {
+          width: 100%;
+          margin: 0;
+          padding: 0 0 2px;
+          border: none;
+          border-bottom: 1px solid transparent;
+          background: transparent;
+          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+          font-size: clamp(26px, 5.5cqw, 38px);
+          font-weight: 500;
+          line-height: 1.12;
+          color: var(--ink, #22283f);
+        }
+        .iso-name-input:hover {
+          border-bottom-color: rgba(41, 26, 35, 0.2);
+        }
+        .iso-name-input:focus {
+          outline: none;
+          border-bottom-color: var(--gold, #a5854a);
+        }
+        .iso-cats {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 8px;
+        }
+        .iso-catchip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 5px 11px;
+          border: 1px solid rgba(41, 26, 35, 0.2);
+          border-radius: 999px;
+          background: var(--surface, #fffdf8);
+          cursor: pointer;
+          font-family: var(--font-sans, 'Jost', sans-serif);
+          font-size: 11px;
+          color: var(--ink, #22283f);
+        }
+        .iso-catchip.is-on {
+          border-color: transparent;
+          background: var(--gold, #a5854a);
+          color: var(--surface, #fffdf8);
+        }
+        .iso-vip-toggle {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 5px 13px;
+          border: 1px solid rgba(41, 26, 35, 0.28);
+          border-radius: 999px;
+          background: var(--surface, #fffdf8);
+          cursor: pointer;
+          font-family: var(--font-sans, 'Jost', sans-serif);
+          font-size: 9.5px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--ink, #22283f);
+        }
+        .iso-vip-toggle.is-on {
+          background: var(--gold, #a5854a);
+          border-color: var(--gold, #a5854a);
+          color: var(--surface, #fffdf8);
         }
         .iso-tags {
           display: flex;
