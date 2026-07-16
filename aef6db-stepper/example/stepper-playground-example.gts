@@ -374,11 +374,11 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
             <code>--radius</code>, and
             <code>--font-sans</code>. Link a Theme card (cardInfo.theme) or
             Brand Guide and the whole stepper restyles with no stepper-specific
-            work. For a one-off brand color there is also
-            <code>@accent</code>
-            (hex) — the on-fill content color is auto-computed black/white via
-            <code>getContrastColor</code>, the same pattern as boxel-ui's
-            Avatar.</span>
+            work. For a one-off brand override, set the
+            <code>--stepper-accent</code>
+            /
+            <code>--stepper-accent-fg</code>
+            pair on a host class.</span>
         </div>
       </div>
     </div>

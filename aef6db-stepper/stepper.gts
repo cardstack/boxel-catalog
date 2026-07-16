@@ -2,10 +2,8 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { htmlSafe } from '@ember/template';
-import type { SafeString } from '@ember/template';
 import { Button } from '@cardstack/boxel-ui/components';
-import { eq, getContrastColor, not } from '@cardstack/boxel-ui/helpers';
+import { eq, not } from '@cardstack/boxel-ui/helpers';
 import type { ComponentLike } from '@glint/template';
 
 /**
@@ -89,11 +87,6 @@ interface StepperSignature {
   Element: HTMLDivElement;
   Args: {
     steps: StepperStep[];
-    /** Accent as a hex color (e.g. a brand color). Like boxel-ui's
-     *  Avatar, the content ON accent fills gets an auto-computed
-     *  black/white contrast color (getContrastColor). Omit to use the
-     *  CSS-var defaults (`--stepper-accent` / `--stepper-accent-fg`). */
-    accent?: string;
     /** Wrap the shell in a scrim + centered card. Default false. */
     modal?: boolean;
     /** Header brand name; header renders when this or `onClose` is set. */
@@ -152,14 +145,6 @@ export default class Stepper extends Component<StepperSignature> {
   get currentOptional(): boolean {
     return this.current?.optional ?? false;
   }
-  /** Avatar-style dynamic accent: paint the fills with @accent and set
-   *  the on-accent content color to black/white by contrast ratio. */
-  get accentStyle(): SafeString | undefined {
-    let accent = this.args.accent;
-    if (!accent) return undefined;
-    let fg = getContrastColor(accent) ?? 'var(--boxel-dark, #000000)';
-    return htmlSafe(`--stepper-accent: ${accent}; --stepper-accent-fg: ${fg}`);
-  }
   get api(): StepperApi {
     return {
       index: this.index,
@@ -201,11 +186,7 @@ export default class Stepper extends Component<StepperSignature> {
   };
 
   <template>
-    <div
-      class='stepper-shell {{if @modal "stepper-scrim"}}'
-      style={{this.accentStyle}}
-      ...attributes
-    >
+    <div class='stepper-shell {{if @modal "stepper-scrim"}}' ...attributes>
       <div class='stepper-card {{unless @modal "stepper-inline"}}'>
         {{yield to='decoration'}}
         {{#if this.showHeader}}
@@ -495,9 +476,9 @@ export default class Stepper extends Component<StepperSignature> {
         font-weight: 600;
         z-index: 1;
       }
-      /* Avatar-style pairing: accent fill + auto-contrasting content.
-         boxel-highlight is bright, so the default on-accent color is
-         dark — pass @accent (hex) to recompute black/white at runtime. */
+      /* Accent fill + contrasting on-fill content, sourced from the
+         theme's --primary / --primary-foreground pair; boxel-highlight
+         is bright, so the themeless on-accent fallback is dark. */
       .stepper-step.is-done .stepper-dot {
         background: var(
           --stepper-accent,
