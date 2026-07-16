@@ -17,82 +17,137 @@
       },
       "modelConfigurations.0": {
         "links": {
-          "self": "../ModelConfiguration/anthropic-claude-sonnet-5"
+          "self": "../ModelConfiguration/anthropic-claude-fable-5"
         }
       },
       "modelConfigurations.1": {
         "links": {
-          "self": "../ModelConfiguration/anthropic-claude-opus-48"
+          "self": "../ModelConfiguration/anthropic-claude-sonnet-5"
         }
       },
       "modelConfigurations.2": {
         "links": {
-          "self": "../ModelConfiguration/anthropic-claude-opus-47"
+          "self": "../ModelConfiguration/anthropic-claude-opus-48"
         }
       },
       "modelConfigurations.3": {
         "links": {
-          "self": "../ModelConfiguration/anthropic-claude-sonnet-46"
+          "self": "../ModelConfiguration/anthropic-claude-opus-47"
         }
       },
       "modelConfigurations.4": {
         "links": {
-          "self": "../ModelConfiguration/openai-gpt-56-sol"
+          "self": "../ModelConfiguration/anthropic-claude-sonnet-46"
         }
       },
       "modelConfigurations.5": {
         "links": {
-          "self": "../ModelConfiguration/openai-gpt-56-terra"
+          "self": "../ModelConfiguration/anthropic-claude-haiku-45"
         }
       },
       "modelConfigurations.6": {
         "links": {
-          "self": "../ModelConfiguration/openai-gpt-55"
+          "self": "../ModelConfiguration/openai-gpt-56-sol"
         }
       },
       "modelConfigurations.7": {
         "links": {
-          "self": "../ModelConfiguration/openai-gpt-54"
+          "self": "../ModelConfiguration/openai-gpt-56-terra"
         }
       },
       "modelConfigurations.8": {
         "links": {
-          "self": "../ModelConfiguration/google-gemini-31-pro"
+          "self": "../ModelConfiguration/openai-gpt-55"
         }
       },
       "modelConfigurations.9": {
         "links": {
-          "self": "../ModelConfiguration/x-ai-grok-45"
+          "self": "../ModelConfiguration/openai-gpt-54"
         }
       },
       "modelConfigurations.10": {
         "links": {
-          "self": "../ModelConfiguration/x-ai-grok-43"
+          "self": "../ModelConfiguration/openai-gpt-54-mini"
         }
       },
       "modelConfigurations.11": {
         "links": {
-          "self": "../ModelConfiguration/deepseek-deepseek-v4-pro"
+          "self": "../ModelConfiguration/openai-gpt-54-nano"
         }
       },
       "modelConfigurations.12": {
         "links": {
-          "self": "../ModelConfiguration/moonshotai-kimi-k2-7-code"
+          "self": "../ModelConfiguration/google-gemini-31-pro"
         }
       },
       "modelConfigurations.13": {
         "links": {
-          "self": "../ModelConfiguration/z-ai-glm-52"
+          "self": "../ModelConfiguration/google-gemini-35-flash"
         }
       },
       "modelConfigurations.14": {
         "links": {
-          "self": "../ModelConfiguration/qwen-qwen3-7-max"
+          "self": "../ModelConfiguration/google-gemini-31-flash-lite"
         }
       },
       "modelConfigurations.15": {
         "links": {
+          "self": "../ModelConfiguration/x-ai-grok-45"
+        }
+      },
+      "modelConfigurations.16": {
+        "links": {
+          "self": "../ModelConfiguration/x-ai-grok-43"
+        }
+      },
+      "modelConfigurations.17": {
+        "links": {
+          "self": "../ModelConfiguration/deepseek-deepseek-v4-pro"
+        }
+      },
+      "modelConfigurations.18": {
+        "links": {
+          "self": "../ModelConfiguration/deepseek-deepseek-v4-flash"
+        }
+      },
+      "modelConfigurations.19": {
+        "links": {
+          "self": "../ModelConfiguration/moonshotai-kimi-k2-7-code"
+        }
+      },
+      "modelConfigurations.20": {
+        "links": {
+          "self": "../ModelConfiguration/z-ai-glm-52"
+        }
+      },
+      "modelConfigurations.21": {
+        "links": {
+          "self": "../ModelConfiguration/z-ai-glm-47-flash"
+        }
+      },
+      "modelConfigurations.22": {
+        "links": {
+          "self": "../ModelConfiguration/qwen-qwen3-7-max"
+        }
+      },
+      "modelConfigurations.23": {
+        "links": {
+          "self": "../ModelConfiguration/qwen-qwen3-6-flash"
+        }
+      },
+      "modelConfigurations.24": {
+        "links": {
           "self": "../ModelConfiguration/minimax-minimax-m3"
+        }
+      },
+      "modelConfigurations.25": {
+        "links": {
+          "self": "../ModelConfiguration/mistralai-mistral-medium-35"
+        }
+      },
+      "modelConfigurations.26": {
+        "links": {
+          "self": "../ModelConfiguration/meta-llama-llama-4-maverick"
         }
       }
     },

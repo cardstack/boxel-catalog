@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "DeepSeek: DeepSeek V4 Flash",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "openRouterModel": {
+        "links": {
+          "self": "@cardstack/openrouter/OpenRouterModel/deepseek-deepseek-v4-flash"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../system-card/model-configuration",
+        "name": "ModelConfiguration"
+      }
+    }
+  }
+}

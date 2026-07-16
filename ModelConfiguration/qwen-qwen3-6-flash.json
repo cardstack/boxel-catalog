@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Qwen: Qwen3.6 Flash",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "openRouterModel": {
+        "links": {
+          "self": "@cardstack/openrouter/OpenRouterModel/qwen-qwen3-6-flash"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../system-card/model-configuration",
+        "name": "ModelConfiguration"
+      }
+    }
+  }
+}

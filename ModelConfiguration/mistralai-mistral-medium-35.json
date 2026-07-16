@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Mistral: Mistral Medium 3.5",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "openRouterModel": {
+        "links": {
+          "self": "@cardstack/openrouter/OpenRouterModel/mistralai-mistral-medium-3-5"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../system-card/model-configuration",
+        "name": "ModelConfiguration"
+      }
+    }
+  }
+}

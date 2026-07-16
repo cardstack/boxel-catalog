@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Google: Gemini 3.1 Flash Lite",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "openRouterModel": {
+        "links": {
+          "self": "@cardstack/openrouter/OpenRouterModel/google-gemini-3-1-flash-lite"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../system-card/model-configuration",
+        "name": "ModelConfiguration"
+      }
+    }
+  }
+}
