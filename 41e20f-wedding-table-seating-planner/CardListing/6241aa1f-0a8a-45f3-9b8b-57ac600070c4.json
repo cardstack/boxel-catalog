@@ -175,10 +175,15 @@
       },
       "images.1": {
         "links": {
-          "self": "../Screenshots/seating-print-5eb923a4.png"
+          "self": "../Screenshots/add-element-5c7a382a.png"
         }
       },
       "images.2": {
+        "links": {
+          "self": "../Screenshots/seating-print-5eb923a4.png"
+        }
+      },
+      "images.3": {
         "links": {
           "self": "../Screenshots/ai-poster-0881ce2a.png"
         }
