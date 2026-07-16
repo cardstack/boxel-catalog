@@ -108,6 +108,7 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
           >
             <BoxelInputGroup
               id='url-input'
+              aria-label='Image URL'
               @placeholder='https://example.com/image.jpg'
               @value={{this.imageUrl}}
               @onInput={{this.onUrlChange}}
