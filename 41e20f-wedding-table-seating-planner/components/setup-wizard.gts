@@ -6,9 +6,9 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import CalendarHeartIcon from '@cardstack/boxel-icons/calendar-heart';
 import CrownIcon from '@cardstack/boxel-icons/crown';
 import UsersIcon from '@cardstack/boxel-icons/users';
-import LayoutPreview from './components/layout-preview';
-import type { Table } from './table';
-import type { Fixture } from './fixture';
+import LayoutPreview from './layout-preview';
+import type { Table } from '../table';
+import type { Fixture } from '../fixture';
 
 // First-run setup wizard for the Table Seating Planner. Self-contained and
 // composable: owns its own step state + styling, talks to the host planner only

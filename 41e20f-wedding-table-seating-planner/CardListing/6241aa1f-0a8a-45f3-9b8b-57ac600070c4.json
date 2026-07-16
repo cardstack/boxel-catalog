@@ -282,6 +282,21 @@
         "links": {
           "self": "../ListingThumbnails/table-seating-b62d23ba.png"
         }
+      },
+      "specs.23": {
+        "links": {
+          "self": "../Spec/039f23ea-f61a-4a68-a322-6ff5acb17bf7"
+        }
+      },
+      "specs.24": {
+        "links": {
+          "self": "../Spec/10c3938c-b579-45cc-a849-4811b0fbc16b"
+        }
+      },
+      "specs.25": {
+        "links": {
+          "self": "../Spec/39355975-9e51-49d1-9b77-88bcdb7c5feb"
+        }
       }
     }
   }
