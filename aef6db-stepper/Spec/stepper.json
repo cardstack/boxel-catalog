@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "@cardstack/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../stepper"
+      },
+      "readMe": "## Stepper\n\nA general multi-step flow shell — the \"guideline book\" that walks a user through a journey (a first-run wizard, an onboarding flow, a setup checklist) *before* they start using an app. Two-pane layout: a vertical step rail on the left (numbered dots, ✓ done state, active ring, connector lines) and the active step's content on the right, closed out by a Back / Skip / Next action bar built from boxel-ui `<Button>`.\n\nThe first consumer is the Table Seating Planner's setup wizard; the component carries no wedding-specific anything — every product supplies its own steps, content, and brand.\n\n### Ownership split\n\nThe **host** owns the step definitions (labels, completion state) and each step's content, supplied through the `<:step>` named block. The **Stepper** owns the step state machine, the rail's done/active painting, gating Next on `isComplete`, and the shell chrome (header, action bar, optional modal scrim). The component never closes itself — visibility stays with the host, exactly like Popover's `@open`.\n\n### Steps — `StepperStep[]`\n\n```ts\ninterface StepperStep {\n  id: string;            // dispatch key for the <:step> block\n  label: string;         // rail label ('Your event')\n  summary?: string;      // rail sub-line while pending; swaps to 'Completed' when done\n  title?: string;        // content-pane heading (defaults to label)\n  description?: string;  // content-pane sub-line\n  icon?: ComponentLike;  // lead icon circle above the title\n  isComplete?: boolean;  // gates Next + paints the rail ✓; omit = never gates\n  optional?: boolean;    // shows a Skip button on this step (MUI-style)\n}\n```\n\n- **Completion gating is host-wired**: point `isComplete` at your own state (`this.name.length > 0`, `this.guests.length > 0`) and Next unlocks/locks live.\n- **Skip is per-step opt-in** (`optional: true`), following the MUI Stepper convention — linear steps get no Skip button. `api.skip` remains available for custom action bars.\n\n### Args\n\n| Arg | Purpose |\n| --- | --- |\n| `@steps` | the `StepperStep[]` above |\n| `@modal` | wrap in a scrim + centered card (`position: absolute; inset: 0` — fills the nearest positioned ancestor). Default inline bordered card |\n| `@kicker` / `@title` | header eyebrow + brand name; header renders only when one of these (or the close button) is present |\n| `@onClose` / `@showClose` | ✕ close — an outlined 30px circle, no fill (same treatment as the seating planner's popover close). `@showClose` defaults to true whenever `@onClose` is set |\n| `@finishLabel` / `@onFinish` | the last step swaps Skip/Next for a single primary button labeled `finishLabel` (default 'Done') |\n| `@onStepChange` | fires `(step, index)` on every step entry — use for enter hooks (e.g. lazy-load data when the user reaches a step) |\n| `@initialStep` | start on a later step (resume) |\n| `@allowStepJump` | click rail items to jump between steps. Off by default so wizards stay linear |\n| `@accent` | a hex brand color for the fills; see *Accent & contrast* |\n\n### Blocks\n\n- `<:step as |step api|>` — the active step's content; dispatch on `step.id`. The `api` bundle exposes `next` / `back` / `skip` / `goTo` plus `index` / `isFirst` / `isLast` / `canProceed` for hosts that want custom controls inside the content.\n- `<:actions as |api|>` — replaces the default action bar entirely.\n- `<:decoration>` — renders inside the card for brand art (the seating planner puts its gold corner mandala here).\n\n### Accent & contrast (the Avatar pattern)\n\nFills (done dots, connectors, the lead icon circle) paint with the accent; the content ON those fills (✓ glyph, icon) uses a separate foreground so it always reads:\n\n- Default: the fills follow the linked theme's `--primary` with `--primary-foreground` as the on-fill content — themes author this pair as a contrast pairing. With no theme, the fallback is `--boxel-highlight` (bright green) with a dark on-fill color — correct WCAG pairing.\n- For a one-off brand color, pass `@accent='#1a4f76'` (any hex) and the component computes black/white via boxel-ui's `getContrastColor` — the same helper `<Avatar>` uses for initials on dynamic backgrounds.\n- Text on the light rail (active label, kicker) stays ink/muted — accent is for fills only, never light-background text.\n\n### Theming — the theme system drives it\n\nEvery visual value resolves through three scopes, strongest first:\n\n1. **Stepper-only knobs** — `--stepper-*` custom properties set on a host class restyle ONLY the stepper: `--stepper-accent` · `--stepper-accent-fg` · `--stepper-ink` · `--stepper-muted` · `--stepper-surface` (rail bg) · `--stepper-card-bg` · `--stepper-border` · `--stepper-connector` · `--stepper-primary-bg` / `--stepper-primary-fg` (Next button) · `--stepper-kicker-color` · `--stepper-heading-font` · `--stepper-body-font` · `--stepper-radius` · `--stepper-scrim-bg` · `--stepper-shadow`\n2. **Theme semantic tokens** — link a Theme card / Brand Guide and the stepper follows automatically: `--primary` / `--primary-foreground` drive the accent fills, their on-fill content, and the Next button; `--foreground`, `--muted`, `--muted-foreground`, `--card`, `--border`, `--radius`, and `--font-sans` drive text, surfaces, hairlines, corners, and type.\n3. **Built-in neutral defaults** (Boxel tokens) — used with no theme at all.\n\nThe seating planner's Parisian look (navy/gold, Cormorant + Jost) is a scope-1 override — see `wz-theme` in its setup-wizard for the full block.\n\n## Usage\n\nThe **Stepper Playground** example is the canonical reference — knobs for `@modal` and `@allowStepJump` over a live 4-step demo whose gating is real, with a generated-invocation panel; its colors follow the linked theme. The minimal shape:\n\n```gts\nimport Stepper from '../stepper';\nimport type { StepperStep } from '../stepper';\n\nget steps(): StepperStep[] {\n  return [\n    { id: 'event', label: 'Your event', summary: 'Event details',\n      description: 'Tell us about it.', icon: CalendarIcon,\n      isComplete: !!this.title, optional: true },\n    { id: 'template', label: 'Template', summary: 'Choose a layout' },\n  ];\n}\n\n<template>\n  <Stepper\n    @modal={{true}}\n    @steps={{this.steps}}\n    @kicker='Getting started'\n    @title='My Product'\n    @finishLabel='Start blank'\n    @onClose={{this.dismiss}}\n    @onFinish={{this.dismiss}}\n    @onStepChange={{this.stepEntered}}\n  >\n    <:step as |step|>\n      {{#if (eq step.id 'event')}} …event form… {{else}} …template list… {{/if}}\n    </:step>\n  </Stepper>\n</template>\n```\n\nCross-realm import: `@cardstack/catalog/aef6db-stepper/stepper`.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "component",
+      "cardTitle": "Stepper",
+      "cardDescription": "A multi-step flow shell for first-run wizards and onboarding journeys: vertical step rail, per-step completion gating, MUI-style optional steps, boxel-ui buttons, and full --stepper-* theming with Avatar-style accent contrast.",
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
