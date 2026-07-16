@@ -170,20 +170,25 @@
       },
       "images.0": {
         "links": {
-          "self": "../Screenshots/setup-wizard-f3947e69.png"
+          "self": "../Screenshots/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8-80e439fd.png"
         }
       },
       "images.1": {
         "links": {
-          "self": "../Screenshots/add-element-5c7a382a.png"
+          "self": "../Screenshots/setup-wizard-f3947e69.png"
         }
       },
       "images.2": {
         "links": {
-          "self": "../Screenshots/seating-print-5eb923a4.png"
+          "self": "../Screenshots/add-element-5c7a382a.png"
         }
       },
       "images.3": {
+        "links": {
+          "self": "../Screenshots/seating-print-5eb923a4.png"
+        }
+      },
+      "images.4": {
         "links": {
           "self": "../Screenshots/ai-poster-0881ce2a.png"
         }
