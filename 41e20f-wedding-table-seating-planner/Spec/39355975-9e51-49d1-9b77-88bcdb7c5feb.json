@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# TableCardView\n\n## Summary\n\nRenders a table-number card: an optional uppercase event-title kicker, the table name in large serif type, and an optional italic accent line. Like PlaceCardView it is the single source of truth for the stationery — the TableCard card definition and the planner's print sheet both render it, so print output matches the card exactly. Container-query sizing lets it scale from an isolated card down to a print-sheet cell.\n\n## Import\n\n```js\nimport { TableCardView } from '../components/card-views';\n```\n\n## Template Usage\n\nAs rendered on the planner's print sheet (all args optional; the name falls back to \"Table\"):\n\n```gjs\n<TableCardView\n  @eventTitle={{@model.eventTitle}}\n  @tableName={{t.name}}\n  @accent={{@model.venue}}\n/>\n```",
       "ref": {
         "module": "../components/card-views",
         "name": "TableCardView"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# Person\n\n## Summary\nPerson is the shared base card for people in the Table Seating Planner package. It holds a `fullName` string, a `photo` image source, and a computed `photoURL` derived from that photo; its `title` falls back to \"Unnamed Person\" when the name is blank. Guest and Host both extend Person, inheriting these identity fields plus the avatar-row embedded view. The package ships no standalone Person instances — it exists to be subclassed.\n\n## Import\n```js\nimport { Person } from '../person';\n```\n\n## Usage\nPerson is a card, so link to it (or, more commonly, extend it the way Guest and Host do):\n\n```js\nimport { CardDef, field, linksTo } from 'https://cardstack.com/base/card-api';\nimport { Person } from '../person';\n\nexport class ContactCard extends CardDef {\n  @field contact = linksTo(Person);\n}\n```\n\n## Template Usage\n```handlebars\n<@fields.contact @format='embedded' />\n```\nRenders the person as a compact row with a photo (or initials) avatar and their name.",
       "ref": {
         "module": "../person",
         "name": "Person"

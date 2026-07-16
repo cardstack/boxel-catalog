@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# sectionSeatPoints\n\n## Summary\n\nComputes an evenly spaced rows × cols grid of normalized seat positions for a section-type table, with seat numbering following the given `SeatOrder` (reading order, right-to-left, bottom-up, snake, or column-wise). Used in `components/tsp.gts` to lay out seats inside section blocks on the floor-plan canvas, and in `components/layout-preview.gts` for layout-template previews.\n\n## Import\n\n```js\nimport { sectionSeatPoints } from '../utils/index';\n```\n\n## Usage\n\n```js\nsectionSeatPoints(rows: number, cols: number, order: SeatOrder = 'lr-tb'): SeatPoint[]\n\nsectionSeatPoints(3, 4, 'snake');\n```",
       "ref": {
         "module": "../utils/index",
         "name": "sectionSeatPoints"

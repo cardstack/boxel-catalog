@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# categoryLabel\n\n## Summary\n\nReturns the display label for a guest-category value (e.g. `brides-family` → \"Bride's Family\") from the `GUEST_CATEGORIES` list, or an empty string when the value is missing or unknown. The planner uses it wherever a guest's category is shown as text — the category chips in the Guest card views and the guest roster, legend, and hover popover in the main planner component (`components/tsp.gts`).\n\n## Import\n\n```js\nimport { categoryLabel } from '../utils/index';\n```\n\n## Usage\n\n```js\ncategoryLabel(value: string | null | undefined): string\n\ncategoryLabel('brides-family'); // \"Bride's Family\"\n```",
       "ref": {
         "module": "../utils/index",
         "name": "categoryLabel"

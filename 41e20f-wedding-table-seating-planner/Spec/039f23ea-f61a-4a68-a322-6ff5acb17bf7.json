@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# SetupWizard\n\n## Summary\n\nFirst-run setup wizard that the isolated planner shows over the canvas until the plan has content. It renders a two-pane layout — a vertical stepper on the left, the active step on the right — walking through event details, hosts, guests, and finally starting from a layout template (previewed with LayoutPreview) or a blank canvas. It owns its own step state and styling and talks to the host planner only through args, so every mutation happens via the callbacks you pass in. Steps gate their Next button on completion (event title entered, at least one host/guest added), and each step can be skipped.\n\n## Import\n\n```js\nimport SetupWizard from '../components/setup-wizard';\n```\n\n## Template Usage\n\nAs invoked from the isolated planner view:\n\n```gjs\n<SetupWizard\n  @eventTitle={{@model.eventTitle}}\n  @venue={{@model.venue}}\n  @eventDate={{this.eventDateInput}}\n  @hostCount={{this.hostsCount}}\n  @guestCount={{this.totalGuests}}\n  @templates={{this.templates}}\n  @templatesLoading={{this.templatesLoading}}\n  @onEventTitle={{this.setEventTitle}}\n  @onVenue={{this.setVenue}}\n  @onEventDate={{this.setEventDate}}\n  @onAddHosts={{this.addHosts}}\n  @onAddGuests={{this.addGuests}}\n  @onLoadTemplates={{this.loadTemplates}}\n  @onApplyTemplate={{this.applyTemplateFromWizard}}\n  @onSkip={{this.skipWizard}}\n/>\n```",
       "ref": {
         "module": "../components/setup-wizard",
         "name": "default"

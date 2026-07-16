@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# categoryColor\n\n## Summary\n\nReturns the hex color assigned to a guest-category value in `GUEST_CATEGORIES`, defaulting to `#c5a35c` when the value is missing or unknown. The planner uses it to color-code guests by category — category swatches in the Guest card views, seat markers and the category legend in `components/tsp.gts`, and per-category dots in the Table card.\n\n## Import\n\n```js\nimport { categoryColor } from '../utils/index';\n```\n\n## Usage\n\n```js\ncategoryColor(value: string | null | undefined): string\n\ncategoryColor('close-friend'); // '#74b18d'\n```",
       "ref": {
         "module": "../utils/index",
         "name": "categoryColor"

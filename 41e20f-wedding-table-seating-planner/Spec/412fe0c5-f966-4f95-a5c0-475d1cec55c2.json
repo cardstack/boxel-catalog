@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# TableSeatingPlannerFitted\n\n## Summary\n\nThe compact card format for the Table Seating Planner: a dark navy tile showing the event title (falling back to \"Seating Plan\") over two stats — table count and seated/total guests, with the seated count de-duplicated across tables. It applies the linked theme's CSS variables inline, and a container query hides the stats row when the tile is 70px tall or shorter so tiny strips still read cleanly.\n\n## Import\n\n```js\nimport { TableSeatingPlannerFitted } from '../components/tsp';\n```\n\n## Template Usage\n\nNot typically invoked directly — the card definition assigns it as both the fitted and embedded formats in `table-seating-planner.gts`:\n\n```js\nTableSeatingPlanner.embedded = TableSeatingPlannerFitted;\nTableSeatingPlanner.fitted = TableSeatingPlannerFitted;\n```",
       "ref": {
         "module": "../components/tsp",
         "name": "TableSeatingPlannerFitted"

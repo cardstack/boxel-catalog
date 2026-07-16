@@ -9,7 +9,7 @@
     "type": "card",
     "attributes": {
       "name": "Table Seating Planner",
-      "summary": "The TableSeatingPlanner is a card definition designed to organize and manage seating arrangements for events. It captures key event details such as the event title, date, venue, and hosts. The planner links to guests, tables, and fixtures involved in the event setup. It includes a floor plan with configurable positioning, dimensions, opacity, and lock status to visualize seating arrangements. Additionally, it supports messaging features like invitation and seating messages, and facilitates poster creation with customizable poster images, prompts, and aspect ratios. The primary purpose is to assist event planners in designing, visualizing, and organizing seating plans for successful gatherings.",
+      "summary": "Seating charts are the most stressful part of planning an event — dozens of guests, family politics, and a floor plan that keeps changing right up to the big day. Table Seating Planner takes the pain out of it: lay out your venue with drag-and-drop tables and fixtures (or import your own floor plan), then seat everyone with a simple drag.\n\nOpen the demo to see it shine: ask the AI assistant to arrange the seats and watch every guest find a place, step through the guided setup wizard to start an event of your own, then carry your theme through to matching invitations and posters for the big day.",
       "cardInfo": {
         "name": "Table Seating Planner",
         "notes": null,
@@ -170,17 +170,17 @@
       },
       "images.0": {
         "links": {
-          "self": "../Screenshots/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8-b6ba6f10.png"
+          "self": "../Screenshots/setup-wizard-f3947e69.png"
         }
       },
       "images.1": {
         "links": {
-          "self": "../Screenshots/8b596412-e2ed-4d38-877b-40d12c1876dc-940f80d5.png"
+          "self": "../Screenshots/seating-print-5eb923a4.png"
         }
       },
       "images.2": {
         "links": {
-          "self": "../Screenshots/36305cb1-39a5-4a95-b594-ab4af32fa883-e6851a31.png"
+          "self": "../Screenshots/ai-poster-0881ce2a.png"
         }
       },
       "skills.0": {
@@ -276,11 +276,6 @@
       "examples.16": {
         "links": {
           "self": "../Theme/italian-cathedral"
-        }
-      },
-      "examples.17": {
-        "links": {
-          "self": "../../index"
         }
       },
       "categories.0": {

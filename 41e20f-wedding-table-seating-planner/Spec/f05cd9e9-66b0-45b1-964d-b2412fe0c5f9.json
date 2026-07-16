@@ -2,13 +2,40 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# Fixture\n\n## Summary\n\nFixture models a non-seating floor element placed on the same canvas as the tables — the `kind` enum covers plants, trees, a balloon arch, stage, projector, red carpet, dance floor, ceremony arch, cake table, bar, and abstract curved-wall/rectangle/circle decor shapes. Its schema is a `label` string, the `kind` enum, a `pattern` enum (solid/outline/soft) that controls how the glyph fills, canvas geometry (`x`, `y`, `width`, `height`, `rotation`, `z` — all numbers), a `locked` boolean that pins it against moving or resizing on the canvas, and a `color`. A computed `title` falls back from the label to the kind's display label. The planner holds fixtures in a containsMany field so decor travels with the seating plan.\n\n## Import\n\n```js\nimport { Fixture } from '../fixture';\n```\n\n## Usage as a Field\n\n```ts\n@field fixtures = containsMany(Fixture);\n```\n\n## Template Usage\n\n```handlebars\n{{#each @model.fixtures as |fixture|}}\n  {{fixture.title}}\n{{/each}}\n```\n\nEach entry also renders with its own embedded and fitted views via `<@fields.fixtures />`.\n",
       "ref": {
         "module": "../fixture",
         "name": "Fixture"
       },
       "specType": "field",
-      "containedExamples": [],
+      "containedExamples": [
+        {
+          "label": "Dance floor",
+          "kind": "dance-floor",
+          "pattern": "solid",
+          "x": -120,
+          "y": 60,
+          "width": 240,
+          "height": 240,
+          "rotation": 0,
+          "z": 1,
+          "locked": false,
+          "color": "#c5a35c"
+        },
+        {
+          "label": "Stage",
+          "kind": "stage",
+          "pattern": "outline",
+          "x": -250,
+          "y": 138,
+          "width": 260,
+          "height": 140,
+          "rotation": 0,
+          "z": 2,
+          "locked": true,
+          "color": "#c5a35c"
+        }
+      ],
       "cardTitle": "Fixture",
       "cardDescription": null,
       "cardInfo": {
@@ -39,6 +66,22 @@
       "adoptsFrom": {
         "module": "@cardstack/base/spec",
         "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../fixture",
+              "name": "Fixture"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../fixture",
+              "name": "Fixture"
+            }
+          }
+        ]
       }
     }
   }

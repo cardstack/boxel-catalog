@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# Host\n\n## Summary\nHost models someone hosting the event — a bride, groom, or other organizer. It extends Person, inheriting `fullName`, `photo`, and the computed `photoURL`, and adds a single `role` string (for example \"Bride\" or \"Groom\") shown beneath the name in its gold-badged embedded view. The Table Seating Planner links hosts via `hosts = linksToMany(Host)` and joins their names into a computed `hostNames` string for the event header.\n\n## Import\n```js\nimport { Host } from '../host';\n```\n\n## Usage\nHost is a card, so consuming cards link to it — the same wiring the planner uses:\n\n```js\nimport { CardDef, field, linksToMany } from 'https://cardstack.com/base/card-api';\nimport { Host } from '../host';\n\nexport class EventHeader extends CardDef {\n  @field hosts = linksToMany(() => Host);\n}\n```\n\n## Template Usage\n```handlebars\n<@fields.hosts @format='embedded' />\n```\nRenders each host as an avatar row with their name, role, and a \"Host\" badge.",
       "ref": {
         "module": "../host",
         "name": "Host"
@@ -19,9 +19,14 @@
       }
     },
     "relationships": {
-      "linkedExamples": {
+      "linkedExamples.0": {
         "links": {
-          "self": null
+          "self": "../Host/amy"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Host/lucas"
         }
       },
       "cardInfo.cardThumbnail": {

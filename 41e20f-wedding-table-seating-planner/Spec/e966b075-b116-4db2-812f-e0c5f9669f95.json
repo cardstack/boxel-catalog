@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# sectionSize\n\n## Summary\n\nComputes the pixel footprint of a section-type table from its rows × cols grid at 34px per seat, clamped to a minimum of 80×60. Used in `components/tsp.gts` to size section blocks on the floor-plan canvas and to enforce the minimum size when resizing them.\n\n## Import\n\n```js\nimport { sectionSize } from '../utils/index';\n```\n\n## Usage\n\n```js\nsectionSize(rows: number, cols: number): { w: number; h: number }\n\nsectionSize(3, 4); // { w: 136, h: 102 }\n```",
       "ref": {
         "module": "../utils/index",
         "name": "sectionSize"
