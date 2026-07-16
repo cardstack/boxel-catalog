@@ -33,14 +33,14 @@ interface Signature {
     guestCount?: number;
     templates?: TemplateLike[];
     templatesLoading?: boolean;
-    onEventTitle?: (e: Event) => void;
-    onVenue?: (e: Event) => void;
-    onEventDate?: (e: Event) => void;
-    onAddHosts?: () => void;
-    onAddGuests?: () => void;
-    onLoadTemplates?: () => void;
-    onApplyTemplate?: (index: number) => void;
-    onSkip?: () => void;
+    onEventTitle: (e: Event) => void;
+    onVenue: (e: Event) => void;
+    onEventDate: (e: Event) => void;
+    onAddHosts: () => void;
+    onAddGuests: () => void;
+    onLoadTemplates: () => void;
+    onApplyTemplate: (index: number) => void;
+    onSkip: () => void;
   };
 }
 
@@ -73,7 +73,7 @@ export default class SetupWizard extends Component<Signature> {
 
   private enter = (step: number) => {
     this.step = step;
-    if (step === LAST_STEP) this.args.onLoadTemplates?.();
+    if (step === LAST_STEP) this.args.onLoadTemplates();
   };
   next = () => {
     if (this.step < LAST_STEP) this.enter(this.step + 1);
@@ -83,10 +83,10 @@ export default class SetupWizard extends Component<Signature> {
   };
   skipStep = () => {
     if (this.step < LAST_STEP) this.enter(this.step + 1);
-    else this.args.onSkip?.();
+    else this.args.onSkip();
   };
   applyTpl = (index: number) => {
-    this.args.onApplyTemplate?.(index);
+    this.args.onApplyTemplate(index);
   };
 
   <template>
