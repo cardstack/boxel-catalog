@@ -13,13 +13,16 @@ import { htmlSafe } from '@ember/template';
 import { get } from '@ember/helper';
 import { on } from '@ember/modifier';
 import Modifier from 'ember-modifier';
+import { fittedFormatById } from '@cardstack/boxel-ui/helpers';
 import LayoutDashboardIcon from '@cardstack/boxel-icons/layout-dashboard';
 import { RigState, SurfaceRig, type PanSession } from './rig';
 
-// Tile geometry in world-space pixels. The CSS tile size (--pb-tile-width /
-// --pb-tile-height) must stay in sync: 280px = 17.5rem, 364px = 22.75rem.
-const TILE_WIDTH = 280;
-const TILE_HEIGHT = 364;
+// Tiles use the shared cardsgrid-tile fitted size so boards show cards at a
+// size their fitted views are designed for. The value feeds both the
+// placement math and the --pb-tile-* CSS vars (via rootStyle).
+const cardsgridTile = fittedFormatById.get('cardsgrid-tile')!;
+const TILE_WIDTH = cardsgridTile.width;
+const TILE_HEIGHT = cardsgridTile.height;
 const TILE_GAP = 32;
 const GRID_COLUMNS = 4;
 
@@ -80,7 +83,9 @@ class Isolated extends Component<typeof PosterBoard> {
   }
 
   get rootStyle() {
-    return htmlSafe(`cursor: ${this.isPanning ? 'grabbing' : 'grab'};`);
+    return htmlSafe(
+      `cursor: ${this.isPanning ? 'grabbing' : 'grab'}; --pb-tile-width: ${TILE_WIDTH}px; --pb-tile-height: ${TILE_HEIGHT}px;`,
+    );
   }
 
   // ── Tile placement ─────────────────────────────────────
@@ -294,8 +299,8 @@ class Isolated extends Component<typeof PosterBoard> {
         --pb-hud-zoom-min-width: 2.125rem;
         --pb-hud-border-radius: 0.5rem;
         --pb-hud-btn-border-radius: 0.3125rem;
-        --pb-tile-width: 17.5rem;
-        --pb-tile-height: 22.75rem;
+        /* --pb-tile-width / --pb-tile-height come from rootStyle, derived
+           from the cardsgrid-tile entry in FITTED_FORMATS */
         position: relative;
         width: 100%;
         height: 100%;
