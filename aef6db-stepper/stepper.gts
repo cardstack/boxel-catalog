@@ -436,6 +436,22 @@ export default class Stepper extends Component<StepperSignature> {
         display: flex;
         gap: 14px;
       }
+      /* Current-step highlight — a soft accent wash behind the whole
+         row, so "you are here" stays visible even once the step is
+         complete and its dot has flipped to the done fill. */
+      .stepper-step.is-active::after {
+        content: '';
+        position: absolute;
+        inset: -8px -10px;
+        border-radius: 12px;
+        background: color-mix(
+          in srgb,
+          var(--stepper-accent, var(--primary, var(--boxel-highlight, #00ac3d)))
+            10%,
+          transparent
+        );
+        pointer-events: none;
+      }
       .stepper-step.is-jumpable {
         cursor: pointer;
       }
@@ -509,11 +525,22 @@ export default class Stepper extends Component<StepperSignature> {
                 --stepper-accent,
                 var(--primary, var(--boxel-highlight, #00ac3d))
               )
-              16%,
+              28%,
             transparent
           );
       }
+      /* Completed AND current: keep the on-accent foreground so the ✓
+         stays readable on the accent fill (the active rule above would
+         otherwise repaint it in ink). */
+      .stepper-step.is-done.is-active .stepper-dot {
+        color: var(
+          --stepper-accent-fg,
+          var(--primary-foreground, var(--boxel-dark, #000000))
+        );
+      }
       .stepper-step-txt {
+        position: relative;
+        z-index: 1;
         display: flex;
         flex-direction: column;
         gap: 2px;
