@@ -78,17 +78,16 @@ export default class ListingUseCommand extends Command<
       });
     }
 
-    if (listing.examples) {
-      const sourceCards = (listing.examples as CardAPI.CardDef[]).map(
-        (example) => example,
-      );
-      for (const card of sourceCards) {
-        await new CopyCardToRealmCommand(this.commandContext).execute({
-          sourceCard: card,
-          targetRealm: realmUrl,
-          localDir,
-        });
-      }
+    const sourceCards = [
+      ...((listing.examples ?? []) as CardAPI.CardDef[]),
+      ...((listing.supportingCards ?? []) as CardAPI.CardDef[]),
+    ];
+    for (const card of sourceCards) {
+      await new CopyCardToRealmCommand(this.commandContext).execute({
+        sourceCard: card,
+        targetRealm: realmUrl,
+        localDir,
+      });
     }
 
     if ('skills' in listing && Array.isArray(listing.skills)) {

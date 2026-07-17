@@ -98,9 +98,14 @@ export default class ListingInstallCommand extends Command<
     // this is intentionally to type because base command cannot interpret Listing type from catalog
     const listing = listingInput as Listing;
 
-    let examplesToInstall = listing.examples;
-    if (listing.examples?.length) {
-      examplesToInstall = await this.expandInstances(listing.examples);
+    // seed examples first so the primary example stays the first planned instance
+    let hasPrimaryExamples = (listing.examples?.length ?? 0) > 0;
+    let examplesToInstall = [
+      ...(listing.examples ?? []),
+      ...(listing.supportingCards ?? []),
+    ];
+    if (examplesToInstall.length) {
+      examplesToInstall = await this.expandInstances(examplesToInstall);
     }
 
     // side-effects
@@ -125,9 +130,11 @@ export default class ListingInstallCommand extends Command<
           resolver,
           virtualNetwork,
         );
-        let firstInstance = r.instancesCopy[0];
-        exampleCardId = join(realmUrl, firstInstance.lid);
-        selectedCodeRef = firstInstance.targetCodeRef;
+        if (hasPrimaryExamples) {
+          let firstInstance = r.instancesCopy[0];
+          exampleCardId = join(realmUrl, firstInstance.lid);
+          selectedCodeRef = firstInstance.targetCodeRef;
+        }
         return r;
       })
       .addIf(listing.skills?.length > 0, (resolver: ListingPathResolver) => {

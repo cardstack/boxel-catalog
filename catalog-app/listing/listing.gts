@@ -934,6 +934,8 @@ export class Listing extends CardDef {
   @field license = linksTo(() => License, { searchable: true });
   @field images = linksToMany(ImageDef, { searchable: true });
   @field examples = linksToMany(() => CardDef);
+  // installed alongside examples but never rendered in the listing detail view
+  @field supportingCards = linksToMany(() => CardDef);
   @field skills = linksToMany(() => Skill);
 
   @field cardTitle = contains(StringField, {

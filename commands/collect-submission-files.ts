@@ -109,10 +109,13 @@ export default class CollectSubmissionFilesCommand extends Command<
       );
     }
 
-    let examplesToSnapshot = listing.examples;
+    let examplesToSnapshot = [
+      ...(listing.examples ?? []),
+      ...(listing.supportingCards ?? []),
+    ];
     let fileDefUrls = new Set<string>();
-    if (listing.examples?.length) {
-      let expanded = await this.expandInstances(listing.examples);
+    if (examplesToSnapshot.length) {
+      let expanded = await this.expandInstances(examplesToSnapshot);
       examplesToSnapshot = expanded.instances;
       fileDefUrls = expanded.fileDefUrls;
     }
