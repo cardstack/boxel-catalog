@@ -96,6 +96,9 @@ export default class ListingCreateCommand extends Command<
     input: BaseCommandModule.ListingCreateInput,
   ): Promise<BaseCommandModule.ListingCreateResult> {
     let { openCardIds, codeRef, targetRealm } = input;
+    // tolerate a base ListingCreateInput that predates supportingCardIds
+    let explicitSupportingCardIds = (input as { supportingCardIds?: string[] })
+      .supportingCardIds;
 
     if (!codeRef) {
       throw new Error('codeRef is required');
@@ -118,10 +121,16 @@ export default class ListingCreateCommand extends Command<
     const displayName = (cardDef as any)?.displayName ?? codeRef.name;
     const catalogRealm = await this.getCatalogRealm();
 
-    const { exampleCardIds, supportingCardIds } = await this.classifyOpenCards(
-      openCardIds,
-      codeRef,
-    );
+    const classified = await this.classifyOpenCards(openCardIds, codeRef);
+    const exampleCardIds = classified.exampleCardIds;
+    // explicit supporting cards are taken verbatim (no type check); a card
+    // also picked as an example stays an example
+    const supportingCardIds = [
+      ...new Set([
+        ...classified.supportingCardIds,
+        ...(explicitSupportingCardIds ?? []),
+      ]),
+    ].filter((id) => !exampleCardIds.includes(id));
 
     let relationships: Record<string, { links: { self: string } }> = {};
     exampleCardIds.forEach((id, index) => {
