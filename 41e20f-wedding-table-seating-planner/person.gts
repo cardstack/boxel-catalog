@@ -18,6 +18,7 @@ export class Person extends CardDef {
 
   @field fullName = contains(StringField);
   @field photo = contains(ImageSourceField);
+
   @field photoURL = contains(UrlField, {
     computeVia: function (this: Person) {
       return this.photo?.resolvedUrl;
@@ -38,6 +39,7 @@ export class Person extends CardDef {
     get initials() {
       return initialsOf(this.args.model?.fullName);
     }
+
     <template>
       <div class='p-row'>
         {{#if @model.photoURL}}
@@ -59,11 +61,15 @@ export class Person extends CardDef {
           align-items: center;
           gap: 12px;
           padding: 9px 12px;
-          border: 1px solid var(--border, rgba(220, 193, 136, 0.3));
+          border: 1px solid
+            var(--tsp-border, var(--border, rgba(220, 193, 136, 0.3)));
           border-radius: 11px;
-          background: var(--background, #ffffff);
-          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
-          color: var(--foreground, #22283f);
+          background: var(--tsp-background, var(--background, #ffffff));
+          font-family: var(
+            --tsp-font-sans,
+            var(--font-sans, 'Jost', system-ui, sans-serif)
+          );
+          color: var(--tsp-foreground, var(--foreground, #22283f));
         }
         .p-avatar {
           width: 38px;
@@ -76,11 +82,17 @@ export class Person extends CardDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          font:
-            600 13px 'Cormorant Garamond',
-            serif;
-          color: var(--ink, #22283f);
-          background: linear-gradient(135deg, #dcc188, var(--gold, #c5a35c));
+          font: 600 13px
+            var(
+              --tsp-font-serif,
+              var(--font-serif, 'Cormorant Garamond', serif)
+            );
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          background: linear-gradient(
+            135deg,
+            #dcc188,
+            var(--tsp-accent, var(--accent, #c5a35c))
+          );
         }
         .p-main {
           flex: 1;

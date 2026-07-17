@@ -29,13 +29,14 @@ export class Fixture extends FieldDef {
   @field label = contains(StringField);
   @field kind = contains(KindField);
   @field pattern = contains(PatternField);
-
   @field x = contains(NumberField);
   @field y = contains(NumberField);
   @field width = contains(NumberField);
   @field height = contains(NumberField);
   @field rotation = contains(NumberField);
+
   @field z = contains(NumberField); // canvas stacking order
+
   @field locked = contains(BooleanField); // locked fixtures can't be moved/resized on canvas
 
   @field color = contains(ColorField);
@@ -72,11 +73,14 @@ export class Fixture extends FieldDef {
           align-items: center;
           gap: 12px;
           padding: 10px 12px;
-          border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+          border: 1px solid var(--tsp-border, var(--border, rgba(0, 0, 0, 0.1)));
           border-radius: 11px;
-          background: var(--background, #fff);
-          color: var(--foreground, #22283f);
-          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+          background: var(--tsp-background, var(--background, #fff));
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font-family: var(
+            --tsp-font-sans,
+            var(--font-sans, 'Jost', system-ui, sans-serif)
+          );
         }
         .fx-thumb {
           width: 40px;
@@ -93,10 +97,8 @@ export class Fixture extends FieldDef {
           font-size: 14px;
         }
         .fx-kind {
-          font:
-            11px 'Jost',
-            monospace;
-          color: var(--muted-foreground, #a5919c);
+          font: 11px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
         }
       </style>
     </template>
@@ -139,9 +141,12 @@ export class Fixture extends FieldDef {
           align-content: center;
           grid-template-columns: auto minmax(0, 1fr);
           grid-template-areas: 'thumb head' 'thumb meta';
-          background: var(--background, #fff);
-          color: var(--foreground, #22283f);
-          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+          background: var(--tsp-background, var(--background, #fff));
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font-family: var(
+            --tsp-font-sans,
+            var(--font-sans, 'Jost', system-ui, sans-serif)
+          );
         }
         .r-thumb {
           grid-area: thumb;
@@ -169,10 +174,8 @@ export class Fixture extends FieldDef {
           text-overflow: ellipsis;
         }
         .kind {
-          font:
-            11px 'Jost',
-            monospace;
-          color: var(--muted-foreground, #a5919c);
+          font: 11px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
         }
         @container fx (width <= 90px) {
           .fit {
@@ -215,9 +218,12 @@ export class Fixture extends FieldDef {
           gap: 14px;
           padding: 28px;
           box-sizing: border-box;
-          background: var(--background, #faf5ec);
-          color: var(--foreground, #22283f);
-          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+          background: var(--tsp-background, var(--background, #faf5ec));
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font-family: var(
+            --tsp-font-sans,
+            var(--font-sans, 'Jost', system-ui, sans-serif)
+          );
         }
         .fx-iso-art {
           width: 160px;
@@ -225,17 +231,18 @@ export class Fixture extends FieldDef {
         }
         h1 {
           margin: 0;
-          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+          font-family: var(
+            --tsp-font-serif,
+            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+          );
           font-size: 26px;
         }
         .fx-iso-kind {
           margin: 0;
-          font:
-            10px 'Jost',
-            monospace;
+          font: 10px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--muted-foreground, #a5919c);
+          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
         }
       </style>
     </template>

@@ -1,20 +1,28 @@
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import CalendarHeartIcon from '@cardstack/boxel-icons/calendar-heart';
 import CrownIcon from '@cardstack/boxel-icons/crown';
 import UsersIcon from '@cardstack/boxel-icons/users';
+import Stepper from '@cardstack/catalog/aef6db-stepper/stepper';
+import type { StepperStep } from '@cardstack/catalog/aef6db-stepper/stepper';
 import LayoutPreview from './layout-preview';
 import type { Table } from '../table';
 import type { Fixture } from '../fixture';
 
-// First-run setup wizard for the Table Seating Planner. Self-contained and
-// composable: owns its own step state + styling, talks to the host planner only
-// through args. Two-pane layout — a vertical stepper on the left, the active
-// step's content on the right. Steps: event details → hosts (the couple) →
-// guests → start from a template (previewed with the LayoutPreview SVG) or blank.
+// First-run setup wizard for the Table Seating Planner. The shell (modal
+// scrim, step rail, nav actions) is the shared <Stepper> catalog component;
+// this file owns only the four domain steps — event details → hosts (the
+// couple) → guests → start from a template (previewed with the LayoutPreview
+// SVG) or blank — plus the gold corner ornament. All colors flow from the
+// theme's semantic tokens (the planner pins its Parisian defaults when no
+// theme is linked), so no wizard-specific palette remains. Talks to the host
+// planner only through args. Every step is mandatory: Next stays disabled
+// until the step's fields are filled and there is no Skip. The ✕ close is the
+// one escape hatch — dismissal isn't persisted, so the wizard reopens the
+// next time an incomplete planner is opened.
 interface TemplateLike {
   name?: string | null;
   tableCount?: number | null;
@@ -33,6 +41,11 @@ interface Signature {
     guestCount?: number;
     templates?: TemplateLike[];
     templatesLoading?: boolean;
+    /** The planner's `hosts` / `guests` linksToMany field components —
+     *  rendered fitted inside the wizard so newly added people show up
+     *  as cards, not just a count. */
+    hostsField?: any;
+    guestsField?: any;
     onEventTitle: (e: Event) => void;
     onVenue: (e: Event) => void;
     onEventDate: (e: Event) => void;
@@ -44,59 +57,75 @@ interface Signature {
   };
 }
 
-const LAST_STEP = 4;
-
 export default class SetupWizard extends Component<Signature> {
-  @tracked step = 1;
+  get steps(): StepperStep[] {
+    return [
+      {
+        id: 'event',
+        label: 'Your event',
+        summary: 'Event details',
+        title: 'Your event',
+        description:
+          'Tell us about the celebration — name, date, and venue are all needed.',
+        icon: CalendarHeartIcon,
+        isComplete:
+          !!this.args.eventTitle?.trim() &&
+          !!this.args.eventDate &&
+          !!this.args.venue?.trim(),
+      },
+      {
+        id: 'hosts',
+        label: 'Hosts',
+        summary: 'The couple',
+        title: 'Hosts',
+        description:
+          "Who's hosting? Add the couple or hosts of the celebration.",
+        icon: CrownIcon,
+        isComplete: (this.args.hostCount ?? 0) > 0,
+      },
+      {
+        id: 'guests',
+        label: 'Guests',
+        summary: 'Your guest list',
+        title: 'Guests',
+        description: 'Add at least one guest to continue.',
+        icon: UsersIcon,
+        isComplete: (this.args.guestCount ?? 0) > 0,
+      },
+      {
+        id: 'template',
+        label: 'Template',
+        summary: 'Choose a layout',
+        title: 'Start from a template',
+        description:
+          'Pick a ready-made layout to get a head start, or start with a blank canvas.',
+      },
+    ];
+  }
 
-  get step1Done(): boolean {
-    return !!this.args.eventTitle && this.args.eventTitle.trim().length > 0;
-  }
-  get step2Done(): boolean {
-    return (this.args.hostCount ?? 0) > 0;
-  }
-  get step3Done(): boolean {
-    return (this.args.guestCount ?? 0) > 0;
-  }
-  get canProceed(): boolean {
-    if (this.step === 1) return this.step1Done;
-    if (this.step === 2) return this.step2Done;
-    if (this.step === 3) return this.step3Done;
-    return true;
-  }
-  get nextDisabled(): boolean {
-    return !this.canProceed;
-  }
-  get isLastStep(): boolean {
-    return this.step === LAST_STEP;
-  }
+  stepEntered = (step: StepperStep) => {
+    if (step.id === 'template') this.args.onLoadTemplates();
+  };
 
-  private enter = (step: number) => {
-    this.step = step;
-    if (step === LAST_STEP) this.args.onLoadTemplates();
-  };
-  next = () => {
-    if (this.step < LAST_STEP) this.enter(this.step + 1);
-  };
-  back = () => {
-    if (this.step > 1) this.step -= 1;
-  };
-  skipStep = () => {
-    if (this.step < LAST_STEP) this.enter(this.step + 1);
-    else this.args.onSkip();
-  };
   applyTpl = (index: number) => {
     this.args.onApplyTemplate(index);
   };
 
   <template>
-    <div class='wz-scrim' ...attributes>
-      <div class='wz-card'>
-        <svg
-          class='wz-corner wz-corner-tr'
-          viewBox='0 0 100 100'
-          aria-hidden='true'
-        >
+    <Stepper
+      class='wz'
+      @modal={{true}}
+      @steps={{this.steps}}
+      @kicker='Getting started'
+      @title='Table Seating Planner'
+      @finishLabel='Start blank'
+      @onClose={{@onSkip}}
+      @onFinish={{@onSkip}}
+      @onStepChange={{this.stepEntered}}
+      ...attributes
+    >
+      <:decoration>
+        <svg class='wz-corner' viewBox='0 0 100 100' aria-hidden='true'>
           <g fill='none' stroke='currentColor' stroke-width='1'>
             <circle cx='50' cy='50' r='40' /><circle cx='50' cy='50' r='27' />
             <circle cx='50' cy='50' r='14' /><path
@@ -104,410 +133,142 @@ export default class SetupWizard extends Component<Signature> {
             />
           </g>
         </svg>
-
-        <div class='wz-top'>
-          <div class='wz-brand'>
-            <span class='wz-kicker'>Getting started</span>
-            <span class='wz-brand-name'>Table Seating Planner</span>
+      </:decoration>
+      <:step as |step|>
+        {{#if (eq step.id 'event')}}
+          <div class='wz-form'>
+            <label class='wz-field'>Event name
+              <BoxelInput
+                @value={{@eventTitle}}
+                placeholder='e.g. Sunway Hotel Wedding Party'
+                {{on 'input' @onEventTitle}}
+              />
+            </label>
+            <label class='wz-field'>Date &amp; time
+              <BoxelInput
+                @type='datetime-local'
+                @value={{@eventDate}}
+                {{on 'change' @onEventDate}}
+              />
+            </label>
+            <label class='wz-field'>Venue
+              <BoxelInput
+                @value={{@venue}}
+                placeholder='e.g. Grand Ballroom, Level 3'
+                {{on 'input' @onVenue}}
+              />
+            </label>
           </div>
-          <button
-            type='button'
-            class='wz-close'
-            aria-label='Close setup'
-            {{on 'click' @onSkip}}
-          >&#10005; Close</button>
-        </div>
-
-        <div class='wz-body'>
-          <ol class='wz-rail'>
-            <li
-              class='wz-step
-                {{if this.step1Done "is-done"}}
-                {{if (eq this.step 1) "is-active"}}'
-            >
-              <span class='wz-dot'>{{if this.step1Done '✓' '1'}}</span>
-              <span class='wz-step-txt'>
-                <span class='wz-step-k'>Step 01</span>
-                <span class='wz-step-l'>Your event</span>
-                <span class='wz-step-s'>{{if
-                    this.step1Done
-                    'Completed'
-                    'Event details'
-                  }}</span>
-              </span>
-            </li>
-            <li
-              class='wz-step
-                {{if this.step2Done "is-done"}}
-                {{if (eq this.step 2) "is-active"}}'
-            >
-              <span class='wz-dot'>{{if this.step2Done '✓' '2'}}</span>
-              <span class='wz-step-txt'>
-                <span class='wz-step-k'>Step 02</span>
-                <span class='wz-step-l'>Hosts</span>
-                <span class='wz-step-s'>{{if
-                    this.step2Done
-                    'Completed'
-                    'The couple'
-                  }}</span>
-              </span>
-            </li>
-            <li
-              class='wz-step
-                {{if this.step3Done "is-done"}}
-                {{if (eq this.step 3) "is-active"}}'
-            >
-              <span class='wz-dot'>{{if this.step3Done '✓' '3'}}</span>
-              <span class='wz-step-txt'>
-                <span class='wz-step-k'>Step 03</span>
-                <span class='wz-step-l'>Guests</span>
-                <span class='wz-step-s'>{{if
-                    this.step3Done
-                    'Completed'
-                    'Your guest list'
-                  }}</span>
-              </span>
-            </li>
-            <li class='wz-step {{if (eq this.step 4) "is-active"}}'>
-              <span class='wz-dot'>4</span>
-              <span class='wz-step-txt'>
-                <span class='wz-step-k'>Step 04</span>
-                <span class='wz-step-l'>Template</span>
-                <span class='wz-step-s'>Choose a layout</span>
-              </span>
-            </li>
-          </ol>
-
-          <div class='wz-main'>
-            {{#if (eq this.step 1)}}
-              <div class='wz-lead'><CalendarHeartIcon
-                  width='26'
-                  height='26'
-                /></div>
-              <h1 class='wz-title'>Your event</h1>
-              <p class='wz-sub'>Tell us about the celebration.</p>
-              <div class='wz-form'>
-                <label class='wz-field'>Event name
-                  <input
-                    type='text'
-                    value={{@eventTitle}}
-                    placeholder='e.g. Lucas & Amy'
-                    {{on 'input' @onEventTitle}}
-                  />
-                </label>
-                <label class='wz-field'>Date
-                  <input
-                    type='date'
-                    value={{@eventDate}}
-                    {{on 'change' @onEventDate}}
-                  />
-                </label>
-                <label class='wz-field'>Venue
-                  <input
-                    type='text'
-                    value={{@venue}}
-                    placeholder='e.g. Sunway Hotel'
-                    {{on 'input' @onVenue}}
-                  />
-                </label>
-              </div>
-            {{else if (eq this.step 2)}}
-              <div class='wz-lead'><CrownIcon width='26' height='26' /></div>
-              <h1 class='wz-title'>Hosts</h1>
-              <p class='wz-sub'>Who's hosting? Add the couple or hosts of the
-                celebration.</p>
-              <div class='wz-panel wz-guest-panel'>
-                <span class='wz-guest-count'>{{if @hostCount @hostCount 0}}
-                  host(s) added</span>
-                <button
-                  type='button'
-                  class='wz-btn wz-secondary'
-                  {{on 'click' @onAddHosts}}
-                >Add hosts</button>
-              </div>
-            {{else if (eq this.step 3)}}
-              <div class='wz-lead'><UsersIcon width='26' height='26' /></div>
-              <h1 class='wz-title'>Guests</h1>
-              <p class='wz-sub'>Add your guest list now, or skip and add them
-                later.</p>
-              <div class='wz-panel wz-guest-panel'>
-                <span class='wz-guest-count'>{{if @guestCount @guestCount 0}}
-                  guest(s) added</span>
-                <button
-                  type='button'
-                  class='wz-btn wz-secondary'
-                  {{on 'click' @onAddGuests}}
-                >Add guests</button>
-              </div>
-            {{else}}
-              <h1 class='wz-title'>Start from a template</h1>
-              <p class='wz-sub'>Pick a ready-made layout to get a head start, or
-                start with a blank canvas.</p>
-              <div class='wz-panel'>
-                {{#if @templatesLoading}}
-                  <p class='wz-empty'>Loading templates…</p>
-                {{else if @templates.length}}
-                  {{#each @templates as |tpl idx|}}
-                    <button
-                      type='button'
-                      class='wz-opt'
-                      {{on 'click' (fn this.applyTpl idx)}}
-                    >
-                      <span class='wz-opt-preview'>
-                        <LayoutPreview
-                          @tables={{tpl.tables}}
-                          @fixtures={{tpl.fixtures}}
-                        />
-                      </span>
-                      <span class='wz-opt-text'>
-                        <span class='wz-opt-name'>{{if
-                            tpl.name
-                            tpl.name
-                            'Untitled template'
-                          }}</span>
-                        <span class='wz-opt-meta'>{{if
-                            tpl.tableCount
-                            tpl.tableCount
-                            0
-                          }}
-                          tables ·
-                          {{if tpl.seatCount tpl.seatCount 0}}
-                          seats</span>
-                      </span>
-                    </button>
-                  {{/each}}
-                {{else}}
-                  <p class='wz-empty'>No templates yet — start blank and build
-                    your own.</p>
-                {{/if}}
+        {{else if (eq step.id 'hosts')}}
+          <div class='wz-panel wz-people-panel'>
+            {{#if @hostCount}}
+              <div class='wz-cards'>
+                <@hostsField @format='fitted' />
               </div>
             {{/if}}
-
-            <div class='wz-actions'>
-              {{#unless (eq this.step 1)}}
-                <button
-                  type='button'
-                  class='wz-ghost'
-                  {{on 'click' this.back}}
-                >Back</button>
-              {{/unless}}
-              {{#if this.isLastStep}}
-                <button
-                  type='button'
-                  class='wz-btn wz-primary'
-                  {{on 'click' @onSkip}}
-                >Start blank</button>
-              {{else}}
-                <button
-                  type='button'
-                  class='wz-ghost'
-                  {{on 'click' this.skipStep}}
-                >Skip</button>
-                <button
-                  type='button'
-                  class='wz-btn wz-primary'
-                  disabled={{this.nextDisabled}}
-                  {{on 'click' this.next}}
-                >Next</button>
-              {{/if}}
+            <div class='wz-people-row'>
+              <span class='wz-guest-count'>{{if @hostCount @hostCount 0}}
+                host(s) added</span>
+              <Button
+                @kind='secondary'
+                class='wz-secondary'
+                {{on 'click' @onAddHosts}}
+              >Add hosts</Button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+        {{else if (eq step.id 'guests')}}
+          <div class='wz-panel wz-people-panel'>
+            {{#if @guestCount}}
+              <div class='wz-cards'>
+                <@guestsField @format='fitted' />
+              </div>
+            {{/if}}
+            <div class='wz-people-row'>
+              <span class='wz-guest-count'>{{if @guestCount @guestCount 0}}
+                guest(s) added</span>
+              <Button
+                @kind='secondary'
+                class='wz-secondary'
+                {{on 'click' @onAddGuests}}
+              >Add guests</Button>
+            </div>
+          </div>
+        {{else}}
+          <div class='wz-panel'>
+            {{#if @templatesLoading}}
+              <p class='wz-empty'>Loading templates…</p>
+            {{else if @templates.length}}
+              {{#each @templates as |tpl idx|}}
+                <Button
+                  @kind='text-only'
+                  class='wz-opt'
+                  {{on 'click' (fn this.applyTpl idx)}}
+                >
+                  <span class='wz-opt-preview'>
+                    <LayoutPreview
+                      @tables={{tpl.tables}}
+                      @fixtures={{tpl.fixtures}}
+                    />
+                  </span>
+                  <span class='wz-opt-text'>
+                    <span class='wz-opt-name'>{{if
+                        tpl.name
+                        tpl.name
+                        'Untitled template'
+                      }}</span>
+                    <span class='wz-opt-meta'>{{if
+                        tpl.tableCount
+                        tpl.tableCount
+                        0
+                      }}
+                      tables ·
+                      {{if tpl.seatCount tpl.seatCount 0}}
+                      seats</span>
+                  </span>
+                </Button>
+              {{/each}}
+            {{else}}
+              <p class='wz-empty'>No templates yet — start blank and build your
+                own.</p>
+            {{/if}}
+          </div>
+        {{/if}}
+      </:step>
+    </Stepper>
     <style scoped>
-      .wz-scrim {
-        position: absolute;
-        inset: 0;
-        z-index: 200;
-        display: grid;
-        place-items: center;
-        padding: 16px;
-        background: rgba(20, 27, 51, 0.28);
-        backdrop-filter: blur(2px);
-      }
-      .wz-card {
-        --wz-ink: #22283f;
-        --wz-gold: #a5854a;
-        --wz-navy: #141b33;
-        --wz-serif: 'Cormorant Garamond', Georgia, serif;
-        --wz-sans: 'Jost', system-ui, sans-serif;
-        box-sizing: border-box;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-        padding: 26px 30px;
-        overflow: hidden;
-        background: #ffffff;
-        border-radius: 18px;
-        box-shadow: 0 20px 60px rgba(20, 27, 51, 0.28);
-        font-family: var(--wz-sans);
-        color: var(--wz-ink);
+      /* Wizard-specific Stepper knobs — everything else flows from the
+         theme's semantic tokens through the Stepper's own chains. */
+      .wz {
+        /* Rail highlights in gold — the Stepper's default accent chain
+           follows --primary (navy here); the wizard wants the accent
+           pair instead, with a cream ✓ on the gold fills. */
+        --stepper-accent: var(--tsp-accent, var(--accent, #c5a35c));
+        --stepper-accent-fg: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
+        --stepper-heading-font: var(
+          --font-serif,
+          'Cormorant Garamond',
+          Georgia,
+          serif
+        );
+        --stepper-kicker-color: var(--tsp-accent-deep, #a5854a);
+        --stepper-scrim-bg: color-mix(
+          in srgb,
+          var(--tsp-primary, var(--primary, #141b33)) 28%,
+          transparent
+        );
       }
       .wz-corner {
         position: absolute;
-        width: 170px;
-        height: 170px;
-        color: var(--wz-gold);
-        opacity: 0.05;
-        pointer-events: none;
-      }
-      .wz-corner-tr {
         top: -22px;
         right: -22px;
-      }
-      .wz-top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-      }
-      .wz-brand {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      .wz-kicker {
-        font-size: 10px;
-        letter-spacing: 0.24em;
-        text-transform: uppercase;
-        color: var(--wz-gold);
-      }
-      .wz-brand-name {
-        font-family: var(--wz-serif);
-        font-size: 21px;
-        font-weight: 600;
-      }
-      .wz-close {
-        border: none;
-        background: none;
-        cursor: pointer;
-        font-family: var(--wz-sans);
-        font-size: 13px;
-        color: var(--wz-ink);
-        opacity: 0.6;
-      }
-      .wz-close:hover {
-        opacity: 1;
-      }
-      .wz-body {
-        flex: 1;
-        min-height: 0;
-        display: flex;
-        gap: 32px;
-        margin-top: 18px;
-      }
-      .wz-rail {
-        flex: none;
-        width: 232px;
-        margin: 0;
-        padding: 22px 18px;
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-        border: 1px solid rgba(34, 40, 63, 0.1);
-        border-radius: 16px;
-        background: #fdfaf2;
-      }
-      .wz-step {
-        position: relative;
-        display: flex;
-        gap: 14px;
-      }
-      .wz-step:not(:last-child)::before {
-        content: '';
-        position: absolute;
-        left: 15px;
-        top: 34px;
-        bottom: -24px;
-        width: 2px;
-        background: rgba(34, 40, 63, 0.12);
-      }
-      .wz-step.is-done:not(:last-child)::before {
-        background: var(--wz-gold);
-      }
-      .wz-dot {
-        flex: none;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        border: 2px solid rgba(34, 40, 63, 0.18);
-        background: #ffffff;
-        color: rgba(34, 40, 63, 0.5);
-        font-size: 12px;
-        font-weight: 600;
-        z-index: 1;
-      }
-      .wz-step.is-done .wz-dot {
-        background: var(--wz-gold);
-        border-color: var(--wz-gold);
-        color: #ffffff;
-      }
-      .wz-step.is-active .wz-dot {
-        border-color: var(--wz-gold);
-        color: var(--wz-gold);
-        box-shadow: 0 0 0 4px
-          color-mix(in srgb, var(--wz-gold) 16%, transparent);
-      }
-      .wz-step-txt {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        padding-top: 2px;
-      }
-      .wz-step-k {
-        font-size: 10px;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: rgba(34, 40, 63, 0.45);
-      }
-      .wz-step-l {
-        font-family: var(--wz-serif);
-        font-size: 18px;
-        font-weight: 600;
-      }
-      .wz-step.is-active .wz-step-l {
-        color: var(--wz-gold);
-      }
-      .wz-step-s {
-        font-size: 11px;
-        color: rgba(34, 40, 63, 0.45);
-      }
-      .wz-step.is-done .wz-step-s {
-        color: var(--wz-gold);
-      }
-      .wz-main {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-      }
-      .wz-lead {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        background: color-mix(in srgb, var(--wz-gold) 14%, transparent);
-        color: var(--wz-gold);
-      }
-      .wz-title {
-        margin: 12px 0 0;
-        font-family: var(--wz-serif);
-        font-size: 32px;
-        font-weight: 600;
-      }
-      .wz-sub {
-        margin: 6px 0 0;
-        font-size: 14px;
-        color: rgba(34, 40, 63, 0.65);
-        max-width: 54ch;
+        width: 170px;
+        height: 170px;
+        color: var(--tsp-accent, var(--accent, #a5854a));
+        opacity: 0.05;
+        pointer-events: none;
       }
       .wz-form {
         display: flex;
@@ -522,19 +283,25 @@ export default class SetupWizard extends Component<Signature> {
         gap: 4px;
         font-size: 12px;
         letter-spacing: 0.04em;
-        color: rgba(34, 40, 63, 0.7);
+        color: var(--tsp-muted-foreground, var(--muted-foreground, #6b6656));
       }
       .wz-field input {
+        min-height: 0;
         padding: 10px 12px;
-        border: 1px solid rgba(34, 40, 63, 0.18);
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(34, 40, 63, 0.18)));
         border-radius: 10px;
-        font-family: var(--wz-sans);
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         font-size: 14px;
-        color: var(--wz-ink);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        background: var(--tsp-input, var(--input, #fffdf8));
       }
       .wz-field input:focus {
         outline: none;
-        border-color: var(--wz-gold);
+        border-color: var(--tsp-ring, var(--ring, #a5854a));
       }
       .wz-panel {
         flex: 1;
@@ -545,32 +312,58 @@ export default class SetupWizard extends Component<Signature> {
         display: flex;
         flex-direction: column;
         gap: 10px;
-        border: 1.5px dashed rgba(34, 40, 63, 0.2);
+        border: 1.5px dashed
+          var(--tsp-border, var(--border, rgba(34, 40, 63, 0.2)));
         border-radius: 16px;
       }
-      .wz-guest-panel {
+      .wz-people-panel {
         flex: none;
-        flex-direction: row;
+        max-height: 100%;
+        gap: 12px;
+      }
+      .wz-people-row {
+        display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
+      }
+      /* Newly added people render as fitted cards. The linksToMany
+         plural component stacks items vertically; re-lay its wrapper as
+         a responsive grid so the panel width is used. */
+      .wz-cards {
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .wz-cards :deep(.linksToMany-field.fitted-effectiveFormat) {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 8px;
+      }
+      .wz-cards :deep(.linksToMany-itemContainer + .linksToMany-itemContainer) {
+        margin-top: 0;
       }
       .wz-guest-count {
         font-size: 14px;
-        color: rgba(34, 40, 63, 0.7);
+        color: var(--tsp-muted-foreground, var(--muted-foreground, #6b6656));
       }
       .wz-opt {
         display: flex;
+        justify-content: flex-start;
         align-items: center;
         gap: 14px;
         padding: 12px 14px;
         border: 1px solid transparent;
         border-radius: 12px;
-        background: color-mix(in srgb, var(--wz-gold) 9%, transparent);
+        background: color-mix(
+          in srgb,
+          var(--tsp-accent, var(--accent, #a5854a)) 9%,
+          transparent
+        );
         cursor: pointer;
         text-align: left;
       }
       .wz-opt:hover {
-        border-color: var(--wz-gold);
+        border-color: var(--tsp-accent, var(--accent, #a5854a));
       }
       .wz-opt-preview {
         flex: none;
@@ -580,7 +373,7 @@ export default class SetupWizard extends Component<Signature> {
         width: 108px;
         height: 62px;
         border-radius: 8px;
-        background: #ffffff;
+        background: var(--tsp-card, var(--card, #ffffff));
         overflow: hidden;
       }
       .wz-opt-preview :deep(svg) {
@@ -594,7 +387,10 @@ export default class SetupWizard extends Component<Signature> {
         min-width: 0;
       }
       .wz-opt-name {
-        font-family: var(--wz-serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 18px;
         font-weight: 600;
       }
@@ -602,7 +398,7 @@ export default class SetupWizard extends Component<Signature> {
         font-size: 11px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--wz-gold);
+        color: var(--tsp-accent-deep, #a5854a);
       }
       .wz-empty {
         margin: auto;
@@ -610,43 +406,20 @@ export default class SetupWizard extends Component<Signature> {
         font-size: 13px;
         opacity: 0.65;
       }
-      .wz-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 18px;
-      }
-      .wz-ghost {
-        border: none;
-        background: none;
-        cursor: pointer;
-        font-family: var(--wz-sans);
-        font-size: 13px;
-        color: var(--wz-ink);
-        opacity: 0.65;
-      }
-      .wz-btn {
-        border: 1px solid transparent;
-        border-radius: 999px;
-        cursor: pointer;
-        font-family: var(--wz-sans);
-        font-size: 13px;
-        letter-spacing: 0.04em;
-        padding: 11px 22px;
-      }
-      .wz-btn:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-      .wz-primary {
-        background: var(--wz-navy);
-        color: #ffffff;
-      }
+      /* Boxel <Button> re-skin for the panel actions */
       .wz-secondary {
-        background: transparent;
-        border-color: rgba(197, 163, 92, 0.55);
-        color: var(--wz-gold);
+        --boxel-button-secondary-background: transparent;
+        --boxel-button-secondary-border: color-mix(
+          in srgb,
+          var(--tsp-accent, var(--accent, #a5854a)) 55%,
+          transparent
+        );
+        --boxel-button-secondary-foreground: var(--tsp-accent-deep, #a5854a);
+        --boxel-button-font: 500 13px
+          var(--tsp-font-sans, var(--font-sans, 'Jost', system-ui, sans-serif));
+        --boxel-button-letter-spacing: 0.04em;
+        --boxel-button-padding: 11px 22px;
+        --boxel-button-border-radius: 999px;
       }
     </style>
   </template>

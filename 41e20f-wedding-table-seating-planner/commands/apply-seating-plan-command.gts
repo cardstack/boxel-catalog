@@ -16,6 +16,7 @@ import type { Table } from '../table';
 
 export class TableAssignmentField extends FieldDef {
   static displayName = 'Table Assignment';
+
   @field tableIndex = contains(NumberField, {
     description:
       'Zero-based index of the table in the payload the user sent (and in the planner card’s "tables" field).',
@@ -77,6 +78,7 @@ export class ApplySeatingPlanCommand extends Command<
 > {
   static actionVerb = 'Apply';
   static displayName = 'Apply Seating Plan';
+
   description =
     'Apply a complete seating arrangement to a Table Seating Planner card. Every table gets exactly the parties assigned to it; tables without an assignment entry are emptied.';
 

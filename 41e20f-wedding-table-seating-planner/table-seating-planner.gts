@@ -12,7 +12,7 @@ import UrlField from 'https://cardstack.com/base/url';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 import NumberField from 'https://cardstack.com/base/number';
 import BooleanField from 'https://cardstack.com/base/boolean';
-import DateField from 'https://cardstack.com/base/date';
+import DatetimeField from 'https://cardstack.com/base/datetime';
 import LayoutIcon from '@cardstack/boxel-icons/layout-dashboard';
 
 import { Guest } from './guest';
@@ -32,7 +32,7 @@ export class TableSeatingPlanner extends CardDef {
 
   @field eventLogo = contains(ImageSourceField);
   @field eventTitle = contains(StringField);
-  @field eventDate = contains(DateField);
+  @field eventDate = contains(DatetimeField);
   @field hosts = linksToMany(() => Host);
   @field venue = contains(StringField);
 
@@ -46,9 +46,9 @@ export class TableSeatingPlanner extends CardDef {
   });
 
   @field guests = linksToMany(() => Guest); // reusable people — stay cards
+
   @field tables = containsMany(Table);
   @field fixtures = containsMany(Fixture);
-
   @field floorPlanURL = contains(UrlField);
   @field floorPlanX = contains(NumberField);
   @field floorPlanY = contains(NumberField);
@@ -56,7 +56,6 @@ export class TableSeatingPlanner extends CardDef {
   @field floorPlanHeight = contains(NumberField);
   @field floorPlanOpacity = contains(NumberField);
   @field floorPlanLocked = contains(BooleanField);
-
   @field invitationMessage = contains(TextAreaField);
   @field seatingMessage = contains(TextAreaField);
   @field poster = contains(ImageSourceField);

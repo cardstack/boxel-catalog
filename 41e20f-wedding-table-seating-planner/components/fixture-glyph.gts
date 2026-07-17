@@ -11,20 +11,26 @@ interface Signature {
 }
 
 export default class FixtureGlyph extends Component<Signature> {
+  // Default to currentColor so the glyph follows the theme's accent (set
+  // as `color:` on the svg root below); an explicit @color still wins.
   get color() {
-    return this.args.color || '#c5a35c';
+    return this.args.color || 'currentColor';
   }
+
   get fill() {
     if (this.args.pattern === 'outline') return 'none';
     if (this.args.pattern === 'soft') return this.color;
     return this.color;
   }
+
   get fillOpacity() {
     return this.args.pattern === 'soft' ? '0.45' : '1';
   }
+
   get stroke() {
     return this.color;
   }
+
   get paperLine() {
     return 'rgba(0,0,0,0.32)';
   }
@@ -213,6 +219,7 @@ export default class FixtureGlyph extends Component<Signature> {
         display: block;
         overflow: visible;
         pointer-events: none;
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .fx-glyph path,
       .fx-glyph rect,

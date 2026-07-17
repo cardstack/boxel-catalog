@@ -5,6 +5,7 @@ import { modifier } from 'ember-modifier';
 import { computePosition, offset, flip, shift } from '@floating-ui/dom';
 import { on } from '@ember/modifier';
 import { fn, get } from '@ember/helper';
+import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Component, ImageDef } from 'https://cardstack.com/base/card-api';
 import {
@@ -154,43 +155,42 @@ type DragMode =
   | 'marquee'
   | 'move';
 
-// A linked theme's variables, returned as an inline-style declaration string to
-// apply on the planner root. Empty when no theme is linked — in which case every
-// `var(--token, fallback)` in the scoped styles simply uses its fallback. Only
-// the light `:root` block is read, and it is applied inline on the element, so
-// the theme can never leak onto sibling cards or the surrounding listing.
-function buildThemeVars(theme: any): string {
-  let css = theme?.cssVariables;
-  if (!css) return '';
-  let m = String(css).match(/:root\s*\{([\s\S]*?)\}/);
-  if (!m) return '';
-  return m[1]
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+// Theming: the linked theme (cardInfo.theme) is applied by the standard
+// CardContainer pipeline — a scoped <style> carrying the theme's semantic
+// tokens (--background, --foreground, --primary, --accent, …) plus the
+// planner's --tsp-* extras, with dark-mode variables emitted under a
+// container query. Every rule in these components consumes those tokens
+// via `var(--token, fallback)`, so with no theme the literal fallbacks
+// render and a theme can never leak onto sibling cards.
 
 export class TableSeatingPlannerIsolated extends Component<
   typeof TableSeatingPlanner
 > {
   @tracked view: 'plan' | 'invites' = 'plan';
   @tracked inviteSearch = '';
+
   get isPlan() {
     return this.view === 'plan';
   }
+
   get isInvites() {
     return this.view === 'invites';
   }
+
   setView = (v: 'plan' | 'invites') => {
     this.view = v;
   };
+
   @tracked aiStatus: 'idle' | 'loading' = 'idle';
   @tracked selectedKeys: string[] = [];
   @tracked floorSelected = false;
   @tracked clipboard: ClipItem[] = [];
+
   private pasteSeq = 0;
+
   @tracked marquee: { x: number; y: number; w: number; h: number } | null =
     null;
+
   @tracked marqueeHitKeys: string[] = [];
   @tracked spaceDown = false;
   @tracked search = '';
@@ -208,35 +208,60 @@ export class TableSeatingPlannerIsolated extends Component<
   @tracked hoverGuest: Guest | null = null;
   @tracked hoverX = 0;
   @tracked hoverY = 0;
+
   private dragMode: DragMode = 'none';
+
   private dragId: string | null = null;
+
   private startPX = 0;
+
   private startPY = 0;
+
   private origX = 0;
+
   private origY = 0;
+
   private resizeKind: 'table' | 'fixture' | 'floorplan' = 'fixture';
+
   private resizeEdge = 'se';
+
   private origW = 0;
+
   private origH = 0;
+
   private dragRot = 0;
+
   private dragTarget: Table | Fixture | null = null;
+
   private dragSet: { el: Table | Fixture; ox: number; oy: number }[] = [];
+
   private dragFloor = false;
+
   private floorOX = 0;
+
   private floorOY = 0;
+
   private mStartX = 0;
+
   private mStartY = 0;
+
   private rotEl: Table | Fixture | null = null;
+
   private rotCx = 0;
+
   private rotCy = 0;
+
   private rotStart = 0;
+
   private rotOrig = 0;
+
   @tracked private liveMove: {
     keys: string[];
     dx: number;
     dy: number;
     floor: boolean;
   } | null = null;
+
   @tracked private liveSize: {
     key: string;
     w: number;
@@ -244,9 +269,11 @@ export class TableSeatingPlannerIsolated extends Component<
     dx: number;
     dy: number;
   } | null = null;
+
   @tracked private liveRotate: { key: string; deg: number } | null = null;
   @tracked private liveColor: { key: string; color: string } | null = null;
   @tracked private liveOpacity: number | null = null;
+
   private effX(el: Table | Fixture): number {
     let base = el.x || 0;
     let lm = this.liveMove;
@@ -255,6 +282,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (ls && ls.key === keyOf(el)) base += ls.dx;
     return base;
   }
+
   private effY(el: Table | Fixture): number {
     let base = el.y || 0;
     let lm = this.liveMove;
@@ -263,54 +291,67 @@ export class TableSeatingPlannerIsolated extends Component<
     if (ls && ls.key === keyOf(el)) base += ls.dy;
     return base;
   }
+
   private effW(el: Table | Fixture, fallback: number): number {
     let ls = this.liveSize;
     return ls && ls.key === keyOf(el) ? ls.w : el.width || fallback;
   }
+
   private effH(el: Table | Fixture, fallback: number): number {
     let ls = this.liveSize;
     return ls && ls.key === keyOf(el) ? ls.h : el.height || fallback;
   }
+
   private effRot(el: Table | Fixture): number {
     let lr = this.liveRotate;
     return lr && lr.key === keyOf(el) ? lr.deg : el.rotation || 0;
   }
+
   private effColor(el: Table | Fixture, current: string): string {
     let lc = this.liveColor;
     return lc && lc.key === keyOf(el) ? lc.color : current;
   }
+
   private get effFloorX(): number {
     let base = this.args.model?.floorPlanX || 0;
     let lm = this.liveMove;
     return lm?.floor ? base + lm.dx : base;
   }
+
   private get effFloorY(): number {
     let base = this.args.model?.floorPlanY || 0;
     let lm = this.liveMove;
     return lm?.floor ? base + lm.dy : base;
   }
+
   private get effFloorW(): number {
     let ls = this.liveSize;
     return ls && ls.key === '__floor__'
       ? ls.w
       : this.args.model?.floorPlanWidth || 800;
   }
+
   private get effFloorH(): number {
     let ls = this.liveSize;
     return ls && ls.key === '__floor__'
       ? ls.h
       : this.args.model?.floorPlanHeight || 600;
   }
+
   private undoStack: { u: () => void; r: () => void }[] = [];
+
   private redoStack: { u: () => void; r: () => void }[] = [];
+
   @tracked undoDepth = 0;
   @tracked redoDepth = 0;
+
   private pushUndo(u: () => void, r: () => void) {
     this.undoStack.push({ u, r });
     this.redoStack = [];
     this.undoDepth = this.undoStack.length;
     this.redoDepth = 0;
   }
+
   undo = () => {
     let e = this.undoStack.pop();
     if (!e) return;
@@ -319,6 +360,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.undoDepth = this.undoStack.length;
     this.redoDepth = this.redoStack.length;
   };
+
   redo = () => {
     let e = this.redoStack.pop();
     if (!e) return;
@@ -327,6 +369,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.undoDepth = this.undoStack.length;
     this.redoDepth = this.redoStack.length;
   };
+
   positionTip = modifier((el: HTMLElement, [x, y]: [number, number]) => {
     let reference = {
       getBoundingClientRect: () => ({
@@ -349,6 +392,7 @@ export class TableSeatingPlannerIsolated extends Component<
       el.style.top = `${top}px`;
     });
   });
+
   keyboard = modifier(() => {
     let onKey = (e: KeyboardEvent) => {
       let el = e.target as HTMLElement | null;
@@ -416,12 +460,14 @@ export class TableSeatingPlannerIsolated extends Component<
       window.removeEventListener('keyup', onUp);
     };
   });
+
   private slotsOf(t: Table): number[] {
     let n = (t.seatedGuests ?? []).length;
     let slots = (t.seatSlots ?? []) as number[];
     if (slots.length === n) return [...slots];
     return Array.from({ length: n }, (_, i) => i);
   }
+
   private snapshotSeats(): Map<Table, { guests: Guest[]; slots: number[] }> {
     let m = new Map<Table, { guests: Guest[]; slots: number[] }>();
     for (let t of this.tables)
@@ -431,12 +477,14 @@ export class TableSeatingPlannerIsolated extends Component<
       });
     return m;
   }
+
   private restoreSeats(snap: Map<Table, { guests: Guest[]; slots: number[] }>) {
     for (let [t, s] of snap) {
       t.seatedGuests = [...s.guests];
       t.seatSlots = [...s.slots];
     }
   }
+
   private recordSeatChange(mutate: () => void) {
     let before = this.snapshotSeats();
     mutate();
@@ -446,6 +494,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.restoreSeats(after),
     );
   }
+
   private recordSet<T>(setter: (v: T) => void, before: T, after: T) {
     if (before === after) return;
     setter(after);
@@ -454,18 +503,23 @@ export class TableSeatingPlannerIsolated extends Component<
       () => setter(after),
     );
   }
+
   get plan() {
     return this.args.model;
   }
+
   get guests(): Guest[] {
     return ((this.args.model?.guests ?? []) as Guest[]).filter(Boolean);
   }
+
   get tables(): Table[] {
     return ((this.args.model?.tables ?? []) as Table[]).filter(Boolean);
   }
+
   get fixtures(): Fixture[] {
     return ((this.args.model?.fixtures ?? []) as Fixture[]).filter(Boolean);
   }
+
   private get focalCentre(): { x: number; y: number } {
     let centre = (el: {
       x?: number;
@@ -487,6 +541,7 @@ export class TableSeatingPlannerIsolated extends Component<
       [...this.tables].sort((a, b) => (a.y || 0) - (b.y || 0))[0];
     return front ? centre(front) : { x: 0, y: 0 };
   }
+
   get tableRank(): Map<Table, number> {
     let c = this.focalCentre;
     let distOf = (t: Table) =>
@@ -521,23 +576,30 @@ export class TableSeatingPlannerIsolated extends Component<
     });
     return map;
   }
+
   get fixtureKinds() {
     return FIXTURE_KINDS;
   }
+
   get tableShapes() {
     return TABLE_SHAPES;
   }
+
   get seatingStyles() {
     return SEATING_STYLES;
   }
-  // The linked theme (cardInfo.theme) as inline vars applied on the planner
-  // root — affects this card's subtree only, never the surrounding listing.
-  get themeVars() {
-    return htmlSafe(buildThemeVars((this.args.model as any)?.cardInfo?.theme));
+
+  // With no linked theme the app-level semantic tokens would restyle the
+  // planner arbitrarily; this flags the root so a scoped default palette
+  // (Parisian) applies instead. A linked theme removes the class and wins.
+  get hasLinkedTheme(): boolean {
+    return Boolean((this.args.model as any)?.cardInfo?.theme);
   }
+
   get eventLogoURL(): string {
     return (this.args.model as any)?.eventLogo?.resolvedUrl ?? '';
   }
+
   get eventInitials(): string {
     let t = (this.args.model?.eventTitle ?? '').trim();
     if (!t) return '';
@@ -548,6 +610,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .join('');
     return (letters || t.slice(0, 2)).toUpperCase();
   }
+
   get seatedGuestIds(): Set<string> {
     let s = new Set<string>();
     for (let t of this.tables) {
@@ -557,6 +620,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return s;
   }
+
   get totalGuests() {
     try {
       return this.guests.length;
@@ -564,24 +628,30 @@ export class TableSeatingPlannerIsolated extends Component<
       return 0;
     }
   }
+
   get seatedCount() {
     return this.seatedGuestIds.size;
   }
+
   get pct() {
     let total = this.totalGuests || 1;
     return `${Math.round((this.seatedCount / total) * 100)}%`;
   }
+
   get tableCount() {
     return this.tables.length;
   }
+
   get hasCanvasContent(): boolean {
     return (
       this.tables.length > 0 || this.fixtures.length > 0 || this.hasFloorPlan
     );
   }
+
   get hasEventInfo(): boolean {
     return !!this.args.model?.eventTitle?.trim();
   }
+
   get hostsCount(): number {
     return (this.args.model?.hosts ?? []).length;
   }
@@ -593,17 +663,21 @@ export class TableSeatingPlannerIsolated extends Component<
   // not make it close itself. It closes only on Skip / ✕ / Create tables.
   @tracked wizardDismissed =
     this.hasCanvasContent || this.hasEventInfo || this.guests.length > 0;
+
   get showWizard(): boolean {
     return !this.wizardDismissed;
   }
+
   skipWizard = () => {
     this.wizardDismissed = true;
   };
+
   applyTemplateFromWizard = (index: number) => {
     let tpl = this.templates[index];
     if (tpl) this.applyTemplate(tpl);
     this.wizardDismissed = true;
   };
+
   get tableVMs(): TableVM[] {
     let rankMap = this.tableRank;
     return this.tables.map((t) => {
@@ -645,7 +719,7 @@ export class TableSeatingPlannerIsolated extends Component<
           photoURL: (g as any)?.photoURL || '',
           color: g?.category
             ? categoryColor(g.category)
-            : 'var(--acc, #c5a35c)',
+            : 'var(--tsp-accent, var(--accent, #c5a35c))',
           isDrop: dropping && this.dropSeatIndex === i,
           guest: g ?? null,
         };
@@ -679,6 +753,7 @@ export class TableSeatingPlannerIsolated extends Component<
       };
     });
   }
+
   get fixtureVMs(): FixtureVM[] {
     return this.fixtures.map((f) => {
       let w = this.effW(f, 100);
@@ -698,47 +773,59 @@ export class TableSeatingPlannerIsolated extends Component<
       };
     });
   }
+
   get worldStyle() {
     return `position:absolute;inset:0;transform-origin:0 0;transform:translate(${this.panX}px,${this.panY}px) scale(${this.zoom});`;
   }
+
   get zoomPct() {
     return `${Math.round(this.zoom * 100)}%`;
   }
+
   get zoomAtMin() {
     return this.zoom <= 0.4;
   }
+
   get zoomAtMax() {
     return this.zoom >= 2.5;
   }
+
   get selectedTable(): Table | null {
     if (this.selectedKeys.length !== 1) return null;
     return this.tables.find((t) => keyOf(t) === this.selectedKeys[0]) ?? null;
   }
+
   get selectedFixture(): Fixture | null {
     if (this.selectedKeys.length !== 1) return null;
     return this.fixtures.find((f) => keyOf(f) === this.selectedKeys[0]) ?? null;
   }
+
   get selectedTables(): Table[] {
     return this.tables.filter((t) => this.isSelected(keyOf(t)));
   }
+
   get selectedFixtures(): Fixture[] {
     return this.fixtures.filter((f) => this.isSelected(keyOf(f)));
   }
+
   get selectionHasTables() {
     return this.selectedTables.length > 0;
   }
+
   get selectionShape(): string {
     let tables = this.selectedTables;
     if (!tables.length) return '';
     let first = tables[0].shape;
     return tables.every((t) => t.shape === first) ? (first ?? '') : '';
   }
+
   get selectedTableVM(): TableVM | null {
     let t = this.selectedTable;
     if (!t) return null;
     let tk = keyOf(t);
     return this.tableVMs.find((vm) => vm.id === tk) ?? null;
   }
+
   get inspTableBoxStyle(): ReturnType<typeof htmlSafe> {
     let t = this.selectedTable;
     if (!t) return htmlSafe('');
@@ -752,6 +839,7 @@ export class TableSeatingPlannerIsolated extends Component<
       )}px;transform:rotate(${rot}deg)`,
     );
   }
+
   private inspTableScale(t: Table, w: number, h: number): number {
     let scale = 190 / Math.max(w, h);
     let pitch = 40;
@@ -780,6 +868,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return scale;
   }
+
   get inspTableReserveStyle(): ReturnType<typeof htmlSafe> {
     let t = this.selectedTable;
     if (!t) return htmlSafe('');
@@ -793,6 +882,7 @@ export class TableSeatingPlannerIsolated extends Component<
       `width:${Math.round(bw) + 56}px;height:${Math.round(bh) + 56}px`,
     );
   }
+
   get catChips() {
     return GUEST_CATEGORIES.filter((c) =>
       this.guests.some((g) => g.category === c.value),
@@ -803,9 +893,11 @@ export class TableSeatingPlannerIsolated extends Component<
       countSeated: this.guests.filter((g) => g.category === c.value).length,
     }));
   }
+
   onSearch = (e: Event) => {
     this.search = (e.target as HTMLInputElement).value;
   };
+
   private commitEventTitle = debounce((v: string) => {
     if (!this.args.model) {
       return;
@@ -815,18 +907,23 @@ export class TableSeatingPlannerIsolated extends Component<
       this.args.model.cardInfo.name = v;
     }
   }, 300);
+
   private commitVenue = debounce((v: string) => {
     this.args.model.venue = v;
   }, 300);
+
   private commitTableName = debounce((t: Table, v: string) => {
     t.name = v;
   }, 300);
+
   private commitFixtureLabel = debounce((f: Fixture, v: string) => {
     f.label = v;
   }, 300);
+
   private commitInviteMessage = debounce((v: string) => {
     this.args.model.invitationMessage = v;
   }, 300);
+
   override willDestroy() {
     this.commitEventTitle.flush();
     this.commitVenue.flush();
@@ -836,44 +933,58 @@ export class TableSeatingPlannerIsolated extends Component<
     this.commitFloorUnderlay.flush();
     super.willDestroy();
   }
+
   setEventTitle = (e: Event) => {
     this.commitEventTitle((e.target as HTMLInputElement).value);
   };
+
   setVenue = (e: Event) => {
     this.commitVenue((e.target as HTMLInputElement).value);
   };
+
   setCat = (id: string | null) => {
     this.activeCatId = id;
   };
+
   isSelected = (key: string) => this.selectedKeys.includes(key);
+
   private selectOnly(key: string) {
     this.selectedKeys = [key];
     this.floorSelected = false;
   }
+
   toggleSel = (key: string) => {
     this.selectedKeys = this.isSelected(key)
       ? this.selectedKeys.filter((k) => k !== key)
       : [...this.selectedKeys, key];
   };
+
   selectTable = (id: string) => this.selectOnly(id);
+
   selectFixture = (id: string) => this.selectOnly(id);
+
   deselect = () => {
     this.selectedKeys = [];
     this.floorSelected = false;
     this.popoverTableKey = null;
   };
+
   get multiSelected() {
     return this.selectedKeys.length > 1;
   }
+
   get selCount() {
     return this.selectedKeys.length + (this.floorSelected ? 1 : 0);
   }
+
   get selectedGeometry(): Array<Table | Fixture> {
     return [...this.selectedTables, ...this.selectedFixtures];
   }
+
   get canAlign(): boolean {
     return this.selectedGeometry.length >= 2;
   }
+
   alignSelected = (edge: string) => {
     let els = this.selectedGeometry;
     if (els.length < 2) return;
@@ -907,9 +1018,11 @@ export class TableSeatingPlannerIsolated extends Component<
       }
     }, apply);
   };
+
   get canDistribute(): boolean {
     return this.selectedGeometry.length >= 3;
   }
+
   distributeSelected = (axis: 'h' | 'v') => {
     let els = this.selectedGeometry;
     if (els.length < 3) return;
@@ -939,29 +1052,36 @@ export class TableSeatingPlannerIsolated extends Component<
       }
     }, apply);
   };
+
   @tracked popoverTableKey: string | null = null;
+
   get tablePopoverAnchor() {
     return `[data-tedit='${this.popoverTableKey}']`;
   }
+
   openTablePopover = (key: string, e: PointerEvent) => {
     e.stopPropagation();
     e.preventDefault();
     this.selectTable(key);
     this.popoverTableKey = key;
   };
+
   closeTablePopover = () => {
     this.popoverTableKey = null;
   };
+
   // Right-click a fixture to select it (opens its inspector editor).
   openFixtureEdit = (id: string, e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     this.selectOnly(id);
   };
+
   popoverDuplicate = () => {
     this.duplicateTable();
     this.closeTablePopover();
   };
+
   popoverDelete = () => {
     this.requestDelete(
       'Delete this table?',
@@ -972,22 +1092,27 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   @tracked pendingDelete: {
     title: string;
     detail: string;
     run: () => void;
   } | null = null;
+
   requestDelete = (title: string, detail: string, run: () => void) => {
     this.pendingDelete = { title, detail, run };
   };
+
   cancelDelete = () => {
     this.pendingDelete = null;
   };
+
   confirmDelete = () => {
     let p = this.pendingDelete;
     this.pendingDelete = null;
     p?.run();
   };
+
   confirmDeleteTable = () => {
     this.requestDelete(
       'Delete this table?',
@@ -995,6 +1120,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.removeTable(),
     );
   };
+
   confirmDeleteFixture = () => {
     this.requestDelete(
       'Delete this element?',
@@ -1002,6 +1128,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.removeFixture(),
     );
   };
+
   confirmDeleteSelected = () => {
     this.requestDelete(
       `Delete ${this.selCount} selected?`,
@@ -1009,6 +1136,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.deleteSelected(),
     );
   };
+
   confirmRemoveGuest = (g: Guest) => {
     this.requestDelete(
       'Remove this guest?',
@@ -1016,6 +1144,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.removeGuest(g),
     );
   };
+
   unlockElement = (kind: 'table' | 'fixture', id: string) => {
     let el =
       kind === 'table'
@@ -1024,9 +1153,11 @@ export class TableSeatingPlannerIsolated extends Component<
     if (!el || !el.locked) return;
     this.recordSet((v) => (el!.locked = v), true, false);
   };
+
   stopProp = (e: Event) => {
     e.stopPropagation();
   };
+
   scrollToolbar = (evt: Event) => {
     let e = evt as WheelEvent;
     let el = e.currentTarget as HTMLElement;
@@ -1036,12 +1167,14 @@ export class TableSeatingPlannerIsolated extends Component<
     let delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     el.scrollLeft += delta;
   };
+
   private worldCenter() {
     return {
       x: (300 - this.panX) / this.zoom,
       y: (220 - this.panY) / this.zoom,
     };
   }
+
   addSeat = () => {
     this.addMenuOpen = false;
     let { x, y } = this.worldCenter();
@@ -1070,6 +1203,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   addSection = () => {
     this.addMenuOpen = false;
     let { x, y } = this.worldCenter();
@@ -1103,6 +1237,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   addTableShape = (shape: string) => {
     this.addMenuOpen = false;
     let { x, y } = this.worldCenter();
@@ -1153,36 +1288,46 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   @tracked addBranch: string | null = null;
+
   private branchTimer: ReturnType<typeof setTimeout> | null = null;
+
   openBranch = (name: string) => {
     if (this.branchTimer) clearTimeout(this.branchTimer);
     this.addBranch = name;
   };
+
   scheduleCloseBranch = () => {
     if (this.branchTimer) clearTimeout(this.branchTimer);
     this.branchTimer = setTimeout(() => (this.addBranch = null), 220);
   };
+
   toggleAddMenu = () => {
     this.addMenuOpen = !this.addMenuOpen;
     this.addBranch = null;
     this.templateMenuOpen = false;
   };
+
   closeAddMenu = () => {
     this.addMenuOpen = false;
     this.addBranch = null;
   };
+
   @tracked templateMenuOpen = false;
+
   toggleTemplateMenu = () => {
     this.templateMenuOpen = !this.templateMenuOpen;
     this.addMenuOpen = false;
     this.addBranch = null;
     if (this.templateMenuOpen) this.loadTemplates();
   };
+
   closeTemplateMenu = () => {
     this.templateMenuOpen = false;
     this.previewTplKey = null;
   };
+
   addFixture = (kind: string) => {
     this.addMenuOpen = false;
     let { x, y } = this.worldCenter();
@@ -1207,6 +1352,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.selectFixture(keyOf(f));
     this.recordAddFixture(f);
   };
+
   private recordAddFixture(f: Fixture) {
     this.pushUndo(
       () => {
@@ -1218,10 +1364,12 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   }
+
   renameTable = (e: Event) => {
     let t = this.selectedTable;
     if (t) this.commitTableName(t, (e.target as HTMLInputElement).value);
   };
+
   setShape = (shape: string) => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1279,6 +1427,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   private bumpSection = (dRows: number, dCols: number) => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1300,18 +1449,26 @@ export class TableSeatingPlannerIsolated extends Component<
       t!.seatCount = bn;
     }, apply);
   };
+
   incRows = () => this.bumpSection(1, 0);
+
   decRows = () => this.bumpSection(-1, 0);
+
   incCols = () => this.bumpSection(0, 1);
+
   decCols = () => this.bumpSection(0, -1);
+
   setFacing = (deg: number) => {
     let t = this.selectedTable;
     if (!t) return;
     this.recordSet((v) => (t!.rotation = v), t.rotation || 0, deg);
   };
+
   facingIs = (deg: number): boolean =>
     (this.selectedTable?.rotation || 0) === deg;
+
   seatOrders = SEAT_ORDERS;
+
   setSeatOrder = (order: SeatOrder) => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1321,19 +1478,24 @@ export class TableSeatingPlannerIsolated extends Component<
       order,
     );
   };
+
   seatOrderIs = (order: SeatOrder): boolean =>
     ((this.selectedTable?.seatOrder as SeatOrder) || 'lr-tb') === order;
+
   setSeatingStyle = (style: string) => {
     let t = this.selectedTable;
     if (!t) return;
     this.recordSet((v) => (t!.seatingStyle = v), t.seatingStyle, style);
   };
+
   seatingStyleIs = (style: string): boolean =>
     (this.selectedTable?.seatingStyle || 'around') === style;
+
   get showSeatingStyle(): boolean {
     let s = this.selectedTable?.shape;
     return s === 'rect' || s === 'oval';
   }
+
   setSelectionColor = (color: string) => {
     let tables = this.selectedTables;
     let fixtures = this.selectedFixtures;
@@ -1350,15 +1512,18 @@ export class TableSeatingPlannerIsolated extends Component<
       fixtures.forEach((f, i) => (f.color = prevF[i]));
     }, apply);
   };
+
   selectionColorCommit = (e: Event) => {
     this.setSelectionColor((e.target as HTMLInputElement).value);
   };
+
   get selectionColorValue(): string {
     let t = this.selectedTables[0];
     if (t?.themeColor) return t.themeColor;
     let f = this.selectedFixtures[0];
     return f?.color || '#c5a35c';
   }
+
   clearSelectionSeats = () => {
     let tables = this.selectedTables.filter(
       (t) => (t.seatedGuests ?? []).length,
@@ -1371,9 +1536,11 @@ export class TableSeatingPlannerIsolated extends Component<
       });
     });
   };
+
   get selectionHasSeated(): boolean {
     return this.selectedTables.some((t) => (t.seatedGuests ?? []).length > 0);
   }
+
   setSelectionShape = (shape: string) => {
     let tables = this.selectedTables;
     if (!tables.length) return;
@@ -1401,12 +1568,14 @@ export class TableSeatingPlannerIsolated extends Component<
       });
     }, apply);
   };
+
   incSeats = () => {
     let t = this.selectedTable;
     if (!t) return;
     let b = t.seatCount || 0;
     this.recordSet((v) => (t!.seatCount = v), b, b + 1);
   };
+
   decSeats = () => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1414,6 +1583,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (b <= 0) return;
     this.recordSet((v) => (t!.seatCount = v), b, b - 1);
   };
+
   seatsInput = (e: Event) => {
     let t = this.selectedTable;
     let el = e.target as HTMLInputElement;
@@ -1424,8 +1594,11 @@ export class TableSeatingPlannerIsolated extends Component<
     el.value = String(next);
     if (next !== b) this.recordSet((v) => (t!.seatCount = v), b, next);
   };
+
   rowsInput = (e: Event) => this.gridInput(e, 'rows');
+
   colsInput = (e: Event) => this.gridInput(e, 'cols');
+
   private gridInput = (e: Event, axis: 'rows' | 'cols') => {
     let t = this.selectedTable;
     let el = e.target as HTMLInputElement;
@@ -1441,11 +1614,13 @@ export class TableSeatingPlannerIsolated extends Component<
       axis === 'cols' ? next - cur : 0,
     );
   };
+
   toggleVip = () => {
     let t = this.selectedTable;
     if (!t) return;
     this.recordSet((v) => (t!.vip = v), !!t.vip, !t.vip);
   };
+
   setTableRank = (raw: number) => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1454,39 +1629,50 @@ export class TableSeatingPlannerIsolated extends Component<
       Number.isFinite(raw) && raw >= 1 ? Math.min(Math.floor(raw), n) : 0;
     this.recordSet((v) => (t!.rank = v), t.rank || 0, next);
   };
+
   pinTableRankInput = (e: Event) => {
     let val = parseInt((e.target as HTMLInputElement).value, 10);
     this.setTableRank(val);
   };
+
   clearTableRank = () => this.setTableRank(0);
+
   get selectedTablePinned(): boolean {
     let r = this.selectedTable?.rank;
     return !!r && r >= 1;
   }
+
   get selectedTableRank(): number {
     let t = this.selectedTable;
     return t ? (this.tableRank.get(t) ?? 0) : 0;
   }
+
   get hasFloorPlan(): boolean {
     return !!this.args.model?.floorPlanURL;
   }
+
   @tracked private floorImgBroken = false;
   @tracked private floorImgRetry = 0;
+
   private get floorPlanSrc(): string | undefined {
     let url = this.args.model?.floorPlanURL;
     if (!url || !this.floorImgRetry) return url;
     return `${url}${url.includes('?') ? '&' : '?'}retry=${this.floorImgRetry}`;
   }
+
   onFloorImgError = () => {
     this.floorImgBroken = true;
   };
+
   onFloorImgLoad = () => {
     this.floorImgBroken = false;
   };
+
   refreshFloorImg = () => {
     this.floorImgBroken = false;
     this.floorImgRetry++;
   };
+
   private screenBox(t: Table): {
     cx: number;
     cy: number;
@@ -1503,6 +1689,7 @@ export class TableSeatingPlannerIsolated extends Component<
       h: rot ? w : h,
     };
   }
+
   private sectionsNeedFit(): boolean {
     let m = this.args.model;
     let px = m?.floorPlanX || 0;
@@ -1533,6 +1720,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
     return false;
   }
+
   private captureSections(secs: Table[]) {
     return secs.map((t) => ({
       t,
@@ -1547,6 +1735,7 @@ export class TableSeatingPlannerIsolated extends Component<
       slots: this.slotsOf(t),
     }));
   }
+
   private restoreSections(
     snap: ReturnType<TableSeatingPlannerIsolated['captureSections']>,
   ) {
@@ -1562,6 +1751,7 @@ export class TableSeatingPlannerIsolated extends Component<
       s.t.seatSlots = [...s.slots];
     }
   }
+
   private layoutSeatingSections(silent = false): boolean {
     let m = this.args.model;
     let px = m?.floorPlanX || 0;
@@ -1663,6 +1853,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (!silent) this.showToast('Fitted seating to floor plan');
     return true;
   }
+
   grabRotate = (kind: 'table' | 'fixture', id: string, evt: Event) => {
     let e = evt as PointerEvent;
     e.stopPropagation();
@@ -1688,14 +1879,17 @@ export class TableSeatingPlannerIsolated extends Component<
     this.rotOrig = m.rotation || 0;
     this.attachDragListeners();
   };
+
   themeSwatches = [
     { value: '#141b33', label: 'Navy' },
     { value: '#c5a35c', label: 'Gold' },
     { value: '#fdfaf2', label: 'Cream' },
   ];
+
   fixtureColorIs = (v: string): boolean =>
     (this.selectedFixture?.color || '#c5a35c').toLowerCase() ===
     v.toLowerCase();
+
   clearSeats = () => {
     let t = this.selectedTable;
     if (t && (t.seatedGuests ?? []).length)
@@ -1704,6 +1898,7 @@ export class TableSeatingPlannerIsolated extends Component<
         t!.seatSlots = [];
       });
   };
+
   duplicateTable = () => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1738,6 +1933,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   removeTable = () => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1755,11 +1951,13 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   setFxColor = (color: string) => {
     let f = this.selectedFixture;
     if (!f) return;
     this.recordSet((v) => (f!.color = v), f.color, color);
   };
+
   fxColorInput = (e: Event) => {
     let f = this.selectedFixture;
     if (!f) return;
@@ -1768,14 +1966,17 @@ export class TableSeatingPlannerIsolated extends Component<
       color: (e.target as HTMLInputElement).value,
     };
   };
+
   fxColorCommit = (e: Event) => {
     this.liveColor = null;
     this.setFxColor((e.target as HTMLInputElement).value);
   };
+
   get selectedFxFill() {
     let f = this.selectedFixture;
     return f ? this.effColor(f, f.color || '#c5a35c') : '#c5a35c';
   }
+
   get selectedFxArtStyle() {
     let f = this.selectedFixture;
     let w = f ? Math.max(1, this.effW(f, f.width || 100)) : 1;
@@ -1786,10 +1987,12 @@ export class TableSeatingPlannerIsolated extends Component<
         : `aspect-ratio: ${w} / ${h}; height: 220px;`,
     );
   }
+
   renameFixture = (e: Event) => {
     let f = this.selectedFixture;
     if (f) this.commitFixtureLabel(f, (e.target as HTMLInputElement).value);
   };
+
   duplicateFixture = () => {
     let f = this.selectedFixture;
     if (!f) return;
@@ -1809,6 +2012,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.selectFixture(keyOf(copy));
     this.recordAddFixture(copy);
   };
+
   removeFixture = () => {
     let f = this.selectedFixture;
     if (!f) return;
@@ -1826,22 +2030,28 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   zoomIn = () => {
     this.userMovedView = true;
     this.zoom = Math.min(2.5, this.zoom + 0.1);
   };
+
   zoomOut = () => {
     this.userMovedView = true;
     this.zoom = Math.max(0.4, this.zoom - 0.1);
   };
+
   resetZoom = () => {
     this.userMovedView = true;
     this.zoom = 1;
     this.panX = 60;
     this.panY = 40;
   };
+
   private canvasEl: HTMLElement | null = null;
+
   private userMovedView = false;
+
   registerCanvas = modifier((el: Element) => {
     this.canvasEl = el as HTMLElement;
     let canvas = el as HTMLElement;
@@ -1869,10 +2079,12 @@ export class TableSeatingPlannerIsolated extends Component<
       ro.disconnect();
     };
   });
+
   fitView = () => {
     this.userMovedView = true;
     this.applyFit();
   };
+
   private applyFit = () => {
     let el = this.canvasEl;
     let items: Array<Table | Fixture> = [...this.tables, ...this.fixtures];
@@ -1917,6 +2129,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.panX = cw / 2 - cx * z;
     this.panY = ch / 2 - cy * z;
   };
+
   onWheel = (evt: Event) => {
     let e = evt as WheelEvent;
     e.preventDefault();
@@ -1924,6 +2137,7 @@ export class TableSeatingPlannerIsolated extends Component<
     let next = this.zoom - Math.sign(e.deltaY) * 0.08;
     this.zoom = Math.min(2.5, Math.max(0.4, next));
   };
+
   onCanvasDown = (evt: Event) => {
     let e = evt as PointerEvent;
     let target = e.target as HTMLElement;
@@ -1951,6 +2165,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.startPY = e.clientY;
     this.attachDragListeners();
   };
+
   private beginMove(e: PointerEvent) {
     this.dragMode = 'move';
     this.startPX = e.clientX;
@@ -1967,6 +2182,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.floorOY = this.args.model?.floorPlanY || 0;
     this.attachDragListeners();
   }
+
   grabTable = (id: string, e: PointerEvent) => {
     e.stopPropagation();
     let t = this.tables.find((x) => keyOf(x) === id);
@@ -1979,6 +2195,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (t.locked) return;
     this.beginMove(e);
   };
+
   grabFixture = (id: string, e: PointerEvent) => {
     e.stopPropagation();
     let f = this.fixtures.find((x) => keyOf(x) === id);
@@ -1991,6 +2208,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (f.locked) return;
     this.beginMove(e);
   };
+
   grabResize = (
     kind: 'table' | 'fixture',
     id: string,
@@ -2019,14 +2237,17 @@ export class TableSeatingPlannerIsolated extends Component<
     this.dragRot = m.rotation || 0;
     this.attachDragListeners();
   };
+
   private attachDragListeners() {
     document.addEventListener('pointermove', this.onDragMove);
     document.addEventListener('pointerup', this.onDragUp);
   }
+
   private detachDragListeners() {
     document.removeEventListener('pointermove', this.onDragMove);
     document.removeEventListener('pointerup', this.onDragUp);
   }
+
   onDragMove = (e: PointerEvent) => {
     if (this.dragMode === 'pan') {
       this.panX = this.origX + (e.clientX - this.startPX);
@@ -2123,6 +2344,7 @@ export class TableSeatingPlannerIsolated extends Component<
       return;
     }
   };
+
   onDragUp = () => {
     let mode = this.dragMode;
     if (mode === 'move') {
@@ -2273,6 +2495,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.liveRotate = null;
     this.detachDragListeners();
   };
+
   private hitsInMarquee(): string[] {
     let mq = this.marquee;
     if (!mq) return [];
@@ -2291,12 +2514,14 @@ export class TableSeatingPlannerIsolated extends Component<
         keys.push(keyOf(f));
     return keys;
   }
+
   private commitMarquee() {
     let mq = this.marquee;
     if (!mq || (mq.w < 4 && mq.h < 4)) return;
     let keys = new Set([...this.selectedKeys, ...this.hitsInMarquee()]);
     this.selectedKeys = [...keys];
   }
+
   deleteSelected = () => {
     if (!this.selCount) return;
     let m = this.args.model;
@@ -2325,6 +2550,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.deselect();
     this.showToast('Deleted');
   };
+
   nudgeSelected = (dx: number, dy: number) => {
     let tabs = this.tables.filter(
       (t) => this.isSelected(keyOf(t)) && !t.locked,
@@ -2354,6 +2580,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => apply(dx, dy),
     );
   };
+
   private snapshotSelection(): ClipItem[] {
     let items: ClipItem[] = [];
     for (let t of this.selectedTables) {
@@ -2397,6 +2624,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return items;
   }
+
   private pasteItems = (items: ClipItem[], off: number) => {
     if (!items.length) return;
     let newTables: Table[] = [];
@@ -2442,6 +2670,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   copySelection = (): boolean => {
     let items = this.snapshotSelection();
     if (!items.length) return false;
@@ -2450,18 +2679,22 @@ export class TableSeatingPlannerIsolated extends Component<
     this.showToast(`Copied ${items.length}`);
     return true;
   };
+
   cutSelection = () => {
     if (this.copySelection()) this.deleteSelected();
   };
+
   pasteClipboard = () => {
     if (!this.clipboard.length) return;
     this.pasteSeq += 1;
     this.pasteItems(this.clipboard, 40 * this.pasteSeq);
     this.showToast('Pasted');
   };
+
   duplicateSelection = () => {
     this.pasteItems(this.snapshotSelection(), 40);
   };
+
   get marqueeStyle() {
     let mq = this.marquee;
     if (!mq) return htmlSafe('display:none');
@@ -2469,6 +2702,7 @@ export class TableSeatingPlannerIsolated extends Component<
       `left:${mq.x}px;top:${mq.y}px;width:${mq.w}px;height:${mq.h}px`,
     );
   }
+
   resolveGuest = async (id: string): Promise<Guest | null> => {
     try {
       let g = await (this.args as any).context?.store?.get(id);
@@ -2477,6 +2711,7 @@ export class TableSeatingPlannerIsolated extends Component<
       return null;
     }
   };
+
   onGuestMove = (e: PointerEvent) => {
     this.ghostX = e.clientX;
     this.ghostY = e.clientY;
@@ -2496,6 +2731,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.dropSeatIndex = -1;
     }
   };
+
   onGuestUp = async (e: PointerEvent) => {
     let g = this.draggingGuest;
     let id = this.draggingGuestId;
@@ -2521,6 +2757,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     this.assignGuest(g, tableId, seatIndex);
   };
+
   assignGuest = (guest: Guest, tableId: string, seatIndex: number) => {
     let target = this.tables.find((t) => keyOf(t) === tableId);
     if (!target) return;
@@ -2547,6 +2784,7 @@ export class TableSeatingPlannerIsolated extends Component<
       target!.seatSlots = slots;
     });
   };
+
   grabSeatedGuest = (guest: Guest | null, e: PointerEvent) => {
     if (!guest) return;
     e.preventDefault();
@@ -2559,21 +2797,25 @@ export class TableSeatingPlannerIsolated extends Component<
     document.addEventListener('pointermove', this.onGuestMove);
     document.addEventListener('pointerup', this.onGuestUp);
   };
+
   showSeatInfo = (guest: Guest | null, e: MouseEvent) => {
     if (!guest || this.draggingGuest) return;
     this.hoverGuest = guest;
     this.hoverX = e.clientX;
     this.hoverY = e.clientY;
   };
+
   moveSeatInfo = (evt: Event) => {
     let e = evt as MouseEvent;
     if (!this.hoverGuest) return;
     this.hoverX = e.clientX;
     this.hoverY = e.clientY;
   };
+
   hideSeatInfo = () => {
     this.hoverGuest = null;
   };
+
   freeSeat = (tableId: string, seatIndex: number) => {
     let t = this.tables.find((x) => keyOf(x) === tableId);
     if (!t) return;
@@ -2587,16 +2829,21 @@ export class TableSeatingPlannerIsolated extends Component<
       });
     }
   };
+
   stopPointer = (e: Event) => {
     e.stopPropagation();
   };
+
   seatClick = (tableId: string, seatIndex: number, e: Event) => {
     e.stopPropagation();
     this.freeSeat(tableId, seatIndex);
   };
+
   @tracked toast: string | null = null;
   @tracked toastAction: { label: string; run: () => void } | null = null;
+
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
   private showToast(
     msg: string,
     action?: { label: string; run: () => void },
@@ -2607,22 +2854,26 @@ export class TableSeatingPlannerIsolated extends Component<
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => this.dismissToast(), duration);
   }
+
   dismissToast = () => {
     this.toast = null;
     this.toastAction = null;
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = null;
   };
+
   runToastAction = () => {
     let a = this.toastAction;
     this.dismissToast();
     a?.run();
   };
+
   get floorPlanOpacity() {
     if (this.liveOpacity != null) return this.liveOpacity;
     let o = this.args.model?.floorPlanOpacity;
     return o == null ? 45 : o;
   }
+
   get floorPlanStyle() {
     return htmlSafe(
       `position:absolute;left:0;top:0;transform:translate(${this.effFloorX}px,${this.effFloorY}px);width:${this.effFloorW}px;height:${this.effFloorH}px;opacity:${
@@ -2630,45 +2881,56 @@ export class TableSeatingPlannerIsolated extends Component<
       };`,
     );
   }
+
   get floorFrameStyle() {
     return htmlSafe(
       `position:absolute;left:0;top:0;transform:translate(${this.effFloorX}px,${this.effFloorY}px);width:${this.effFloorW}px;height:${this.effFloorH}px;`,
     );
   }
+
   selectFloorForEdit = () => {
     this.selectedKeys = [];
     this.floorSelected = true;
     this.floorDeleteArmed = false;
   };
+
   setFloorOpacity = (e: Event) => {
     this.liveOpacity = Number((e.target as HTMLInputElement).value);
   };
+
   commitFloorOpacity = (e: Event) => {
     this.liveOpacity = null;
     this.args.model.floorPlanOpacity = Number(
       (e.target as HTMLInputElement).value,
     );
   };
+
   removeFloorPlan = () => {
     let m = this.args.model;
     m.floorPlanURL = undefined;
     this.showToast('Floor plan removed');
   };
+
   @tracked floorDeleteArmed = false;
+
   armFloorDelete = () => {
     this.floorDeleteArmed = true;
   };
+
   cancelFloorDelete = () => {
     this.floorDeleteArmed = false;
   };
+
   confirmRemoveFloorPlan = () => {
     this.floorDeleteArmed = false;
     this.removeFloorPlan();
   };
+
   replaceFloorPlan = () => {
     this.floorDeleteArmed = false;
     this.openFloorLibrary();
   };
+
   grabFloorPlan = (evt: Event) => {
     let e = evt as PointerEvent;
     e.stopPropagation();
@@ -2676,7 +2938,9 @@ export class TableSeatingPlannerIsolated extends Component<
     this.floorSelected = true;
     this.beginMove(e);
   };
+
   @tracked aiPlanBusy = false;
+
   private validateFloorFile(
     file: File,
   ): { ok: true; isPdf: boolean } | { ok: false; msg: string } {
@@ -2701,6 +2965,7 @@ export class TableSeatingPlannerIsolated extends Component<
       };
     return { ok: true, isPdf };
   }
+
   private async readPlanFile(file: File, isPdf: boolean) {
     let base64 = '';
     let contentType = 'image/png';
@@ -2718,6 +2983,7 @@ export class TableSeatingPlannerIsolated extends Component<
     let dims = await imageDims(dataUrl);
     return { base64, contentType, dataUrl, dims };
   }
+
   private commitFloorUnderlay = debounce(
     (url: string, natW: number, natH: number) => {
       this.placeFloorUnderlay(url, natW, natH);
@@ -2725,6 +2991,7 @@ export class TableSeatingPlannerIsolated extends Component<
     },
     300,
   );
+
   private placeFloorUnderlay(url: string, natW: number, natH: number) {
     let targetW = 860;
     let scale = targetW / (natW || targetW);
@@ -2740,6 +3007,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.args.model.floorPlanOpacity = 45;
     return { x: rx, y: ry, w: targetW, h: targetH };
   }
+
   private async urlToDataUrl(url: string): Promise<string> {
     let resp = await fetch(url);
     if (!resp.ok) throw new Error(`Could not load image (${resp.status})`);
@@ -2752,6 +3020,7 @@ export class TableSeatingPlannerIsolated extends Component<
       fr.readAsDataURL(blob);
     });
   }
+
   private buildLayoutFromImage = async (
     ctx: any,
     dataUrl: string,
@@ -2921,31 +3190,40 @@ export class TableSeatingPlannerIsolated extends Component<
     this.applyLayout(tables, fixtures, 'AI floor-plan');
     if (this.sectionsNeedFit()) this.layoutSeatingSections(true);
   };
+
   @tracked inspectorCollapsed = true;
+
   toggleInspector = () => {
     this.inspectorCollapsed = !this.inspectorCollapsed;
   };
+
   private get inspectorBeckons(): boolean {
     return this.inspectorCollapsed;
   }
+
   private get hasInspectorSelection(): boolean {
-    return !!this.selectedTable || !!this.selectedFixture;
+    return !!this.selectedTable || !!this.selectedFixture || this.multiSelected;
   }
+
   @tracked showFloorLibrary = false;
   @tracked fpImporting = false;
+
   openFloorLibrary = () => {
     this.addMenuOpen = false;
     this.showFloorLibrary = true;
   };
+
   closeFloorLibrary = () => {
     this.showFloorLibrary = false;
   };
+
   get seatedGuestSet(): Set<Guest> {
     let s = new Set<Guest>();
     for (let t of this.tables)
       for (let g of t.seatedGuests ?? []) if (g) s.add(g as Guest);
     return s;
   }
+
   railShowsGuest = (g: Guest | undefined): boolean => {
     if (!g || this.seatedGuestSet.has(g)) return false;
     let q = this.search.trim().toLowerCase();
@@ -2953,6 +3231,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (this.activeCatId && g.category !== this.activeCatId) return false;
     return true;
   };
+
   grabGuest = (g: Guest, e: PointerEvent) => {
     e.preventDefault();
     this.draggingGuest = g;
@@ -2962,9 +3241,11 @@ export class TableSeatingPlannerIsolated extends Component<
     document.addEventListener('pointermove', this.onGuestMove);
     document.addEventListener('pointerup', this.onGuestUp);
   };
+
   get buildDisabled() {
     return this.aiPlanBusy || !this.args.model?.floorPlanURL;
   }
+
   importFloorPlanCard = async (e: Event) => {
     let input = e.target as HTMLInputElement;
     let file = input.files?.[0];
@@ -3019,6 +3300,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.fpImporting = false;
     input.value = '';
   };
+
   linkFloorPlan = async () => {
     try {
       let fileType = identifyCard(ImageDef);
@@ -3045,6 +3327,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.showToast(`Could not link floor plan: ${err?.message ?? 'error'}`);
     }
   };
+
   buildFromFloorPlan = async () => {
     let ctx = (this.args as any).context?.commandContext;
     if (!ctx) {
@@ -3076,6 +3359,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.showToast(`AI failed: ${msg}`);
     }
   };
+
   grabFloorResize = (evt: Event) => {
     let e = evt as PointerEvent;
     e.stopPropagation();
@@ -3091,38 +3375,47 @@ export class TableSeatingPlannerIsolated extends Component<
     this.dragRot = 0;
     this.attachDragListeners();
   };
+
   private nextZ(): number {
     let zs = [...this.tables, ...this.fixtures].map((e) => e.z || 0);
     return (zs.length ? Math.max(...zs) : 0) + 1;
   }
+
   private minZ(): number {
     let zs = [...this.tables, ...this.fixtures].map((e) => e.z || 0);
     return (zs.length ? Math.min(...zs) : 0) - 1;
   }
+
   bringTableFront = () => {
     let t = this.selectedTable;
     if (t) this.recordSet((v) => (t!.z = v), t.z || 0, this.nextZ());
   };
+
   sendTableBack = () => {
     let t = this.selectedTable;
     if (t) this.recordSet((v) => (t!.z = v), t.z || 0, this.minZ());
   };
+
   bringFxFront = () => {
     let f = this.selectedFixture;
     if (f) this.recordSet((v) => (f!.z = v), f.z || 0, this.nextZ());
   };
+
   sendFxBack = () => {
     let f = this.selectedFixture;
     if (f) this.recordSet((v) => (f!.z = v), f.z || 0, this.minZ());
   };
+
   toggleTableLock = () => {
     let t = this.selectedTable;
     if (t) this.recordSet((v) => (t!.locked = v), !!t.locked, !t.locked);
   };
+
   toggleFixtureLock = () => {
     let f = this.selectedFixture;
     if (f) this.recordSet((v) => (f!.locked = v), !!f.locked, !f.locked);
   };
+
   private applyLayout = (
     tables: Table[],
     fixtures: Fixture[],
@@ -3150,9 +3443,11 @@ export class TableSeatingPlannerIsolated extends Component<
     this.showToast(`${label} layout created`);
     setTimeout(() => this.fitView(), 16);
   };
+
   @tracked savingTemplate = false;
   @tracked templates: LayoutTemplate[] = [];
   @tracked templatesLoading = false;
+
   loadTemplates = async () => {
     let store = (this.args as any).context?.store;
     let realm = this.realmUrl;
@@ -3176,7 +3471,9 @@ export class TableSeatingPlannerIsolated extends Component<
       this.templatesLoading = false;
     }
   };
+
   tplKey = (t: LayoutTemplate) => (t as any)?.id ?? keyOf(t);
+
   applyTemplate = (tpl: LayoutTemplate) => {
     this.addMenuOpen = false;
     this.templateMenuOpen = false;
@@ -3185,26 +3482,33 @@ export class TableSeatingPlannerIsolated extends Component<
     let fixtures = ((tpl.fixtures ?? []) as Fixture[]).map(cloneFixture);
     this.applyLayout(tables, fixtures, tpl.name?.trim() || 'Template');
   };
+
   @tracked previewTplKey: string | null = null;
+
   openTemplatePreview = (t: LayoutTemplate, e: Event) => {
     e.stopPropagation();
     this.previewTplKey = this.tplKey(t);
   };
+
   closeTemplatePreview = () => {
     this.previewTplKey = null;
   };
+
   get previewTemplate(): LayoutTemplate | null {
     if (!this.previewTplKey) return null;
     return (
       this.templates.find((t) => this.tplKey(t) === this.previewTplKey) ?? null
     );
   }
+
   get previewAnchor(): string {
     return `[data-tpl-preview='${this.previewTplKey}']`;
   }
+
   @tracked showSaveTemplate = false;
   @tracked templateName = '';
   @tracked templateError = '';
+
   openSaveTemplate = () => {
     if (!this.tables.length && !this.fixtures.length) {
       this.showToast('Nothing to save yet — add some tables first.');
@@ -3216,13 +3520,16 @@ export class TableSeatingPlannerIsolated extends Component<
       (this.args.model?.eventTitle?.trim() || 'My') + ' layout';
     this.showSaveTemplate = true;
   };
+
   closeSaveTemplate = () => {
     this.showSaveTemplate = false;
   };
+
   onTemplateNameInput = (e: Event) => {
     this.templateName = (e.target as HTMLInputElement).value;
     if (this.templateError) this.templateError = '';
   };
+
   confirmSaveTemplate = async () => {
     if (this.savingTemplate) return;
     let name = this.templateName.trim();
@@ -3265,7 +3572,9 @@ export class TableSeatingPlannerIsolated extends Component<
       this.savingTemplate = false;
     }
   };
+
   @tracked savingSnapshot = false;
+
   saveSnapshot = async () => {
     if (this.savingSnapshot) return;
     let m = this.args.model;
@@ -3321,16 +3630,58 @@ export class TableSeatingPlannerIsolated extends Component<
       this.savingSnapshot = false;
     }
   };
+
   @tracked printOnlyTable: Table | null = null;
   @tracked printMode: 'cards' | 'chart' = 'cards';
+
   get tablesToPrint(): Table[] {
     return this.printOnlyTable ? [this.printOnlyTable] : this.tables;
   }
+  // Pack print rows into explicit A4 pages so EVERY page keeps a 12mm
+  // top/bottom margin (grid auto-fragmentation only pads the first and
+  // last page once @page margin is 0).
+  get printPages(): {
+    table: Table;
+    isTable: boolean;
+    guests?: Guest[];
+  }[][] {
+    const USABLE = 273; // 297mm A4 minus 12mm page padding top + bottom
+    const TABLE_H = 33.2; // 1.15in + 2mm bleed each side, in mm
+    const GUEST_H = 57.3; // 2.1in + 2mm bleed each side, in mm
+    const GAP = 10;
+    let rows: { table: Table; isTable: boolean; guests?: Guest[] }[] = [];
+    for (let t of this.tablesToPrint) {
+      rows.push({ table: t, isTable: true });
+      let guests = ((t as any).seatedGuests ?? []) as Guest[];
+      for (let i = 0; i < guests.length; i += 2) {
+        rows.push({ table: t, isTable: false, guests: guests.slice(i, i + 2) });
+      }
+    }
+    let pages: (typeof rows)[] = [];
+    let cur: typeof rows = [];
+    let used = 0;
+    for (let row of rows) {
+      let h = row.isTable ? TABLE_H : GUEST_H;
+      let need = h + (cur.length ? GAP : 0);
+      if (cur.length && used + need > USABLE) {
+        pages.push(cur);
+        cur = [];
+        used = h;
+      } else {
+        used += need;
+      }
+      cur.push(row);
+    }
+    if (cur.length) pages.push(cur);
+    return pages;
+  }
+
   private nextFrame(): Promise<void> {
     return new Promise((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
     );
   }
+
   private printWith = async (
     mode: 'cards' | 'chart',
     onlyTable: Table | null,
@@ -3338,30 +3689,117 @@ export class TableSeatingPlannerIsolated extends Component<
     this.printMode = mode;
     this.printOnlyTable = onlyTable;
     await this.nextFrame(); // let the print sheet re-render before printing
-    window.print();
-    this.printOnlyTable = null;
+    try {
+      window.print(); // hoisting happens in the beforeprint listener
+    } finally {
+      this.unhoistPrintSheet();
+      this.printOnlyTable = null;
+    }
   };
+
+  // The printout must contain ONLY the print sheet — the operator-mode
+  // shell (workspace header, card frame, side rails) would otherwise leak
+  // into the pages, and its 100vh clipping would cut pagination. Hoist the
+  // sheet to <body> with a global print stylesheet for the duration of the
+  // print, then restore. Bound to beforeprint/afterprint so plain Ctrl+P
+  // works too, not just the Print menu.
+  private printRestore?: () => void;
+
+  private hoistPrintSheet = () => {
+    if (this.printRestore) return;
+    let sheet = document.querySelector('.print-sheet');
+    if (!sheet) return;
+    let parent = sheet.parentElement;
+    let marker = sheet.nextSibling;
+    // Custom properties don't travel with the sheet when it leaves the
+    // planner subtree — re-attach the theme: adopt the linked theme's scope
+    // attribute (its stylesheet then styles the hoisted sheet directly) and
+    // the pinned default palette class when the card is themeless.
+    let themeRoot = sheet.closest('[data-boxel-theme-scope]');
+    let themeScope = themeRoot?.getAttribute('data-boxel-theme-scope');
+    let hadScope = sheet.hasAttribute('data-boxel-theme-scope');
+    if (themeScope && !hadScope) {
+      sheet.setAttribute('data-boxel-theme-scope', themeScope);
+    }
+    let pinnedDefault =
+      !sheet.classList.contains('tsp-default-theme') &&
+      Boolean(sheet.closest('.tsp-default-theme'));
+    if (pinnedDefault) {
+      sheet.classList.add('tsp-default-theme');
+    }
+    let style = document.createElement('style');
+    style.textContent = `@media print {
+      body > :not(.print-sheet) { display: none !important; }
+      html, body {
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        background: #fff !important;
+      }
+      .print-sheet {
+        box-sizing: border-box;
+        width: 100%;
+      }
+    }`;
+    document.head.appendChild(style);
+    document.body.appendChild(sheet);
+    this.printRestore = () => {
+      parent?.insertBefore(sheet, marker);
+      style.remove();
+      if (themeScope && !hadScope) {
+        sheet.removeAttribute('data-boxel-theme-scope');
+      }
+      if (pinnedDefault) {
+        sheet.classList.remove('tsp-default-theme');
+      }
+    };
+  };
+
+  private unhoistPrintSheet = () => {
+    this.printRestore?.();
+    this.printRestore = undefined;
+  };
+
+  private setupPrintHoist = modifier(() => {
+    window.addEventListener('beforeprint', this.hoistPrintSheet);
+    window.addEventListener('afterprint', this.unhoistPrintSheet);
+    return () => {
+      window.removeEventListener('beforeprint', this.hoistPrintSheet);
+      window.removeEventListener('afterprint', this.unhoistPrintSheet);
+      this.unhoistPrintSheet();
+    };
+  });
+
   // Print all tables' cards (table card + each guest's place card).
   printCards = () => this.printWith('cards', null);
+
   // Print a single table's cards.
   printTable = (t: Table) => this.printWith('cards', t);
+
   // Print the whole seating chart as one scaled overview page.
   printChart = () => this.printWith('chart', null);
+
   @tracked printMenuOpen = false;
+
   togglePrintMenu = () => {
     this.printMenuOpen = !this.printMenuOpen;
   };
+
   closePrintMenu = () => {
     this.printMenuOpen = false;
   };
+
   printCardsFromMenu = () => {
     this.printMenuOpen = false;
     this.printCards();
   };
+
   printChartFromMenu = () => {
     this.printMenuOpen = false;
     this.printChart();
   };
+
   private partyChildren(roster: Guest[]): Map<Guest, Guest[]> {
     let inRoster = new Set(roster);
     let rootOf = (g: Guest): Guest => {
@@ -3385,13 +3823,16 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return map;
   }
+
   partySizeOf = (g: Guest): number => {
     return 1 + (this.partyChildren(this.guests).get(g)?.length ?? 0);
   };
+
   railPartyOf = (g: Guest): number | null => {
     let n = this.partySizeOf(g);
     return n > 1 ? n : null;
   };
+
   private parseLlmJson(raw: string): any | null {
     if (!raw) return null;
     let fenceOpenJson = new RegExp('^```json', 'i');
@@ -3412,6 +3853,7 @@ export class TableSeatingPlannerIsolated extends Component<
       return null;
     }
   }
+
   arrangeWithAI = async () => {
     if (this.aiStatus === 'loading') return;
     let ctx = (this.args as any).context?.commandContext;
@@ -3495,17 +3937,21 @@ export class TableSeatingPlannerIsolated extends Component<
       this.showToast(msg);
     }
   };
+
   get ghostInitials() {
     return initialsOf(this.draggingGuest?.fullName);
   }
+
   get hoverInitials() {
     return initialsOf(this.hoverGuest?.fullName);
   }
+
   get hoverParty() {
     let g = this.hoverGuest;
     let n = g ? this.partySizeOf(g) : 1;
     return n > 1 ? n : 0;
   }
+
   addGuests = async () => {
     let store = (this.args as any).context?.store;
     let type = identifyCard(Guest) ?? baseCardRef;
@@ -3536,6 +3982,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.args.model.guests = [...this.guests, ...picked];
     }
   };
+
   get hostChips() {
     return ((this.args.model?.hosts ?? []) as Host[])
       .filter(Boolean)
@@ -3547,6 +3994,7 @@ export class TableSeatingPlannerIsolated extends Component<
         name: h.fullName || 'Host',
       }));
   }
+
   addHosts = async () => {
     let store = (this.args as any).context?.store;
     let type = identifyCard(Host) ?? baseCardRef;
@@ -3578,6 +4026,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.args.model.hosts = [...hosts, ...picked];
     }
   };
+
   removeHost = (h: Host) => {
     let hosts = ((this.args.model?.hosts ?? []) as Host[]).filter(Boolean);
     let hid = (h as any).id;
@@ -3586,6 +4035,7 @@ export class TableSeatingPlannerIsolated extends Component<
     );
     this.showToast(`${h.fullName || 'Host'} removed from hosts`);
   };
+
   get eventDateInput(): string {
     let d = this.args.model?.eventDate;
     if (!d) return '';
@@ -3593,21 +4043,27 @@ export class TableSeatingPlannerIsolated extends Component<
       let y = d.getFullYear();
       let m = String(d.getMonth() + 1).padStart(2, '0');
       let day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
+      let hh = String(d.getHours()).padStart(2, '0');
+      let mm = String(d.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${day}T${hh}:${mm}`;
     } catch {
       return '';
     }
   }
+
   setEventDate = (e: Event) => {
     let v = (e.target as HTMLInputElement).value;
-    this.args.model.eventDate = v ? new Date(`${v}T12:00:00`) : undefined;
+    this.args.model.eventDate = v ? new Date(v) : undefined;
   };
+
   openEditGuest = (g: Guest) => {
     this.args.viewCard?.(g, 'edit');
   };
+
   stopDrag = (e: Event) => {
     e.stopPropagation();
   };
+
   removeGuest = (g: Guest) => {
     let members = [g, ...(this.partyChildren(this.guests).get(g) ?? [])];
     let party = new Set<Guest>(members);
@@ -3645,8 +4101,11 @@ export class TableSeatingPlannerIsolated extends Component<
         : `Removed ${name}`,
     );
   };
+
   @tracked confirmClearGuests = false;
+
   private clearGuestsTimer: number | undefined;
+
   clearAllGuests = () => {
     if (!this.confirmClearGuests) {
       this.confirmClearGuests = true;
@@ -3677,47 +4136,59 @@ export class TableSeatingPlannerIsolated extends Component<
     }, apply);
     this.showToast(`Removed all ${roster.length} guests`);
   };
+
   get realmUrl(): string {
     let u = (this.args.model as any)?.[realmURL];
     return u ? String(u) : '';
   }
+
   private formatEventDate(): string {
     let d = this.args.model?.eventDate;
     if (!d) return 'our wedding day';
     try {
-      return d.toLocaleDateString('en-US', {
+      return d.toLocaleString('en-US', {
         month: 'long',
         day: 'numeric',
         year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
       });
     } catch {
       return 'our wedding day';
     }
   }
+
   clearPoster = () => {
     this.args.model.poster = undefined;
     this.showToast('Using the default card');
   };
+
   get defaultInviteMessage(): string {
     return "Dear {name}, you're warmly invited to {event} on {date} at {venue}, Can't wait to see you there!";
   }
+
   get inviteTemplate(): string {
     return this.args.model?.invitationMessage || this.defaultInviteMessage;
   }
+
   onInviteTemplateInput = (e: Event) => {
     this.commitInviteMessage((e.target as HTMLTextAreaElement).value);
   };
+
   onInviteSearch = (e: Event) => {
     this.inviteSearch = (e.target as HTMLInputElement).value;
   };
+
   clearInviteSearch = () => {
     this.inviteSearch = '';
   };
+
   private matchesInviteSearch = (g: Guest): boolean => {
     let q = this.inviteSearch.trim().toLowerCase();
     if (!q) return true;
     return (g.fullName ?? '').toLowerCase().includes(q);
   };
+
   guestSeat = (g: Guest): { table: string; seat: number } | null => {
     for (let t of this.tables) {
       let idx = (t.seatedGuests ?? []).findIndex((x) => x === g);
@@ -3725,10 +4196,13 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return null;
   };
+
   get posterLink(): string {
     return this.args.model?.poster?.resolvedUrl || '';
   }
+
   @tracked posterBusy = false;
+
   private linkPosterFile = async (fileUrl: string) => {
     if (!fileUrl) {
       throw new Error('could not load the saved image');
@@ -3740,6 +4214,7 @@ export class TableSeatingPlannerIsolated extends Component<
       sourceMode: 'url',
     });
   };
+
   downloadPoster = async () => {
     let url = this.posterLink;
     if (!url) return;
@@ -3759,6 +4234,7 @@ export class TableSeatingPlannerIsolated extends Component<
       window.open(url, '_blank', 'noopener');
     }
   };
+
   // Visual-style line for the poster, derived from the linked theme
   // (cardInfo.theme) so the generated artwork follows the same palette and mood
   // as the rest of the planner. Falls back to a tasteful neutral style when no
@@ -3786,14 +4262,9 @@ export class TableSeatingPlannerIsolated extends Component<
     // hue) so the artwork reads as the theme at a glance — e.g. a red theme
     // yields a red poster. Lettering uses the theme's own on-primary contrast
     // colour; decorative motifs use the accent (metallic) hue.
-    let bg = c['primary'] || c['navy'] || c['ink-2'];
-    let fg =
-      c['primary-foreground'] ||
-      c['gold-soft'] ||
-      c['navy-ink'] ||
-      c['paper'] ||
-      c['background'];
-    let accent = c['accent'] || c['gold'] || c['acc'];
+    let bg = c['primary'];
+    let fg = c['primary-foreground'] || c['background'];
+    let accent = c['accent'];
     if (name || desc || bg) {
       let intro = name
         ? `follow the “${name}” theme`
@@ -3838,22 +4309,28 @@ export class TableSeatingPlannerIsolated extends Component<
     if (m?.venue) lines.push(`${n++}. ${m.venue}`);
     return lines.join('\n');
   }
+
   onPosterPromptInput = (e: Event) => {
     this.args.model.posterPrompt =
       (e.target as HTMLTextAreaElement).value || undefined;
   };
+
   posterAspects = POSTER_ASPECTS;
+
   get posterAspect(): string {
     return this.args.model?.posterAspect || '4:5';
   }
+
   get posterAspectStyle(): ReturnType<typeof htmlSafe> {
     let [w, h] = this.posterAspect.split(':').map(Number);
     if (!w || !h) [w, h] = [4, 5];
     return htmlSafe(`aspect-ratio: ${w} / ${h};`);
   }
+
   setPosterAspect = (v: string) => {
     this.args.model.posterAspect = v;
   };
+
   generatePoster = async () => {
     let ctx = (this.args as any).context?.commandContext;
     if (!ctx) {
@@ -3886,6 +4363,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     this.posterBusy = false;
   };
+
   composeMessage = (g: Guest, template: string): string => {
     let m = this.args.model;
     let seatObj = this.guestSeat(g);
@@ -3902,14 +4380,24 @@ export class TableSeatingPlannerIsolated extends Component<
       .replace(/\{hosts\}/g, m?.hostNames || m?.eventTitle || 'us')
       .replace(/\{poster\}/g, link);
   };
-  copyText = async (text: string) => {
+
+  copyInvite = async (row: { msg: string; model: Guest }) => {
     try {
-      await navigator.clipboard.writeText(text);
-      this.showToast('Message copied');
+      await navigator.clipboard.writeText(row.msg);
+      this.showToast(`Copied invite for ${row.model.fullName || 'guest'}`);
     } catch {
       this.showToast('Copy failed');
     }
   };
+
+  @tracked expandedInviteKey: string | null = null;
+
+  toggleInvitePreview = (key: string) => {
+    this.expandedInviteKey = this.expandedInviteKey === key ? null : key;
+  };
+
+  invitePreviewOpen = (key: string) => this.expandedInviteKey === key;
+
   get inviteRows() {
     return this.guests.filter(this.matchesInviteSearch).map((g) => {
       let msg = this.composeMessage(g, this.inviteTemplate);
@@ -3921,9 +4409,15 @@ export class TableSeatingPlannerIsolated extends Component<
       };
     });
   }
+
   <template>
     {{! template-lint-disable no-pointer-down-event-binding no-invalid-interactive }}
-    <div class='tsp' data-tsp-root style={{this.themeVars}} {{this.keyboard}}>
+    <div
+      class='tsp {{unless this.hasLinkedTheme "tsp-default-theme"}}'
+      {{this.setupPrintHoist}}
+      data-tsp-root
+      {{this.keyboard}}
+    >
       <header class='tsp-head' aria-label='Event details'>
         <div class='tsp-brand' aria-hidden='true'>
           {{#if this.eventLogoURL}}
@@ -3936,11 +4430,11 @@ export class TableSeatingPlannerIsolated extends Component<
           {{/if}}
         </div>
         <div class='tsp-event'>
-          <input
+          <BoxelInput
+            @value={{@model.eventTitle}}
             class='tsp-event-title'
             placeholder='Untitled Event'
             aria-label='Event title'
-            value={{@model.eventTitle}}
             {{on 'input' this.setEventTitle}}
           />
         </div>
@@ -3949,18 +4443,20 @@ export class TableSeatingPlannerIsolated extends Component<
             <span class='tsp-meta-label'>Hosts</span>
             <div class='tsp-hosts-row'>
               {{#each this.hostChips key='key' as |h|}}
-                <button
-                  type='button'
-                  class='tsp-host'
-                  title='{{h.name}} — click to remove'
-                  {{on 'click' (fn this.removeHost h.model)}}
-                >
+                <span class='tsp-host' title={{h.name}}>
                   {{#if h.photo}}
                     <img class='tsp-host-img' src={{h.photo}} alt={{h.name}} />
                   {{else}}
                     {{h.initials}}
                   {{/if}}
-                </button>
+                  <button
+                    type='button'
+                    class='tsp-host-x'
+                    title='Remove {{h.name}}'
+                    aria-label='Remove {{h.name}}'
+                    {{on 'click' (fn this.removeHost h.model)}}
+                  >✕</button>
+                </span>
               {{/each}}
               <button
                 type='button'
@@ -3977,10 +4473,10 @@ export class TableSeatingPlannerIsolated extends Component<
           <div class='tsp-meta-col'>
             <span class='tsp-meta-label'>Date</span>
             <span class='tsp-date'>
-              <input
-                type='date'
-                aria-label='Event date'
-                value={{this.eventDateInput}}
+              <BoxelInput
+                @type='datetime-local'
+                @value={{this.eventDateInput}}
+                aria-label='Event date and time'
                 {{on 'change' this.setEventDate}}
               />
               {{#unless this.eventDateInput}}
@@ -3991,11 +4487,11 @@ export class TableSeatingPlannerIsolated extends Component<
           <div class='tsp-meta-div'></div>
           <div class='tsp-meta-col'>
             <span class='tsp-meta-label'>Venue</span>
-            <input
+            <BoxelInput
+              @value={{@model.venue}}
               class='tsp-venue'
               placeholder='Add venue'
               aria-label='Venue'
-              value={{@model.venue}}
               {{on 'input' this.setVenue}}
             />
           </div>
@@ -4030,10 +4526,10 @@ export class TableSeatingPlannerIsolated extends Component<
                 style={{htmlBarWidth this.pct}}
               ></span></div>
             <div class='rail-search'>
-              <input
+              <BoxelInput
+                @value={{this.search}}
                 placeholder='Search guests'
                 aria-label='Search guests'
-                value={{this.search}}
                 {{on 'input' this.onSearch}}
               />
             </div>
@@ -4117,21 +4613,21 @@ export class TableSeatingPlannerIsolated extends Component<
               {{/if}}
             </div>
             <div class='rail-foot'>
-              <button
-                type='button'
+              <Button
+                @kind='primary'
                 class='rail-add'
                 {{on 'click' this.addGuests}}
-              >+ Add Guests</button>
+              >+ Add Guests</Button>
               {{#if this.guests.length}}
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
                   class='rail-clear {{if this.confirmClearGuests "is-armed"}}'
                   {{on 'click' this.clearAllGuests}}
                 >{{if
                     this.confirmClearGuests
                     'Click again to confirm'
                     'Remove all guests'
-                  }}</button>
+                  }}</Button>
               {{/if}}
             </div>
           </aside>
@@ -4139,12 +4635,12 @@ export class TableSeatingPlannerIsolated extends Component<
             <div class='canvas-toolbar'>
               <div class='ct-group ct-group-build'>
                 <div class='ct-menu'>
-                  <button
-                    type='button'
+                  <Button
+                    @kind='secondary'
                     class='ct-btn ct-add {{if this.addMenuOpen "is-open"}}'
                     title='Add tables, seats & decorative elements'
                     {{on 'click' this.toggleAddMenu}}
-                  >＋ Add element <span class='ct-caret'>▾</span></button>
+                  >＋ Add element <span class='ct-caret'>▾</span></Button>
                   {{#if this.addMenuOpen}}
                     <button
                       type='button'
@@ -4296,14 +4792,14 @@ export class TableSeatingPlannerIsolated extends Component<
                   {{/if}}
                 </div>
                 <div class='ct-menu'>
-                  <button
-                    type='button'
+                  <Button
+                    @kind='secondary'
                     class='ct-btn ct-add {{if this.templateMenuOpen "is-open"}}'
                     title='Start from a saved layout template'
                     {{on 'click' this.toggleTemplateMenu}}
                   ><TemplateIcon class='ico' />
                     Add template
-                    <span class='ct-caret'>▾</span></button>
+                    <span class='ct-caret'>▾</span></Button>
                   {{#if this.templateMenuOpen}}
                     <button
                       type='button'
@@ -4372,52 +4868,52 @@ export class TableSeatingPlannerIsolated extends Component<
                     </div>
                   {{/if}}
                 </div>
-                <button
-                  type='button'
+                <Button
+                  @kind='secondary'
                   class='ct-btn ct-secondary'
                   title='Import a floor plan / venue drawing to trace'
                   {{on 'click' this.openFloorLibrary}}
-                ><FloorPlanIcon class='ico' /> Import floor plan</button>
+                ><FloorPlanIcon class='ico' /> Import floor plan</Button>
               </div>
               <div class='ct-spacer'></div>
               <div class='ct-group ct-group-arrange'>
-                <button
-                  type='button'
+                <Button
+                  @kind='primary'
+                  @disabled={{eq this.aiStatus 'loading'}}
                   class='ct-primary'
                   title='Open the AI Assistant to arrange by relationships'
-                  disabled={{eq this.aiStatus 'loading'}}
                   {{on 'click' this.arrangeWithAI}}
                 >{{if
                     (eq this.aiStatus 'loading')
                     'Opening…'
                     '✦ AI Arrange'
-                  }}</button>
+                  }}</Button>
               </div>
               <div class='ct-divider'></div>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @disabled={{this.savingTemplate}}
                 class='ct-btn ct-ghost'
                 title='Save this layout as a reusable template'
-                disabled={{this.savingTemplate}}
                 data-bx-popover-anchor
                 data-save-anchor
                 {{on 'click' this.openSaveTemplate}}
-              ><TemplateIcon class='ico' /> Save template</button>
-              <button
-                type='button'
+              ><TemplateIcon class='ico' /> Save template</Button>
+              <Button
+                @kind='text-only'
+                @disabled={{this.savingSnapshot}}
                 class='ct-btn ct-ghost'
                 title='Save a copy of this plan with everyone assigned — reopen and edit it any time'
-                disabled={{this.savingSnapshot}}
                 {{on 'click' this.saveSnapshot}}
               ><CameraIcon class='ico' />
-                {{if this.savingSnapshot 'Saving…' 'Save snapshot'}}</button>
-              <button
-                type='button'
+                {{if this.savingSnapshot 'Saving…' 'Save snapshot'}}</Button>
+              <Button
+                @kind='text-only'
                 class='ct-btn ct-ghost'
                 title='Print place/table cards or the seating chart'
                 data-print-anchor
                 {{on 'click' this.togglePrintMenu}}
-              ><PrinterIcon class='ico' /> Print</button>
+              ><PrinterIcon class='ico' /> Print</Button>
               {{#if this.printMenuOpen}}
                 <SeatingPlanPopover
                   @anchor='[data-print-anchor]'
@@ -4486,26 +4982,26 @@ export class TableSeatingPlannerIsolated extends Component<
                     {{on 'pointerdown' this.stopProp}}
                     {{on 'wheel' this.scrollToolbar}}
                   >
-                    <button
-                      type='button'
+                    <Button
+                      @kind='primary'
+                      @disabled={{this.buildDisabled}}
                       class='fp-build-btn {{if this.aiPlanBusy "is-busy"}}'
-                      disabled={{this.buildDisabled}}
                       title='Trace this floor plan into tables with AI'
                       {{on 'click' this.buildFromFloorPlan}}
                     >{{if
                         this.aiPlanBusy
                         '✦ Building…'
                         '✦ Build seats with AI'
-                      }}</button>
+                      }}</Button>
                     <span class='fp-tool-div'></span>
                     <label class='fp-tool-opacity' title='Floor plan opacity'>
                       <span class='fp-tool-ico'>◐</span>
-                      <input
-                        type='range'
+                      <BoxelInput
+                        @type='range'
+                        @min='10'
+                        @max='100'
+                        @value={{this.floorPlanOpacity}}
                         class='fp-opacity'
-                        min='10'
-                        max='100'
-                        value={{this.floorPlanOpacity}}
                         {{on 'input' this.setFloorOpacity}}
                         {{on 'change' this.commitFloorOpacity}}
                       />
@@ -4521,18 +5017,18 @@ export class TableSeatingPlannerIsolated extends Component<
                       {{on 'click' this.selectFloorForEdit}}
                     ><ArrowsMoveIcon class='ico' /></button>
                     {{#if this.floorDeleteArmed}}
-                      <button
-                        type='button'
+                      <Button
+                        @kind='secondary'
                         class='fp-tool-confirm'
                         title='Pick a different floor plan'
                         {{on 'click' this.replaceFloorPlan}}
-                      >Replace</button>
-                      <button
-                        type='button'
+                      >Replace</Button>
+                      <Button
+                        @kind='danger'
                         class='fp-tool-confirm is-danger'
                         title='Remove this floor plan'
                         {{on 'click' this.confirmRemoveFloorPlan}}
-                      >Remove</button>
+                      >Remove</Button>
                       <button
                         type='button'
                         class='fp-tool-btn'
@@ -4552,11 +5048,11 @@ export class TableSeatingPlannerIsolated extends Component<
                 {{#if this.floorImgBroken}}
                   <div class='fp-broken' {{on 'pointerdown' this.stopProp}}>
                     <span class='fp-broken-msg'>Floor plan image failed to load</span>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='secondary'
                       class='fp-broken-btn'
                       {{on 'click' this.refreshFloorImg}}
-                    ><RefreshIcon class='ico' /> Refresh</button>
+                    ><RefreshIcon class='ico' /> Refresh</Button>
                   </div>
                 {{/if}}
               {{/if}}
@@ -4998,384 +5494,351 @@ export class TableSeatingPlannerIsolated extends Component<
                   <span class='zoom-fit-lbl'>Fit</span></button>
               </div>
             </div>
-            <button
-              type='button'
-              class='insp-handle
-                {{if this.inspectorBeckons "is-beckoning"}}
-                {{if this.hasInspectorSelection "has-selection"}}'
-              title={{if this.inspectorCollapsed 'Show panel' 'Hide panel'}}
-              aria-label={{if
-                this.inspectorCollapsed
-                'Show panel'
-                'Hide panel'
-              }}
-              {{on 'click' this.toggleInspector}}
-            ><span class='insp-handle-ico'>{{if
+            {{#if this.hasInspectorSelection}}
+              <button
+                type='button'
+                class='insp-handle
+                  {{if this.inspectorBeckons "is-beckoning"}}
+                  has-selection'
+                title={{if this.inspectorCollapsed 'Show panel' 'Hide panel'}}
+                aria-label={{if
                   this.inspectorCollapsed
-                  '‹'
-                  '›'
-                }}</span></button>
+                  'Show panel'
+                  'Hide panel'
+                }}
+                {{on 'click' this.toggleInspector}}
+              ><span class='insp-handle-ico'>{{if
+                    this.inspectorCollapsed
+                    '‹'
+                    '›'
+                  }}</span>
+                <span class='insp-handle-lbl'>Details</span></button>
+            {{/if}}
           </section>
-          <aside
-            class='tsp-inspector {{if this.inspectorCollapsed "is-collapsed"}}'
-            aria-label='Inspector'
-          >
-            {{#if this.selectedTable}}
-              <div class='insp-deco'></div>
-              <div class='insp-pad'>
-                <div class='insp-top'>
-                  <input
-                    class='insp-name'
-                    aria-label='Table name'
-                    value={{this.selectedTable.name}}
-                    {{on 'input' this.renameTable}}
-                  />
-                  <button
-                    type='button'
-                    class='insp-x'
-                    {{on 'click' this.deselect}}
-                  >✕</button>
-                </div>
-                <div class='insp-status'>
-                  {{this.selectedTable.seatedCount}}
-                  of
-                  {{this.selectedTable.seatCount}}
-                  seated
-                </div>
-                {{#if this.selectedTableVM}}
-                  <div class='insp-label'>Seat Map</div>
-                  <p class='insp-seatmap-hint'>Drag a guest from the roster onto
-                    a seat, drag a seated guest to another seat, or use ✕ to
-                    unseat.</p>
-                  <div class='insp-tablemap'>
-                    <div
-                      class='insp-tablemap-reserve'
-                      style={{this.inspTableReserveStyle}}
-                    >
+          {{#if this.hasInspectorSelection}}
+            <aside
+              class='tsp-inspector
+                {{if this.inspectorCollapsed "is-collapsed"}}'
+              aria-label='Inspector'
+            >
+              {{#if this.selectedTable}}
+                <div class='insp-deco'></div>
+                <div class='insp-pad'>
+                  <div class='insp-top'>
+                    <BoxelInput
+                      @value={{this.selectedTable.name}}
+                      class='insp-name'
+                      aria-label='Table name'
+                      {{on 'input' this.renameTable}}
+                    />
+                    <button
+                      type='button'
+                      class='insp-x'
+                      {{on 'click' this.deselect}}
+                    >✕</button>
+                  </div>
+                  <div class='insp-status'>
+                    {{this.selectedTable.seatedCount}}
+                    of
+                    {{this.selectedTable.seatCount}}
+                    seated
+                  </div>
+                  {{#if this.selectedTableVM}}
+                    <div class='insp-label'>Seat Map</div>
+                    <p class='insp-seatmap-hint'>Drag a guest from the roster
+                      onto a seat, drag a seated guest to another seat, or use ✕
+                      to unseat.</p>
+                    <div class='insp-tablemap'>
                       <div
-                        class='insp-tablemap-box shape-{{this.selectedTableVM.model.shape}}'
-                        style={{this.inspTableBoxStyle}}
+                        class='insp-tablemap-reserve'
+                        style={{this.inspTableReserveStyle}}
                       >
-                        {{#if this.selectedTableVM.curved}}
-                          <svg
-                            class='t-curvedsvg'
-                            viewBox='0 0 100 100'
-                            preserveAspectRatio='none'
-                          >
-                            <path
-                              class='t-curvedband'
-                              d='M3 72.9 A50 50 0 0 1 97 72.9 L76.3 80.4 A28 28 0 0 0 23.7 80.4 Z'
-                              stroke-width='1.5'
-                              stroke-linejoin='round'
-                              vector-effect='non-scaling-stroke'
-                            />
-                          </svg>
-                        {{else if this.selectedTableVM.isSection}}
-                          <span class='insp-section-front'>▲ stage</span>
-                        {{/if}}
-                        {{#each this.selectedTableVM.seats key='index' as |s|}}
-                          <div
-                            class='insp-seat
-                              {{if s.filled "is-filled"}}
-                              {{if s.isDrop "is-drop"}}'
-                            data-seat-table={{this.selectedTableVM.id}}
-                            data-seat-index={{s.index}}
-                            title={{if
-                              s.filled
-                              'Drag to move · ✕ to unseat'
-                              'Drop a guest here'
-                            }}
-                            style={{htmlSeat s.leftPct s.topPct s.color}}
-                            {{on
-                              'pointerdown'
-                              (fn this.grabSeatedGuest s.guest)
-                            }}
-                            {{on 'mouseenter' (fn this.showSeatInfo s.guest)}}
-                            {{on 'mousemove' this.moveSeatInfo}}
-                            {{on 'mouseleave' this.hideSeatInfo}}
-                          >
-                            {{#if s.isDrop}}
-                              {{#if this.draggingGuest.photoURL}}
+                        <div
+                          class='insp-tablemap-box shape-{{this.selectedTableVM.model.shape}}'
+                          style={{this.inspTableBoxStyle}}
+                        >
+                          {{#if this.selectedTableVM.curved}}
+                            <svg
+                              class='t-curvedsvg'
+                              viewBox='0 0 100 100'
+                              preserveAspectRatio='none'
+                            >
+                              <path
+                                class='t-curvedband'
+                                d='M3 72.9 A50 50 0 0 1 97 72.9 L76.3 80.4 A28 28 0 0 0 23.7 80.4 Z'
+                                stroke-width='1.5'
+                                stroke-linejoin='round'
+                                vector-effect='non-scaling-stroke'
+                              />
+                            </svg>
+                          {{else if this.selectedTableVM.isSection}}
+                            <span class='insp-section-front'>▲ stage</span>
+                          {{/if}}
+                          {{#each
+                            this.selectedTableVM.seats key='index'
+                            as |s|
+                          }}
+                            <div
+                              class='insp-seat
+                                {{if s.filled "is-filled"}}
+                                {{if s.isDrop "is-drop"}}'
+                              data-seat-table={{this.selectedTableVM.id}}
+                              data-seat-index={{s.index}}
+                              title={{if
+                                s.filled
+                                'Drag to move · ✕ to unseat'
+                                'Drop a guest here'
+                              }}
+                              style={{htmlSeat s.leftPct s.topPct s.color}}
+                              {{on
+                                'pointerdown'
+                                (fn this.grabSeatedGuest s.guest)
+                              }}
+                              {{on 'mouseenter' (fn this.showSeatInfo s.guest)}}
+                              {{on 'mousemove' this.moveSeatInfo}}
+                              {{on 'mouseleave' this.hideSeatInfo}}
+                            >
+                              {{#if s.isDrop}}
+                                {{#if this.draggingGuest.photoURL}}
+                                  <img
+                                    class='insp-seat-img'
+                                    src={{this.draggingGuest.photoURL}}
+                                    alt=''
+                                  />
+                                {{else}}
+                                  {{this.ghostInitials}}
+                                {{/if}}
+                              {{else if s.photoURL}}
                                 <img
                                   class='insp-seat-img'
-                                  src={{this.draggingGuest.photoURL}}
+                                  src={{s.photoURL}}
                                   alt=''
                                 />
                               {{else}}
-                                {{this.ghostInitials}}
+                                {{s.label}}
                               {{/if}}
-                            {{else if s.photoURL}}
-                              <img
-                                class='insp-seat-img'
-                                src={{s.photoURL}}
-                                alt=''
-                              />
-                            {{else}}
-                              {{s.label}}
-                            {{/if}}
-                            {{#if s.filled}}
-                              <button
-                                type='button'
-                                class='insp-seat-x'
-                                title='Unseat this guest'
-                                aria-label='Unseat this guest'
-                                {{on 'pointerdown' this.stopPointer}}
-                                {{on
-                                  'click'
-                                  (fn
-                                    this.seatClick
-                                    this.selectedTableVM.id
-                                    s.index
-                                  )
-                                }}
-                              >✕</button>
-                            {{/if}}
-                          </div>
-                        {{/each}}
+                              {{#if s.filled}}
+                                <button
+                                  type='button'
+                                  class='insp-seat-x'
+                                  title='Unseat this guest'
+                                  aria-label='Unseat this guest'
+                                  {{on 'pointerdown' this.stopPointer}}
+                                  {{on
+                                    'click'
+                                    (fn
+                                      this.seatClick
+                                      this.selectedTableVM.id
+                                      s.index
+                                    )
+                                  }}
+                                >✕</button>
+                              {{/if}}
+                            </div>
+                          {{/each}}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                {{/if}}
-                <TableConfig @c={{this}} />
-                <button
-                  type='button'
-                  class='insp-vip {{if this.selectedTable.vip "is-on"}}'
-                  {{on 'click' this.toggleVip}}
-                ><StarIcon class='ico' /> VIP table</button>
-                <div class='insp-label'>Layer</div>
-                <div class='insp-layer'>
+                  {{/if}}
+                  <TableConfig @c={{this}} />
                   <button
                     type='button'
-                    class='insp-opt'
-                    disabled={{this.selectedTable.locked}}
-                    {{on 'click' this.sendTableBack}}
-                  >↓ Send back</button>
-                  <button
-                    type='button'
-                    class='insp-opt'
-                    disabled={{this.selectedTable.locked}}
-                    {{on 'click' this.bringTableFront}}
-                  >↑ Bring front</button>
-                  <button
-                    type='button'
-                    class='insp-opt insp-lock
-                      {{if this.selectedTable.locked "is-on"}}'
-                    {{on 'click' this.toggleTableLock}}
-                  >{{#if this.selectedTable.locked}}<LockIcon class='ico' />
-                      Locked — click to unlock{{else}}<LockOpenIcon
-                        class='ico'
-                      />
-                      Lock layer{{/if}}</button>
-                </div>
-                <div class='insp-actionbar'>
-                  <button
-                    type='button'
-                    class='insp-clear'
-                    {{on 'click' this.clearSeats}}
-                  >Clear all seats</button>
-                  <div class='insp-actions'>
+                    class='insp-vip {{if this.selectedTable.vip "is-on"}}'
+                    {{on 'click' this.toggleVip}}
+                  ><StarIcon class='ico' /> VIP table</button>
+                  <div class='insp-label'>Layer</div>
+                  <div class='insp-layer'>
+                    <Button
+                      @kind='secondary'
+                      @disabled={{this.selectedTable.locked}}
+                      class='insp-opt'
+                      {{on 'click' this.sendTableBack}}
+                    >↓ Send back</Button>
+                    <Button
+                      @kind='secondary'
+                      @disabled={{this.selectedTable.locked}}
+                      class='insp-opt'
+                      {{on 'click' this.bringTableFront}}
+                    >↑ Bring front</Button>
                     <button
                       type='button'
-                      {{on 'click' this.duplicateTable}}
-                    ><CopyIcon class='ico' /> Duplicate</button>
-                    <button
-                      type='button'
-                      class='danger'
-                      {{on 'click' this.confirmDeleteTable}}
-                    ><TrashIcon class='ico' /> Delete</button>
+                      class='insp-opt insp-lock
+                        {{if this.selectedTable.locked "is-on"}}'
+                      {{on 'click' this.toggleTableLock}}
+                    >{{#if this.selectedTable.locked}}<LockIcon class='ico' />
+                        Locked — click to unlock{{else}}<LockOpenIcon
+                          class='ico'
+                        />
+                        Lock layer{{/if}}</button>
+                  </div>
+                  <div class='insp-actionbar'>
+                    <Button
+                      @kind='secondary'
+                      class='insp-clear'
+                      {{on 'click' this.clearSeats}}
+                    >Clear all seats</Button>
+                    <div class='insp-actions'>
+                      <Button
+                        @kind='secondary'
+                        {{on 'click' this.duplicateTable}}
+                      ><CopyIcon class='ico' /> Duplicate</Button>
+                      <Button
+                        @kind='danger'
+                        class='danger'
+                        {{on 'click' this.confirmDeleteTable}}
+                      ><TrashIcon class='ico' /> Delete</Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            {{else if this.selectedFixture}}
-              <div class='insp-deco'></div>
-              <div class='insp-pad'>
-                <div class='insp-top'>
-                  <input
-                    class='insp-name'
-                    aria-label='Fixture label'
-                    value={{this.selectedFixture.label}}
-                    {{on 'input' this.renameFixture}}
-                  />
-                  <button
-                    type='button'
-                    class='insp-x'
-                    {{on 'click' this.deselect}}
-                  >✕</button>
-                </div>
-                <div class='insp-status'>{{get
-                    FIXTURE_KIND_LABELS
-                    this.selectedFixture.kind
-                  }}</div>
-                <div class='insp-fxart'><span
-                    class='insp-fxart-box'
-                    style={{this.selectedFxArtStyle}}
-                  ><FixtureGlyph
-                      @kind={{this.selectedFixture.kind}}
-                      @color={{this.selectedFxFill}}
-                      @pattern={{this.selectedFixture.pattern}}
-                    /></span></div>
-                <div class='insp-label'>Colour</div>
-                <div class='insp-swatches'>
-                  <label class='insp-fxpick' title='Custom colour'>
-                    <input
-                      type='color'
-                      value={{this.selectedFxFill}}
-                      {{on 'input' this.fxColorInput}}
-                      {{on 'change' this.fxColorCommit}}
+              {{else if this.selectedFixture}}
+                <div class='insp-deco'></div>
+                <div class='insp-pad'>
+                  <div class='insp-top'>
+                    <BoxelInput
+                      @value={{this.selectedFixture.label}}
+                      class='insp-name'
+                      aria-label='Fixture label'
+                      {{on 'input' this.renameFixture}}
                     />
-                  </label>
-                  {{#each this.themeSwatches as |sw|}}
                     <button
                       type='button'
-                      class='insp-sw
-                        {{if (this.fixtureColorIs sw.value) "is-on"}}'
-                      style={{htmlBg sw.value}}
-                      title={{sw.label}}
-                      {{on 'click' (fn this.setFxColor sw.value)}}
-                    ></button>
-                  {{/each}}
-                </div>
-                <div class='insp-label'>Layer</div>
-                <div class='insp-layer'>
-                  <button
-                    type='button'
-                    class='insp-opt'
-                    disabled={{this.selectedFixture.locked}}
-                    {{on 'click' this.sendFxBack}}
-                  >↓ Send back</button>
-                  <button
-                    type='button'
-                    class='insp-opt'
-                    disabled={{this.selectedFixture.locked}}
-                    {{on 'click' this.bringFxFront}}
-                  >↑ Bring front</button>
-                  <button
-                    type='button'
-                    class='insp-opt insp-lock
-                      {{if this.selectedFixture.locked "is-on"}}'
-                    {{on 'click' this.toggleFixtureLock}}
-                  >{{#if this.selectedFixture.locked}}<LockIcon class='ico' />
-                      Locked — click to unlock{{else}}<LockOpenIcon
-                        class='ico'
-                      />
-                      Lock layer{{/if}}</button>
-                </div>
-                <div class='insp-actionbar'>
-                  <div class='insp-actions'>
-                    <button
-                      type='button'
-                      {{on 'click' this.duplicateFixture}}
-                    ><CopyIcon class='ico' /> Duplicate</button>
-                    <button
-                      type='button'
-                      class='danger'
-                      {{on 'click' this.confirmDeleteFixture}}
-                    ><TrashIcon class='ico' /> Delete</button>
+                      class='insp-x'
+                      {{on 'click' this.deselect}}
+                    >✕</button>
                   </div>
-                </div>
-              </div>
-            {{else if this.multiSelected}}
-              <div class='insp-deco'></div>
-              <div class='insp-pad'>
-                <div class='insp-kicker'>Selection</div>
-                <div class='insp-hero'>{{this.selCount}} selected</div>
-                <p class='insp-lead'>Drag any one to move them together, nudge
-                  with the arrow keys, or delete. Shift-click an element to add
-                  or remove it.</p>
-                {{#if this.selectionHasTables}}
-                  <div class='insp-label'>Table Shape</div>
-                  <div class='insp-grid4'>
-                    {{#each this.tableShapes as |sh|}}
+                  <div class='insp-status'>{{get
+                      FIXTURE_KIND_LABELS
+                      this.selectedFixture.kind
+                    }}</div>
+                  <div class='insp-fxart'><span
+                      class='insp-fxart-box'
+                      style={{this.selectedFxArtStyle}}
+                    ><FixtureGlyph
+                        @kind={{this.selectedFixture.kind}}
+                        @color={{this.selectedFxFill}}
+                        @pattern={{this.selectedFixture.pattern}}
+                      /></span></div>
+                  <div class='insp-label'>Colour</div>
+                  <div class='insp-swatches'>
+                    <label class='insp-fxpick' title='Custom colour'>
+                      <BoxelInput
+                        @type='color'
+                        @value={{this.selectedFxFill}}
+                        {{on 'input' this.fxColorInput}}
+                        {{on 'change' this.fxColorCommit}}
+                      />
+                    </label>
+                    {{#each this.themeSwatches as |sw|}}
                       <button
                         type='button'
-                        class='insp-opt
-                          {{if (eq this.selectionShape sh.value) "is-on"}}'
-                        {{on 'click' (fn this.setSelectionShape sh.value)}}
-                      >{{sh.label}}</button>
+                        class='insp-sw
+                          {{if (this.fixtureColorIs sw.value) "is-on"}}'
+                        style={{htmlBg sw.value}}
+                        title={{sw.label}}
+                        {{on 'click' (fn this.setFxColor sw.value)}}
+                      ></button>
                     {{/each}}
                   </div>
-                {{/if}}
-                <div class='insp-label'>Colour</div>
-                <div class='insp-swatches'>
-                  <label class='insp-fxpick' title='Custom colour'>
-                    <input
-                      type='color'
-                      value={{this.selectionColorValue}}
-                      {{on 'change' this.selectionColorCommit}}
-                    />
-                  </label>
-                  {{#each this.themeSwatches as |sw|}}
-                    <button
-                      type='button'
-                      class='insp-sw'
-                      style={{htmlBg sw.value}}
-                      title={{sw.label}}
-                      {{on 'click' (fn this.setSelectionColor sw.value)}}
-                    ></button>
-                  {{/each}}
-                </div>
-                {{#if this.selectionHasSeated}}
-                  <div class='insp-label'>Seating</div>
+                  <div class='insp-label'>Layer</div>
                   <div class='insp-layer'>
+                    <Button
+                      @kind='secondary'
+                      @disabled={{this.selectedFixture.locked}}
+                      class='insp-opt'
+                      {{on 'click' this.sendFxBack}}
+                    >↓ Send back</Button>
+                    <Button
+                      @kind='secondary'
+                      @disabled={{this.selectedFixture.locked}}
+                      class='insp-opt'
+                      {{on 'click' this.bringFxFront}}
+                    >↑ Bring front</Button>
                     <button
                       type='button'
-                      class='insp-opt'
-                      {{on 'click' this.clearSelectionSeats}}
-                    >Clear seats</button>
+                      class='insp-opt insp-lock
+                        {{if this.selectedFixture.locked "is-on"}}'
+                      {{on 'click' this.toggleFixtureLock}}
+                    >{{#if this.selectedFixture.locked}}<LockIcon class='ico' />
+                        Locked — click to unlock{{else}}<LockOpenIcon
+                          class='ico'
+                        />
+                        Lock layer{{/if}}</button>
                   </div>
-                {{/if}}
-                <div class='insp-actions'>
-                  <button
-                    type='button'
-                    class='danger'
-                    {{on 'click' this.confirmDeleteSelected}}
-                  >Delete selected</button>
-                </div>
-              </div>
-            {{else}}
-              <div class='insp-deco'></div>
-              <div class='insp-pad'>
-                <div class='insp-kicker'>Compose</div>
-                <div class='insp-hero'>Arrange the room</div>
-                <div class='insp-progress'>
-                  <div class='insp-progress-head'>
-                    <span class='insp-progress-label'>Assigned</span>
-                    <span class='insp-progress-count'>{{this.seatedCount}}
-                      of
-                      {{this.totalGuests}}</span>
-                  </div>
-                  <div class='insp-progress-bar'><span
-                      class='insp-progress-fill'
-                      style={{htmlBarWidth this.pct}}
-                    ></span></div>
-                </div>
-                <p class='insp-lead'>Use
-                  <b>＋ Add</b>
-                  to place tables, or
-                  <b>✦ AI Arrange</b>
-                  to seat everyone. Select a table to seat guests here.</p>
-                <div class='insp-legend-title'>Categories</div>
-                <div class='insp-legend'>
-                  {{#each this.catChips as |c|}}
-                    <div class='insp-legend-row'>
-                      <span class='cat-swatch' style={{htmlBg c.color}}></span>
-                      <span class='ilr-name'>{{c.name}}</span>
-                      <span class='ilr-count'>{{c.countSeated}}</span>
+                  <div class='insp-actionbar'>
+                    <div class='insp-actions'>
+                      <Button
+                        @kind='secondary'
+                        {{on 'click' this.duplicateFixture}}
+                      ><CopyIcon class='ico' /> Duplicate</Button>
+                      <Button
+                        @kind='danger'
+                        class='danger'
+                        {{on 'click' this.confirmDeleteFixture}}
+                      ><TrashIcon class='ico' /> Delete</Button>
                     </div>
-                  {{else}}
-                    <p class='rail-empty'>No categories yet.</p>
-                  {{/each}}
+                  </div>
                 </div>
-                <div class='insp-help'>
-                  <div class='insp-help-title'>Need help?</div>
-                  <p class='insp-help-lead'>Drag guests from the left rail onto
-                    any seat, or let
-                    <b>✦ AI Arrange</b>
-                    compose the room for you.</p>
+              {{else if this.multiSelected}}
+                <div class='insp-deco'></div>
+                <div class='insp-pad'>
+                  <div class='insp-kicker'>Selection</div>
+                  <div class='insp-hero'>{{this.selCount}} selected</div>
+                  <p class='insp-lead'>Drag any one to move them together, nudge
+                    with the arrow keys, or delete. Shift-click an element to
+                    add or remove it.</p>
+                  {{#if this.selectionHasTables}}
+                    <div class='insp-label'>Table Shape</div>
+                    <div class='insp-grid4'>
+                      {{#each this.tableShapes as |sh|}}
+                        <button
+                          type='button'
+                          class='insp-opt
+                            {{if (eq this.selectionShape sh.value) "is-on"}}'
+                          {{on 'click' (fn this.setSelectionShape sh.value)}}
+                        >{{sh.label}}</button>
+                      {{/each}}
+                    </div>
+                  {{/if}}
+                  <div class='insp-label'>Colour</div>
+                  <div class='insp-swatches'>
+                    <label class='insp-fxpick' title='Custom colour'>
+                      <BoxelInput
+                        @type='color'
+                        @value={{this.selectionColorValue}}
+                        {{on 'change' this.selectionColorCommit}}
+                      />
+                    </label>
+                    {{#each this.themeSwatches as |sw|}}
+                      <button
+                        type='button'
+                        class='insp-sw'
+                        style={{htmlBg sw.value}}
+                        title={{sw.label}}
+                        {{on 'click' (fn this.setSelectionColor sw.value)}}
+                      ></button>
+                    {{/each}}
+                  </div>
+                  {{#if this.selectionHasSeated}}
+                    <div class='insp-label'>Seating</div>
+                    <div class='insp-layer'>
+                      <Button
+                        @kind='secondary'
+                        class='insp-opt'
+                        {{on 'click' this.clearSelectionSeats}}
+                      >Clear seats</Button>
+                    </div>
+                  {{/if}}
+                  <div class='insp-actions'>
+                    <Button
+                      @kind='danger'
+                      class='danger'
+                      {{on 'click' this.confirmDeleteSelected}}
+                    >Delete selected</Button>
+                  </div>
                 </div>
-              </div>
-            {{/if}}
-          </aside>
+              {{/if}}
+            </aside>
+          {{/if}}
         </div>
       {{else}}
         <div class='tsp-invites'>
@@ -5438,34 +5901,35 @@ export class TableSeatingPlannerIsolated extends Component<
                     >{{a.label}}</button>
                   {{/each}}
                 </div>
-                <textarea
+                <BoxelInput
+                  @type='textarea'
+                  @value={{if @model.posterPrompt @model.posterPrompt ''}}
                   class='inv-msg inv-ai-prompt'
                   aria-label='Extra style directions for the AI poster'
                   placeholder='Optional style directions (markdown) — only if you want a special design, e.g. watercolor florals, blush pink & gold, art-deco…'
-                  value={{if @model.posterPrompt @model.posterPrompt ''}}
                   {{on 'input' this.onPosterPromptInput}}
-                ></textarea>
-                <button
-                  type='button'
+                />
+                <Button
+                  @kind='primary'
+                  @disabled={{this.posterBusy}}
                   class='inv-ai-generate'
-                  disabled={{this.posterBusy}}
                   {{on 'click' this.generatePoster}}
                 >{{if
                     this.posterBusy
                     'Generating…'
                     '✦ Generate poster'
-                  }}</button>
+                  }}</Button>
                 {{#if this.posterLink}}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='secondary'
                     class='inv-download'
                     {{on 'click' this.downloadPoster}}
-                  ><DownloadIcon class='ico' /> Download poster</button>
-                  <button
-                    type='button'
+                  ><DownloadIcon class='ico' /> Download poster</Button>
+                  <Button
+                    @kind='text-only'
                     class='inv-ai-clear'
                     {{on 'click' this.clearPoster}}
-                  >Remove image</button>
+                  >Remove image</Button>
                 {{/if}}
               </div>
             </div>
@@ -5473,12 +5937,12 @@ export class TableSeatingPlannerIsolated extends Component<
           <aside class='inv-list' aria-label='Invitation guests'>
             <div class='inv-search'>
               <span class='inv-search-ico'><SearchIcon class='ico' /></span>
-              <input
+              <BoxelInput
+                @value={{this.inviteSearch}}
                 class='inv-search-input'
                 type='search'
                 placeholder='Search guests by name'
                 aria-label='Search guests by name'
-                value={{this.inviteSearch}}
                 {{on 'input' this.onInviteSearch}}
               />
               {{#if this.inviteSearch}}
@@ -5496,36 +5960,61 @@ export class TableSeatingPlannerIsolated extends Component<
             <p class='inv-list-note'>Edit the message below — each guest's Copy
               button fills in their tokens for you.</p>
             <div class='inv-label'>Invite message</div>
-            <textarea
+            <BoxelInput
+              @type='textarea'
+              @value={{this.inviteTemplate}}
               class='inv-msg'
               aria-label='Invite message'
-              value={{this.inviteTemplate}}
               {{on 'input' this.onInviteTemplateInput}}
-            ></textarea>
+            />
             <p class='inv-tokens'>Tokens: {name} · {event} · {date} · {venue} ·
               {hosts} · {poster}</p>
             {{#each this.inviteRows as |row|}}
               <div class='inv-row'>
-                <span class='inv-av'>{{row.initials}}</span>
-                <div class='inv-row-main'>
-                  <div class='inv-row-name'>{{if
-                      row.model.fullName
-                      row.model.fullName
-                      'Guest'
-                    }}</div>
+                <div class='inv-row-head'>
+                  <button
+                    type='button'
+                    class='inv-row-toggle'
+                    aria-expanded={{if
+                      (this.invitePreviewOpen row.key)
+                      'true'
+                      'false'
+                    }}
+                    title='Preview this invite'
+                    {{on 'click' (fn this.toggleInvitePreview row.key)}}
+                  >
+                    <span class='inv-av'>{{row.initials}}</span>
+                    <span class='inv-row-id'>
+                      <span class='inv-row-name'>{{if
+                          row.model.fullName
+                          row.model.fullName
+                          'Guest'
+                        }}</span>
+                      <span class='inv-row-sub'>
+                        {{if
+                          (this.invitePreviewOpen row.key)
+                          'Hide message ▴'
+                          'Show message ▾'
+                        }}
+                      </span>
+                    </span>
+                  </button>
+                  <Button
+                    @kind='secondary'
+                    class='inv-btn copy'
+                    {{on 'click' (fn this.copyInvite row)}}
+                  >Copy</Button>
+                  <button
+                    type='button'
+                    class='inv-edit'
+                    aria-label='Edit guest details'
+                    title='Edit details'
+                    {{on 'click' (fn this.openEditGuest row.model)}}
+                  ><PencilIcon class='inv-edit-ico' /></button>
                 </div>
-                <button
-                  type='button'
-                  class='inv-btn copy'
-                  {{on 'click' (fn this.copyText row.msg)}}
-                >Copy</button>
-                <button
-                  type='button'
-                  class='inv-edit'
-                  aria-label='Edit guest details'
-                  title='Edit details'
-                  {{on 'click' (fn this.openEditGuest row.model)}}
-                ><PencilIcon class='inv-edit-ico' /></button>
+                {{#if (this.invitePreviewOpen row.key)}}
+                  <p class='inv-preview'>{{row.msg}}</p>
+                {{/if}}
               </div>
             {{else}}
               <p class='rail-empty'>{{if
@@ -5555,16 +6044,16 @@ export class TableSeatingPlannerIsolated extends Component<
           </:body>
           <:foot>
             <div class='pop-actions'>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
                 class='modal-cancel'
                 {{on 'click' this.cancelDelete}}
-              >Cancel</button>
-              <button
-                type='button'
+              >Cancel</Button>
+              <Button
+                @kind='danger'
                 class='confirm-danger'
                 {{on 'click' this.confirmDelete}}
-              ><TrashIcon class='ico' /> Delete</button>
+              ><TrashIcon class='ico' /> Delete</Button>
             </div>
           </:foot>
         </SeatingPlanPopover>
@@ -5573,11 +6062,11 @@ export class TableSeatingPlannerIsolated extends Component<
         <div class='tsp-toast'>✦
           {{this.toast}}
           {{#if this.toastAction}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
               class='tsp-toast-action'
               {{on 'click' this.runToastAction}}
-            >{{this.toastAction.label}}</button>
+            >{{this.toastAction.label}}</Button>
             <button
               type='button'
               class='tsp-toast-close'
@@ -5671,11 +6160,11 @@ export class TableSeatingPlannerIsolated extends Component<
           </:body>
           <:foot>
             <div class='pop-actions'>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
                 class='modal-cancel'
                 {{on 'click' this.closeFloorLibrary}}
-              >Close</button>
+              >Close</Button>
             </div>
           </:foot>
         </SeatingPlanPopover>
@@ -5695,9 +6184,9 @@ export class TableSeatingPlannerIsolated extends Component<
               reusable template. Guests aren’t included.</p>
             <label class='save-field'>
               <span class='save-field-label'>Template name</span>
-              <input
+              <BoxelInput
+                @value={{this.templateName}}
                 class='save-input'
-                value={{this.templateName}}
                 placeholder='e.g. Garden reception'
                 autocomplete='off'
                 {{on 'input' this.onTemplateNameInput}}
@@ -5709,17 +6198,17 @@ export class TableSeatingPlannerIsolated extends Component<
           </:body>
           <:foot>
             <div class='pop-actions'>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
                 class='modal-cancel'
                 {{on 'click' this.closeSaveTemplate}}
-              >Cancel</button>
-              <button
-                type='button'
+              >Cancel</Button>
+              <Button
+                @kind='primary'
+                @disabled={{this.savingTemplate}}
                 class='modal-save'
-                disabled={{this.savingTemplate}}
                 {{on 'click' this.confirmSaveTemplate}}
-              >{{if this.savingTemplate 'Saving…' 'Save template'}}</button>
+              >{{if this.savingTemplate 'Saving…' 'Save template'}}</Button>
             </div>
           </:foot>
         </SeatingPlanPopover>
@@ -5761,11 +6250,11 @@ export class TableSeatingPlannerIsolated extends Component<
                   0
                 }}
                 seats</span>
-              <button
-                type='button'
+              <Button
+                @kind='primary'
                 class='modal-save preview-apply'
                 {{on 'click' (fn this.applyTemplate this.previewTemplate)}}
-              >Use this layout</button>
+              >Use this layout</Button>
             </div>
           </:foot>
         </SeatingPlanPopover>
@@ -5780,10 +6269,10 @@ export class TableSeatingPlannerIsolated extends Component<
             <:header>
               <div class='tpop-hwrap'>
                 <div class='tpop-head'>
-                  <input
+                  <BoxelInput
+                    @value={{this.selectedTable.name}}
                     class='tpop-name'
                     aria-label='Table name'
-                    value={{this.selectedTable.name}}
                     {{on 'input' this.renameTable}}
                   />
                   <button
@@ -5811,16 +6300,16 @@ export class TableSeatingPlannerIsolated extends Component<
                 Auto to rank by floor position.</div>
               <div class='tpop-label'>Layer</div>
               <div class='tpop-layer'>
-                <button
-                  type='button'
-                  disabled={{this.selectedTable.locked}}
+                <Button
+                  @kind='secondary'
+                  @disabled={{this.selectedTable.locked}}
                   {{on 'click' this.sendTableBack}}
-                >↓ Send back</button>
-                <button
-                  type='button'
-                  disabled={{this.selectedTable.locked}}
+                >↓ Send back</Button>
+                <Button
+                  @kind='secondary'
+                  @disabled={{this.selectedTable.locked}}
                   {{on 'click' this.bringTableFront}}
-                >↑ Bring front</button>
+                >↑ Bring front</Button>
                 <button
                   type='button'
                   class='tpop-lock {{if this.selectedTable.locked "is-on"}}'
@@ -5832,15 +6321,15 @@ export class TableSeatingPlannerIsolated extends Component<
             </:body>
             <:foot>
               <div class='tpop-actions'>
-                <button
-                  type='button'
+                <Button
+                  @kind='secondary'
                   {{on 'click' this.popoverDuplicate}}
-                ><CopyIcon class='ico' /> Duplicate</button>
-                <button
-                  type='button'
+                ><CopyIcon class='ico' /> Duplicate</Button>
+                <Button
+                  @kind='danger'
                   class='danger'
                   {{on 'click' this.popoverDelete}}
-                ><TrashIcon class='ico' /> Delete</button>
+                ><TrashIcon class='ico' /> Delete</Button>
               </div>
             </:foot>
           </SeatingPlanPopover>
@@ -5848,6 +6337,8 @@ export class TableSeatingPlannerIsolated extends Component<
       {{/if}}
       {{#if this.showWizard}}
         <SetupWizard
+          @hostsField={{@fields.hosts}}
+          @guestsField={{@fields.guests}}
           @eventTitle={{@model.eventTitle}}
           @venue={{@model.venue}}
           @eventDate={{this.eventDateInput}}
@@ -5879,22 +6370,29 @@ export class TableSeatingPlannerIsolated extends Component<
             </div>
           </div>
         {{else}}
-          {{#each this.tablesToPrint as |t|}}
-            <section class='ps-group'>
-              <div class='ps-cell ps-cell-table'>
-                <TableCardView
-                  @eventTitle={{@model.eventTitle}}
-                  @tableName={{t.name}}
-                />
-              </div>
-              {{#each t.seatedGuests as |g|}}
-                <div class='ps-cell'>
-                  <PlaceCardView
-                    @eventTitle={{@model.eventTitle}}
-                    @guestName={{g.fullName}}
-                    @tableName={{t.name}}
-                  />
-                </div>
+          {{#each this.printPages as |pg|}}
+            <section class='ps-page'>
+              {{#each pg as |row|}}
+                {{#if row.isTable}}
+                  <div class='ps-cell ps-cell-table'>
+                    <TableCardView
+                      @eventTitle={{@model.eventTitle}}
+                      @tableName={{row.table.name}}
+                      @logoUrl={{this.eventLogoURL}}
+                    />
+                  </div>
+                {{else}}
+                  {{#each row.guests as |g|}}
+                    <div class='ps-cell'>
+                      <PlaceCardView
+                        @eventTitle={{@model.eventTitle}}
+                        @guestName={{g.fullName}}
+                        @tableName={{row.table.name}}
+                        @logoUrl={{this.eventLogoURL}}
+                      />
+                    </div>
+                  {{/each}}
+                {{/if}}
               {{/each}}
             </section>
           {{/each}}
@@ -5904,6 +6402,10 @@ export class TableSeatingPlannerIsolated extends Component<
     <style scoped>
       .print-sheet {
         display: none;
+        /* Print backgrounds/colors even when the browser's "Background
+           graphics" option is unchecked. */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
       @media print {
         /* The planner shell is height-capped + overflow-hidden on screen; let
@@ -5918,42 +6420,96 @@ export class TableSeatingPlannerIsolated extends Component<
         .tsp > :not(.print-sheet) {
           display: none !important;
         }
-        /* Cards mode: paginated grid of table + place cards. */
+        /* Cards mode: explicitly packed A4 pages (see printPages) so every
+           page carries its own 12mm top/bottom margin for easy cutting. */
         .print-cards {
-          display: grid !important;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          padding: 0;
+          display: block !important;
           background: #ffffff;
         }
-        .ps-group {
-          display: contents;
+        .ps-page {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          /* Cells already include their own 2mm bleed; gaps just need the
+             trim marks (4mm per side) plus air. */
+          gap: 10mm 9mm;
+          align-content: start;
+          padding: 12mm;
+          break-after: page;
+        }
+        .ps-page:last-child {
+          break-after: auto;
         }
         /* Fixed print sizes (not aspect-ratio) so cards paginate predictably;
            break-inside keeps each card whole across page boundaries. */
+        /* Each cell IS the bleed box (trim size + 2mm bleed on every side,
+           Illustrator-style): the artwork fills the whole cell and the trim
+           line sits 2mm inside its edge, so break-inside: avoid keeps art,
+           bleed, and trim together on one page — a card can never straddle
+           a page boundary. */
         .ps-cell {
-          height: 2.1in;
+          height: calc(2.1in + 4mm);
           break-inside: avoid;
+          position: relative;
+        }
+        .ps-cell :deep(.pcv),
+        .ps-cell :deep(.tcv) {
+          /* No outline at the bleed edge — it would survive as a stray line
+             if the cut drifts. */
+          border: none;
+          border-radius: 0;
+        }
+        /* The decorative gold hairline frame reads as a stray cut line on
+           paper — screen only. */
+        .ps-cell :deep(.pcv)::before,
+        .ps-cell :deep(.tcv)::before {
+          display: none;
         }
         .ps-cell-table {
           grid-column: 1 / -1;
-          height: 1.15in;
+          height: calc(1.15in + 4mm);
           break-inside: avoid;
+        }
+        /* Illustrator-style crop marks: hairline ticks just outside each
+           card's corners — cut along the marks. The card art itself runs to
+           the cell edge, so the trimmed card is full-bleed. */
+        /* Trim marks aligned to the trim line (2mm inside the bleed edge),
+           drawn outside the bleed box with a 1mm gap before the art. */
+        .ps-cell::after {
+          content: '';
+          position: absolute;
+          inset: -4mm;
+          z-index: 1;
+          pointer-events: none;
+          --mk: rgba(0, 0, 0, 0.65);
+          background:
+            linear-gradient(var(--mk), var(--mk)) left 0 top 6mm / 3mm 0.2mm,
+            linear-gradient(var(--mk), var(--mk)) left 6mm top 0 / 0.2mm 3mm,
+            linear-gradient(var(--mk), var(--mk)) right 0 top 6mm / 3mm 0.2mm,
+            linear-gradient(var(--mk), var(--mk)) right 6mm top 0 / 0.2mm 3mm,
+            linear-gradient(var(--mk), var(--mk)) left 0 bottom 6mm / 3mm 0.2mm,
+            linear-gradient(var(--mk), var(--mk)) left 6mm bottom 0 / 0.2mm 3mm,
+            linear-gradient(var(--mk), var(--mk)) right 0 bottom 6mm / 3mm 0.2mm,
+            linear-gradient(var(--mk), var(--mk)) right 6mm bottom 0 / 0.2mm 3mm;
+          background-repeat: no-repeat;
         }
         /* Chart mode: the whole seating layout scaled to one overview page. */
         .print-chart {
           display: block !important;
           background: #ffffff;
+          padding: 12mm;
         }
         .ps-chart {
           display: flex;
           flex-direction: column;
           gap: 10px;
-          height: 96vh;
+          height: calc(100vh - 24mm);
         }
         .ps-chart-title {
           text-align: center;
-          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+          font-family: var(
+            --tsp-font-serif,
+            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+          );
           font-size: 26px;
           font-weight: 600;
           color: #22283f;
@@ -5967,10 +6523,18 @@ export class TableSeatingPlannerIsolated extends Component<
           height: 100%;
         }
       }
+      /* Zero page margin so the browser has nowhere to draw its own
+         header/footer (date + URL); the sheet carries its margins itself. */
       @page {
-        margin: 12mm;
+        size: A4;
+        margin: 0;
       }
-      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Jost:ital,wght@0,300..600;1,300..600&display=swap');
+      /* boxel Button is inline-flex, which swallows the literal space
+         between an icon and its label; gap restores it (icon-only buttons
+         are single-item, so they're unaffected). */
+      .tsp :deep(.boxel-button) {
+        gap: 6px;
+      }
       .ico {
         width: 14px;
         height: 14px;
@@ -5982,14 +6546,42 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 12px;
         height: 12px;
       }
+      /* Default palette for planners with NO linked theme — pins the
+         semantic tokens to the Parisian look so app-level defaults can't
+         restyle the card arbitrarily. A linked theme omits this class. */
+      .tsp-default-theme {
+        --background: #faf6ec;
+        --foreground: #22283f;
+        --card: #fffdf8;
+        --card-foreground: #22283f;
+        --popover: #fffdf8;
+        --popover-foreground: #22283f;
+        --primary: #141b33;
+        --primary-foreground: #f3ead6;
+        --secondary: #c5a35c;
+        --secondary-foreground: #22283f;
+        --muted: #f4eddb;
+        --muted-foreground: #7d7460;
+        --accent: #c5a35c;
+        --accent-foreground: #22283f;
+        --border: rgba(197, 163, 92, 0.35);
+        --input: #fffdf8;
+        --ring: #c5a35c;
+        --radius: 0.75rem;
+        --font-sans: 'Jost', system-ui, sans-serif;
+        --font-serif: 'Cormorant Garamond', Georgia, serif;
+      }
       .tsp {
         height: 100%;
         min-height: 720px;
         display: flex;
         flex-direction: column;
-        background: var(--paper, #faf6ec);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        background: var(--tsp-background, var(--background, #faf6ec));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         overflow: hidden;
         container-type: inline-size;
         container-name: tsp;
@@ -6000,13 +6592,15 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-head,
       .tsp-rail {
-        --surface: var(--navy-2, #1a2238);
-        --surface-edge: var(--navy-edge, rgba(255, 255, 255, 0.1));
-        --ink: var(--navy-ink, #f3ead6);
-        --gold: #e3c27d;
-        --gold-soft: #f4e4b6;
-        --gold-grad: linear-gradient(135deg, #f6e7b8, #e3c27d 55%, #c09a55);
-        color: var(--ink, #22283f);
+        --card: var(--tsp-primary-soft, #1a2238);
+        --border: var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
+        --foreground: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
+        --accent: #e3c27d;
+        --tsp-accent-soft: #f4e4b6;
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .tsp-head {
         min-height: 70px;
@@ -6016,7 +6610,7 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         gap: 10px 26px;
         padding: 10px 26px;
-        background: var(--navy, #141b33);
+        background: var(--tsp-primary, var(--primary, #141b33));
         border-bottom: 1px solid rgba(197, 163, 92, 0.45);
       }
       .tsp-brand {
@@ -6028,11 +6622,11 @@ export class TableSeatingPlannerIsolated extends Component<
         place-items: center;
         overflow: hidden;
         background: var(
-          --gold-grad,
+          --tsp-gold-grad,
           linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
         );
-        color: var(--navy, #141b33);
-        border: 1px solid var(--gold-soft, #e6cf9a);
+        color: var(--tsp-primary, var(--primary, #141b33));
+        border: 1px solid var(--tsp-accent-soft, #e6cf9a);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
       }
       .tsp-brand-img {
@@ -6042,7 +6636,10 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-brand-mark::before {
         content: var(--tsp-motif, attr(data-initials));
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-weight: 700;
         font-size: 22px;
         line-height: 1;
@@ -6058,6 +6655,7 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-left: auto;
       }
       .tsp-event-title {
+        min-height: 0;
         display: block;
         width: 100%;
         appearance: none;
@@ -6066,15 +6664,18 @@ export class TableSeatingPlannerIsolated extends Component<
         border-bottom: 1px solid transparent;
         border-radius: 0;
         padding: 0 0 2px;
-        color: var(--gold-soft, #e6cf9a);
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        color: var(--tsp-accent-soft, #e6cf9a);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-weight: 600;
         font-size: 28px;
         line-height: 1.15;
         transition: border-color 0.15s;
       }
       .tsp-event-title::placeholder {
-        color: var(--gold-soft, #e6cf9a);
+        color: var(--tsp-accent-soft, #e6cf9a);
         opacity: 0.55;
       }
       .tsp-event-title:hover {
@@ -6082,7 +6683,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-event-title:focus {
         outline: none;
-        border-bottom-color: var(--gold, #c5a35c);
+        border-bottom-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .tsp-meta-card {
         display: flex;
@@ -6091,7 +6692,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 8px 20px;
         border-radius: 14px;
         background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
+        border: 1px solid var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
       }
       .tsp-meta-col {
         display: flex;
@@ -6101,7 +6702,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-meta-div {
         width: 1px;
-        background: var(--navy-edge, rgba(255, 255, 255, 0.1));
+        background: var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
       }
       .tsp-meta-label {
         font-size: 8.5px;
@@ -6116,6 +6717,7 @@ export class TableSeatingPlannerIsolated extends Component<
         min-height: 34px;
       }
       .tsp-host {
+        position: relative;
         width: 34px;
         height: 34px;
         margin-right: -8px;
@@ -6123,26 +6725,54 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        border: 1.5px solid var(--gold, #c5a35c);
-        background: var(--navy-2, #1a2238);
-        color: var(--gold-soft, #e6cf9a);
-        font:
-          600 12px 'Cormorant Garamond',
-          serif;
-        overflow: hidden;
-        cursor: pointer;
+        border: 1.5px solid var(--tsp-accent, var(--accent, #c5a35c));
+        background: var(--tsp-primary-soft, #1a2238);
+        color: var(--tsp-accent-soft, #e6cf9a);
+        font: 600 12px
+          var(--tsp-font-serif, var(--font-serif, 'Cormorant Garamond', serif));
         transition: 0.15s;
       }
       .tsp-host:hover {
-        border-color: #e0857a;
-        color: #e0857a;
         z-index: 1;
       }
       .tsp-host-img {
         width: 100%;
         height: 100%;
+        border-radius: 50%;
         object-fit: cover;
         display: block;
+      }
+      /* Small top-right ✕ — the only unlink trigger; the avatar itself
+         is display-only. Revealed on hover/focus so the stack stays
+         clean. */
+      .tsp-host-x {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 15px;
+        height: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 50%;
+        border: 1.5px solid var(--tsp-primary, var(--primary, #141b33));
+        background: var(--tsp-destructive, var(--destructive, #b3261e));
+        color: var(
+          --tsp-destructive-foreground,
+          var(--destructive-foreground, #ffffff)
+        );
+        font-size: 7.5px;
+        line-height: 1;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+      }
+      .tsp-host:hover .tsp-host-x,
+      .tsp-host-x:focus-visible {
+        opacity: 1;
+        pointer-events: auto;
       }
       .tsp-host-add {
         margin-right: 0;
@@ -6154,8 +6784,8 @@ export class TableSeatingPlannerIsolated extends Component<
         border-style: dashed;
         border-color: rgba(197, 163, 92, 0.55);
         background: transparent;
-        color: var(--gold, #c5a35c);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 14px;
       }
       .tsp-host-add-hint {
@@ -6171,8 +6801,8 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0 10px;
       }
       .tsp-host-add:hover {
-        border-color: var(--gold, #c5a35c);
-        color: var(--gold-soft, #e6cf9a);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent-soft, #e6cf9a);
       }
       .tsp-date {
         position: relative;
@@ -6196,14 +6826,15 @@ export class TableSeatingPlannerIsolated extends Component<
         color: rgba(243, 234, 214, 0.5);
         pointer-events: none;
       }
-      .tsp-date:has(.tsp-date-hint) input[type='date'] {
+      .tsp-date:has(.tsp-date-hint) input[type='datetime-local'] {
         color: transparent;
       }
-      .tsp-date input[type='date'] {
+      .tsp-date input[type='datetime-local'] {
+        min-height: 0;
         border: none;
         background: transparent;
-        color: var(--gold, #c5a35c);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10.5px;
         font-weight: 500;
         letter-spacing: 0.14em;
@@ -6212,7 +6843,7 @@ export class TableSeatingPlannerIsolated extends Component<
         cursor: pointer;
         padding: 0;
       }
-      .tsp-date input[type='date']:focus {
+      .tsp-date input[type='datetime-local']:focus {
         outline: none;
         border-bottom: 1px solid rgba(197, 163, 92, 0.5);
       }
@@ -6221,8 +6852,8 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 150px;
         border: none;
         background: transparent;
-        color: var(--gold, #c5a35c);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10.5px;
         font-weight: 500;
         letter-spacing: 0.14em;
@@ -6236,18 +6867,36 @@ export class TableSeatingPlannerIsolated extends Component<
         outline: none;
         border-bottom: 1px solid rgba(197, 163, 92, 0.5);
       }
+      /* Seating / Invitations — a segmented pill track so the view switch
+         reads as tabs, distinct from the header's plain action buttons */
       .tsp-nav {
         display: flex;
-        gap: 6px;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 30px;
+        border: 1px solid
+          color-mix(
+            in srgb,
+            var(--tsp-accent, var(--accent, #c5a35c)) 45%,
+            transparent
+          );
+        background: color-mix(
+          in srgb,
+          var(--tsp-accent, var(--accent, #c5a35c)) 12%,
+          transparent
+        );
       }
       .tsp-navbtn {
-        height: 34px;
+        height: 30px;
         padding: 0 18px;
         border-radius: 30px;
         border: 1px solid transparent;
         background: transparent;
-        color: var(--gold, #c5a35c);
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         font-size: 11px;
         font-weight: 500;
         letter-spacing: 0.22em;
@@ -6256,12 +6905,16 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .tsp-navbtn:hover {
-        color: var(--gold-soft, #e6cf9a);
-        border-color: rgba(197, 163, 92, 0.5);
+        color: var(--tsp-accent-soft, #e6cf9a);
       }
       .tsp-navbtn.is-on {
-        background: var(--popover, #fdfaf2);
-        color: var(--navy, #141b33);
+        background: var(--tsp-popover, var(--popover, #fdfaf2));
+        color: var(--tsp-primary, var(--primary, #141b33));
+        font-weight: 600;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+      }
+      .tsp-navbtn.is-on:hover {
+        color: var(--tsp-primary, var(--primary, #141b33));
       }
       .tsp-body {
         flex: 1;
@@ -6329,7 +6982,7 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         flex-direction: column;
         min-height: 0;
-        background: var(--navy, #141b33);
+        background: var(--tsp-primary, var(--primary, #141b33));
         border-right: 1px solid rgba(197, 163, 92, 0.35);
       }
       .rail-head {
@@ -6339,7 +6992,10 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 20px 20px 10px;
       }
       .rail-title {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 28px;
         font-weight: 600;
       }
@@ -6349,13 +7005,13 @@ export class TableSeatingPlannerIsolated extends Component<
         font-weight: 500;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--gold, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
         text-align: right;
       }
       .rail-bar {
         height: 2px;
         margin: 0 20px;
-        background: var(--navy-edge, rgba(255, 255, 255, 0.1));
+        background: var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
         border-radius: 2px;
         overflow: hidden;
       }
@@ -6363,7 +7019,7 @@ export class TableSeatingPlannerIsolated extends Component<
         display: block;
         height: 100%;
         background: var(
-          --gold-grad,
+          --tsp-gold-grad,
           linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
         );
         transition: width 0.4s ease;
@@ -6376,15 +7032,18 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 38px;
         padding: 0 14px;
         border-radius: 9px;
-        border: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
+        border: 1px solid var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
         background: rgba(255, 255, 255, 0.06);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         font-size: 14px;
         outline: none;
       }
       .rail-search input::placeholder {
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         opacity: 0.5;
       }
       .rail-search input:focus {
@@ -6402,23 +7061,26 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 6px;
         padding: 5px 10px;
         border-radius: 999px;
-        border: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
+        border: 1px solid var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
         background: rgba(255, 255, 255, 0.04);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         font-size: 12px;
         cursor: pointer;
         transition: 0.15s;
       }
       .cat-pill:hover {
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .cat-pill.is-on {
         background: var(
-          --gold-grad,
+          --tsp-gold-grad,
           linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
         );
-        color: var(--navy, #141b33);
+        color: var(--tsp-primary, var(--primary, #141b33));
         border-color: transparent;
       }
       .cat-pill .dim {
@@ -6447,16 +7109,19 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         gap: 12px;
         padding: 9px 12px;
-        border: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
+        border: 1px solid var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
         border-radius: 11px;
-        background: var(--navy-2, #1a2238);
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
-        color: var(--ink, #22283f);
+        background: var(--tsp-primary-soft, #1a2238);
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
       }
       .rail-guest:hover {
         transform: translateY(-1px);
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .rail-guest:active {
         cursor: grabbing;
@@ -6472,12 +7137,11 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        font:
-          600 13px 'Cormorant Garamond',
-          serif;
-        color: var(--navy, #141b33);
+        font: 600 13px
+          var(--tsp-font-serif, var(--font-serif, 'Cormorant Garamond', serif));
+        color: var(--tsp-primary, var(--primary, #141b33));
         background: var(
-          --gold-grad,
+          --tsp-gold-grad,
           linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
         );
       }
@@ -6501,12 +7165,10 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .rg-vip {
         flex: none;
-        font:
-          600 8px 'Jost',
-          sans-serif;
+        font: 600 8px var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         letter-spacing: 0.12em;
-        color: var(--navy, #141b33);
-        background: var(--gold, #c5a35c);
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
+        background: var(--tsp-accent, var(--accent, #c5a35c));
         border-radius: 4px;
         padding: 2px 5px;
       }
@@ -6525,10 +7187,8 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .rg-party {
         flex: none;
-        font:
-          11px 'Jost',
-          sans-serif;
-        color: var(--gold, #c5a35c);
+        font: 11px var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
+        color: var(--tsp-accent, var(--accent, #c5a35c));
         border: 1px solid rgba(197, 163, 92, 0.45);
         border-radius: 999px;
         padding: 2px 8px;
@@ -6548,8 +7208,8 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .rg-edit:hover {
-        border-color: var(--gold, #c5a35c);
-        color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .rg-remove {
         flex: none;
@@ -6570,28 +7230,34 @@ export class TableSeatingPlannerIsolated extends Component<
         color: #a8543f;
       }
       .rail-empty {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-style: italic;
         font-size: 15px;
-        color: var(--gold, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
         padding: 8px 4px;
       }
       .rail-foot {
         flex: none;
         padding: 14px 20px;
-        border-top: 1px solid var(--navy-edge, rgba(255, 255, 255, 0.1));
+        border-top: 1px solid var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
       }
       .rail-add {
         width: 100%;
         height: 44px;
         border: none;
         background: var(
-          --gold-grad,
+          --tsp-gold-grad,
           linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
         );
-        color: var(--navy, #141b33);
+        color: var(--tsp-primary, var(--primary, #141b33));
         border-radius: 30px;
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.22em;
@@ -6608,8 +7274,11 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-top: 8px;
         border: none;
         background: transparent;
-        color: var(--gold, #c5a35c);
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         font-size: 10px;
         font-weight: 500;
         letter-spacing: 0.2em;
@@ -6639,17 +7308,20 @@ export class TableSeatingPlannerIsolated extends Component<
         right: 0;
         transform: translateY(-50%);
         z-index: var(--z-handle);
-        width: 26px;
-        height: 64px;
+        width: 28px;
+        height: 104px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         padding: 0;
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-right: none;
         border-radius: 10px 0 0 10px;
-        background: var(--surface, #ffffff);
-        color: var(--acc-deep, #a5854a);
+        background: var(--tsp-card, var(--card, #ffffff));
+        color: var(--tsp-accent-deep, #a5854a);
         font-size: 19px;
         line-height: 1;
         cursor: pointer;
@@ -6660,22 +7332,33 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .insp-handle:hover {
         background: #f5ecd9;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .insp-handle-ico {
         display: inline-block;
       }
+      .insp-handle-lbl {
+        writing-mode: vertical-rl;
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
+        font-size: 9.5px;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
       .insp-handle.has-selection {
-        background: var(--navy, #141b33);
-        border-color: var(--navy, #141b33);
+        background: var(--tsp-primary, var(--primary, #141b33));
+        border-color: var(--tsp-primary, var(--primary, #141b33));
         color: #ffffff;
       }
       .insp-handle.has-selection:hover {
-        background: var(--navy-2, #1a2238);
+        background: var(--tsp-primary-soft, #1a2238);
         color: #ffffff;
       }
       .insp-handle.is-beckoning {
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
         box-shadow:
           -4px 0 12px rgba(34, 40, 63, 0.1),
           0 0 0 0 rgba(197, 163, 92, 0.45);
@@ -6762,7 +7445,7 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 18px;
         padding: 10px 22px;
         border-bottom: 1px solid rgba(197, 163, 92, 0.25);
-        background: var(--paper, #faf6ec);
+        background: var(--tsp-background, var(--background, #faf6ec));
       }
       .ct-group {
         display: flex;
@@ -6786,28 +7469,20 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0 14px;
         border-radius: 30px;
         border: 1px solid rgba(34, 40, 63, 0.1);
-        background: var(--surface, #ffffff);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        background: var(--tsp-card, var(--card, #ffffff));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.08em;
         cursor: pointer;
         transition: 0.15s;
-      }
-      .ct-icon-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        padding: 0;
-        color: var(--acc-deep, #a5854a);
       }
       .ct-btn:disabled {
         opacity: 0.4;
         cursor: not-allowed;
       }
       .ct-btn:hover {
-        border-color: var(--acc, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       @container tsp (max-width: 860px) {
         .canvas-toolbar {
@@ -6843,10 +7518,10 @@ export class TableSeatingPlannerIsolated extends Component<
       .ct-secondary {
         background: transparent;
         border-color: rgba(197, 163, 92, 0.55);
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
       }
       .ct-secondary:hover {
-        border-color: var(--acc, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
         background: rgba(197, 163, 92, 0.12);
       }
       .ct-ghost {
@@ -6856,7 +7531,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .ct-ghost:hover {
         border-color: rgba(197, 163, 92, 0.55);
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .ct-ghost:disabled {
         opacity: 0.5;
@@ -6867,9 +7542,9 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0 18px;
         border-radius: 30px;
         border: none;
-        background: var(--navy, #141b33);
+        background: var(--tsp-primary, var(--primary, #141b33));
         color: #ffffff;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.1em;
         font-weight: 500;
@@ -6909,8 +7584,8 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: transform 0.18s ease;
       }
       .ct-add.is-open {
-        border-color: var(--acc, #c5a35c);
-        color: var(--acc-deep, #a5854a);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent-deep, #a5854a);
       }
       .ct-add.is-open .ct-caret {
         transform: rotate(180deg);
@@ -6929,8 +7604,9 @@ export class TableSeatingPlannerIsolated extends Component<
         left: 0;
         z-index: 40;
         width: 248px;
-        background: var(--surface, #ffffff);
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--tsp-card, var(--card, #ffffff));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 16px;
         box-shadow: 0 18px 48px rgba(34, 40, 63, 0.16);
         padding: 0 8px 8px;
@@ -6945,7 +7621,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 8px;
       }
       .ct-pop::-webkit-scrollbar-thumb {
-        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 999px;
       }
       @keyframes ct-pop-in {
@@ -6964,11 +7640,11 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 16px 16px 0 0;
       }
       .ct-pop-title {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 9px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         padding: 10px 10px 6px;
       }
       .ct-pop-item {
@@ -6983,7 +7659,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 11px;
         cursor: pointer;
         font-size: 13px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         transition: 0.13s;
       }
       .ct-pop-item:hover {
@@ -6999,14 +7675,17 @@ export class TableSeatingPlannerIsolated extends Component<
         min-width: 0;
       }
       .ct-pop-name {
-        font-family: var(--font-serif, 'Cormorant Garamond', serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', serif)
+        );
         font-size: 14px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .ct-pop-desc {
         font-size: 10.5px;
         letter-spacing: 0.02em;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         opacity: 0.55;
       }
       .ct-table-glyph {
@@ -7014,20 +7693,24 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         justify-content: center;
         font-size: 18px;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
       }
       .ct-pop-empty {
         padding: 10px 12px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
-        color: color-mix(in srgb, var(--ink, #22283f) 55%, transparent);
+        color: color-mix(
+          in srgb,
+          var(--tsp-foreground, var(--foreground, #22283f)) 55%,
+          transparent
+        );
       }
       .ct-branch {
         position: relative;
       }
       .ct-branch-caret {
         margin-left: auto;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         font-size: 15px;
       }
       .ct-branch.is-open {
@@ -7040,8 +7723,9 @@ export class TableSeatingPlannerIsolated extends Component<
         z-index: 41;
         width: 210px;
         padding: 8px;
-        background: var(--surface, #ffffff);
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--tsp-card, var(--card, #ffffff));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 16px;
         box-shadow: 0 18px 48px rgba(34, 40, 63, 0.16);
         animation: ct-pop-in 0.12s ease;
@@ -7050,11 +7734,11 @@ export class TableSeatingPlannerIsolated extends Component<
         top: 110px;
       }
       .ct-flyout-title {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 9px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         padding: 8px 8px 6px;
       }
       .ct-flyout-grid {
@@ -7071,8 +7755,8 @@ export class TableSeatingPlannerIsolated extends Component<
         border: 1px solid transparent;
         background: none;
         border-radius: 11px;
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11.5px;
         cursor: pointer;
         transition: 0.13s;
@@ -7084,7 +7768,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .ct-shape-g {
         width: 30px;
         height: 24px;
-        border: 2px solid var(--acc-deep, #a5854a);
+        border: 2px solid var(--tsp-accent-deep, #a5854a);
         background: rgba(197, 163, 92, 0.14);
       }
       .sg-round {
@@ -7106,7 +7790,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .sg-curved {
         width: 28px;
         height: 16px;
-        border: 5px solid var(--acc-deep, #a5854a);
+        border: 5px solid var(--tsp-accent-deep, #a5854a);
         border-bottom: none;
         border-radius: 26px 26px 0 0;
         background: transparent;
@@ -7126,7 +7810,7 @@ export class TableSeatingPlannerIsolated extends Component<
         background: none;
         border-radius: 11px;
         cursor: pointer;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         transition: 0.13s;
       }
       .ct-pop-tile:hover {
@@ -7149,7 +7833,7 @@ export class TableSeatingPlannerIsolated extends Component<
         flex: 1;
         position: relative;
         overflow: hidden;
-        background: var(--paper, #faf6ec);
+        background: var(--tsp-background, var(--background, #faf6ec));
         touch-action: none;
         cursor: default;
       }
@@ -7162,7 +7846,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .marquee {
         position: absolute;
         z-index: 25;
-        border: 1px solid var(--acc, #c5a35c);
+        border: 1px solid var(--tsp-accent, var(--accent, #c5a35c));
         background: rgba(197, 163, 92, 0.14);
         pointer-events: none;
         border-radius: 2px;
@@ -7178,12 +7862,12 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 6000px;
         background-image:
           linear-gradient(
-            var(--grid, rgba(191, 155, 90, 0.07)) 1px,
+            var(--tsp-grid, rgba(191, 155, 90, 0.07)) 1px,
             transparent 1px
           ),
           linear-gradient(
             90deg,
-            var(--grid, rgba(191, 155, 90, 0.07)) 1px,
+            var(--tsp-grid, rgba(191, 155, 90, 0.07)) 1px,
             transparent 1px
           );
         background-size: 40px 40px;
@@ -7279,26 +7963,27 @@ export class TableSeatingPlannerIsolated extends Component<
         pointer-events: none;
       }
       .fp-broken-msg {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 13px;
         letter-spacing: 0.02em;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         padding: 4px 12px;
         border-radius: 999px;
-        background: var(--surface, #ffffff);
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--tsp-card, var(--card, #ffffff));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
       }
       .fp-broken-btn {
         pointer-events: auto;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 13px;
         font-weight: 500;
         letter-spacing: 0.02em;
         color: #ffffff;
-        background: var(--navy, #141b33);
+        background: var(--tsp-primary, var(--primary, #141b33));
         border: none;
         border-radius: 999px;
         padding: 8px 18px;
@@ -7306,7 +7991,7 @@ export class TableSeatingPlannerIsolated extends Component<
         box-shadow: 0 8px 24px rgba(34, 40, 63, 0.18);
       }
       .fp-broken-btn:hover {
-        background: var(--navy-2, #1a2238);
+        background: var(--tsp-primary-soft, #1a2238);
       }
       .fp-broken-btn .ico {
         width: 15px;
@@ -7322,8 +8007,9 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 8px;
         padding: 5px 8px;
         border-radius: 999px;
-        background: var(--surface, #ffffff);
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--tsp-card, var(--card, #ffffff));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         box-shadow: 0 8px 24px rgba(34, 40, 63, 0.14);
         max-width: min(680px, 100%);
         overflow-x: auto;
@@ -7336,29 +8022,29 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 5px;
       }
       .fp-toolbar::-webkit-scrollbar-thumb {
-        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 999px;
       }
       .fp-tool-div {
         width: 1px;
         align-self: stretch;
         margin: 3px 0;
-        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
       }
       .fp-build-btn {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 13px;
         font-weight: 500;
         letter-spacing: 0.02em;
         color: #ffffff;
-        background: var(--navy, #141b33);
+        background: var(--tsp-primary, var(--primary, #141b33));
         border: none;
         border-radius: 999px;
         padding: 7px 16px;
         cursor: pointer;
       }
       .fp-build-btn:hover:not(:disabled) {
-        background: var(--navy-2, #1a2238);
+        background: var(--tsp-primary-soft, #1a2238);
       }
       .fp-build-btn:disabled {
         cursor: default;
@@ -7372,13 +8058,13 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .fp-tool-ico {
         font-size: 13px;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
       }
       .fp-tool-val {
         min-width: 34px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         text-align: right;
       }
       .fp-tool-btn {
@@ -7388,21 +8074,22 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 30px;
         height: 30px;
         border-radius: 50%;
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         background: rgba(34, 40, 63, 0.04);
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         font-size: 14px;
         cursor: pointer;
         transition: 0.15s;
       }
       .fp-tool-btn:hover {
-        border-color: var(--acc, #c5a35c);
-        color: var(--ink, #22283f);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .fp-tool-btn.is-on {
-        background: var(--acc, #c5a35c);
-        color: #ffffff;
-        border-color: var(--acc, #c5a35c);
+        background: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .fp-tool-btn.is-del:hover {
         border-color: #a8663f;
@@ -7412,10 +8099,11 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 30px;
         padding: 0 12px;
         border-radius: 999px;
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         background: rgba(34, 40, 63, 0.04);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10.5px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
@@ -7423,7 +8111,7 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .fp-tool-confirm:hover {
-        border-color: var(--acc, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .fp-tool-confirm.is-danger {
         border-color: rgba(217, 138, 106, 0.6);
@@ -7436,7 +8124,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .fp-frame {
         position: absolute;
         z-index: 9990;
-        border: 1.5px dashed var(--acc, #c5a35c);
+        border: 1.5px dashed var(--tsp-accent, var(--accent, #c5a35c));
         background: rgba(197, 163, 92, 0.06);
         cursor: grab;
         touch-action: none;
@@ -7448,12 +8136,12 @@ export class TableSeatingPlannerIsolated extends Component<
         position: absolute;
         top: -22px;
         left: 0;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--acc-deep, #a5854a);
-        background: var(--paper, #faf6ec);
+        color: var(--tsp-accent-deep, #a5854a);
+        background: var(--tsp-background, var(--background, #faf6ec));
         padding: 2px 6px;
         border-radius: 4px;
       }
@@ -7465,12 +8153,15 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 18px;
         border-radius: 50%;
         background: #fff;
-        border: 2px solid var(--acc, #c5a35c);
+        border: 2px solid var(--tsp-accent, var(--accent, #c5a35c));
         box-shadow: 0 2px 6px rgba(34, 40, 63, 0.14);
         cursor: nwse-resize;
         touch-action: none;
       }
       .fp-opacity {
+        min-height: 0;
+        border: none;
+        padding: 0;
         width: 90px;
         height: 5px;
         -webkit-appearance: none;
@@ -7485,7 +8176,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 14px;
         height: 14px;
         border-radius: 50%;
-        background: var(--acc, #c5a35c);
+        background: var(--tsp-accent, var(--accent, #c5a35c));
         cursor: pointer;
       }
       .fp-opacity::-moz-range-thumb {
@@ -7493,7 +8184,7 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 14px;
         border: none;
         border-radius: 50%;
-        background: var(--acc, #c5a35c);
+        background: var(--tsp-accent, var(--accent, #c5a35c));
         cursor: pointer;
       }
       .t-node {
@@ -7502,10 +8193,10 @@ export class TableSeatingPlannerIsolated extends Component<
         z-index: 2;
       }
       .t-node.is-sel .t-surface {
-        box-shadow: 0 0 0 2px var(--acc, #c5a35c);
+        box-shadow: 0 0 0 2px var(--tsp-accent, var(--accent, #c5a35c));
       }
       .t-node.is-targeting .t-surface {
-        box-shadow: 0 0 0 2px var(--acc-deep, #a5854a);
+        box-shadow: 0 0 0 2px var(--tsp-accent-deep, #a5854a);
       }
       .fx-node.is-targeting {
         outline: 2px solid rgba(197, 163, 92, 0.55);
@@ -7517,17 +8208,17 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--popover, #fdfaf2);
-        border: 1.5px solid var(--outline, #c5a35c);
+        background: var(--tsp-popover, var(--popover, #fdfaf2));
+        border: 1.5px solid var(--tsp-ring, var(--ring, #c5a35c));
         box-shadow: 0 6px 18px rgba(34, 40, 63, 0.08);
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .t-center {
         width: 42%;
         height: 42%;
         max-width: 46px;
         max-height: 46px;
-        color: var(--gold, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
         opacity: var(--tsp-center-opacity, 0.5);
         pointer-events: none;
       }
@@ -7540,11 +8231,14 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .t-motif::before {
         content: var(--tsp-motif, '');
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-weight: 700;
         font-size: 34%;
         line-height: 1;
-        color: var(--gold, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .shape-round {
         border-radius: 50%;
@@ -7561,7 +8255,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .t-section {
         position: absolute;
         inset: 0;
-        border: 1px dashed var(--outline, #c5a35c);
+        border: 1px dashed var(--tsp-ring, var(--ring, #c5a35c));
         border-radius: 6px;
         background: transparent;
         opacity: 0.5;
@@ -7573,13 +8267,11 @@ export class TableSeatingPlannerIsolated extends Component<
         top: 0;
         transform: translateY(-100%);
         padding-bottom: 3px;
-        border-bottom: 3px solid var(--outline, #c5a35c);
+        border-bottom: 3px solid var(--tsp-ring, var(--ring, #c5a35c));
         text-align: center;
-        font:
-          700 9px 'Jost',
-          monospace;
+        font: 700 9px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
         letter-spacing: 0.12em;
-        color: var(--outline, #c5a35c);
+        color: var(--tsp-ring, var(--ring, #c5a35c));
         pointer-events: none;
       }
       .t-node.is-section.is-sel,
@@ -7595,14 +8287,14 @@ export class TableSeatingPlannerIsolated extends Component<
         overflow: visible;
       }
       .t-curvedband {
-        fill: var(--popover, #fdfaf2);
-        stroke: var(--outline, #c5a35c);
+        fill: var(--tsp-popover, var(--popover, #fdfaf2));
+        stroke: var(--tsp-ring, var(--ring, #c5a35c));
       }
       .t-node.is-sel .t-curvedband {
-        stroke: var(--acc, #c5a35c);
+        stroke: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .t-node.is-targeting .t-curvedband {
-        stroke: var(--acc-deep, #a5854a);
+        stroke: var(--tsp-accent-deep, #a5854a);
       }
       .t-node.is-sel {
         outline: 2px solid rgba(197, 163, 92, 0.45);
@@ -7633,10 +8325,11 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 28px;
         padding: 0 13px;
         border-radius: 30px;
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
-        background: var(--acc, #c5a35c);
-        color: #ffffff;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
+        background: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10.5px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
@@ -7659,7 +8352,7 @@ export class TableSeatingPlannerIsolated extends Component<
         left: 50%;
         transform: translateX(-50%);
         border: 5px solid transparent;
-        border-top-color: var(--acc, #c5a35c);
+        border-top-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .t-node.is-sel .t-edit {
         opacity: 1;
@@ -7683,11 +8376,11 @@ export class TableSeatingPlannerIsolated extends Component<
         position: absolute;
         top: 8px;
         right: 10px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 8px;
         letter-spacing: 0.12em;
-        color: var(--ink, #22283f);
-        background: var(--acc, #c5a35c);
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
+        background: var(--tsp-accent, var(--accent, #c5a35c));
         border-radius: 4px;
         padding: 2px 5px;
       }
@@ -7703,12 +8396,12 @@ export class TableSeatingPlannerIsolated extends Component<
         bottom: -22px;
         transform: translateX(-50%);
         white-space: nowrap;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         font-weight: 500;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         opacity: 0.75;
       }
       .t-node.is-sel .t-name {
@@ -7723,11 +8416,11 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
-        color: var(--acc-deep, #a5854a);
-        background: var(--popover, #fdfaf2);
-        border: 1.5px solid var(--outline, #c5a35c);
+        color: var(--tsp-accent-deep, #a5854a);
+        background: var(--tsp-popover, var(--popover, #fdfaf2));
+        border: 1.5px solid var(--tsp-ring, var(--ring, #c5a35c));
         cursor: grab;
         z-index: 3;
         transition:
@@ -7740,10 +8433,10 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .seat.is-filled {
         border-style: solid;
-        color: var(--ink, #22283f);
-        background: var(--seatcol, var(--acc, #c5a35c));
-        border-color: var(--seatcol, var(--acc, #c5a35c));
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        background: var(--seatcol, var(--tsp-accent, var(--accent, #c5a35c)));
+        border-color: var(--seatcol, var(--tsp-accent, var(--accent, #c5a35c)));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-weight: 600;
         cursor: grab;
         animation: seat-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -7755,11 +8448,14 @@ export class TableSeatingPlannerIsolated extends Component<
         transform: translate(-50%, -50%) scale(1.35);
         z-index: 6;
         overflow: hidden;
-        color: var(--ink, #22283f);
-        background: var(--acc, #c5a35c);
-        border: 2px solid var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
+        background: var(--tsp-accent, var(--accent, #c5a35c));
+        border: 2px solid var(--tsp-accent-deep, #a5854a);
         box-shadow: 0 4px 14px rgba(34, 40, 63, 0.15);
-        font-family: var(--font-serif, 'Cormorant Garamond', serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', serif)
+        );
         font-weight: 600;
       }
       .seat-img {
@@ -7809,7 +8505,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 14px;
         height: 14px;
         background: #fff;
-        border: 1.5px solid var(--acc-deep, #a5854a);
+        border: 1.5px solid var(--tsp-accent-deep, #a5854a);
         border-radius: 4px;
         box-shadow: 0 2px 6px rgba(34, 40, 63, 0.14);
         z-index: 6;
@@ -7820,8 +8516,8 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .rz:hover,
       .rz:active {
-        background: var(--acc-deep, #a5854a);
-        border-color: var(--acc-deep, #a5854a);
+        background: var(--tsp-accent-deep, #a5854a);
+        border-color: var(--tsp-accent-deep, #a5854a);
       }
       .rz-e {
         right: -32px;
@@ -7860,8 +8556,8 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 22px;
         border-radius: 50%;
         background: #fff;
-        border: 1.5px solid var(--acc-deep, #a5854a);
-        color: var(--acc-deep, #a5854a);
+        border: 1.5px solid var(--tsp-accent-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -7874,7 +8570,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .rz-locked {
         cursor: pointer;
         font-size: 11px;
-        border-color: var(--acc, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
         background: rgba(197, 163, 92, 0.18);
       }
       .rz-locked:active {
@@ -7886,10 +8582,10 @@ export class TableSeatingPlannerIsolated extends Component<
         bottom: -20px;
         transform: translateX(-50%);
         white-space: nowrap;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.08em;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         opacity: 0.8;
       }
       .align-bar {
@@ -7903,22 +8599,23 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 4px 8px;
         background: color-mix(
           in srgb,
-          var(--surface, #ffffff) 92%,
+          var(--tsp-card, var(--card, #ffffff)) 92%,
           transparent
         );
         -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 999px;
         box-shadow: 0 8px 22px rgba(34, 40, 63, 0.15);
         z-index: 21;
       }
       .align-cap {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 9px;
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         padding: 0 6px 0 2px;
       }
       .align-btn {
@@ -7930,7 +8627,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border: none;
         background: none;
         border-radius: 8px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         font-size: 16px;
         line-height: 1;
         cursor: pointer;
@@ -7953,7 +8650,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1px;
         height: 18px;
         margin: 0 4px;
-        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
       }
       .cv-history {
         position: absolute;
@@ -7961,7 +8658,7 @@ export class TableSeatingPlannerIsolated extends Component<
         right: 12px;
         z-index: var(--z-canvas-overlay, 60);
         display: inline-flex;
-        background: var(--surface, #ffffff);
+        background: var(--tsp-card, var(--card, #ffffff));
         border: 1px solid rgba(34, 40, 63, 0.1);
         border-radius: 12px;
         box-shadow: 0 4px 14px rgba(20, 27, 51, 0.14);
@@ -7975,7 +8672,7 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 36px;
         border: none;
         background: transparent;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         cursor: pointer;
         transition:
           background 0.15s,
@@ -7989,8 +8686,12 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 17px;
       }
       .cv-hist-btn:not(:disabled):hover {
-        background: color-mix(in srgb, var(--gold, #a5854a) 14%, transparent);
-        color: var(--gold, #a5854a);
+        background: color-mix(
+          in srgb,
+          var(--tsp-accent, var(--accent, #a5854a)) 14%,
+          transparent
+        );
+        color: var(--tsp-accent, var(--accent, #a5854a));
       }
       .cv-hist-btn:disabled {
         opacity: 0.32;
@@ -8004,17 +8705,17 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 12px;
         border: 1px solid rgba(197, 163, 92, 0.35);
         border-radius: 12px;
-        background: var(--surface, #fffdf8);
-        color: var(--ink, #22283f);
+        background: var(--tsp-card, var(--card, #fffdf8));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         cursor: pointer;
         text-align: left;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
       }
       .pr-opt + .pr-opt {
         margin-top: 8px;
       }
       .pr-opt:hover {
-        border-color: var(--gold, #a5854a);
+        border-color: var(--tsp-accent, var(--accent, #a5854a));
       }
       .pr-opt-txt {
         display: flex;
@@ -8023,13 +8724,16 @@ export class TableSeatingPlannerIsolated extends Component<
         min-width: 0;
       }
       .pr-opt-name {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 16px;
         font-weight: 600;
       }
       .pr-opt-desc {
         font-size: 11px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         opacity: 0.6;
       }
       .zoom-ctl {
@@ -8042,12 +8746,13 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 1px;
         background: color-mix(
           in srgb,
-          var(--surface, #ffffff) 88%,
+          var(--tsp-card, var(--card, #ffffff)) 88%,
           transparent
         );
         -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 999px;
         padding: 4px;
         box-shadow:
@@ -8062,7 +8767,7 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 28px;
         border: none;
         background: none;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         border-radius: 999px;
         cursor: pointer;
         transition:
@@ -8087,32 +8792,32 @@ export class TableSeatingPlannerIsolated extends Component<
       .zoom-pct {
         min-width: 46px;
         padding: 0 4px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         font-variant-numeric: tabular-nums;
         letter-spacing: 0.02em;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .zoom-pct:hover {
-        color: var(--acc, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .zoom-div {
         width: 1px;
         height: 16px;
-        background: var(--surface-edge, rgba(197, 163, 92, 0.35));
+        background: var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         margin: 0 3px;
       }
       .zoom-fit {
         gap: 5px;
         padding: 0 12px 0 10px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--ink-2, #57534b);
+        color: var(--tsp-primary, var(--primary, #57534b));
       }
       .zoom-fit:not(:disabled):hover {
-        color: var(--acc, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .zoom-fit-ico {
         font-size: 14px;
@@ -8127,10 +8832,10 @@ export class TableSeatingPlannerIsolated extends Component<
         contain: size;
         background: linear-gradient(
           180deg,
-          var(--popover, #fdfaf2),
-          var(--paper-2, #f4eddb)
+          var(--tsp-popover, var(--popover, #fdfaf2)),
+          var(--tsp-muted, var(--muted, #f4eddb))
         );
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         border-left: 1px solid rgba(0, 0, 0, 0.1);
         transition: width 0.2s ease;
       }
@@ -8166,14 +8871,18 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 10px;
       }
       .insp-name {
+        min-height: 0;
         flex: 1;
         min-width: 0;
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 25px;
         border: none;
         background: none;
         outline: none;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .insp-x {
         flex: none;
@@ -8186,7 +8895,7 @@ export class TableSeatingPlannerIsolated extends Component<
         color: #8f887b;
       }
       .insp-status {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         letter-spacing: 0.08em;
         color: #6f6a61;
@@ -8202,16 +8911,19 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-bottom: 8px;
       }
       .insp-progress-label {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: #6f6a61;
       }
       .insp-progress-count {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 16px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .insp-progress-bar {
         height: 6px;
@@ -8222,7 +8934,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .insp-progress-fill {
         display: block;
         height: 100%;
-        background: var(--gold, #c5a35c);
+        background: var(--tsp-accent, var(--accent, #c5a35c));
         transition: width 0.4s ease;
       }
       .insp-seatmap-hint {
@@ -8254,19 +8966,19 @@ export class TableSeatingPlannerIsolated extends Component<
         flex: none;
       }
       .insp-tablemap-box.shape-round {
-        border: 2px solid var(--outline, #22283f);
+        border: 2px solid var(--tsp-ring, var(--ring, #22283f));
         border-radius: 50%;
       }
       .insp-tablemap-box.shape-oval {
-        border: 2px solid var(--outline, #22283f);
+        border: 2px solid var(--tsp-ring, var(--ring, #22283f));
         border-radius: 50% / 42%;
       }
       .insp-tablemap-box.shape-rect,
       .insp-tablemap-box.shape-square {
-        border: 2px solid var(--outline, #22283f);
+        border: 2px solid var(--tsp-ring, var(--ring, #22283f));
       }
       .insp-tablemap-box.shape-section {
-        border: 1px dashed var(--outline, #22283f);
+        border: 1px dashed var(--tsp-ring, var(--ring, #22283f));
         border-radius: 6px;
         opacity: 0.9;
       }
@@ -8277,11 +8989,9 @@ export class TableSeatingPlannerIsolated extends Component<
         top: 0;
         transform: translateY(-140%);
         text-align: center;
-        font:
-          700 9px 'Jost',
-          monospace;
+        font: 700 9px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
         letter-spacing: 0.12em;
-        color: var(--outline, #22283f);
+        color: var(--tsp-ring, var(--ring, #22283f));
         pointer-events: none;
       }
       .insp-tablemap-box .t-curvedsvg {
@@ -8292,7 +9002,7 @@ export class TableSeatingPlannerIsolated extends Component<
         overflow: visible;
       }
       .insp-tablemap-box .t-curvedband {
-        stroke: var(--outline, #22283f);
+        stroke: var(--tsp-ring, var(--ring, #22283f));
       }
       .insp-tablemap-box .insp-seat {
         position: absolute;
@@ -8314,7 +9024,7 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 12px;
         color: #9a7d44;
         background: #fff;
@@ -8326,14 +9036,14 @@ export class TableSeatingPlannerIsolated extends Component<
           background 0.15s ease;
       }
       .insp-seat:hover {
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .insp-seat.is-filled {
         border-style: solid;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         background: var(--seatcol, #c5a35c);
         border-color: var(--seatcol, #c5a35c);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-weight: 600;
         cursor: grab;
       }
@@ -8343,8 +9053,8 @@ export class TableSeatingPlannerIsolated extends Component<
       .insp-seat.is-drop {
         transform: scale(1.18);
         overflow: hidden;
-        color: var(--ink, #22283f);
-        background: var(--gold, #c5a35c);
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
+        background: var(--tsp-accent, var(--accent, #c5a35c));
         border: 2px solid #9a7d44;
         box-shadow: 0 4px 14px rgba(154, 125, 68, 0.4);
       }
@@ -8364,7 +9074,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0;
         border: 1px solid rgba(255, 255, 255, 0.75);
         border-radius: 50%;
-        background: var(--ink, #22283f);
+        background: var(--tsp-foreground, var(--foreground, #22283f));
         color: #fff;
         font-size: 9px;
         line-height: 1;
@@ -8383,14 +9093,17 @@ export class TableSeatingPlannerIsolated extends Component<
         border-color: #b3261e;
       }
       .insp-kicker {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.24em;
         text-transform: uppercase;
         color: #9a7d44;
       }
       .insp-hero {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 27px;
         margin-top: 8px;
       }
@@ -8401,7 +9114,7 @@ export class TableSeatingPlannerIsolated extends Component<
         margin: 12px 0 0;
       }
       .insp-label {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
@@ -8420,16 +9133,16 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 10px;
         cursor: pointer;
         font-size: 12px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         transition: 0.15s;
       }
       .insp-opt:hover {
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .insp-opt.is-on {
-        background: var(--ink, #22283f);
+        background: var(--tsp-foreground, var(--foreground, #22283f));
         color: #fff;
-        border-color: var(--ink, #22283f);
+        border-color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .insp-opt:disabled {
         opacity: 0.45;
@@ -8486,18 +9199,18 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-top: 20px;
         height: 44px;
         border-radius: 12px;
-        border: 1px solid var(--gold, #c5a35c);
+        border: 1px solid var(--tsp-accent, var(--accent, #c5a35c));
         background: rgba(197, 163, 92, 0.14);
         color: #9a7d44;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         cursor: pointer;
       }
       .insp-vip.is-on {
-        background: var(--gold, #c5a35c);
-        color: var(--ink, #22283f);
+        background: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
       }
       .insp-fxart {
         width: 100%;
@@ -8522,14 +9235,14 @@ export class TableSeatingPlannerIsolated extends Component<
         background: #fff;
         border-radius: 10px;
         cursor: pointer;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.06em;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         transition: 0.15s;
       }
       .insp-clear:hover {
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .insp-actions {
         display: flex;
@@ -8545,7 +9258,7 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 8px;
         margin: 26px -22px -30px;
         padding: 14px 22px 16px;
-        background: var(--paper-2, #f4eddb);
+        background: var(--tsp-muted, var(--muted, #f4eddb));
         border-top: 1px solid rgba(197, 163, 92, 0.25);
       }
       .insp-actionbar .insp-clear,
@@ -8560,17 +9273,17 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 10px;
         cursor: pointer;
         font-size: 12px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .insp-actions button:hover {
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .insp-actions .danger {
         color: #8e3a46;
         border-color: rgba(179, 67, 63, 0.4);
       }
       .insp-legend-title {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         letter-spacing: 0.22em;
         text-transform: uppercase;
@@ -8592,7 +9305,7 @@ export class TableSeatingPlannerIsolated extends Component<
         font-size: 14px;
       }
       .ilr-count {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 12px;
         color: #6f6a61;
       }
@@ -8602,18 +9315,24 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 14px;
         background: linear-gradient(
           168deg,
-          var(--navy, #141b33),
-          var(--navy-2, #1a2238)
+          var(--tsp-primary, var(--primary, #141b33)),
+          var(--tsp-primary-soft, #1a2238)
         );
         border: 1px solid rgba(197, 163, 92, 0.5);
-        color: var(--navy-ink, #f3ead6);
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
         box-shadow: 0 10px 26px rgba(20, 27, 51, 0.22);
       }
       .insp-help-title {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-style: italic;
         font-size: 21px;
-        color: var(--gold-soft, #e6cf9a);
+        color: var(--tsp-accent-soft, #e6cf9a);
       }
       .insp-help-lead {
         margin: 8px 0 0;
@@ -8622,15 +9341,15 @@ export class TableSeatingPlannerIsolated extends Component<
         color: rgba(243, 234, 214, 0.85);
       }
       .insp-help-lead b {
-        color: var(--gold, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
         font-weight: 500;
       }
       .tsp-invites {
         flex: 1;
         display: flex;
         min-height: 0;
-        background: var(--paper, #faf6ec);
-        color: var(--ink, #22283f);
+        background: var(--tsp-background, var(--background, #faf6ec));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .inv-studio {
         flex: 1;
@@ -8640,21 +9359,24 @@ export class TableSeatingPlannerIsolated extends Component<
         border-right: 1px solid rgba(34, 40, 63, 0.06);
       }
       .inv-kicker {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.24em;
         text-transform: uppercase;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
       }
       .inv-h {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 30px;
         margin: 8px 0 0;
       }
       .inv-lead {
         font-size: 13.5px;
         line-height: 1.6;
-        color: var(--ink-2, #57534b);
+        color: var(--tsp-primary, var(--primary, #57534b));
         margin: 10px 0 20px;
         max-width: 460px;
       }
@@ -8670,7 +9392,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .poster-img {
         width: 100%;
-        border: 1.5px solid var(--gold, #c5a35c);
+        border: 1.5px solid var(--tsp-accent, var(--accent, #c5a35c));
         border-radius: 16px;
         display: block;
       }
@@ -8686,14 +9408,14 @@ export class TableSeatingPlannerIsolated extends Component<
         justify-content: center;
         text-align: center;
         gap: 8px;
-        color: var(--ink-2, #7c766c);
+        color: var(--tsp-primary, var(--primary, #7c766c));
       }
       .poster-empty-logo {
         width: 64px;
         height: 64px;
         border-radius: 50%;
         object-fit: cover;
-        border: 1px solid var(--gold-soft, #e6cf9a);
+        border: 1px solid var(--tsp-accent-soft, #e6cf9a);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
       }
       .poster-empty-mark {
@@ -8703,24 +9425,30 @@ export class TableSeatingPlannerIsolated extends Component<
         display: grid;
         place-items: center;
         background: var(
-          --gold-grad,
+          --tsp-gold-grad,
           linear-gradient(135deg, #e6cf9a, #c5a35c 55%, #a5854a)
         );
-        color: var(--navy, #141b33);
-        border: 1px solid var(--gold-soft, #e6cf9a);
+        color: var(--tsp-primary, var(--primary, #141b33));
+        border: 1px solid var(--tsp-accent-soft, #e6cf9a);
       }
       .poster-empty-mark::before {
         content: var(--tsp-motif, attr(data-initials));
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-weight: 700;
         font-size: 30px;
         line-height: 1;
       }
       .poster-empty-title {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-style: italic;
         font-size: 19px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .poster-empty-hint {
         font-size: 11.5px;
@@ -8739,10 +9467,10 @@ export class TableSeatingPlannerIsolated extends Component<
         max-width: 480px;
         font-size: 12.5px;
         line-height: 1.6;
-        color: var(--ink-2, #57534b);
+        color: var(--tsp-primary, var(--primary, #57534b));
       }
       .inv-ai-lead b {
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         font-weight: 500;
       }
       .inv-ai-clear {
@@ -8751,18 +9479,18 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0;
         border: none;
         background: none;
-        color: var(--ink-2, #7c766c);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-primary, var(--primary, #7c766c));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         text-decoration: underline;
         cursor: pointer;
       }
       .inv-label {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: var(--ink-2, #7c766c);
+        color: var(--tsp-primary, var(--primary, #7c766c));
         margin: 26px 0 10px;
       }
       .inv-msg {
@@ -8770,11 +9498,12 @@ export class TableSeatingPlannerIsolated extends Component<
         max-width: 560px;
         height: 96px;
         padding: 13px 14px;
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 11px;
-        background: var(--surface, #ffffff);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        background: var(--tsp-card, var(--card, #ffffff));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 13.5px;
         line-height: 1.5;
         outline: none;
@@ -8784,18 +9513,19 @@ export class TableSeatingPlannerIsolated extends Component<
         display: block;
         margin-top: 14px;
         padding: 9px 18px;
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 11px;
         background: none;
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 12px;
         letter-spacing: 0.04em;
         cursor: pointer;
       }
       .inv-download:hover {
-        border-color: var(--acc, #c5a35c);
-        color: var(--acc, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .inv-aspects {
         display: flex;
@@ -8805,24 +9535,29 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .inv-aspect {
         padding: 6px 14px;
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 20px;
-        background: var(--surface, #ffffff);
-        color: var(--ink-2, #7c766c);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        background: var(--tsp-card, var(--card, #ffffff));
+        color: var(--tsp-primary, var(--primary, #7c766c));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.04em;
         cursor: pointer;
         transition: 0.15s;
       }
       .inv-aspect:hover {
-        border-color: var(--acc, #c5a35c);
-        color: var(--ink, #22283f);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .inv-aspect.is-on {
-        border-color: var(--acc, #c5a35c);
-        background: color-mix(in oklab, var(--acc, #c5a35c) 16%, transparent);
-        color: var(--acc, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        background: color-mix(
+          in oklab,
+          var(--tsp-accent, var(--accent, #c5a35c)) 16%,
+          transparent
+        );
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .inv-ai-prompt {
         height: 64px;
@@ -8831,27 +9566,27 @@ export class TableSeatingPlannerIsolated extends Component<
         display: block;
         margin-top: 10px;
         padding: 9px 18px;
-        border: 1px solid var(--acc, #c5a35c);
+        border: 1px solid var(--tsp-accent, var(--accent, #c5a35c));
         border-radius: 11px;
         background: none;
-        color: var(--acc, #c5a35c);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 12px;
         letter-spacing: 0.04em;
         cursor: pointer;
       }
       .inv-ai-generate:hover:not(:disabled) {
-        background: var(--acc, #c5a35c);
-        color: var(--paper, #17140f);
+        background: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
       }
       .inv-ai-generate:disabled {
         opacity: 0.6;
         cursor: progress;
       }
       .inv-tokens {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10.5px;
-        color: var(--ink-2, #7c766c);
+        color: var(--tsp-primary, var(--primary, #7c766c));
         margin: 9px 0 0;
       }
       .inv-list .inv-label {
@@ -8865,7 +9600,7 @@ export class TableSeatingPlannerIsolated extends Component<
         flex: none;
         overflow-y: auto;
         padding: 24px 22px 30px;
-        background: var(--paper-2, #f4eddb);
+        background: var(--tsp-muted, var(--muted, #f4eddb));
       }
       .inv-search {
         position: relative;
@@ -8877,7 +9612,7 @@ export class TableSeatingPlannerIsolated extends Component<
         position: absolute;
         left: 10px;
         font-size: 15px;
-        color: var(--ink-2, #7c766c);
+        color: var(--tsp-primary, var(--primary, #7c766c));
         pointer-events: none;
       }
       .inv-search-input {
@@ -8890,7 +9625,7 @@ export class TableSeatingPlannerIsolated extends Component<
         font-size: 13px;
       }
       .inv-search-input::placeholder {
-        color: var(--ink-2, #7c766c);
+        color: var(--tsp-primary, var(--primary, #7c766c));
       }
       .inv-search-input:focus {
         outline: none;
@@ -8905,7 +9640,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border: none;
         background: none;
         cursor: pointer;
-        color: var(--ink-2, #7c766c);
+        color: var(--tsp-primary, var(--primary, #7c766c));
         font-size: 12px;
         line-height: 1;
         padding: 4px;
@@ -8914,20 +9649,77 @@ export class TableSeatingPlannerIsolated extends Component<
         color: inherit;
       }
       .inv-list-head {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 20px;
       }
       .inv-list-note {
         font-size: 12px;
-        color: var(--ink-2, #7c766c);
+        color: var(--tsp-primary, var(--primary, #7c766c));
         margin: 6px 0 16px;
       }
       .inv-row {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(34, 40, 63, 0.05);
+      }
+      .inv-row-head {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(34, 40, 63, 0.05);
+      }
+      /* Avatar + name + caret — click to preview the resolved message */
+      .inv-row-toggle {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        text-align: left;
+        font: inherit;
+        color: inherit;
+      }
+      .inv-row-id {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      /* Explicit "Show message" affordance — link-styled so the preview
+         toggle is discoverable without hunting for a caret */
+      .inv-row-sub {
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--tsp-accent-deep, #a5854a);
+        opacity: 0.75;
+      }
+      .inv-row-toggle:hover .inv-row-sub {
+        opacity: 1;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .inv-preview {
+        margin: 8px 0 2px 44px;
+        padding: 10px 12px;
+        border-left: 2px solid var(--tsp-accent, var(--accent, #c5a35c));
+        border-radius: 0 10px 10px 0;
+        background: color-mix(
+          in srgb,
+          var(--tsp-accent, var(--accent, #c5a35c)) 8%,
+          transparent
+        );
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
       }
       .inv-av {
         width: 34px;
@@ -8937,19 +9729,14 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        font:
-          600 12px 'Cormorant Garamond',
-          serif;
-        color: var(--ink, #22283f);
+        font: 600 12px
+          var(--tsp-font-serif, var(--font-serif, 'Cormorant Garamond', serif));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         background: linear-gradient(
           135deg,
-          var(--acc-deep, #a5854a),
-          var(--gold, #c5a35c)
+          var(--tsp-accent-deep, #a5854a),
+          var(--tsp-accent, var(--accent, #c5a35c))
         );
-      }
-      .inv-row-main {
-        flex: 1;
-        min-width: 0;
       }
       .inv-row-name {
         font-size: 13.5px;
@@ -8964,10 +9751,11 @@ export class TableSeatingPlannerIsolated extends Component<
         display: inline-flex;
         align-items: center;
         border-radius: 20px;
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
-        background: var(--surface, #ffffff);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
+        background: var(--tsp-card, var(--card, #ffffff));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 9.5px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
@@ -8976,7 +9764,7 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .inv-btn:hover {
-        border-color: var(--acc, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .inv-edit {
         flex: none;
@@ -8988,14 +9776,18 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 50%;
         border: 1px solid transparent;
         background: transparent;
-        color: var(--ink-2, #7c766c);
+        color: var(--tsp-primary, var(--primary, #7c766c));
         cursor: pointer;
         transition: 0.15s;
       }
       .inv-edit:hover {
-        border-color: var(--acc, #c5a35c);
-        color: var(--acc, #c5a35c);
-        background: color-mix(in oklab, var(--acc, #c5a35c) 12%, transparent);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        background: color-mix(
+          in oklab,
+          var(--tsp-accent, var(--accent, #c5a35c)) 12%,
+          transparent
+        );
       }
       .inv-edit-ico {
         width: 15px;
@@ -9009,11 +9801,11 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 100%;
         height: 56px;
         margin: 4px 0 16px;
-        border: 1.5px dashed var(--acc, #c5a35c);
+        border: 1.5px dashed var(--tsp-accent, var(--accent, #c5a35c));
         border-radius: 14px;
         background: rgba(197, 163, 92, 0.08);
-        color: var(--acc-deep, #9a7d44);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-accent-deep, #9a7d44);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 12px;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -9041,19 +9833,19 @@ export class TableSeatingPlannerIsolated extends Component<
       .fp-link {
         margin-top: 0;
         border-style: solid;
-        border-color: var(--surface-edge, rgba(34, 40, 63, 0.18));
+        border-color: var(--tsp-border, var(--border, rgba(34, 40, 63, 0.18)));
         background: none;
-        color: var(--ink-2, #57534b);
+        color: var(--tsp-primary, var(--primary, #57534b));
       }
       .fp-link:hover {
-        border-color: var(--acc, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
         background: rgba(197, 163, 92, 0.08);
-        color: var(--acc-deep, #9a7d44);
+        color: var(--tsp-accent-deep, #9a7d44);
       }
       .ai-lead {
         font-size: 13.5px;
         line-height: 1.6;
-        color: var(--ink-2, #57534b);
+        color: var(--tsp-primary, var(--primary, #57534b));
         margin: 14px 0 16px;
       }
       .tpop-hwrap {
@@ -9066,6 +9858,7 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 8px;
       }
       .tpop-name {
+        min-height: 0;
         flex: 1;
         min-width: 0;
         padding: 2px 8px;
@@ -9074,8 +9867,14 @@ export class TableSeatingPlannerIsolated extends Component<
         border: 1px solid transparent;
         border-radius: 8px;
         outline: none;
-        color: var(--navy-ink, #f3ead6);
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 21px;
         line-height: 1.2;
         text-overflow: ellipsis;
@@ -9106,126 +9905,28 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .tpop-vip:hover {
-        border-color: var(--gold, #c5a35c);
-        color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .tpop-vip.is-on {
-        background: var(--gold, #c5a35c);
-        border-color: var(--gold, #c5a35c);
-        color: var(--ink, #22283f);
+        background: var(--tsp-accent, var(--accent, #c5a35c));
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .tpop-status {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         letter-spacing: 0.08em;
-        color: var(--gold, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
         margin-top: 4px;
       }
       .tpop-label {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 9.5px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: #7c766c;
         margin: 16px 0 9px;
-      }
-      .tpop-shapes {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
-      }
-      .tpop-shape {
-        height: 34px;
-        border: 1px solid rgba(34, 40, 63, 0.1);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--ink, #22283f);
-        border-radius: 8px;
-        font-size: 10.5px;
-        cursor: pointer;
-        transition: 0.15s;
-      }
-      .tpop-shape:hover {
-        border-color: var(--gold, #c5a35c);
-      }
-      .tpop-shape.is-on {
-        background: var(--gold, #c5a35c);
-        color: var(--ink, #22283f);
-        border-color: var(--gold, #c5a35c);
-      }
-      .tpop-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 4px;
-      }
-      .tpop-row .tpop-label {
-        margin: 16px 0 0;
-      }
-      .tpop-step {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-top: 12px;
-      }
-      .tpop-step button {
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-        border: 1px solid rgba(34, 40, 63, 0.12);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--ink, #22283f);
-        font-size: 17px;
-        cursor: pointer;
-      }
-      .tpop-step button:hover {
-        border-color: var(--gold, #c5a35c);
-      }
-      .tpop-num {
-        min-width: 30px;
-        width: 44px;
-        text-align: center;
-        font-family: var(--font-serif, 'Cormorant Garamond', serif);
-        font-size: 19px;
-        border: none;
-        background: transparent;
-        color: inherit;
-        padding: 0;
-        appearance: textfield;
-        -moz-appearance: textfield;
-      }
-      .tpop-num:focus {
-        outline: 1px solid var(--tsp-gold, #c5a35c);
-        border-radius: 6px;
-      }
-      .tpop-num::-webkit-outer-spin-button,
-      .tpop-num::-webkit-inner-spin-button {
-        appearance: none;
-        margin: 0;
-      }
-      .tpop-orders {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-      }
-      .tpop-order {
-        height: 30px;
-        border: 1px solid rgba(34, 40, 63, 0.1);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--ink, #22283f);
-        border-radius: 8px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
-        font-size: 9.5px;
-        letter-spacing: 0.02em;
-        cursor: pointer;
-        transition: 0.15s;
-      }
-      .tpop-order:hover {
-        border-color: var(--gold, #c5a35c);
-      }
-      .tpop-order.is-on {
-        background: var(--gold, #c5a35c);
-        color: var(--ink, #22283f);
-        border-color: var(--gold, #c5a35c);
       }
       .tpop-layer {
         display: grid;
@@ -9237,14 +9938,14 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 8px;
         border: 1px solid rgba(34, 40, 63, 0.12);
         background: rgba(34, 40, 63, 0.04);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         cursor: pointer;
         transition: 0.15s;
       }
       .tpop-layer button:hover {
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .tpop-layer button:disabled {
         opacity: 0.5;
@@ -9254,7 +9955,7 @@ export class TableSeatingPlannerIsolated extends Component<
         grid-column: 1 / -1;
       }
       .tpop-lock.is-on {
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
         background: rgba(197, 163, 92, 0.16);
         color: #9a7d44;
       }
@@ -9269,18 +9970,19 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tpop-actions button {
         flex: 1;
+        gap: 6px;
         height: 38px;
         border-radius: 9px;
         border: 1px solid rgba(34, 40, 63, 0.12);
         background: rgba(34, 40, 63, 0.04);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10.5px;
         cursor: pointer;
         transition: 0.15s;
       }
       .tpop-actions button:hover {
-        border-color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .tpop-actions .danger {
         color: #b05a48;
@@ -9290,57 +9992,9 @@ export class TableSeatingPlannerIsolated extends Component<
         border-color: #b05a48;
         background: rgba(224, 144, 127, 0.12);
       }
-      .tpop-rank-badge {
-        margin-left: 6px;
-        padding: 1px 7px;
-        border-radius: 20px;
-        background: rgba(197, 163, 92, 0.18);
-        color: var(--gold, #c5a35c);
-        letter-spacing: 0.04em;
-      }
-      .tpop-rank {
-        display: flex;
-        gap: 8px;
-      }
-      .tpop-rank-input {
-        flex: 1;
-        min-width: 0;
-        height: 34px;
-        padding: 0 12px;
-        border-radius: 8px;
-        border: 1px solid rgba(34, 40, 63, 0.1);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', sans-serif);
-        font-size: 12px;
-      }
-      .tpop-rank-input:focus {
-        outline: none;
-        border-color: var(--gold, #c5a35c);
-      }
-      .tpop-rank-auto {
-        flex: none;
-        padding: 0 14px;
-        height: 34px;
-        border-radius: 8px;
-        border: 1px solid rgba(34, 40, 63, 0.1);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--ink, #22283f);
-        font-size: 10.5px;
-        cursor: pointer;
-        transition: 0.15s;
-      }
-      .tpop-rank-auto:hover {
-        border-color: var(--gold, #c5a35c);
-      }
-      .tpop-rank-auto.is-on {
-        background: var(--gold, #c5a35c);
-        border-color: var(--gold, #c5a35c);
-        color: var(--ink, #22283f);
-      }
       .tpop-hint {
         margin-top: 8px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10.5px;
         line-height: 1.5;
         color: #7c766c;
@@ -9352,11 +10006,14 @@ export class TableSeatingPlannerIsolated extends Component<
         transform: translateX(-50%);
         z-index: 9000;
         padding: 12px 22px;
-        background: var(--navy, #141b33);
-        border: 1px solid var(--gold, #c5a35c);
-        color: var(--navy-ink, #f3ead6);
+        background: var(--tsp-primary, var(--primary, #141b33));
+        border: 1px solid var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
         border-radius: 30px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.08em;
         box-shadow: 0 12px 34px rgba(34, 40, 63, 0.15);
@@ -9367,24 +10024,27 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-toast-action {
         border: none;
-        background: var(--gold, #c5a35c);
-        color: var(--navy, #141b33);
+        background: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-primary, var(--primary, #141b33));
         border-radius: 20px;
         padding: 5px 14px;
         cursor: pointer;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.1em;
         text-transform: uppercase;
         font-weight: 600;
       }
       .tsp-toast-action:hover {
-        background: var(--gold-soft, #e6cf9a);
+        background: var(--tsp-accent-soft, #e6cf9a);
       }
       .tsp-toast-close {
         border: none;
         background: none;
-        color: var(--navy-ink, #f3ead6);
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
         opacity: 0.6;
         cursor: pointer;
         font-size: 12px;
@@ -9412,7 +10072,7 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 38px;
         border-radius: 50%;
         overflow: hidden;
-        border: 2px solid var(--acc, #c5a35c);
+        border: 2px solid var(--tsp-accent, var(--accent, #c5a35c));
         box-shadow: 0 10px 26px rgba(34, 40, 63, 0.15);
       }
       .dg-photo {
@@ -9427,14 +10087,13 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        font:
-          600 14px 'Cormorant Garamond',
-          serif;
-        color: var(--ink, #22283f);
+        font: 600 14px
+          var(--tsp-font-serif, var(--font-serif, 'Cormorant Garamond', serif));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         background: linear-gradient(
           135deg,
-          var(--acc-deep, #a5854a),
-          var(--gold, #c5a35c)
+          var(--tsp-accent-deep, #a5854a),
+          var(--tsp-accent, var(--accent, #c5a35c))
         );
       }
       .seat-info {
@@ -9445,11 +10104,14 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 214px;
         padding: 12px 13px;
         background: linear-gradient(168deg, #ffffff, #f0eee7 75%);
-        border: 1px solid var(--acc, #c5a35c);
+        border: 1px solid var(--tsp-accent, var(--accent, #c5a35c));
         border-radius: 12px;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         box-shadow: 0 16px 40px rgba(34, 40, 63, 0.16);
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
       }
       .si-top {
         display: flex;
@@ -9468,21 +10130,23 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         justify-content: center;
-        font:
-          600 15px 'Cormorant Garamond',
-          serif;
-        color: var(--ink, #22283f);
+        font: 600 15px
+          var(--tsp-font-serif, var(--font-serif, 'Cormorant Garamond', serif));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         background: linear-gradient(
           135deg,
-          var(--acc-deep, #a5854a),
-          var(--gold, #c5a35c)
+          var(--tsp-accent-deep, #a5854a),
+          var(--tsp-accent, var(--accent, #c5a35c))
         );
       }
       .si-id {
         min-width: 0;
       }
       .si-name {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 15px;
         line-height: 1.2;
       }
@@ -9490,11 +10154,11 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-left: 4px;
         padding: 1px 5px;
         border-radius: 4px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 8px;
         letter-spacing: 0.1em;
-        color: var(--ink, #22283f);
-        background: var(--acc, #c5a35c);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        background: var(--tsp-accent, var(--accent, #c5a35c));
         vertical-align: middle;
       }
       .si-cat {
@@ -9513,20 +10177,20 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .si-line {
         margin-top: 8px;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10.5px;
         letter-spacing: 0.04em;
-        color: var(--gold, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .modal-cancel {
         flex: 1;
         height: 46px;
         border: 1px solid rgba(34, 40, 63, 0.1);
         background: none;
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
         border-radius: 30px;
         cursor: pointer;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -9535,18 +10199,21 @@ export class TableSeatingPlannerIsolated extends Component<
         flex: 1;
         height: 46px;
         border: none;
-        background: var(--navy, #141b33);
-        color: var(--navy-ink, #f3ead6);
+        background: var(--tsp-primary, var(--primary, #141b33));
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
         border-radius: 30px;
         cursor: pointer;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         font-weight: 600;
       }
       .modal-save:hover:not(:disabled) {
-        background: var(--navy-2, #1a2238);
+        background: var(--tsp-primary-soft, #1a2238);
       }
       .modal-save:disabled {
         opacity: 0.4;
@@ -9564,16 +10231,22 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 11px 12px 10px 16px;
         background: linear-gradient(
           168deg,
-          var(--navy, #141b33),
-          var(--navy-2, #1a2238)
+          var(--tsp-primary, var(--primary, #141b33)),
+          var(--tsp-primary-soft, #1a2238)
         );
         border-bottom: 1px solid rgba(197, 163, 92, 0.25);
       }
       .pop-title {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 15px;
         font-weight: 600;
-        color: var(--navy-ink, #f3ead6);
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -9588,7 +10261,10 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 50%;
         border: 1px solid rgba(255, 255, 255, 0.14);
         background: rgba(255, 255, 255, 0.05);
-        color: var(--navy-ink, #f3ead6);
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
         font-size: 13px;
         cursor: pointer;
         transition: 0.14s;
@@ -9601,13 +10277,17 @@ export class TableSeatingPlannerIsolated extends Component<
         margin: 0 0 12px;
         font-size: 12.5px;
         line-height: 1.5;
-        color: color-mix(in srgb, var(--ink, #22283f) 65%, transparent);
+        color: color-mix(
+          in srgb,
+          var(--tsp-foreground, var(--foreground, #22283f)) 65%,
+          transparent
+        );
       }
       .confirm-detail {
         margin: 8px 0 4px;
         font-size: 13px;
         line-height: 1.6;
-        color: var(--ink-2, #57534b);
+        color: var(--tsp-primary, var(--primary, #57534b));
       }
       .confirm-danger {
         flex: 1;
@@ -9617,7 +10297,7 @@ export class TableSeatingPlannerIsolated extends Component<
         color: #ffffff;
         border-radius: 30px;
         cursor: pointer;
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -9641,25 +10321,29 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 7px;
       }
       .save-field-label {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10px;
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
       }
       .save-input {
         height: 44px;
         padding: 0 14px;
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 12px;
         background: rgba(34, 40, 63, 0.03);
-        color: var(--ink, #22283f);
-        font-family: var(--font-serif, 'Cormorant Garamond', serif);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', serif)
+        );
         font-size: 15px;
       }
       .save-input:focus {
         outline: none;
-        border-color: var(--acc, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .save-error {
         margin: 10px 0 0;
@@ -9673,7 +10357,8 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 100%;
         height: 200px;
         background: rgba(34, 40, 63, 0.03);
-        border: 1px solid var(--surface-edge, rgba(197, 163, 92, 0.35));
+        border: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         border-radius: 10px;
       }
       .preview-foot {
@@ -9684,7 +10369,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 100%;
       }
       .preview-meta {
-        font-family: var(--font-sans, 'Jost', sans-serif);
+        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 11px;
         white-space: nowrap;
         color: rgba(34, 40, 63, 0.6);
@@ -9714,14 +10399,14 @@ export class TableSeatingPlannerIsolated extends Component<
         border: none;
         background: none;
         border-radius: 10px;
-        color: var(--acc-deep, #a5854a);
+        color: var(--tsp-accent-deep, #a5854a);
         font-size: 15px;
         cursor: pointer;
         transition: 0.13s;
       }
       .ct-tpl-eye:hover {
         background: rgba(197, 163, 92, 0.16);
-        color: var(--ink, #22283f);
+        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
     </style>
   </template>
@@ -9745,13 +10430,13 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       <span class='tpop-label'>Rows</span>
       <div class='tpop-step'>
         <button type='button' {{on 'click' @c.decRows}}>−</button>
-        <input
+        <BoxelInput
+          @type='number'
+          @min='1'
+          @max='60'
+          @value={{@c.selectedTable.rows}}
           class='tpop-num'
-          type='number'
-          min='1'
-          max='60'
           aria-label='Rows'
-          value={{@c.selectedTable.rows}}
           {{on 'change' @c.rowsInput}}
         />
         <button type='button' {{on 'click' @c.incRows}}>+</button>
@@ -9761,13 +10446,13 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       <span class='tpop-label'>Seats / row</span>
       <div class='tpop-step'>
         <button type='button' {{on 'click' @c.decCols}}>−</button>
-        <input
+        <BoxelInput
+          @type='number'
+          @min='1'
+          @max='60'
+          @value={{@c.selectedTable.cols}}
           class='tpop-num'
-          type='number'
-          min='1'
-          max='60'
           aria-label='Seats per row'
-          value={{@c.selectedTable.cols}}
           {{on 'change' @c.colsInput}}
         />
         <button type='button' {{on 'click' @c.incCols}}>+</button>
@@ -9811,13 +10496,13 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       <span class='tpop-label'>Seats</span>
       <div class='tpop-step'>
         <button type='button' {{on 'click' @c.decSeats}}>−</button>
-        <input
+        <BoxelInput
+          @type='number'
+          @min='0'
+          @max='99'
+          @value={{@c.selectedTable.seatCount}}
           class='tpop-num'
-          type='number'
-          min='0'
-          max='99'
           aria-label='Seats'
-          value={{@c.selectedTable.seatCount}}
           {{on 'change' @c.seatsInput}}
         />
         <button type='button' {{on 'click' @c.incSeats}}>+</button>
@@ -9840,14 +10525,14 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
     <span class='tpop-rank-badge'>#{{@c.selectedTableRank}}</span>
   </div>
   <div class='tpop-rank'>
-    <input
-      type='number'
-      min='1'
-      max={{@c.tableCount}}
+    <BoxelInput
+      @type='number'
+      @min='1'
+      @max={{@c.tableCount}}
+      @value={{if @c.selectedTablePinned @c.selectedTable.rank ''}}
       class='tpop-rank-input'
       aria-label='Table rank'
       placeholder='Auto'
-      value={{if @c.selectedTablePinned @c.selectedTable.rank ''}}
       {{on 'change' @c.pinTableRankInput}}
     />
     <button
@@ -9858,7 +10543,7 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
   </div>
   <style scoped>
     .tpop-label {
-      font-family: var(--font-sans, 'Jost', sans-serif);
+      font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
       font-size: 9.5px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
@@ -9874,19 +10559,19 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       height: 34px;
       border: 1px solid rgba(34, 40, 63, 0.1);
       background: rgba(34, 40, 63, 0.04);
-      color: var(--ink, #22283f);
+      color: var(--tsp-foreground, var(--foreground, #22283f));
       border-radius: 8px;
       font-size: 10.5px;
       cursor: pointer;
       transition: 0.15s;
     }
     .tpop-shape:hover {
-      border-color: var(--gold, #c5a35c);
+      border-color: var(--tsp-accent, var(--accent, #c5a35c));
     }
     .tpop-shape.is-on {
-      background: var(--gold, #c5a35c);
-      color: var(--ink, #22283f);
-      border-color: var(--gold, #c5a35c);
+      background: var(--tsp-accent, var(--accent, #c5a35c));
+      color: var(--tsp-foreground, var(--foreground, #22283f));
+      border-color: var(--tsp-accent, var(--accent, #c5a35c));
     }
     .tpop-row {
       display: flex;
@@ -9903,24 +10588,39 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       gap: 4px;
       margin-top: 12px;
     }
+    /* BoxelInput defaults to width:100%; pin the number box (and its
+       wrapper) so the −/value/+ trio stays one compact group. */
+    .tpop-step > * {
+      flex: none;
+    }
+    .tpop-step :deep(.input-container),
+    .tpop-step :deep(.boxel-input),
+    .tpop-step .tpop-num {
+      width: 48px;
+      flex: none;
+    }
     .tpop-step button {
       width: 30px;
       height: 30px;
       border-radius: 8px;
       border: 1px solid rgba(34, 40, 63, 0.12);
       background: rgba(34, 40, 63, 0.04);
-      color: var(--ink, #22283f);
+      color: var(--tsp-foreground, var(--foreground, #22283f));
       font-size: 17px;
       cursor: pointer;
     }
     .tpop-step button:hover {
-      border-color: var(--gold, #c5a35c);
+      border-color: var(--tsp-accent, var(--accent, #c5a35c));
     }
     .tpop-num {
+      min-height: 0;
       min-width: 30px;
       width: 44px;
       text-align: center;
-      font-family: var(--font-serif, 'Cormorant Garamond', serif);
+      font-family: var(
+        --tsp-font-serif,
+        var(--font-serif, 'Cormorant Garamond', serif)
+      );
       font-size: 19px;
       border: none;
       background: transparent;
@@ -9930,7 +10630,7 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       -moz-appearance: textfield;
     }
     .tpop-num:focus {
-      outline: 1px solid var(--tsp-gold, #c5a35c);
+      outline: 1px solid var(--tsp-accent, var(--accent, #c5a35c));
       border-radius: 6px;
     }
     .tpop-num::-webkit-outer-spin-button,
@@ -9947,28 +10647,28 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       height: 30px;
       border: 1px solid rgba(34, 40, 63, 0.1);
       background: rgba(34, 40, 63, 0.04);
-      color: var(--ink, #22283f);
+      color: var(--tsp-foreground, var(--foreground, #22283f));
       border-radius: 8px;
-      font-family: var(--font-sans, 'Jost', sans-serif);
+      font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
       font-size: 9.5px;
       letter-spacing: 0.02em;
       cursor: pointer;
       transition: 0.15s;
     }
     .tpop-order:hover {
-      border-color: var(--gold, #c5a35c);
+      border-color: var(--tsp-accent, var(--accent, #c5a35c));
     }
     .tpop-order.is-on {
-      background: var(--gold, #c5a35c);
-      color: var(--ink, #22283f);
-      border-color: var(--gold, #c5a35c);
+      background: var(--tsp-accent, var(--accent, #c5a35c));
+      color: var(--tsp-foreground, var(--foreground, #22283f));
+      border-color: var(--tsp-accent, var(--accent, #c5a35c));
     }
     .tpop-rank-badge {
       margin-left: 6px;
       padding: 1px 7px;
       border-radius: 20px;
       background: rgba(197, 163, 92, 0.18);
-      color: var(--gold, #c5a35c);
+      color: var(--tsp-accent, var(--accent, #c5a35c));
       letter-spacing: 0.04em;
     }
     .tpop-rank {
@@ -9976,6 +10676,7 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       gap: 8px;
     }
     .tpop-rank-input {
+      min-height: 0;
       flex: 1;
       min-width: 0;
       height: 34px;
@@ -9983,13 +10684,13 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       border-radius: 8px;
       border: 1px solid rgba(34, 40, 63, 0.1);
       background: rgba(34, 40, 63, 0.04);
-      color: var(--ink, #22283f);
-      font-family: var(--font-sans, 'Jost', sans-serif);
+      color: var(--tsp-foreground, var(--foreground, #22283f));
+      font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
       font-size: 12px;
     }
     .tpop-rank-input:focus {
       outline: none;
-      border-color: var(--gold, #c5a35c);
+      border-color: var(--tsp-accent, var(--accent, #c5a35c));
     }
     .tpop-rank-auto {
       flex: none;
@@ -9998,18 +10699,18 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       border-radius: 8px;
       border: 1px solid rgba(34, 40, 63, 0.1);
       background: rgba(34, 40, 63, 0.04);
-      color: var(--ink, #22283f);
+      color: var(--tsp-foreground, var(--foreground, #22283f));
       font-size: 10.5px;
       cursor: pointer;
       transition: 0.15s;
     }
     .tpop-rank-auto:hover {
-      border-color: var(--gold, #c5a35c);
+      border-color: var(--tsp-accent, var(--accent, #c5a35c));
     }
     .tpop-rank-auto.is-on {
-      background: var(--gold, #c5a35c);
-      border-color: var(--gold, #c5a35c);
-      color: var(--ink, #22283f);
+      background: var(--tsp-accent, var(--accent, #c5a35c));
+      border-color: var(--tsp-accent, var(--accent, #c5a35c));
+      color: var(--tsp-foreground, var(--foreground, #22283f));
     }
   </style>
 </template>;
@@ -10225,88 +10926,533 @@ export class TableSeatingPlannerFitted extends Component<
     }
     return ids.size;
   }
-  get themeVars() {
-    return htmlSafe(buildThemeVars((this.args.model as any)?.cardInfo?.theme));
+
+  get hasLinkedTheme(): boolean {
+    return Boolean((this.args.model as any)?.cardInfo?.theme);
   }
+
+  get title() {
+    return this.args.model?.eventTitle || 'Seating Plan';
+  }
+
+  get dateLabel(): string {
+    let d = this.args.model?.eventDate;
+    if (!d) return '';
+    try {
+      return new Date(d as any).toLocaleString(undefined, {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    } catch {
+      return String(d);
+    }
+  }
+
+  get hasLayout() {
+    return (
+      (this.args.model?.tables?.length ?? 0) > 0 ||
+      (this.args.model?.fixtures?.length ?? 0) > 0
+    );
+  }
+
   <template>
-    <div class='cq' style={{this.themeVars}}>
-      <div class='fit'>
-        <div class='r-head'>
-          <span class='title'>{{if
-              @model.eventTitle
-              @model.eventTitle
-              'Seating Plan'
-            }}</span>
-        </div>
-        <div class='r-body'>
-          <span class='stat'><b>{{@model.tables.length}}</b> tables</span>
-          <span class='stat'><b
-            >{{this.seatedCount}}</b>/{{@model.guests.length}}
-            assigned</span>
+    <div class='fitted {{unless this.hasLinkedTheme "tsp-default-theme"}}'>
+
+      {{! BADGE (≤150w × ≤169h) — mark + title + count }}
+      <div class='fmt badge'>
+        <span class='b-mark'>✦</span>
+        <div class='b-info'>
+          <div class='b-title'>{{this.title}}</div>
+          <div class='b-sub'>{{@model.guests.length}} guests</div>
         </div>
       </div>
+
+      {{! STRIP (≥151w × ≤169h) — title · venue/date · seated tag }}
+      <div class='fmt strip'>
+        <span class='s-mark'>✦</span>
+        <div class='s-info'>
+          <div class='s-title'>{{this.title}}</div>
+          <div class='s-sub'>
+            {{#if @model.venue}}{{@model.venue}}{{else}}{{@model.tables.length}}
+              tables{{/if}}
+          </div>
+        </div>
+        <span class='s-tag'>{{this.seatedCount}}/{{@model.guests.length}}
+          seated</span>
+      </div>
+
+      {{! TILE (≤399w × ≥170h) — floor-plan hero + title + stats }}
+      <div class='fmt tile'>
+        <div class='t-hero'>
+          {{#if this.hasLayout}}
+            <LayoutPreview
+              @tables={{@model.tables}}
+              @fixtures={{@model.fixtures}}
+            />
+          {{else}}
+            <span class='t-empty'>❧</span>
+          {{/if}}
+        </div>
+        <div class='t-body'>
+          <div class='t-kicker'>Seating plan</div>
+          <div class='t-title'>{{this.title}}</div>
+          <div class='t-stats'>
+            <span class='t-stat'><b>{{@model.tables.length}}</b> tables</span>
+            <span class='t-dot'>·</span>
+            <span class='t-stat'><b
+              >{{this.seatedCount}}</b>/{{@model.guests.length}}
+              seated</span>
+          </div>
+        </div>
+      </div>
+
+      {{! CARD (≥400w × ≥170h) — split: info + floor-plan panel }}
+      <div class='fmt cardf'>
+        <div class='c-body'>
+          <div class='c-kicker'>Seating plan</div>
+          <div class='c-title'>{{this.title}}</div>
+          <div class='c-meta'>
+            {{#if this.dateLabel}}<span>{{this.dateLabel}}</span>{{/if}}
+            {{#if @model.venue}}<span
+                class='c-venue'
+              >{{@model.venue}}</span>{{/if}}
+          </div>
+          <div class='c-stats'>
+            <span class='c-pill'><b>{{@model.tables.length}}</b>
+              tables</span>
+            <span class='c-pill'><b>{{@model.guests.length}}</b>
+              guests</span>
+            <span class='c-pill c-pill-gold'><b>{{this.seatedCount}}</b>
+              seated</span>
+          </div>
+        </div>
+        <div class='c-panel'>
+          {{#if this.hasLayout}}
+            <LayoutPreview
+              @tables={{@model.tables}}
+              @fixtures={{@model.fixtures}}
+            />
+          {{else}}
+            <span class='c-empty'>❧</span>
+          {{/if}}
+        </div>
+      </div>
+
     </div>
     <style scoped>
-      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Jost:ital,wght@0,300..600;1,300..600&display=swap');
-      .cq {
-        container-type: size;
-        container-name: plan;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
+      /* Default palette for planners with NO linked theme — pins the
+         semantic tokens to the Parisian look so app-level defaults can't
+         restyle the card arbitrarily. A linked theme omits this class. */
+      .tsp-default-theme {
+        --background: #faf6ec;
+        --foreground: #22283f;
+        --card: #fffdf8;
+        --card-foreground: #22283f;
+        --popover: #fffdf8;
+        --popover-foreground: #22283f;
+        --primary: #141b33;
+        --primary-foreground: #f3ead6;
+        --secondary: #c5a35c;
+        --secondary-foreground: #22283f;
+        --muted: #f4eddb;
+        --muted-foreground: #7d7460;
+        --accent: #c5a35c;
+        --accent-foreground: #22283f;
+        --border: rgba(197, 163, 92, 0.35);
+        --input: #fffdf8;
+        --ring: #c5a35c;
+        --radius: 0.75rem;
+        --font-sans: 'Jost', system-ui, sans-serif;
+        --font-serif: 'Cormorant Garamond', Georgia, serif;
       }
-      .fit {
+      .fitted {
         width: 100%;
         height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 8px;
-        padding: 16px;
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
+      }
+      .fmt {
+        display: none;
+        width: 100%;
+        height: 100%;
         box-sizing: border-box;
         overflow: hidden;
-        background: linear-gradient(
-          168deg,
-          var(--navy, #141b33),
-          var(--navy-2, #1a2238)
+      }
+
+      /* ── BADGE ── */
+      @container fitted-card (max-width: 150px) and (max-height: 169px) {
+        .badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          background: var(--tsp-primary, var(--primary, #141b33));
+          color: var(
+            --tsp-primary-foreground,
+            var(--primary-foreground, #f3ead6)
+          );
+        }
+      }
+      .b-mark {
+        flex: none;
+        font-size: 13px;
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+      }
+      .b-info {
+        min-width: 0;
+      }
+      .b-title {
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
         );
-        color: var(--navy-ink, #f3ead6);
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
-      }
-      .r-head {
-        overflow: hidden;
-        min-height: 0;
-      }
-      .title {
-        display: block;
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
-        font-style: italic;
-        font-size: 19px;
-        color: var(--gold-soft, #e6cf9a);
-        margin-top: 4px;
+        font-size: clamp(0.7rem, 22cqmin, 0.95rem);
+        line-height: 1.15;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .r-body {
-        display: flex;
-        gap: 16px;
+      .b-sub {
+        font-size: 0.5rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        white-space: nowrap;
         overflow: hidden;
-        min-height: 0;
+        text-overflow: ellipsis;
       }
-      .stat {
-        font-family: var(--font-sans, 'Jost', sans-serif);
-        font-size: 11px;
-        color: rgba(243, 234, 214, 0.7);
+
+      /* ── STRIP ── */
+      @container fitted-card (min-width: 151px) and (max-height: 169px) {
+        .strip {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 12px;
+          background: linear-gradient(
+            120deg,
+            var(--tsp-primary, var(--primary, #141b33)) 0%,
+            color-mix(
+                in srgb,
+                var(--tsp-primary, var(--primary, #141b33)) 88%,
+                #ffffff
+              )
+              100%
+          );
+          color: var(
+            --tsp-primary-foreground,
+            var(--primary-foreground, #f3ead6)
+          );
+        }
       }
-      .stat b {
-        color: var(--gold, #c5a35c);
-        font-size: 15px;
+      .s-mark {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: clamp(24px, 60cqmin, 38px);
+        height: clamp(24px, 60cqmin, 38px);
+        border-radius: 50%;
+        border: 1px solid
+          color-mix(
+            in srgb,
+            var(--tsp-accent, var(--accent, #c5a35c)) 55%,
+            transparent
+          );
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        font-size: clamp(10px, 30cqmin, 15px);
       }
-      @container plan (height <= 70px) {
-        .r-body {
+      .s-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .s-title {
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
+        font-size: clamp(0.85rem, 26cqmin, 1.1rem);
+        line-height: 1.15;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .s-sub {
+        font-size: 0.55rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .s-tag {
+        flex: none;
+        font-size: 0.5rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
+        background: var(--tsp-accent, var(--accent, #c5a35c));
+        border-radius: 999px;
+        padding: 3px 8px;
+        white-space: nowrap;
+      }
+      @container fitted-card (max-height: 64px) {
+        .s-tag {
           display: none;
         }
+      }
+
+      /* ── TILE — floor-plan hero ── */
+      @container fitted-card (max-width: 399px) and (min-height: 170px) {
+        .tile {
+          display: flex;
+          flex-direction: column;
+          background: var(--tsp-card, var(--card, #fffdf8));
+          border: 1px solid
+            var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
+          border-radius: var(--tsp-radius, var(--radius, 0.75rem));
+        }
+      }
+      .t-hero {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(6px, 4cqmin, 12px);
+        background:
+          radial-gradient(
+            130% 90% at 50% -12%,
+            color-mix(
+              in srgb,
+              var(--tsp-accent, var(--accent, #c5a35c)) 14%,
+              transparent
+            ),
+            transparent 60%
+          ),
+          color-mix(
+            in srgb,
+            var(--tsp-primary, var(--primary, #141b33)) 7%,
+            var(--tsp-muted, var(--muted, #f4eddb))
+          );
+        border-bottom: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
+        overflow: hidden;
+      }
+      .t-hero :deep(svg) {
+        width: 100%;
+        height: 100%;
+      }
+      .t-empty {
+        font-size: clamp(16px, 16cqmin, 30px);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+      }
+      .t-body {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: clamp(7px, 4.5cqmin, 14px);
+        background: var(--tsp-primary, var(--primary, #141b33));
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
+      }
+      .t-kicker {
+        font-size: clamp(0.42rem, 4cqmin, 0.52rem);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+      }
+      .t-title {
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
+        font-size: clamp(0.9rem, 9cqmin, 1.35rem);
+        line-height: 1.12;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .t-stats {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: clamp(0.55rem, 4.5cqmin, 0.68rem);
+        color: color-mix(
+          in srgb,
+          var(--tsp-primary-foreground, var(--primary-foreground, #f3ead6)) 75%,
+          transparent
+        );
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .t-stat b {
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
+        font-weight: 600;
+      }
+      .t-dot {
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+      }
+
+      /* ── CARD — split info + floor plan ── */
+      @container fitted-card (min-width: 400px) and (min-height: 170px) {
+        .cardf {
+          display: flex;
+          background: var(--tsp-card, var(--card, #fffdf8));
+          border: 1px solid
+            var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
+          border-radius: var(--tsp-radius, var(--radius, 0.75rem));
+        }
+      }
+      .c-body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: clamp(3px, 2.4cqmin, 8px);
+        padding: clamp(10px, 6cqmin, 22px);
+        background: var(--tsp-primary, var(--primary, #141b33));
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
+      }
+      .c-kicker {
+        font-size: clamp(0.45rem, 4cqmin, 0.58rem);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--tsp-accent, var(--accent, #c5a35c));
+      }
+      .c-title {
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
+        font-size: clamp(1.1rem, 12cqmin, 2rem);
+        line-height: 1.1;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .c-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: clamp(0.55rem, 4.5cqmin, 0.7rem);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: color-mix(
+          in srgb,
+          var(--tsp-primary-foreground, var(--primary-foreground, #f3ead6)) 75%,
+          transparent
+        );
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .c-venue {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .c-stats {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: clamp(2px, 2cqmin, 8px);
+      }
+      .c-pill {
+        font-size: 0.55rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: color-mix(
+          in srgb,
+          var(--tsp-primary-foreground, var(--primary-foreground, #f3ead6)) 82%,
+          transparent
+        );
+        border: 1px solid
+          color-mix(
+            in srgb,
+            var(--tsp-primary-foreground, var(--primary-foreground, #f3ead6))
+              35%,
+            transparent
+          );
+        border-radius: 999px;
+        padding: 3px 10px;
+        white-space: nowrap;
+        background: transparent;
+      }
+      .c-pill b {
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
+        font-weight: 600;
+      }
+      .c-pill-gold {
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
+        background: var(--tsp-accent, var(--accent, #c5a35c));
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+      }
+      .c-pill-gold b {
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
+      }
+      .c-panel {
+        flex: none;
+        width: 42%;
+        max-width: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(8px, 5cqmin, 16px);
+        background:
+          radial-gradient(
+            130% 90% at 50% -12%,
+            color-mix(
+              in srgb,
+              var(--tsp-accent, var(--accent, #c5a35c)) 14%,
+              transparent
+            ),
+            transparent 60%
+          ),
+          color-mix(
+            in srgb,
+            var(--tsp-primary, var(--primary, #141b33)) 7%,
+            var(--tsp-muted, var(--muted, #f4eddb))
+          );
+        border-left: 1px solid
+          var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
+        overflow: hidden;
+      }
+      .c-panel :deep(svg) {
+        width: 100%;
+        height: 100%;
+      }
+      .c-empty {
+        font-size: clamp(18px, 16cqmin, 34px);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
     </style>
   </template>
