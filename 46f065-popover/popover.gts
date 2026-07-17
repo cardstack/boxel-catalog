@@ -244,68 +244,75 @@ const allocatePopoverLayer = modifier(
   },
 );
 
-/** Theme tokens the popover carries across its portal.
- *
- *  Theme CSS variables are scoped to the CardContainer of the themed
- *  card (extractCssVariables applies the `:root` block there, not to
- *  the real document root). The popover portals into document.body —
- *  outside that scope — so a plain `var(--popover)` on the portaled
- *  root would resolve to nothing. This modifier reads the RESOLVED
- *  values from the anchor element (which lives inside the themed card)
- *  and copies them onto the portaled root as inline custom properties,
- *  so the popover follows whatever theme governs its anchor — including
- *  dark mode and Brand Guide custom variables. */
-const POPOVER_THEME_BRIDGE_TOKENS = [
-  /* semantic theme tokens (shadcn vocabulary) */
+/** Semantic tokens copied across the portal when the anchor has no
+ *  theme scope — see bridgeThemeVariables. Full fill/foreground PAIRS:
+ *  a fill without its companion foreground resolves against whatever
+ *  the app root defines and produces unreadable text. */
+const PORTAL_FALLBACK_TOKENS = [
   '--popover',
   '--popover-foreground',
   '--foreground',
   '--background',
+  '--card',
+  '--card-foreground',
   '--border',
+  '--input',
+  '--ring',
   '--primary',
+  '--primary-foreground',
+  '--secondary',
+  '--secondary-foreground',
+  '--accent',
+  '--accent-foreground',
+  '--muted',
   '--muted-foreground',
+  '--destructive',
+  '--destructive-foreground',
   '--radius',
   '--shadow-sm',
   '--shadow-md',
   '--shadow-xl',
   '--font-sans',
-  /* popover-specific knobs a host or theme may set (e.g. via Brand
-   * Guide custom variables) */
-  '--bx-popover-bg',
-  '--bx-popover-fg',
-  '--bx-popover-fg-muted',
-  '--bx-popover-border',
-  '--bx-popover-accent',
-  '--bx-popover-dim-bg',
-  '--bx-popover-bg-tint',
-  '--bx-popover-bg-blur',
-  '--bx-popover-tools-bg',
-  '--bx-popover-tools-fg',
-  '--bx-popover-edit-bg',
-  '--bx-popover-edit-border',
-  '--bx-popover-radius',
-  '--bx-popover-shadow-raised',
-  '--bx-popover-shadow-elevated',
-  '--bx-popover-shadow-floating',
-  '--bx-popover-font-family',
-  '--bx-popover-size-compact-min-w',
-  '--bx-popover-size-compact-max-w',
-  '--bx-popover-size-compact-max-h',
-  '--bx-popover-size-comfortable-min-w',
-  '--bx-popover-size-comfortable-max-w',
-  '--bx-popover-size-comfortable-max-h',
-  '--bx-popover-size-spacious-min-w',
-  '--bx-popover-size-spacious-max-w',
-  '--bx-popover-size-spacious-max-h',
+  '--font-serif',
+  '--font-mono',
 ];
 
+/** Carries the theme across the portal.
+ *
+ *  Theme CSS variables are scoped to the CardContainer of the themed
+ *  card. The popover portals into document.body — outside that scope —
+ *  so a plain `var(--popover)` on the portaled root would resolve
+ *  against the app root instead of the card's theme.
+ *
+ *  Primary path: adopt the anchor's `data-boxel-theme-scope` attribute
+ *  so the theme's scoped stylesheet styles the portaled root directly —
+ *  every token the theme defines (semantic pairs, custom namespaces,
+ *  future additions) flows with nothing to enumerate, and dark-mode
+ *  container queries keep working.
+ *
+ *  Fallback path: with no theme scope, copy the RESOLVED semantic
+ *  tokens from the anchor. This carries element-scoped palettes — a
+ *  card with no linked theme that pins its default look via CSS
+ *  variables on its own root (e.g. a `*-default-theme` class) — which
+ *  no stylesheet-scope mechanism can see. For anchors with neither, the
+ *  copied values equal the app-level tokens the portal would inherit
+ *  anyway, so the fallback is harmless. */
 const bridgeThemeVariables = modifier(
   (element: HTMLElement, [selector]: [string]) => {
     const anchor = document.querySelector<HTMLElement>(selector);
     if (!anchor) return;
+    const scope = anchor
+      .closest('[data-boxel-theme-scope]')
+      ?.getAttribute('data-boxel-theme-scope');
+    if (scope) {
+      element.setAttribute('data-boxel-theme-scope', scope);
+      return () => {
+        element.removeAttribute('data-boxel-theme-scope');
+      };
+    }
     const computed = getComputedStyle(anchor);
     const applied: string[] = [];
-    for (const token of POPOVER_THEME_BRIDGE_TOKENS) {
+    for (const token of PORTAL_FALLBACK_TOKENS) {
       const value = computed.getPropertyValue(token).trim();
       if (value) {
         element.style.setProperty(token, value);
