@@ -1,10 +1,50 @@
-import { CardDef, Component } from 'https://cardstack.com/base/card-api';
+import {
+  CardDef,
+  Component,
+  FieldDef,
+  field,
+  contains,
+  containsMany,
+  linksToMany,
+} from 'https://cardstack.com/base/card-api';
+import NumberField from 'https://cardstack.com/base/number';
 import { tracked } from '@glimmer/tracking';
 import { htmlSafe } from '@ember/template';
+import { get } from '@ember/helper';
 import { on } from '@ember/modifier';
 import Modifier from 'ember-modifier';
 import LayoutDashboardIcon from '@cardstack/boxel-icons/layout-dashboard';
 import { RigState, SurfaceRig, type PanSession } from './rig';
+
+// Tile geometry in world-space pixels. The CSS tile size (--pb-tile-width /
+// --pb-tile-height) must stay in sync: 280px = 17.5rem, 364px = 22.75rem.
+const TILE_WIDTH = 280;
+const TILE_HEIGHT = 364;
+const TILE_GAP = 32;
+const GRID_COLUMNS = 4;
+
+interface TilePlacement {
+  index: number;
+  x: number;
+  y: number;
+}
+
+// Cards without a persisted frame setting flow into a fixed grid.
+function defaultPlacement(index: number): TilePlacement {
+  return {
+    index,
+    x: (index % GRID_COLUMNS) * (TILE_WIDTH + TILE_GAP),
+    y: Math.floor(index / GRID_COLUMNS) * (TILE_HEIGHT + TILE_GAP),
+  };
+}
+
+export class FrameSettingsField extends FieldDef {
+  static displayName = 'Frame Settings';
+
+  @field cardIndex = contains(NumberField);
+  @field x = contains(NumberField);
+  @field y = contains(NumberField);
+}
 
 interface OnInsertSignature {
   Element: HTMLElement;
@@ -42,6 +82,30 @@ class Isolated extends Component<typeof PosterBoard> {
   get rootStyle() {
     return htmlSafe(`cursor: ${this.isPanning ? 'grabbing' : 'grab'};`);
   }
+
+  // ── Tile placement ─────────────────────────────────────
+
+  get tilePlacements(): TilePlacement[] {
+    let cards = this.args.model?.cards ?? [];
+    let settings = this.args.model?.frameSettings ?? [];
+    return cards.map((_card, index) => {
+      let setting = settings.find((s) => Number(s.cardIndex) === index);
+      // Number() guards against non-numeric values in hand-edited JSON
+      let x = Number(setting?.x);
+      let y = Number(setting?.y);
+      if (setting && Number.isFinite(x) && Number.isFinite(y)) {
+        return { index, x, y };
+      }
+      return defaultPlacement(index);
+    });
+  }
+
+  get hasCards() {
+    return this.tilePlacements.length > 0;
+  }
+
+  tileStyle = (tile: TilePlacement) =>
+    htmlSafe(`left: ${tile.x}px; top: ${tile.y}px;`);
 
   // ── Wheel ──────────────────────────────────────────────
 
@@ -159,11 +223,24 @@ class Isolated extends Component<typeof PosterBoard> {
     >
       <div class='poster-board-plane' style={{this.planeStyle}}>
         <div class='poster-board-grid' aria-hidden='true'></div>
-        <header class='poster-board-hint'>
-          <h1 class='poster-board-hint-title'><@fields.cardTitle /></h1>
-          <p class='poster-board-hint-line'>Scroll to pan · ⌘ or Ctrl + scroll
-            to zoom · Drag to pan</p>
-        </header>
+        {{#each this.tilePlacements key='index' as |tile|}}
+          <div
+            class='poster-board-tile'
+            style={{this.tileStyle tile}}
+            data-test-poster-board-tile={{tile.index}}
+          >
+            {{#let (get @fields.cards tile.index) as |LinkedCard|}}
+              <LinkedCard @format='fitted' />
+            {{/let}}
+          </div>
+        {{/each}}
+        {{#unless this.hasCards}}
+          <header class='poster-board-hint'>
+            <h1 class='poster-board-hint-title'><@fields.cardTitle /></h1>
+            <p class='poster-board-hint-line'>Scroll to pan · ⌘ or Ctrl + scroll
+              to zoom · Drag to pan</p>
+          </header>
+        {{/unless}}
       </div>
 
       <div
@@ -217,6 +294,8 @@ class Isolated extends Component<typeof PosterBoard> {
         --pb-hud-zoom-min-width: 2.125rem;
         --pb-hud-border-radius: 0.5rem;
         --pb-hud-btn-border-radius: 0.3125rem;
+        --pb-tile-width: 17.5rem;
+        --pb-tile-height: 22.75rem;
         position: relative;
         width: 100%;
         height: 100%;
@@ -227,6 +306,19 @@ class Isolated extends Component<typeof PosterBoard> {
 
       .poster-board-plane {
         will-change: transform;
+      }
+
+      .poster-board-tile {
+        position: absolute;
+        width: var(--pb-tile-width);
+        height: var(--pb-tile-height);
+        container-name: fitted-card;
+        container-type: size;
+      }
+
+      .poster-board-tile > :first-child {
+        width: 100%;
+        height: 100%;
       }
 
       .poster-board-grid {
@@ -328,6 +420,9 @@ export class PosterBoard extends CardDef {
   static displayName = 'Poster Board';
   static icon = LayoutDashboardIcon;
   static prefersWideFormat = true;
+
+  @field cards = linksToMany(() => CardDef);
+  @field frameSettings = containsMany(FrameSettingsField);
 
   static isolated = Isolated;
 }
