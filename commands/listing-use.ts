@@ -79,8 +79,12 @@ export default class ListingUseCommand extends Command<
     }
 
     const sourceCards = [
-      ...((listing.examples ?? []) as CardAPI.CardDef[]),
-      ...((listing.supportingCards ?? []) as CardAPI.CardDef[]),
+      ...new Map(
+        [
+          ...((listing.examples ?? []) as CardAPI.CardDef[]),
+          ...((listing.supportingCards ?? []) as CardAPI.CardDef[]),
+        ].map((card) => [card.id ?? card, card]),
+      ).values(),
     ];
     for (const card of sourceCards) {
       await new CopyCardToRealmCommand(this.commandContext).execute({
