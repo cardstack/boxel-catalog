@@ -13,13 +13,14 @@ import { htmlSafe } from '@ember/template';
 import { get } from '@ember/helper';
 import { on } from '@ember/modifier';
 import Modifier from 'ember-modifier';
+import { FittedCardContainer } from '@cardstack/boxel-ui/components';
 import { fittedFormatById } from '@cardstack/boxel-ui/helpers';
 import LayoutDashboardIcon from '@cardstack/boxel-icons/layout-dashboard';
 import { RigState, SurfaceRig, type PanSession } from './rig';
 
 // Tiles use the shared cardsgrid-tile fitted size so boards show cards at a
-// size their fitted views are designed for. The value feeds both the
-// placement math and the --pb-tile-* CSS vars (via rootStyle).
+// size their fitted views are designed for. FittedCardContainer applies the
+// dimensions; these constants drive the grid placement math.
 const cardsgridTile = fittedFormatById.get('cardsgrid-tile')!;
 const TILE_WIDTH = cardsgridTile.width;
 const TILE_HEIGHT = cardsgridTile.height;
@@ -83,9 +84,7 @@ class Isolated extends Component<typeof PosterBoard> {
   }
 
   get rootStyle() {
-    return htmlSafe(
-      `cursor: ${this.isPanning ? 'grabbing' : 'grab'}; --pb-tile-width: ${TILE_WIDTH}px; --pb-tile-height: ${TILE_HEIGHT}px;`,
-    );
+    return htmlSafe(`cursor: ${this.isPanning ? 'grabbing' : 'grab'};`);
   }
 
   // ── Tile placement ─────────────────────────────────────
@@ -229,15 +228,16 @@ class Isolated extends Component<typeof PosterBoard> {
       <div class='poster-board-plane' style={{this.planeStyle}}>
         <div class='poster-board-grid' aria-hidden='true'></div>
         {{#each this.tilePlacements key='index' as |tile|}}
-          <div
+          <FittedCardContainer
+            @size='cardsgrid-tile'
+            @style={{this.tileStyle tile}}
             class='poster-board-tile'
-            style={{this.tileStyle tile}}
             data-test-poster-board-tile={{tile.index}}
           >
             {{#let (get @fields.cards tile.index) as |LinkedCard|}}
               <LinkedCard @format='fitted' />
             {{/let}}
-          </div>
+          </FittedCardContainer>
         {{/each}}
         {{#unless this.hasCards}}
           <header class='poster-board-hint'>
@@ -299,8 +299,6 @@ class Isolated extends Component<typeof PosterBoard> {
         --pb-hud-zoom-min-width: 2.125rem;
         --pb-hud-border-radius: 0.5rem;
         --pb-hud-btn-border-radius: 0.3125rem;
-        /* --pb-tile-width / --pb-tile-height come from rootStyle, derived
-           from the cardsgrid-tile entry in FITTED_FORMATS */
         position: relative;
         width: 100%;
         height: 100%;
@@ -315,8 +313,6 @@ class Isolated extends Component<typeof PosterBoard> {
 
       .poster-board-tile {
         position: absolute;
-        width: var(--pb-tile-width);
-        height: var(--pb-tile-height);
         container-name: fitted-card;
         container-type: size;
       }
