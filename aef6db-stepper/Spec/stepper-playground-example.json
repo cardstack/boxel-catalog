@@ -1,0 +1,45 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "@cardstack/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "StepperPlayground",
+        "module": "../example/stepper-playground-example"
+      },
+      "readMe": "## Stepper Playground\n\nA config explorer for `<Stepper>`. Live preview on top, knobs for `@modal` (inline vs scrim + centered card) and `@allowStepJump` below it, then the generated invocation and the full API reference. Colors, fonts, and radius come from the linked theme (cardInfo.theme) via the semantic tokens (`--primary` / `--primary-foreground`, `--foreground`, `--muted`, `--card`, `--border`, `--radius`, `--font-sans`) — link a different Theme card and the whole stepper restyles with no stepper-specific work.\n\nThe live 4-step demo's completion gating is REAL: step 1 completes when you type a name, step 2 when you pick a workspace — exactly how a product wires `isComplete` to its own state. Step 3 sets `optional: true` so a Skip button appears (MUI-style); the steps before it are linear. The last step shows the `@finishLabel` / `@onFinish` primary button, and an event line above the stage prints every `onStepChange` / `onClose` / `onFinish` as it fires.\n\nThis is the **teaching example** for the Stepper API — the generated-code panel prints the exact invocation for the current knob combination.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "card",
+      "cardTitle": "Stepper Playground",
+      "cardDescription": "A live config explorer for <Stepper> — modal and step-jump knobs over a real gated 4-step demo that follows the linked theme, with the generated invocation printed alongside. The teaching example for the Stepper API.",
+      "containedExamples": []
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/StepperPlayground/c76678a0-a2ee-4142-a3d7-a9f537df7c52"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
