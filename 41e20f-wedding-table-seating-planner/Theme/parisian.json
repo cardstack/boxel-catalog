@@ -1,0 +1,35 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Theme",
+        "module": "@cardstack/base/card-api"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cssVariables": ":root {\n  --background: #faf6ec;\n  --foreground: #22283f;\n  --card: #fffdf8;\n  --card-foreground: #22283f;\n  --popover: #fffdf8;\n  --popover-foreground: #22283f;\n  --primary: #141b33;\n  --primary-foreground: #f3ead6;\n  --secondary: #c5a35c;\n  --secondary-foreground: #22283f;\n  --muted: #f4eddb;\n  --muted-foreground: #7d7460;\n  --accent: #c5a35c;\n  --accent-foreground: #22283f;\n  --destructive: #b3261e;\n  --destructive-foreground: #ffffff;\n  --border: rgba(197, 163, 92, 0.35);\n  --input: #fffdf8;\n  --ring: #c5a35c;\n  --radius: 0.75rem;\n  --font-sans: 'Jost', system-ui, sans-serif;\n  --font-serif: 'Cormorant Garamond', Georgia, serif;\n}",
+      "cssImports": [
+        "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Jost:ital,wght@0,300..600;1,300..600&display=swap"
+      ],
+      "cardInfo": {
+        "name": "Parisian",
+        "summary": "The Table Seating Planner's default look — navy, gold, and cream with Cormorant Garamond and Jost. A lean semantic-token theme matching the components' built-in fallbacks.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
