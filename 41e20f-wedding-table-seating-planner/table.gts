@@ -109,11 +109,14 @@ export class Table extends FieldDef {
           align-items: center;
           gap: 12px;
           padding: 10px 12px;
-          border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+          border: 1px solid var(--tsp-border, var(--border, rgba(0, 0, 0, 0.1)));
           border-radius: 11px;
-          background: var(--background, #fff);
-          color: var(--foreground, #22283f);
-          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+          background: var(--tsp-background, var(--background, #fff));
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font-family: var(
+            --tsp-font-sans,
+            var(--font-sans, 'Jost', system-ui, sans-serif)
+          );
         }
         .t-glyph {
           width: 40px;
@@ -122,11 +125,17 @@ export class Table extends FieldDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          font:
-            600 14px 'Cormorant Garamond',
-            serif;
-          color: var(--ink, #22283f);
-          background: linear-gradient(135deg, #dcc188, var(--gold, #c5a35c));
+          font: 600 14px
+            var(
+              --tsp-font-serif,
+              var(--font-serif, 'Cormorant Garamond', serif)
+            );
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          background: linear-gradient(
+            135deg,
+            #dcc188,
+            var(--tsp-accent, var(--accent, #c5a35c))
+          );
           border-radius: 50%;
         }
         .t-rect,
@@ -150,27 +159,22 @@ export class Table extends FieldDef {
           gap: 7px;
         }
         .t-vip {
-          font:
-            600 8px 'Jost',
-            monospace;
+          font: 600 8px
+            var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
           letter-spacing: 0.12em;
-          color: var(--ink, #22283f);
-          background: var(--gold, #c5a35c);
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          background: var(--tsp-accent, var(--accent, #c5a35c));
           border-radius: 4px;
           padding: 2px 5px;
         }
         .t-meta {
-          font:
-            11px 'Jost',
-            monospace;
-          color: var(--muted-foreground, #a5919c);
+          font: 11px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
         }
         .t-cap {
           flex: none;
-          font:
-            12px 'Jost',
-            monospace;
-          color: var(--muted-foreground, #a5919c);
+          font: 12px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
         }
       </style>
     </template>
@@ -224,9 +228,12 @@ export class Table extends FieldDef {
           align-content: center;
           grid-template-columns: auto minmax(0, 1fr);
           grid-template-areas: 'glyph head' 'glyph meta';
-          background: var(--background, #fff);
-          color: var(--foreground, #22283f);
-          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+          background: var(--tsp-background, var(--background, #fff));
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font-family: var(
+            --tsp-font-sans,
+            var(--font-sans, 'Jost', system-ui, sans-serif)
+          );
         }
         .r-glyph {
           grid-area: glyph;
@@ -253,11 +260,17 @@ export class Table extends FieldDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          font:
-            600 15px 'Cormorant Garamond',
-            serif;
-          color: var(--ink, #22283f);
-          background: linear-gradient(135deg, #dcc188, var(--gold, #c5a35c));
+          font: 600 15px
+            var(
+              --tsp-font-serif,
+              var(--font-serif, 'Cormorant Garamond', serif)
+            );
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          background: linear-gradient(
+            135deg,
+            #dcc188,
+            var(--tsp-accent, var(--accent, #c5a35c))
+          );
           border-radius: 50%;
         }
         .t-rect,
@@ -275,18 +288,15 @@ export class Table extends FieldDef {
           text-overflow: ellipsis;
         }
         .cap {
-          font:
-            12px 'Jost',
-            monospace;
-          color: var(--muted-foreground, #a5919c);
+          font: 12px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
         }
         .vip {
-          font:
-            600 8px 'Jost',
-            monospace;
+          font: 600 8px
+            var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
           letter-spacing: 0.12em;
-          color: var(--ink, #22283f);
-          background: var(--gold, #c5a35c);
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          background: var(--tsp-accent, var(--accent, #c5a35c));
           border-radius: 4px;
           padding: 2px 5px;
         }
@@ -356,25 +366,30 @@ export class Table extends FieldDef {
           overflow-y: auto;
           padding: 28px;
           box-sizing: border-box;
-          background: var(--background, #faf5ec);
-          color: var(--foreground, #22283f);
-          font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+          background: var(--tsp-background, var(--background, #faf5ec));
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font-family: var(
+            --tsp-font-sans,
+            var(--font-sans, 'Jost', system-ui, sans-serif)
+          );
         }
         h1 {
           margin: 0;
-          font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+          font-family: var(
+            --tsp-font-serif,
+            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+          );
           font-size: 28px;
           display: flex;
           align-items: center;
           gap: 10px;
         }
         .pill {
-          font:
-            600 9px 'Jost',
-            monospace;
+          font: 600 9px
+            var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
           letter-spacing: 0.14em;
-          color: var(--ink, #22283f);
-          background: var(--gold, #c5a35c);
+          color: var(--tsp-foreground, var(--foreground, #22283f));
+          background: var(--tsp-accent, var(--accent, #c5a35c));
           border-radius: 5px;
           padding: 3px 7px;
         }
@@ -385,12 +400,10 @@ export class Table extends FieldDef {
           gap: 14px;
         }
         dt {
-          font:
-            10px 'Jost',
-            monospace;
+          font: 10px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--muted-foreground, #a5919c);
+          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
         }
         dd {
           margin: 4px 0 0;
@@ -400,12 +413,10 @@ export class Table extends FieldDef {
           margin-top: 24px;
         }
         h2 {
-          font:
-            10px 'Jost',
-            monospace;
+          font: 10px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--muted-foreground, #a5919c);
+          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
           margin: 0 0 10px;
         }
         .note {

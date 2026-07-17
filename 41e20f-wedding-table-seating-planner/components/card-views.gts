@@ -34,11 +34,17 @@ export class PlaceCardView extends Component<PlaceCardSignature> {
     <style scoped>
       .pcv {
         container-type: inline-size;
-        --pc-paper: #fbf6ec;
-        --pc-ink: #5a1a1a;
-        --pc-gold: #a5854a;
-        --pc-serif: 'Cormorant Garamond', Georgia, serif;
-        --pc-sans: 'Jost', system-ui, sans-serif;
+        --pc-paper: var(--tsp-background, var(--background, #fbf6ec));
+        --pc-ink: var(--tsp-foreground, var(--foreground, #5a1a1a));
+        --pc-gold: var(--tsp-accent, var(--accent, #a5854a));
+        --pc-serif: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
+        --pc-sans: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -112,11 +118,17 @@ export class TableCardView extends Component<TableCardSignature> {
     <style scoped>
       .tcv {
         container-type: inline-size;
-        --tc-paper: #fbf6ec;
-        --tc-ink: #5a1a1a;
-        --tc-gold: #a5854a;
-        --tc-serif: 'Cormorant Garamond', Georgia, serif;
-        --tc-sans: 'Jost', system-ui, sans-serif;
+        --tc-paper: var(--tsp-background, var(--background, #fbf6ec));
+        --tc-ink: var(--tsp-foreground, var(--foreground, #5a1a1a));
+        --tc-gold: var(--tsp-accent, var(--accent, #a5854a));
+        --tc-serif: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
+        --tc-sans: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         display: flex;
         flex-direction: column;
         align-items: center;

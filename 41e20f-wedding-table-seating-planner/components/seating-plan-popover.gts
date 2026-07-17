@@ -166,15 +166,17 @@ export default class SeatingPlanPopover extends Component<Signature> {
     </Popover>
 
     <style scoped>
-      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Jost:ital,wght@0,300..600;1,300..600&display=swap');
       .spp {
         position: relative;
         display: flex;
         flex-direction: column;
         max-height: min(480px, calc(100vh - 48px));
-        background: var(--popover, #fdfaf2);
-        color: var(--ink, #22283f);
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        background: var(--tsp-popover, var(--popover, #fdfaf2));
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         overflow: hidden;
       }
       .spp-glow {
@@ -205,8 +207,12 @@ export default class SeatingPlanPopover extends Component<Signature> {
         padding: 16px 16px 12px;
         background: linear-gradient(
           168deg,
-          var(--navy, #141b33),
-          var(--navy-2, #1a2238)
+          var(--tsp-primary, var(--primary, #141b33)),
+          color-mix(
+            in srgb,
+            var(--tsp-primary, var(--primary, #141b33)) 90%,
+            #ffffff
+          )
         );
         border-bottom: 1px solid rgba(197, 163, 92, 0.25);
       }
@@ -215,22 +221,31 @@ export default class SeatingPlanPopover extends Component<Signature> {
         min-width: 0;
       }
       .spp-kicker {
-        font-family: var(--font-sans, 'Jost', system-ui, sans-serif);
+        font-family: var(
+          --tsp-font-sans,
+          var(--font-sans, 'Jost', system-ui, sans-serif)
+        );
         font-size: 9.5px;
         font-weight: 500;
         letter-spacing: 0.3em;
         text-transform: uppercase;
-        color: var(--gold, #c5a35c);
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .spp-title {
-        font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+        font-family: var(
+          --tsp-font-serif,
+          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+        );
         font-size: 22px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .spp-head .spp-title {
-        color: var(--navy-ink, #f3ead6);
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
       }
       .spp-close {
         flex: none;
@@ -242,15 +257,18 @@ export default class SeatingPlanPopover extends Component<Signature> {
         border-radius: 50%;
         border: 1px solid rgba(255, 255, 255, 0.14);
         background: rgba(255, 255, 255, 0.05);
-        color: var(--navy-ink, #f3ead6);
+        color: var(
+          --tsp-primary-foreground,
+          var(--primary-foreground, #f3ead6)
+        );
         font-size: 12px;
         line-height: 1;
         cursor: pointer;
         transition: 0.15s;
       }
       .spp-close:hover {
-        border-color: var(--gold, #c5a35c);
-        color: var(--gold, #c5a35c);
+        border-color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .spp-body {
         position: relative;
@@ -263,7 +281,7 @@ export default class SeatingPlanPopover extends Component<Signature> {
         flex: none;
         padding: 12px 18px;
         border-top: 1px solid rgba(197, 163, 92, 0.25);
-        background: var(--paper-2, #f4eddb);
+        background: var(--tsp-muted, var(--muted, #f4eddb));
       }
     </style>
   </template>

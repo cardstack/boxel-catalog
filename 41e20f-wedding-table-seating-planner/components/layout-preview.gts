@@ -111,7 +111,7 @@ export default class LayoutPreview extends Component<Signature> {
         cy: y + h / 2,
         rx: w / 2,
         ry: h / 2,
-        fill: t.themeColor || '#c5a35c',
+        fill: t.themeColor || 'currentColor',
         seats: pts.map((p) => ({ cx: x + p.x * w, cy: y + p.y * h })),
       };
     });
@@ -185,7 +185,7 @@ export default class LayoutPreview extends Component<Signature> {
               ry={{t.ry}}
               class='lp-table'
               vector-effect='non-scaling-stroke'
-              style={{this.strokeStyle t.fill '#c5a35c'}}
+              style={{this.strokeStyle t.fill 'currentColor'}}
             />
           {{else if t.isCurved}}
 
@@ -215,7 +215,7 @@ export default class LayoutPreview extends Component<Signature> {
               rx='6'
               class='lp-table'
               vector-effect='non-scaling-stroke'
-              style={{this.strokeStyle t.fill '#c5a35c'}}
+              style={{this.strokeStyle t.fill 'currentColor'}}
             />
           {{/if}}
         {{/if}}
@@ -237,6 +237,7 @@ export default class LayoutPreview extends Component<Signature> {
         display: block;
         width: 100%;
         height: 100%;
+        color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .lp-table {
         fill: none;
@@ -244,7 +245,7 @@ export default class LayoutPreview extends Component<Signature> {
       }
       .lp-seat {
         fill: none;
-        stroke: rgba(197, 163, 92, 0.75);
+        stroke: color-mix(in srgb, currentColor 75%, transparent);
         stroke-width: 1.25;
       }
     </style>
