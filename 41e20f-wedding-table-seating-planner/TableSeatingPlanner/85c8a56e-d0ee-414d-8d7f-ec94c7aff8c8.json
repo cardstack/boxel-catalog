@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "TableSeatingPlanner",
-        "module": "../table-seating-planner"
+        "module": "@cardstack/catalog/41e20f-wedding-table-seating-planner/table-seating-planner"
       }
     },
     "type": "card",
