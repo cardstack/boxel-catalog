@@ -1,10 +1,4 @@
-import {
-  CardDef,
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { CardDef, Component } from 'https://cardstack.com/base/card-api';
 import { tracked } from '@glimmer/tracking';
 import { htmlSafe } from '@ember/template';
 import { on } from '@ember/modifier';
@@ -154,7 +148,6 @@ class Isolated extends Component<typeof PosterBoard> {
     {{! template-lint-disable no-inline-styles no-pointer-down-event-binding }}
     <div
       class='poster-board-root'
-      data-test-poster-board
       style={{this.rootStyle}}
       {{OnInsert this.handleInserted}}
       {{on 'wheel' this.handleWheel}}
@@ -162,66 +155,74 @@ class Isolated extends Component<typeof PosterBoard> {
       {{on 'pointermove' this.handlePointerMove}}
       {{on 'pointerup' this.handlePointerUp}}
       {{on 'pointercancel' this.handlePointerUp}}
+      data-test-poster-board
     >
       <div class='poster-board-plane' style={{this.planeStyle}}>
         <div class='poster-board-grid' aria-hidden='true'></div>
-        <div class='poster-board-hint'>
-          <span class='poster-board-hint-title'>{{if
-              @model.title
-              @model.title
-              'Untitled Poster Board'
-            }}</span>
-          <span class='poster-board-hint-line'>Scroll to pan · ⌘ or Ctrl +
-            scroll to zoom · Drag to pan</span>
-        </div>
+        <header class='poster-board-hint'>
+          <h1 class='poster-board-hint-title'><@fields.cardTitle /></h1>
+          <p class='poster-board-hint-line'>Scroll to pan · ⌘ or Ctrl + scroll
+            to zoom · Drag to pan</p>
+        </header>
       </div>
 
       <div
         class='poster-board-hud'
+        role='toolbar'
+        aria-label='Zoom controls'
         data-poster-board-hud
         data-test-poster-board-hud
       >
         <button
           type='button'
           class='poster-board-hud-btn'
-          data-test-zoom-in
           aria-label='Zoom in'
           {{on 'click' this.zoomIn}}
+          data-test-zoom-in
         >+</button>
-        <span class='poster-board-hud-zoom' data-test-zoom-level>
-          {{this.zoomLabel}}
-        </span>
+        <output
+          class='poster-board-hud-zoom'
+          aria-label='Zoom level'
+          data-test-zoom-level
+        >{{this.zoomLabel}}</output>
         <button
           type='button'
           class='poster-board-hud-btn'
-          data-test-zoom-out
           aria-label='Zoom out'
           {{on 'click' this.zoomOut}}
+          data-test-zoom-out
         >−</button>
         <button
           type='button'
           class='poster-board-hud-btn poster-board-hud-btn-wide'
-          data-test-zoom-reset
           {{on 'click' this.zoom100}}
+          data-test-zoom-reset
         >100%</button>
         <button
           type='button'
           class='poster-board-hud-btn poster-board-hud-btn-wide'
-          data-test-fit
           {{on 'click' this.resetView}}
+          data-test-fit
         >Fit</button>
       </div>
     </div>
 
     <style scoped>
       .poster-board-root {
+        --pb-grid-extent: 625rem;
+        --pb-grid-cell-size: 1.5rem;
+        --pb-hud-btn-size: 1.625rem;
+        --pb-hud-btn-font-size: 0.8125rem;
+        --pb-hud-label-font-size: 0.625rem;
+        --pb-hud-zoom-min-width: 2.125rem;
+        --pb-hud-border-radius: 0.5rem;
+        --pb-hud-btn-border-radius: 0.3125rem;
         position: relative;
         width: 100%;
         height: 100%;
         overflow: hidden;
         touch-action: none;
         min-width: 0;
-        background: var(--background);
       }
 
       .poster-board-plane {
@@ -230,16 +231,16 @@ class Isolated extends Component<typeof PosterBoard> {
 
       .poster-board-grid {
         position: absolute;
-        inset: -312.5rem;
-        width: 625rem;
-        height: 625rem;
+        inset: calc(var(--pb-grid-extent) / -2);
+        width: var(--pb-grid-extent);
+        height: var(--pb-grid-extent);
         pointer-events: none;
         background-image: radial-gradient(
           circle,
           color-mix(in oklch, var(--muted-foreground) 35%, transparent) 1px,
           transparent 1px
         );
-        background-size: 1.5rem 1.5rem;
+        background-size: var(--pb-grid-cell-size) var(--pb-grid-cell-size);
       }
 
       .poster-board-hint {
@@ -254,12 +255,14 @@ class Isolated extends Component<typeof PosterBoard> {
       }
 
       .poster-board-hint-title {
-        font: 600 var(--boxel-font-lg);
-        color: var(--foreground);
+        margin: 0;
+        font-size: var(--boxel-font-size-lg);
+        font-weight: 600;
       }
 
       .poster-board-hint-line {
-        font: var(--boxel-font-sm);
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
         color: var(--muted-foreground);
       }
 
@@ -272,8 +275,9 @@ class Isolated extends Component<typeof PosterBoard> {
         gap: var(--boxel-sp-4xs);
         padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
         background: color-mix(in oklch, var(--card) 88%, transparent);
+        color: var(--card-foreground);
         border: 1px solid var(--border);
-        border-radius: 0.5rem;
+        border-radius: var(--pb-hud-border-radius);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         box-shadow: 0 0.125rem 0.5rem
@@ -283,13 +287,13 @@ class Isolated extends Component<typeof PosterBoard> {
       }
 
       .poster-board-hud-btn {
-        width: 1.625rem;
-        height: 1.625rem;
+        width: var(--pb-hud-btn-size);
+        height: var(--pb-hud-btn-size);
         border: none;
-        border-radius: 0.3125rem;
+        border-radius: var(--pb-hud-btn-border-radius);
         background: var(--muted);
         color: var(--foreground);
-        font-size: 0.8125rem;
+        font-size: var(--pb-hud-btn-font-size);
         font-weight: 700;
         cursor: pointer;
         display: grid;
@@ -304,17 +308,17 @@ class Isolated extends Component<typeof PosterBoard> {
       .poster-board-hud-btn-wide {
         width: auto;
         padding: 0 var(--boxel-sp-2xs);
-        font-size: 0.625rem;
+        font-size: var(--pb-hud-label-font-size);
         font-weight: 600;
       }
 
       .poster-board-hud-zoom {
-        min-width: 2.125rem;
+        display: inline-block;
+        min-width: var(--pb-hud-zoom-min-width);
         text-align: center;
-        font-size: 0.625rem;
+        font-size: var(--pb-hud-label-font-size);
         font-weight: 600;
         font-variant-numeric: tabular-nums;
-        color: var(--muted-foreground);
       }
     </style>
   </template>
@@ -324,8 +328,6 @@ export class PosterBoard extends CardDef {
   static displayName = 'Poster Board';
   static icon = LayoutDashboardIcon;
   static prefersWideFormat = true;
-
-  @field title = contains(StringField);
 
   static isolated = Isolated;
 }

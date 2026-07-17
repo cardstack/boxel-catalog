@@ -2,9 +2,9 @@
   "data": {
     "type": "card",
     "attributes": {
-      "title": "Demo Poster Board",
-      "description": null,
-      "thumbnailURL": null
+      "cardInfo": {
+        "name": "Demo Poster Board"
+      }
     },
     "meta": {
       "adoptsFrom": {

@@ -1,20 +1,31 @@
 import { tracked } from '@glimmer/tracking';
 
-// Pure-TS pan/zoom engine for the board surface. No DOM dependencies —
-// consumers wire handleWheel / startPan to elements and render from RigState.
+// Pure-TS pan/zoom engine for the board surface. "Rig" as in camera rig: the
+// world stays put while RigState holds the camera (worldX/worldY/magnify) and
+// SurfaceRig moves it with momentum. No DOM dependencies — consumers wire
+// handleWheel / startPan to elements and render from RigState.
+//
+// API at a glance:
+//   handleWheel(event)            wheel → pan; ctrl/cmd+wheel (pinch) → zoom at cursor
+//   startPan(x, y) → PanSession   pointer drag; session.move(x, y) / session.end()
+//   zoomAtPoint(factor, x, y)     programmatic zoom keeping a local point fixed
+//   zoomCentered(factor, el?)     programmatic zoom around an element's center
+//   startPanMomentum() / startZoomMomentum() / stopKineticPan() / stopZoomMomentum()
+//   stopAll() / destroy()         cancel every momentum loop and pending timeout
 
 // ── Constants ──────────────────────────────────────────────
-export const MIN_ZOOM = 0.2;
+export const MIN_ZOOM = 0.2; // default zoom clamp; override via SurfaceRigOptions
 export const MAX_ZOOM = 5;
-const ZOOM_SENSITIVITY = 0.0032;
-const PINCH_ZOOM_BOOST = 1.7;
-const PAN_INERTIA_DECAY = 0.9;
-const PAN_INERTIA_MIN_SPEED = 0.0008;
-const ZOOM_INERTIA_DECAY = 0.86;
+const ZOOM_SENSITIVITY = 0.0032; // wheel delta → zoom ratio
+const PINCH_ZOOM_BOOST = 1.7; // extra speed for pinch gestures
+const PAN_INERTIA_DECAY = 0.9; // momentum decay per 60fps-normalized frame
+const PAN_INERTIA_MIN_SPEED = 0.0008; // below this, pan momentum stops
+const ZOOM_INERTIA_DECAY = 0.86; // zoom momentum dies faster than pan
 const ZOOM_INERTIA_MIN_SPEED = 0.00008;
-const MOMENTUM_START_DELAY_MS = 45;
+const MOMENTUM_START_DELAY_MS = 45; // idle time after last wheel before momentum
 
 // ── RigState ───────────────────────────────────────────────
+// The camera: starts at the origin, 100% zoom.
 export class RigState {
   @tracked worldX = 0;
   @tracked worldY = 0;
@@ -31,8 +42,8 @@ export interface PanSession {
 export interface SurfaceRigOptions {
   minZoom?: number;
   maxZoom?: number;
-  onChange?: () => void;
-  isInteracting?: () => boolean;
+  onChange?: () => void; // fired after every camera change
+  isInteracting?: () => boolean; // true stops momentum loops (e.g. during a drag)
 }
 
 export class SurfaceRig {
