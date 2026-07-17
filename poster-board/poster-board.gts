@@ -26,6 +26,8 @@ const TILE_WIDTH = cardsgridTile.width;
 const TILE_HEIGHT = cardsgridTile.height;
 const TILE_GAP = 32;
 const GRID_COLUMNS = 4;
+// Breathing room between the world origin and the default grid (~--boxel-sp-xs)
+const GRID_PADDING = 10;
 
 interface TilePlacement {
   index: number;
@@ -37,8 +39,10 @@ interface TilePlacement {
 function defaultPlacement(index: number): TilePlacement {
   return {
     index,
-    x: (index % GRID_COLUMNS) * (TILE_WIDTH + TILE_GAP),
-    y: Math.floor(index / GRID_COLUMNS) * (TILE_HEIGHT + TILE_GAP),
+    x: GRID_PADDING + (index % GRID_COLUMNS) * (TILE_WIDTH + TILE_GAP),
+    y:
+      GRID_PADDING +
+      Math.floor(index / GRID_COLUMNS) * (TILE_HEIGHT + TILE_GAP),
   };
 }
 
@@ -313,13 +317,6 @@ class Isolated extends Component<typeof PosterBoard> {
 
       .poster-board-tile {
         position: absolute;
-        container-name: fitted-card;
-        container-type: size;
-      }
-
-      .poster-board-tile > :first-child {
-        width: 100%;
-        height: 100%;
       }
 
       .poster-board-grid {

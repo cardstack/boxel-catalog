@@ -116,8 +116,8 @@ export function runTests() {
       assert
         .dom('[data-test-poster-board-tile="0"]')
         .hasStyle(
-          { left: '0px', top: '0px' },
-          'card without settings lands at its grid-default slot',
+          { left: '10px', top: '10px' },
+          'card without settings lands at its padded grid-default slot',
         );
       assert
         .dom('[data-test-poster-board-tile="1"]')
