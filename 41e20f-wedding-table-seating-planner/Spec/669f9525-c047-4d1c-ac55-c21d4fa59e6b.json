@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# AnalyzeFloorPlanCommand\n\n## Summary\n\nReads a venue floor-plan image and reproduces it as structured layout JSON: tables (shape, seat count, seating style, position, rotation), seating sections, standalone seats, and fixtures such as stages, dance floors, and arches. Input is an `AnalyzeInput` card (`imageUrl` as a data URL, `planRect` JSON bounds, optional `instruction` and `llmModel`); output is an `AnalyzeResult` card whose `output` field holds the model's raw JSON text. The command sends the image and a detailed tracing prompt to a vision model (default `anthropic/claude-opus-4.8`) through the OpenRouter proxy via `SendRequestViaProxyCommand`. The prompt assumes a red 20x20 reference grid is drawn over the image — the planner component overlays one before invoking.\n\n## Import\n\n```js\nimport { AnalyzeFloorPlanCommand } from '../commands/analyze-floor-plan-command';\n```\n\n## Usage\n\nAs invoked from the planner's floor-plan import flow (`components/tsp.gts`):\n\n```js\nlet ctx = this.args.context?.commandContext;\nlet out = await new AnalyzeFloorPlanCommand(ctx).execute({\n  imageUrl: griddedDataUrl,\n  planRect: JSON.stringify({ x: 0, y: 0, w: 800, h: 600 }),\n});\nlet layout = JSON.parse(out.output);\n```\n\n`layout.tables` and `layout.fixtures` are then clamped to the plan rectangle and mapped onto the planner's `Table` and `Fixture` cards by the caller.\n",
       "ref": {
         "module": "../commands/analyze-floor-plan-command",
         "name": "AnalyzeFloorPlanCommand"

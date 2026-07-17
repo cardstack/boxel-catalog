@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# initialsOf\n\n## Summary\n\nComputes avatar initials from a full name: first and last word initials for multi-word names, the first two letters for single-word names, and `·` when the name is empty. Used for guest avatars throughout the planner — seat markers, drag chips, and the guest roster in `components/tsp.gts`, plus the Guest, Host, and Person card views.\n\n## Import\n\n```js\nimport { initialsOf } from '../utils/index';\n```\n\n## Usage\n\n```js\ninitialsOf(name: string | null | undefined): string\n\ninitialsOf('Ada Lovelace'); // 'AL'\n```",
       "ref": {
         "module": "../utils/index",
         "name": "initialsOf"

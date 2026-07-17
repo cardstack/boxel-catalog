@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# SeatingPlanPopover\n\n## Summary\n\nThe one popover shell every planner popover shares: a themed surface with a sticky header (kicker/title or a custom `:header` block, always capped with a ✕ close button), a scrollable `:body` that limits its height so it never runs off-screen, and an optional pinned `:foot` for actions. It wraps the catalog `<Popover>` and owns sensible positioning defaults — kind 'edit', anchoring 'beside', placement 'right-start', elevation 'floating' — so most call sites only pass `@anchor` and `@onClose`. The planner uses it for table and fixture editors, tool panels, and centered, backdropped delete confirmations.\n\n## Import\n\n```js\nimport SeatingPlanPopover from '../components/seating-plan-popover';\n```\n\n## Template Usage\n\nA centered confirmation, as used by the planner's delete flow:\n\n```gjs\n<SeatingPlanPopover\n  @anchor='[data-tsp-root]'\n  @onClose={{this.cancelDelete}}\n  @kicker='Confirm'\n  @title={{this.pendingDelete.title}}\n  @kind='details'\n  @anchoring='center'\n  @backdrop='dim'\n  @elevation='raised'\n  @width={{320}}\n>\n  <:body>\n    <p>{{this.pendingDelete.detail}}</p>\n  </:body>\n  <:foot>\n    <button type='button' {{on 'click' this.confirmDelete}}>Delete</button>\n  </:foot>\n</SeatingPlanPopover>\n```",
       "ref": {
         "module": "../components/seating-plan-popover",
         "name": "default"

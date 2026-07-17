@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# Guest\n\n## Summary\nGuest models one invitee on the wedding guest list. It extends Person, so it inherits `fullName`, `photo`, and the computed `photoURL`, and adds a `category` enum (Bride's Family, Groom's Family, Close Friend, Friends, College, Colleagues, Others), a `vip` boolean, and a `parentGuest` link that is set on a +1 to point back at the guest who brings them. In the Table Seating Planner package, Guest instances are the people you drag onto tables: the planner links to them via `guests = linksToMany(Guest)`, and each Table field tracks its own `seatedGuests`.\n\n## Import\n```js\nimport { Guest } from '../guest';\n```\n\n## Usage\nGuest is a card, so consuming cards link to it rather than containing it — the same wiring the planner uses:\n\n```js\nimport { CardDef, field, linksToMany } from 'https://cardstack.com/base/card-api';\nimport { Guest } from '../guest';\n\nexport class SeatingChart extends CardDef {\n  @field guests = linksToMany(() => Guest);\n}\n```\n\n## Template Usage\n```handlebars\n<@fields.guests @format='embedded' />\n```\nRenders each linked guest as an avatar row with name, category dot, VIP badge, and +1 attribution.",
       "ref": {
         "module": "../guest",
         "name": "Guest"
@@ -19,9 +19,44 @@
       }
     },
     "relationships": {
-      "linkedExamples": {
+      "linkedExamples.0": {
         "links": {
-          "self": null
+          "self": "../Guest/andy"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Guest/cheche"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Guest/chuan"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../Guest/justin"
+        }
+      },
+      "linkedExamples.4": {
+        "links": {
+          "self": "../Guest/nana"
+        }
+      },
+      "linkedExamples.5": {
+        "links": {
+          "self": "../Guest/richy"
+        }
+      },
+      "linkedExamples.6": {
+        "links": {
+          "self": "../Guest/robin"
+        }
+      },
+      "linkedExamples.7": {
+        "links": {
+          "self": "../Guest/yvonne"
         }
       },
       "cardInfo.cardThumbnail": {

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# LayoutPreview\n\n## Summary\n\nA read-only SVG miniature of a seating layout: table bodies drawn per shape (ellipses for round/oval, rounded rects, a swept path for curved tables) ringed by seat dots, with fixtures rendered through FixtureGlyph underneath. The viewBox is computed from the bounding box of everything passed in, plus padding, so any layout auto-fits its container. The planner uses it for template previews in the SetupWizard and snapshot popover, and as the figure on the printed seating chart.\n\n## Import\n\n```js\nimport LayoutPreview from '../components/layout-preview';\n```\n\n## Template Usage\n\n```gjs\n<LayoutPreview\n  @tables={{this.tables}}\n  @fixtures={{this.fixtures}}\n/>\n```",
       "ref": {
         "module": "../components/layout-preview",
         "name": "default"

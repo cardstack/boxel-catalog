@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# seatPoints\n\n## Summary\n\nComputes normalized seat positions (each coordinate a 0–1 fraction of the table's bounding box) for a table of the given shape (`round`, `oval`, `rect`, `square`, `curved`, `seat`) and seating style (`around`, `opposite`, `top`, `bottom`, `left`, `right`). The planner calls it in `components/tsp.gts` to place seat markers around each table on the floor-plan canvas, and in `components/layout-preview.gts` to render layout-template thumbnails.\n\n## Import\n\n```js\nimport { seatPoints } from '../utils/index';\n```\n\n## Usage\n\n```js\nseatPoints(shape: string, style: string, count: number): SeatPoint[]\n\nseatPoints('round', 'around', 8);\n```",
       "ref": {
         "module": "../utils/index",
         "name": "seatPoints"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# shortTableLabel\n\n## Summary\n\nDerives a compact badge label for a table from its name: the trailing number if the name ends in digits, otherwise the first two characters, falling back to `T` when the name is empty. Used to label table shapes on the floor-plan canvas in `components/tsp.gts` and in the Table card's fitted and embedded views.\n\n## Import\n\n```js\nimport { shortTableLabel } from '../utils/index';\n```\n\n## Usage\n\n```js\nshortTableLabel(name: string | null | undefined): string\n\nshortTableLabel('Table 12'); // '12'\n```",
       "ref": {
         "module": "../utils/index",
         "name": "shortTableLabel"

@@ -12,7 +12,7 @@
         "name": "TableSeatingPlanner",
         "module": "../table-seating-planner"
       },
-      "readMe": "# Table Seating Planner\n\n## Summary\nThe `TableSeatingPlanner` spec is a card definition that provides a comprehensive solution for managing table seating arrangements for events. It includes various fields to capture event details, host information, guest lists, table layouts, and related media like floor plans and invitation posters.\n\n## Import\n```javascript\nimport { TableSeatingPlanner } from '../table-seating-planner';\n```\n\n## Usage as a Field\nYou can use the `TableSeatingPlanner` card as a field within a consuming card or field. For example:\n\n```javascript\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport { TableSeatingPlanner } from '../table-seating-planner';\n\nexport class EventCard extends CardDef {\n  @field seatingPlanner = contains(TableSeatingPlanner);\n}\n```\n\nIn this example, the `EventCard` contains a `seatingPlanner` field of type `TableSeatingPlanner`, allowing the user to manage the table seating arrangement as part of the event.\n\n## Template Usage\nTo use the `TableSeatingPlanner` card in a template, you can simply include the field in your template:\n\n```handlebars\n<Card.section>\n  <@fields.seatingPlanner />\n</Card.section>\n```\n\nThis will render the `TableSeatingPlanner` card within the consuming card's template.",
+      "readMe": "# Table Seating Planner\n\n## Summary\nTableSeatingPlanner is the main card of the package: a drag-and-drop seating chart for a wedding or event. It carries the event identity (`eventTitle`, `eventDate`, `venue`, `eventLogo`, plus `hosts = linksToMany(Host)` with a computed `hostNames` header string), the guest list (`guests = linksToMany(Guest)`), and the room itself (`tables = containsMany(Table)` and `fixtures = containsMany(Fixture)`), with each Table tracking its own seated guests. Supporting fields handle a floor-plan underlay image (`floorPlanURL` with position, size, opacity, and lock fields), invitation and seating messages, and a generated event poster (`poster`, `posterPrompt`, `posterAspect`).\n\n## Import\n```js\nimport { TableSeatingPlanner } from '../table-seating-planner';\n```\n\n## Usage\nTableSeatingPlanner is a card, so consuming cards link to it rather than containing it:\n\n```js\nimport { CardDef, field, linksTo } from 'https://cardstack.com/base/card-api';\nimport { TableSeatingPlanner } from '../table-seating-planner';\n\nexport class WeddingBinder extends CardDef {\n  @field seatingPlan = linksTo(TableSeatingPlanner);\n}\n```\n\n## Template Usage\n```handlebars\n<@fields.seatingPlan />\n```\nRenders the linked plan; open it isolated to work on the full seating canvas.",
       "cardInfo": {
         "name": null,
         "notes": null,
@@ -30,9 +30,19 @@
           "self": null
         }
       },
-      "linkedExamples": {
+      "linkedExamples.0": {
         "links": {
-          "self": null
+          "self": "../TableSeatingPlanner/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../TableSeatingPlanner/8b596412-e2ed-4d38-877b-40d12c1876dc"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../TableSeatingPlanner/36305cb1-39a5-4a95-b594-ab4af32fa883"
         }
       },
       "cardInfo.cardThumbnail": {

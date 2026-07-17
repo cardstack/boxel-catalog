@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# FixtureGlyph\n\n## Summary\n\nAn SVG glyph for a floor-plan fixture, chosen by `@kind`: plant, tree, balloon, stage, red-carpet, dance-floor, arch, projector, cake, bar, curved-wall, rect-decor, round-decor, or circle-cluster, with a dashed placeholder box for unknown kinds. `@color` tints the drawing and `@pattern` ('solid' | 'outline' | 'soft') controls the fill — outline removes it, soft renders it at 45% opacity. Strokes use `vector-effect: non-scaling-stroke`, so line weight stays crisp whether it is stretched across the canvas, shrunk into LayoutPreview, or shown as a picker swatch.\n\n## Import\n\n```js\nimport FixtureGlyph from '../components/fixture-glyph';\n```\n\n## Template Usage\n\n```gjs\n<FixtureGlyph\n  @kind={{f.kind}}\n  @color={{f.color}}\n  @pattern={{f.pattern}}\n/>\n```",
       "ref": {
         "module": "../components/fixture-glyph",
         "name": "default"

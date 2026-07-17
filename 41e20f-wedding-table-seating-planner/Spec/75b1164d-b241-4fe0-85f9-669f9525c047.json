@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# InvitationPosterCommand\n\n## Summary\n\nGenerates a wedding-invitation poster image from a text prompt and saves it into a realm. It calls the image model `google/gemini-3.1-flash-image-preview` through the OpenRouter proxy via `SendRequestViaProxyCommand`, appending a full-bleed, exact-lettering directive and the chosen aspect ratio to the prompt, then extracts the returned `data:image/...` URL, recompresses it to WebP under about 500 KB when possible, and writes the bytes with `WriteBinaryFileCommand`. Input is a `PosterInput` card (`prompt`, `aspect` from `POSTER_ASPECTS`, `targetRealmIdentifier`, `targetPath`); output is a `PosterOutput` whose `imageUrl` is the saved file's identifier. The module also exports `POSTER_ASPECTS` and `PosterAspectField` for building an aspect picker.\n\n## Import\n\n```js\nimport {\n  InvitationPosterCommand,\n  POSTER_ASPECTS,\n} from '../commands/invitation-poster-command';\n```\n\n## Usage\n\nAs invoked from the planner's poster panel (`components/tsp.gts`):\n\n```js\nlet ctx = this.args.context?.commandContext;\nlet res = await new InvitationPosterCommand(ctx).execute({\n  prompt: posterPrompt,\n  aspect: '4:5',\n  targetRealmIdentifier: this.realmUrl,\n  targetPath: 'InvitationPoster',\n});\nlet savedFileUrl = res.imageUrl;\n```\n",
       "ref": {
         "module": "../commands/invitation-poster-command",
         "name": "InvitationPosterCommand"

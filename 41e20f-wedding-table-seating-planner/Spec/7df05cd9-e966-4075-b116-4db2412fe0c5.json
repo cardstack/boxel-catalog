@@ -2,13 +2,60 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# Table\n\n## Summary\n\nTable models one seatable unit on the seating-plan canvas — a single banquet table or a whole `section` grid of individual seats. Its schema covers identity and seating configuration (`name`, a `shape` enum of round/oval/rect/square/curved/section/seat, `seatCount`, a `seatingStyle` enum of around/opposite/top/bottom/left/right, plus `rows`, `cols`, and a `seatOrder` enum used by section grids), canvas geometry (`x`, `y`, `width`, `height`, `rotation`, `z` — all numbers), and assignment state (`themeColor`, `reservedCategories` as a containsMany of guest-category values, `seatedGuests` as a linksToMany of Guest cards packed alongside `seatSlots`, plus `vip`, `rank`, `locked`, and `note`). Computed fields derive `seatedCount` from the seated guests and `title` from the name. The planner holds tables in a containsMany field, so each table carries its own seat assignments inside the plan.\n\n## Import\n\n```js\nimport { Table } from '../table';\n```\n\n## Usage as a Field\n\n```ts\n@field tables = containsMany(Table);\n```\n\n## Template Usage\n\n```handlebars\n{{#each @model.tables as |table|}}\n  {{table.name}} — {{table.seatedCount}}/{{table.seatCount}} seated\n{{/each}}\n```\n\nEach entry also renders with its own embedded and fitted views via `<@fields.tables />`.\n",
       "ref": {
         "module": "../table",
         "name": "Table"
       },
       "specType": "field",
-      "containedExamples": [],
+      "containedExamples": [
+        {
+          "name": "Bride's Parents & Family",
+          "shape": "round",
+          "seatCount": 10,
+          "seatingStyle": "around",
+          "rows": null,
+          "cols": null,
+          "seatOrder": null,
+          "x": -180,
+          "y": -60,
+          "width": 130,
+          "height": 130,
+          "rotation": 0,
+          "z": 4,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [
+            "brides-family"
+          ],
+          "seatSlots": [],
+          "vip": true,
+          "rank": 1,
+          "locked": false,
+          "note": "Front of the ballroom, closest to the stage."
+        },
+        {
+          "name": "Groom's Friends & Guest",
+          "shape": "section",
+          "seatCount": 18,
+          "seatingStyle": "around",
+          "rows": 3,
+          "cols": 6,
+          "seatOrder": "lr-tb",
+          "x": 88,
+          "y": 407,
+          "width": 330,
+          "height": 220,
+          "rotation": 0,
+          "z": 8,
+          "themeColor": "#c5a35c",
+          "reservedCategories": [],
+          "seatSlots": [],
+          "vip": false,
+          "rank": null,
+          "locked": false,
+          "note": null
+        }
+      ],
       "cardTitle": "Table",
       "cardDescription": null,
       "cardInfo": {
@@ -39,6 +86,22 @@
       "adoptsFrom": {
         "module": "@cardstack/base/spec",
         "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../table",
+              "name": "Table"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../table",
+              "name": "Table"
+            }
+          }
+        ]
       }
     }
   }

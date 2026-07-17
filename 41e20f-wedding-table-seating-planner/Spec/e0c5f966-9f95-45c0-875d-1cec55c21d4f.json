@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# TableSeatingPlannerIsolated\n\n## Summary\n\nThe full planner application, assigned as the card's isolated format. It renders a zoomable, pannable canvas of tables and fixtures with drag-and-drop guest seating, marquee multi-select, copy/paste, resize/rotate, and undo/redo with keyboard shortcuts. Beyond the canvas it offers a floor-plan image underlay (upload plus AI analysis), an \"arrange with AI\" action that opens an AI Assistant room armed with the seat-arranger skill, print output for place cards or the seating chart, an invites view for invitation and poster content, and saving the current layout as a template snapshot. On first run it shows the SetupWizard. A linked theme (`cardInfo.theme`) is applied by the standard card theming pipeline, not by this component — every rule here reads the theme's semantic tokens (plus the planner's `--tsp-*` extras) through `var(--token, fallback)` chains, so an unthemed planner falls back to the package's Parisian look.\n\n## Import\n\n```js\nimport { TableSeatingPlannerIsolated } from '../components/tsp';\n```\n\n## Template Usage\n\nNot typically invoked directly — the card definition assigns it as the isolated format in `table-seating-planner.gts`:\n\n```js\nTableSeatingPlanner.isolated = TableSeatingPlannerIsolated;\n```",
       "ref": {
         "module": "../components/tsp",
         "name": "TableSeatingPlannerIsolated"

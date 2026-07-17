@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# Layout Template\n\n## Summary\nLayoutTemplate is a reusable floor arrangement: a `name` plus `tables = containsMany(Table)` and `fixtures = containsMany(Fixture)` capturing the positioned tables and fixtures (dance floor, stage, bar, and so on) of a room setup, with computed `tableCount` and `seatCount` totals. In the Table Seating Planner, the template browser finds LayoutTemplate instances by card type and applies one to stamp its tables and fixtures onto the current plan; you can also save the plan's current arrangement back as a new template. The shipped examples cover a ceremony and a reception layout.\n\n## Import\n```js\nimport { LayoutTemplate } from '../layout-template';\n```\n\n## Usage\nLayoutTemplate is a card, so consuming cards link to it:\n\n```js\nimport { CardDef, field, linksTo } from 'https://cardstack.com/base/card-api';\nimport { LayoutTemplate } from '../layout-template';\n\nexport class VenueSetup extends CardDef {\n  @field layout = linksTo(LayoutTemplate);\n}\n```\n\n## Template Usage\n```handlebars\n<@fields.layout @format='embedded' />\n```\nRenders the template as a thumbnail preview of its floor plan with table and seat counts.",
       "ref": {
         "module": "../layout-template",
         "name": "LayoutTemplate"
@@ -19,9 +19,14 @@
       }
     },
     "relationships": {
-      "linkedExamples": {
+      "linkedExamples.0": {
         "links": {
-          "self": null
+          "self": "../LayoutTemplate/ceremony"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../LayoutTemplate/reception"
         }
       },
       "cardInfo.cardThumbnail": {

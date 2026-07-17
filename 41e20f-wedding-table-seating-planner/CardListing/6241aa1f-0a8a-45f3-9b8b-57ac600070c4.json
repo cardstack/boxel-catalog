@@ -9,7 +9,7 @@
     "type": "card",
     "attributes": {
       "name": "Table Seating Planner",
-      "summary": "The TableSeatingPlanner is a card definition designed to organize and manage seating arrangements for events. It captures key event details such as the event title, date, venue, and hosts. The planner links to guests, tables, and fixtures involved in the event setup. It includes a floor plan with configurable positioning, dimensions, opacity, and lock status to visualize seating arrangements. Additionally, it supports messaging features like invitation and seating messages, and facilitates poster creation with customizable poster images, prompts, and aspect ratios. The primary purpose is to assist event planners in designing, visualizing, and organizing seating plans for successful gatherings.",
+      "summary": "Seating charts are the most stressful part of planning an event — dozens of guests, family politics, and a floor plan that keeps changing right up to the big day. Table Seating Planner takes the pain out of it: lay out your venue with drag-and-drop tables and fixtures (or import your own floor plan), then seat everyone with a simple drag.\n\nOpen the demo to see it shine: ask the AI assistant to arrange the seats and watch every guest find a place, step through the guided setup wizard to start an event of your own, then carry your theme through to matching invitations and posters for the big day.",
       "cardInfo": {
         "name": "Table Seating Planner",
         "notes": null,
@@ -170,17 +170,27 @@
       },
       "images.0": {
         "links": {
-          "self": "../Screenshots/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8-b6ba6f10.png"
+          "self": "../Screenshots/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8-81ceb0df.png"
         }
       },
       "images.1": {
         "links": {
-          "self": "../Screenshots/8b596412-e2ed-4d38-877b-40d12c1876dc-940f80d5.png"
+          "self": "../Screenshots/setup-wizard-c0a3fa49.png"
         }
       },
       "images.2": {
         "links": {
-          "self": "../Screenshots/36305cb1-39a5-4a95-b594-ab4af32fa883-e6851a31.png"
+          "self": "../Screenshots/add-element-d340bad2.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/seating-print-05985ab6.png"
+        }
+      },
+      "images.4": {
+        "links": {
+          "self": "../Screenshots/ai-poster-9d32df2e.png"
         }
       },
       "skills.0": {
@@ -191,96 +201,6 @@
       "publisher": {
         "links": {
           "self": null
-        }
-      },
-      "examples.0": {
-        "links": {
-          "self": "../TableSeatingPlanner/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8"
-        }
-      },
-      "examples.1": {
-        "links": {
-          "self": "../TableSeatingPlanner/8b596412-e2ed-4d38-877b-40d12c1876dc"
-        }
-      },
-      "examples.2": {
-        "links": {
-          "self": "../TableSeatingPlanner/36305cb1-39a5-4a95-b594-ab4af32fa883"
-        }
-      },
-      "examples.3": {
-        "links": {
-          "self": "../Guest/andy"
-        }
-      },
-      "examples.4": {
-        "links": {
-          "self": "../Guest/cheche"
-        }
-      },
-      "examples.5": {
-        "links": {
-          "self": "../Guest/chuan"
-        }
-      },
-      "examples.6": {
-        "links": {
-          "self": "../Guest/justin"
-        }
-      },
-      "examples.7": {
-        "links": {
-          "self": "../Guest/nana"
-        }
-      },
-      "examples.8": {
-        "links": {
-          "self": "../Guest/richy"
-        }
-      },
-      "examples.9": {
-        "links": {
-          "self": "../Guest/robin"
-        }
-      },
-      "examples.10": {
-        "links": {
-          "self": "../Guest/yvonne"
-        }
-      },
-      "examples.11": {
-        "links": {
-          "self": "../Host/amy"
-        }
-      },
-      "examples.12": {
-        "links": {
-          "self": "../Host/lucas"
-        }
-      },
-      "examples.13": {
-        "links": {
-          "self": "../LayoutTemplate/ceremony"
-        }
-      },
-      "examples.14": {
-        "links": {
-          "self": "../LayoutTemplate/reception"
-        }
-      },
-      "examples.15": {
-        "links": {
-          "self": "../Theme/double-happiness-banquet"
-        }
-      },
-      "examples.16": {
-        "links": {
-          "self": "../Theme/italian-cathedral"
-        }
-      },
-      "examples.17": {
-        "links": {
-          "self": "../../index"
         }
       },
       "categories.0": {
@@ -301,6 +221,96 @@
       "cardInfo.cardThumbnail": {
         "links": {
           "self": "../ListingThumbnails/table-seating-b62d23ba.png"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../TableSeatingPlanner/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../TableSeatingPlanner/8b596412-e2ed-4d38-877b-40d12c1876dc"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../TableSeatingPlanner/36305cb1-39a5-4a95-b594-ab4af32fa883"
+        }
+      },
+      "supportingCards.0": {
+        "links": {
+          "self": "../Guest/andy"
+        }
+      },
+      "supportingCards.1": {
+        "links": {
+          "self": "../Guest/cheche"
+        }
+      },
+      "supportingCards.2": {
+        "links": {
+          "self": "../Guest/chuan"
+        }
+      },
+      "supportingCards.3": {
+        "links": {
+          "self": "../Guest/justin"
+        }
+      },
+      "supportingCards.4": {
+        "links": {
+          "self": "../Guest/nana"
+        }
+      },
+      "supportingCards.5": {
+        "links": {
+          "self": "../Guest/richy"
+        }
+      },
+      "supportingCards.6": {
+        "links": {
+          "self": "../Guest/robin"
+        }
+      },
+      "supportingCards.7": {
+        "links": {
+          "self": "../Guest/yvonne"
+        }
+      },
+      "supportingCards.8": {
+        "links": {
+          "self": "../Host/amy"
+        }
+      },
+      "supportingCards.9": {
+        "links": {
+          "self": "../Host/lucas"
+        }
+      },
+      "supportingCards.10": {
+        "links": {
+          "self": "../LayoutTemplate/ceremony"
+        }
+      },
+      "supportingCards.11": {
+        "links": {
+          "self": "../LayoutTemplate/reception"
+        }
+      },
+      "supportingCards.12": {
+        "links": {
+          "self": "../Theme/double-happiness-banquet"
+        }
+      },
+      "supportingCards.13": {
+        "links": {
+          "self": "../Theme/italian-cathedral"
+        }
+      },
+      "supportingCards.14": {
+        "links": {
+          "self": "../Theme/parisian"
         }
       }
     }
