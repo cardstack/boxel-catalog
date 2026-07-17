@@ -96,6 +96,9 @@ export default class ListingCreateCommand extends Command<
     input: BaseCommandModule.ListingCreateInput,
   ): Promise<BaseCommandModule.ListingCreateResult> {
     let { openCardIds, codeRef, targetRealm } = input;
+    // tolerate a base ListingCreateInput that predates supportingCardIds
+    let explicitSupportingCardIds = (input as { supportingCardIds?: string[] })
+      .supportingCardIds;
 
     if (!codeRef) {
       throw new Error('codeRef is required');
@@ -118,12 +121,24 @@ export default class ListingCreateCommand extends Command<
     const displayName = (cardDef as any)?.displayName ?? codeRef.name;
     const catalogRealm = await this.getCatalogRealm();
 
+    const classified = await this.classifyOpenCards(openCardIds, codeRef);
+    const exampleCardIds = classified.exampleCardIds;
+    // explicit supporting cards are taken verbatim (no type check); a card
+    // also picked as an example stays an example
+    const supportingCardIds = [
+      ...new Set([
+        ...classified.supportingCardIds,
+        ...(explicitSupportingCardIds ?? []),
+      ]),
+    ].filter((id) => !exampleCardIds.includes(id));
+
     let relationships: Record<string, { links: { self: string } }> = {};
-    if (openCardIds && openCardIds.length > 0) {
-      openCardIds.forEach((id, index) => {
-        relationships[`examples.${index}`] = { links: { self: id } };
-      });
-    }
+    exampleCardIds.forEach((id, index) => {
+      relationships[`examples.${index}`] = { links: { self: id } };
+    });
+    supportingCardIds.forEach((id, index) => {
+      relationships[`supportingCards.${index}`] = { links: { self: id } };
+    });
 
     const listingDoc: LooseSingleCardDocument = {
       data: {
@@ -144,12 +159,12 @@ export default class ListingCreateCommand extends Command<
 
     const commandModule = await loadCommandModule(this.commandContext);
     const listingCard = listing as CardAPI.CardDef;
-    const firstOpenCardId = openCardIds?.[0];
+    const firstExampleCardId = exampleCardIds[0];
 
     const examplePromise = this.autoLinkExample(
       listingCard,
       codeRef,
-      openCardIds,
+      exampleCardIds,
     );
 
     const backgroundTasks = [
@@ -190,7 +205,7 @@ export default class ListingCreateCommand extends Command<
         promise: this.linkSpecs(
           listingCard,
           targetRealm,
-          firstOpenCardId ?? codeRef?.module,
+          firstExampleCardId ?? codeRef?.module,
           codeRef.module,
           codeRef,
         ),
@@ -214,6 +229,69 @@ export default class ListingCreateCommand extends Command<
     const result = new ListingCreateResult({ listing });
     (result as any).backgroundWork = backgroundWork;
     return result;
+  }
+
+  // Open cards that are instances of the listed type become examples; other
+  // open cards (e.g. data a query-based example depends on) become
+  // supportingCards, which install but don't render in the listing detail.
+  private async classifyOpenCards(
+    openCardIds: string[] | undefined,
+    codeRef: ResolvedCodeRef,
+  ): Promise<{ exampleCardIds: string[]; supportingCardIds: string[] }> {
+    const classified = await Promise.all(
+      (openCardIds ?? []).map(async (id) => {
+        try {
+          const instance = await new GetCardCommand(
+            this.commandContext,
+          ).execute({ cardId: id });
+          return {
+            id,
+            isExample:
+              isCardInstance(instance) &&
+              this.isInstanceOfCodeRef(instance as CardAPI.CardDef, codeRef),
+          };
+        } catch {
+          return { id, isExample: true };
+        }
+      }),
+    );
+    return {
+      exampleCardIds: classified.filter((c) => c.isExample).map((c) => c.id),
+      supportingCardIds: classified
+        .filter((c) => !c.isExample)
+        .map((c) => c.id),
+    };
+  }
+
+  private isInstanceOfCodeRef(
+    instance: CardAPI.CardDef,
+    codeRef: ResolvedCodeRef,
+  ): boolean {
+    let targetModule: string;
+    try {
+      targetModule = trimExecutableExtension(rri(new URL(codeRef.module).href));
+    } catch {
+      return false;
+    }
+    let current: CardAPI.BaseDefConstructor | undefined =
+      instance.constructor as CardAPI.BaseDefConstructor;
+    while (current) {
+      const ref = identifyCard(current);
+      if (ref && !('type' in ref) && ref.name === codeRef.name) {
+        try {
+          if (
+            trimExecutableExtension(rri(new URL(ref.module).href)) ===
+            targetModule
+          ) {
+            return true;
+          }
+        } catch {
+          // unresolvable ancestor module; keep walking
+        }
+      }
+      current = getAncestor(current) ?? undefined;
+    }
+    return false;
   }
 
   private async guessListingType(
