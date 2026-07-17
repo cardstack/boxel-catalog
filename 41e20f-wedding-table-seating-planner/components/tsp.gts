@@ -168,22 +168,29 @@ export class TableSeatingPlannerIsolated extends Component<
 > {
   @tracked view: 'plan' | 'invites' = 'plan';
   @tracked inviteSearch = '';
+
   get isPlan() {
     return this.view === 'plan';
   }
+
   get isInvites() {
     return this.view === 'invites';
   }
+
   setView = (v: 'plan' | 'invites') => {
     this.view = v;
   };
+
   @tracked aiStatus: 'idle' | 'loading' = 'idle';
   @tracked selectedKeys: string[] = [];
   @tracked floorSelected = false;
   @tracked clipboard: ClipItem[] = [];
+
   private pasteSeq = 0;
+
   @tracked marquee: { x: number; y: number; w: number; h: number } | null =
     null;
+
   @tracked marqueeHitKeys: string[] = [];
   @tracked spaceDown = false;
   @tracked search = '';
@@ -201,35 +208,60 @@ export class TableSeatingPlannerIsolated extends Component<
   @tracked hoverGuest: Guest | null = null;
   @tracked hoverX = 0;
   @tracked hoverY = 0;
+
   private dragMode: DragMode = 'none';
+
   private dragId: string | null = null;
+
   private startPX = 0;
+
   private startPY = 0;
+
   private origX = 0;
+
   private origY = 0;
+
   private resizeKind: 'table' | 'fixture' | 'floorplan' = 'fixture';
+
   private resizeEdge = 'se';
+
   private origW = 0;
+
   private origH = 0;
+
   private dragRot = 0;
+
   private dragTarget: Table | Fixture | null = null;
+
   private dragSet: { el: Table | Fixture; ox: number; oy: number }[] = [];
+
   private dragFloor = false;
+
   private floorOX = 0;
+
   private floorOY = 0;
+
   private mStartX = 0;
+
   private mStartY = 0;
+
   private rotEl: Table | Fixture | null = null;
+
   private rotCx = 0;
+
   private rotCy = 0;
+
   private rotStart = 0;
+
   private rotOrig = 0;
+
   @tracked private liveMove: {
     keys: string[];
     dx: number;
     dy: number;
     floor: boolean;
   } | null = null;
+
   @tracked private liveSize: {
     key: string;
     w: number;
@@ -237,9 +269,11 @@ export class TableSeatingPlannerIsolated extends Component<
     dx: number;
     dy: number;
   } | null = null;
+
   @tracked private liveRotate: { key: string; deg: number } | null = null;
   @tracked private liveColor: { key: string; color: string } | null = null;
   @tracked private liveOpacity: number | null = null;
+
   private effX(el: Table | Fixture): number {
     let base = el.x || 0;
     let lm = this.liveMove;
@@ -248,6 +282,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (ls && ls.key === keyOf(el)) base += ls.dx;
     return base;
   }
+
   private effY(el: Table | Fixture): number {
     let base = el.y || 0;
     let lm = this.liveMove;
@@ -256,54 +291,67 @@ export class TableSeatingPlannerIsolated extends Component<
     if (ls && ls.key === keyOf(el)) base += ls.dy;
     return base;
   }
+
   private effW(el: Table | Fixture, fallback: number): number {
     let ls = this.liveSize;
     return ls && ls.key === keyOf(el) ? ls.w : el.width || fallback;
   }
+
   private effH(el: Table | Fixture, fallback: number): number {
     let ls = this.liveSize;
     return ls && ls.key === keyOf(el) ? ls.h : el.height || fallback;
   }
+
   private effRot(el: Table | Fixture): number {
     let lr = this.liveRotate;
     return lr && lr.key === keyOf(el) ? lr.deg : el.rotation || 0;
   }
+
   private effColor(el: Table | Fixture, current: string): string {
     let lc = this.liveColor;
     return lc && lc.key === keyOf(el) ? lc.color : current;
   }
+
   private get effFloorX(): number {
     let base = this.args.model?.floorPlanX || 0;
     let lm = this.liveMove;
     return lm?.floor ? base + lm.dx : base;
   }
+
   private get effFloorY(): number {
     let base = this.args.model?.floorPlanY || 0;
     let lm = this.liveMove;
     return lm?.floor ? base + lm.dy : base;
   }
+
   private get effFloorW(): number {
     let ls = this.liveSize;
     return ls && ls.key === '__floor__'
       ? ls.w
       : this.args.model?.floorPlanWidth || 800;
   }
+
   private get effFloorH(): number {
     let ls = this.liveSize;
     return ls && ls.key === '__floor__'
       ? ls.h
       : this.args.model?.floorPlanHeight || 600;
   }
+
   private undoStack: { u: () => void; r: () => void }[] = [];
+
   private redoStack: { u: () => void; r: () => void }[] = [];
+
   @tracked undoDepth = 0;
   @tracked redoDepth = 0;
+
   private pushUndo(u: () => void, r: () => void) {
     this.undoStack.push({ u, r });
     this.redoStack = [];
     this.undoDepth = this.undoStack.length;
     this.redoDepth = 0;
   }
+
   undo = () => {
     let e = this.undoStack.pop();
     if (!e) return;
@@ -312,6 +360,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.undoDepth = this.undoStack.length;
     this.redoDepth = this.redoStack.length;
   };
+
   redo = () => {
     let e = this.redoStack.pop();
     if (!e) return;
@@ -320,6 +369,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.undoDepth = this.undoStack.length;
     this.redoDepth = this.redoStack.length;
   };
+
   positionTip = modifier((el: HTMLElement, [x, y]: [number, number]) => {
     let reference = {
       getBoundingClientRect: () => ({
@@ -342,6 +392,7 @@ export class TableSeatingPlannerIsolated extends Component<
       el.style.top = `${top}px`;
     });
   });
+
   keyboard = modifier(() => {
     let onKey = (e: KeyboardEvent) => {
       let el = e.target as HTMLElement | null;
@@ -409,12 +460,14 @@ export class TableSeatingPlannerIsolated extends Component<
       window.removeEventListener('keyup', onUp);
     };
   });
+
   private slotsOf(t: Table): number[] {
     let n = (t.seatedGuests ?? []).length;
     let slots = (t.seatSlots ?? []) as number[];
     if (slots.length === n) return [...slots];
     return Array.from({ length: n }, (_, i) => i);
   }
+
   private snapshotSeats(): Map<Table, { guests: Guest[]; slots: number[] }> {
     let m = new Map<Table, { guests: Guest[]; slots: number[] }>();
     for (let t of this.tables)
@@ -424,12 +477,14 @@ export class TableSeatingPlannerIsolated extends Component<
       });
     return m;
   }
+
   private restoreSeats(snap: Map<Table, { guests: Guest[]; slots: number[] }>) {
     for (let [t, s] of snap) {
       t.seatedGuests = [...s.guests];
       t.seatSlots = [...s.slots];
     }
   }
+
   private recordSeatChange(mutate: () => void) {
     let before = this.snapshotSeats();
     mutate();
@@ -439,6 +494,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.restoreSeats(after),
     );
   }
+
   private recordSet<T>(setter: (v: T) => void, before: T, after: T) {
     if (before === after) return;
     setter(after);
@@ -447,18 +503,23 @@ export class TableSeatingPlannerIsolated extends Component<
       () => setter(after),
     );
   }
+
   get plan() {
     return this.args.model;
   }
+
   get guests(): Guest[] {
     return ((this.args.model?.guests ?? []) as Guest[]).filter(Boolean);
   }
+
   get tables(): Table[] {
     return ((this.args.model?.tables ?? []) as Table[]).filter(Boolean);
   }
+
   get fixtures(): Fixture[] {
     return ((this.args.model?.fixtures ?? []) as Fixture[]).filter(Boolean);
   }
+
   private get focalCentre(): { x: number; y: number } {
     let centre = (el: {
       x?: number;
@@ -480,6 +541,7 @@ export class TableSeatingPlannerIsolated extends Component<
       [...this.tables].sort((a, b) => (a.y || 0) - (b.y || 0))[0];
     return front ? centre(front) : { x: 0, y: 0 };
   }
+
   get tableRank(): Map<Table, number> {
     let c = this.focalCentre;
     let distOf = (t: Table) =>
@@ -514,24 +576,30 @@ export class TableSeatingPlannerIsolated extends Component<
     });
     return map;
   }
+
   get fixtureKinds() {
     return FIXTURE_KINDS;
   }
+
   get tableShapes() {
     return TABLE_SHAPES;
   }
+
   get seatingStyles() {
     return SEATING_STYLES;
   }
+
   // With no linked theme the app-level semantic tokens would restyle the
   // planner arbitrarily; this flags the root so a scoped default palette
   // (Parisian) applies instead. A linked theme removes the class and wins.
   get hasLinkedTheme(): boolean {
     return Boolean((this.args.model as any)?.cardInfo?.theme);
   }
+
   get eventLogoURL(): string {
     return (this.args.model as any)?.eventLogo?.resolvedUrl ?? '';
   }
+
   get eventInitials(): string {
     let t = (this.args.model?.eventTitle ?? '').trim();
     if (!t) return '';
@@ -542,6 +610,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .join('');
     return (letters || t.slice(0, 2)).toUpperCase();
   }
+
   get seatedGuestIds(): Set<string> {
     let s = new Set<string>();
     for (let t of this.tables) {
@@ -551,6 +620,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return s;
   }
+
   get totalGuests() {
     try {
       return this.guests.length;
@@ -558,24 +628,30 @@ export class TableSeatingPlannerIsolated extends Component<
       return 0;
     }
   }
+
   get seatedCount() {
     return this.seatedGuestIds.size;
   }
+
   get pct() {
     let total = this.totalGuests || 1;
     return `${Math.round((this.seatedCount / total) * 100)}%`;
   }
+
   get tableCount() {
     return this.tables.length;
   }
+
   get hasCanvasContent(): boolean {
     return (
       this.tables.length > 0 || this.fixtures.length > 0 || this.hasFloorPlan
     );
   }
+
   get hasEventInfo(): boolean {
     return !!this.args.model?.eventTitle?.trim();
   }
+
   get hostsCount(): number {
     return (this.args.model?.hosts ?? []).length;
   }
@@ -587,17 +663,21 @@ export class TableSeatingPlannerIsolated extends Component<
   // not make it close itself. It closes only on Skip / ✕ / Create tables.
   @tracked wizardDismissed =
     this.hasCanvasContent || this.hasEventInfo || this.guests.length > 0;
+
   get showWizard(): boolean {
     return !this.wizardDismissed;
   }
+
   skipWizard = () => {
     this.wizardDismissed = true;
   };
+
   applyTemplateFromWizard = (index: number) => {
     let tpl = this.templates[index];
     if (tpl) this.applyTemplate(tpl);
     this.wizardDismissed = true;
   };
+
   get tableVMs(): TableVM[] {
     let rankMap = this.tableRank;
     return this.tables.map((t) => {
@@ -673,6 +753,7 @@ export class TableSeatingPlannerIsolated extends Component<
       };
     });
   }
+
   get fixtureVMs(): FixtureVM[] {
     return this.fixtures.map((f) => {
       let w = this.effW(f, 100);
@@ -692,47 +773,59 @@ export class TableSeatingPlannerIsolated extends Component<
       };
     });
   }
+
   get worldStyle() {
     return `position:absolute;inset:0;transform-origin:0 0;transform:translate(${this.panX}px,${this.panY}px) scale(${this.zoom});`;
   }
+
   get zoomPct() {
     return `${Math.round(this.zoom * 100)}%`;
   }
+
   get zoomAtMin() {
     return this.zoom <= 0.4;
   }
+
   get zoomAtMax() {
     return this.zoom >= 2.5;
   }
+
   get selectedTable(): Table | null {
     if (this.selectedKeys.length !== 1) return null;
     return this.tables.find((t) => keyOf(t) === this.selectedKeys[0]) ?? null;
   }
+
   get selectedFixture(): Fixture | null {
     if (this.selectedKeys.length !== 1) return null;
     return this.fixtures.find((f) => keyOf(f) === this.selectedKeys[0]) ?? null;
   }
+
   get selectedTables(): Table[] {
     return this.tables.filter((t) => this.isSelected(keyOf(t)));
   }
+
   get selectedFixtures(): Fixture[] {
     return this.fixtures.filter((f) => this.isSelected(keyOf(f)));
   }
+
   get selectionHasTables() {
     return this.selectedTables.length > 0;
   }
+
   get selectionShape(): string {
     let tables = this.selectedTables;
     if (!tables.length) return '';
     let first = tables[0].shape;
     return tables.every((t) => t.shape === first) ? (first ?? '') : '';
   }
+
   get selectedTableVM(): TableVM | null {
     let t = this.selectedTable;
     if (!t) return null;
     let tk = keyOf(t);
     return this.tableVMs.find((vm) => vm.id === tk) ?? null;
   }
+
   get inspTableBoxStyle(): ReturnType<typeof htmlSafe> {
     let t = this.selectedTable;
     if (!t) return htmlSafe('');
@@ -746,6 +839,7 @@ export class TableSeatingPlannerIsolated extends Component<
       )}px;transform:rotate(${rot}deg)`,
     );
   }
+
   private inspTableScale(t: Table, w: number, h: number): number {
     let scale = 190 / Math.max(w, h);
     let pitch = 40;
@@ -774,6 +868,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return scale;
   }
+
   get inspTableReserveStyle(): ReturnType<typeof htmlSafe> {
     let t = this.selectedTable;
     if (!t) return htmlSafe('');
@@ -787,6 +882,7 @@ export class TableSeatingPlannerIsolated extends Component<
       `width:${Math.round(bw) + 56}px;height:${Math.round(bh) + 56}px`,
     );
   }
+
   get catChips() {
     return GUEST_CATEGORIES.filter((c) =>
       this.guests.some((g) => g.category === c.value),
@@ -797,9 +893,11 @@ export class TableSeatingPlannerIsolated extends Component<
       countSeated: this.guests.filter((g) => g.category === c.value).length,
     }));
   }
+
   onSearch = (e: Event) => {
     this.search = (e.target as HTMLInputElement).value;
   };
+
   private commitEventTitle = debounce((v: string) => {
     if (!this.args.model) {
       return;
@@ -809,18 +907,23 @@ export class TableSeatingPlannerIsolated extends Component<
       this.args.model.cardInfo.name = v;
     }
   }, 300);
+
   private commitVenue = debounce((v: string) => {
     this.args.model.venue = v;
   }, 300);
+
   private commitTableName = debounce((t: Table, v: string) => {
     t.name = v;
   }, 300);
+
   private commitFixtureLabel = debounce((f: Fixture, v: string) => {
     f.label = v;
   }, 300);
+
   private commitInviteMessage = debounce((v: string) => {
     this.args.model.invitationMessage = v;
   }, 300);
+
   override willDestroy() {
     this.commitEventTitle.flush();
     this.commitVenue.flush();
@@ -830,44 +933,58 @@ export class TableSeatingPlannerIsolated extends Component<
     this.commitFloorUnderlay.flush();
     super.willDestroy();
   }
+
   setEventTitle = (e: Event) => {
     this.commitEventTitle((e.target as HTMLInputElement).value);
   };
+
   setVenue = (e: Event) => {
     this.commitVenue((e.target as HTMLInputElement).value);
   };
+
   setCat = (id: string | null) => {
     this.activeCatId = id;
   };
+
   isSelected = (key: string) => this.selectedKeys.includes(key);
+
   private selectOnly(key: string) {
     this.selectedKeys = [key];
     this.floorSelected = false;
   }
+
   toggleSel = (key: string) => {
     this.selectedKeys = this.isSelected(key)
       ? this.selectedKeys.filter((k) => k !== key)
       : [...this.selectedKeys, key];
   };
+
   selectTable = (id: string) => this.selectOnly(id);
+
   selectFixture = (id: string) => this.selectOnly(id);
+
   deselect = () => {
     this.selectedKeys = [];
     this.floorSelected = false;
     this.popoverTableKey = null;
   };
+
   get multiSelected() {
     return this.selectedKeys.length > 1;
   }
+
   get selCount() {
     return this.selectedKeys.length + (this.floorSelected ? 1 : 0);
   }
+
   get selectedGeometry(): Array<Table | Fixture> {
     return [...this.selectedTables, ...this.selectedFixtures];
   }
+
   get canAlign(): boolean {
     return this.selectedGeometry.length >= 2;
   }
+
   alignSelected = (edge: string) => {
     let els = this.selectedGeometry;
     if (els.length < 2) return;
@@ -901,9 +1018,11 @@ export class TableSeatingPlannerIsolated extends Component<
       }
     }, apply);
   };
+
   get canDistribute(): boolean {
     return this.selectedGeometry.length >= 3;
   }
+
   distributeSelected = (axis: 'h' | 'v') => {
     let els = this.selectedGeometry;
     if (els.length < 3) return;
@@ -933,29 +1052,36 @@ export class TableSeatingPlannerIsolated extends Component<
       }
     }, apply);
   };
+
   @tracked popoverTableKey: string | null = null;
+
   get tablePopoverAnchor() {
     return `[data-tedit='${this.popoverTableKey}']`;
   }
+
   openTablePopover = (key: string, e: PointerEvent) => {
     e.stopPropagation();
     e.preventDefault();
     this.selectTable(key);
     this.popoverTableKey = key;
   };
+
   closeTablePopover = () => {
     this.popoverTableKey = null;
   };
+
   // Right-click a fixture to select it (opens its inspector editor).
   openFixtureEdit = (id: string, e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     this.selectOnly(id);
   };
+
   popoverDuplicate = () => {
     this.duplicateTable();
     this.closeTablePopover();
   };
+
   popoverDelete = () => {
     this.requestDelete(
       'Delete this table?',
@@ -966,22 +1092,27 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   @tracked pendingDelete: {
     title: string;
     detail: string;
     run: () => void;
   } | null = null;
+
   requestDelete = (title: string, detail: string, run: () => void) => {
     this.pendingDelete = { title, detail, run };
   };
+
   cancelDelete = () => {
     this.pendingDelete = null;
   };
+
   confirmDelete = () => {
     let p = this.pendingDelete;
     this.pendingDelete = null;
     p?.run();
   };
+
   confirmDeleteTable = () => {
     this.requestDelete(
       'Delete this table?',
@@ -989,6 +1120,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.removeTable(),
     );
   };
+
   confirmDeleteFixture = () => {
     this.requestDelete(
       'Delete this element?',
@@ -996,6 +1128,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.removeFixture(),
     );
   };
+
   confirmDeleteSelected = () => {
     this.requestDelete(
       `Delete ${this.selCount} selected?`,
@@ -1003,6 +1136,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.deleteSelected(),
     );
   };
+
   confirmRemoveGuest = (g: Guest) => {
     this.requestDelete(
       'Remove this guest?',
@@ -1010,6 +1144,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => this.removeGuest(g),
     );
   };
+
   unlockElement = (kind: 'table' | 'fixture', id: string) => {
     let el =
       kind === 'table'
@@ -1018,9 +1153,11 @@ export class TableSeatingPlannerIsolated extends Component<
     if (!el || !el.locked) return;
     this.recordSet((v) => (el!.locked = v), true, false);
   };
+
   stopProp = (e: Event) => {
     e.stopPropagation();
   };
+
   scrollToolbar = (evt: Event) => {
     let e = evt as WheelEvent;
     let el = e.currentTarget as HTMLElement;
@@ -1030,12 +1167,14 @@ export class TableSeatingPlannerIsolated extends Component<
     let delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     el.scrollLeft += delta;
   };
+
   private worldCenter() {
     return {
       x: (300 - this.panX) / this.zoom,
       y: (220 - this.panY) / this.zoom,
     };
   }
+
   addSeat = () => {
     this.addMenuOpen = false;
     let { x, y } = this.worldCenter();
@@ -1064,6 +1203,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   addSection = () => {
     this.addMenuOpen = false;
     let { x, y } = this.worldCenter();
@@ -1097,6 +1237,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   addTableShape = (shape: string) => {
     this.addMenuOpen = false;
     let { x, y } = this.worldCenter();
@@ -1147,36 +1288,46 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   @tracked addBranch: string | null = null;
+
   private branchTimer: ReturnType<typeof setTimeout> | null = null;
+
   openBranch = (name: string) => {
     if (this.branchTimer) clearTimeout(this.branchTimer);
     this.addBranch = name;
   };
+
   scheduleCloseBranch = () => {
     if (this.branchTimer) clearTimeout(this.branchTimer);
     this.branchTimer = setTimeout(() => (this.addBranch = null), 220);
   };
+
   toggleAddMenu = () => {
     this.addMenuOpen = !this.addMenuOpen;
     this.addBranch = null;
     this.templateMenuOpen = false;
   };
+
   closeAddMenu = () => {
     this.addMenuOpen = false;
     this.addBranch = null;
   };
+
   @tracked templateMenuOpen = false;
+
   toggleTemplateMenu = () => {
     this.templateMenuOpen = !this.templateMenuOpen;
     this.addMenuOpen = false;
     this.addBranch = null;
     if (this.templateMenuOpen) this.loadTemplates();
   };
+
   closeTemplateMenu = () => {
     this.templateMenuOpen = false;
     this.previewTplKey = null;
   };
+
   addFixture = (kind: string) => {
     this.addMenuOpen = false;
     let { x, y } = this.worldCenter();
@@ -1201,6 +1352,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.selectFixture(keyOf(f));
     this.recordAddFixture(f);
   };
+
   private recordAddFixture(f: Fixture) {
     this.pushUndo(
       () => {
@@ -1212,10 +1364,12 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   }
+
   renameTable = (e: Event) => {
     let t = this.selectedTable;
     if (t) this.commitTableName(t, (e.target as HTMLInputElement).value);
   };
+
   setShape = (shape: string) => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1273,6 +1427,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   private bumpSection = (dRows: number, dCols: number) => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1294,18 +1449,26 @@ export class TableSeatingPlannerIsolated extends Component<
       t!.seatCount = bn;
     }, apply);
   };
+
   incRows = () => this.bumpSection(1, 0);
+
   decRows = () => this.bumpSection(-1, 0);
+
   incCols = () => this.bumpSection(0, 1);
+
   decCols = () => this.bumpSection(0, -1);
+
   setFacing = (deg: number) => {
     let t = this.selectedTable;
     if (!t) return;
     this.recordSet((v) => (t!.rotation = v), t.rotation || 0, deg);
   };
+
   facingIs = (deg: number): boolean =>
     (this.selectedTable?.rotation || 0) === deg;
+
   seatOrders = SEAT_ORDERS;
+
   setSeatOrder = (order: SeatOrder) => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1315,19 +1478,24 @@ export class TableSeatingPlannerIsolated extends Component<
       order,
     );
   };
+
   seatOrderIs = (order: SeatOrder): boolean =>
     ((this.selectedTable?.seatOrder as SeatOrder) || 'lr-tb') === order;
+
   setSeatingStyle = (style: string) => {
     let t = this.selectedTable;
     if (!t) return;
     this.recordSet((v) => (t!.seatingStyle = v), t.seatingStyle, style);
   };
+
   seatingStyleIs = (style: string): boolean =>
     (this.selectedTable?.seatingStyle || 'around') === style;
+
   get showSeatingStyle(): boolean {
     let s = this.selectedTable?.shape;
     return s === 'rect' || s === 'oval';
   }
+
   setSelectionColor = (color: string) => {
     let tables = this.selectedTables;
     let fixtures = this.selectedFixtures;
@@ -1344,15 +1512,18 @@ export class TableSeatingPlannerIsolated extends Component<
       fixtures.forEach((f, i) => (f.color = prevF[i]));
     }, apply);
   };
+
   selectionColorCommit = (e: Event) => {
     this.setSelectionColor((e.target as HTMLInputElement).value);
   };
+
   get selectionColorValue(): string {
     let t = this.selectedTables[0];
     if (t?.themeColor) return t.themeColor;
     let f = this.selectedFixtures[0];
     return f?.color || '#c5a35c';
   }
+
   clearSelectionSeats = () => {
     let tables = this.selectedTables.filter(
       (t) => (t.seatedGuests ?? []).length,
@@ -1365,9 +1536,11 @@ export class TableSeatingPlannerIsolated extends Component<
       });
     });
   };
+
   get selectionHasSeated(): boolean {
     return this.selectedTables.some((t) => (t.seatedGuests ?? []).length > 0);
   }
+
   setSelectionShape = (shape: string) => {
     let tables = this.selectedTables;
     if (!tables.length) return;
@@ -1395,12 +1568,14 @@ export class TableSeatingPlannerIsolated extends Component<
       });
     }, apply);
   };
+
   incSeats = () => {
     let t = this.selectedTable;
     if (!t) return;
     let b = t.seatCount || 0;
     this.recordSet((v) => (t!.seatCount = v), b, b + 1);
   };
+
   decSeats = () => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1408,6 +1583,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (b <= 0) return;
     this.recordSet((v) => (t!.seatCount = v), b, b - 1);
   };
+
   seatsInput = (e: Event) => {
     let t = this.selectedTable;
     let el = e.target as HTMLInputElement;
@@ -1418,8 +1594,11 @@ export class TableSeatingPlannerIsolated extends Component<
     el.value = String(next);
     if (next !== b) this.recordSet((v) => (t!.seatCount = v), b, next);
   };
+
   rowsInput = (e: Event) => this.gridInput(e, 'rows');
+
   colsInput = (e: Event) => this.gridInput(e, 'cols');
+
   private gridInput = (e: Event, axis: 'rows' | 'cols') => {
     let t = this.selectedTable;
     let el = e.target as HTMLInputElement;
@@ -1435,11 +1614,13 @@ export class TableSeatingPlannerIsolated extends Component<
       axis === 'cols' ? next - cur : 0,
     );
   };
+
   toggleVip = () => {
     let t = this.selectedTable;
     if (!t) return;
     this.recordSet((v) => (t!.vip = v), !!t.vip, !t.vip);
   };
+
   setTableRank = (raw: number) => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1448,39 +1629,50 @@ export class TableSeatingPlannerIsolated extends Component<
       Number.isFinite(raw) && raw >= 1 ? Math.min(Math.floor(raw), n) : 0;
     this.recordSet((v) => (t!.rank = v), t.rank || 0, next);
   };
+
   pinTableRankInput = (e: Event) => {
     let val = parseInt((e.target as HTMLInputElement).value, 10);
     this.setTableRank(val);
   };
+
   clearTableRank = () => this.setTableRank(0);
+
   get selectedTablePinned(): boolean {
     let r = this.selectedTable?.rank;
     return !!r && r >= 1;
   }
+
   get selectedTableRank(): number {
     let t = this.selectedTable;
     return t ? (this.tableRank.get(t) ?? 0) : 0;
   }
+
   get hasFloorPlan(): boolean {
     return !!this.args.model?.floorPlanURL;
   }
+
   @tracked private floorImgBroken = false;
   @tracked private floorImgRetry = 0;
+
   private get floorPlanSrc(): string | undefined {
     let url = this.args.model?.floorPlanURL;
     if (!url || !this.floorImgRetry) return url;
     return `${url}${url.includes('?') ? '&' : '?'}retry=${this.floorImgRetry}`;
   }
+
   onFloorImgError = () => {
     this.floorImgBroken = true;
   };
+
   onFloorImgLoad = () => {
     this.floorImgBroken = false;
   };
+
   refreshFloorImg = () => {
     this.floorImgBroken = false;
     this.floorImgRetry++;
   };
+
   private screenBox(t: Table): {
     cx: number;
     cy: number;
@@ -1497,6 +1689,7 @@ export class TableSeatingPlannerIsolated extends Component<
       h: rot ? w : h,
     };
   }
+
   private sectionsNeedFit(): boolean {
     let m = this.args.model;
     let px = m?.floorPlanX || 0;
@@ -1527,6 +1720,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
     return false;
   }
+
   private captureSections(secs: Table[]) {
     return secs.map((t) => ({
       t,
@@ -1541,6 +1735,7 @@ export class TableSeatingPlannerIsolated extends Component<
       slots: this.slotsOf(t),
     }));
   }
+
   private restoreSections(
     snap: ReturnType<TableSeatingPlannerIsolated['captureSections']>,
   ) {
@@ -1556,6 +1751,7 @@ export class TableSeatingPlannerIsolated extends Component<
       s.t.seatSlots = [...s.slots];
     }
   }
+
   private layoutSeatingSections(silent = false): boolean {
     let m = this.args.model;
     let px = m?.floorPlanX || 0;
@@ -1657,6 +1853,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (!silent) this.showToast('Fitted seating to floor plan');
     return true;
   }
+
   grabRotate = (kind: 'table' | 'fixture', id: string, evt: Event) => {
     let e = evt as PointerEvent;
     e.stopPropagation();
@@ -1682,14 +1879,17 @@ export class TableSeatingPlannerIsolated extends Component<
     this.rotOrig = m.rotation || 0;
     this.attachDragListeners();
   };
+
   themeSwatches = [
     { value: '#141b33', label: 'Navy' },
     { value: '#c5a35c', label: 'Gold' },
     { value: '#fdfaf2', label: 'Cream' },
   ];
+
   fixtureColorIs = (v: string): boolean =>
     (this.selectedFixture?.color || '#c5a35c').toLowerCase() ===
     v.toLowerCase();
+
   clearSeats = () => {
     let t = this.selectedTable;
     if (t && (t.seatedGuests ?? []).length)
@@ -1698,6 +1898,7 @@ export class TableSeatingPlannerIsolated extends Component<
         t!.seatSlots = [];
       });
   };
+
   duplicateTable = () => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1732,6 +1933,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   removeTable = () => {
     let t = this.selectedTable;
     if (!t) return;
@@ -1749,11 +1951,13 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   setFxColor = (color: string) => {
     let f = this.selectedFixture;
     if (!f) return;
     this.recordSet((v) => (f!.color = v), f.color, color);
   };
+
   fxColorInput = (e: Event) => {
     let f = this.selectedFixture;
     if (!f) return;
@@ -1762,14 +1966,17 @@ export class TableSeatingPlannerIsolated extends Component<
       color: (e.target as HTMLInputElement).value,
     };
   };
+
   fxColorCommit = (e: Event) => {
     this.liveColor = null;
     this.setFxColor((e.target as HTMLInputElement).value);
   };
+
   get selectedFxFill() {
     let f = this.selectedFixture;
     return f ? this.effColor(f, f.color || '#c5a35c') : '#c5a35c';
   }
+
   get selectedFxArtStyle() {
     let f = this.selectedFixture;
     let w = f ? Math.max(1, this.effW(f, f.width || 100)) : 1;
@@ -1780,10 +1987,12 @@ export class TableSeatingPlannerIsolated extends Component<
         : `aspect-ratio: ${w} / ${h}; height: 220px;`,
     );
   }
+
   renameFixture = (e: Event) => {
     let f = this.selectedFixture;
     if (f) this.commitFixtureLabel(f, (e.target as HTMLInputElement).value);
   };
+
   duplicateFixture = () => {
     let f = this.selectedFixture;
     if (!f) return;
@@ -1803,6 +2012,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.selectFixture(keyOf(copy));
     this.recordAddFixture(copy);
   };
+
   removeFixture = () => {
     let f = this.selectedFixture;
     if (!f) return;
@@ -1820,22 +2030,28 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   zoomIn = () => {
     this.userMovedView = true;
     this.zoom = Math.min(2.5, this.zoom + 0.1);
   };
+
   zoomOut = () => {
     this.userMovedView = true;
     this.zoom = Math.max(0.4, this.zoom - 0.1);
   };
+
   resetZoom = () => {
     this.userMovedView = true;
     this.zoom = 1;
     this.panX = 60;
     this.panY = 40;
   };
+
   private canvasEl: HTMLElement | null = null;
+
   private userMovedView = false;
+
   registerCanvas = modifier((el: Element) => {
     this.canvasEl = el as HTMLElement;
     let canvas = el as HTMLElement;
@@ -1863,10 +2079,12 @@ export class TableSeatingPlannerIsolated extends Component<
       ro.disconnect();
     };
   });
+
   fitView = () => {
     this.userMovedView = true;
     this.applyFit();
   };
+
   private applyFit = () => {
     let el = this.canvasEl;
     let items: Array<Table | Fixture> = [...this.tables, ...this.fixtures];
@@ -1911,6 +2129,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.panX = cw / 2 - cx * z;
     this.panY = ch / 2 - cy * z;
   };
+
   onWheel = (evt: Event) => {
     let e = evt as WheelEvent;
     e.preventDefault();
@@ -1918,6 +2137,7 @@ export class TableSeatingPlannerIsolated extends Component<
     let next = this.zoom - Math.sign(e.deltaY) * 0.08;
     this.zoom = Math.min(2.5, Math.max(0.4, next));
   };
+
   onCanvasDown = (evt: Event) => {
     let e = evt as PointerEvent;
     let target = e.target as HTMLElement;
@@ -1945,6 +2165,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.startPY = e.clientY;
     this.attachDragListeners();
   };
+
   private beginMove(e: PointerEvent) {
     this.dragMode = 'move';
     this.startPX = e.clientX;
@@ -1961,6 +2182,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.floorOY = this.args.model?.floorPlanY || 0;
     this.attachDragListeners();
   }
+
   grabTable = (id: string, e: PointerEvent) => {
     e.stopPropagation();
     let t = this.tables.find((x) => keyOf(x) === id);
@@ -1973,6 +2195,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (t.locked) return;
     this.beginMove(e);
   };
+
   grabFixture = (id: string, e: PointerEvent) => {
     e.stopPropagation();
     let f = this.fixtures.find((x) => keyOf(x) === id);
@@ -1985,6 +2208,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (f.locked) return;
     this.beginMove(e);
   };
+
   grabResize = (
     kind: 'table' | 'fixture',
     id: string,
@@ -2013,14 +2237,17 @@ export class TableSeatingPlannerIsolated extends Component<
     this.dragRot = m.rotation || 0;
     this.attachDragListeners();
   };
+
   private attachDragListeners() {
     document.addEventListener('pointermove', this.onDragMove);
     document.addEventListener('pointerup', this.onDragUp);
   }
+
   private detachDragListeners() {
     document.removeEventListener('pointermove', this.onDragMove);
     document.removeEventListener('pointerup', this.onDragUp);
   }
+
   onDragMove = (e: PointerEvent) => {
     if (this.dragMode === 'pan') {
       this.panX = this.origX + (e.clientX - this.startPX);
@@ -2117,6 +2344,7 @@ export class TableSeatingPlannerIsolated extends Component<
       return;
     }
   };
+
   onDragUp = () => {
     let mode = this.dragMode;
     if (mode === 'move') {
@@ -2267,6 +2495,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.liveRotate = null;
     this.detachDragListeners();
   };
+
   private hitsInMarquee(): string[] {
     let mq = this.marquee;
     if (!mq) return [];
@@ -2285,12 +2514,14 @@ export class TableSeatingPlannerIsolated extends Component<
         keys.push(keyOf(f));
     return keys;
   }
+
   private commitMarquee() {
     let mq = this.marquee;
     if (!mq || (mq.w < 4 && mq.h < 4)) return;
     let keys = new Set([...this.selectedKeys, ...this.hitsInMarquee()]);
     this.selectedKeys = [...keys];
   }
+
   deleteSelected = () => {
     if (!this.selCount) return;
     let m = this.args.model;
@@ -2319,6 +2550,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.deselect();
     this.showToast('Deleted');
   };
+
   nudgeSelected = (dx: number, dy: number) => {
     let tabs = this.tables.filter(
       (t) => this.isSelected(keyOf(t)) && !t.locked,
@@ -2348,6 +2580,7 @@ export class TableSeatingPlannerIsolated extends Component<
       () => apply(dx, dy),
     );
   };
+
   private snapshotSelection(): ClipItem[] {
     let items: ClipItem[] = [];
     for (let t of this.selectedTables) {
@@ -2391,6 +2624,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return items;
   }
+
   private pasteItems = (items: ClipItem[], off: number) => {
     if (!items.length) return;
     let newTables: Table[] = [];
@@ -2436,6 +2670,7 @@ export class TableSeatingPlannerIsolated extends Component<
       },
     );
   };
+
   copySelection = (): boolean => {
     let items = this.snapshotSelection();
     if (!items.length) return false;
@@ -2444,18 +2679,22 @@ export class TableSeatingPlannerIsolated extends Component<
     this.showToast(`Copied ${items.length}`);
     return true;
   };
+
   cutSelection = () => {
     if (this.copySelection()) this.deleteSelected();
   };
+
   pasteClipboard = () => {
     if (!this.clipboard.length) return;
     this.pasteSeq += 1;
     this.pasteItems(this.clipboard, 40 * this.pasteSeq);
     this.showToast('Pasted');
   };
+
   duplicateSelection = () => {
     this.pasteItems(this.snapshotSelection(), 40);
   };
+
   get marqueeStyle() {
     let mq = this.marquee;
     if (!mq) return htmlSafe('display:none');
@@ -2463,6 +2702,7 @@ export class TableSeatingPlannerIsolated extends Component<
       `left:${mq.x}px;top:${mq.y}px;width:${mq.w}px;height:${mq.h}px`,
     );
   }
+
   resolveGuest = async (id: string): Promise<Guest | null> => {
     try {
       let g = await (this.args as any).context?.store?.get(id);
@@ -2471,6 +2711,7 @@ export class TableSeatingPlannerIsolated extends Component<
       return null;
     }
   };
+
   onGuestMove = (e: PointerEvent) => {
     this.ghostX = e.clientX;
     this.ghostY = e.clientY;
@@ -2490,6 +2731,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.dropSeatIndex = -1;
     }
   };
+
   onGuestUp = async (e: PointerEvent) => {
     let g = this.draggingGuest;
     let id = this.draggingGuestId;
@@ -2515,6 +2757,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     this.assignGuest(g, tableId, seatIndex);
   };
+
   assignGuest = (guest: Guest, tableId: string, seatIndex: number) => {
     let target = this.tables.find((t) => keyOf(t) === tableId);
     if (!target) return;
@@ -2541,6 +2784,7 @@ export class TableSeatingPlannerIsolated extends Component<
       target!.seatSlots = slots;
     });
   };
+
   grabSeatedGuest = (guest: Guest | null, e: PointerEvent) => {
     if (!guest) return;
     e.preventDefault();
@@ -2553,21 +2797,25 @@ export class TableSeatingPlannerIsolated extends Component<
     document.addEventListener('pointermove', this.onGuestMove);
     document.addEventListener('pointerup', this.onGuestUp);
   };
+
   showSeatInfo = (guest: Guest | null, e: MouseEvent) => {
     if (!guest || this.draggingGuest) return;
     this.hoverGuest = guest;
     this.hoverX = e.clientX;
     this.hoverY = e.clientY;
   };
+
   moveSeatInfo = (evt: Event) => {
     let e = evt as MouseEvent;
     if (!this.hoverGuest) return;
     this.hoverX = e.clientX;
     this.hoverY = e.clientY;
   };
+
   hideSeatInfo = () => {
     this.hoverGuest = null;
   };
+
   freeSeat = (tableId: string, seatIndex: number) => {
     let t = this.tables.find((x) => keyOf(x) === tableId);
     if (!t) return;
@@ -2581,16 +2829,21 @@ export class TableSeatingPlannerIsolated extends Component<
       });
     }
   };
+
   stopPointer = (e: Event) => {
     e.stopPropagation();
   };
+
   seatClick = (tableId: string, seatIndex: number, e: Event) => {
     e.stopPropagation();
     this.freeSeat(tableId, seatIndex);
   };
+
   @tracked toast: string | null = null;
   @tracked toastAction: { label: string; run: () => void } | null = null;
+
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
   private showToast(
     msg: string,
     action?: { label: string; run: () => void },
@@ -2601,22 +2854,26 @@ export class TableSeatingPlannerIsolated extends Component<
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => this.dismissToast(), duration);
   }
+
   dismissToast = () => {
     this.toast = null;
     this.toastAction = null;
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = null;
   };
+
   runToastAction = () => {
     let a = this.toastAction;
     this.dismissToast();
     a?.run();
   };
+
   get floorPlanOpacity() {
     if (this.liveOpacity != null) return this.liveOpacity;
     let o = this.args.model?.floorPlanOpacity;
     return o == null ? 45 : o;
   }
+
   get floorPlanStyle() {
     return htmlSafe(
       `position:absolute;left:0;top:0;transform:translate(${this.effFloorX}px,${this.effFloorY}px);width:${this.effFloorW}px;height:${this.effFloorH}px;opacity:${
@@ -2624,45 +2881,56 @@ export class TableSeatingPlannerIsolated extends Component<
       };`,
     );
   }
+
   get floorFrameStyle() {
     return htmlSafe(
       `position:absolute;left:0;top:0;transform:translate(${this.effFloorX}px,${this.effFloorY}px);width:${this.effFloorW}px;height:${this.effFloorH}px;`,
     );
   }
+
   selectFloorForEdit = () => {
     this.selectedKeys = [];
     this.floorSelected = true;
     this.floorDeleteArmed = false;
   };
+
   setFloorOpacity = (e: Event) => {
     this.liveOpacity = Number((e.target as HTMLInputElement).value);
   };
+
   commitFloorOpacity = (e: Event) => {
     this.liveOpacity = null;
     this.args.model.floorPlanOpacity = Number(
       (e.target as HTMLInputElement).value,
     );
   };
+
   removeFloorPlan = () => {
     let m = this.args.model;
     m.floorPlanURL = undefined;
     this.showToast('Floor plan removed');
   };
+
   @tracked floorDeleteArmed = false;
+
   armFloorDelete = () => {
     this.floorDeleteArmed = true;
   };
+
   cancelFloorDelete = () => {
     this.floorDeleteArmed = false;
   };
+
   confirmRemoveFloorPlan = () => {
     this.floorDeleteArmed = false;
     this.removeFloorPlan();
   };
+
   replaceFloorPlan = () => {
     this.floorDeleteArmed = false;
     this.openFloorLibrary();
   };
+
   grabFloorPlan = (evt: Event) => {
     let e = evt as PointerEvent;
     e.stopPropagation();
@@ -2670,7 +2938,9 @@ export class TableSeatingPlannerIsolated extends Component<
     this.floorSelected = true;
     this.beginMove(e);
   };
+
   @tracked aiPlanBusy = false;
+
   private validateFloorFile(
     file: File,
   ): { ok: true; isPdf: boolean } | { ok: false; msg: string } {
@@ -2695,6 +2965,7 @@ export class TableSeatingPlannerIsolated extends Component<
       };
     return { ok: true, isPdf };
   }
+
   private async readPlanFile(file: File, isPdf: boolean) {
     let base64 = '';
     let contentType = 'image/png';
@@ -2712,6 +2983,7 @@ export class TableSeatingPlannerIsolated extends Component<
     let dims = await imageDims(dataUrl);
     return { base64, contentType, dataUrl, dims };
   }
+
   private commitFloorUnderlay = debounce(
     (url: string, natW: number, natH: number) => {
       this.placeFloorUnderlay(url, natW, natH);
@@ -2719,6 +2991,7 @@ export class TableSeatingPlannerIsolated extends Component<
     },
     300,
   );
+
   private placeFloorUnderlay(url: string, natW: number, natH: number) {
     let targetW = 860;
     let scale = targetW / (natW || targetW);
@@ -2734,6 +3007,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.args.model.floorPlanOpacity = 45;
     return { x: rx, y: ry, w: targetW, h: targetH };
   }
+
   private async urlToDataUrl(url: string): Promise<string> {
     let resp = await fetch(url);
     if (!resp.ok) throw new Error(`Could not load image (${resp.status})`);
@@ -2746,6 +3020,7 @@ export class TableSeatingPlannerIsolated extends Component<
       fr.readAsDataURL(blob);
     });
   }
+
   private buildLayoutFromImage = async (
     ctx: any,
     dataUrl: string,
@@ -2915,31 +3190,40 @@ export class TableSeatingPlannerIsolated extends Component<
     this.applyLayout(tables, fixtures, 'AI floor-plan');
     if (this.sectionsNeedFit()) this.layoutSeatingSections(true);
   };
+
   @tracked inspectorCollapsed = true;
+
   toggleInspector = () => {
     this.inspectorCollapsed = !this.inspectorCollapsed;
   };
+
   private get inspectorBeckons(): boolean {
     return this.inspectorCollapsed;
   }
+
   private get hasInspectorSelection(): boolean {
     return !!this.selectedTable || !!this.selectedFixture || this.multiSelected;
   }
+
   @tracked showFloorLibrary = false;
   @tracked fpImporting = false;
+
   openFloorLibrary = () => {
     this.addMenuOpen = false;
     this.showFloorLibrary = true;
   };
+
   closeFloorLibrary = () => {
     this.showFloorLibrary = false;
   };
+
   get seatedGuestSet(): Set<Guest> {
     let s = new Set<Guest>();
     for (let t of this.tables)
       for (let g of t.seatedGuests ?? []) if (g) s.add(g as Guest);
     return s;
   }
+
   railShowsGuest = (g: Guest | undefined): boolean => {
     if (!g || this.seatedGuestSet.has(g)) return false;
     let q = this.search.trim().toLowerCase();
@@ -2947,6 +3231,7 @@ export class TableSeatingPlannerIsolated extends Component<
     if (this.activeCatId && g.category !== this.activeCatId) return false;
     return true;
   };
+
   grabGuest = (g: Guest, e: PointerEvent) => {
     e.preventDefault();
     this.draggingGuest = g;
@@ -2956,9 +3241,11 @@ export class TableSeatingPlannerIsolated extends Component<
     document.addEventListener('pointermove', this.onGuestMove);
     document.addEventListener('pointerup', this.onGuestUp);
   };
+
   get buildDisabled() {
     return this.aiPlanBusy || !this.args.model?.floorPlanURL;
   }
+
   importFloorPlanCard = async (e: Event) => {
     let input = e.target as HTMLInputElement;
     let file = input.files?.[0];
@@ -3013,6 +3300,7 @@ export class TableSeatingPlannerIsolated extends Component<
     this.fpImporting = false;
     input.value = '';
   };
+
   linkFloorPlan = async () => {
     try {
       let fileType = identifyCard(ImageDef);
@@ -3039,6 +3327,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.showToast(`Could not link floor plan: ${err?.message ?? 'error'}`);
     }
   };
+
   buildFromFloorPlan = async () => {
     let ctx = (this.args as any).context?.commandContext;
     if (!ctx) {
@@ -3070,6 +3359,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.showToast(`AI failed: ${msg}`);
     }
   };
+
   grabFloorResize = (evt: Event) => {
     let e = evt as PointerEvent;
     e.stopPropagation();
@@ -3085,38 +3375,47 @@ export class TableSeatingPlannerIsolated extends Component<
     this.dragRot = 0;
     this.attachDragListeners();
   };
+
   private nextZ(): number {
     let zs = [...this.tables, ...this.fixtures].map((e) => e.z || 0);
     return (zs.length ? Math.max(...zs) : 0) + 1;
   }
+
   private minZ(): number {
     let zs = [...this.tables, ...this.fixtures].map((e) => e.z || 0);
     return (zs.length ? Math.min(...zs) : 0) - 1;
   }
+
   bringTableFront = () => {
     let t = this.selectedTable;
     if (t) this.recordSet((v) => (t!.z = v), t.z || 0, this.nextZ());
   };
+
   sendTableBack = () => {
     let t = this.selectedTable;
     if (t) this.recordSet((v) => (t!.z = v), t.z || 0, this.minZ());
   };
+
   bringFxFront = () => {
     let f = this.selectedFixture;
     if (f) this.recordSet((v) => (f!.z = v), f.z || 0, this.nextZ());
   };
+
   sendFxBack = () => {
     let f = this.selectedFixture;
     if (f) this.recordSet((v) => (f!.z = v), f.z || 0, this.minZ());
   };
+
   toggleTableLock = () => {
     let t = this.selectedTable;
     if (t) this.recordSet((v) => (t!.locked = v), !!t.locked, !t.locked);
   };
+
   toggleFixtureLock = () => {
     let f = this.selectedFixture;
     if (f) this.recordSet((v) => (f!.locked = v), !!f.locked, !f.locked);
   };
+
   private applyLayout = (
     tables: Table[],
     fixtures: Fixture[],
@@ -3144,9 +3443,11 @@ export class TableSeatingPlannerIsolated extends Component<
     this.showToast(`${label} layout created`);
     setTimeout(() => this.fitView(), 16);
   };
+
   @tracked savingTemplate = false;
   @tracked templates: LayoutTemplate[] = [];
   @tracked templatesLoading = false;
+
   loadTemplates = async () => {
     let store = (this.args as any).context?.store;
     let realm = this.realmUrl;
@@ -3170,7 +3471,9 @@ export class TableSeatingPlannerIsolated extends Component<
       this.templatesLoading = false;
     }
   };
+
   tplKey = (t: LayoutTemplate) => (t as any)?.id ?? keyOf(t);
+
   applyTemplate = (tpl: LayoutTemplate) => {
     this.addMenuOpen = false;
     this.templateMenuOpen = false;
@@ -3179,26 +3482,33 @@ export class TableSeatingPlannerIsolated extends Component<
     let fixtures = ((tpl.fixtures ?? []) as Fixture[]).map(cloneFixture);
     this.applyLayout(tables, fixtures, tpl.name?.trim() || 'Template');
   };
+
   @tracked previewTplKey: string | null = null;
+
   openTemplatePreview = (t: LayoutTemplate, e: Event) => {
     e.stopPropagation();
     this.previewTplKey = this.tplKey(t);
   };
+
   closeTemplatePreview = () => {
     this.previewTplKey = null;
   };
+
   get previewTemplate(): LayoutTemplate | null {
     if (!this.previewTplKey) return null;
     return (
       this.templates.find((t) => this.tplKey(t) === this.previewTplKey) ?? null
     );
   }
+
   get previewAnchor(): string {
     return `[data-tpl-preview='${this.previewTplKey}']`;
   }
+
   @tracked showSaveTemplate = false;
   @tracked templateName = '';
   @tracked templateError = '';
+
   openSaveTemplate = () => {
     if (!this.tables.length && !this.fixtures.length) {
       this.showToast('Nothing to save yet — add some tables first.');
@@ -3210,13 +3520,16 @@ export class TableSeatingPlannerIsolated extends Component<
       (this.args.model?.eventTitle?.trim() || 'My') + ' layout';
     this.showSaveTemplate = true;
   };
+
   closeSaveTemplate = () => {
     this.showSaveTemplate = false;
   };
+
   onTemplateNameInput = (e: Event) => {
     this.templateName = (e.target as HTMLInputElement).value;
     if (this.templateError) this.templateError = '';
   };
+
   confirmSaveTemplate = async () => {
     if (this.savingTemplate) return;
     let name = this.templateName.trim();
@@ -3259,7 +3572,9 @@ export class TableSeatingPlannerIsolated extends Component<
       this.savingTemplate = false;
     }
   };
+
   @tracked savingSnapshot = false;
+
   saveSnapshot = async () => {
     if (this.savingSnapshot) return;
     let m = this.args.model;
@@ -3315,16 +3630,58 @@ export class TableSeatingPlannerIsolated extends Component<
       this.savingSnapshot = false;
     }
   };
+
   @tracked printOnlyTable: Table | null = null;
   @tracked printMode: 'cards' | 'chart' = 'cards';
+
   get tablesToPrint(): Table[] {
     return this.printOnlyTable ? [this.printOnlyTable] : this.tables;
   }
+  // Pack print rows into explicit A4 pages so EVERY page keeps a 12mm
+  // top/bottom margin (grid auto-fragmentation only pads the first and
+  // last page once @page margin is 0).
+  get printPages(): {
+    table: Table;
+    isTable: boolean;
+    guests?: Guest[];
+  }[][] {
+    const USABLE = 273; // 297mm A4 minus 12mm page padding top + bottom
+    const TABLE_H = 33.2; // 1.15in + 2mm bleed each side, in mm
+    const GUEST_H = 57.3; // 2.1in + 2mm bleed each side, in mm
+    const GAP = 10;
+    let rows: { table: Table; isTable: boolean; guests?: Guest[] }[] = [];
+    for (let t of this.tablesToPrint) {
+      rows.push({ table: t, isTable: true });
+      let guests = ((t as any).seatedGuests ?? []) as Guest[];
+      for (let i = 0; i < guests.length; i += 2) {
+        rows.push({ table: t, isTable: false, guests: guests.slice(i, i + 2) });
+      }
+    }
+    let pages: (typeof rows)[] = [];
+    let cur: typeof rows = [];
+    let used = 0;
+    for (let row of rows) {
+      let h = row.isTable ? TABLE_H : GUEST_H;
+      let need = h + (cur.length ? GAP : 0);
+      if (cur.length && used + need > USABLE) {
+        pages.push(cur);
+        cur = [];
+        used = h;
+      } else {
+        used += need;
+      }
+      cur.push(row);
+    }
+    if (cur.length) pages.push(cur);
+    return pages;
+  }
+
   private nextFrame(): Promise<void> {
     return new Promise((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
     );
   }
+
   private printWith = async (
     mode: 'cards' | 'chart',
     onlyTable: Table | null,
@@ -3332,30 +3689,117 @@ export class TableSeatingPlannerIsolated extends Component<
     this.printMode = mode;
     this.printOnlyTable = onlyTable;
     await this.nextFrame(); // let the print sheet re-render before printing
-    window.print();
-    this.printOnlyTable = null;
+    try {
+      window.print(); // hoisting happens in the beforeprint listener
+    } finally {
+      this.unhoistPrintSheet();
+      this.printOnlyTable = null;
+    }
   };
+
+  // The printout must contain ONLY the print sheet — the operator-mode
+  // shell (workspace header, card frame, side rails) would otherwise leak
+  // into the pages, and its 100vh clipping would cut pagination. Hoist the
+  // sheet to <body> with a global print stylesheet for the duration of the
+  // print, then restore. Bound to beforeprint/afterprint so plain Ctrl+P
+  // works too, not just the Print menu.
+  private printRestore?: () => void;
+
+  private hoistPrintSheet = () => {
+    if (this.printRestore) return;
+    let sheet = document.querySelector('.print-sheet');
+    if (!sheet) return;
+    let parent = sheet.parentElement;
+    let marker = sheet.nextSibling;
+    // Custom properties don't travel with the sheet when it leaves the
+    // planner subtree — re-attach the theme: adopt the linked theme's scope
+    // attribute (its stylesheet then styles the hoisted sheet directly) and
+    // the pinned default palette class when the card is themeless.
+    let themeRoot = sheet.closest('[data-boxel-theme-scope]');
+    let themeScope = themeRoot?.getAttribute('data-boxel-theme-scope');
+    let hadScope = sheet.hasAttribute('data-boxel-theme-scope');
+    if (themeScope && !hadScope) {
+      sheet.setAttribute('data-boxel-theme-scope', themeScope);
+    }
+    let pinnedDefault =
+      !sheet.classList.contains('tsp-default-theme') &&
+      Boolean(sheet.closest('.tsp-default-theme'));
+    if (pinnedDefault) {
+      sheet.classList.add('tsp-default-theme');
+    }
+    let style = document.createElement('style');
+    style.textContent = `@media print {
+      body > :not(.print-sheet) { display: none !important; }
+      html, body {
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        background: #fff !important;
+      }
+      .print-sheet {
+        box-sizing: border-box;
+        width: 100%;
+      }
+    }`;
+    document.head.appendChild(style);
+    document.body.appendChild(sheet);
+    this.printRestore = () => {
+      parent?.insertBefore(sheet, marker);
+      style.remove();
+      if (themeScope && !hadScope) {
+        sheet.removeAttribute('data-boxel-theme-scope');
+      }
+      if (pinnedDefault) {
+        sheet.classList.remove('tsp-default-theme');
+      }
+    };
+  };
+
+  private unhoistPrintSheet = () => {
+    this.printRestore?.();
+    this.printRestore = undefined;
+  };
+
+  private setupPrintHoist = modifier(() => {
+    window.addEventListener('beforeprint', this.hoistPrintSheet);
+    window.addEventListener('afterprint', this.unhoistPrintSheet);
+    return () => {
+      window.removeEventListener('beforeprint', this.hoistPrintSheet);
+      window.removeEventListener('afterprint', this.unhoistPrintSheet);
+      this.unhoistPrintSheet();
+    };
+  });
+
   // Print all tables' cards (table card + each guest's place card).
   printCards = () => this.printWith('cards', null);
+
   // Print a single table's cards.
   printTable = (t: Table) => this.printWith('cards', t);
+
   // Print the whole seating chart as one scaled overview page.
   printChart = () => this.printWith('chart', null);
+
   @tracked printMenuOpen = false;
+
   togglePrintMenu = () => {
     this.printMenuOpen = !this.printMenuOpen;
   };
+
   closePrintMenu = () => {
     this.printMenuOpen = false;
   };
+
   printCardsFromMenu = () => {
     this.printMenuOpen = false;
     this.printCards();
   };
+
   printChartFromMenu = () => {
     this.printMenuOpen = false;
     this.printChart();
   };
+
   private partyChildren(roster: Guest[]): Map<Guest, Guest[]> {
     let inRoster = new Set(roster);
     let rootOf = (g: Guest): Guest => {
@@ -3379,13 +3823,16 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return map;
   }
+
   partySizeOf = (g: Guest): number => {
     return 1 + (this.partyChildren(this.guests).get(g)?.length ?? 0);
   };
+
   railPartyOf = (g: Guest): number | null => {
     let n = this.partySizeOf(g);
     return n > 1 ? n : null;
   };
+
   private parseLlmJson(raw: string): any | null {
     if (!raw) return null;
     let fenceOpenJson = new RegExp('^```json', 'i');
@@ -3406,6 +3853,7 @@ export class TableSeatingPlannerIsolated extends Component<
       return null;
     }
   }
+
   arrangeWithAI = async () => {
     if (this.aiStatus === 'loading') return;
     let ctx = (this.args as any).context?.commandContext;
@@ -3489,17 +3937,21 @@ export class TableSeatingPlannerIsolated extends Component<
       this.showToast(msg);
     }
   };
+
   get ghostInitials() {
     return initialsOf(this.draggingGuest?.fullName);
   }
+
   get hoverInitials() {
     return initialsOf(this.hoverGuest?.fullName);
   }
+
   get hoverParty() {
     let g = this.hoverGuest;
     let n = g ? this.partySizeOf(g) : 1;
     return n > 1 ? n : 0;
   }
+
   addGuests = async () => {
     let store = (this.args as any).context?.store;
     let type = identifyCard(Guest) ?? baseCardRef;
@@ -3530,6 +3982,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.args.model.guests = [...this.guests, ...picked];
     }
   };
+
   get hostChips() {
     return ((this.args.model?.hosts ?? []) as Host[])
       .filter(Boolean)
@@ -3541,6 +3994,7 @@ export class TableSeatingPlannerIsolated extends Component<
         name: h.fullName || 'Host',
       }));
   }
+
   addHosts = async () => {
     let store = (this.args as any).context?.store;
     let type = identifyCard(Host) ?? baseCardRef;
@@ -3572,6 +4026,7 @@ export class TableSeatingPlannerIsolated extends Component<
       this.args.model.hosts = [...hosts, ...picked];
     }
   };
+
   removeHost = (h: Host) => {
     let hosts = ((this.args.model?.hosts ?? []) as Host[]).filter(Boolean);
     let hid = (h as any).id;
@@ -3580,6 +4035,7 @@ export class TableSeatingPlannerIsolated extends Component<
     );
     this.showToast(`${h.fullName || 'Host'} removed from hosts`);
   };
+
   get eventDateInput(): string {
     let d = this.args.model?.eventDate;
     if (!d) return '';
@@ -3587,21 +4043,27 @@ export class TableSeatingPlannerIsolated extends Component<
       let y = d.getFullYear();
       let m = String(d.getMonth() + 1).padStart(2, '0');
       let day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
+      let hh = String(d.getHours()).padStart(2, '0');
+      let mm = String(d.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${day}T${hh}:${mm}`;
     } catch {
       return '';
     }
   }
+
   setEventDate = (e: Event) => {
     let v = (e.target as HTMLInputElement).value;
-    this.args.model.eventDate = v ? new Date(`${v}T12:00:00`) : undefined;
+    this.args.model.eventDate = v ? new Date(v) : undefined;
   };
+
   openEditGuest = (g: Guest) => {
     this.args.viewCard?.(g, 'edit');
   };
+
   stopDrag = (e: Event) => {
     e.stopPropagation();
   };
+
   removeGuest = (g: Guest) => {
     let members = [g, ...(this.partyChildren(this.guests).get(g) ?? [])];
     let party = new Set<Guest>(members);
@@ -3639,8 +4101,11 @@ export class TableSeatingPlannerIsolated extends Component<
         : `Removed ${name}`,
     );
   };
+
   @tracked confirmClearGuests = false;
+
   private clearGuestsTimer: number | undefined;
+
   clearAllGuests = () => {
     if (!this.confirmClearGuests) {
       this.confirmClearGuests = true;
@@ -3671,47 +4136,59 @@ export class TableSeatingPlannerIsolated extends Component<
     }, apply);
     this.showToast(`Removed all ${roster.length} guests`);
   };
+
   get realmUrl(): string {
     let u = (this.args.model as any)?.[realmURL];
     return u ? String(u) : '';
   }
+
   private formatEventDate(): string {
     let d = this.args.model?.eventDate;
     if (!d) return 'our wedding day';
     try {
-      return d.toLocaleDateString('en-US', {
+      return d.toLocaleString('en-US', {
         month: 'long',
         day: 'numeric',
         year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
       });
     } catch {
       return 'our wedding day';
     }
   }
+
   clearPoster = () => {
     this.args.model.poster = undefined;
     this.showToast('Using the default card');
   };
+
   get defaultInviteMessage(): string {
     return "Dear {name}, you're warmly invited to {event} on {date} at {venue}, Can't wait to see you there!";
   }
+
   get inviteTemplate(): string {
     return this.args.model?.invitationMessage || this.defaultInviteMessage;
   }
+
   onInviteTemplateInput = (e: Event) => {
     this.commitInviteMessage((e.target as HTMLTextAreaElement).value);
   };
+
   onInviteSearch = (e: Event) => {
     this.inviteSearch = (e.target as HTMLInputElement).value;
   };
+
   clearInviteSearch = () => {
     this.inviteSearch = '';
   };
+
   private matchesInviteSearch = (g: Guest): boolean => {
     let q = this.inviteSearch.trim().toLowerCase();
     if (!q) return true;
     return (g.fullName ?? '').toLowerCase().includes(q);
   };
+
   guestSeat = (g: Guest): { table: string; seat: number } | null => {
     for (let t of this.tables) {
       let idx = (t.seatedGuests ?? []).findIndex((x) => x === g);
@@ -3719,10 +4196,13 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     return null;
   };
+
   get posterLink(): string {
     return this.args.model?.poster?.resolvedUrl || '';
   }
+
   @tracked posterBusy = false;
+
   private linkPosterFile = async (fileUrl: string) => {
     if (!fileUrl) {
       throw new Error('could not load the saved image');
@@ -3734,6 +4214,7 @@ export class TableSeatingPlannerIsolated extends Component<
       sourceMode: 'url',
     });
   };
+
   downloadPoster = async () => {
     let url = this.posterLink;
     if (!url) return;
@@ -3753,6 +4234,7 @@ export class TableSeatingPlannerIsolated extends Component<
       window.open(url, '_blank', 'noopener');
     }
   };
+
   // Visual-style line for the poster, derived from the linked theme
   // (cardInfo.theme) so the generated artwork follows the same palette and mood
   // as the rest of the planner. Falls back to a tasteful neutral style when no
@@ -3827,22 +4309,28 @@ export class TableSeatingPlannerIsolated extends Component<
     if (m?.venue) lines.push(`${n++}. ${m.venue}`);
     return lines.join('\n');
   }
+
   onPosterPromptInput = (e: Event) => {
     this.args.model.posterPrompt =
       (e.target as HTMLTextAreaElement).value || undefined;
   };
+
   posterAspects = POSTER_ASPECTS;
+
   get posterAspect(): string {
     return this.args.model?.posterAspect || '4:5';
   }
+
   get posterAspectStyle(): ReturnType<typeof htmlSafe> {
     let [w, h] = this.posterAspect.split(':').map(Number);
     if (!w || !h) [w, h] = [4, 5];
     return htmlSafe(`aspect-ratio: ${w} / ${h};`);
   }
+
   setPosterAspect = (v: string) => {
     this.args.model.posterAspect = v;
   };
+
   generatePoster = async () => {
     let ctx = (this.args as any).context?.commandContext;
     if (!ctx) {
@@ -3875,6 +4363,7 @@ export class TableSeatingPlannerIsolated extends Component<
     }
     this.posterBusy = false;
   };
+
   composeMessage = (g: Guest, template: string): string => {
     let m = this.args.model;
     let seatObj = this.guestSeat(g);
@@ -3891,14 +4380,24 @@ export class TableSeatingPlannerIsolated extends Component<
       .replace(/\{hosts\}/g, m?.hostNames || m?.eventTitle || 'us')
       .replace(/\{poster\}/g, link);
   };
-  copyText = async (text: string) => {
+
+  copyInvite = async (row: { msg: string; model: Guest }) => {
     try {
-      await navigator.clipboard.writeText(text);
-      this.showToast('Message copied');
+      await navigator.clipboard.writeText(row.msg);
+      this.showToast(`Copied invite for ${row.model.fullName || 'guest'}`);
     } catch {
       this.showToast('Copy failed');
     }
   };
+
+  @tracked expandedInviteKey: string | null = null;
+
+  toggleInvitePreview = (key: string) => {
+    this.expandedInviteKey = this.expandedInviteKey === key ? null : key;
+  };
+
+  invitePreviewOpen = (key: string) => this.expandedInviteKey === key;
+
   get inviteRows() {
     return this.guests.filter(this.matchesInviteSearch).map((g) => {
       let msg = this.composeMessage(g, this.inviteTemplate);
@@ -3910,10 +4409,12 @@ export class TableSeatingPlannerIsolated extends Component<
       };
     });
   }
+
   <template>
     {{! template-lint-disable no-pointer-down-event-binding no-invalid-interactive }}
     <div
       class='tsp {{unless this.hasLinkedTheme "tsp-default-theme"}}'
+      {{this.setupPrintHoist}}
       data-tsp-root
       {{this.keyboard}}
     >
@@ -3973,9 +4474,9 @@ export class TableSeatingPlannerIsolated extends Component<
             <span class='tsp-meta-label'>Date</span>
             <span class='tsp-date'>
               <BoxelInput
-                @type='date'
+                @type='datetime-local'
                 @value={{this.eventDateInput}}
-                aria-label='Event date'
+                aria-label='Event date and time'
                 {{on 'change' this.setEventDate}}
               />
               {{#unless this.eventDateInput}}
@@ -4993,385 +5494,351 @@ export class TableSeatingPlannerIsolated extends Component<
                   <span class='zoom-fit-lbl'>Fit</span></button>
               </div>
             </div>
-            <button
-              type='button'
-              class='insp-handle
-                {{if this.inspectorBeckons "is-beckoning"}}
-                {{if this.hasInspectorSelection "has-selection"}}'
-              title={{if this.inspectorCollapsed 'Show panel' 'Hide panel'}}
-              aria-label={{if
-                this.inspectorCollapsed
-                'Show panel'
-                'Hide panel'
-              }}
-              {{on 'click' this.toggleInspector}}
-            ><span class='insp-handle-ico'>{{if
+            {{#if this.hasInspectorSelection}}
+              <button
+                type='button'
+                class='insp-handle
+                  {{if this.inspectorBeckons "is-beckoning"}}
+                  has-selection'
+                title={{if this.inspectorCollapsed 'Show panel' 'Hide panel'}}
+                aria-label={{if
                   this.inspectorCollapsed
-                  '‹'
-                  '›'
-                }}</span>
-              <span class='insp-handle-lbl'>Details</span></button>
+                  'Show panel'
+                  'Hide panel'
+                }}
+                {{on 'click' this.toggleInspector}}
+              ><span class='insp-handle-ico'>{{if
+                    this.inspectorCollapsed
+                    '‹'
+                    '›'
+                  }}</span>
+                <span class='insp-handle-lbl'>Details</span></button>
+            {{/if}}
           </section>
-          <aside
-            class='tsp-inspector {{if this.inspectorCollapsed "is-collapsed"}}'
-            aria-label='Inspector'
-          >
-            {{#if this.selectedTable}}
-              <div class='insp-deco'></div>
-              <div class='insp-pad'>
-                <div class='insp-top'>
-                  <BoxelInput
-                    @value={{this.selectedTable.name}}
-                    class='insp-name'
-                    aria-label='Table name'
-                    {{on 'input' this.renameTable}}
-                  />
-                  <button
-                    type='button'
-                    class='insp-x'
-                    {{on 'click' this.deselect}}
-                  >✕</button>
-                </div>
-                <div class='insp-status'>
-                  {{this.selectedTable.seatedCount}}
-                  of
-                  {{this.selectedTable.seatCount}}
-                  seated
-                </div>
-                {{#if this.selectedTableVM}}
-                  <div class='insp-label'>Seat Map</div>
-                  <p class='insp-seatmap-hint'>Drag a guest from the roster onto
-                    a seat, drag a seated guest to another seat, or use ✕ to
-                    unseat.</p>
-                  <div class='insp-tablemap'>
-                    <div
-                      class='insp-tablemap-reserve'
-                      style={{this.inspTableReserveStyle}}
-                    >
+          {{#if this.hasInspectorSelection}}
+            <aside
+              class='tsp-inspector
+                {{if this.inspectorCollapsed "is-collapsed"}}'
+              aria-label='Inspector'
+            >
+              {{#if this.selectedTable}}
+                <div class='insp-deco'></div>
+                <div class='insp-pad'>
+                  <div class='insp-top'>
+                    <BoxelInput
+                      @value={{this.selectedTable.name}}
+                      class='insp-name'
+                      aria-label='Table name'
+                      {{on 'input' this.renameTable}}
+                    />
+                    <button
+                      type='button'
+                      class='insp-x'
+                      {{on 'click' this.deselect}}
+                    >✕</button>
+                  </div>
+                  <div class='insp-status'>
+                    {{this.selectedTable.seatedCount}}
+                    of
+                    {{this.selectedTable.seatCount}}
+                    seated
+                  </div>
+                  {{#if this.selectedTableVM}}
+                    <div class='insp-label'>Seat Map</div>
+                    <p class='insp-seatmap-hint'>Drag a guest from the roster
+                      onto a seat, drag a seated guest to another seat, or use ✕
+                      to unseat.</p>
+                    <div class='insp-tablemap'>
                       <div
-                        class='insp-tablemap-box shape-{{this.selectedTableVM.model.shape}}'
-                        style={{this.inspTableBoxStyle}}
+                        class='insp-tablemap-reserve'
+                        style={{this.inspTableReserveStyle}}
                       >
-                        {{#if this.selectedTableVM.curved}}
-                          <svg
-                            class='t-curvedsvg'
-                            viewBox='0 0 100 100'
-                            preserveAspectRatio='none'
-                          >
-                            <path
-                              class='t-curvedband'
-                              d='M3 72.9 A50 50 0 0 1 97 72.9 L76.3 80.4 A28 28 0 0 0 23.7 80.4 Z'
-                              stroke-width='1.5'
-                              stroke-linejoin='round'
-                              vector-effect='non-scaling-stroke'
-                            />
-                          </svg>
-                        {{else if this.selectedTableVM.isSection}}
-                          <span class='insp-section-front'>▲ stage</span>
-                        {{/if}}
-                        {{#each this.selectedTableVM.seats key='index' as |s|}}
-                          <div
-                            class='insp-seat
-                              {{if s.filled "is-filled"}}
-                              {{if s.isDrop "is-drop"}}'
-                            data-seat-table={{this.selectedTableVM.id}}
-                            data-seat-index={{s.index}}
-                            title={{if
-                              s.filled
-                              'Drag to move · ✕ to unseat'
-                              'Drop a guest here'
-                            }}
-                            style={{htmlSeat s.leftPct s.topPct s.color}}
-                            {{on
-                              'pointerdown'
-                              (fn this.grabSeatedGuest s.guest)
-                            }}
-                            {{on 'mouseenter' (fn this.showSeatInfo s.guest)}}
-                            {{on 'mousemove' this.moveSeatInfo}}
-                            {{on 'mouseleave' this.hideSeatInfo}}
-                          >
-                            {{#if s.isDrop}}
-                              {{#if this.draggingGuest.photoURL}}
+                        <div
+                          class='insp-tablemap-box shape-{{this.selectedTableVM.model.shape}}'
+                          style={{this.inspTableBoxStyle}}
+                        >
+                          {{#if this.selectedTableVM.curved}}
+                            <svg
+                              class='t-curvedsvg'
+                              viewBox='0 0 100 100'
+                              preserveAspectRatio='none'
+                            >
+                              <path
+                                class='t-curvedband'
+                                d='M3 72.9 A50 50 0 0 1 97 72.9 L76.3 80.4 A28 28 0 0 0 23.7 80.4 Z'
+                                stroke-width='1.5'
+                                stroke-linejoin='round'
+                                vector-effect='non-scaling-stroke'
+                              />
+                            </svg>
+                          {{else if this.selectedTableVM.isSection}}
+                            <span class='insp-section-front'>▲ stage</span>
+                          {{/if}}
+                          {{#each
+                            this.selectedTableVM.seats key='index'
+                            as |s|
+                          }}
+                            <div
+                              class='insp-seat
+                                {{if s.filled "is-filled"}}
+                                {{if s.isDrop "is-drop"}}'
+                              data-seat-table={{this.selectedTableVM.id}}
+                              data-seat-index={{s.index}}
+                              title={{if
+                                s.filled
+                                'Drag to move · ✕ to unseat'
+                                'Drop a guest here'
+                              }}
+                              style={{htmlSeat s.leftPct s.topPct s.color}}
+                              {{on
+                                'pointerdown'
+                                (fn this.grabSeatedGuest s.guest)
+                              }}
+                              {{on 'mouseenter' (fn this.showSeatInfo s.guest)}}
+                              {{on 'mousemove' this.moveSeatInfo}}
+                              {{on 'mouseleave' this.hideSeatInfo}}
+                            >
+                              {{#if s.isDrop}}
+                                {{#if this.draggingGuest.photoURL}}
+                                  <img
+                                    class='insp-seat-img'
+                                    src={{this.draggingGuest.photoURL}}
+                                    alt=''
+                                  />
+                                {{else}}
+                                  {{this.ghostInitials}}
+                                {{/if}}
+                              {{else if s.photoURL}}
                                 <img
                                   class='insp-seat-img'
-                                  src={{this.draggingGuest.photoURL}}
+                                  src={{s.photoURL}}
                                   alt=''
                                 />
                               {{else}}
-                                {{this.ghostInitials}}
+                                {{s.label}}
                               {{/if}}
-                            {{else if s.photoURL}}
-                              <img
-                                class='insp-seat-img'
-                                src={{s.photoURL}}
-                                alt=''
-                              />
-                            {{else}}
-                              {{s.label}}
-                            {{/if}}
-                            {{#if s.filled}}
-                              <button
-                                type='button'
-                                class='insp-seat-x'
-                                title='Unseat this guest'
-                                aria-label='Unseat this guest'
-                                {{on 'pointerdown' this.stopPointer}}
-                                {{on
-                                  'click'
-                                  (fn
-                                    this.seatClick
-                                    this.selectedTableVM.id
-                                    s.index
-                                  )
-                                }}
-                              >✕</button>
-                            {{/if}}
-                          </div>
-                        {{/each}}
+                              {{#if s.filled}}
+                                <button
+                                  type='button'
+                                  class='insp-seat-x'
+                                  title='Unseat this guest'
+                                  aria-label='Unseat this guest'
+                                  {{on 'pointerdown' this.stopPointer}}
+                                  {{on
+                                    'click'
+                                    (fn
+                                      this.seatClick
+                                      this.selectedTableVM.id
+                                      s.index
+                                    )
+                                  }}
+                                >✕</button>
+                              {{/if}}
+                            </div>
+                          {{/each}}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                {{/if}}
-                <TableConfig @c={{this}} />
-                <button
-                  type='button'
-                  class='insp-vip {{if this.selectedTable.vip "is-on"}}'
-                  {{on 'click' this.toggleVip}}
-                ><StarIcon class='ico' /> VIP table</button>
-                <div class='insp-label'>Layer</div>
-                <div class='insp-layer'>
-                  <Button
-                    @kind='secondary'
-                    @disabled={{this.selectedTable.locked}}
-                    class='insp-opt'
-                    {{on 'click' this.sendTableBack}}
-                  >↓ Send back</Button>
-                  <Button
-                    @kind='secondary'
-                    @disabled={{this.selectedTable.locked}}
-                    class='insp-opt'
-                    {{on 'click' this.bringTableFront}}
-                  >↑ Bring front</Button>
+                  {{/if}}
+                  <TableConfig @c={{this}} />
                   <button
                     type='button'
-                    class='insp-opt insp-lock
-                      {{if this.selectedTable.locked "is-on"}}'
-                    {{on 'click' this.toggleTableLock}}
-                  >{{#if this.selectedTable.locked}}<LockIcon class='ico' />
-                      Locked — click to unlock{{else}}<LockOpenIcon
-                        class='ico'
-                      />
-                      Lock layer{{/if}}</button>
-                </div>
-                <div class='insp-actionbar'>
-                  <Button
-                    @kind='secondary'
-                    class='insp-clear'
-                    {{on 'click' this.clearSeats}}
-                  >Clear all seats</Button>
-                  <div class='insp-actions'>
-                    <Button
-                      @kind='secondary'
-                      {{on 'click' this.duplicateTable}}
-                    ><CopyIcon class='ico' /> Duplicate</Button>
-                    <Button
-                      @kind='danger'
-                      class='danger'
-                      {{on 'click' this.confirmDeleteTable}}
-                    ><TrashIcon class='ico' /> Delete</Button>
-                  </div>
-                </div>
-              </div>
-            {{else if this.selectedFixture}}
-              <div class='insp-deco'></div>
-              <div class='insp-pad'>
-                <div class='insp-top'>
-                  <BoxelInput
-                    @value={{this.selectedFixture.label}}
-                    class='insp-name'
-                    aria-label='Fixture label'
-                    {{on 'input' this.renameFixture}}
-                  />
-                  <button
-                    type='button'
-                    class='insp-x'
-                    {{on 'click' this.deselect}}
-                  >✕</button>
-                </div>
-                <div class='insp-status'>{{get
-                    FIXTURE_KIND_LABELS
-                    this.selectedFixture.kind
-                  }}</div>
-                <div class='insp-fxart'><span
-                    class='insp-fxart-box'
-                    style={{this.selectedFxArtStyle}}
-                  ><FixtureGlyph
-                      @kind={{this.selectedFixture.kind}}
-                      @color={{this.selectedFxFill}}
-                      @pattern={{this.selectedFixture.pattern}}
-                    /></span></div>
-                <div class='insp-label'>Colour</div>
-                <div class='insp-swatches'>
-                  <label class='insp-fxpick' title='Custom colour'>
-                    <BoxelInput
-                      @type='color'
-                      @value={{this.selectedFxFill}}
-                      {{on 'input' this.fxColorInput}}
-                      {{on 'change' this.fxColorCommit}}
-                    />
-                  </label>
-                  {{#each this.themeSwatches as |sw|}}
-                    <button
-                      type='button'
-                      class='insp-sw
-                        {{if (this.fixtureColorIs sw.value) "is-on"}}'
-                      style={{htmlBg sw.value}}
-                      title={{sw.label}}
-                      {{on 'click' (fn this.setFxColor sw.value)}}
-                    ></button>
-                  {{/each}}
-                </div>
-                <div class='insp-label'>Layer</div>
-                <div class='insp-layer'>
-                  <Button
-                    @kind='secondary'
-                    @disabled={{this.selectedFixture.locked}}
-                    class='insp-opt'
-                    {{on 'click' this.sendFxBack}}
-                  >↓ Send back</Button>
-                  <Button
-                    @kind='secondary'
-                    @disabled={{this.selectedFixture.locked}}
-                    class='insp-opt'
-                    {{on 'click' this.bringFxFront}}
-                  >↑ Bring front</Button>
-                  <button
-                    type='button'
-                    class='insp-opt insp-lock
-                      {{if this.selectedFixture.locked "is-on"}}'
-                    {{on 'click' this.toggleFixtureLock}}
-                  >{{#if this.selectedFixture.locked}}<LockIcon class='ico' />
-                      Locked — click to unlock{{else}}<LockOpenIcon
-                        class='ico'
-                      />
-                      Lock layer{{/if}}</button>
-                </div>
-                <div class='insp-actionbar'>
-                  <div class='insp-actions'>
-                    <Button
-                      @kind='secondary'
-                      {{on 'click' this.duplicateFixture}}
-                    ><CopyIcon class='ico' /> Duplicate</Button>
-                    <Button
-                      @kind='danger'
-                      class='danger'
-                      {{on 'click' this.confirmDeleteFixture}}
-                    ><TrashIcon class='ico' /> Delete</Button>
-                  </div>
-                </div>
-              </div>
-            {{else if this.multiSelected}}
-              <div class='insp-deco'></div>
-              <div class='insp-pad'>
-                <div class='insp-kicker'>Selection</div>
-                <div class='insp-hero'>{{this.selCount}} selected</div>
-                <p class='insp-lead'>Drag any one to move them together, nudge
-                  with the arrow keys, or delete. Shift-click an element to add
-                  or remove it.</p>
-                {{#if this.selectionHasTables}}
-                  <div class='insp-label'>Table Shape</div>
-                  <div class='insp-grid4'>
-                    {{#each this.tableShapes as |sh|}}
-                      <button
-                        type='button'
-                        class='insp-opt
-                          {{if (eq this.selectionShape sh.value) "is-on"}}'
-                        {{on 'click' (fn this.setSelectionShape sh.value)}}
-                      >{{sh.label}}</button>
-                    {{/each}}
-                  </div>
-                {{/if}}
-                <div class='insp-label'>Colour</div>
-                <div class='insp-swatches'>
-                  <label class='insp-fxpick' title='Custom colour'>
-                    <BoxelInput
-                      @type='color'
-                      @value={{this.selectionColorValue}}
-                      {{on 'change' this.selectionColorCommit}}
-                    />
-                  </label>
-                  {{#each this.themeSwatches as |sw|}}
-                    <button
-                      type='button'
-                      class='insp-sw'
-                      style={{htmlBg sw.value}}
-                      title={{sw.label}}
-                      {{on 'click' (fn this.setSelectionColor sw.value)}}
-                    ></button>
-                  {{/each}}
-                </div>
-                {{#if this.selectionHasSeated}}
-                  <div class='insp-label'>Seating</div>
+                    class='insp-vip {{if this.selectedTable.vip "is-on"}}'
+                    {{on 'click' this.toggleVip}}
+                  ><StarIcon class='ico' /> VIP table</button>
+                  <div class='insp-label'>Layer</div>
                   <div class='insp-layer'>
                     <Button
                       @kind='secondary'
+                      @disabled={{this.selectedTable.locked}}
                       class='insp-opt'
-                      {{on 'click' this.clearSelectionSeats}}
-                    >Clear seats</Button>
+                      {{on 'click' this.sendTableBack}}
+                    >↓ Send back</Button>
+                    <Button
+                      @kind='secondary'
+                      @disabled={{this.selectedTable.locked}}
+                      class='insp-opt'
+                      {{on 'click' this.bringTableFront}}
+                    >↑ Bring front</Button>
+                    <button
+                      type='button'
+                      class='insp-opt insp-lock
+                        {{if this.selectedTable.locked "is-on"}}'
+                      {{on 'click' this.toggleTableLock}}
+                    >{{#if this.selectedTable.locked}}<LockIcon class='ico' />
+                        Locked — click to unlock{{else}}<LockOpenIcon
+                          class='ico'
+                        />
+                        Lock layer{{/if}}</button>
                   </div>
-                {{/if}}
-                <div class='insp-actions'>
-                  <Button
-                    @kind='danger'
-                    class='danger'
-                    {{on 'click' this.confirmDeleteSelected}}
-                  >Delete selected</Button>
-                </div>
-              </div>
-            {{else}}
-              <div class='insp-deco'></div>
-              <div class='insp-pad'>
-                <div class='insp-kicker'>Compose</div>
-                <div class='insp-hero'>Arrange the room</div>
-                <div class='insp-progress'>
-                  <div class='insp-progress-head'>
-                    <span class='insp-progress-label'>Assigned</span>
-                    <span class='insp-progress-count'>{{this.seatedCount}}
-                      of
-                      {{this.totalGuests}}</span>
-                  </div>
-                  <div class='insp-progress-bar'><span
-                      class='insp-progress-fill'
-                      style={{htmlBarWidth this.pct}}
-                    ></span></div>
-                </div>
-                <p class='insp-lead'>Use
-                  <b>＋ Add</b>
-                  to place tables, or
-                  <b>✦ AI Arrange</b>
-                  to seat everyone. Select a table to seat guests here.</p>
-                <div class='insp-legend-title'>Categories</div>
-                <div class='insp-legend'>
-                  {{#each this.catChips as |c|}}
-                    <div class='insp-legend-row'>
-                      <span class='cat-swatch' style={{htmlBg c.color}}></span>
-                      <span class='ilr-name'>{{c.name}}</span>
-                      <span class='ilr-count'>{{c.countSeated}}</span>
+                  <div class='insp-actionbar'>
+                    <Button
+                      @kind='secondary'
+                      class='insp-clear'
+                      {{on 'click' this.clearSeats}}
+                    >Clear all seats</Button>
+                    <div class='insp-actions'>
+                      <Button
+                        @kind='secondary'
+                        {{on 'click' this.duplicateTable}}
+                      ><CopyIcon class='ico' /> Duplicate</Button>
+                      <Button
+                        @kind='danger'
+                        class='danger'
+                        {{on 'click' this.confirmDeleteTable}}
+                      ><TrashIcon class='ico' /> Delete</Button>
                     </div>
-                  {{else}}
-                    <p class='rail-empty'>No categories yet.</p>
-                  {{/each}}
+                  </div>
                 </div>
-                <div class='insp-help'>
-                  <div class='insp-help-title'>Need help?</div>
-                  <p class='insp-help-lead'>Drag guests from the left rail onto
-                    any seat, or let
-                    <b>✦ AI Arrange</b>
-                    compose the room for you.</p>
+              {{else if this.selectedFixture}}
+                <div class='insp-deco'></div>
+                <div class='insp-pad'>
+                  <div class='insp-top'>
+                    <BoxelInput
+                      @value={{this.selectedFixture.label}}
+                      class='insp-name'
+                      aria-label='Fixture label'
+                      {{on 'input' this.renameFixture}}
+                    />
+                    <button
+                      type='button'
+                      class='insp-x'
+                      {{on 'click' this.deselect}}
+                    >✕</button>
+                  </div>
+                  <div class='insp-status'>{{get
+                      FIXTURE_KIND_LABELS
+                      this.selectedFixture.kind
+                    }}</div>
+                  <div class='insp-fxart'><span
+                      class='insp-fxart-box'
+                      style={{this.selectedFxArtStyle}}
+                    ><FixtureGlyph
+                        @kind={{this.selectedFixture.kind}}
+                        @color={{this.selectedFxFill}}
+                        @pattern={{this.selectedFixture.pattern}}
+                      /></span></div>
+                  <div class='insp-label'>Colour</div>
+                  <div class='insp-swatches'>
+                    <label class='insp-fxpick' title='Custom colour'>
+                      <BoxelInput
+                        @type='color'
+                        @value={{this.selectedFxFill}}
+                        {{on 'input' this.fxColorInput}}
+                        {{on 'change' this.fxColorCommit}}
+                      />
+                    </label>
+                    {{#each this.themeSwatches as |sw|}}
+                      <button
+                        type='button'
+                        class='insp-sw
+                          {{if (this.fixtureColorIs sw.value) "is-on"}}'
+                        style={{htmlBg sw.value}}
+                        title={{sw.label}}
+                        {{on 'click' (fn this.setFxColor sw.value)}}
+                      ></button>
+                    {{/each}}
+                  </div>
+                  <div class='insp-label'>Layer</div>
+                  <div class='insp-layer'>
+                    <Button
+                      @kind='secondary'
+                      @disabled={{this.selectedFixture.locked}}
+                      class='insp-opt'
+                      {{on 'click' this.sendFxBack}}
+                    >↓ Send back</Button>
+                    <Button
+                      @kind='secondary'
+                      @disabled={{this.selectedFixture.locked}}
+                      class='insp-opt'
+                      {{on 'click' this.bringFxFront}}
+                    >↑ Bring front</Button>
+                    <button
+                      type='button'
+                      class='insp-opt insp-lock
+                        {{if this.selectedFixture.locked "is-on"}}'
+                      {{on 'click' this.toggleFixtureLock}}
+                    >{{#if this.selectedFixture.locked}}<LockIcon class='ico' />
+                        Locked — click to unlock{{else}}<LockOpenIcon
+                          class='ico'
+                        />
+                        Lock layer{{/if}}</button>
+                  </div>
+                  <div class='insp-actionbar'>
+                    <div class='insp-actions'>
+                      <Button
+                        @kind='secondary'
+                        {{on 'click' this.duplicateFixture}}
+                      ><CopyIcon class='ico' /> Duplicate</Button>
+                      <Button
+                        @kind='danger'
+                        class='danger'
+                        {{on 'click' this.confirmDeleteFixture}}
+                      ><TrashIcon class='ico' /> Delete</Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            {{/if}}
-          </aside>
+              {{else if this.multiSelected}}
+                <div class='insp-deco'></div>
+                <div class='insp-pad'>
+                  <div class='insp-kicker'>Selection</div>
+                  <div class='insp-hero'>{{this.selCount}} selected</div>
+                  <p class='insp-lead'>Drag any one to move them together, nudge
+                    with the arrow keys, or delete. Shift-click an element to
+                    add or remove it.</p>
+                  {{#if this.selectionHasTables}}
+                    <div class='insp-label'>Table Shape</div>
+                    <div class='insp-grid4'>
+                      {{#each this.tableShapes as |sh|}}
+                        <button
+                          type='button'
+                          class='insp-opt
+                            {{if (eq this.selectionShape sh.value) "is-on"}}'
+                          {{on 'click' (fn this.setSelectionShape sh.value)}}
+                        >{{sh.label}}</button>
+                      {{/each}}
+                    </div>
+                  {{/if}}
+                  <div class='insp-label'>Colour</div>
+                  <div class='insp-swatches'>
+                    <label class='insp-fxpick' title='Custom colour'>
+                      <BoxelInput
+                        @type='color'
+                        @value={{this.selectionColorValue}}
+                        {{on 'change' this.selectionColorCommit}}
+                      />
+                    </label>
+                    {{#each this.themeSwatches as |sw|}}
+                      <button
+                        type='button'
+                        class='insp-sw'
+                        style={{htmlBg sw.value}}
+                        title={{sw.label}}
+                        {{on 'click' (fn this.setSelectionColor sw.value)}}
+                      ></button>
+                    {{/each}}
+                  </div>
+                  {{#if this.selectionHasSeated}}
+                    <div class='insp-label'>Seating</div>
+                    <div class='insp-layer'>
+                      <Button
+                        @kind='secondary'
+                        class='insp-opt'
+                        {{on 'click' this.clearSelectionSeats}}
+                      >Clear seats</Button>
+                    </div>
+                  {{/if}}
+                  <div class='insp-actions'>
+                    <Button
+                      @kind='danger'
+                      class='danger'
+                      {{on 'click' this.confirmDeleteSelected}}
+                    >Delete selected</Button>
+                  </div>
+                </div>
+              {{/if}}
+            </aside>
+          {{/if}}
         </div>
       {{else}}
         <div class='tsp-invites'>
@@ -5504,26 +5971,50 @@ export class TableSeatingPlannerIsolated extends Component<
               {hosts} · {poster}</p>
             {{#each this.inviteRows as |row|}}
               <div class='inv-row'>
-                <span class='inv-av'>{{row.initials}}</span>
-                <div class='inv-row-main'>
-                  <div class='inv-row-name'>{{if
-                      row.model.fullName
-                      row.model.fullName
-                      'Guest'
-                    }}</div>
+                <div class='inv-row-head'>
+                  <button
+                    type='button'
+                    class='inv-row-toggle'
+                    aria-expanded={{if
+                      (this.invitePreviewOpen row.key)
+                      'true'
+                      'false'
+                    }}
+                    title='Preview this invite'
+                    {{on 'click' (fn this.toggleInvitePreview row.key)}}
+                  >
+                    <span class='inv-av'>{{row.initials}}</span>
+                    <span class='inv-row-id'>
+                      <span class='inv-row-name'>{{if
+                          row.model.fullName
+                          row.model.fullName
+                          'Guest'
+                        }}</span>
+                      <span class='inv-row-sub'>
+                        {{if
+                          (this.invitePreviewOpen row.key)
+                          'Hide message ▴'
+                          'Show message ▾'
+                        }}
+                      </span>
+                    </span>
+                  </button>
+                  <Button
+                    @kind='secondary'
+                    class='inv-btn copy'
+                    {{on 'click' (fn this.copyInvite row)}}
+                  >Copy</Button>
+                  <button
+                    type='button'
+                    class='inv-edit'
+                    aria-label='Edit guest details'
+                    title='Edit details'
+                    {{on 'click' (fn this.openEditGuest row.model)}}
+                  ><PencilIcon class='inv-edit-ico' /></button>
                 </div>
-                <Button
-                  @kind='secondary'
-                  class='inv-btn copy'
-                  {{on 'click' (fn this.copyText row.msg)}}
-                >Copy</Button>
-                <button
-                  type='button'
-                  class='inv-edit'
-                  aria-label='Edit guest details'
-                  title='Edit details'
-                  {{on 'click' (fn this.openEditGuest row.model)}}
-                ><PencilIcon class='inv-edit-ico' /></button>
+                {{#if (this.invitePreviewOpen row.key)}}
+                  <p class='inv-preview'>{{row.msg}}</p>
+                {{/if}}
               </div>
             {{else}}
               <p class='rail-empty'>{{if
@@ -5879,22 +6370,29 @@ export class TableSeatingPlannerIsolated extends Component<
             </div>
           </div>
         {{else}}
-          {{#each this.tablesToPrint as |t|}}
-            <section class='ps-group'>
-              <div class='ps-cell ps-cell-table'>
-                <TableCardView
-                  @eventTitle={{@model.eventTitle}}
-                  @tableName={{t.name}}
-                />
-              </div>
-              {{#each t.seatedGuests as |g|}}
-                <div class='ps-cell'>
-                  <PlaceCardView
-                    @eventTitle={{@model.eventTitle}}
-                    @guestName={{g.fullName}}
-                    @tableName={{t.name}}
-                  />
-                </div>
+          {{#each this.printPages as |pg|}}
+            <section class='ps-page'>
+              {{#each pg as |row|}}
+                {{#if row.isTable}}
+                  <div class='ps-cell ps-cell-table'>
+                    <TableCardView
+                      @eventTitle={{@model.eventTitle}}
+                      @tableName={{row.table.name}}
+                      @logoUrl={{this.eventLogoURL}}
+                    />
+                  </div>
+                {{else}}
+                  {{#each row.guests as |g|}}
+                    <div class='ps-cell'>
+                      <PlaceCardView
+                        @eventTitle={{@model.eventTitle}}
+                        @guestName={{g.fullName}}
+                        @tableName={{row.table.name}}
+                        @logoUrl={{this.eventLogoURL}}
+                      />
+                    </div>
+                  {{/each}}
+                {{/if}}
               {{/each}}
             </section>
           {{/each}}
@@ -5904,6 +6402,10 @@ export class TableSeatingPlannerIsolated extends Component<
     <style scoped>
       .print-sheet {
         display: none;
+        /* Print backgrounds/colors even when the browser's "Background
+           graphics" option is unchecked. */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
       @media print {
         /* The planner shell is height-capped + overflow-hidden on screen; let
@@ -5918,38 +6420,89 @@ export class TableSeatingPlannerIsolated extends Component<
         .tsp > :not(.print-sheet) {
           display: none !important;
         }
-        /* Cards mode: paginated grid of table + place cards. */
+        /* Cards mode: explicitly packed A4 pages (see printPages) so every
+           page carries its own 12mm top/bottom margin for easy cutting. */
         .print-cards {
-          display: grid !important;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          padding: 0;
+          display: block !important;
           background: #ffffff;
         }
-        .ps-group {
-          display: contents;
+        .ps-page {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          /* Cells already include their own 2mm bleed; gaps just need the
+             trim marks (4mm per side) plus air. */
+          gap: 10mm 9mm;
+          align-content: start;
+          padding: 12mm;
+          break-after: page;
+        }
+        .ps-page:last-child {
+          break-after: auto;
         }
         /* Fixed print sizes (not aspect-ratio) so cards paginate predictably;
            break-inside keeps each card whole across page boundaries. */
+        /* Each cell IS the bleed box (trim size + 2mm bleed on every side,
+           Illustrator-style): the artwork fills the whole cell and the trim
+           line sits 2mm inside its edge, so break-inside: avoid keeps art,
+           bleed, and trim together on one page — a card can never straddle
+           a page boundary. */
         .ps-cell {
-          height: 2.1in;
+          height: calc(2.1in + 4mm);
           break-inside: avoid;
+          position: relative;
+        }
+        .ps-cell :deep(.pcv),
+        .ps-cell :deep(.tcv) {
+          /* No outline at the bleed edge — it would survive as a stray line
+             if the cut drifts. */
+          border: none;
+          border-radius: 0;
+        }
+        /* The decorative gold hairline frame reads as a stray cut line on
+           paper — screen only. */
+        .ps-cell :deep(.pcv)::before,
+        .ps-cell :deep(.tcv)::before {
+          display: none;
         }
         .ps-cell-table {
           grid-column: 1 / -1;
-          height: 1.15in;
+          height: calc(1.15in + 4mm);
           break-inside: avoid;
+        }
+        /* Illustrator-style crop marks: hairline ticks just outside each
+           card's corners — cut along the marks. The card art itself runs to
+           the cell edge, so the trimmed card is full-bleed. */
+        /* Trim marks aligned to the trim line (2mm inside the bleed edge),
+           drawn outside the bleed box with a 1mm gap before the art. */
+        .ps-cell::after {
+          content: '';
+          position: absolute;
+          inset: -4mm;
+          z-index: 1;
+          pointer-events: none;
+          --mk: rgba(0, 0, 0, 0.65);
+          background:
+            linear-gradient(var(--mk), var(--mk)) left 0 top 6mm / 3mm 0.2mm,
+            linear-gradient(var(--mk), var(--mk)) left 6mm top 0 / 0.2mm 3mm,
+            linear-gradient(var(--mk), var(--mk)) right 0 top 6mm / 3mm 0.2mm,
+            linear-gradient(var(--mk), var(--mk)) right 6mm top 0 / 0.2mm 3mm,
+            linear-gradient(var(--mk), var(--mk)) left 0 bottom 6mm / 3mm 0.2mm,
+            linear-gradient(var(--mk), var(--mk)) left 6mm bottom 0 / 0.2mm 3mm,
+            linear-gradient(var(--mk), var(--mk)) right 0 bottom 6mm / 3mm 0.2mm,
+            linear-gradient(var(--mk), var(--mk)) right 6mm bottom 0 / 0.2mm 3mm;
+          background-repeat: no-repeat;
         }
         /* Chart mode: the whole seating layout scaled to one overview page. */
         .print-chart {
           display: block !important;
           background: #ffffff;
+          padding: 12mm;
         }
         .ps-chart {
           display: flex;
           flex-direction: column;
           gap: 10px;
-          height: 96vh;
+          height: calc(100vh - 24mm);
         }
         .ps-chart-title {
           text-align: center;
@@ -5970,8 +6523,17 @@ export class TableSeatingPlannerIsolated extends Component<
           height: 100%;
         }
       }
+      /* Zero page margin so the browser has nowhere to draw its own
+         header/footer (date + URL); the sheet carries its margins itself. */
       @page {
-        margin: 12mm;
+        size: A4;
+        margin: 0;
+      }
+      /* boxel Button is inline-flex, which swallows the literal space
+         between an icon and its label; gap restores it (icon-only buttons
+         are single-item, so they're unaffected). */
+      .tsp :deep(.boxel-button) {
+        gap: 6px;
       }
       .ico {
         width: 14px;
@@ -6264,10 +6826,10 @@ export class TableSeatingPlannerIsolated extends Component<
         color: rgba(243, 234, 214, 0.5);
         pointer-events: none;
       }
-      .tsp-date:has(.tsp-date-hint) input[type='date'] {
+      .tsp-date:has(.tsp-date-hint) input[type='datetime-local'] {
         color: transparent;
       }
-      .tsp-date input[type='date'] {
+      .tsp-date input[type='datetime-local'] {
         min-height: 0;
         border: none;
         background: transparent;
@@ -6281,7 +6843,7 @@ export class TableSeatingPlannerIsolated extends Component<
         cursor: pointer;
         padding: 0;
       }
-      .tsp-date input[type='date']:focus {
+      .tsp-date input[type='datetime-local']:focus {
         outline: none;
         border-bottom: 1px solid rgba(197, 163, 92, 0.5);
       }
@@ -6605,7 +7167,7 @@ export class TableSeatingPlannerIsolated extends Component<
         flex: none;
         font: 600 8px var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         letter-spacing: 0.12em;
-        color: var(--tsp-primary, var(--primary, #141b33));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
         background: var(--tsp-accent, var(--accent, #c5a35c));
         border-radius: 4px;
         padding: 2px 5px;
@@ -6914,14 +7476,6 @@ export class TableSeatingPlannerIsolated extends Component<
         letter-spacing: 0.08em;
         cursor: pointer;
         transition: 0.15s;
-      }
-      .ct-icon-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        padding: 0;
-        color: var(--tsp-accent-deep, #a5854a);
       }
       .ct-btn:disabled {
         opacity: 0.4;
@@ -7534,7 +8088,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .fp-tool-btn.is-on {
         background: var(--tsp-accent, var(--accent, #c5a35c));
-        color: #ffffff;
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
         border-color: var(--tsp-accent, var(--accent, #c5a35c));
       }
       .fp-tool-btn.is-del:hover {
@@ -7774,7 +8328,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border: 1px solid
           var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
         background: var(--tsp-accent, var(--accent, #c5a35c));
-        color: #ffffff;
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 10.5px;
         letter-spacing: 0.12em;
@@ -7825,7 +8379,7 @@ export class TableSeatingPlannerIsolated extends Component<
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
         font-size: 8px;
         letter-spacing: 0.12em;
-        color: var(--tsp-foreground, var(--foreground, #22283f));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
         background: var(--tsp-accent, var(--accent, #c5a35c));
         border-radius: 4px;
         padding: 2px 5px;
@@ -7894,7 +8448,7 @@ export class TableSeatingPlannerIsolated extends Component<
         transform: translate(-50%, -50%) scale(1.35);
         z-index: 6;
         overflow: hidden;
-        color: var(--tsp-foreground, var(--foreground, #22283f));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
         background: var(--tsp-accent, var(--accent, #c5a35c));
         border: 2px solid var(--tsp-accent-deep, #a5854a);
         box-shadow: 0 4px 14px rgba(34, 40, 63, 0.15);
@@ -8499,7 +9053,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .insp-seat.is-drop {
         transform: scale(1.18);
         overflow: hidden;
-        color: var(--tsp-foreground, var(--foreground, #22283f));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
         background: var(--tsp-accent, var(--accent, #c5a35c));
         border: 2px solid #9a7d44;
         box-shadow: 0 4px 14px rgba(154, 125, 68, 0.4);
@@ -8656,7 +9210,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .insp-vip.is-on {
         background: var(--tsp-accent, var(--accent, #c5a35c));
-        color: var(--tsp-foreground, var(--foreground, #22283f));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
       }
       .insp-fxart {
         width: 100%;
@@ -9023,7 +9577,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .inv-ai-generate:hover:not(:disabled) {
         background: var(--tsp-accent, var(--accent, #c5a35c));
-        color: var(--tsp-background, var(--background, #17140f));
+        color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
       }
       .inv-ai-generate:disabled {
         opacity: 0.6;
@@ -9107,11 +9661,65 @@ export class TableSeatingPlannerIsolated extends Component<
         margin: 6px 0 16px;
       }
       .inv-row {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(34, 40, 63, 0.05);
+      }
+      .inv-row-head {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(34, 40, 63, 0.05);
+      }
+      /* Avatar + name + caret — click to preview the resolved message */
+      .inv-row-toggle {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        text-align: left;
+        font: inherit;
+        color: inherit;
+      }
+      .inv-row-id {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      /* Explicit "Show message" affordance — link-styled so the preview
+         toggle is discoverable without hunting for a caret */
+      .inv-row-sub {
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--tsp-accent-deep, #a5854a);
+        opacity: 0.75;
+      }
+      .inv-row-toggle:hover .inv-row-sub {
+        opacity: 1;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .inv-preview {
+        margin: 8px 0 2px 44px;
+        padding: 10px 12px;
+        border-left: 2px solid var(--tsp-accent, var(--accent, #c5a35c));
+        border-radius: 0 10px 10px 0;
+        background: color-mix(
+          in srgb,
+          var(--tsp-accent, var(--accent, #c5a35c)) 8%,
+          transparent
+        );
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: var(--tsp-foreground, var(--foreground, #22283f));
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
       }
       .inv-av {
         width: 34px;
@@ -9129,10 +9737,6 @@ export class TableSeatingPlannerIsolated extends Component<
           var(--tsp-accent-deep, #a5854a),
           var(--tsp-accent, var(--accent, #c5a35c))
         );
-      }
-      .inv-row-main {
-        flex: 1;
-        min-width: 0;
       }
       .inv-row-name {
         font-size: 13.5px;
@@ -9324,108 +9928,6 @@ export class TableSeatingPlannerIsolated extends Component<
         color: #7c766c;
         margin: 16px 0 9px;
       }
-      .tpop-shapes {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
-      }
-      .tpop-shape {
-        height: 34px;
-        border: 1px solid rgba(34, 40, 63, 0.1);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--tsp-foreground, var(--foreground, #22283f));
-        border-radius: 8px;
-        font-size: 10.5px;
-        cursor: pointer;
-        transition: 0.15s;
-      }
-      .tpop-shape:hover {
-        border-color: var(--tsp-accent, var(--accent, #c5a35c));
-      }
-      .tpop-shape.is-on {
-        background: var(--tsp-accent, var(--accent, #c5a35c));
-        color: var(--tsp-foreground, var(--foreground, #22283f));
-        border-color: var(--tsp-accent, var(--accent, #c5a35c));
-      }
-      .tpop-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 4px;
-      }
-      .tpop-row .tpop-label {
-        margin: 16px 0 0;
-      }
-      .tpop-step {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-top: 12px;
-      }
-      .tpop-step button {
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-        border: 1px solid rgba(34, 40, 63, 0.12);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--tsp-foreground, var(--foreground, #22283f));
-        font-size: 17px;
-        cursor: pointer;
-      }
-      .tpop-step button:hover {
-        border-color: var(--tsp-accent, var(--accent, #c5a35c));
-      }
-      .tpop-num {
-        min-height: 0;
-        min-width: 30px;
-        width: 44px;
-        text-align: center;
-        font-family: var(
-          --tsp-font-serif,
-          var(--font-serif, 'Cormorant Garamond', serif)
-        );
-        font-size: 19px;
-        border: none;
-        background: transparent;
-        color: inherit;
-        padding: 0;
-        appearance: textfield;
-        -moz-appearance: textfield;
-      }
-      .tpop-num:focus {
-        outline: 1px solid var(--tsp-accent, var(--accent, #c5a35c));
-        border-radius: 6px;
-      }
-      .tpop-num::-webkit-outer-spin-button,
-      .tpop-num::-webkit-inner-spin-button {
-        appearance: none;
-        margin: 0;
-      }
-      .tpop-orders {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-      }
-      .tpop-order {
-        height: 30px;
-        border: 1px solid rgba(34, 40, 63, 0.1);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--tsp-foreground, var(--foreground, #22283f));
-        border-radius: 8px;
-        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 9.5px;
-        letter-spacing: 0.02em;
-        cursor: pointer;
-        transition: 0.15s;
-      }
-      .tpop-order:hover {
-        border-color: var(--tsp-accent, var(--accent, #c5a35c));
-      }
-      .tpop-order.is-on {
-        background: var(--tsp-accent, var(--accent, #c5a35c));
-        color: var(--tsp-foreground, var(--foreground, #22283f));
-        border-color: var(--tsp-accent, var(--accent, #c5a35c));
-      }
       .tpop-layer {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -9468,6 +9970,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tpop-actions button {
         flex: 1;
+        gap: 6px;
         height: 38px;
         border-radius: 9px;
         border: 1px solid rgba(34, 40, 63, 0.12);
@@ -9488,55 +9991,6 @@ export class TableSeatingPlannerIsolated extends Component<
       .tpop-actions .danger:hover {
         border-color: #b05a48;
         background: rgba(224, 144, 127, 0.12);
-      }
-      .tpop-rank-badge {
-        margin-left: 6px;
-        padding: 1px 7px;
-        border-radius: 20px;
-        background: rgba(197, 163, 92, 0.18);
-        color: var(--tsp-accent, var(--accent, #c5a35c));
-        letter-spacing: 0.04em;
-      }
-      .tpop-rank {
-        display: flex;
-        gap: 8px;
-      }
-      .tpop-rank-input {
-        min-height: 0;
-        flex: 1;
-        min-width: 0;
-        height: 34px;
-        padding: 0 12px;
-        border-radius: 8px;
-        border: 1px solid rgba(34, 40, 63, 0.1);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--tsp-foreground, var(--foreground, #22283f));
-        font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 12px;
-      }
-      .tpop-rank-input:focus {
-        outline: none;
-        border-color: var(--tsp-accent, var(--accent, #c5a35c));
-      }
-      .tpop-rank-auto {
-        flex: none;
-        padding: 0 14px;
-        height: 34px;
-        border-radius: 8px;
-        border: 1px solid rgba(34, 40, 63, 0.1);
-        background: rgba(34, 40, 63, 0.04);
-        color: var(--tsp-foreground, var(--foreground, #22283f));
-        font-size: 10.5px;
-        cursor: pointer;
-        transition: 0.15s;
-      }
-      .tpop-rank-auto:hover {
-        border-color: var(--tsp-accent, var(--accent, #c5a35c));
-      }
-      .tpop-rank-auto.is-on {
-        background: var(--tsp-accent, var(--accent, #c5a35c));
-        border-color: var(--tsp-accent, var(--accent, #c5a35c));
-        color: var(--tsp-foreground, var(--foreground, #22283f));
       }
       .tpop-hint {
         margin-top: 8px;
@@ -10134,6 +10588,17 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       gap: 4px;
       margin-top: 12px;
     }
+    /* BoxelInput defaults to width:100%; pin the number box (and its
+       wrapper) so the −/value/+ trio stays one compact group. */
+    .tpop-step > * {
+      flex: none;
+    }
+    .tpop-step :deep(.input-container),
+    .tpop-step :deep(.boxel-input),
+    .tpop-step .tpop-num {
+      width: 48px;
+      flex: none;
+    }
     .tpop-step button {
       width: 30px;
       height: 30px;
@@ -10461,31 +10926,38 @@ export class TableSeatingPlannerFitted extends Component<
     }
     return ids.size;
   }
+
   get hasLinkedTheme(): boolean {
     return Boolean((this.args.model as any)?.cardInfo?.theme);
   }
+
   get title() {
     return this.args.model?.eventTitle || 'Seating Plan';
   }
+
   get dateLabel(): string {
     let d = this.args.model?.eventDate;
     if (!d) return '';
     try {
-      return new Date(d as any).toLocaleDateString(undefined, {
+      return new Date(d as any).toLocaleString(undefined, {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
       });
     } catch {
       return String(d);
     }
   }
+
   get hasLayout() {
     return (
       (this.args.model?.tables?.length ?? 0) > 0 ||
       (this.args.model?.fixtures?.length ?? 0) > 0
     );
   }
+
   <template>
     <div class='fitted {{unless this.hasLinkedTheme "tsp-default-theme"}}'>
 

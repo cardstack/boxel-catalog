@@ -67,27 +67,35 @@ export default class SeatingPlanPopover extends Component<Signature> {
   get open() {
     return this.args.open ?? true;
   }
+
   get kind(): PopKind {
     return this.args.kind ?? 'edit';
   }
+
   get anchoring(): PopAnchoring {
     return this.args.anchoring ?? 'beside';
   }
+
   get placement(): Placement {
     return this.args.placement ?? 'right-start';
   }
+
   get size(): PopSize {
     return this.args.size ?? 'auto';
   }
+
   get backdrop(): PopBackdrop {
     return this.args.backdrop ?? 'none';
   }
+
   get elevation(): PopElevation {
     return this.args.elevation ?? 'floating';
   }
+
   get label() {
     return this.args.label ?? this.args.title ?? 'Edit';
   }
+
   get widthStyle(): SafeString | string {
     let w = this.args.width ?? 264;
     return `width:${w}px;`;
