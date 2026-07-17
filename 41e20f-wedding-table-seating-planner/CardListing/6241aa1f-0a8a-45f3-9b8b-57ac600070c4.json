@@ -170,27 +170,27 @@
       },
       "images.0": {
         "links": {
-          "self": "../Screenshots/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8-80e439fd.png"
+          "self": "../Screenshots/85c8a56e-d0ee-414d-8d7f-ec94c7aff8c8-81ceb0df.png"
         }
       },
       "images.1": {
         "links": {
-          "self": "../Screenshots/setup-wizard-f3947e69.png"
+          "self": "../Screenshots/setup-wizard-c0a3fa49.png"
         }
       },
       "images.2": {
         "links": {
-          "self": "../Screenshots/add-element-5c7a382a.png"
+          "self": "../Screenshots/add-element-d340bad2.png"
         }
       },
       "images.3": {
         "links": {
-          "self": "../Screenshots/seating-print-5eb923a4.png"
+          "self": "../Screenshots/seating-print-05985ab6.png"
         }
       },
       "images.4": {
         "links": {
-          "self": "../Screenshots/ai-poster-0881ce2a.png"
+          "self": "../Screenshots/ai-poster-9d32df2e.png"
         }
       },
       "skills.0": {
@@ -306,6 +306,11 @@
       "cardInfo.cardThumbnail": {
         "links": {
           "self": "../ListingThumbnails/table-seating-b62d23ba.png"
+        }
+      },
+      "examples.17": {
+        "links": {
+          "self": "../Theme/parisian"
         }
       }
     }
