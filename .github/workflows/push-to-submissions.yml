@@ -69,12 +69,16 @@ jobs:
         run: |
           STAGE="${RUNNER_TEMP}/push-stage"
           mkdir -p "$STAGE"
+          # HEAD is the PR merge commit, whose first parent is the base branch
+          # tip, so this diff yields exactly the PR's changes. The list is
+          # saved so the PR comment reflects what was actually pushed.
           git diff --name-only --diff-filter=d HEAD^1 HEAD \
             -- . ':!realm.json' ':!index.json' ':!.boxel-sync.json' \
-            | while IFS= read -r f; do
-                mkdir -p "${STAGE}/$(dirname "$f")"
-                cp "$f" "${STAGE}/$f"
-              done
+            > "${RUNNER_TEMP}/pushed-files.txt"
+          while IFS= read -r f; do
+            mkdir -p "${STAGE}/$(dirname "$f")"
+            cp "$f" "${STAGE}/$f"
+          done < "${RUNNER_TEMP}/pushed-files.txt"
           echo "Staged $(find "$STAGE" -type f | wc -l | tr -d ' ') file(s)"
 
       - name: Push to submissions realm
@@ -88,10 +92,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           COMMENT="${RUNNER_TEMP}/submissions-comment.md"
-          # The checked-out HEAD is the PR merge commit, whose first parent
-          # is the base branch tip, so this diff yields exactly the PR's
-          # changes without needing branch refs or full history.
-          CHANGED=$(git diff --name-only --diff-filter=d HEAD^1 HEAD)
+          CHANGED=$(cat "${RUNNER_TEMP}/pushed-files.txt")
 
           {
             echo "## Staging Submissions Preview"
