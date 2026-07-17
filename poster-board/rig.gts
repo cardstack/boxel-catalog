@@ -186,9 +186,13 @@ export class SurfaceRig {
   }
 
   // ── Programmatic zoom (centered on element) ────────────
+  // A programmatic zoom is an explicit camera command: stop momentum loops
+  // and the pending momentum-start timeout first, so stale wheel/pinch
+  // velocity can't resume afterwards and drift the camera off its target.
 
   zoomCentered(factor: number, el?: HTMLElement | null) {
     if (!el) {
+      this.stopAll();
       this.rig.magnify = clamp(
         this.rig.magnify * factor,
         this.minZoom,
@@ -204,6 +208,7 @@ export class SurfaceRig {
   }
 
   zoomAtPoint(factor: number, localX: number, localY: number) {
+    this.stopAll();
     const rig = this.rig;
     const oldZoom = rig.magnify;
     const newZoom = clamp(oldZoom * factor, this.minZoom, this.maxZoom);

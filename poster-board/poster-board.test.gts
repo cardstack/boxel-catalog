@@ -1,4 +1,4 @@
-import { click } from '@ember/test-helpers';
+import { click, triggerEvent } from '@ember/test-helpers';
 
 import { getService } from '@universal-ember/test-support';
 
@@ -63,6 +63,26 @@ export function runTests() {
       assert
         .dom('[data-test-zoom-level]')
         .hasText('100%', 'fit resets zoom to 100%');
+    });
+
+    test('poster-board zoom reset is not undone by pending pinch momentum', async function (assert) {
+      await renderPosterBoard();
+
+      // Pinch-style zoom (ctrl+wheel) records velocity and schedules
+      // momentum to start after a short idle delay
+      await triggerEvent('[data-test-poster-board]', 'wheel', {
+        deltaY: -120,
+        ctrlKey: true,
+      });
+      await click('[data-test-zoom-reset]');
+
+      // Wait past the momentum-start delay (45ms); without clearing it,
+      // the stale pinch velocity would resume and drift off 100%
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      assert
+        .dom('[data-test-zoom-level]')
+        .hasText('100%', 'zoom stays at 100% after momentum delay elapses');
     });
   });
 }
