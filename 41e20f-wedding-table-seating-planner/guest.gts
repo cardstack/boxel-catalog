@@ -34,7 +34,9 @@ export class Guest extends Person {
   static icon = UserIcon;
 
   @field category = contains(CategoryField);
+
   @field parentGuest = linksTo(() => Guest); // set on a +1 → the inviting guest
+
   @field vip = contains(BooleanField);
 
   @field title = contains(StringField, {
@@ -47,6 +49,7 @@ export class Guest extends Person {
     get initials() {
       return initialsOf(this.args.model?.fullName);
     }
+
     <template>
       <div class='g-row'>
         {{#if @model.photoURL}}
@@ -169,327 +172,19 @@ export class Guest extends Person {
     </template>
   };
 
-  static edit = class Edit extends Component<typeof Guest> {
-    categoryOptions = GUEST_CATEGORIES;
-    setCategory = (value: string) => {
-      this.args.model.category =
-        this.args.model.category === value ? undefined : value;
-    };
-    toggleVip = () => {
-      this.args.model.vip = !this.args.model.vip;
-    };
-    <template>
-      <article class='mag'>
-
-        <header class='mag-mast' aria-label='Masthead'>
-          <span class='mag-rule'></span>
-          <span class='mag-mast-title'>The Guest List</span>
-          <span class='mag-rule'></span>
-        </header>
-
-        <div class='mag-ident'>
-          <div class='mag-ident-top'>
-            <span class='mag-kicker'>Guest Profile</span>
-            <button
-              type='button'
-              class='mag-vip {{if @model.vip "is-on"}}'
-              title='Mark as a VIP guest'
-              {{on 'click' this.toggleVip}}
-            >
-              <span class='mag-vip-star'>&#10022;</span>
-              VIP
-            </button>
-          </div>
-          <div class='mag-name'>
-            <@fields.fullName />
-          </div>
-
-          <div class='mag-field'>
-            <span class='mag-lbl'>Category</span>
-            <div class='mag-cats'>
-              {{#each this.categoryOptions as |cat|}}
-                <button
-                  type='button'
-                  class='mag-cat {{if (eq @model.category cat.value) "is-on"}}'
-                  {{on 'click' (fn this.setCategory cat.value)}}
-                >
-                  <span class='mag-cat-dot' style={{swatch cat.color}}></span>
-                  {{cat.label}}
-                </button>
-              {{/each}}
-            </div>
-          </div>
-
-          <div class='mag-field'>
-            <span class='mag-lbl'>Photo
-              <span class='mag-hint'>optional</span></span>
-            <@fields.photo />
-          </div>
-        </div>
-
-        <header class='mag-sect' aria-label='Party'>
-          <span class='mag-sect-no'>01</span>
-          <span class='mag-sect-title'>Party</span>
-          <span class='mag-rule'></span>
-        </header>
-        <div class='mag-field'>
-          <span class='mag-lbl'>Guest of
-            <span class='mag-hint'>set on a +1 — links back to the guest who
-              brings them</span></span>
-          <@fields.parentGuest />
-        </div>
-
-        <footer class='mag-colophon'>
-          <span class='mag-rule'></span>
-          <span class='mag-colophon-mark'>&#10022;</span>
-          <span class='mag-rule'></span>
-        </footer>
-      </article>
-      <style scoped>
-        .mag {
-          --background: var(--tsp-card, var(--card, #fffdf8));
-          --foreground: var(--tsp-foreground, var(--foreground, #22283f));
-          --border: var(--tsp-border, var(--border, rgba(41, 26, 35, 0.18)));
-          --boxel-form-control-border-color: rgba(41, 26, 35, 0.22);
-          container-type: inline-size;
-          container-name: mag;
-          height: 100%;
-          overflow-y: auto;
-          box-sizing: border-box;
-          padding: 26px 28px 34px;
-          background:
-            radial-gradient(
-              120% 60% at 50% -8%,
-              rgba(197, 163, 92, 0.16),
-              transparent 60%
-            ),
-            var(--tsp-background, var(--background, #f7f1e4));
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
-        }
-        .mag-mast,
-        .mag-colophon {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-        .mag-rule {
-          flex: 1;
-          height: 1px;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(41, 26, 35, 0.35),
-            transparent
-          );
-        }
-        .mag-mast-title {
-          flex: none;
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 10px;
-          letter-spacing: 0.34em;
-          text-transform: uppercase;
-          color: var(--tsp-accent, var(--accent, #a5854a));
-        }
-        .mag-colophon {
-          margin-top: 30px;
-        }
-        .mag-colophon-mark {
-          flex: none;
-          font-size: 12px;
-          color: var(--tsp-accent, var(--accent, #a5854a));
-        }
-        .mag-ident {
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin: 24px 0 8px;
-        }
-        .mag-ident-top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-        }
-        .mag-kicker {
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 9.5px;
-          letter-spacing: 0.3em;
-          text-transform: uppercase;
-          color: var(--tsp-accent, var(--accent, #a5854a));
-        }
-        .mag-vip {
-          flex: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 5px 12px;
-          border: 1px solid rgba(41, 26, 35, 0.28);
-          border-radius: 999px;
-          background: transparent;
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 9.5px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #8a7f6c));
-          cursor: pointer;
-          transition:
-            background 0.15s,
-            color 0.15s,
-            border-color 0.15s;
-        }
-        .mag-vip:hover {
-          border-color: var(--tsp-accent, var(--accent, #a5854a));
-          color: var(--tsp-accent, var(--accent, #a5854a));
-        }
-        .mag-vip.is-on {
-          background: var(--tsp-accent, var(--accent, #a5854a));
-          border-color: var(--tsp-accent, var(--accent, #a5854a));
-          color: var(--tsp-card, var(--card, #fffdf8));
-        }
-        .mag-vip-star {
-          font-size: 11px;
-        }
-        .mag-name :deep(.boxel-input) {
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
-          font-size: clamp(24px, 5cqw, 34px);
-          font-weight: 500;
-          line-height: 1.15;
-          padding: 4px 2px 10px;
-          background: transparent;
-          border: none;
-          border-radius: 0;
-          border-bottom: 1px solid rgba(41, 26, 35, 0.3);
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-        }
-        .mag-name :deep(.boxel-input:focus) {
-          outline: none;
-          border-bottom-color: var(--tsp-accent, var(--accent, #a5854a));
-          box-shadow: none;
-        }
-        .mag-cats {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        .mag-cat {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          padding: 6px 14px;
-          border: 1px solid rgba(41, 26, 35, 0.28);
-          border-radius: 999px;
-          background: var(--tsp-card, var(--card, #fffdf8));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 9.5px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #8a7f6c));
-          cursor: pointer;
-          transition:
-            background 0.15s,
-            color 0.15s,
-            border-color 0.15s;
-        }
-        .mag-cat:hover {
-          border-color: var(--tsp-foreground, var(--foreground, #22283f));
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-        }
-        .mag-cat.is-on {
-          background: var(--tsp-foreground, var(--foreground, #22283f));
-          border-color: var(--tsp-foreground, var(--foreground, #22283f));
-          color: var(--tsp-background, var(--background, #f7f1e4));
-        }
-        .mag-cat-dot {
-          width: 9px;
-          height: 9px;
-          border-radius: 50%;
-          flex: none;
-        }
-        .mag-sect {
-          display: flex;
-          align-items: baseline;
-          gap: 12px;
-          margin: 30px 0 14px;
-        }
-        .mag-sect-no {
-          flex: none;
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
-          font-style: italic;
-          font-size: 15px;
-          color: var(--tsp-accent, var(--accent, #a5854a));
-        }
-        .mag-sect-title {
-          flex: none;
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 10px;
-          letter-spacing: 0.3em;
-          text-transform: uppercase;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-        }
-        .mag-sect .mag-rule {
-          align-self: center;
-        }
-        .mag-field {
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-        .mag-lbl {
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 9px;
-          letter-spacing: 0.24em;
-          text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #8a7f6c));
-        }
-        .mag-hint {
-          letter-spacing: 0.05em;
-          text-transform: none;
-          color: rgba(138, 127, 108, 0.75);
-        }
-      </style>
-    </template>
-  };
-
   static fitted = class Fitted extends Component<typeof Guest> {
     get hasLinkedTheme(): boolean {
       return Boolean((this.args.model as any)?.cardInfo?.theme);
     }
+
     get initials() {
       return initialsOf(this.args.model?.fullName);
     }
+
     get name() {
       return this.args.model?.fullName || 'Unnamed Guest';
     }
+
     <template>
       <div class='fitted {{unless this.hasLinkedTheme "tsp-default-theme"}}'>
 
@@ -529,7 +224,11 @@ export class Guest extends Person {
               {{/if}}
             </div>
           </div>
-          {{#if @model.vip}}<span class='s-tag'>★ VIP</span>{{/if}}
+          {{#if @model.vip}}
+            <span class='s-tag'>★ VIP</span>
+          {{else}}
+            <span class='s-orn' aria-hidden='true'>&#10087;</span>
+          {{/if}}
         </div>
 
         {{! TILE (≤399w × ≥170h) — cream invitation frame }}
@@ -691,11 +390,17 @@ export class Guest extends Person {
           .strip {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            background: var(--tsp-card, var(--card, #fffdf8));
+            gap: 12px;
+            padding: 8px 14px 8px 12px;
+            background: linear-gradient(
+              120deg,
+              var(--tsp-card, var(--card, #fffdf8)) 55%,
+              var(--tsp-muted, var(--muted, #f4eddb)) 140%
+            );
             color: var(--tsp-card-foreground, var(--card-foreground, #22283f));
             border-left: 3px solid var(--tsp-accent, var(--accent, #c5a35c));
+            box-shadow: inset 0 0 0 1px
+              var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
           }
         }
         .s-ring {
@@ -793,8 +498,23 @@ export class Guest extends Person {
           padding: 3px 8px;
           white-space: nowrap;
         }
+        .s-orn {
+          flex: none;
+          font-family: var(
+            --tsp-font-serif,
+            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
+          );
+          font-size: clamp(14px, 34cqmin, 22px);
+          line-height: 1;
+          color: color-mix(
+            in srgb,
+            var(--tsp-accent, var(--accent, #c5a35c)) 45%,
+            transparent
+          );
+        }
         @container fitted-card (max-height: 64px) {
-          .s-tag {
+          .s-tag,
+          .s-orn {
             display: none;
           }
         }
@@ -1132,20 +852,26 @@ export class Guest extends Person {
     get hasLinkedTheme(): boolean {
       return Boolean((this.args.model as any)?.cardInfo?.theme);
     }
+
     categoryOptions = GUEST_CATEGORIES;
+
     get initials() {
       return initialsOf(this.args.model?.fullName);
     }
+
     setName = (e: Event) => {
       this.args.model.fullName = (e.target as HTMLInputElement).value;
     };
+
     setCategory = (value: string) => {
       this.args.model.category =
         this.args.model.category === value ? undefined : value;
     };
+
     toggleVip = () => {
       this.args.model.vip = !this.args.model.vip;
     };
+
     <template>
       <article class='iso {{unless this.hasLinkedTheme "tsp-default-theme"}}'>
 
@@ -1411,17 +1137,6 @@ export class Guest extends Person {
           letter-spacing: 0.3em;
           text-transform: uppercase;
           color: var(--tsp-accent, var(--accent, #a5854a));
-        }
-        .iso-name {
-          margin: 0;
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
-          font-size: clamp(26px, 5.5cqw, 38px);
-          font-weight: 500;
-          line-height: 1.12;
-          overflow-wrap: anywhere;
         }
         .iso-name-input {
           width: 100%;
