@@ -54,6 +54,7 @@ export default class LayoutPreview extends Component<Signature> {
   get tables(): Table[] {
     return (this.args.tables ?? []).filter(Boolean) as Table[];
   }
+
   get fixtures(): Fixture[] {
     return (this.args.fixtures ?? []).filter(Boolean) as Fixture[];
   }

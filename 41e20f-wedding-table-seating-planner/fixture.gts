@@ -29,13 +29,14 @@ export class Fixture extends FieldDef {
   @field label = contains(StringField);
   @field kind = contains(KindField);
   @field pattern = contains(PatternField);
-
   @field x = contains(NumberField);
   @field y = contains(NumberField);
   @field width = contains(NumberField);
   @field height = contains(NumberField);
   @field rotation = contains(NumberField);
+
   @field z = contains(NumberField); // canvas stacking order
+
   @field locked = contains(BooleanField); // locked fixtures can't be moved/resized on canvas
 
   @field color = contains(ColorField);

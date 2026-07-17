@@ -26,6 +26,7 @@ export class LayoutTemplate extends CardDef {
       return this.tables?.length ?? 0;
     },
   });
+
   @field seatCount = contains(NumberField, {
     computeVia: function (this: LayoutTemplate) {
       return (this.tables ?? []).reduce((n, t) => n + (t?.seatCount ?? 0), 0);

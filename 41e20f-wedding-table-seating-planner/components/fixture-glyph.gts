@@ -16,17 +16,21 @@ export default class FixtureGlyph extends Component<Signature> {
   get color() {
     return this.args.color || 'currentColor';
   }
+
   get fill() {
     if (this.args.pattern === 'outline') return 'none';
     if (this.args.pattern === 'soft') return this.color;
     return this.color;
   }
+
   get fillOpacity() {
     return this.args.pattern === 'soft' ? '0.45' : '1';
   }
+
   get stroke() {
     return this.color;
   }
+
   get paperLine() {
     return 'rgba(0,0,0,0.32)';
   }

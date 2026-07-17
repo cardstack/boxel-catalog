@@ -18,6 +18,7 @@ export class Person extends CardDef {
 
   @field fullName = contains(StringField);
   @field photo = contains(ImageSourceField);
+
   @field photoURL = contains(UrlField, {
     computeVia: function (this: Person) {
       return this.photo?.resolvedUrl;
@@ -38,6 +39,7 @@ export class Person extends CardDef {
     get initials() {
       return initialsOf(this.args.model?.fullName);
     }
+
     <template>
       <div class='p-row'>
         {{#if @model.photoURL}}

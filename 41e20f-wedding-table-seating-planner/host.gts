@@ -36,6 +36,7 @@ export class Host extends Person {
     get initials() {
       return initialsOf(this.args.model?.fullName);
     }
+
     <template>
       <div class='h-row'>
         {{#if @model.photoURL}}
@@ -142,12 +143,15 @@ export class Host extends Person {
     get hasLinkedTheme(): boolean {
       return Boolean((this.args.model as any)?.cardInfo?.theme);
     }
+
     get initials() {
       return initialsOf(this.args.model?.fullName);
     }
+
     get name() {
       return this.args.model?.fullName || 'Unnamed Host';
     }
+
     <template>
       <div class='fitted {{unless this.hasLinkedTheme "tsp-default-theme"}}'>
 
@@ -737,16 +741,21 @@ export class Host extends Person {
     get hasLinkedTheme(): boolean {
       return Boolean((this.args.model as any)?.cardInfo?.theme);
     }
+
     get initials() {
       return initialsOf(this.args.model?.fullName);
     }
+
     setName = (e: Event) => {
       this.args.model.fullName = (e.target as HTMLInputElement).value;
     };
+
     roleOptions = HOST_ROLES;
+
     setRole = (value: string) => {
       this.args.model.role = this.args.model.role === value ? undefined : value;
     };
+
     <template>
       <article class='iso {{unless this.hasLinkedTheme "tsp-default-theme"}}'>
         <header class='iso-mast' aria-label='Masthead'>

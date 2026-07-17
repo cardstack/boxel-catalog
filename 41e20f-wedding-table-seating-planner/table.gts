@@ -47,17 +47,19 @@ export class Table extends FieldDef {
   @field rows = contains(NumberField);
   @field cols = contains(NumberField);
   @field seatOrder = contains(SeatOrderField);
-
   @field x = contains(NumberField);
   @field y = contains(NumberField);
   @field width = contains(NumberField);
   @field height = contains(NumberField);
   @field rotation = contains(NumberField);
+
   @field z = contains(NumberField); // canvas stacking order
 
   @field themeColor = contains(ColorField);
   @field reservedCategories = containsMany(CategoryField);
+
   @field seatedGuests = linksToMany(() => Guest); // packed list of seated guests
+
   @field seatSlots = containsMany(NumberField);
   @field vip = contains(BooleanField);
   @field rank = contains(NumberField);
@@ -80,6 +82,7 @@ export class Table extends FieldDef {
     get short() {
       return shortTableLabel(this.args.model?.name);
     }
+
     <template>
       <div class='t-row'>
         <span class='t-glyph t-{{if @model.shape @model.shape "round"}}'>
@@ -184,6 +187,7 @@ export class Table extends FieldDef {
     get short() {
       return shortTableLabel(this.args.model?.name);
     }
+
     <template>
       <div class='cq'>
         <div class='fit'>
