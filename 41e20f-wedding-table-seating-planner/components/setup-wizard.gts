@@ -106,6 +106,7 @@ export default class SetupWizard extends Component<Signature> {
   stepEntered = (step: StepperStep) => {
     if (step.id === 'template') this.args.onLoadTemplates();
   };
+
   applyTpl = (index: number) => {
     this.args.onApplyTemplate(index);
   };
@@ -143,9 +144,9 @@ export default class SetupWizard extends Component<Signature> {
                 {{on 'input' @onEventTitle}}
               />
             </label>
-            <label class='wz-field'>Date
+            <label class='wz-field'>Date &amp; time
               <BoxelInput
-                @type='date'
+                @type='datetime-local'
                 @value={{@eventDate}}
                 {{on 'change' @onEventDate}}
               />
@@ -314,12 +315,6 @@ export default class SetupWizard extends Component<Signature> {
         border: 1.5px dashed
           var(--tsp-border, var(--border, rgba(34, 40, 63, 0.2)));
         border-radius: 16px;
-      }
-      .wz-guest-panel {
-        flex: none;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
       }
       .wz-people-panel {
         flex: none;
