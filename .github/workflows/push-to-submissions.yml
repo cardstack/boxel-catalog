@@ -1,9 +1,9 @@
 name: Push PR to Submissions Realm
 
-# Temporary review aid: mirrors each open PR's tree into the shared staging
-# submissions realm so reviewers can see the content running before merge.
-# Push-only by design — the realm also holds PrCard instances and other PRs'
-# pushes, so never sync with --delete. Decommission by deleting this file.
+# Temporary review aid: mirrors each open PR's changed files into the shared
+# staging submissions realm so reviewers can see the content running before
+# merge. Push-only by design — the realm also holds PrCard instances and other
+# PRs' pushes, so never sync with --delete. Decommission by deleting this file.
 
 on:
   pull_request:
@@ -60,28 +60,39 @@ jobs:
             --password "${MATRIX_PASSWORD}" \
             --matrix-url "${MATRIX_URL}"
 
-      - name: Strip catalog realm-config files
-        # The submissions realm has its own realm.json and index.json; pushing
-        # the catalog's copies would overwrite the realm's identity and index
-        # card. A stray local sync manifest would make the CLI misclassify
-        # add-vs-update operations, so drop it too.
-        run: rm -f realm.json index.json .boxel-sync.json
+      - name: Stage this PR's changed files
+        # The realm is shared across open PRs, so pushing the whole tree would
+        # reset every file back to this PR's view of main, reverting other
+        # PRs' pushes. Stage only this PR's diff and push that. realm.json and
+        # index.json belong to the realm itself, and a stray sync manifest
+        # would make the CLI misclassify add-vs-update, so exclude all three.
+        run: |
+          STAGE="${RUNNER_TEMP}/push-stage"
+          mkdir -p "$STAGE"
+          # HEAD is the PR merge commit, whose first parent is the base branch
+          # tip, so this diff yields exactly the PR's changes. The list is
+          # saved so the PR comment reflects what was actually pushed.
+          git diff --name-only --diff-filter=d HEAD^1 HEAD \
+            -- . ':!realm.json' ':!index.json' ':!.boxel-sync.json' \
+            > "${RUNNER_TEMP}/pushed-files.txt"
+          while IFS= read -r f; do
+            mkdir -p "${STAGE}/$(dirname "$f")"
+            cp "$f" "${STAGE}/$f"
+          done < "${RUNNER_TEMP}/pushed-files.txt"
+          echo "Staged $(find "$STAGE" -type f | wc -l | tr -d ' ') file(s)"
 
       - name: Push to submissions realm
         run: |
           echo "Target workspace: ${SUBMISSIONS_REALM_URL}"
           echo "Commit: ${{ github.event.pull_request.head.sha }}"
-          boxel realm push . "${SUBMISSIONS_REALM_URL}" --force
+          boxel realm push "${RUNNER_TEMP}/push-stage" "${SUBMISSIONS_REALM_URL}" --force
 
       - name: Compose PR comment
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           COMMENT="${RUNNER_TEMP}/submissions-comment.md"
-          # The checked-out HEAD is the PR merge commit, whose first parent
-          # is the base branch tip, so this diff yields exactly the PR's
-          # changes without needing branch refs or full history.
-          CHANGED=$(git diff --name-only --diff-filter=d HEAD^1 HEAD)
+          CHANGED=$(cat "${RUNNER_TEMP}/pushed-files.txt")
 
           {
             echo "## Staging Submissions Preview"
@@ -107,7 +118,7 @@ jobs:
               echo ""
             fi
 
-            echo "_Updated at $(date -u '+%Y-%m-%d %H:%M:%S') UTC for commit \`${HEAD_SHA::7}\`. Shared realm: content reflects whichever PR pushed last._"
+            echo "_Updated at $(date -u '+%Y-%m-%d %H:%M:%S') UTC for commit \`${HEAD_SHA::7}\`. Shared realm: only this PR's changed files are pushed; files touched by multiple PRs reflect whichever pushed last, and deleted files are not removed._"
           } > "$COMMENT"
 
       - name: Comment on PR
