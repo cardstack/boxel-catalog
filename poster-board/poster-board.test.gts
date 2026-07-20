@@ -65,6 +65,45 @@ export function runTests() {
         .hasText('100%', 'fit resets zoom to 100%');
     });
 
+    test('poster-board keyboard shortcuts match physical keys and leave browser zoom alone', async function (assert) {
+      await renderPosterBoard();
+
+      // event.key carries the shifted character ('+', '_', ')') — the
+      // handler must match the physical event.code instead
+      await triggerEvent(document, 'keydown', {
+        code: 'Equal',
+        key: '+',
+        shiftKey: true,
+      });
+      assert.dom('[data-test-zoom-level]').hasText('120%', 'Shift+= zooms in');
+
+      await triggerEvent(document, 'keydown', {
+        code: 'Equal',
+        key: '+',
+        shiftKey: true,
+        ctrlKey: true,
+      });
+      assert
+        .dom('[data-test-zoom-level]')
+        .hasText('120%', 'ctrl+shift+= is left to the browser');
+
+      await triggerEvent(document, 'keydown', {
+        code: 'Digit0',
+        key: ')',
+        shiftKey: true,
+      });
+      assert
+        .dom('[data-test-zoom-level]')
+        .hasText('100%', 'Shift+0 resets to 100%');
+
+      await triggerEvent(document, 'keydown', {
+        code: 'Minus',
+        key: '_',
+        shiftKey: true,
+      });
+      assert.dom('[data-test-zoom-level]').hasText('83%', 'Shift+- zooms out');
+    });
+
     test('poster-board zoom reset is not undone by pending pinch momentum', async function (assert) {
       await renderPosterBoard();
 

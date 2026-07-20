@@ -101,6 +101,10 @@ export class SurfaceRig {
     );
     this.lastWheelSampleTime = now;
 
+    // Normalize line/page delta modes to pixels for both zoom and pan
+    const deltaScale =
+      event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 120 : 1;
+
     if (isZoom) {
       const surface = event.currentTarget as HTMLElement | null;
       if (!surface) return;
@@ -110,8 +114,6 @@ export class SurfaceRig {
       const localY = event.clientY - rect.top;
 
       const current = rig.magnify;
-      const deltaScale =
-        event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 120 : 1;
       const zoomStrength = ZOOM_SENSITIVITY * PINCH_ZOOM_BOOST;
       const next = clamp(
         current * Math.exp(-(event.deltaY * deltaScale) * zoomStrength),
@@ -133,7 +135,7 @@ export class SurfaceRig {
       return;
     }
 
-    const panScale = 1 / rig.magnify;
+    const panScale = deltaScale / rig.magnify;
     const dxWorld = -event.deltaX * panScale;
     const dyWorld = -event.deltaY * panScale;
     rig.worldX += dxWorld;

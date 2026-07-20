@@ -25,6 +25,7 @@ class Isolated extends Component<typeof PosterBoard> {
 
   @tracked isPanning = false;
   private panSession: PanSession | null = null;
+  private activePointerId: number | null = null;
   private rootElement: HTMLElement | null = null;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
@@ -53,11 +54,21 @@ class Isolated extends Component<typeof PosterBoard> {
 
   handlePointerDown = (rawEvent: Event) => {
     const event = rawEvent as PointerEvent;
+    // Primary button only: right/middle-drag isn't a pan, and a context
+    // menu can swallow the matching pointerup, wedging the session
+    if (event.button !== 0) {
+      return;
+    }
+    // One pan per pointer: a second touch must not hijack a live session
+    if (this.panSession) {
+      return;
+    }
     const target = event.target as HTMLElement;
     if (target.closest('[data-poster-board-hud]')) {
       return;
     }
     this.panSession = this.surfaceRig.startPan(event.clientX, event.clientY);
+    this.activePointerId = event.pointerId;
     this.isPanning = true;
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     event.preventDefault();
@@ -65,16 +76,20 @@ class Isolated extends Component<typeof PosterBoard> {
 
   handlePointerMove = (rawEvent: Event) => {
     const event = rawEvent as PointerEvent;
+    if (event.pointerId !== this.activePointerId) {
+      return;
+    }
     this.panSession?.move(event.clientX, event.clientY);
   };
 
   handlePointerUp = (rawEvent: Event) => {
     const event = rawEvent as PointerEvent;
-    if (!this.panSession) {
+    if (!this.panSession || event.pointerId !== this.activePointerId) {
       return;
     }
     this.panSession.end();
     this.panSession = null;
+    this.activePointerId = null;
     this.isPanning = false;
     try {
       (event.currentTarget as HTMLElement).releasePointerCapture(
@@ -115,13 +130,19 @@ class Isolated extends Component<typeof PosterBoard> {
     ) {
       return;
     }
-    if (event.shiftKey && (event.key === '=' || event.key === '+')) {
+    // Match the physical key (event.code) — event.key reports the shifted
+    // character ('_', ')'), which would make Shift+- and Shift+0 dead.
+    // Bail on ctrl/meta/alt so browser zoom (ctrl/cmd+shift+=) stays intact.
+    if (event.ctrlKey || event.metaKey || event.altKey || !event.shiftKey) {
+      return;
+    }
+    if (event.code === 'Equal') {
       event.preventDefault();
       this.zoomIn();
-    } else if (event.shiftKey && event.key === '-') {
+    } else if (event.code === 'Minus') {
       event.preventDefault();
       this.zoomOut();
-    } else if (event.shiftKey && event.key === '0') {
+    } else if (event.code === 'Digit0') {
       event.preventDefault();
       this.zoom100();
     }
