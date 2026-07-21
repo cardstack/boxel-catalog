@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "AiImage",
-        "module": "@cardstack/catalog/6a076d-ai-image-generator/ai-image"
+        "module": "../ai-image"
       }
     },
     "type": "card",
