@@ -1,0 +1,38 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AiImageGenerator",
+        "module": "@cardstack/catalog/6a076d-ai-image-generator/ai-image-generator"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "AI Image Generator",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "llmModel": "google/gemini-2.5-flash-image",
+      "aspectRatio": "16:9"
+    },
+    "relationships": {
+      "history.0": {
+        "links": {
+          "self": "../AiImage/2686c149-feff-4787-8f65-50e8c96e53f7"
+        }
+      },
+      "history.1": {
+        "links": {
+          "self": "../AiImage/8f6550e8-c96e-43f7-94b9-fbeed1a56a6f"
+        }
+      },
+      "history.2": {
+        "links": {
+          "self": "../AiImage/1fa629a5-3a4c-4829-8fe0-de1232c99d26"
+        }
+      }
+    }
+  }
+}

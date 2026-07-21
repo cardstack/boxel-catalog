@@ -1,0 +1,41 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "AiImage",
+        "module": "@cardstack/catalog/6a076d-ai-image-generator/ai-image"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "mode": "inpaint",
+      "prompt": "Remove the chair",
+      "cardInfo": {
+        "name": "Remove the chair",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "llmModel": "google/gemini-2.5-flash-image",
+      "createdAt": "2026-07-21T04:36:00.663Z",
+      "aspectRatio": "16:9"
+    },
+    "relationships": {
+      "mask": {
+        "links": {
+          "self": "../generated/ai-image-mask-1784608560612.png"
+        }
+      },
+      "image": {
+        "links": {
+          "self": "../generated/ai-image-1784608560473.png"
+        }
+      },
+      "parent": {
+        "links": {
+          "self": "./31a7b7db-eb50-48b8-9373-95de4f43fc71"
+        }
+      }
+    }
+  }
+}

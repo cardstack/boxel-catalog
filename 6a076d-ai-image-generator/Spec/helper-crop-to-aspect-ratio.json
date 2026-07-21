@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# cropToAspectRatio\n\n## Summary\nCenter-crops an image to an exact width:height ratio (e.g. '16:9'). The Gemini image models ignore a prompt's aspect-ratio hint and return a square, so this enforces the requested framing deterministically after generation. Returns null when it can't run (no canvas / unparseable ratio / already correct) so the caller keeps the original.\n\n## Import\n```js\nimport { cropToAspectRatio } from '../helpers/image';\n```",
+      "ref": {
+        "module": "../helpers/image",
+        "name": "cropToAspectRatio"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "cropToAspectRatio",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

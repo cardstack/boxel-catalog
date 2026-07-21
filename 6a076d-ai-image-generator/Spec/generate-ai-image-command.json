@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# GenerateAiImageCommand\n\n## Summary\nThe single entry point for AI image generation. In one call it runs the raw image engine \u2014 builds an OpenRouter chat-completions request (`modalities: ['image','text']`, default model `google/gemini-2.5-flash-image`, the generally-available model that works on the production Vertex provider; the gemini-3.x preview models 404 there unless the project is allowlisted) through `SendRequestViaProxyCommand`, extracts the returned data URL, crops it to the requested aspect ratio (the models ignore the prompt's ratio hint and return a square, so `cropToAspectRatio` enforces the framing deterministically), shrinks it under ~500KB with `compressDataUrl` while preserving the source format, and persists it into the target realm via `WriteBinaryFileCommand` so the result survives the upstream API's ~1h expiry \u2014 AND records the result as its own AiImage card (via `SaveCardCommand`) with full provenance: prompt, mode, model, aspect ratio, the `parent` it was derived from, and the inpaint `mask` (itself persisted as a realm file so the record captures WHERE the repaint happened). Routing every generation \u2014 studio UI, other card code, or an AI-assistant skill \u2014 through this one command makes the generation record a structural guarantee rather than something each call site must remember.\n\nInput (`GenerateAiImageInput`): `prompt`, optional `mode` (inferred when omitted: mask \u21d2 inpaint, a parent image \u21d2 edit, else generate), `parent` (`linksTo(AiImage)` \u2014 the image being iterated on, whose image is the edit source), `maskDataUrl` (inpaint; white = repaint, black = keep), `model`, `aspectRatio`, `targetRealmIdentifier` (required), and `targetPath` (defaults to `generated`). Output (`GenerateAiImageOutput`): the saved `aiImage`, plus `imageUrl` and `contentType` of the persisted file.\n\n## Import\n```js\nimport { GenerateAiImageCommand } from '../commands/generate-ai-image';\n```\n\n## Usage\n```js\nlet ctx = this.args.context?.commandContext;\nlet result = await new GenerateAiImageCommand(ctx).execute({\n  prompt: 'a watercolor fox in a misty forest',\n  model: 'google/gemini-2.5-flash-image',\n  aspectRatio: '16:9',\n  targetRealmIdentifier: realmUrl,\n  targetPath: 'generated',\n});\n// result.aiImage is the saved generation record \u2014 link it into your history.\n```\nFor a reprompt, pass `parent` (the AiImage being iterated on) so its image becomes the edit source and the new card records it as `parent`; a reprompt may pass a new `aspectRatio`. For an inpaint, also pass `maskDataUrl` and inherit the parent's `aspectRatio` so the repaint lines up with the mask. `mode` can be left unset; it is inferred from those inputs.",
+      "ref": {
+        "module": "../commands/generate-ai-image",
+        "name": "GenerateAiImageCommand"
+      },
+      "specType": "command",
+      "containedExamples": [],
+      "cardTitle": "Generate AI Image Command",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

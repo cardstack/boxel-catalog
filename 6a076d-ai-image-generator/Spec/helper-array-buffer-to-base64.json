@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# arrayBufferToBase64\n\n## Summary\nConverts an `ArrayBuffer` to a base64 string, byte by byte. Used to turn fetched image bytes into the base64 payload of a data URL.\n\n## Import\n```js\nimport { arrayBufferToBase64 } from '../helpers/image';\n```",
+      "ref": {
+        "module": "../helpers/image",
+        "name": "arrayBufferToBase64"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "arrayBufferToBase64",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

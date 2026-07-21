@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# AI Image Generator\n\n## Summary\nAiImageGenerator is the main card of the package: a ChatGPT-style image studio. Its data model is deliberately thin \u2014 `history = linksToMany(AiImage)` (every generated image is its own card, in generation order), plus the composer defaults `llmModel` (an enum of OpenRouter image models) and `aspectRatio` (AspectRatioField), persisted so the studio remembers your last choices. It sets `prefersWideFormat` and a Sparkles icon. The whole isolated/embedded experience is composed from `./components` rather than written inline, keeping the schema small and instances safe to re-index. The studio offers: a chat-style bottom composer that continues from the latest image or starts a new one; a focused Refine editor with Reprompt (regenerate, may reframe the aspect ratio) and brush-based Paint-area (inpaint, locked to the source framing) modes; a GitLens-style version graph in the sidebar that draws the `parent` lineage as a branch tree (each new image starts its own lane); light/dark theming through the standard semantic-token pipeline; and a Stop control to cancel an in-flight generation. Every generation runs through `GenerateAiImageCommand`, so each result is a fully-recorded AiImage linked into `history`.\n\n## Import\n```js\nimport { AiImageGenerator } from '../ai-image-generator';\n```\n\n## Usage\nAiImageGenerator is a card, so consuming cards link to it rather than containing it:\n\n```js\nimport { CardDef, field, linksTo } from 'https://cardstack.com/base/card-api';\nimport { AiImageGenerator } from '../ai-image-generator';\n\nexport class Project extends CardDef {\n  @field imageStudio = linksTo(() => AiImageGenerator);\n}\n```\nNew images append to `history` as AiImage cards as the user generates and refines \u2014 nothing else needs wiring.\n\n## Template Usage\n```handlebars\n<@fields.imageStudio />\n```\nRenders the linked studio; open it isolated for the full experience (composer, version tree, refine editor). The embedded/fitted format shows the latest image with a caption.",
+      "ref": {
+        "module": "../ai-image-generator",
+        "name": "AiImageGenerator"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "AI Image Generator",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "prompt": "isometric cozy coffee shop, soft pastel lighting",
+      "mode": "generate",
+      "llmModel": "google/gemini-2.5-flash-image",
+      "aspectRatio": "16:9",
+      "createdAt": "2026-07-21T04:32:59.008Z",
+      "cardInfo": {
+        "name": "isometric cozy coffee shop, soft pastel lighting",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "image": {
+        "links": {
+          "self": "../generated/ai-image-1784608378897.png"
+        }
+      },
+      "parent": {
+        "links": {
+          "self": null
+        }
+      },
+      "mask": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/6a076d-ai-image-generator/ai-image",
+        "name": "AiImage"
+      }
+    }
+  }
+}

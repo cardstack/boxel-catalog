@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# compressDataUrl\n\n## Summary\nRe-encodes an image via canvas, lowering quality (and downscaling as a last resort) until it fits under `maxBytes`, while preserving the source format (a PNG stays a PNG). Returns null when no canvas is available so the caller falls back to the original. Keeps persisted generations small.\n\n## Import\n```js\nimport { compressDataUrl } from '../helpers/image';\n```",
+      "ref": {
+        "module": "../helpers/image",
+        "name": "compressDataUrl"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "compressDataUrl",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

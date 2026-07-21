@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# AI Image\n\n## Summary\nAiImage is the atomic \"piece\" of the package: one generated image modeled as its own card, so every version is independently referable, reusable, and carries a full generation record. It stores the `prompt` (String), the `mode` (an enum field: `'generate' | 'edit' | 'inpaint'`), the persisted result (`image = linksTo(ImageDef)`), an optional inpaint `mask = linksTo(ImageDef)` (white = repaint, black = keep), the `parent = linksTo(AiImage)` it was derived from (this self-referential edge forms the version tree), and the settings that produced it \u2014 `llmModel` (an enum of the OpenRouter image models), `aspectRatio` (AspectRatioField), and `createdAt` (DateTimeField). Because each generation is its own CardDef rather than a field on a bigger card, any image can be linked from anywhere and its lineage plus technique is always recoverable. The embedded format shows the image with a mode badge and prompt; the isolated format adds the full record (model, aspect ratio, inpaint mask, and the parent it was edited from).\n\n## Import\n```js\nimport { AiImage } from '../ai-image';\n```\n\n## Usage\nAiImage is a card, so consuming cards link to it rather than containing it \u2014 the same wiring the generator uses for its ordered history:\n\n```js\nimport { CardDef, field, linksToMany } from 'https://cardstack.com/base/card-api';\nimport { AiImage } from '../ai-image';\n\nexport class Gallery extends CardDef {\n  @field images = linksToMany(() => AiImage);\n}\n```\nNew AiImage records are produced by `GenerateAiImageCommand`, which fills in `image`, `mask`, `parent`, and the provenance fields in a single call \u2014 you rarely construct one by hand.\n\n## Template Usage\n```handlebars\n<@fields.images @format='embedded' />\n```\nRenders each linked image with its mode badge and prompt; open one isolated to see its full generation record and parent lineage.",
+      "ref": {
+        "module": "../ai-image",
+        "name": "AiImage"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "AI Image",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

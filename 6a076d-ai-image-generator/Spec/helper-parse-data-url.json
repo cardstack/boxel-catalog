@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# parseDataUrl\n\n## Summary\nSplits a data URL into its `mimeType` and base64 `base64Content`. Used when writing a generated image or mask to the realm as a binary file.\n\n## Import\n```js\nimport { parseDataUrl } from '../helpers/image';\n```",
+      "ref": {
+        "module": "../helpers/image",
+        "name": "parseDataUrl"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "parseDataUrl",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

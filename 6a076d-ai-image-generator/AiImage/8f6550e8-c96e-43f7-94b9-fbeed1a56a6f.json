@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "prompt": "Add one butterfly flying around the fox. Do not add any other animals or insects. Keep the fox and the rest of the scene unchanged.",
+      "mode": "edit",
+      "llmModel": "google/gemini-2.5-flash-image",
+      "aspectRatio": "2:3",
+      "createdAt": "2026-07-21T05:05:52.955Z",
+      "cardInfo": {
+        "name": "Add one butterfly flying around the fox. Do not add any othe",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "image": {
+        "links": {
+          "self": "../generated/ai-image-1784610352847.png"
+        }
+      },
+      "parent": {
+        "links": {
+          "self": "./2686c149-feff-4787-8f65-50e8c96e53f7"
+        }
+      },
+      "mask": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/6a076d-ai-image-generator/ai-image",
+        "name": "AiImage"
+      }
+    }
+  }
+}

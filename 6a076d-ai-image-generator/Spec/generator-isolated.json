@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# AiImageGeneratorIsolated\n\n## Summary\nThe full image studio, assigned as the AiImageGenerator card's isolated format. It renders a large poster stage for the current image with a hover overlay for Refine and Download, a ChatGPT-style bottom composer that continues from the latest image (or starts a fresh lane), and a focused Refine editor offering Reprompt and brush-based Paint-area (inpaint) modes. A GitLens-style version graph in the sidebar draws the `parent` lineage of `history` as a branch tree; hovering a node pops a preview with jump-to-thread and copy-prompt actions. Generation runs through `GenerateAiImageCommand` as an ember-concurrency task, so it exposes a Stop control, skeleton loading states, and blame-free inline errors. Aspect ratio is editable for new images and reprompts but locked to the source for inpaint. A linked theme (`cardInfo.theme`) is applied by the standard card theming pipeline \u2014 every rule reads semantic tokens through `var(--token, fallback)` chains, so an unthemed studio falls back to the package's studio-dark look.\n\n## Import\n```js\nimport { AiImageGeneratorIsolated } from '../components/generator';\n```\n\n## Template Usage\nNot invoked directly \u2014 assigned as the isolated format in `ai-image-generator.gts`:\n```js\nAiImageGenerator.isolated = AiImageGeneratorIsolated;\n```",
+      "ref": {
+        "module": "../components/generator",
+        "name": "AiImageGeneratorIsolated"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "AI Image Generator (Isolated)",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
