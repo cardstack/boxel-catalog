@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# GeneratingOverlay\n\n## Summary\nA presentational Glimmer component (default export) that renders the \"generating\" state over the image stage: a sweeping animated border and shimmer with a centered status block passed in as the default block. It takes an optional `color` (accent for the sweep + shimmer, defaulting to the host theme's highlight token) and an optional `label`. It holds no data and issues no requests \u2014 the studio shows it while a `GenerateAiImageCommand` task is running, so the loading state matches the studio's theme and reads as calm progress rather than a generic spinner.\n\n## Import\n```js\nimport GeneratingOverlay from '../components/generating-overlay';\n```\n\n## Template Usage\n```handlebars\n<GeneratingOverlay @color='#e3c27d'>\n  <div class='gen-center'>Generating your image\u2026</div>\n</GeneratingOverlay>\n```",
+      "ref": {
+        "module": "../components/generating-overlay",
+        "name": "default"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "Generating Overlay",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

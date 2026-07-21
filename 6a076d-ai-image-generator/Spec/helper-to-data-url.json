@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# toDataUrl\n\n## Summary\nFetches a URL and returns it as a `data:` URL (data URLs pass through untouched). Used to inline a source image or mask into the OpenRouter request so the model can edit/inpaint it.\n\n## Import\n```js\nimport { toDataUrl } from '../helpers/image';\n```",
+      "ref": {
+        "module": "../helpers/image",
+        "name": "toDataUrl"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "toDataUrl",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

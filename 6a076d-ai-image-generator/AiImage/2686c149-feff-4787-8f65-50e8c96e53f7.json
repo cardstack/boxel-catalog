@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "prompt": "a watercolor fox in a misty forest",
+      "mode": "generate",
+      "llmModel": "google/gemini-2.5-flash-image",
+      "aspectRatio": "2:3",
+      "createdAt": "2026-07-21T05:04:02.080Z",
+      "cardInfo": {
+        "name": "a watercolor fox in a misty forest",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "image": {
+        "links": {
+          "self": "../generated/ai-image-1784610241952.png"
+        }
+      },
+      "parent": {
+        "links": {
+          "self": null
+        }
+      },
+      "mask": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ai-image",
+        "name": "AiImage"
+      }
+    }
+  }
+}

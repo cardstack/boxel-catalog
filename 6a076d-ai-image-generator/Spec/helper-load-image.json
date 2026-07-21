@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# loadImage\n\n## Summary\nDecodes a data URL into an `HTMLImageElement`, resolving on load and rejecting on error. The canvas primitive behind `compressDataUrl` and `cropToAspectRatio`.\n\n## Import\n```js\nimport { loadImage } from '../helpers/image';\n```",
+      "ref": {
+        "module": "../helpers/image",
+        "name": "loadImage"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "loadImage",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

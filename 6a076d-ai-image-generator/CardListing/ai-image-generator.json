@@ -1,0 +1,138 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "@cardstack/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "AI Image Generator",
+      "summary": "A composable, ChatGPT-style AI image studio for any Boxel app. Generate from a prompt, then reprompt or brush-mask (inpaint) to refine \u2014 every image is saved as its own AI Image card with full provenance (prompt, model, aspect ratio, inpaint mask, and the parent it was derived from), so the whole history is a referable version tree. A GitLens-style version graph, light/dark theming, aspect-ratio control, and a Stop button round out the studio. All generation flows through a single GenerateAiImageCommand, so you can drive it from the studio UI, from your own card code, or from an AI-assistant skill and always get the same recorded result.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "../../Tag/ai"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "../../Tag/app"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/ai-image-generator"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/ai-image"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/generate-ai-image-command"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/generator-isolated"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/generator-embedded"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/generating-overlay"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/helper-compress-data-url"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/helper-crop-to-aspect-ratio"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/helper-to-data-url"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/helper-parse-data-url"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/helper-file-name-from-url"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/helper-array-buffer-to-base64"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/helper-load-image"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/studio-fox-versions.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/2f84a205-487e-4f4e-a5e0-1d84337c029a-fefbd725.png"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../AiImageGenerator/d2611dfa-b973-4419-a686-c149feff6787"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../AiImageGenerator/2f84a205-487e-4f4e-a5e0-1d84337c029a"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../Category/ai-automation"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "../../Category/design-creative"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/ai-image-9cfef64d.png"
+        }
+      }
+    }
+  }
+}

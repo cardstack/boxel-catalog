@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# AiImageGeneratorEmbedded\n\n## Summary\nThe compact preview of an AI Image Generator, assigned as the card's embedded AND fitted format. It surfaces the most recent image in `history` as a poster thumbnail with a short caption (the latest prompt) and a count of how many images the studio holds, giving a linked or tiled generator a meaningful glance instead of generic card chrome. It has no composer, refine editor, or version graph \u2014 those live only in the isolated studio; this view is read-only and degrades gracefully to an inviting empty state when `history` is empty. Like the isolated component it carries no theme logic of its own: colors, radius, and fonts resolve through `var(--token, fallback)` chains, and it stays legible at fitted-card container sizes via `@container` rules.\n\n## Import\n```js\nimport { AiImageGeneratorEmbedded } from '../components/generator';\n```\n\n## Template Usage\nNot invoked directly \u2014 assigned as the embedded and fitted formats in `ai-image-generator.gts`:\n```js\nAiImageGenerator.embedded = AiImageGeneratorEmbedded;\nAiImageGenerator.fitted = AiImageGeneratorEmbedded;\n```",
+      "ref": {
+        "module": "../components/generator",
+        "name": "AiImageGeneratorEmbedded"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "AI Image Generator (Embedded)",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

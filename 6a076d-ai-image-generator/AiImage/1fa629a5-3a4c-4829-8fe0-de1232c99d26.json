@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "prompt": "Add several butterflies hovering in the sky. Keep the rest of the scene unchanged, and do not add any other animals, people, or objects.",
+      "mode": "edit",
+      "llmModel": "google/gemini-2.5-flash-image",
+      "aspectRatio": "16:9",
+      "createdAt": "2026-07-21T05:14:16.636Z",
+      "cardInfo": {
+        "name": "Add several butterflies hovering in the sky. Keep the rest o",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "image": {
+        "links": {
+          "self": "../generated/ai-image-1784610856488.png"
+        }
+      },
+      "parent": {
+        "links": {
+          "self": "./8f6550e8-c96e-43f7-94b9-fbeed1a56a6f"
+        }
+      },
+      "mask": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ai-image",
+        "name": "AiImage"
+      }
+    }
+  }
+}
