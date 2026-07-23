@@ -67,6 +67,11 @@
         "links": {
           "self": "../ListingThumbnails/leaflet-map-3ecc8358.png"
         }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
       }
     }
   }

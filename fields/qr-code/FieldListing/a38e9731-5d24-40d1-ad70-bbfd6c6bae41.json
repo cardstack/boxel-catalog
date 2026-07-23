@@ -67,6 +67,11 @@
         "links": {
           "self": "../ListingThumbnails/qr-code-6ade8630.png"
         }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
       }
     }
   }
