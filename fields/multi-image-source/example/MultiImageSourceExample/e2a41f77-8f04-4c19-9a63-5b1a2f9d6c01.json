@@ -1,0 +1,49 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "MultiImageSourceExample",
+        "module": "@cardstack/catalog/fields/multi-image-source/example/multi-image-source-playground-example"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "photos": {
+        "images": [
+          {
+            "url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800",
+            "sourceMode": "url"
+          },
+          {
+            "url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+            "sourceMode": "url"
+          },
+          {
+            "url": "https://images.unsplash.com/photo-1518843875459-f738682238a6?w=800",
+            "sourceMode": "url"
+          }
+        ]
+      },
+      "title": "Multi Image Source Example",
+      "cardInfo": {
+        "name": "Multi Image Source Example",
+        "notes": null,
+        "summary": "",
+        "cardThumbnailURL": null
+      },
+      "description": "An ordered list of images in one field — each entry sourced from a URL or a linked file, managed by a single editor."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../components/multi-image-source-editor",
+        "name": "default"
+      },
+      "specType": "component",
+      "readMe": "# MultiImageSourceEditor\n\n## Summary\nThe edit UI for the Multi Image Source field, assigned as its edit format. It renders a hero preview of the highlighted image, a one-row scrollable thumbnail strip with per-image remove, a full-width Link Image bar (the linksTo editor for the field's `newImage` add slot — picks are adopted into `images` in a microtask and the slot is cleared), and a compact paste-URL row. Empty state is a two-panel link-or-URL invitation that stacks in narrow hosts. All mutating handlers no-op when the contained field value is undefined.\n\n## Import\n```js\nimport MultiImageSourceEditor from '../components/multi-image-source-editor';\n```\n\n## Template Usage\nNot invoked directly — assigned as the edit format in `multi-image-source.gts`:\n```js\nclass EditTemplate extends Component<typeof MultiImageSourceField> {\n  <template>\n    <MultiImageSourceEditor @model={{@model}} @fileField={{@fields.newImage}} />\n  </template>\n}\n```",
+      "cardTitle": "Multi Image Source Editor",
+      "cardDescription": "Gallery editor for an ordered list of images — hero preview, scrollable thumbnail strip with per-image remove, Link Image bar, and a paste-URL row.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    }
+  }
+}

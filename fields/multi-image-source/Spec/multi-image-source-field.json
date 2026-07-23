@@ -1,0 +1,51 @@
+{
+  "data": {
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../multi-image-source",
+              "name": "default"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../multi-image-source"
+      },
+      "readMe": "## Multi Image Source Field\n\nAn ordered list of images in one field. `images` is a `containsMany(ImageSourceField)`, so every entry supports the same URL-or-linked-file sourcing as the single Image Source field, and the two fields share one data model per image.\n\n### Fields\n\n| name | type | notes |\n| --- | --- | --- |\n| `images` | `ImageSourceField[]` | ordered list; each entry is `{ url, file, sourceMode }` |\n| `newImage` | `linksTo(ImageDef)` | add slot — the standard linksTo editor writes a pick here and the edit UI immediately moves it into `images` and clears the slot; it never stays populated |\n| `resolvedUrls` | `string[]` (computed) | every image's resolved URL, in order |\n| `primaryUrl` | `string` (computed) | the first resolved URL — the cover for consumers that show one |\n\n### Edit UI\n\nA gallery: a hero preview of the highlighted image on top (`object-fit: contain`), a single-row horizontally scrollable thumbnail strip (click a thumb to highlight it; each thumb has a ✕ remove; new images auto-highlight), a full-width **Link Image** bar (the real linksTo editor button — card chooser with search and Create New ImageDef), and a compact paste-URL row. Empty state is a two-panel invitation — link a workspace image, or add by URL — that stacks in narrow hosts via container query.\n\n### Usage\n\n```ts\nimport { CardDef, field, contains } from 'https://cardstack.com/base/card-api';\nimport MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';\n\nexport class Example extends CardDef {\n  @field photos = contains(MultiImageSourceField);\n}\n```\n\n```handlebars\n{{#each @model.photos.resolvedUrls as |url|}}\n  <img src={{url}} alt='' />\n{{/each}}\n```\n\n### Theming\n\nStyling resolves through `--mlt-img-*` (this editor only) → `--img-source-*` (family knob shared with the single Image Source editor — one override re-skins both) → semantic theme tokens → boxel/literal fallbacks. The accent deliberately skips the app-global `--primary`; override it via `--img-source-accent` (or `--mlt-img-accent` for just this editor).",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "specType": "field",
+      "cardTitle": "Multi Image Source Field",
+      "cardDescription": "A field storing an ordered list of images, each sourced from a URL or a linked file upload.",
+      "containedExamples": [
+        {
+          "images": [
+            {
+              "url": "https://images.pexels.com/photos/34568018/pexels-photo-34568018.jpeg",
+              "sourceMode": "url"
+            },
+            {
+              "url": "https://images.pexels.com/photos/1170986/pexels-photo-1170986.jpeg",
+              "sourceMode": "url"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
