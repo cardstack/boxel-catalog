@@ -117,7 +117,7 @@ export function runTests() {
       );
 
       await fillIn(
-        '[data-test-image-source-editor] input',
+        '[data-test-image-source-url-input] input',
         'https://example.com/added.jpg',
       );
       await click('[data-test-image-source-url-add]');

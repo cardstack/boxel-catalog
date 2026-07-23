@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+import { isDestroyed, isDestroying } from '@ember/destroyable';
 import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
 import PhotoPlusIcon from '@cardstack/boxel-icons/photo-plus';
@@ -71,10 +72,13 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
   };
 
   // picking a file through the linksTo editor makes file the active source
-  // (deferred to a microtask — mutating during render is dropped)
+  // (deferred to a microtask — mutating during render is dropped). This also
+  // self-heals instances persisted as { file: set, sourceMode: 'url' }: the
+  // first edit render flips them to file — an intentional write-on-open.
   adoptPickedFile = modifier((_element: HTMLElement, [file]: [any]) => {
     if (file?.url && this.sourceMode !== 'file') {
       void Promise.resolve().then(() => {
+        if (isDestroyed(this) || isDestroying(this)) return;
         this.args.model.sourceMode = 'file';
       });
     }
@@ -207,7 +211,9 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
         padding: var(--boxel-sp-2xs);
         border-radius: var(--boxel-border-radius-sm, 6px);
         overflow: hidden;
-        background: var(--boxel-100, #f8f7fa);
+        /* letterbox surface derives from the themed bg/text pair instead of
+           a raw boxel gray, so dark-themed hosts stay dark */
+        background: color-mix(in srgb, var(--img-bg) 94%, var(--img-text));
       }
       .hero img {
         display: block;
