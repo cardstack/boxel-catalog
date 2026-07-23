@@ -5,7 +5,7 @@ import {
   field,
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
-import CodeSnippet from '../../../components/code-snippet';
+import CodeSnippet from '@cardstack/catalog/components/code-snippet';
 import ImageSourceField from '../image-source';
 
 const usageCode = `@field image = contains(ImageSourceField);`;
