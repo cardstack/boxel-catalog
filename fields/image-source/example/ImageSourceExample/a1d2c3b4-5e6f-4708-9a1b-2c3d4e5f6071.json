@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "image": {
+        "url": null,
+        "sourceMode": "file"
+      },
+      "title": "Image Source — Empty State",
+      "cardInfo": {
+        "name": "Image Source — Empty State",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "description": "The field's edit UI before any image is added — link a workspace image, or add by URL."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "ImageSourceExample",
+        "module": "@cardstack/catalog/fields/image-source/example/image-source-playground-example"
+      }
+    }
+  }
+}

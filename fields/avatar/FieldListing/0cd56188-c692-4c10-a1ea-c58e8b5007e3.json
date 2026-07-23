@@ -82,6 +82,11 @@
         "links": {
           "self": "../ListingThumbnails/avatar-cd224588.png"
         }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
       }
     }
   }

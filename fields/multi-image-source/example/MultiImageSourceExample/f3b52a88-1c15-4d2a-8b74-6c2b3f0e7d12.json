@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "photos": {
+        "images": []
+      },
+      "title": "Multi Image Source — Empty State",
+      "cardInfo": {
+        "name": "Multi Image Source — Empty State",
+        "notes": null,
+        "summary": "",
+        "cardThumbnailURL": null
+      },
+      "description": "The field's edit UI before any image is added."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "photos.newImage": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "MultiImageSourceExample",
+        "module": "@cardstack/catalog/fields/multi-image-source/example/multi-image-source-playground-example"
+      }
+    }
+  }
+}

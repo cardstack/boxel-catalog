@@ -67,6 +67,11 @@
         "links": {
           "self": "../ListingThumbnails/slider-number-c603297c.png"
         }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
       }
     }
   }

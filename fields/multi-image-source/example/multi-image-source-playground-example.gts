@@ -6,31 +6,36 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import CodeSnippet from '../../../components/code-snippet';
-import ImageSourceField from '../image-source';
+import MultiImageSourceField from '../multi-image-source';
 
-const usageCode = `@field image = contains(ImageSourceField);`;
+const usageCode = `@field photos = contains(MultiImageSourceField);`;
 
-export class ImageSourceExample extends CardDef {
-  static displayName = 'Image Source Example';
+export class MultiImageSourceExample extends CardDef {
+  static displayName = 'Multi Image Source Example';
 
-  @field image = contains(ImageSourceField);
+  @field photos = contains(MultiImageSourceField);
   @field title = contains(StringField);
   @field description = contains(StringField);
 
   static isolated = class Isolated extends Component<typeof this> {
     apiRows = [
-      { name: 'url', type: 'string', default: '—', desc: 'Source image URL.' },
       {
-        name: 'sourceMode',
-        type: 'string',
+        name: 'images',
+        type: 'ImageSourceField[]',
         default: '—',
-        desc: 'How the image is sourced.',
+        desc: 'Ordered list of images, each a full Image Source (url or linked file).',
       },
       {
-        name: 'resolvedUrl',
+        name: 'resolvedUrls',
+        type: 'string[]',
+        default: 'computed',
+        desc: 'Every image’s resolved URL, in order.',
+      },
+      {
+        name: 'primaryUrl',
         type: 'string',
         default: 'computed',
-        desc: 'Resolved display URL.',
+        desc: 'The first resolved URL — the cover image.',
       },
     ];
 
@@ -50,7 +55,7 @@ export class ImageSourceExample extends CardDef {
             <span class='fe-panel-hint'>Edit the value</span>
           </div>
           <div class='fe-panel-body'>
-            <@fields.image @format='edit' />
+            <@fields.photos @format='edit' />
           </div>
         </section>
 
@@ -60,7 +65,7 @@ export class ImageSourceExample extends CardDef {
             <span class='fe-panel-hint'>Read-only display</span>
           </div>
           <div class='fe-panel-body'>
-            <@fields.image />
+            <@fields.photos />
           </div>
         </section>
 

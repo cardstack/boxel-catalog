@@ -72,6 +72,11 @@
         "links": {
           "self": "../ListingThumbnails/discrete-range-51da4717.png"
         }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../../../Spec/code-snippet"
+        }
       }
     }
   }
