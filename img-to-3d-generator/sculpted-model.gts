@@ -1,0 +1,388 @@
+import {
+  CardDef,
+  Component,
+  field,
+  contains,
+  linksTo,
+  ImageDef,
+} from 'https://cardstack.com/base/card-api';
+import StringField from 'https://cardstack.com/base/string';
+import NumberField from 'https://cardstack.com/base/number';
+import DatetimeField from 'https://cardstack.com/base/datetime';
+
+import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
+
+import { SculptSpecField } from './fields/sculpt-spec';
+import ModelViewer from './components/model-viewer';
+
+// One finished reconstruction: the reference it was built from, the full
+// SculptSpec the vision model authored, and its self-review. Every generation
+// in the studio is saved as one of these, so each model is an independent,
+// searchable, linkable card in the realm (mirroring the AiImage pattern).
+export class SculptedModel extends CardDef {
+  static displayName = 'Sculpted Model';
+
+  @field referenceImage = contains(ImageSourceField);
+  @field spec = contains(SculptSpecField);
+  @field critique = contains(StringField);
+  @field score = contains(NumberField);
+  // snapshot of the render at save time — the kept result is viewable as an
+  // image (gallery tiles) without rebuilding the 3D scene
+  @field renderScreenshot = linksTo(() => ImageDef);
+  // history is a backward linked list: each round points at the round it
+  // refined, so the studio only ever holds the latest card and older rounds
+  // load on demand as you walk the chain
+  @field parentCreation = linksTo(() => SculptedModel);
+  // id of the ImgTo3dStudio card that produced this round — scopes the
+  // studio's prerendered history search without loading any cards
+  @field sourceStudioId = contains(StringField);
+  @field round = contains(NumberField);
+  @field modelUsed = contains(StringField);
+  @field createdAt = contains(DatetimeField);
+  @field title = contains(StringField, {
+    computeVia: function (this: SculptedModel) {
+      return this.spec?.objectName || 'Sculpted Model';
+    },
+  });
+
+  static isolated = class Isolated extends Component<typeof SculptedModel> {
+    get hasLinkedTheme() {
+      return Boolean(this.args.model?.cardInfo?.theme);
+    }
+    <template>
+      <article
+        class='sculpted {{unless this.hasLinkedTheme "i3d-default-theme"}}'
+      >
+        <header class='sculpted-header'>
+          <h1 class='sculpted-title'>{{@model.title}}</h1>
+          {{#if @model.score}}
+            <p class='sculpted-score'>score {{@model.score}}</p>
+          {{/if}}
+        </header>
+        <main class='sculpted-viewport' aria-label='3D model viewport'>
+          <ModelViewer @spec={{@model.spec}} />
+        </main>
+        {{#if @model.critique}}
+          <footer class='sculpted-footer'>
+            <p class='sculpted-critique'>{{@model.critique}}</p>
+          </footer>
+        {{/if}}
+      </article>
+      <style scoped>
+        .sculpted {
+          --_border: var(--i3d-border, var(--border, #232838));
+          --_dim: var(--i3d-text-dim, var(--muted-foreground, #9aa0b2));
+          --_accent: var(--i3d-accent, var(--accent, #38e8ff));
+          --_mono: var(
+            --i3d-font-mono,
+            var(--font-mono, ui-monospace, Menlo, monospace)
+          );
+          display: flex;
+          flex-direction: column;
+          height: 100dvh;
+          max-height: 100%;
+          min-height: 0;
+          background: var(--i3d-bg, var(--background, #0a0b10));
+          color: var(--i3d-text, var(--foreground, #eef0f6));
+          font-family: var(
+            --i3d-font-sans,
+            var(
+              --font-sans,
+              -apple-system,
+              BlinkMacSystemFont,
+              'Segoe UI',
+              Roboto,
+              sans-serif
+            )
+          );
+        }
+        .sculpted-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem 1.25rem;
+          border-bottom: 1px solid var(--_border);
+        }
+        .sculpted-title {
+          margin: 0;
+          font-size: 1rem;
+        }
+        .sculpted-score {
+          margin: 0;
+          font-family: var(--_mono);
+          font-size: 0.6875rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--_accent);
+        }
+        .sculpted-viewport {
+          flex: 1;
+          min-height: 0;
+          position: relative;
+        }
+        .sculpted-footer {
+          padding: 0.625rem 1.25rem;
+          border-top: 1px solid var(--_border);
+        }
+        .sculpted-critique {
+          margin: 0;
+          font-size: 0.8125rem;
+          color: var(--_dim);
+        }
+        .i3d-default-theme {
+          --background: #0a0b10;
+          --card: #14161e;
+          --border: #232838;
+          --foreground: #eef0f6;
+          --muted-foreground: #9aa0b2;
+          --accent: #38e8ff;
+        }
+      </style>
+    </template>
+  };
+
+  static embedded = class Embedded extends Component<typeof SculptedModel> {
+    get componentCount() {
+      return this.args.model?.spec?.components?.length ?? 0;
+    }
+    get hasLinkedTheme() {
+      return Boolean(this.args.model?.cardInfo?.theme);
+    }
+    <template>
+      <article class='tile {{unless this.hasLinkedTheme "i3d-default-theme"}}'>
+        <header class='tile-header'>
+          <h3 class='tile-title'>{{@model.title}}</h3>
+          {{#if @model.score}}
+            <p class='tile-score'>score {{@model.score}}</p>
+          {{/if}}
+        </header>
+        {{#if @model.renderScreenshot.url}}
+          <img
+            class='tile-image'
+            src={{@model.renderScreenshot.url}}
+            alt='Render of {{@model.title}}'
+          />
+        {{else if @model.referenceImage.resolvedUrl}}
+          <img
+            class='tile-image'
+            src={{@model.referenceImage.resolvedUrl}}
+            alt='Reference for {{@model.title}}'
+          />
+        {{/if}}
+        <p class='tile-meta'>{{this.componentCount}}
+          parts ·
+          {{@model.spec.objectClass}}</p>
+      </article>
+      <style scoped>
+        .tile {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          height: 100%;
+          padding: 0.875rem;
+          background: var(--i3d-bg, var(--background, #0a0b10));
+          color: var(--i3d-text, var(--foreground, #eef0f6));
+          font-family: var(
+            --i3d-font-sans,
+            var(
+              --font-sans,
+              -apple-system,
+              BlinkMacSystemFont,
+              'Segoe UI',
+              Roboto,
+              sans-serif
+            )
+          );
+        }
+        .tile-header {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 0.5rem;
+        }
+        .tile-title {
+          margin: 0;
+          font-size: 0.9375rem;
+        }
+        .tile-score {
+          margin: 0;
+          font-family: var(
+            --i3d-font-mono,
+            var(--font-mono, ui-monospace, Menlo, monospace)
+          );
+          font-size: 0.625rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--i3d-accent, var(--accent, #38e8ff));
+          white-space: nowrap;
+        }
+        .tile-image {
+          flex: 1;
+          min-height: 0;
+          width: 100%;
+          /* renders are deep-space screenshots — contain on the same dark
+             ground shows the whole model instead of a blown-up crop */
+          object-fit: contain;
+          background: var(--i3d-bg, var(--background, #0a0b10));
+          border-radius: 0.5rem;
+          border: 1px solid var(--i3d-border, var(--border, #232838));
+        }
+        .tile-meta {
+          margin: 0;
+          font-family: var(
+            --i3d-font-mono,
+            var(--font-mono, ui-monospace, Menlo, monospace)
+          );
+          font-size: 0.6875rem;
+          color: var(--i3d-text-dim, var(--muted-foreground, #9aa0b2));
+        }
+        .i3d-default-theme {
+          --background: #0a0b10;
+          --card: #14161e;
+          --border: #232838;
+          --foreground: #eef0f6;
+          --muted-foreground: #9aa0b2;
+          --accent: #38e8ff;
+        }
+      </style>
+    </template>
+  };
+
+  static fitted = class Fitted extends Component<typeof SculptedModel> {
+    get hasLinkedTheme() {
+      return Boolean(this.args.model?.cardInfo?.theme);
+    }
+    // baked into the prerendered tile so the studio's history strip can show
+    // when each round was made without loading the card
+    get createdLabel() {
+      let d = this.args.model?.createdAt;
+      if (!d) return undefined;
+      return new Date(d).toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+    <template>
+      <article class='fit {{unless this.hasLinkedTheme "i3d-default-theme"}}'>
+        {{#if @model.renderScreenshot.url}}
+          <img class='fit-image' src={{@model.renderScreenshot.url}} alt='' />
+        {{else if @model.referenceImage.resolvedUrl}}
+          <img
+            class='fit-image'
+            src={{@model.referenceImage.resolvedUrl}}
+            alt=''
+          />
+        {{/if}}
+        <div class='fit-info'>
+          <h3 class='fit-title'>{{@model.title}}</h3>
+          <p class='fit-tag'>
+            {{#if @model.round}}round {{@model.round}}{{else}}sculpted{{/if}}
+          </p>
+          {{#if this.createdLabel}}
+            <p class='fit-time'>{{this.createdLabel}}</p>
+          {{/if}}
+        </div>
+      </article>
+      <style scoped>
+        .fit {
+          display: flex;
+          align-items: flex-start;
+          gap: var(--boxel-sp-xs, 0.625rem);
+          height: 100%;
+          padding: var(--boxel-sp-xs, 0.625rem);
+          overflow: hidden;
+          background: var(--i3d-bg, var(--background, #0a0b10));
+          color: var(--i3d-text, var(--foreground, #eef0f6));
+          font-family: var(
+            --i3d-font-sans,
+            var(
+              --font-sans,
+              -apple-system,
+              BlinkMacSystemFont,
+              'Segoe UI',
+              Roboto,
+              sans-serif
+            )
+          );
+        }
+        .fit-image {
+          width: 3rem;
+          height: 3rem;
+          flex-shrink: 0;
+          /* deep-space screenshot — contain shows the whole model */
+          object-fit: contain;
+          background: var(--i3d-bg, var(--background, #0a0b10));
+          border-radius: 0.375rem;
+          border: 1px solid var(--i3d-border, var(--border, #232838));
+        }
+        .fit-info {
+          min-width: 0;
+        }
+        .fit-title {
+          margin: 0;
+          font-size: 0.8125rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .fit-tag {
+          margin: 0.125rem 0 0;
+          font-family: var(
+            --i3d-font-mono,
+            var(--font-mono, ui-monospace, Menlo, monospace)
+          );
+          font-size: 0.625rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--i3d-accent, var(--accent, #38e8ff));
+        }
+        .fit-time {
+          margin: 0.125rem 0 0;
+          font-family: var(
+            --i3d-font-mono,
+            var(--font-mono, ui-monospace, Menlo, monospace)
+          );
+          font-size: 0.625rem;
+          white-space: nowrap;
+          color: var(--i3d-text-dim, var(--muted-foreground, #9aa0b2));
+        }
+        @container fitted-card (height <= 80px) {
+          .fit {
+            align-items: center;
+          }
+          .fit-image {
+            width: 2rem;
+            height: 2rem;
+          }
+        }
+        /* tall tiles (root grid cards): render on top, info strip below */
+        @container fitted-card (height > 170px) {
+          .fit {
+            flex-direction: column;
+            align-items: stretch;
+            gap: var(--boxel-sp-xxs, 0.375rem);
+          }
+          .fit-image {
+            width: 100%;
+            height: auto;
+            flex: 1;
+            min-height: 0;
+          }
+          .fit-info {
+            flex-shrink: 0;
+          }
+        }
+        .i3d-default-theme {
+          --background: #0a0b10;
+          --card: #14161e;
+          --border: #232838;
+          --foreground: #eef0f6;
+          --muted-foreground: #9aa0b2;
+          --accent: #38e8ff;
+        }
+      </style>
+    </template>
+  };
+}

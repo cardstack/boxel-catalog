@@ -1,0 +1,310 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "referenceImage": {
+        "url": null,
+        "sourceMode": "file"
+      },
+      "spec": {
+        "objectName": "Cloudy Bay Sauvignon Blanc Bottle",
+        "inputKind": "object",
+        "identityFeatures": [
+          "tall cylindrical green glass body with tapered shoulder",
+          "long thin neck with screw-cap closure",
+          "dark foil/capsule wrap over neck and finish",
+          "white rectangular label with 'CLOUDY BAY' branding and mountain motif",
+          "punted flat base for standing",
+          "'Sauvignon Blanc' text below main label"
+        ],
+        "objectClass": "hard-surface",
+        "complexity": "simple",
+        "components": [
+          {
+            "nodeId": "bottle-root",
+            "parentId": "",
+            "primitive": "group",
+            "dimensions": "[]",
+            "position": "[0,0,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "",
+            "text": null,
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": null,
+            "note": "root"
+          },
+          {
+            "nodeId": "bottle-body",
+            "parentId": "bottle-root",
+            "primitive": "lathe",
+            "dimensions": "[0.02,0,0.4,0.02,0.42,0.05,0.42,1.55,0.4,1.75,0.32,1.95,0.2,2.1,0.145,2.2]",
+            "position": "[0,0,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "m-glass",
+            "text": null,
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": null,
+            "note": "single revolved glass body with punt and shoulder"
+          },
+          {
+            "nodeId": "foil-capsule",
+            "parentId": "bottle-root",
+            "primitive": "cylinder",
+            "dimensions": "[0.145,0.19,0.55]",
+            "position": "[0,2.475,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "m-capsule",
+            "text": null,
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": "bottle-body",
+            "note": "dark foil capsule over neck"
+          },
+          {
+            "nodeId": "foil-band-text",
+            "parentId": "bottle-root",
+            "primitive": "curvedDecal",
+            "dimensions": "[0.2,0.12,90]",
+            "position": "[0,2.55,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "m-label-gold",
+            "text": "CLOUDY BAY NEW ZEALAND",
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": "foil-capsule",
+            "note": "gold foil text band on capsule"
+          },
+          {
+            "nodeId": "screw-cap",
+            "parentId": "bottle-root",
+            "primitive": "cylinder",
+            "dimensions": "[0.14,0.145,0.22]",
+            "position": "[0,2.86,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "m-cap",
+            "text": null,
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": "foil-capsule",
+            "note": "knurled screw-cap top"
+          },
+          {
+            "nodeId": "main-label-bg",
+            "parentId": "bottle-root",
+            "primitive": "curvedDecal",
+            "dimensions": "[0.43,0.72,150]",
+            "position": "[0,0.98,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "m-label-bg",
+            "text": null,
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": "bottle-body",
+            "note": "white rectangular label background"
+          },
+          {
+            "nodeId": "label-title",
+            "parentId": "bottle-root",
+            "primitive": "curvedDecal",
+            "dimensions": "[0.44,0.15,150]",
+            "position": "[0,1.18,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "m-label-text",
+            "text": "CLOUDY BAY",
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": "main-label-bg",
+            "note": "large serif title on label"
+          },
+          {
+            "nodeId": "label-subtitle",
+            "parentId": "bottle-root",
+            "primitive": "curvedDecal",
+            "dimensions": "[0.445,0.08,150]",
+            "position": "[0,1.06,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "m-label-gold",
+            "text": "NEW ZEALAND",
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": "main-label-bg",
+            "note": "gold subtitle beneath title"
+          },
+          {
+            "nodeId": "label-mountain",
+            "parentId": "bottle-root",
+            "primitive": "curvedDecal",
+            "dimensions": "[0.45,0.25,150]",
+            "position": "[0,0.93,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "m-mountain",
+            "text": "▲",
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": "main-label-bg",
+            "note": "faint watercolor mountain motif"
+          },
+          {
+            "nodeId": "label-subtext",
+            "parentId": "bottle-root",
+            "primitive": "curvedDecal",
+            "dimensions": "[0.455,0.08,150]",
+            "position": "[0,0.7,0]",
+            "rotation": "[0,0,0]",
+            "scale": "[1,1,1]",
+            "materialId": "m-label-italic",
+            "text": "Sauvignon Blanc",
+            "repeat": null,
+            "assetUrl": null,
+            "attachTo": "main-label-bg",
+            "note": "italic varietal text near label bottom"
+          }
+        ],
+        "materials": [
+          {
+            "materialId": "m-glass",
+            "baseColor": "#4a5c1e",
+            "roughness": 0.12,
+            "metalness": 0,
+            "opacity": 0.85,
+            "emissive": null,
+            "clearcoat": 1,
+            "sheen": null,
+            "finish": null,
+            "emissiveIntensity": null
+          },
+          {
+            "materialId": "m-capsule",
+            "baseColor": "#2b1f1a",
+            "roughness": 0.4,
+            "metalness": 0.5,
+            "opacity": null,
+            "emissive": null,
+            "clearcoat": null,
+            "sheen": null,
+            "finish": null,
+            "emissiveIntensity": null
+          },
+          {
+            "materialId": "m-cap",
+            "baseColor": "#241a15",
+            "roughness": 0.35,
+            "metalness": 0.55,
+            "opacity": null,
+            "emissive": null,
+            "clearcoat": null,
+            "sheen": null,
+            "finish": "knurl",
+            "emissiveIntensity": null
+          },
+          {
+            "materialId": "m-label-bg",
+            "baseColor": "#f5f3ee",
+            "roughness": 0.6,
+            "metalness": 0,
+            "opacity": null,
+            "emissive": null,
+            "clearcoat": null,
+            "sheen": null,
+            "finish": null,
+            "emissiveIntensity": null
+          },
+          {
+            "materialId": "m-label-text",
+            "baseColor": "#2a2a2a",
+            "roughness": 0.5,
+            "metalness": 0,
+            "opacity": null,
+            "emissive": null,
+            "clearcoat": null,
+            "sheen": null,
+            "finish": null,
+            "emissiveIntensity": null
+          },
+          {
+            "materialId": "m-label-gold",
+            "baseColor": "#a08a4f",
+            "roughness": 0.4,
+            "metalness": 0.3,
+            "opacity": null,
+            "emissive": null,
+            "clearcoat": null,
+            "sheen": null,
+            "finish": null,
+            "emissiveIntensity": null
+          },
+          {
+            "materialId": "m-mountain",
+            "baseColor": "#a99bb0",
+            "roughness": 0.7,
+            "metalness": 0,
+            "opacity": null,
+            "emissive": null,
+            "clearcoat": null,
+            "sheen": null,
+            "finish": null,
+            "emissiveIntensity": null
+          },
+          {
+            "materialId": "m-label-italic",
+            "baseColor": "#3a3a3a",
+            "roughness": 0.55,
+            "metalness": 0,
+            "opacity": null,
+            "emissive": null,
+            "clearcoat": null,
+            "sheen": null,
+            "finish": null,
+            "emissiveIntensity": null
+          }
+        ]
+      },
+      "critique": "Captures the tapered olive-glass silhouette, foil capsule, knurled cap, and layered label decals with mountain motif; glass translucency and exact typography are approximated.",
+      "score": 74,
+      "sourceStudioId": "@cardstack/catalog/img-to-3d-generator/ImgTo3dStudio/4bb2e071-57d9-43bb-ae0e-e4f189534797",
+      "round": 1,
+      "modelUsed": "anthropic/claude-sonnet-5",
+      "createdAt": "2026-07-23T08:29:29.021Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "referenceImage.file": {
+        "links": {
+          "self": "https://localhost:4201/catalog/4b6602-wine-cellar-card-definition/CloudyBaySauvignonBlanc.webp"
+        }
+      },
+      "renderScreenshot": {
+        "links": {
+          "self": "https://localhost:4201/catalog/img-to-3d-generator/renders/cloudy-bay-sauvignon-blanc-bottle-round-1-1.webp"
+        }
+      },
+      "parentCreation": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/img-to-3d-generator/sculpted-model",
+        "name": "SculptedModel"
+      }
+    }
+  }
+}
