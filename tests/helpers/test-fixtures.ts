@@ -124,8 +124,10 @@ export function makeMockCatalogContents(
           cardTitle: 'Photo Post',
         },
         relationships: {
+          // relative links.self mirrors the on-disk shape of catalog content;
+          // it must resolve inside the install directory after copying
           photo: {
-            links: { self: `${mockCatalogURL}photo-post/photo.png` },
+            links: { self: '../photo.png' },
             data: {
               type: 'file-meta',
               id: `${mockCatalogURL}photo-post/photo.png`,
