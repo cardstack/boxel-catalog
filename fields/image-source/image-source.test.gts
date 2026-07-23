@@ -1,3 +1,4 @@
+import { click, fillIn } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
@@ -66,7 +67,7 @@ export function runTests() {
         .exists('editor component renders');
     });
 
-    test('image-source field edit defaults to file tab when no sourceMode or url', async function (assert) {
+    test('image-source field edit shows the empty state when no url or file', async function (assert) {
       await renderField(
         ImageSourceField,
         buildField(ImageSourceField, {}),
@@ -74,77 +75,80 @@ export function runTests() {
       );
 
       assert
-        .dom('[data-test-image-source-file-tab]')
-        .hasAttribute('aria-selected', 'true', 'file tab active by default');
+        .dom('[data-test-image-source-preview]')
+        .doesNotExist('no hero preview without an image');
       assert
-        .dom('[data-test-image-source-url-tab]')
-        .hasAttribute('aria-selected', 'false', 'url tab inactive');
-      assert
-        .dom('[data-test-image-source-file-panel]')
-        .exists('file panel shown');
-    });
-
-    test('image-source field edit shows url tab active when sourceMode is url', async function (assert) {
-      await renderField(
-        ImageSourceField,
-        buildField(ImageSourceField, {
-          url: 'https://example.com/photo.jpg',
-          sourceMode: 'url',
-        }),
-        'edit',
-      );
-
-      assert
-        .dom('[data-test-image-source-url-tab]')
-        .hasAttribute('aria-selected', 'true', 'url tab active');
-      assert
-        .dom('[data-test-image-source-url-panel]')
-        .exists('url panel shown');
-    });
-
-    test('image-source field edit url panel shows preview when url is set', async function (assert) {
-      await renderField(
-        ImageSourceField,
-        buildField(ImageSourceField, {
-          url: 'https://example.com/photo.jpg',
-          sourceMode: 'url',
-        }),
-        'edit',
-      );
-
-      assert
-        .dom('[data-test-image-source-url-preview]')
-        .exists('url preview renders when url is set');
-    });
-
-    test('image-source field edit url panel shows empty state when no url', async function (assert) {
-      await renderField(
-        ImageSourceField,
-        buildField(ImageSourceField, { sourceMode: 'url' }),
-        'edit',
-      );
-
-      assert
-        .dom('[data-test-image-source-url-preview]')
-        .doesNotExist('no preview when url is empty');
+        .dom('[data-test-image-source-file-field]')
+        .exists('link-an-image panel shown');
       assert
         .dom('[data-test-image-source-url-input]')
         .exists('url input present');
     });
 
-    test('image-source field edit shows file picker when sourceMode is file and no file linked', async function (assert) {
+    test('image-source field edit shows the hero preview when url is set', async function (assert) {
+      await renderField(
+        ImageSourceField,
+        buildField(ImageSourceField, {
+          url: 'https://example.com/photo.jpg',
+          sourceMode: 'url',
+        }),
+        'edit',
+      );
+
+      assert
+        .dom('[data-test-image-source-preview] img')
+        .hasAttribute(
+          'src',
+          'https://example.com/photo.jpg',
+          'hero shows the resolved image',
+        );
+      assert
+        .dom('[data-test-image-source-remove]')
+        .exists('remove button present on the hero');
+    });
+
+    test('image-source field edit adds an image by url', async function (assert) {
+      // sourceMode alone yields a real (still image-less) field instance —
+      // buildField({}) returns undefined, which renders but cannot be edited
       await renderField(
         ImageSourceField,
         buildField(ImageSourceField, { sourceMode: 'file' }),
         'edit',
       );
 
+      await fillIn(
+        '[data-test-image-source-url-input] input',
+        'https://example.com/added.jpg',
+      );
+      await click('[data-test-image-source-url-add]');
+
       assert
-        .dom('[data-test-image-source-file-panel]')
-        .exists('file panel renders');
+        .dom('[data-test-image-source-preview] img')
+        .hasAttribute(
+          'src',
+          'https://example.com/added.jpg',
+          'added url becomes the hero image',
+        );
+    });
+
+    test('image-source field edit remove returns to the empty state', async function (assert) {
+      await renderField(
+        ImageSourceField,
+        buildField(ImageSourceField, {
+          url: 'https://example.com/photo.jpg',
+          sourceMode: 'url',
+        }),
+        'edit',
+      );
+
+      await click('[data-test-image-source-remove]');
+
+      assert
+        .dom('[data-test-image-source-preview]')
+        .doesNotExist('hero cleared after remove');
       assert
         .dom('[data-test-image-source-file-field]')
-        .exists('file picker shown when no file linked');
+        .exists('back to the empty state');
     });
   });
 }

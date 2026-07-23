@@ -1,21 +1,12 @@
 import Component from '@glimmer/component';
-import SparkleIcon from '@cardstack/boxel-icons/sparkle';
-import type { BoxComponent } from 'https://cardstack.com/base/card-api';
-import { fn } from '@ember/helper';
+import { tracked } from '@glimmer/tracking';
+import { isDestroyed, isDestroying } from '@ember/destroyable';
 import { on } from '@ember/modifier';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  BoxelInputGroup,
-  IconButton,
-  Pill,
-} from '@cardstack/boxel-ui/components';
-import {
-  File,
-  IconMinusCircle,
-  IconLink,
-  ImagePlaceholder,
-  Upload,
-} from '@cardstack/boxel-ui/icons';
+import { modifier } from 'ember-modifier';
+import PhotoPlusIcon from '@cardstack/boxel-icons/photo-plus';
+import type { BoxComponent } from 'https://cardstack.com/base/card-api';
+import { BoxelInputGroup } from '@cardstack/boxel-ui/components';
+import { IconLink, IconX } from '@cardstack/boxel-ui/icons';
 
 import type { ImageSourceMode } from '../image-source';
 import { selectedSourceMode } from '../utils';
@@ -33,7 +24,14 @@ interface ImageSourceEditorSignature {
   };
 }
 
+// One surface, two moves — the same design language as the Multi Image
+// Source editor. With an image: a hero preview with a remove button. Empty:
+// a two-panel invitation — link a workspace image, or add by URL. Styling
+// resolves --img-source-* knob → semantic theme token → boxel/literal (three-scope),
+// so themed hosts restyle both editors at once.
 export default class ImageSourceEditor extends Component<ImageSourceEditorSignature> {
+  @tracked urlDraft = '';
+
   get sourceMode(): ImageSourceMode {
     return selectedSourceMode(
       this.args.model?.sourceMode,
@@ -41,426 +39,226 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
     );
   }
 
-  switchTo = (mode: ImageSourceMode) => {
-    this.args.model.sourceMode = mode;
+  get resolvedUrl(): string {
+    return this.sourceMode === 'url'
+      ? (this.args.model?.url ?? '')
+      : (this.args.model?.file?.url ?? '');
+  }
+
+  get hasImage() {
+    return Boolean(this.resolvedUrl);
+  }
+
+  // BoxelInputGroup's @onInput passes the value itself, not an event
+  onUrlInput = (value: string) => {
+    this.urlDraft = value;
   };
 
-  onUrlChange = (val: string) => {
-    this.args.model.url = val;
+  addUrl = (event: Event) => {
+    event.preventDefault();
+    let model = this.args.model;
+    let url = this.urlDraft.trim();
+    if (!model || !url) return;
+    model.url = url;
+    model.sourceMode = 'url';
+    this.urlDraft = '';
   };
 
-  onFileRemove = () => {
-    this.args.model.file = undefined;
+  removeImage = () => {
+    let model = this.args.model;
+    if (!model) return;
+    model.file = undefined;
+    model.url = null;
   };
 
-  get hasFile() {
-    return Boolean(this.filePreviewSrc);
-  }
-
-  get hasUrl() {
-    return Boolean(this.args.model?.url);
-  }
-
-  get imageUrl() {
-    return this.args.model?.url ?? '';
-  }
-
-  get filePreviewSrc() {
-    return this.args.model?.file?.url ?? '';
-  }
-
-  get defaultSourceLabel() {
-    return this.sourceMode === 'url' ? 'Default: URL' : 'Default: File Upload';
-  }
+  // picking a file through the linksTo editor makes file the active source
+  // (deferred to a microtask — mutating during render is dropped). This also
+  // self-heals instances persisted as { file: set, sourceMode: 'url' }: the
+  // first edit render flips them to file — an intentional write-on-open.
+  adoptPickedFile = modifier((_element: HTMLElement, [file]: [any]) => {
+    if (file?.url && this.sourceMode !== 'file') {
+      void Promise.resolve().then(() => {
+        if (isDestroyed(this) || isDestroying(this)) return;
+        this.args.model.sourceMode = 'file';
+      });
+    }
+  });
 
   <template>
     <div class='image-source-root' data-test-image-source-edit>
       <div class='editor' data-test-image-source-editor>
-        <header class='header header--static'>
-          <div class='header-text'>
-            <span class='title'>Image source</span>
-            <span class='description'>Choose where the image comes from.</span>
-          </div>
-          <Pill @tag='span' aria-hidden='true' class='default-pill'>
-            <:iconLeft>
-              <SparkleIcon width='10' height='10' />
-            </:iconLeft>
-            <:default>{{this.defaultSourceLabel}}</:default>
-          </Pill>
-        </header>
-
-        <div class='body'>
-          {{! template-lint-disable require-presentational-children }}
-          <div class='tabs' role='tablist'>
+        {{#if this.hasImage}}
+          <figure class='hero' data-test-image-source-preview>
+            <img src={{this.resolvedUrl}} alt='' />
             <button
               type='button'
-              role='tab'
-              id='tab-file'
-              aria-controls='panel-file'
-              class='tab {{if (eq this.sourceMode "file") "tab--active"}}'
-              aria-selected={{if (eq this.sourceMode 'file') 'true' 'false'}}
-              data-test-image-source-file-tab
-              {{on 'click' (fn this.switchTo 'file')}}
+              class='remove-btn'
+              aria-label='Remove image'
+              data-test-image-source-remove
+              {{on 'click' this.removeImage}}
             >
-              <span class='tab-content'>
-                <File width='14' height='14' aria-hidden='true' />
-                File Upload
-              </span>
+              <IconX width='8' height='8' aria-hidden='true' />
             </button>
-            <button
-              type='button'
-              role='tab'
-              id='tab-url'
-              aria-controls='panel-url'
-              class='tab {{if (eq this.sourceMode "url") "tab--active"}}'
-              aria-selected={{if (eq this.sourceMode 'url') 'true' 'false'}}
-              data-test-image-source-url-tab
-              {{on 'click' (fn this.switchTo 'url')}}
-            >
-              <span class='tab-content'>
-                <IconLink width='14' height='14' aria-hidden='true' />
-                URL
-              </span>
-            </button>
-          </div>
-          {{! template-lint-enable require-presentational-children }}
-
-          {{#if (eq this.sourceMode 'url')}}
+          </figure>
+        {{else}}
+          <div class='empty'>
             <div
-              role='tabpanel'
-              id='panel-url'
-              aria-labelledby='tab-url'
-              tabindex='0'
-              class='panel'
-              data-test-image-source-url-panel
+              class='empty-pick'
+              data-test-image-source-file-field
+              {{this.adoptPickedFile @model.file}}
             >
-              <label class='field-label' for='url-input'>URL (Image)</label>
-              <BoxelInputGroup
-                id='url-input'
-                @placeholder='https://example.com/image.jpg'
-                @value={{this.imageUrl}}
-                @onInput={{this.onUrlChange}}
-                data-test-image-source-url-input
-              >
-                <:before as |Accessories|>
-                  <Accessories.Text>
-                    <IconLink width='16' height='16' aria-hidden='true' />
-                  </Accessories.Text>
-                </:before>
-              </BoxelInputGroup>
-
-              <div class='preview-header'>
-                <span class='field-label'>Preview</span>
-                <span class='badge'>Optional</span>
+              <PhotoPlusIcon
+                class='empty-pick-icon'
+                width='20'
+                height='20'
+                aria-hidden='true'
+              />
+              <span class='empty-pick-title'>Add an image</span>
+              <div class='file-link-btn'>
+                <@fileField />
               </div>
-              {{#if this.hasUrl}}
-                <figure class='media-box' data-test-image-source-url-preview>
-                  <img src={{this.imageUrl}} alt='' />
-                </figure>
-              {{else}}
-                <div class='media-box media-box--empty'>
-                  <ImagePlaceholder
-                    class='empty-icon'
-                    width='30'
-                    height='30'
-                    aria-hidden='true'
-                  />
-                  <p class='empty-title'>No image to preview</p>
-                  <p class='empty-hint'>Enter a URL above to see a preview</p>
-                </div>
-              {{/if}}
             </div>
-          {{else}}
-            <div
-              role='tabpanel'
-              id='panel-file'
-              aria-labelledby='tab-file'
-              tabindex='0'
-              class='panel'
-              data-test-image-source-file-panel
-            >
-              <span class='field-label'>File (Image)</span>
-              {{#if this.hasFile}}
-                <figure class='media-box' data-test-image-source-file-preview>
-                  <IconButton
-                    @icon={{IconMinusCircle}}
-                    @width='24'
-                    @height='24'
-                    class='remove-btn'
-                    {{on 'click' this.onFileRemove}}
-                    aria-label='Remove image file'
-                    data-test-image-source-file-remove
-                  />
-                  <img src={{this.filePreviewSrc}} alt='' />
-                </figure>
-              {{else}}
-                <div class='media-box media-box--empty'>
-                  <Upload
-                    class='empty-icon'
-                    width='20'
-                    height='20'
-                    aria-hidden='true'
-                  />
-                  <p class='empty-title'>No file linked</p>
-                  <p class='empty-hint'>Link an image file to get started</p>
-                  <div class='file-link-btn' data-test-image-source-file-field>
-                    <@fileField />
-                  </div>
-                </div>
-              {{/if}}
+            <div class='empty-divider' aria-hidden='true'>
+              <span class='empty-or'>or</span>
             </div>
-          {{/if}}
-        </div>
+            <div class='empty-url'>
+              <span class='empty-url-title'>Add image URL</span>
+              <form class='url-form' {{on 'submit' this.addUrl}}>
+                <label class='visually-hidden' for='is-url-input'>Image URL</label>
+                <BoxelInputGroup
+                  id='is-url-input'
+                  @placeholder='Paste image URL…'
+                  @value={{this.urlDraft}}
+                  @onInput={{this.onUrlInput}}
+                  data-test-image-source-url-input
+                >
+                  <:before as |Accessories|>
+                    <Accessories.Text>
+                      <IconLink width='14' height='14' aria-hidden='true' />
+                    </Accessories.Text>
+                  </:before>
+                  <:after>
+                    <button
+                      type='submit'
+                      class='add-url-btn'
+                      data-test-image-source-url-add
+                    >
+                      Add
+                    </button>
+                  </:after>
+                </BoxelInputGroup>
+              </form>
+            </div>
+          </div>
+        {{/if}}
       </div>
     </div>
 
     <style scoped>
+      /* three-scope resolution: --img-source-* component knob → semantic theme
+         token → boxel/literal fallback — the SAME knob namespace as the
+         Multi Image Source editor, so a host re-skins both at once. Accent
+         deliberately skips the app's global --primary (the boxel highlight
+         green would take over every control). The --img-* names are the
+         resolved values every rule below reads. */
       .image-source-root {
-        --accent: var(--boxel-purple, #6638ff);
-        --accent-bg: color-mix(
-          in srgb,
-          var(--boxel-purple, #6638ff) 8%,
-          transparent
+        --img-bg: var(--img-source-bg, var(--card, var(--boxel-light, #fff)));
+        --img-text: var(
+          --img-source-text,
+          var(--card-foreground, var(--boxel-700, #272330))
         );
+        --img-dim: var(
+          --img-source-text-dim,
+          var(--muted-foreground, var(--boxel-400, #afafb7))
+        );
+        --img-border: var(
+          --img-source-border,
+          var(--border, var(--boxel-border-color, #d3d3d3))
+        );
+        --img-accent: var(--img-source-accent, var(--boxel-purple, #6638ff));
+        --img-accent-fg: var(--img-source-accent-fg, var(--boxel-light, #fff));
+        --img-danger: var(
+          --img-source-danger,
+          var(--destructive, var(--boxel-danger, #ff5050))
+        );
+        --img-font: var(
+          --img-source-font,
+          var(--font-sans, var(--boxel-font-family, sans-serif))
+        );
+        --img-accent-bg: color-mix(in srgb, var(--img-accent) 8%, transparent);
+        /* the input group's focus ring reads var(--ring, --boxel-highlight);
+           re-point both locally so focus matches the accent */
+        --ring: var(--img-source-ring, var(--img-accent));
+        --boxel-highlight: var(--img-source-ring, var(--img-accent));
 
-        background: var(--boxel-light, #fff);
-        font-family: var(--boxel-font-family, sans-serif);
-        color: var(--boxel-700, #272330);
-        border: 1px solid var(--boxel-border-color, #d3d3d3);
+        background: var(--img-bg);
+        font-family: var(--img-font);
+        color: var(--img-text);
+        border: 1px solid var(--img-border);
         border-radius: var(--boxel-radius, 10px);
-        overflow: hidden;
+        padding: var(--boxel-sp-xs);
+        /* lets the empty-state layout respond to the host's width */
+        container-type: inline-size;
       }
 
-      .editor {
-        background: transparent;
-      }
-
-      .header {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-sm) var(--boxel-sp);
-        border-bottom: 1px solid var(--boxel-border-color, #d3d3d3);
-      }
-
-      .header--static {
-        cursor: default;
-      }
-
-      .header-text {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-6xs);
-      }
-
-      .title {
-        font-size: var(--boxel-font-size-sm, 14px);
-        font-weight: 600;
-        color: var(--boxel-700, #272330);
-        line-height: 1.4;
-      }
-
-      .description {
-        font-size: var(--boxel-font-size-xs, 12px);
-        color: var(--boxel-400, #afafb7);
-        line-height: 1.4;
-      }
-
-      .default-pill {
-        --boxel-pill-background-color: color-mix(
-          in srgb,
-          var(--boxel-purple, #6638ff) 12%,
-          transparent
-        );
-        --boxel-pill-font-color: var(--accent, #6638ff);
-        --boxel-pill-border-color: transparent;
-        --icon-color: var(--accent, #6638ff);
-        font-size: var(--boxel-font-size-xs, 12px);
-      }
-
-      .body {
-        padding: var(--boxel-sp);
-        padding-right: var(--boxel-sp-lg);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-sm);
-      }
-
-      .tabs {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--boxel-sp-2xs);
-      }
-
-      .tab {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--boxel-border-color, #d3d3d3);
-        border-radius: var(--boxel-border-radius-sm, 6px);
-        background: transparent;
-        color: var(--boxel-400, #afafb7);
-        font-size: var(--boxel-font-size-sm, 14px);
-        font-weight: 500;
-        font-family: var(--boxel-font-family, sans-serif);
-        cursor: pointer;
-        transition:
-          background 0.15s,
-          border-color 0.15s,
-          color 0.15s;
-      }
-
-      .tab svg {
-        flex-shrink: 0;
-      }
-
-      .tab:hover:not(.tab--active) {
-        background: var(--boxel-100, #f8f7fa);
-        color: var(--boxel-700, #272330);
-      }
-
-      .tab--active {
-        background: var(
-          --accent-bg,
-          color-mix(in srgb, #6638ff 8%, transparent)
-        );
-        border-color: var(--accent, #6638ff);
-        color: var(--accent, #6638ff);
-        --icon-color: var(--accent, #6638ff);
-      }
-
-      .tab-content {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-3xs);
-        flex-wrap: wrap;
-      }
-
-      .panel {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-
-      .field-label {
-        font-size: var(--boxel-font-size-sm, 14px);
-        font-weight: 600;
-        color: var(--boxel-700, #272330);
-      }
-
-      .panel :deep(.text-accessory) {
-        --icon-color: var(--accent, #6638ff);
-        color: var(--accent, #6638ff);
-      }
-
-      .panel :deep(.text-accessory svg) {
-        --icon-color: var(--accent, #6638ff);
-        color: var(--accent, #6638ff);
-        display: block;
-      }
-
-      .preview-header {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        margin-top: var(--boxel-sp-2xs);
-      }
-
-      .badge {
-        display: inline-block;
-        padding: var(--boxel-sp-6xs) var(--boxel-sp-xs);
-        border-radius: 999px;
-        border: 1px solid var(--boxel-border-color, #d3d3d3);
-        font-size: var(--boxel-font-size-2xs, 11px);
-        font-weight: 500;
-        color: var(--boxel-400, #afafb7);
-      }
-
-      .media-box {
-        margin: 0;
-        width: 100%;
-        height: 180px;
+      /* ── hero: the current image ── */
+      .hero {
         position: relative;
-        border-radius: var(--boxel-border-radius, 10px);
+        margin: 0;
+        aspect-ratio: 16 / 9;
+        max-height: 12rem;
+        width: 100%;
+        padding: var(--boxel-sp-2xs);
+        border-radius: var(--boxel-border-radius-sm, 6px);
         overflow: hidden;
-        border: 1px solid var(--boxel-border-color, #d3d3d3);
-        background: var(--boxel-100, #f8f7fa);
-        flex: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        /* letterbox surface derives from the themed bg/text pair instead of
+           a raw boxel gray, so dark-themed hosts stay dark */
+        background: color-mix(in srgb, var(--img-bg) 94%, var(--img-text));
       }
-
+      .hero img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        /* contain, not cover — show the whole image */
+        object-fit: contain;
+      }
       .remove-btn {
-        --icon-color: var(--background, var(--boxel-light, #fff));
-        --icon-border: var(--foreground, var(--boxel-dark, #000));
-        --icon-bg: var(--foreground, var(--boxel-dark, #000));
-        --boxel-icon-button-width: var(--boxel-icon-sm, 1.25rem);
-        --boxel-icon-button-height: var(--boxel-icon-sm, 1.25rem);
         position: absolute;
-        top: 5px;
-        right: 5px;
+        top: 6px;
+        right: 6px;
         z-index: 1;
-        border: 2px solid var(--boxel-light, #fff);
+        display: grid;
+        place-items: center;
+        width: 1rem;
+        height: 1rem;
+        padding: 0;
+        border: 1px solid var(--img-border);
         border-radius: 50%;
-        box-shadow: 0px 0px 6px var(--boxel-500, #5a586a);
-        outline: 0;
+        background: var(--img-bg);
+        color: var(--img-text);
+        --icon-color: var(--img-text);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
       }
-
       .remove-btn:hover,
       .remove-btn:focus {
-        --icon-bg: var(--boxel-danger, #ff5050);
-        --icon-border: var(--boxel-danger, #ff5050);
+        background: var(--img-danger);
+        color: var(--img-bg);
+        --icon-color: var(--img-bg);
       }
 
-      .media-box--empty {
-        border-style: dashed;
-        border-color: var(--accent, #6638ff);
-        color: var(--accent, #6638ff);
-        flex-direction: column;
-        gap: 0;
-        padding: var(--boxel-sp-sm) var(--boxel-sp);
-        text-align: center;
-      }
-
-      .empty-icon {
-        --icon-color: var(--accent, #6638ff);
-        color: var(--accent, #6638ff);
-        opacity: 0.6;
-      }
-
-      .empty-title {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm, 14px);
-        font-weight: 600;
-        color: var(--boxel-700, #272330);
-        margin-top: var(--boxel-sp-xs);
-      }
-
-      .empty-hint {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs, 12px);
-        color: var(--boxel-400, #afafb7);
-        margin-top: var(--boxel-sp-3xs);
-      }
-
-      .file-link-btn {
-        margin-top: var(--boxel-sp-xs);
-      }
-
+      /* ── the linksTo editor's Link Image button ── */
       .file-link-btn :deep(.links-to-editor) {
         display: flex;
         justify-content: center;
       }
-
       .file-link-btn :deep(.add-new.boxel-button) {
-        --boxel-button-text-color: var(--accent, #6638ff);
+        --boxel-button-text-color: var(--img-accent);
         --boxel-button-color: transparent;
-        --boxel-button-border: 1px solid var(--accent, #6638ff);
-        --boxel-button-padding: var(--boxel-sp-2xs) var(--boxel-sp-sm);
+        --boxel-button-border: 1px solid var(--img-accent);
+        --boxel-button-padding: var(--boxel-sp-5xs, 2px) var(--boxel-sp-xs);
+        --boxel-button-min-height: 0;
+        min-height: 0;
         font-size: var(--boxel-font-size-xs, 12px);
         font-weight: 500;
         letter-spacing: 0;
@@ -468,12 +266,154 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
         width: auto;
         height: auto;
       }
-
       .file-link-btn :deep(.add-new.boxel-button:hover) {
-        --boxel-button-color: var(
-          --accent-bg,
-          color-mix(in srgb, #6638ff 8%, transparent)
-        );
+        --boxel-button-color: var(--img-accent-bg);
+      }
+
+      /* ── url row (compact) ── */
+      .url-form {
+        margin: 0;
+        --boxel-input-group-padding-x: var(--boxel-sp-xs);
+        --boxel-input-group-padding-y: var(--boxel-sp-5xs, 2px);
+        --boxel-input-height: 1.75rem;
+      }
+      .url-form :deep(.boxel-input-group),
+      .url-form :deep(.form-control) {
+        font-size: var(--boxel-font-size-xs, 12px);
+      }
+      .url-form :deep(.text-accessory) {
+        --icon-color: var(--img-accent);
+        color: var(--img-accent);
+      }
+      .url-form :deep(.text-accessory svg) {
+        --icon-color: var(--img-accent);
+        color: var(--img-accent);
+        display: block;
+      }
+      /* input suffix, not a nested pill */
+      .add-url-btn {
+        align-self: stretch;
+        padding: 0 var(--boxel-sp-sm);
+        border: none;
+        border-left: 1px solid var(--img-border);
+        background: transparent;
+        color: var(--img-accent);
+        font-size: var(--boxel-font-size-xs, 12px);
+        font-weight: 600;
+        font-family: var(--img-font);
+        cursor: pointer;
+      }
+      .add-url-btn:hover {
+        background: var(--img-accent-bg);
+      }
+
+      /* ── empty state: link a card, or add by URL ── */
+      .empty {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .empty-pick {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: var(--boxel-sp-5xs, 2px);
+        padding: var(--boxel-sp-xs);
+        border: 1px dashed var(--img-border);
+        border-radius: var(--boxel-border-radius-sm, 6px);
+        background: transparent;
+        font-family: var(--img-font);
+      }
+      /* soft accent tile around the icon */
+      .empty-pick-icon {
+        box-sizing: content-box;
+        padding: var(--boxel-sp-xs);
+        border-radius: var(--boxel-border-radius, 10px);
+        background: var(--img-accent-bg);
+        color: var(--img-accent);
+        --icon-color: var(--img-accent);
+      }
+      .empty-pick-title {
+        font-size: var(--boxel-font-size-xs, 12px);
+        font-weight: 600;
+        color: var(--img-text);
+      }
+      .empty-pick .file-link-btn {
+        margin-top: var(--boxel-sp-4xs, 4px);
+      }
+      /* line — (or) — line */
+      .empty-divider {
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--boxel-sp-5xs, 2px);
+      }
+      .empty-divider::before,
+      .empty-divider::after {
+        content: '';
+        width: 1px;
+        flex: 1;
+        background: var(--img-border);
+      }
+      .empty-or {
+        display: grid;
+        place-items: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border: 1px solid var(--img-border);
+        border-radius: 50%;
+        font-size: var(--boxel-font-size-2xs, 11px);
+        color: var(--img-dim);
+        background: var(--img-bg);
+      }
+      .empty-url {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs, 4px);
+        min-width: 0;
+      }
+      .empty-url-title {
+        font-size: var(--boxel-font-size-xs, 12px);
+        font-weight: 600;
+        color: var(--img-text);
+      }
+      /* narrow hosts: stack the two paths, divider goes flat, frame drops */
+      @container (max-width: 24rem) {
+        .empty {
+          grid-template-columns: 1fr;
+        }
+        .empty-pick {
+          border: none;
+          padding: var(--boxel-sp-5xs, 2px);
+          gap: var(--boxel-sp-xs);
+        }
+        .empty-pick-title {
+          display: none;
+        }
+        .empty-pick-icon {
+          padding: var(--boxel-sp-sm);
+        }
+        .empty-divider {
+          flex-direction: row;
+          align-self: center;
+          width: 100%;
+        }
+        .empty-divider::before,
+        .empty-divider::after {
+          width: auto;
+          height: 1px;
+        }
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
       }
     </style>
   </template>
