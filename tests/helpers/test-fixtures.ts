@@ -40,6 +40,17 @@ export const blogPostCardSource = `
   }
 `;
 
+export const photoPostCardSource = `
+  import { field, contains, linksTo, CardDef, ImageDef } from 'https://cardstack.com/base/card-api';
+  import StringField from 'https://cardstack.com/base/string';
+
+  export class PhotoPost extends CardDef {
+    static displayName = 'PhotoPost';
+    @field cardTitle = contains(StringField);
+    @field photo = linksTo(() => ImageDef);
+  }
+`;
+
 export const contactLinkFieldSource = `
   import { field, contains, FieldDef } from 'https://cardstack.com/base/card-api';
   import StringField from 'https://cardstack.com/base/string';
@@ -104,6 +115,79 @@ export function makeMockCatalogContents(
   return {
     'author/author.gts': authorCardSource,
     'blog-post/blog-post.gts': blogPostCardSource,
+    'photo-post/photo-post.gts': photoPostCardSource,
+    'photo-post/photo.png': makeMinimalPng(),
+    'photo-post/PhotoPost/example.json': {
+      data: {
+        type: 'card',
+        attributes: {
+          cardTitle: 'Photo Post',
+        },
+        relationships: {
+          photo: {
+            links: { self: `${mockCatalogURL}photo-post/photo.png` },
+            data: {
+              type: 'file-meta',
+              id: `${mockCatalogURL}photo-post/photo.png`,
+            },
+          },
+        },
+        meta: {
+          adoptsFrom: {
+            module: `${mockCatalogURL}photo-post/photo-post`,
+            name: 'PhotoPost',
+          },
+        },
+      },
+    },
+    'Spec/photo-post.json': {
+      data: {
+        type: 'card',
+        attributes: {
+          ref: {
+            name: 'PhotoPost',
+            module: `${mockCatalogURL}photo-post/photo-post`,
+          },
+        },
+        specType: 'card',
+        containedExamples: [],
+        cardTitle: 'PhotoPost',
+        cardDescription: 'Spec for PhotoPost card',
+        meta: {
+          adoptsFrom: {
+            module: 'https://cardstack.com/base/spec',
+            name: 'Spec',
+          },
+        },
+      },
+    },
+    'Listing/photo-post.json': {
+      data: {
+        type: 'card',
+        attributes: {
+          name: 'Photo Post',
+          cardTitle: 'Photo Post', // hardcoding title otherwise test will be flaky when waiting for a computed
+        },
+        relationships: {
+          'specs.0': {
+            links: {
+              self: `${mockCatalogURL}Spec/photo-post`,
+            },
+          },
+          'examples.0': {
+            links: {
+              self: `${mockCatalogURL}photo-post/PhotoPost/example`,
+            },
+          },
+        },
+        meta: {
+          adoptsFrom: {
+            module: `${catalogRealmURL}catalog-app/listing/listing`,
+            name: 'CardListing',
+          },
+        },
+      },
+    },
     'fields/contact-link/contact-link.gts': contactLinkFieldSource,
     'app-card.gts': appCardSource,
     'blog-app/blog-app.gts': blogAppCardSource,
