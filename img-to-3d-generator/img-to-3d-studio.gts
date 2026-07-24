@@ -3,7 +3,6 @@ import {
   Component,
   field,
   contains,
-  containsMany,
   linksTo,
   realmURL,
 } from 'https://cardstack.com/base/card-api';
@@ -21,26 +20,27 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { restartableTask } from 'ember-concurrency';
 
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import WriteTextFileCommand from '@cardstack/boxel-host/tools/write-text-file';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 
 import { fetchAsDataUrl, slugify, writeRealmImage } from './util/realm-image';
+import { generateModelJs, generateViewerHtml } from './util/code-export';
 import {
   VISION_MODEL,
   AUTO_REFINE_ROUNDS,
   REFINE_TARGET_SCORE,
   SPEC_SYSTEM_PROMPT,
-  ANALYZE_SYSTEM_PROMPT,
   REFINE_SYSTEM_PROMPT,
   composeComparison,
   serializeSpecForPrompt,
   requestSpec,
-  parseAnalysisJson,
   parseDiffJson,
   applySpecDiff,
   specFieldFromParsed,
 } from './util/generation';
 
+import { AnalyzeReferenceCommand } from './commands/analyze-reference';
 import { SculptSpecField } from './fields/sculpt-spec';
 import { SculptedModel } from './sculpted-model';
 import ModelViewer, { type ViewerApi } from './components/model-viewer';
@@ -74,6 +74,7 @@ export class ImgTo3dStudio extends CardDef {
         'anthropic/claude-sonnet-4.6',
         'anthropic/claude-opus-4.8',
         'google/gemini-3.5-flash',
+        'google/gemini-3.6-flash',
       ],
       displayName: 'Vision Model',
     }),
@@ -119,12 +120,14 @@ export class ImgTo3dStudio extends CardDef {
       return {
         ...searchEntryWireQueryFromQuery({
           filter: { on: sculptedModelRef, eq: { sourceStudioId: id } },
-          // newest first (leftmost tile): round is a strictly increasing
+          // oldest first (leftmost tile), newest appended at the right —
+          // matches the order rounds appear in during a live refine run, so
+          // a reload never flips the strip. round is a strictly increasing
           // integer per studio; createdAt breaks ties so the order is
           // stable even when rounds collide or are missing
           sort: [
-            { by: 'round', on: sculptedModelRef, direction: 'desc' },
-            { by: 'createdAt', on: sculptedModelRef, direction: 'desc' },
+            { by: 'round', on: sculptedModelRef, direction: 'asc' },
+            { by: 'createdAt', on: sculptedModelRef, direction: 'asc' },
           ],
         }),
         realms: [realm],
@@ -202,6 +205,54 @@ export class ImgTo3dStudio extends CardDef {
       });
     };
 
+    // Editable Output: the round on screen materializes as real code in the
+    // realm — a standalone .js module (buildSculpture(THREE)) plus a
+    // self-contained .html viewer whose URL works directly as an iframe src
+    // anywhere on the web (the realm serves raw .html publicly).
+    @tracked isExportingCode = false;
+
+    exportCode = async () => {
+      let model = this.args.model;
+      let commandContext = this.args.context?.commandContext;
+      let spec = model?.currentSpec;
+      if (!model || !commandContext || !spec?.components?.length) return;
+      this.isExportingCode = true;
+      try {
+        let showingLatest = this.currentRoundId === this.latestCreation?.id;
+        let meta = showingLatest
+          ? {
+              round: this.latestCreation?.round ?? null,
+              score: this.latestCreation?.score ?? null,
+            }
+          : {};
+        let slug = slugify(spec.objectName || 'model', 'model');
+        let realm = (model as any)[realmURL]?.href;
+        let write = async (extension: string, content: string) => {
+          let result = await new WriteTextFileCommand(commandContext).execute({
+            path: `img-to-3d-generator/exports/${slug}.${extension}`,
+            content,
+            realm,
+            useNonConflictingFilename: true,
+          } as any);
+          return (result as any)?.fileIdentifier as string;
+        };
+        await write('js', generateModelJs(spec, meta));
+        let htmlUrl = await write('html', generateViewerHtml(spec, meta));
+        let snippet = `<iframe src="${htmlUrl}" width="720" height="480" style="border:0"></iframe>`;
+        try {
+          await navigator.clipboard.writeText(snippet);
+          this.log('> code exported ✓ iframe snippet copied');
+        } catch {
+          this.log('> code exported ✓');
+        }
+        this.log(`> viewer: ${htmlUrl}`);
+      } catch (e) {
+        this.errorMessage = `code export failed: ${(e as Error).message}`;
+      } finally {
+        this.isExportingCode = false;
+      }
+    };
+
     // Editable Output: alongside the always-editable spec/scene graph, the
     // build exports as a standard binary glTF for any DCC tool or engine
     downloadGlb = async () => {
@@ -254,20 +305,17 @@ export class ImgTo3dStudio extends CardDef {
           image_url: { url },
         }));
 
-        // stage 1 — the model studies the object and writes its own build
-        // recipe (v2 replaces hand-written per-category prompt recipes)
+        // stage 1 — the AnalyzeReferenceCommand studies the object and
+        // writes the build recipe. Running it as a command makes the plan
+        // an inspectable, separately re-runnable artifact (and an AI tool).
         this.log('> analyzing object & planning parts…');
-        let analysis = await this.visionRequest(
-          ANALYZE_SYSTEM_PROMPT,
-          [
-            {
-              type: 'text',
-              text: 'Analyze the object in these reference view(s) and write the construction plan.',
-            },
-            ...imageParts,
-          ],
-          parseAnalysisJson,
-        );
+        let analysisResult = await new AnalyzeReferenceCommand(
+          this.args.context!.commandContext!,
+        ).execute({
+          imageUrls: (model.references?.resolvedUrls ?? []).filter(Boolean),
+          model: model.llmModel || VISION_MODEL,
+        } as any);
+        let analysis = JSON.parse(analysisResult.analysisJson);
         this.log(
           `> plan: ${analysis.objectType ?? 'object'} · ${
             analysis.partPlan.length
@@ -648,6 +696,15 @@ export class ImgTo3dStudio extends CardDef {
               >
                 ⬇ Export .glb
               </button>
+              <button
+                type='button'
+                class='export-btn'
+                disabled={{this.isExportingCode}}
+                {{on 'click' this.exportCode}}
+                title='Write this round as a three.js module + iframe-embeddable viewer page into the realm'
+              >
+                {{if this.isExportingCode 'Exporting…' '</> Export Code'}}
+              </button>
             {{/if}}
 
             {{#if this.errorMessage}}
@@ -985,7 +1042,7 @@ export class ImgTo3dStudio extends CardDef {
         .timeline-label {
           margin: 0;
         }
-        /* prerendered round tiles — horizontal scroll, newest first */
+        /* prerendered round tiles — horizontal scroll, oldest → newest */
         .history-strip {
           display: flex;
           gap: 0.5rem;
@@ -1020,7 +1077,9 @@ export class ImgTo3dStudio extends CardDef {
         /* the round currently in the viewport */
         .history-tile.is-current .history-pick {
           border-color: var(--_accent);
-          box-shadow: 0 0 0 1px var(--_accent);
+          box-shadow:
+            0 0 0 2px var(--_accent),
+            0 0 12px color-mix(in srgb, var(--_accent) 45%, transparent);
         }
         .history-pick > :deep(*) {
           width: 100%;

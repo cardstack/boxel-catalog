@@ -80,6 +80,9 @@ export class MaterialSpecField extends FieldDef {
   // interpreter from MeshStandardMaterial to MeshPhysicalMaterial
   @field clearcoat = contains(NumberField);
   @field sheen = contains(NumberField);
+  // 0-1 see-through glass (window panes, bottles, lenses) — rendered with
+  // refraction, unlike plain low opacity
+  @field transmission = contains(NumberField);
   // optional procedural surface finish painted by the interpreter
   // (worn | brushed | hazard | tread | camo | louver | patina | knurl)
   @field finish = contains(StringField);

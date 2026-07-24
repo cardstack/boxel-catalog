@@ -33,6 +33,7 @@ export interface SculptMaterialData {
   emissiveIntensity?: number | null;
   clearcoat?: number | null;
   sheen?: number | null;
+  transmission?: number | null;
   finish?: string | null;
 }
 
@@ -643,8 +644,19 @@ export function buildModel(
       }
     }
     let usePhysical =
-      typeof m.clearcoat === 'number' || typeof m.sheen === 'number';
+      typeof m.clearcoat === 'number' ||
+      typeof m.sheen === 'number' ||
+      typeof m.transmission === 'number';
     if (usePhysical) {
+      if (typeof m.transmission === 'number') {
+        // real see-through glass: refraction + strong env reflection; a
+        // transmissive pane with the default 0.35 env intensity reads as
+        // fogged plastic
+        params.transmission = clamp01(m.transmission, 0);
+        params.ior = 1.5;
+        params.thickness = 0.05;
+        params.envMapIntensity = Math.max(params.envMapIntensity ?? 0, 1);
+      }
       if (typeof m.clearcoat === 'number') {
         params.clearcoat = clamp01(m.clearcoat, 0);
         // glass-like surfaces (high clearcoat + low roughness) live on

@@ -36,6 +36,7 @@ const SPEC_JSON_SHAPE = `JSON shape:
       "metalness": 0..1, "opacity": 0..1, "emissive": "#rrggbb", "emissiveIntensity": 0..2 (optional; 1.5-2 for LEDs/lamps, 0.05-0.3 for faint warmth),
       "clearcoat": 0..1 (optional, glossy coated surfaces),
       "sheen": 0..1 (optional, fabric/silicone),
+      "transmission": 0..1 (optional, REAL see-through glass — window panes, bottles, lenses; pair with roughness 0.02-0.15 and metalness 0; the engine renders it with refraction, so prefer this over low opacity for glass),
       "finish": "worn" | "brushed" | "hazard" | "tread" | "camo" | "louver" | "patina" | "knurl" (optional procedural
         surface texture: "worn" = grime/soot/scratches for weathered metal or
         used machines; "brushed" = brushed metal; "hazard" = yellow/black
@@ -68,7 +69,7 @@ CLASSIFY FIRST — objectClass drives the build strategy (do not default to hard
 - "organic": soft or curved natural forms — plants, food, plush toys, clothing, fabric, bodies. Strategy: overlapping sphere/capsule chains, high roughness, sheen for fabric; NO large boxes.
 - "hybrid": mixed — footwear (curved leather upper + rigid sole/heel), bags, headphones with pads, upholstered furniture. Strategy: sphere/capsule chains for the soft/curved portions, boxes/cylinders ONLY for the genuinely rigid parts. A leather dress shoe is "hybrid", never "hard-surface".
 
-Material families (set PBR from what the surface IS): polished leather ≈ roughness 0.3-0.45 + clearcoat 0.2; matte leather/rubber ≈ roughness 0.7-0.9, metalness 0; cloth/knit ≈ roughness 0.9 + sheen 0.4-0.7; plastic ≈ roughness 0.4-0.6; metal ≈ metalness 0.9+ with roughness by finish; skin-like ≈ roughness 0.6 + sheen 0.3; glass / bottle glass / glazed ceramic ≈ roughness 0.05-0.15, metalness 0, clearcoat 1.0 (the engine boosts reflections for this combo — a bottle without it reads as matte paint).
+Material families (set PBR from what the surface IS): polished leather ≈ roughness 0.3-0.45 + clearcoat 0.2; matte leather/rubber ≈ roughness 0.7-0.9, metalness 0; cloth/knit ≈ roughness 0.9 + sheen 0.4-0.7; plastic ≈ roughness 0.4-0.6; metal ≈ metalness 0.9+ with roughness by finish; skin-like ≈ roughness 0.6 + sheen 0.3; glazed ceramic ≈ roughness 0.05-0.15, metalness 0, clearcoat 1.0 (the engine boosts reflections for this combo — a bottle without it reads as matte paint); window/bottle glass ≈ transmission 0.9-1.0 + roughness 0.05 + metalness 0 (see-through with refraction — use for every pane the analysis marks as glass).
 
 ORIENTATION CHEAT SHEET (compute rotations, never guess signs):
 - cone / capsule / cylinder point along +Y (tip/length UP) by default.
@@ -83,7 +84,8 @@ Rules:
 - "lathe" is ONLY for rotationally symmetric parts (vase, bottle, bowl, lamp base). NEVER use lathe for shoes, clothing, animals, or any non-symmetric form.
 - HYBRID GENERATION: regular geometric parts (cases, wheels, walls, frames) stay procedural — boxes/cylinders/roundedBoxes with crisp dimensions. Freeform/organic parts (cushions, plush bodies, food, natural masses) use "blob" (non-uniformly scaled, unique seed per part) or a chain of 4-8 OVERLAPPING spheres/capsules laid along the part's centerline, each non-uniformly scaled and overlapping ~40% with the next. NEVER use a box for a curved body — boxes read as bricks; boxes are ONLY for genuinely rectangular parts.
 - FLAT-GRAPHIC strategy (logos, icons, symbols, drawings): set inputKind "flat-graphic". Use roundedPlate for the background (it already faces the camera — rotation MUST stay [0,0,0]) and extrudedPolygon (shallow depth ~0.06) for every artwork shape, positioned just in front of the plate (z = plateDepth/2 + 0.03). Everything lives in the XY plane; use ZERO rotations anywhere. Trace the actual silhouette of the artwork with polygon points (12-40 points per shape). Sample baseColor values from the exact pixels of the reference — do not invent or "tastefully adjust" colors. NEVER approximate flat artwork with spheres or tilted boxes.
-- FOLLOW THE ANALYSIS: the user message includes an ANALYSIS block (object type, semantic part plan, build recipe) produced by a prior analysis pass over the same photos. Treat its buildRecipe as your own expert construction notes — every partPlan entry must map to components, and every recipe instruction must be visibly honored in the spec.
+- FOLLOW THE ANALYSIS: the user message includes an ANALYSIS block (object type, semantic part plan, build recipe) produced by a prior analysis pass over the same photos. Treat its buildRecipe as your own expert construction notes — every partPlan entry must map to components (thin details like railings included — a missing part is a failed build), and every recipe instruction must be visibly honored in the spec. Honor each part's "material" (glass parts get a transmission material, metal gets metalness, etc.), its "surface" note, and its "depthRatio" — depth = bboxWidth × depthRatio is that part's thickness target; do not guess thickness the analysis already measured.
+- PROPORTIONS ARE MEASURED, NEVER ASSUMED: for every pair of related parts (stacked, nested, capping, side-by-side) the size ratio between them comes from their analysis bboxes — never from what this kind of object "usually" looks like. A part that caps or shelters another is at least as wide as what it covers, with the overhang read from the bbox comparison (rarely more than 20%). A part's steepness or flatness comes from its own bbox aspect (height ÷ width) — do not substitute a canonical shape for the measured one.
 - APPROACH DIRECTIVES (each partPlan approach is an ORDER, not a suggestion — build that part with the named primitive family):
   · revolved → ONE lathe profile traced from the silhouette (bottle, can, vase, lamp base) — not stacked cylinders unless the silhouette truly steps.
   · wrap-decal → curvedDecal wrapped at the host body's radius, attachTo the host — never a flat plate.
@@ -122,13 +124,16 @@ JSON shape:
   "objectType": "1-3 words naming what this is (delivery truck, two-story house, running shoe...)",
   "objectClass": "hard-surface" | "organic" | "hybrid",
   "complexity": "simple" | "moderate" | "complex",
-  "identityFeatures": ["3-6 short phrases naming what makes this object recognizable"],
+  "identityFeatures": ["3-8 short phrases naming what makes this object recognizable — MUST include detail-level features (railings, trims, antennas, fence pickets, grilles), not only the big volumes"],
   "camera": { "azimuthDeg": -180..180 (0 = the FIRST image looks straight at the object's front; positive = camera moved to the object's right), "elevationDeg": 0..60 (0 = eye level), "note": "1 short line, e.g. 'slightly right of front, near eye level'" },
   "partPlan": [
     { "part": "semantic part name (cab, roof, left handle loop...)",
       "approach": "boxy" | "rounded-shell" | "curved-chain" | "revolved" | "flat-cutout" | "wrap-decal" | "freeform-mesh" (revolved = rotationally symmetric bodies: bottles, cans, vases, lamp bases; wrap-decal = labels/stickers/prints on a curved body; freeform-mesh = draped fabric, complex character bodies — routed to a mesh service when available, else blob/curved-chain),
       "bbox": { "left": 0..1, "top": 0..1, "width": 0..1, "height": 0..1 } (this part's bounding box in the FIRST image, normalized to image size — MEASURE it, this drives all proportions),
       "primitives": "which vocabulary primitives fit this part and why (1 sentence)",
+      "material": "category + sampled color, e.g. 'painted metal #c23b2e', 'window glass #a8c8d8', 'wood #8a6142' (categories: metal, painted, plastic, wood, glass, fabric, rubber, concrete, ceramic, foliage)",
+      "depthRatio": 0.02..2 (this part's DEPTH divided by its bbox width — 0.05 = thin panel/railing, 0.5 = half as deep as wide, 1 = as deep as wide; estimate from side/three-quarter views, this is the thickness target the builder must hit),
+      "surface": "matte | satin | gloss | transparent, plus any texture note (1 short phrase) — describe what the REFERENCE shows: a flat-shaded / cartoon reference has clean untextured surfaces, a photo may show wear",
       "details": "repeats / finishes / decals worth adding (1 sentence)" }
   ],
   "attachments": ["one line per structural joint: '<part> <constraint> <part>' using constraints centered-above | flush-top | attached-left | attached-right | attached-front | attached-back | inset-into | rests-on — e.g. 'roof centered-above upper-floor', 'carport attached-right lower-floor', 'windows inset-into front-wall'"],
@@ -136,7 +141,9 @@ JSON shape:
 }
 
 Rules:
-- Identify 4-12 semantic parts — the pieces a human would name when describing the object.
+- DECOMPOSE FULLY: break the object down the way a human would describe it piece by piece — every distinct volume, every attachment, every surface detail gets its own partPlan entry with its own material, depth and surface. Whatever the object is, the reader of your plan should be able to rebuild it without ever looking at the photo.
+- Part budget scales with complexity: simple = 4-6 parts, moderate = 6-12, complex = up to 16. Use what the object needs — never pad a simple object, never truncate a complex one.
+- THIN STRUCTURAL DETAILS ARE PARTS TOO: railings, balusters, handrails, fence pickets, antennas, roof trims, window grilles. Never drop them to save budget — each is ONE part built as a thin cylinder/box with a linear repeat, so it costs one partPlan entry no matter how many pieces repeat.
 - MEASURE, don't guess: every bbox comes from actually reading the part's extent in the image. Relative bbox widths/heights become the model's proportions, so a sloppy bbox is a wrong model.
 - List an attachment line for EVERY part except the root volume — a part with no attachment will float.
 - Recipe notes must be concrete and measurable ("six wheels in two rows of three", "roof overhangs walls by ~15%"), never generic advice.
@@ -155,7 +162,7 @@ Respond with ONLY this JSON object:
 }
 
 Refine conservatively:
-- MEASURED TARGETS: the request may include the analysis part list with normalized reference bboxes. Check each part's rendered proportion and position against its bbox ratios (width/height relative to the other parts, horizontal center, vertical band) and fix numeric deviations FIRST — a component with the right shape but the wrong size or placement is still wrong.
+- MEASURED TARGETS: the request may include the analysis part list with normalized reference bboxes. Check each part's rendered proportion and position against its bbox ratios (width/height relative to the other parts, horizontal center, vertical band) and fix numeric deviations FIRST — a component with the right shape but the wrong size or placement is still wrong. Pay special attention to related pairs: a covering part must be at least as wide as the volume under it, with the overhang matching the reference — a cap narrower than its base, or one ballooned far wider than the reference shows, is always a fix-first error.
 - Touch ONLY what is visibly wrong in the render. Components you do not mention stay exactly as they are — that is the point of the change set.
 - Machine-checked assembly problems (floating parts) get fixed FIRST: move the part so it overlaps its neighbour by 0.02-0.05.
 - Colors must be sampled from the reference pixels. A brightness difference caused by scene lighting is NOT a color error — if a baseColor hex already matches the reference pixel, do not touch that material.
@@ -243,6 +250,9 @@ export function serializeSpecForPrompt(spec: any) {
         : {}),
       ...(typeof m.clearcoat === 'number' ? { clearcoat: m.clearcoat } : {}),
       ...(typeof m.sheen === 'number' ? { sheen: m.sheen } : {}),
+      ...(typeof m.transmission === 'number'
+        ? { transmission: m.transmission }
+        : {}),
       ...(m.finish ? { finish: m.finish } : {}),
     })),
     components: (spec.components ?? []).map((c: any) => ({
@@ -392,8 +402,12 @@ export function applySpecDiff(currentSpec: any, diff: any) {
 }
 
 // one vision round-trip through the Boxel proxy, returning the parsed spec.
-// Retries once on transient failures (rate limit / upstream error / invalid
-// JSON / truncation), with a corrective nudge appended on content failures.
+// Retries transient failures (rate limit / upstream error / dropped
+// connection / invalid JSON / truncation) with backoff, appending a
+// corrective nudge on content failures. Network drops get extra attempts:
+// the browser kills every in-flight fetch when the machine's network
+// changes (ERR_NETWORK_CHANGED — Wi-Fi hop, VPN reconnect), and these
+// vision calls run for minutes, so a single flap mid-request is common.
 export async function requestSpec(
   commandContext: any,
   llmModel: string,
@@ -454,25 +468,42 @@ export async function requestSpec(
     return parser(choice?.message?.content ?? '');
   };
 
-  try {
-    return await attempt();
-  } catch (e: any) {
-    let transientHttp =
-      e?.status === 429 || (typeof e?.status === 'number' && e.status >= 500);
-    let contentFailure =
-      e?.truncated ||
-      /did not return JSON|no components/i.test(e?.message ?? '');
-    if (!transientHttp && !contentFailure) throw e;
-    onLog?.(`> retrying (${e?.status ?? 'invalid response'})…`);
-    await new Promise((r) => setTimeout(r, 2000));
-    return await attempt(
-      e?.truncated
-        ? 'Your previous reply was truncated. Reply with ONLY the JSON object and keep every "note" under 8 words.'
-        : contentFailure
-          ? 'Your previous reply was not valid JSON. Reply with ONLY the JSON object — no prose, no markdown fences.'
-          : undefined,
-    );
+  const MAX_ATTEMPTS = 4;
+  const RETRY_DELAYS_MS = [2000, 5000, 10000];
+  let lastError: any;
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    let nudge: string | undefined;
+    if (lastError?.truncated) {
+      nudge =
+        'Your previous reply was truncated. Reply with ONLY the JSON object and keep every "note" under 8 words.';
+    } else if (lastError?.contentFailure) {
+      nudge =
+        'Your previous reply was not valid JSON. Reply with ONLY the JSON object — no prose, no markdown fences.';
+    }
+    try {
+      return await attempt(nudge);
+    } catch (e: any) {
+      let transientHttp =
+        e?.status === 429 || (typeof e?.status === 'number' && e.status >= 500);
+      let networkDrop = /Failed to fetch|NetworkError|network changed/i.test(
+        e?.message ?? '',
+      );
+      let contentFailure =
+        e?.truncated ||
+        /did not return JSON|no components/i.test(e?.message ?? '');
+      if (!transientHttp && !networkDrop && !contentFailure) throw e;
+      e.contentFailure = contentFailure;
+      lastError = e;
+      if (i === MAX_ATTEMPTS - 1) break;
+      onLog?.(
+        `> retrying ${i + 1}/${MAX_ATTEMPTS - 1} (${
+          networkDrop ? 'connection dropped' : (e?.status ?? 'invalid response')
+        })…`,
+      );
+      await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[i] ?? 10000));
+    }
   }
+  throw lastError;
 }
 
 // materializes a parsed response into a SculptSpecField
@@ -500,6 +531,8 @@ export function specFieldFromParsed(parsed: any): SculptSpecField {
               : null,
           clearcoat: typeof m.clearcoat === 'number' ? m.clearcoat : null,
           sheen: typeof m.sheen === 'number' ? m.sheen : null,
+          transmission:
+            typeof m.transmission === 'number' ? m.transmission : null,
           finish: m.finish ? String(m.finish) : null,
         }),
     ),
