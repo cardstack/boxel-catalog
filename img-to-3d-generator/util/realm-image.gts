@@ -3,8 +3,9 @@
 
 import { ImageDef } from 'https://cardstack.com/base/card-api';
 import WriteBinaryFileCommand from '@cardstack/boxel-host/tools/write-binary-file';
+import SendRequestViaProxyCommand from '@cardstack/boxel-host/tools/send-request-via-proxy';
 
-export function blobToDataUrl(blob: Blob): Promise<string> {
+function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     let reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -13,12 +14,100 @@ export function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-export async function fetchAsDataUrl(url: string): Promise<string> {
-  let response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`could not read image (${response.status})`);
+// Vision models resize anything past roughly this on its long edge before they
+// look at it, so pixels beyond it are thrown away by the provider — after being
+// uploaded. A 2000px concept sheet is several megabytes, base64 adds another
+// third, and the analysis stage sends up to SIX of them in one request that then
+// runs for minutes. That is the request most likely to die halfway with "Failed
+// to fetch": the browser abandons every in-flight fetch the moment the network
+// blinks, and a bigger, slower request is simply exposed to more blinks.
+const MAX_VISION_EDGE = 1568;
+
+// A pasted image URL points at somebody else's CDN, and a browser fetch to a
+// third-party host fails with "Failed to fetch" unless that host sends
+// Access-Control-Allow-Origin — which product-image CDNs essentially never do.
+// The confusing part is that the thumbnail still appears: <img src> renders a
+// cross-origin image happily, it just refuses to let script READ the bytes. So
+// a URL reference looks fine and then dies the moment the pipeline needs pixels
+// to send to the model or to trace a silhouette from.
+//
+// The bytes are reachable server-side, where CORS does not apply, and this app
+// already has a server-side hop: the proxy that carries the model calls. Try the
+// direct read first — same-realm uploads are same-origin and need no detour —
+// and fall back to the proxy only when the browser refuses.
+async function readAsDataUrl(
+  url: string,
+  commandContext?: any,
+): Promise<string> {
+  try {
+    let response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`could not read image (${response.status})`);
+    }
+    return await blobToDataUrl(await response.blob());
+  } catch (directError) {
+    if (!commandContext) throw directError;
+    let result = await new SendRequestViaProxyCommand(commandContext).execute({
+      url,
+      method: 'GET',
+    } as any);
+    let proxied = (result as any)?.response;
+    if (!proxied || proxied.status >= 400) {
+      throw new Error(
+        `could not read that image URL (${proxied?.status ?? 'no response'}) — the host blocks direct reads; download it and add it with Link Image instead`,
+      );
+    }
+    let blob = await proxied.blob();
+    if (!blob?.size) {
+      throw new Error(
+        'that image URL returned no data — download it and add it with Link Image instead',
+      );
+    }
+    return await blobToDataUrl(blob);
   }
-  return blobToDataUrl(await response.blob());
+}
+
+function loadImageEl(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    let img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('could not decode image'));
+    img.src = src;
+  });
+}
+
+// Re-encodes to WebP, which keeps alpha — a JPEG would turn a transparent
+// product-shot background black. If the browser cannot produce WebP, toDataURL
+// silently returns a PNG, which is still correct, just larger.
+export async function fetchAsDataUrl(
+  url: string,
+  opts: { maxEdge?: number; commandContext?: any } = {},
+): Promise<string> {
+  let maxEdge = opts.maxEdge ?? MAX_VISION_EDGE;
+  let original = await readAsDataUrl(url, opts.commandContext);
+  if (!(maxEdge > 0)) return original;
+  try {
+    let img = await loadImageEl(original);
+    let longEdge = Math.max(img.naturalWidth, img.naturalHeight);
+    // already small enough — return the untouched bytes rather than re-encoding
+    // and losing quality for nothing
+    if (!longEdge || longEdge <= maxEdge) return original;
+    let scale = maxEdge / longEdge;
+    let canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    let ctx = canvas.getContext('2d');
+    if (!ctx) return original;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    let shrunk = canvas.toDataURL('image/webp', 0.92);
+    // a failed encode can come back tiny or as the wrong type; keep the original
+    // rather than send something degraded
+    if (!shrunk || shrunk.length < 512) return original;
+    return shrunk.length < original.length ? shrunk : original;
+  } catch {
+    return original; // decoding is best-effort; never block a generation on it
+  }
 }
 
 export function slugify(name: string, fallback = 'image'): string {

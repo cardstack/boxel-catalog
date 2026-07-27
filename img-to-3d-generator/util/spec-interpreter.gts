@@ -20,6 +20,13 @@ export interface SculptNodeData {
   repeat?: string | null;
   assetUrl?: string | null;
   attachTo?: string | null;
+  // deterministic placement: pin this part to an exact spot on a target's box
+  // face at normalized (u,v) — { targetId, face, uv:[u,v], normalOffset? } —
+  // instead of trusting authored world coords (windows/doors/balconies/trims)
+  anchor?: any;
+  // ground props (building, tree, car, fence, freestanding) snap their bottom
+  // to the ground plane; roofs/windows/balconies do NOT set this
+  grounded?: boolean | null;
   note?: string | null;
 }
 
@@ -456,6 +463,21 @@ function buildGeometry(THREE: any, primitive: string, d: number[]): any {
       return geo;
     }
     case 'torus':
+      // NATIVE three.js orientation: the ring lies in the XY plane, axis along
+      // +Z, standing upright like a hoop facing the camera.
+      //
+      // I briefly baked this flat instead, because a model authoring a bottle's
+      // lip ring with no rotation was getting an upright hoop floating beside the
+      // neck. That fixed the symptom and broke everything that had compensated:
+      // specs written against the native default lay a collar flat with a ±90° X
+      // rotation (which then stood it upright) and turn a wheel hub sideways with
+      // a ±90° Y rotation (which then left it flat on the ground). Guarding one
+      // axis at a time is whack-a-mole — flipping a primitive's default
+      // invalidates every existing compensation, in every axis.
+      //
+      // So the geometry stays native and the ORIENTATION CHEAT SHEET documents
+      // it, which is what was actually missing: it covered cone, capsule and
+      // cylinder but never said which way a torus faced.
       return new THREE.TorusGeometry(
         d[0] ?? 0.5,
         d[1] ?? 0.15,
@@ -665,6 +687,21 @@ export function buildModel(
         let glassy = params.clearcoat >= 0.8 && (params.roughness ?? 1) <= 0.2;
         params.clearcoatRoughness = glassy ? 0.08 : 0.3;
         if (glassy) params.envMapIntensity = 1.2;
+        // OPAQUE glossy bodies the model authored at mirror-low roughness — a
+        // full dark wine bottle, glossy paint — read as black PLASTIC: the
+        // studio light panels reflect as hard white blobs. Real dark glass
+        // spreads that into a soft vertical streak, which needs a moderate
+        // roughness floor. Only clamp when NOT transmissive (see-through glass
+        // genuinely needs low roughness); the clearcoat still gives the wet
+        // sheen on top, so the surface still reads as glass, not matte.
+        if (
+          glassy &&
+          typeof m.transmission !== 'number' &&
+          (params.roughness ?? 1) < 0.3
+        ) {
+          params.roughness = 0.3;
+          params.clearcoatRoughness = 0.15;
+        }
       }
       if (typeof m.sheen === 'number') {
         params.sheen = clamp01(m.sheen, 0);
@@ -682,7 +719,13 @@ export function buildModel(
   let meshes: any[] = [];
   let geometries: any[] = [];
   let decalMaterials: any[] = [];
-  let repeatRequests: { nodeId: string; raw: string }[] = [];
+  // attachTo travels with the request: a radial array needs the axis of the
+  // part it wraps around in order to place its clones on a real circle
+  let repeatRequests: {
+    nodeId: string;
+    raw: string;
+    attachTo?: string | null;
+  }[] = [];
   let warnings: string[] = [];
   // async-mounted .glb scenes (meshAsset nodes) — tracked for disposal
   let loadedAssets: any[] = [];
@@ -729,6 +772,46 @@ export function buildModel(
     if (!node?.nodeId || objects.has(node.nodeId)) continue;
     let primitive = node.primitive || 'group';
     let obj: any;
+    // any "shadow" part is a SOFT radial-gradient contact shadow — never a solid
+    // floor disc. Whatever primitive/material the model gave it, render a flat
+    // circle with a dark centre fading to transparent, laid on the ground.
+    if (/shadow/i.test(node.nodeId)) {
+      let sd = nums(node.dimensions, []);
+      let radius = Math.abs(sd[0] ?? 0.5) || 0.5;
+      let cvs = document.createElement('canvas');
+      cvs.width = 128;
+      cvs.height = 128;
+      let sctx = cvs.getContext('2d')!;
+      let grad = sctx.createRadialGradient(64, 64, 3, 64, 64, 62);
+      grad.addColorStop(0, 'rgba(0,0,0,0.5)');
+      grad.addColorStop(0.65, 'rgba(0,0,0,0.22)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      sctx.fillStyle = grad;
+      sctx.beginPath();
+      sctx.arc(64, 64, 64, 0, Math.PI * 2);
+      sctx.fill();
+      let stex = new THREE.CanvasTexture(cvs);
+      obj = new THREE.Mesh(
+        new THREE.CircleGeometry(radius, 48),
+        new THREE.MeshBasicMaterial({
+          map: stex,
+          transparent: true,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      );
+      decalMaterials.push(obj.material);
+      obj.name = node.nodeId;
+      obj.userData.note = node.note ?? '';
+      let [px, py, pz] = nums(node.position, [0, 0, 0]);
+      let [, , rz] = nums(node.rotation, [0, 0, 0]);
+      let [sx, sy, sz] = nums(node.scale, [1, 1, 1]);
+      obj.position.set(px ?? 0, py ?? 0, pz ?? 0);
+      obj.rotation.set(-Math.PI / 2, 0, rz ?? 0); // flat on the ground
+      obj.scale.set(sx || 1, sy || 1, sz || 1);
+      objects.set(node.nodeId, obj);
+      continue;
+    }
     if (primitive === 'glow') {
       obj = buildGlowSprite(
         THREE,
@@ -821,6 +904,36 @@ export function buildModel(
     let [px, py, pz] = nums(node.position, [0, 0, 0]);
     let [rx, ry, rz] = nums(node.rotation, [0, 0, 0]);
     let [sx, sy, sz] = nums(node.scale, [1, 1, 1]);
+    // DOUBLE-CORRECTION GUARD for the hip-roof pyramid. buildGeometry already
+    // bakes the 45° square-up into a 4-segment cone, because a vanilla
+    // three.js cone of 4 segments points a CORNER along +X. That baking is
+    // invisible to the author, so a model that knows plain three.js
+    // "helpfully" adds its own 45° Y rotation — and the two corrections stack
+    // into 90°, turning the roof back into a diamond whose corners overhang the
+    // walls (a house came out with 4.88-wide roofs on 3.40-wide walls). The
+    // rotation is also what shears the roof, since T·R·S applies the footprint
+    // scale through the rotation. An odd multiple of 45° on this primitive can
+    // only be that mistake — a genuinely diagonal pyramid is not a thing these
+    // references contain — so it is dropped and reported.
+    let coneSegments =
+      node.primitive === 'cone'
+        ? Math.max(3, Math.round(nums(node.dimensions, [])[2] ?? 24))
+        : 0;
+    if (coneSegments === 4 && ry) {
+      let quarter = Math.PI / 2;
+      let offBy = (((ry % quarter) + quarter) % quarter) - Math.PI / 4;
+      if (Math.abs(offBy) < 0.09) {
+        // subtract the spurious 45° rather than snapping to the nearest
+        // quarter turn: 45° sits exactly halfway between 0° and 90°, so
+        // rounding would resolve it to 90° and silently swap the roof's width
+        // and depth. Subtracting keeps any quarter turn the author did mean
+        // (135° stays a deliberate 90°).
+        ry -= Math.sign(ry) * (Math.PI / 4);
+        warnings.push(
+          `squared up '${node.nodeId}': dropped its 45° Y rotation (the pyramid is already axis-aligned)`,
+        );
+      }
+    }
     obj.position.set(px ?? 0, py ?? 0, pz ?? 0);
     obj.rotation.set(rx ?? 0, ry ?? 0, rz ?? 0);
     obj.scale.set(sx || 1, sy || 1, sz || 1);
@@ -828,7 +941,11 @@ export function buildModel(
     // repetition is expanded AFTER parent linking so group assemblies
     // (e.g. a full wheel) clone with all their children attached
     if (node.repeat) {
-      repeatRequests.push({ nodeId: node.nodeId, raw: node.repeat });
+      repeatRequests.push({
+        nodeId: node.nodeId,
+        raw: node.repeat,
+        attachTo: node.attachTo,
+      });
     }
     objects.set(node.nodeId, obj);
   }
@@ -855,6 +972,68 @@ export function buildModel(
     }
   }
 
+  // surface-anchor solver: a part may pin itself to an EXACT spot on a target's
+  // box — a face + normalized (u,v) — instead of authored world coords. Windows,
+  // doors, balconies, railings and trims land flush on a wall face at their UV,
+  // computed deterministically from the target's world box. Runs before the
+  // contact solver; anchored parts are then exempt from the gap-pull so their
+  // precise placement is not disturbed.
+  let anchored = new Set<string>();
+  {
+    root.updateWorldMatrix(true, true);
+    let clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+    for (let node of nodes ?? []) {
+      let a = node?.anchor;
+      if (!a || !a.targetId || !a.face) continue;
+      let obj = objects.get(node.nodeId);
+      let target = objects.get(a.targetId);
+      if (!obj || !target || obj === target) continue;
+      let box = new THREE.Box3().setFromObject(target);
+      if (box.isEmpty()) continue;
+      let size = new THREE.Vector3();
+      box.getSize(size);
+      let uv = nums(a.uv, [0.5, 0.5]);
+      let u = clamp01(uv[0] ?? 0.5);
+      let v = clamp01(uv[1] ?? 0.5);
+      let off = typeof a.normalOffset === 'number' ? a.normalOffset : 0.01;
+      let p = new THREE.Vector3();
+      let n = new THREE.Vector3();
+      let mn = box.min;
+      switch (a.face) {
+        case 'front':
+          p.set(mn.x + size.x * u, mn.y + size.y * v, box.max.z);
+          n.set(0, 0, 1);
+          break;
+        case 'back':
+          p.set(box.max.x - size.x * u, mn.y + size.y * v, mn.z);
+          n.set(0, 0, -1);
+          break;
+        case 'left':
+          p.set(mn.x, mn.y + size.y * v, box.max.z - size.z * u);
+          n.set(-1, 0, 0);
+          break;
+        case 'right':
+          p.set(box.max.x, mn.y + size.y * v, mn.z + size.z * u);
+          n.set(1, 0, 0);
+          break;
+        case 'top':
+          p.set(mn.x + size.x * u, box.max.y, mn.z + size.z * v);
+          n.set(0, 1, 0);
+          break;
+        case 'bottom':
+          p.set(mn.x + size.x * u, mn.y, mn.z + size.z * v);
+          n.set(0, -1, 0);
+          break;
+        default:
+          continue;
+      }
+      p.addScaledVector(n, off);
+      obj.position.copy(obj.parent ? obj.parent.worldToLocal(p.clone()) : p);
+      anchored.add(node.nodeId);
+    }
+    root.updateWorldMatrix(true, true);
+  }
+
   // constraint solver (declared joints): each node's attachTo names its
   // structural support. If the authored coordinates leave a gap in ANY
   // direction, translate the part by the minimal vector that brings it into
@@ -865,7 +1044,7 @@ export function buildModel(
     root.updateWorldMatrix(true, true);
     let pulled: string[] = [];
     for (let node of nodes ?? []) {
-      if (!node?.attachTo) continue;
+      if (!node?.attachTo || anchored.has(node.nodeId)) continue;
       let obj = objects.get(node.nodeId);
       let target = objects.get(node.attachTo);
       if (!obj || !target || obj === target) continue;
@@ -925,47 +1104,71 @@ export function buildModel(
       let count = Math.min(48, Math.max(0, Math.round(rep?.count ?? 0)));
       if (count < 2) continue;
       let parent = original.parent ?? root;
-      for (let i = 1; i < count; i++) {
-        let clone = original.clone(true);
-        clone.name = `${req.nodeId}-${i}`;
+      let axis = rep.axis === 'x' ? 'x' : rep.axis === 'z' ? 'z' : 'y';
+      let basePos = original.position.clone();
+      let baseRot = original.rotation.clone();
+      // RING CENTER for a radial array. The part's own in-plane position is
+      // already a point ON the intended circle, so adding the radius to it put
+      // every clone at twice the radius — 20 knurl ridges orbited at 0.29
+      // around a 0.16 cap, reading as a spiked collar floating off the cap.
+      // The circle belongs to the part this array wraps around, so its axis
+      // supplies the in-plane center; the position ALONG the axis stays where
+      // the part was authored. With no declared host there is nothing to
+      // centre on, so the part's own position is kept as the centre.
+      let center = basePos.clone();
+      let host = req.attachTo ? objects.get(req.attachTo) : undefined;
+      if (rep.mode === 'radial' && host && host !== original) {
+        let hostBox = new THREE.Box3().setFromObject(host);
+        if (!hostBox.isEmpty()) {
+          let hostCenter = hostBox.getCenter(new THREE.Vector3());
+          parent.worldToLocal(hostCenter);
+          if (axis === 'y') {
+            center.x = hostCenter.x;
+            center.z = hostCenter.z;
+          } else if (axis === 'x') {
+            center.y = hostCenter.y;
+            center.z = hostCenter.z;
+          } else {
+            center.x = hostCenter.x;
+            center.y = hostCenter.y;
+          }
+        }
+      }
+      // place instance i — index 0 is the original itself, so a radial array is
+      // one coherent ring instead of the original sitting off the circle its
+      // own clones orbit on
+      let place = (obj: any, i: number) => {
         if (rep.mode === 'radial') {
           let radius = rep.radius ?? 0.5;
-          let axis = rep.axis === 'x' ? 'x' : rep.axis === 'z' ? 'z' : 'y';
           let angle = (i / count) * Math.PI * 2;
           let ca = Math.cos(angle) * radius;
           let sa = Math.sin(angle) * radius;
           if (axis === 'y') {
-            clone.position.set(
-              original.position.x + ca,
-              original.position.y,
-              original.position.z + sa,
-            );
-            clone.rotation.y = original.rotation.y + angle;
+            obj.position.set(center.x + ca, center.y, center.z + sa);
+            obj.rotation.y = baseRot.y + angle;
           } else if (axis === 'x') {
-            clone.position.set(
-              original.position.x,
-              original.position.y + ca,
-              original.position.z + sa,
-            );
-            clone.rotation.x = original.rotation.x + angle;
+            obj.position.set(center.x, center.y + ca, center.z + sa);
+            obj.rotation.x = baseRot.x + angle;
           } else {
-            clone.position.set(
-              original.position.x + ca,
-              original.position.y + sa,
-              original.position.z,
-            );
-            clone.rotation.z = original.rotation.z + angle;
+            obj.position.set(center.x + ca, center.y + sa, center.z);
+            obj.rotation.z = baseRot.z + angle;
           }
         } else {
           let [ox, oy, oz] = Array.isArray(rep.offset)
             ? rep.offset
             : [0.2, 0, 0];
-          clone.position.set(
-            original.position.x + ox * i,
-            original.position.y + oy * i,
-            original.position.z + oz * i,
+          obj.position.set(
+            basePos.x + ox * i,
+            basePos.y + oy * i,
+            basePos.z + oz * i,
           );
         }
+      };
+      place(original, 0);
+      for (let i = 1; i < count; i++) {
+        let clone = original.clone(true);
+        clone.name = `${req.nodeId}-${i}`;
+        place(clone, i);
         parent.add(clone);
         clone.traverse((child: any) => {
           if (child.isMesh) meshes.push(child);
@@ -1002,6 +1205,44 @@ export function buildModel(
     defaultMaterial.dispose();
   };
 
+  // grounding pass: parts flagged `grounded` (the building root, trees, cars,
+  // fences, freestanding props) drop so their bottom rests on the ground plane
+  // y=0 — never sunk below it or hovering above. Roofs, windows, balconies and
+  // wall-mounted parts are NOT flagged, so they keep their supported height.
+  // This fixes the isometric-view failure where the model's authored heights
+  // put foreground props underground and background props in the air.
+  {
+    root.updateWorldMatrix(true, true);
+    for (let node of nodes ?? []) {
+      if (node?.grounded !== true) continue;
+      let obj = objects.get(node.nodeId);
+      if (!obj) continue;
+      let box = new THREE.Box3().setFromObject(obj);
+      if (box.isEmpty()) continue;
+      let dy = 0 - box.min.y;
+      if (Math.abs(dy) < 1e-4) continue;
+      let wp = new THREE.Vector3();
+      obj.getWorldPosition(wp);
+      wp.y += dy;
+      obj.position.copy(obj.parent ? obj.parent.worldToLocal(wp) : wp);
+    }
+    root.updateWorldMatrix(true, true);
+  }
+
+  // How far a solver pass may ever move a part. Both the contact snap and the
+  // panel inset exist to close an authoring GAP, so the limit scales with the
+  // object: 15% of its largest dimension. The old fixed limits (3.0 for a snap,
+  // 1.0 for an inset) were larger than a whole 2-3 unit object, which let a
+  // badly placed part be teleported clear across the model and land looking
+  // deliberate.
+  root.updateWorldMatrix(true, true);
+  let solverModelSize = new THREE.Box3()
+    .setFromObject(root)
+    .getSize(new THREE.Vector3());
+  let maxSnap =
+    0.15 *
+    Math.max(solverModelSize.x, solverModelSize.y, solverModelSize.z, 0.001);
+
   // deterministic assembly check: parts whose (slightly expanded) world
   // bounding box touches no other part are floating — exactly the "spare
   // parts" look. The list feeds the refine loop so the model gets machine
@@ -1024,60 +1265,188 @@ export function buildModel(
       }
       if (!touches) floating.push(i);
     }
-    // gravity snap: a truly floating part (touches nothing at all) drops
-    // straight down onto the nearest surface below it — the highest top face
-    // among parts it overlaps in plan (XZ) view — or onto the model's ground
-    // level when nothing sits underneath. Parts with any contact are never
-    // moved, so overlap-attached details (antennas, handles) stay put.
+    // contact backstop: a truly floating part (touches nothing at all) is
+    // pulled into ~0.03 overlap with the support it DECLARED, using the
+    // minimal per-axis translation — so this closes gaps in any direction
+    // (down onto a base, sideways onto a wall), not just straight down. Parts
+    // with any contact are never moved, so overlap-attached details (antennas,
+    // handles) stay put.
+    //
+    // Only a declared attachTo is a snap target. Guessing the nearest
+    // neighbour instead was actively harmful: a part the reference does not
+    // contain has no correct home, so "nearest" dragged it onto whatever
+    // happened to be closest — which is how invented rings and seams ended up
+    // welded into a clump at a bottle's neck, and why on-axis parts drifted
+    // sideways. Without a declared joint the part now stays exactly where it
+    // was authored and is reported instead, which leaves the evidence visible
+    // (to the dropUnplannedParts gate, the refine round, or the reader of the
+    // log) rather than hiding a bad part inside a plausible-looking pile.
+    //
+    // maxSnap (shared with the inset pass) caps how far this may move a part.
+    let attachToByName = new Map<string, string>();
+    for (let node of nodes ?? []) {
+      if (node?.nodeId && node.attachTo) {
+        attachToByName.set(node.nodeId, node.attachTo);
+      }
+    }
+    let contactDelta = (a: any, b: any): any => {
+      let margin = 0.03;
+      let delta = new THREE.Vector3();
+      for (let axis of ['x', 'y', 'z'] as const) {
+        if (a.min[axis] > b.max[axis]) {
+          delta[axis] = b.max[axis] - a.min[axis] + margin;
+        } else if (a.max[axis] < b.min[axis]) {
+          delta[axis] = b.min[axis] - a.max[axis] + margin;
+        }
+      }
+      return delta;
+    };
     let snapped: string[] = [];
     let stillFloating: string[] = [];
     for (let i of floating) {
       let name = meshes[i].name || `part ${i}`;
-      let supportTop: number | undefined;
-      let groundY: number | undefined;
-      for (let j = 0; j < meshes.length; j++) {
-        if (j === i || floating.includes(j)) continue;
-        groundY =
-          groundY === undefined
-            ? boxes[j].min.y
-            : Math.min(groundY, boxes[j].min.y);
-        let overlapsPlan =
-          boxes[i].min.x <= boxes[j].max.x &&
-          boxes[i].max.x >= boxes[j].min.x &&
-          boxes[i].min.z <= boxes[j].max.z &&
-          boxes[i].max.z >= boxes[j].min.z;
-        if (overlapsPlan && boxes[j].max.y <= boxes[i].min.y) {
-          supportTop =
-            supportTop === undefined
-              ? boxes[j].max.y
-              : Math.max(supportTop, boxes[j].max.y);
+      let baseName = name.replace(/-\d+$/, '');
+      let targetBox: any;
+
+      // the declared joint is the only target
+      let attachTo = attachToByName.get(name) ?? attachToByName.get(baseName);
+      let targetObj = attachTo ? objects.get(attachTo) : undefined;
+      if (targetObj && targetObj !== meshes[i]) {
+        let tb = new THREE.Box3().setFromObject(targetObj);
+        if (!tb.isEmpty()) {
+          targetBox = tb;
         }
       }
-      let targetY = supportTop ?? groundY;
-      let dy = targetY === undefined ? 0 : boxes[i].min.y - targetY;
-      // only close a SMALL gap — a part hovering just above its support is
-      // an unintended float; a large drop would teleport intentionally
-      // elevated parts (balcony rails, signs) onto whatever lies below,
-      // which reads far worse than the float. Big gaps stay warnings so the
-      // refine round fixes them semantically.
-      if (dy > 0 && dy <= 0.35) {
-        let worldPos = meshes[i].getWorldPosition(new THREE.Vector3());
-        worldPos.y -= dy;
-        meshes[i].position.copy(
-          meshes[i].parent ? meshes[i].parent.worldToLocal(worldPos) : worldPos,
-        );
-        boxes[i].translate(new THREE.Vector3(0, -dy, 0));
-        snapped.push(name);
-      } else {
+      if (!targetBox) {
         stillFloating.push(name);
+        continue;
       }
+
+      let delta = contactDelta(boxes[i], targetBox);
+      let dist = delta.length();
+      if (dist === 0 || dist > maxSnap) {
+        stillFloating.push(name);
+        continue;
+      }
+      let worldPos = meshes[i].getWorldPosition(new THREE.Vector3());
+      worldPos.add(delta);
+      meshes[i].position.copy(
+        meshes[i].parent ? meshes[i].parent.worldToLocal(worldPos) : worldPos,
+      );
+      boxes[i].translate(delta);
+      snapped.push(name);
     }
     root.updateWorldMatrix(true, true);
     for (let name of snapped.slice(0, 5)) {
-      warnings.push(`snapped floating part '${name}' down onto its support`);
+      warnings.push(`snapped floating part '${name}' into contact`);
     }
     for (let name of stillFloating.slice(0, 5)) {
-      warnings.push(`part '${name}' is floating — it touches nothing`);
+      warnings.push(
+        `part '${name}' is floating — it touches nothing and was left where it was authored`,
+      );
+    }
+  }
+
+  // inset thin panels (windows / glass / signs) into their wall. The panel's
+  // thinnest world axis is its surface normal; using the wall's thinnest axis
+  // moves side windows onto roofs whenever Y is the wall's smallest dimension.
+  {
+    root.updateWorldMatrix(true, true);
+    let inset: string[] = [];
+    // rings and bands are never inset panels: a torus/flatRing/arch encircles
+    // its host rather than sitting in a face of it. Their thinnest axis is the
+    // one they wrap around, so left in this pass a bottle collar or a cap rib
+    // gets "flush-mounted" to the top face of the very part it should be
+    // banding, sliding the whole ribbing pattern to one end.
+    const NEVER_INSET = new Set(['torus', 'flatRing', 'arch']);
+    for (let node of nodes ?? []) {
+      if (!node?.attachTo) continue;
+      if (NEVER_INSET.has(String(node.primitive))) continue;
+      let obj = objects.get(node.nodeId);
+      let wall = node.attachTo ? objects.get(node.attachTo) : undefined;
+      if (!obj || !wall || obj === wall) continue;
+      let p = new THREE.Box3().setFromObject(obj);
+      let w = new THREE.Box3().setFromObject(wall);
+      if (p.isEmpty() || w.isEmpty()) continue;
+      let pSize = p.getSize(new THREE.Vector3());
+      let wSize = w.getSize(new THREE.Vector3());
+      let axes = ['x', 'y', 'z'] as const;
+      let normal = axes.reduce((a, b) => (pSize[b] < pSize[a] ? b : a));
+      let faceAxes = axes.filter((a) => a !== normal);
+      // "thin" has to mean thin FOR THIS PART, not merely smaller than the
+      // thing it mounts on. Comparing only against the wall made every small
+      // part qualify: a bottle's screwcap (0.28 x 0.30 x 0.28) counts as
+      // thinner than a 0.70-wide bottle on all three axes, so the pass picked
+      // an arbitrary axis as its "surface normal" and flush-mounted the cap to
+      // the SIDE of the bottle — which is why the cap sat off-axis beside the
+      // neck instead of on top of it. A real panel is a plate: its thickness is
+      // a small fraction of its own face, and a part whose cross-section is
+      // roughly square (anything turned on an axis: caps, knobs, wheels) never
+      // satisfies that.
+      let face = faceAxes.map((a) => pSize[a]);
+      let plateLike = pSize[normal] < 0.3 * Math.min(...face);
+      let thin = pSize[normal] < wSize[normal] * 0.6;
+      let fits = faceAxes.every((a) => pSize[a] <= wSize[a] * 1.1);
+      if (!plateLike || !thin || !fits) continue;
+      let pCenter = p.getCenter(new THREE.Vector3());
+      let wCenter = w.getCenter(new THREE.Vector3());
+      // align the panel's outer face to the wall's outer face on the side
+      // the panel currently sits
+      let side = pCenter[normal] >= wCenter[normal] ? 1 : -1;
+      let d =
+        side > 0
+          ? w.max[normal] - p.max[normal]
+          : w.min[normal] - p.min[normal];
+      // like the contact snap, insetting closes an authoring gap — it must not
+      // be able to walk a panel across the object (1.0 was most of one)
+      if (Math.abs(d) < 0.001 || Math.abs(d) > maxSnap) continue;
+      let worldPos = obj.getWorldPosition(new THREE.Vector3());
+      worldPos[normal] += d;
+      obj.position.copy(
+        obj.parent ? obj.parent.worldToLocal(worldPos) : worldPos,
+      );
+      obj.updateWorldMatrix(true, true);
+      inset.push(node.nodeId);
+    }
+    for (let name of inset.slice(0, 5)) {
+      warnings.push(`inset panel '${name}' flush into its wall`);
+    }
+  }
+
+  // STAND THE OBJECT ON THE GROUND — last, after every solver has finished.
+  // The `grounded` flag above handles specs that use it, but the model never
+  // sets it (0 of 22 parts on a truck, 0 of 24 on a house), so an object's
+  // height is wherever its coordinates happened to land: a house sat 0.42 sunk
+  // into the ground with its windows and door half buried, a truck floated
+  // clear of its own contact shadow.
+  //
+  // This has to run HERE rather than on the spec, which is where I first put it.
+  // Spec-side the boxes are inferred from dimensions and scale, and several
+  // primitives (lathe, hemisphere, tube) are not centred on their origin at all,
+  // so the "lowest point" is a guess — and every solver above then moves parts
+  // afterwards anyway. At this point the real Box3 of the finished assembly is
+  // available, so the shift is exact.
+  if (!(nodes ?? []).some((n) => n?.grounded === true)) {
+    root.updateWorldMatrix(true, true);
+    let standing = new THREE.Box3();
+    for (let mesh of meshes) {
+      // the shadow disc marks the ground, so it cannot be evidence about where
+      // the ground is; a glow is light, not geometry
+      if (/shadow/i.test(mesh.name) || mesh.isSprite) continue;
+      standing.union(new THREE.Box3().setFromObject(mesh));
+    }
+    if (!standing.isEmpty()) {
+      let dy = -standing.min.y;
+      let height = standing.max.y - standing.min.y;
+      // a shift bigger than the object itself means something is badly
+      // misplaced rather than merely offset; sliding it all would hide that
+      if (Math.abs(dy) > 0.02 && height > 0 && Math.abs(dy) <= height) {
+        root.position.y += dy;
+        root.updateWorldMatrix(true, true);
+        warnings.push(
+          `stood the model on the ground (${dy > 0 ? 'raised' : 'lowered'} ${Math.abs(dy).toFixed(2)})`,
+        );
+      }
     }
   }
 

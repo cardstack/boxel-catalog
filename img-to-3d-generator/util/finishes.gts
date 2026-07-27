@@ -256,6 +256,35 @@ function paintKnurl(ctx: CanvasRenderingContext2D, S: number) {
 }
 
 // returns a CanvasTexture for the named finish, deterministic per seedText
+// The standalone .js export needs these painters too — a model whose materials
+// ask for 'worn' or 'hazard' rendered as FLAT COLOUR once exported, which is
+// most of why exported vehicles and machines looked like untextured toys. The
+// exporter emits each painter's own source via Function.prototype.toString()
+// rather than carrying a hand-copied duplicate, so the two can never drift:
+// these are plain functions over a canvas context with no closure state, and
+// TypeScript's annotations are gone by the time toString() sees them.
+//
+// Keyed by finish name; each entry lists every function that finish needs, in
+// dependency order, so only the painters a spec actually uses get emitted.
+// the painters are emitted by source text, so the only shape that matters is
+// "something with a .name and a .toString()" — spelling that out avoids the
+// bare `Function` type the lint config rejects
+export type EmittableFn = { name: string; toString(): string };
+
+export const FINISH_PAINTER_SOURCES: Record<string, EmittableFn[]> = {
+  worn: [paintScratches, paintWorn],
+  brushed: [paintScratches, paintBrushed],
+  hazard: [paintHazard],
+  tread: [paintTread],
+  camo: [shade, paintScratches, paintCamo],
+  louver: [paintLouver],
+  patina: [paintScratches, paintPatina],
+  knurl: [paintKnurl],
+};
+
+// the shared plumbing every finish needs regardless of which painter runs
+export const FINISH_RUNTIME_SOURCES: EmittableFn[] = [mulberry32, seedFrom];
+
 export function makeFinishTexture(
   THREE: any,
   finish: string,

@@ -5,25 +5,43 @@ import {
   contains,
   linksTo,
   ImageDef,
+  FileDef,
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import NumberField from 'https://cardstack.com/base/number';
 import DatetimeField from 'https://cardstack.com/base/datetime';
+import enumField from 'https://cardstack.com/base/enum';
 
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 
-import { SculptSpecField } from './fields/sculpt-spec';
-import ModelViewer from './components/model-viewer';
+import { generateViewerSrcdoc } from './util/code-export';
+import { VISION_MODEL_OPTIONS } from './util/generation';
 
-// One finished reconstruction: the reference it was built from, the full
-// SculptSpec the vision model authored, and its self-review. Every generation
-// in the studio is saved as one of these, so each model is an independent,
+// One finished reconstruction: the reference it was built from, the generated
+// three.js model file it produced, and its self-review. Every generation in
+// the studio is saved as one of these, so each model is an independent,
 // searchable, linkable card in the realm (mirroring the AiImage pattern).
+//
+// The model itself lives OUTSIDE the card   as a realm .js file (real code,
+// with the source spec embedded as a SCULPT_SPEC constant) — the card only
+// carries its URL. Rendering goes through the shared exports/viewer.html
+// harness, which any iframe can load.
 export class SculptedModel extends CardDef {
   static displayName = 'Sculpted Model';
 
   @field referenceImage = contains(ImageSourceField);
-  @field spec = contains(SculptSpecField);
+  // realm URL of the generated model .js — the model's stored form; the
+  // source spec rides inside that file as its SCULPT_SPEC constant
+  @field codeFileUrl = contains(StringField);
+  // the same generated .js as an openable file link (FileDef) — codeFileUrl
+  // stays the embed/viewer contract, this is the clickable file reference
+  @field codeFile = linksTo(() => FileDef);
+  @field objectName = contains(StringField);
+  // stage-1 analysis JSON (object type, camera, per-part measured bboxes,
+  // attachment constraints, _refSig) this build followed — kept on the
+  // creation so selecting this version in the studio re-attaches its measured
+  // targets and its reference signature drives the regenerate cache
+  @field analysis = contains(StringField);
   @field critique = contains(StringField);
   @field score = contains(NumberField);
   // snapshot of the render at save time — the kept result is viewable as an
@@ -37,17 +55,29 @@ export class SculptedModel extends CardDef {
   // studio's prerendered history search without loading any cards
   @field sourceStudioId = contains(StringField);
   @field round = contains(NumberField);
-  @field modelUsed = contains(StringField);
+  @field modelUsed = contains(
+    enumField(StringField, {
+      options: VISION_MODEL_OPTIONS,
+      displayName: 'Model Used',
+    }),
+  );
   @field createdAt = contains(DatetimeField);
   @field title = contains(StringField, {
     computeVia: function (this: SculptedModel) {
-      return this.spec?.objectName || 'Sculpted Model';
+      return this.objectName || 'Sculpted Model';
     },
   });
 
   static isolated = class Isolated extends Component<typeof SculptedModel> {
     get hasLinkedTheme() {
       return Boolean(this.args.model?.cardInfo?.theme);
+    }
+    // the viewer harness renders the model's .js file, inlined via srcdoc
+    // (external sites embed the same harness by its viewer.html URL)
+    get viewerSrcdoc() {
+      let codeFileUrl = this.args.model?.codeFileUrl;
+      if (!codeFileUrl) return undefined;
+      return generateViewerSrcdoc(codeFileUrl);
     }
     <template>
       <article
@@ -60,7 +90,15 @@ export class SculptedModel extends CardDef {
           {{/if}}
         </header>
         <main class='sculpted-viewport' aria-label='3D model viewport'>
-          <ModelViewer @spec={{@model.spec}} />
+          {{#if this.viewerSrcdoc}}
+            <iframe
+              class='sculpted-frame'
+              title='3D model viewer'
+              srcdoc={{this.viewerSrcdoc}}
+            ></iframe>
+          {{else}}
+            <p class='sculpted-missing'>no model file on this round</p>
+          {{/if}}
         </main>
         {{#if @model.critique}}
           <footer class='sculpted-footer'>
@@ -120,6 +158,23 @@ export class SculptedModel extends CardDef {
           min-height: 0;
           position: relative;
         }
+        .sculpted-frame {
+          display: block;
+          width: 100%;
+          height: 100%;
+          border: 0;
+        }
+        .sculpted-missing {
+          display: grid;
+          place-items: center;
+          height: 100%;
+          margin: 0;
+          font-family: var(--_mono);
+          font-size: 0.75rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--_dim);
+        }
         .sculpted-footer {
           padding: 0.625rem 1.25rem;
           border-top: 1px solid var(--_border);
@@ -130,7 +185,7 @@ export class SculptedModel extends CardDef {
           color: var(--_dim);
         }
         .i3d-default-theme {
-          --background: #0a0b10;
+          --background: #2b303d;
           --card: #14161e;
           --border: #232838;
           --foreground: #eef0f6;
@@ -142,9 +197,6 @@ export class SculptedModel extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof SculptedModel> {
-    get componentCount() {
-      return this.args.model?.spec?.components?.length ?? 0;
-    }
     get hasLinkedTheme() {
       return Boolean(this.args.model?.cardInfo?.theme);
     }
@@ -169,9 +221,9 @@ export class SculptedModel extends CardDef {
             alt='Reference for {{@model.title}}'
           />
         {{/if}}
-        <p class='tile-meta'>{{this.componentCount}}
-          parts ·
-          {{@model.spec.objectClass}}</p>
+        {{#if @model.modelUsed}}
+          <p class='tile-meta'>{{@model.modelUsed}}</p>
+        {{/if}}
       </article>
       <style scoped>
         .tile {
@@ -237,7 +289,7 @@ export class SculptedModel extends CardDef {
           color: var(--i3d-text-dim, var(--muted-foreground, #9aa0b2));
         }
         .i3d-default-theme {
-          --background: #0a0b10;
+          --background: #2b303d;
           --card: #14161e;
           --border: #232838;
           --foreground: #eef0f6;
@@ -375,7 +427,7 @@ export class SculptedModel extends CardDef {
           }
         }
         .i3d-default-theme {
-          --background: #0a0b10;
+          --background: #2b303d;
           --card: #14161e;
           --border: #232838;
           --foreground: #eef0f6;

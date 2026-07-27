@@ -6,13 +6,16 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import NumberField from 'https://cardstack.com/base/number';
+import enumField from 'https://cardstack.com/base/enum';
 import { Command } from '@cardstack/runtime-common';
 
 import {
   ANALYZE_SYSTEM_PROMPT,
   VISION_MODEL,
+  VISION_MODEL_OPTIONS,
   requestSpec,
   parseAnalysisJson,
+  seedFromStrings,
 } from '../util/generation';
 import { fetchAsDataUrl } from '../util/realm-image';
 
@@ -28,7 +31,12 @@ class AnalyzeReferenceInput extends CardDef {
   // Resolved reference image URLs, primary view first (up to 6 are used).
   @field imageUrls = containsMany(StringField);
   // OpenRouter vision model id; defaults to the studio's standard model.
-  @field model = contains(StringField);
+  @field model = contains(
+    enumField(StringField, {
+      options: VISION_MODEL_OPTIONS,
+      displayName: 'Vision Model',
+    }),
+  );
 }
 
 class AnalyzeReferenceOutput extends CardDef {
@@ -63,10 +71,18 @@ export class AnalyzeReferenceCommand extends Command<
     let imageParts = await Promise.all(
       urls.map(async (url) => ({
         type: 'image_url',
-        image_url: { url: await fetchAsDataUrl(url) },
+        image_url: {
+          url: await fetchAsDataUrl(url, {
+            commandContext: this.commandContext,
+          }),
+        },
       })),
     );
 
+    // the analysis is the gate for everything downstream (object type, part
+    // count, bboxes, revolved flags), so it is the stage that must not drift:
+    // the seed comes from the reference URLs, not from chance, so re-running
+    // this command on one photo set reproduces the same plan.
     let analysis = await requestSpec(
       this.commandContext,
       input.model || VISION_MODEL,
@@ -80,6 +96,7 @@ export class AnalyzeReferenceCommand extends Command<
       ],
       undefined,
       parseAnalysisJson,
+      { seed: seedFromStrings(urls) },
     );
 
     return new AnalyzeReferenceOutput({

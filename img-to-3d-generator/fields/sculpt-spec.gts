@@ -112,6 +112,14 @@ export class ComponentNodeField extends FieldDef {
   @field materialId = contains(StringField);
   // textDecal only: the label/wordmark text rendered onto the decal plane
   @field text = contains(StringField);
+  // analysis partPlan name this component realizes. The draft measurement
+  // pass groups components by this value and reconciles their world-space
+  // bounds against the reference-image bbox for that semantic part.
+  @field partRef = contains(StringField);
+  // analysis partPlan name whose reference crop supplies decal artwork, plus
+  // the resolved realm URL written by the studio before code export.
+  @field textureRef = contains(StringField);
+  @field textureUrl = contains(StringField);
   // optional repetition system (JSON string): one declared part expands into
   // N placed clones — rivet rows, wheel sets, vent slats (War-Hauler style)
   @field repeat = contains(StringField);

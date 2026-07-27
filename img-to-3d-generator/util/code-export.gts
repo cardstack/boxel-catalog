@@ -8,14 +8,21 @@
 // exported model matches what the studio viewport shows. Only the used
 // primitives' geometry cases and only the needed helpers are emitted, so the
 // file stays readable. Known deliberate gaps, marked with comments in the
-// output: procedural finish textures render as flat color, and meshAsset
-// nodes (dormant feature) are skipped.
+// output: meshAsset nodes (dormant feature) are skipped.
+
+import {
+  FINISH_PAINTER_SOURCES,
+  FINISH_RUNTIME_SOURCES,
+  type EmittableFn,
+} from './finishes';
 
 // three.js UMD pins — keep in step with util/three-loader.gts
 const THREE_CDN =
   'https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js';
 const ROUNDED_BOX_CDN =
   'https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/geometries/RoundedBoxGeometry.js';
+const GLTF_EXPORTER_CDN =
+  'https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/GLTFExporter.js';
 
 interface ExportNode {
   nodeId: string;
@@ -27,6 +34,14 @@ interface ExportNode {
   scale: number[];
   materialId?: string | null;
   text?: string | null;
+  // analysis partPlan name this component belongs to — drives the measured
+  // proportion reconciliation (sizing), while textureRef drives artwork crops
+  partRef?: string | null;
+  // analysis partPlan name whose photo region carries this part's artwork
+  textureRef?: string | null;
+  // resolved crop URL (the studio crops the reference by the analysis bbox
+  // and writes it into the realm before generating code)
+  textureUrl?: string | null;
   repeat?: any;
   attachTo?: string | null;
   note?: string | null;
@@ -76,8 +91,13 @@ function specNodes(spec: any): ExportNode[] {
       scale: parseNums(c.scale, [1, 1, 1]),
       materialId: c.materialId || null,
       text: c.text || null,
+      partRef: c.partRef || null,
+      textureRef: c.textureRef || null,
+      textureUrl: c.textureUrl || null,
       repeat: safeRepeat(c.repeat),
       attachTo: c.attachTo || null,
+      anchor: c.anchor && typeof c.anchor === 'object' ? c.anchor : null,
+      grounded: c.grounded === true ? true : null,
       note: c.note || null,
     }));
 }
@@ -125,9 +145,20 @@ function fmtArr(a: number[]): string {
   return '[' + a.map(fmt).join(', ') + ']';
 }
 
-// single-quoted JS string literal
+// single-quoted JS string literal — newlines included (multi-line label
+// text otherwise emits an unterminated string and breaks the whole file)
 function q(s: string): string {
-  return "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+  return (
+    "'" +
+    String(s)
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'")
+      .replace(/\r/g, '\\r')
+      .replace(/\n/g, '\\n')
+      .replace(/\u2028/g, '\\u2028')
+      .replace(/\u2029/g, '\\u2029') +
+    "'"
+  );
 }
 
 function clamp01(n: number | null | undefined, fallback: number): number {
@@ -205,12 +236,35 @@ function emitMaterials(materials: ExportMaterial[], unlit: boolean): string[] {
     }
     params.push(`envMapIntensity: ${fmt(envIntensity)}`);
     let ctor = usePhysical ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial';
-    let finishNote = m.finish
-      ? ` // finish '${m.finish}' is a procedural canvas texture in the studio — flat color here`
-      : '';
     lines.push(
-      `  MATERIALS[${q(m.materialId)}] = new THREE.${ctor}({ ${params.join(', ')} });${finishNote}`,
+      `  MATERIALS[${q(m.materialId)}] = new THREE.${ctor}({ ${params.join(', ')} });`,
     );
+    // procedural finish, mirroring the studio interpreter exactly: the painted
+    // canvas serves as colour map AND roughnessMap, except for tread/knurl
+    // which are RELIEF and go to bumpMap so the material keeps its own colour.
+    // hazard/camo/louver carry their colours inside the map, so the material's
+    // colour is neutralised to white and the map is not tinted by it.
+    if (m.finish && FINISH_PAINTER_SOURCES[m.finish]) {
+      let id = q(m.materialId);
+      let finish = q(m.finish);
+      let seedColor = m.baseColor ? q(m.baseColor) : "'#7a7f5a'";
+      lines.push(
+        `  (function () {`,
+        `    var tex = makeFinishTexture(THREE, ${finish}, ${id}, ${seedColor});`,
+        `    if (!tex) return;`,
+        `    var mat = MATERIALS[${id}];`,
+        m.finish === 'tread' || m.finish === 'knurl'
+          ? `    mat.bumpMap = tex; mat.bumpScale = 0.02;`
+          : `    mat.map = tex; mat.roughnessMap = tex;` +
+              (m.finish === 'hazard' ||
+              m.finish === 'camo' ||
+              m.finish === 'louver'
+                ? `\n    mat.color = new THREE.Color('#ffffff');`
+                : ''),
+        `    mat.needsUpdate = true;`,
+        `  })();`,
+      );
+    }
   }
   lines.push(
     unlit
@@ -353,6 +407,9 @@ const GEOMETRY_CASES: Record<string, string> = {
       return geo;
     }`,
   torus: `    case 'torus':
+      // [radius,tube] — NATIVE three.js orientation: the ring lies in the XY
+      // plane, axis along +Z, standing upright. A collar around an upright body
+      // is rotation [-1.5708, 0, 0]; a wheel hub facing sideways is [0, 1.5708, 0]
       return new THREE.TorusGeometry(
         d[0] ?? 0.5, d[1] ?? 0.15, Math.max(3, Math.round(d[2] ?? 16)), Math.max(3, Math.round(d[3] ?? 48)));`,
   plane: `    case 'plane':
@@ -439,9 +496,28 @@ const HELPER_MULBERRY = `  // deterministic PRNG — keeps blob shapes identical
     };
   }`;
 
-const HELPER_TEXT_DECAL = `  // canvas-painted text on a transparent plane
-  function buildTextDecal(d, text, color) {
+const HELPER_LOAD_TEXTURE = `  // loads a cropped-artwork texture (a realm-hosted webp of the reference's
+  // own label/logo region) for decals that superimpose the REAL artwork
+  function loadDecalTexture(url) {
+    var loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
+    var tex = loader.load(url);
+    tex.encoding = THREE.sRGBEncoding;
+    tex.anisotropy = 8;
+    return tex;
+  }`;
+
+const HELPER_TEXT_DECAL = `  // flat label plane: superimposes the cropped reference artwork when a
+  // texture is given, else canvas-paints the text
+  function buildTextDecal(d, text, color, textureUrl) {
     var w = d[0] ?? 0.8, h = d[1] ?? 0.25;
+    if (textureUrl) {
+      var material = new THREE.MeshBasicMaterial({
+        map: loadDecalTexture(textureUrl),
+        polygonOffset: true, polygonOffsetFactor: -4, toneMapped: false,
+      });
+      return new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
+    }
     var canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = Math.max(64, Math.round((512 * h) / Math.max(w, 0.001)));
@@ -467,10 +543,20 @@ const HELPER_TEXT_DECAL = `  // canvas-painted text on a transparent plane
     return new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
   }`;
 
-const HELPER_CURVED_DECAL = `  // painted label wrapped around a cylindrical body
-  function buildCurvedDecal(d, text, baseColor) {
+const HELPER_CURVED_DECAL = `  // label wrapped around a cylindrical body: superimposes the cropped
+  // reference artwork when a texture is given, else canvas-paints the text
+  function buildCurvedDecal(d, text, baseColor, textureUrl) {
     var radius = Math.abs(d[0] ?? 0.5), height = Math.abs(d[1] ?? 0.6);
     var arc = (Math.min(Math.max(d[2] ?? 120, 20), 350) * Math.PI) / 180;
+    if (textureUrl) {
+      var texMaterial = new THREE.MeshStandardMaterial({
+        map: loadDecalTexture(textureUrl),
+        roughness: 0.6, metalness: 0, side: THREE.DoubleSide,
+        polygonOffset: true, polygonOffsetFactor: -2,
+      });
+      var texGeometry = new THREE.CylinderGeometry(radius, radius, height, 48, 1, true, -arc / 2, arc);
+      return new THREE.Mesh(texGeometry, texMaterial);
+    }
     var canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = Math.max(64, Math.round((512 * height) / Math.max(radius * arc, 0.001)));
@@ -504,6 +590,70 @@ const HELPER_CURVED_DECAL = `  // painted label wrapped around a cylindrical bod
     return new THREE.Mesh(geometry, material);
   }`;
 
+// Procedural finish painters, emitted from their OWN source so the export
+// paints the same weathering the studio does. `Function.prototype.toString()`
+// hands back the real function text (TypeScript's annotations are already
+// compiled away), which means there is no hand-copied duplicate here to drift
+// out of sync — unlike the geometry and solver blocks in this file, which do
+// mirror the interpreter by hand.
+//
+// Everything emitted is a function DECLARATION, so it hoists to the top of
+// buildSculpture and is callable from the material block above it.
+function emitFinishHelpers(finishes: Set<string>): string {
+  let needed: EmittableFn[] = [];
+  let add = (fn: EmittableFn) => {
+    if (!needed.includes(fn)) needed.push(fn);
+  };
+  for (let fn of FINISH_RUNTIME_SOURCES) add(fn);
+  for (let finish of finishes) {
+    for (let fn of FINISH_PAINTER_SOURCES[finish] ?? []) add(fn);
+  }
+  let dispatch = [...finishes]
+    .map((f) => {
+      let painters = FINISH_PAINTER_SOURCES[f] ?? [];
+      let painter = painters[painters.length - 1];
+      let args =
+        f === 'camo'
+          ? "ctx, S, rand, baseColor || '#7a7f5a'"
+          : f === 'hazard' || f === 'louver' || f === 'knurl'
+            ? 'ctx, S'
+            : 'ctx, S, rand';
+      return `      case '${f}': ${painter.name}(${args}); break;`;
+    })
+    .join('\n');
+  return [
+    '  // procedural surface finishes — the painted canvas doubles as colour and',
+    '  // roughness map, which is what makes a surface read as weathered metal',
+    '  // instead of plastic. Painter sources are emitted from the studio module,',
+    '  // so this is the same paint the studio viewport shows.',
+    ...needed.map((fn) => indentSource(String(fn))),
+    '  function makeFinishTexture(THREE, finish, seedText, baseColor) {',
+    '    var S = 1024;',
+    "    var cv = document.createElement('canvas');",
+    '    cv.width = cv.height = S;',
+    "    var ctx = cv.getContext('2d');",
+    '    var rand = mulberry32(seedFrom(seedText));',
+    '    switch (finish) {',
+    dispatch,
+    '      default: return undefined;',
+    '    }',
+    '    var tex = new THREE.CanvasTexture(cv);',
+    '    tex.encoding = THREE.sRGBEncoding;',
+    '    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;',
+    '    tex.anisotropy = 8;',
+    '    return tex;',
+    '  }',
+  ].join('\n');
+}
+
+// two-space indent so emitted sources sit inside buildSculpture like the rest
+function indentSource(src: string): string {
+  return src
+    .split('\n')
+    .map((line) => (line.trim() ? `  ${line}` : line))
+    .join('\n');
+}
+
 const HELPER_GLOW = `  // camera-facing additive glow sprite
   function buildGlowSprite(d, color) {
     var size = d[0] ?? 0.3;
@@ -527,7 +677,7 @@ const HELPER_GLOW = `  // camera-facing additive glow sprite
   }`;
 
 // assembly plumbing shared by every export: addPart, parent linking,
-// attachTo pull, repeat expansion, gravity snap — the interpreter's
+// attachTo pull, repeat expansion, contact backstop — the interpreter's
 // post-build passes in the same order
 const ASSEMBLY_RUNTIME = `  // ===== assembly plumbing (mirrors the studio interpreter) =====
   var objects = new Map();
@@ -535,6 +685,9 @@ const ASSEMBLY_RUNTIME = `  // ===== assembly plumbing (mirrors the studio inter
   var parentIds = new Map();
   var attachments = [];
   var repeats = [];
+  // true when the spec drives its own heights via "grounded"; the final
+  // stand-on-the-ground step defers to it
+  var groundedDeclared = false;
 
   function material(id) {
     if (id && MATERIALS[id]) return MATERIALS[id];
@@ -545,7 +698,9 @@ const ASSEMBLY_RUNTIME = `  // ===== assembly plumbing (mirrors the studio inter
   function addPart(p) {
     if (objects.has(p.id)) return;
     var obj;
-    if (p.primitive === 'glow') {
+    // decal/glow builders are emitted only when the spec uses them — the
+    // typeof guards keep this shared runtime valid either way
+    if (p.primitive === 'glow' && typeof buildGlowSprite === 'function') {
       obj = buildGlowSprite(p.d || [], p.color || '#eeeeee');
       obj.name = p.id;
       obj.position.set(p.pos[0] || 0, p.pos[1] || 0, p.pos[2] || 0);
@@ -553,11 +708,14 @@ const ASSEMBLY_RUNTIME = `  // ===== assembly plumbing (mirrors the studio inter
       parentIds.set(p.id, p.parent || null);
       return;
     }
-    if (p.primitive === 'textDecal') {
-      obj = buildTextDecal(p.d || [], p.text || '', p.color || '#eeeeee');
+    if (p.primitive === 'textDecal' && typeof buildTextDecal === 'function') {
+      obj = buildTextDecal(p.d || [], p.text || '', p.color || '#eeeeee', p.texture);
       meshes.push(obj);
-    } else if (p.primitive === 'curvedDecal') {
-      obj = buildCurvedDecal(p.d || [], p.text || '', p.color || '#eeeeee');
+    } else if (
+      p.primitive === 'curvedDecal' &&
+      typeof buildCurvedDecal === 'function'
+    ) {
+      obj = buildCurvedDecal(p.d || [], p.text || '', p.color || '#eeeeee', p.texture);
       meshes.push(obj);
     } else {
       var geometry = buildGeometry(p.primitive, p.d || []);
@@ -572,13 +730,27 @@ const ASSEMBLY_RUNTIME = `  // ===== assembly plumbing (mirrors the studio inter
     obj.name = p.id;
     obj.position.set(p.pos[0] || 0, p.pos[1] || 0, p.pos[2] || 0);
     var rot = p.rot || [0, 0, 0];
-    obj.rotation.set(rot[0] || 0, rot[1] || 0, rot[2] || 0);
+    var ry = rot[1] || 0;
+    // double-correction guard: buildGeometry already squares up a 4-segment
+    // cone, so an author-supplied 45° Y rotation stacks to 90° and turns the
+    // hip roof back into an overhanging diamond
+    var coneSegs = p.primitive === 'cone' ? Math.max(3, Math.round((p.d || [])[2] != null ? (p.d || [])[2] : 24)) : 0;
+    if (coneSegs === 4 && ry) {
+      var quarter = Math.PI / 2;
+      // subtract the spurious 45°, never snap: 45° is exactly halfway to 90°,
+      // and resolving it upward would swap the roof's width and depth
+      if (Math.abs((((ry % quarter) + quarter) % quarter) - Math.PI / 4) < 0.09) {
+        ry -= Math.sign(ry) * (Math.PI / 4);
+      }
+    }
+    obj.rotation.set(rot[0] || 0, ry, rot[2] || 0);
     var scl = p.scl || [1, 1, 1];
     obj.scale.set(scl[0] || 1, scl[1] || 1, scl[2] || 1);
     objects.set(p.id, obj);
     parentIds.set(p.id, p.parent || null);
-    if (p.attachTo) attachments.push({ id: p.id, to: p.attachTo });
-    if (p.repeat) repeats.push({ id: p.id, rep: p.repeat });
+    if (p.attachTo) attachments.push({ id: p.id, to: p.attachTo, prim: p.primitive });
+    if (p.repeat) repeats.push({ id: p.id, rep: p.repeat, to: p.attachTo });
+    if (p.grounded) groundedDeclared = true;
   }
 
   function assemble() {
@@ -631,37 +803,65 @@ const ASSEMBLY_RUNTIME = `  // ===== assembly plumbing (mirrors the studio inter
       var count = Math.min(48, Math.max(0, Math.round(rep.count || 0)));
       if (count < 2) return;
       var parent = original.parent || root;
-      for (var i = 1; i < count; i++) {
-        var clone = original.clone(true);
-        clone.name = req.id + '-' + i;
+      var axis = rep.axis === 'x' ? 'x' : rep.axis === 'z' ? 'z' : 'y';
+      var basePos = original.position.clone();
+      var baseRot = original.rotation.clone();
+      // RING CENTER for a radial array: the axis of the part it wraps around.
+      // The original's own in-plane position is already a point ON the circle,
+      // so adding the radius to it put every clone at twice the radius.
+      var center = basePos.clone();
+      var host = req.to ? objects.get(req.to) : undefined;
+      if (rep.mode === 'radial' && host && host !== original) {
+        var hostBox = new THREE.Box3().setFromObject(host);
+        if (!hostBox.isEmpty()) {
+          var hc = hostBox.getCenter(new THREE.Vector3());
+          parent.worldToLocal(hc);
+          if (axis === 'y') { center.x = hc.x; center.z = hc.z; }
+          else if (axis === 'x') { center.y = hc.y; center.z = hc.z; }
+          else { center.x = hc.x; center.y = hc.y; }
+        }
+      }
+      // index 0 is the original itself, so the ring is coherent
+      var place = function (obj, i) {
         if (rep.mode === 'radial') {
           var radius = rep.radius != null ? rep.radius : 0.5;
-          var axis = rep.axis === 'x' ? 'x' : rep.axis === 'z' ? 'z' : 'y';
           var angle = (i / count) * Math.PI * 2;
           var ca = Math.cos(angle) * radius, sa = Math.sin(angle) * radius;
           if (axis === 'y') {
-            clone.position.set(original.position.x + ca, original.position.y, original.position.z + sa);
-            clone.rotation.y = original.rotation.y + angle;
+            obj.position.set(center.x + ca, center.y, center.z + sa);
+            obj.rotation.y = baseRot.y + angle;
           } else if (axis === 'x') {
-            clone.position.set(original.position.x, original.position.y + ca, original.position.z + sa);
-            clone.rotation.x = original.rotation.x + angle;
+            obj.position.set(center.x, center.y + ca, center.z + sa);
+            obj.rotation.x = baseRot.x + angle;
           } else {
-            clone.position.set(original.position.x + ca, original.position.y + sa, original.position.z);
-            clone.rotation.z = original.rotation.z + angle;
+            obj.position.set(center.x + ca, center.y + sa, center.z);
+            obj.rotation.z = baseRot.z + angle;
           }
         } else {
           var off = Array.isArray(rep.offset) ? rep.offset : [0.2, 0, 0];
-          clone.position.set(
-            original.position.x + off[0] * i,
-            original.position.y + off[1] * i,
-            original.position.z + off[2] * i);
+          obj.position.set(basePos.x + off[0] * i, basePos.y + off[1] * i, basePos.z + off[2] * i);
         }
+      };
+      place(original, 0);
+      for (var i = 1; i < count; i++) {
+        var clone = original.clone(true);
+        clone.name = req.id + '-' + i;
+        place(clone, i);
         parent.add(clone);
         clone.traverse(function (child) { if (child.isMesh) meshes.push(child); });
       }
     });
-    // gravity snap — a part touching nothing drops onto the surface below it
-    // (only small gaps close; big gaps are intentional elevation)
+    // contact backstop — a part touching nothing is pulled into ~0.03 overlap
+    // with the support it DECLARED, via the minimal per-axis translation
+    // (closes gaps in ANY direction, not just straight down). A part with no
+    // declared attachTo stays exactly where it was authored: guessing the
+    // nearest neighbour used to drag parts the reference never contained onto
+    // whatever happened to be closest, welding them into a clump. maxSnap
+    // scales with the object (shared with the inset pass below) so a solver can
+    // only close an authoring gap, never relocate a part across the model.
+    root.updateWorldMatrix(true, true);
+    var solverSize = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+    var maxSnap = 0.15 * Math.max(solverSize.x, solverSize.y, solverSize.z, 0.001);
     if (meshes.length > 1) {
       root.updateWorldMatrix(true, true);
       var boxes = meshes.map(function (mesh) {
@@ -677,28 +877,104 @@ const ASSEMBLY_RUNTIME = `  // ===== assembly plumbing (mirrors the studio inter
         }
         if (!touches) floating.push(i);
       }
+      var attachToByName = new Map();
+      attachments.forEach(function (att) { attachToByName.set(att.id, att.to); });
+      var contactDelta = function (a, b) {
+        var margin = 0.03;
+        var delta = new THREE.Vector3();
+        ['x', 'y', 'z'].forEach(function (axis) {
+          if (a.min[axis] > b.max[axis]) delta[axis] = b.max[axis] - a.min[axis] + margin;
+          else if (a.max[axis] < b.min[axis]) delta[axis] = b.min[axis] - a.max[axis] + margin;
+        });
+        return delta;
+      };
       floating.forEach(function (i) {
-        var supportTop, groundY;
-        for (var j = 0; j < meshes.length; j++) {
-          if (j === i || floating.indexOf(j) !== -1) continue;
-          groundY = groundY === undefined ? boxes[j].min.y : Math.min(groundY, boxes[j].min.y);
-          var overlapsPlan =
-            boxes[i].min.x <= boxes[j].max.x && boxes[i].max.x >= boxes[j].min.x &&
-            boxes[i].min.z <= boxes[j].max.z && boxes[i].max.z >= boxes[j].min.z;
-          if (overlapsPlan && boxes[j].max.y <= boxes[i].min.y) {
-            supportTop = supportTop === undefined ? boxes[j].max.y : Math.max(supportTop, boxes[j].max.y);
-          }
+        var name = meshes[i].name || '';
+        var baseName = name.replace(/-\\d+$/, '');
+        var targetBox;
+        // the declared joint is the only snap target
+        var attachTo = attachToByName.has(name) ? attachToByName.get(name) : attachToByName.get(baseName);
+        var targetObj = attachTo ? objects.get(attachTo) : undefined;
+        if (targetObj && targetObj !== meshes[i]) {
+          var tb = new THREE.Box3().setFromObject(targetObj);
+          if (!tb.isEmpty()) { targetBox = tb; }
         }
-        var targetY = supportTop !== undefined ? supportTop : groundY;
-        var dy = targetY === undefined ? 0 : boxes[i].min.y - targetY;
-        if (dy > 0 && dy <= 0.35) {
-          var worldPos = meshes[i].getWorldPosition(new THREE.Vector3());
-          worldPos.y -= dy;
-          meshes[i].position.copy(meshes[i].parent ? meshes[i].parent.worldToLocal(worldPos) : worldPos);
-          boxes[i].translate(new THREE.Vector3(0, -dy, 0));
-        }
+        if (!targetBox) return;
+        var delta = contactDelta(boxes[i], targetBox);
+        var dist = delta.length();
+        if (dist === 0 || dist > maxSnap) return;
+        var worldPos = meshes[i].getWorldPosition(new THREE.Vector3());
+        worldPos.add(delta);
+        meshes[i].position.copy(meshes[i].parent ? meshes[i].parent.worldToLocal(worldPos) : worldPos);
+        boxes[i].translate(delta);
       });
       root.updateWorldMatrix(true, true);
+    }
+    // inset thin panels (windows / glass / signs) flush into their wall. The
+    // panel's thinnest world axis is its surface normal; using the WALL's
+    // thinnest axis moves side windows onto roofs whenever Y is the wall's
+    // smallest dimension.
+    // rings and bands never qualify: a torus/flatRing/arch encircles its host
+    // instead of sitting in one of its faces, and its thinnest axis is the one
+    // it wraps around — so insetting slides a collar or a cap rib to the end of
+    // the very part it should be banding.
+    root.updateWorldMatrix(true, true);
+    var NEVER_INSET = ['torus', 'flatRing', 'arch'];
+    attachments.forEach(function (att) {
+      if (NEVER_INSET.indexOf(att.prim) !== -1) return;
+      var obj = objects.get(att.id);
+      var wall = objects.get(att.to);
+      if (!obj || !wall || obj === wall) return;
+      var p = new THREE.Box3().setFromObject(obj);
+      var w = new THREE.Box3().setFromObject(wall);
+      if (p.isEmpty() || w.isEmpty()) return;
+      var pSize = p.getSize(new THREE.Vector3());
+      var wSize = w.getSize(new THREE.Vector3());
+      var axes = ['x', 'y', 'z'];
+      var normal = axes.reduce(function (a, b) { return pSize[b] < pSize[a] ? b : a; });
+      var faceAxes = axes.filter(function (a) { return a !== normal; });
+      // a panel must be a PLATE in its own right — thickness a small fraction
+      // of its own face. Comparing only against the wall let any small part
+      // qualify: a screwcap is "thinner" than a bottle on all three axes, so it
+      // was flush-mounted to the bottle's SIDE and sat off-axis beside the neck.
+      // A roughly square cross-section (caps, knobs, wheels) never qualifies.
+      var face = faceAxes.map(function (a) { return pSize[a]; });
+      var plateLike = pSize[normal] < 0.3 * Math.min(face[0], face[1]);
+      var thin = pSize[normal] < wSize[normal] * 0.6;
+      var fits = faceAxes.every(function (a) { return pSize[a] <= wSize[a] * 1.1; });
+      if (!plateLike || !thin || !fits) return;
+      var pCenter = p.getCenter(new THREE.Vector3());
+      var wCenter = w.getCenter(new THREE.Vector3());
+      var side = pCenter[normal] >= wCenter[normal] ? 1 : -1;
+      var d = side > 0 ? w.max[normal] - p.max[normal] : w.min[normal] - p.min[normal];
+      if (Math.abs(d) < 0.001 || Math.abs(d) > maxSnap) return;
+      var worldPos = obj.getWorldPosition(new THREE.Vector3());
+      worldPos[normal] += d;
+      obj.position.copy(obj.parent ? obj.parent.worldToLocal(worldPos) : worldPos);
+      obj.updateWorldMatrix(true, true);
+    });
+    root.updateWorldMatrix(true, true);
+
+    // stand the object on the ground — LAST, once every solver above has
+    // finished, and only when the spec never used the "grounded" flag (which has
+    // its own drop). The model does not set that flag in practice, so without
+    // this an object sits wherever its coordinates landed: sunk into the ground,
+    // or floating above its own contact shadow.
+    if (!groundedDeclared) {
+      var standing = new THREE.Box3();
+      for (var si = 0; si < meshes.length; si++) {
+        var sm = meshes[si];
+        if (/shadow/i.test(sm.name) || sm.isSprite) continue;
+        standing.union(new THREE.Box3().setFromObject(sm));
+      }
+      if (!standing.isEmpty()) {
+        var gdy = -standing.min.y;
+        var gh = standing.max.y - standing.min.y;
+        if (Math.abs(gdy) > 0.02 && gh > 0 && Math.abs(gdy) <= gh) {
+          root.position.y += gdy;
+          root.updateWorldMatrix(true, true);
+        }
+      }
     }
   }`;
 
@@ -724,6 +1000,8 @@ export function generateModelJs(spec: any, meta?: CodeExportMeta): string {
   );
 
   let lines: string[] = [];
+  // generated artifact — keep repo linters out of it
+  lines.push('/* eslint-disable */');
   lines.push(`// ${name} — procedural three.js model`);
   let provenance = ['generated by Boxel Img-to-3D Studio from its sculpt spec'];
   if (typeof meta?.round === 'number') provenance.push(`round ${meta.round}`);
@@ -755,9 +1033,21 @@ export function generateModelJs(spec: any, meta?: CodeExportMeta): string {
   if ([...usedPrimitives].some((p) => NEEDS_MULBERRY.has(p))) {
     helperBlocks.push(HELPER_MULBERRY);
   }
+  let usesTexturedDecal = nodes.some(
+    (n) =>
+      n.textureUrl &&
+      (n.primitive === 'textDecal' || n.primitive === 'curvedDecal'),
+  );
+  if (usesTexturedDecal) helperBlocks.push(HELPER_LOAD_TEXTURE);
   if (usedPrimitives.has('textDecal')) helperBlocks.push(HELPER_TEXT_DECAL);
   if (usedPrimitives.has('curvedDecal')) helperBlocks.push(HELPER_CURVED_DECAL);
   if (usedPrimitives.has('glow')) helperBlocks.push(HELPER_GLOW);
+  let usedFinishes = new Set(
+    materials
+      .map((m: any) => String(m?.finish ?? ''))
+      .filter((f) => f && FINISH_PAINTER_SOURCES[f]),
+  );
+  if (usedFinishes.size) helperBlocks.push(emitFinishHelpers(usedFinishes));
 
   // geometry builder with only the used primitive cases
   let cases = [...usedPrimitives]
@@ -805,8 +1095,13 @@ export function generateModelJs(spec: any, meta?: CodeExportMeta): string {
       fields.push(
         `color: ${q(colorById.get(node.materialId ?? '') || '#eeeeee')}`,
       );
-      if (node.text || node.note)
-        fields.push(`text: ${q(node.text || node.note || '')}`);
+      // textDecal falls back to the note as its label (interpreter parity);
+      // curvedDecal must NOT — a recipe note painted onto a wine label reads
+      // as gibberish text on the model
+      let label =
+        node.primitive === 'textDecal' ? node.text || node.note : node.text;
+      if (label) fields.push(`text: ${q(label)}`);
+      if (node.textureUrl) fields.push(`texture: ${q(node.textureUrl)}`);
     } else if (node.materialId) {
       fields.push(`mat: ${q(node.materialId)}`);
     }
@@ -834,24 +1129,110 @@ export function generateModelJs(spec: any, meta?: CodeExportMeta): string {
   lines.push('}');
   lines.push('');
   lines.push(
-    "if (typeof module !== 'undefined') module.exports = { buildSculpture: buildSculpture };",
+    '// machine-readable source spec — the studio reads this back to refine or',
+    '// regenerate; editing addPart() lines above without updating it is fine',
+    '// for one-off tweaks, but regeneration works from this data',
+    `var SCULPT_SPEC = ${JSON.stringify(plainSpec(spec))};`,
+    '',
+    "if (typeof module !== 'undefined') {",
+    '  module.exports = { buildSculpture: buildSculpture, SCULPT_SPEC: SCULPT_SPEC };',
+    '}',
   );
   lines.push('');
   return lines.join('\n');
 }
 
-// the self-contained viewer page: model code inlined, three.js from CDN,
-// scene/lights/orbit mirroring the studio's model-viewer. The page's realm
-// URL is directly usable as an iframe src.
-export function generateViewerHtml(spec: any, meta?: CodeExportMeta): string {
-  let modelJs = generateModelJs(spec, meta);
-  let name = spec?.objectName || 'sculpture';
-  let title = String(name).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  let needsRoundedBox = specNodes(spec).some(
-    (n) => n.primitive === 'roundedBox',
-  );
+// the normalized, JSON-safe form of the spec that rides inside the .js file —
+// card instances no longer persist the spec, so the file is the carrier
+export function plainSpec(spec: any): any {
+  return {
+    objectName: spec?.objectName || 'sculpture',
+    inputKind: spec?.inputKind || 'object',
+    objectClass: spec?.objectClass || null,
+    complexity: spec?.complexity || null,
+    identityFeatures: Array.isArray(spec?.identityFeatures)
+      ? [...spec.identityFeatures]
+      : [],
+    materials: specMaterials(spec),
+    components: specNodes(spec).map((n) => ({
+      nodeId: n.nodeId,
+      parentId: n.parentId,
+      primitive: n.primitive,
+      dimensions: n.dimensions,
+      position: n.position,
+      rotation: n.rotation,
+      scale: n.scale,
+      materialId: n.materialId,
+      text: n.text,
+      partRef: n.partRef,
+      textureRef: n.textureRef,
+      textureUrl: n.textureUrl,
+      repeat: n.repeat,
+      attachTo: n.attachTo,
+      note: n.note,
+    })),
+  };
+}
 
+// reads the embedded SCULPT_SPEC back out of a generated model .js file
+export function specFromModelJs(code: string): any | null {
+  let match = code.match(/^var SCULPT_SPEC = (.*);$/m);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch {
+    return null;
+  }
+}
+
+// the SHARED viewer page (one per generator, not per model): reads the model
+// .js URL from its ?model= query param, fetches and executes it, and renders
+// with the same scene/lights/orbit as the studio viewport. Its realm URL —
+// viewer.html?model=<js url> — is the iframe src for every exported model.
+// Same-origin embedders (the studio) can also call the window API it exposes:
+// captureScreenshot() / captureViews(refCamera) / exportGlb().
+export function generateViewerHarnessHtml(bakedModelUrl?: string): string {
   let harness = `(function () {
+  // model source, in priority order: inline code (draft builds — the studio
+  // measures proportions before persisting anything), a baked-in URL
+  // (srcdoc viewport embeds), or the ?model= query param (external iframes)
+  if (window.SCULPT_MODEL_INLINE) {
+    var inlineFactory = new Function(
+      window.SCULPT_MODEL_INLINE + '\\nreturn buildSculpture;',
+    );
+    start(inlineFactory());
+    return;
+  }
+  var modelUrl =
+    window.SCULPT_MODEL_URL ||
+    new URLSearchParams(window.location.search).get('model');
+  function fail(message) {
+    var p = document.createElement('p');
+    p.style.cssText = 'color:#9aa0b2;font:14px ui-monospace,monospace;padding:1rem;';
+    p.textContent = message;
+    document.body.appendChild(p);
+  }
+  if (!modelUrl) {
+    fail('no model — open as viewer.html?model=<model .js URL>');
+    return;
+  }
+
+  fetch(modelUrl, { headers: { Accept: '*/*' } })
+    .then(function (response) {
+      if (!response.ok) throw new Error('could not load model (' + response.status + ')');
+      return response.text();
+    })
+    .then(function (code) {
+      // the model file declares buildSculpture(THREE); execute it in a plain
+      // (non-module) scope and pull the function out
+      var factory = new Function(code + '\\nreturn buildSculpture;');
+      start(factory());
+    })
+    .catch(function (e) {
+      fail(String((e && e.message) || e));
+    });
+
+  function start(buildSculpture) {
   var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputEncoding = THREE.sRGBEncoding;
@@ -863,8 +1244,8 @@ export function generateViewerHtml(spec: any, meta?: CodeExportMeta): string {
   document.body.appendChild(renderer.domElement);
 
   var scene = new THREE.Scene();
-  scene.background = new THREE.Color('#0a0b10');
-  scene.fog = new THREE.Fog('#0a0b10', 14, 30);
+  scene.background = new THREE.Color('#2b303d');
+  scene.fog = new THREE.Fog('#2b303d', 14, 30);
 
   var camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
 
@@ -904,6 +1285,41 @@ export function generateViewerHtml(spec: any, meta?: CodeExportMeta): string {
     -center.x * scaleFactor, -center.y * scaleFactor, -center.z * scaleFactor);
   scene.add(built.group);
 
+  // staggered pop-in: parts appear one after another, each springing up to
+  // its real size (same feel as the studio's original canvas viewport)
+  var popStart = performance.now();
+  var popDone = false;
+  var popParts = built.meshes.map(function (mesh, i) {
+    var base = mesh.scale.clone();
+    mesh.scale.setScalar(0.0001);
+    return { mesh: mesh, base: base, at: popStart + i * 55 };
+  });
+  function easeOutBack(t) {
+    var c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+  function animatePopIn(now) {
+    if (popDone) return;
+    var allDone = true;
+    for (var i = 0; i < popParts.length; i++) {
+      var p = popParts[i];
+      var t = (now - p.at) / 320;
+      if (t < 1) allDone = false;
+      if (t < 0) t = 0;
+      if (t > 1) t = 1;
+      var s = t === 1 ? 1 : easeOutBack(t);
+      p.mesh.scale.set(p.base.x * s, p.base.y * s, p.base.z * s);
+    }
+    popDone = allDone;
+  }
+  // screenshots must show the finished model, never a mid-animation frame
+  function finishPopIn() {
+    for (var i = 0; i < popParts.length; i++) {
+      popParts[i].mesh.scale.copy(popParts[i].base);
+    }
+    popDone = true;
+  }
+
   // drag-to-orbit / wheel-to-zoom with idle auto-rotate
   var orbit = { theta: 0.85, phi: 1.12, radius: 6 };
   var dragging = false, lastX = 0, lastY = 0, lastInteraction = 0;
@@ -937,6 +1353,7 @@ export function generateViewerHtml(spec: any, meta?: CodeExportMeta): string {
   resize();
 
   function frame(now) {
+    animatePopIn(now);
     if (!dragging && now - lastInteraction > 2500) orbit.theta += 0.0032;
     camera.position.set(
       orbit.radius * Math.sin(orbit.phi) * Math.sin(orbit.theta),
@@ -947,6 +1364,134 @@ export function generateViewerHtml(spec: any, meta?: CodeExportMeta): string {
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+
+  function renderAt(theta, phi) {
+    camera.position.set(
+      orbit.radius * Math.sin(phi) * Math.sin(theta),
+      orbit.radius * Math.cos(phi),
+      orbit.radius * Math.sin(phi) * Math.cos(theta));
+    camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+  }
+
+  // same-origin embedder API (the studio calls these through contentWindow)
+  window.captureScreenshot = function () {
+    finishPopIn();
+    renderer.render(scene, camera);
+    return renderer.domElement.toDataURL('image/webp', 0.9);
+  };
+  // per-part world bounding boxes — the studio compares these against the
+  // analysis bbox targets to auto-correct proportions (no vision call).
+  // The root transform below is presentation-only framing; neutralize it
+  // while measuring so returned positions use the original spec's units.
+  window.measureParts = function () {
+    finishPopIn();
+    var framedPosition = built.group.position.clone();
+    var framedScale = built.group.scale.clone();
+    built.group.position.set(0, 0, 0);
+    built.group.scale.set(1, 1, 1);
+    built.group.updateWorldMatrix(true, true);
+    var box = function (object) {
+      var b = new THREE.Box3().setFromObject(object);
+      return { min: [b.min.x, b.min.y, b.min.z], max: [b.max.x, b.max.y, b.max.z] };
+    };
+    var measurement = {
+      whole: box(built.group),
+      parts: built.meshes.map(function (mesh) {
+        var b = box(mesh);
+        return { name: mesh.name, min: b.min, max: b.max };
+      }),
+    };
+    built.group.position.copy(framedPosition);
+    built.group.scale.copy(framedScale);
+    built.group.updateWorldMatrix(true, true);
+    return measurement;
+  };
+  window.captureViews = function (refCamera) {
+    finishPopIn();
+    var views = [
+      { label: 'front', theta: 0, phi: 1.35 },
+      { label: 'side', theta: Math.PI / 2, phi: 1.35 },
+      { label: 'three-quarter', theta: 0.85, phi: 1.12 },
+    ];
+    if (refCamera && typeof refCamera.azimuthDeg === 'number') {
+      views.unshift({
+        label: 'reference angle',
+        theta: (refCamera.azimuthDeg * Math.PI) / 180,
+        phi: Math.PI / 2 - (((refCamera.elevationDeg || 0) * Math.PI) / 180),
+      });
+    }
+    var shots = views.map(function (view) {
+      renderAt(view.theta, view.phi);
+      return { label: view.label, dataUrl: renderer.domElement.toDataURL('image/webp', 0.9) };
+    });
+    renderAt(orbit.theta, orbit.phi);
+    return shots;
+  };
+  window.exportGlb = function () {
+    return new Promise(function (resolve, reject) {
+      function run() {
+        new THREE.GLTFExporter().parse(built.group, resolve, reject, { binary: true });
+      }
+      if (THREE.GLTFExporter) return run();
+      var s = document.createElement('script');
+      s.src = '${GLTF_EXPORTER_CDN}';
+      s.onload = run;
+      s.onerror = function () { reject(new Error('could not load GLTFExporter')); };
+      document.body.appendChild(s);
+    });
+  };
+  // lasso hit-test: given a screen-space polygon (pixels, viewport coords),
+  // raycast a grid of points INSIDE the polygon and take the front-most hit at
+  // each — so only the parts actually visible under the lasso are returned
+  // (an occluded body behind a lassoed cap is never picked). Drives the
+  // studio's inpaint/lasso targeted-edit feature.
+  window.pickInRegion = function (poly) {
+    finishPopIn();
+    built.group.updateWorldMatrix(true, true);
+    var w = renderer.domElement.clientWidth || window.innerWidth;
+    var h = renderer.domElement.clientHeight || window.innerHeight;
+    function inside(px, py) {
+      var c = false;
+      for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        var xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+        if (((yi > py) !== (yj > py)) &&
+            (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) c = !c;
+      }
+      return c;
+    }
+    var minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+    for (var p = 0; p < poly.length; p++) {
+      if (poly[p].x < minx) minx = poly[p].x;
+      if (poly[p].x > maxx) maxx = poly[p].x;
+      if (poly[p].y < miny) miny = poly[p].y;
+      if (poly[p].y > maxy) maxy = poly[p].y;
+    }
+    var raycaster = new THREE.Raycaster();
+    var ndc = new THREE.Vector2();
+    // ~14 samples across the lasso's shorter side, min 4px spacing
+    var step = Math.max(4, Math.min(maxx - minx, maxy - miny) / 14);
+    var seen = {}, hits = [];
+    for (var y = miny; y <= maxy; y += step) {
+      for (var x = minx; x <= maxx; x += step) {
+        if (!inside(x, y)) continue;
+        ndc.set((x / w) * 2 - 1, -(y / h) * 2 + 1);
+        raycaster.setFromCamera(ndc, camera);
+        var is = raycaster.intersectObjects(built.meshes, true);
+        if (!is.length) continue;
+        var obj = is[0].object;
+        while (obj && !obj.name && obj.parent) obj = obj.parent;
+        if (obj && obj.name && !seen[obj.name]) {
+          seen[obj.name] = 1;
+          hits.push(obj.name);
+        }
+      }
+    }
+    return hits;
+  };
+  window.sculptViewerReady = true;
+  try { window.parent.postMessage({ type: 'sculpt-viewer-ready' }, '*'); } catch (e) { /* sandboxed */ }
+  }
 })();`;
 
   return [
@@ -955,18 +1500,50 @@ export function generateViewerHtml(spec: any, meta?: CodeExportMeta): string {
     '<head>',
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
-    `<title>${title}</title>`,
-    '<style>html,body{margin:0;height:100%;background:#0a0b10;overflow:hidden}canvas{display:block}</style>',
+    '<title>Sculpture Viewer</title>',
+    '<style>html,body{margin:0;height:100%;background:#2b303d;overflow:hidden}canvas{display:block}</style>',
     '</head>',
     '<body>',
+    ...(bakedModelUrl
+      ? [
+          `<script>window.SCULPT_MODEL_URL = ${JSON.stringify(bakedModelUrl)};</script>`,
+        ]
+      : []),
     `<script src="${THREE_CDN}"></script>`,
-    ...(needsRoundedBox ? [`<script src="${ROUNDED_BOX_CDN}"></script>`] : []),
+    `<script src="${ROUNDED_BOX_CDN}"></script>`,
     '<script>',
-    modelJs,
     harness,
     '</script>',
     '</body>',
     '</html>',
     '',
   ].join('\n');
+}
+
+// the same harness with the model URL baked in, for use as an iframe's
+// `srcdoc` attribute — the browser never requests an .html from the realm,
+// so this works regardless of how the realm routes text/html navigations.
+// A srcdoc document inherits the embedding page's origin, so the studio can
+// still call the harness's window API and the model .js fetch stays
+// same-origin.
+export function generateViewerSrcdoc(modelUrl: string): string {
+  return generateViewerHarnessHtml(modelUrl);
+}
+
+// harness with the model CODE embedded directly (no realm file involved) —
+// used for draft builds: the studio measures the draft's proportions and
+// corrects the spec before any file is written. `token` stands in for the
+// model URL so readiness checks work the same as for persisted models.
+export function generateViewerSrcdocInline(
+  code: string,
+  token: string,
+): string {
+  let html = generateViewerHarnessHtml(token);
+  return html.replace(
+    '<body>',
+    [
+      '<body>',
+      `<script>window.SCULPT_MODEL_INLINE = ${JSON.stringify(code).replace(/<\//g, '<\\/')};</script>`,
+    ].join('\n'),
+  );
 }
