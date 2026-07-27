@@ -9,14 +9,14 @@ import NumberField from 'https://cardstack.com/base/number';
 import enumField from 'https://cardstack.com/base/enum';
 import { Command } from '@cardstack/runtime-common';
 
+import { parseAnalysisJson } from '../util/spec-io';
 import {
-  ANALYZE_SYSTEM_PROMPT,
   VISION_MODEL,
   VISION_MODEL_OPTIONS,
   requestSpec,
-  parseAnalysisJson,
   seedFromStrings,
-} from '../util/generation';
+} from '../util/llm-request';
+import { ANALYZE_SYSTEM_PROMPT } from '../prompts/analyze';
 import { fetchAsDataUrl } from '../util/realm-image';
 
 // Stage 1 of the image-to-3D pipeline as its own command: study the

@@ -15,7 +15,7 @@ import enumField from 'https://cardstack.com/base/enum';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 
 import { generateViewerSrcdoc } from './util/code-export';
-import { VISION_MODEL_OPTIONS } from './util/generation';
+import { VISION_MODEL_OPTIONS } from './util/llm-request';
 
 // One finished reconstruction: the reference it was built from, the generated
 // three.js model file it produced, and its self-review. Every generation in
@@ -108,38 +108,35 @@ export class SculptedModel extends CardDef {
       </article>
       <style scoped>
         .sculpted {
-          --_border: var(--i3d-border, var(--border, #232838));
-          --_dim: var(--i3d-text-dim, var(--muted-foreground, #9aa0b2));
-          --_accent: var(--i3d-accent, var(--accent, #38e8ff));
-          --_mono: var(
-            --i3d-font-mono,
-            var(--font-mono, ui-monospace, Menlo, monospace)
+          --i3d-bg: var(--background, #0a0b10);
+          --i3d-text: var(--foreground, #eef0f6);
+          --i3d-border: var(--border, #232838);
+          --i3d-text-dim: var(--muted-foreground, #9aa0b2);
+          --i3d-accent: var(--accent, #38e8ff);
+          --i3d-font-mono: var(--font-mono, ui-monospace, Menlo, monospace);
+          --i3d-font-sans: var(
+            --font-sans,
+            -apple-system,
+            BlinkMacSystemFont,
+            'Segoe UI',
+            Roboto,
+            sans-serif
           );
           display: flex;
           flex-direction: column;
           height: 100dvh;
           max-height: 100%;
           min-height: 0;
-          background: var(--i3d-bg, var(--background, #0a0b10));
-          color: var(--i3d-text, var(--foreground, #eef0f6));
-          font-family: var(
-            --i3d-font-sans,
-            var(
-              --font-sans,
-              -apple-system,
-              BlinkMacSystemFont,
-              'Segoe UI',
-              Roboto,
-              sans-serif
-            )
-          );
+          background: var(--i3d-bg);
+          color: var(--i3d-text);
+          font-family: var(--i3d-font-sans);
         }
         .sculpted-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 0.75rem 1.25rem;
-          border-bottom: 1px solid var(--_border);
+          border-bottom: 1px solid var(--i3d-border);
         }
         .sculpted-title {
           margin: 0;
@@ -147,11 +144,11 @@ export class SculptedModel extends CardDef {
         }
         .sculpted-score {
           margin: 0;
-          font-family: var(--_mono);
+          font-family: var(--i3d-font-mono);
           font-size: 0.6875rem;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--_accent);
+          color: var(--i3d-accent);
         }
         .sculpted-viewport {
           flex: 1;
@@ -169,20 +166,20 @@ export class SculptedModel extends CardDef {
           place-items: center;
           height: 100%;
           margin: 0;
-          font-family: var(--_mono);
+          font-family: var(--i3d-font-mono);
           font-size: 0.75rem;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--_dim);
+          color: var(--i3d-text-dim);
         }
         .sculpted-footer {
           padding: 0.625rem 1.25rem;
-          border-top: 1px solid var(--_border);
+          border-top: 1px solid var(--i3d-border);
         }
         .sculpted-critique {
           margin: 0;
           font-size: 0.8125rem;
-          color: var(--_dim);
+          color: var(--i3d-text-dim);
         }
         .i3d-default-theme {
           --background: #2b303d;

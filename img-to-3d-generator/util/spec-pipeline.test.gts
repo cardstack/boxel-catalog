@@ -1,8 +1,8 @@
 import { module, test } from 'qunit';
 
 import {
-  applySpecDiff,
   dropHairlineParts,
+  enforceAttachments,
   groundSupports,
   resolveBuriedParts,
   flagInstanceCollisions,
@@ -10,9 +10,10 @@ import {
   dropUnplannedParts,
   flagOverbuiltParts,
   reconcileProportions,
-  seedFromStrings,
-  serializeSpecForPrompt,
-} from './generation';
+} from './spec-passes';
+import { applySpecDiff } from './spec-diff';
+import { serializeSpecForPrompt } from './spec-io';
+import { seedFromStrings } from './llm-request';
 import { generateModelJs, specFromModelJs } from './code-export';
 
 function testSpec(dimensions: number[] | string = [0.015]) {

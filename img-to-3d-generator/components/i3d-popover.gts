@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { htmlSafe, type SafeString } from '@ember/template';
-import Popover from '../46f065-popover/popover';
+import Popover from '../../46f065-popover/popover';
 import type { Placement } from '@floating-ui/dom';
 
 type PopKind = 'details' | 'edit' | 'tools';
@@ -57,7 +57,7 @@ interface Signature {
  * scrollable `:body`, and an optional pinned `:foot`.
  *
  * The catalog Popover portals content out of the card's theme scope, so the
- * shell re-declares the `--_*` private aliases the studio's content uses —
+ * shell re-declares the `--i3d-*` token block the studio's content uses —
  * yielded `.history-*` / `.inpaint-*` elements keep their host scoped-CSS
  * classes AND resolve the same tokens they do inside `.studio`.
  */
@@ -150,30 +150,33 @@ export default class ImgTo3dPopover extends Component<Signature> {
 
     <style scoped>
       .i3d-pop {
-        /* re-declare the studio's private aliases (portaled out of .studio) */
-        --_bg: var(--i3d-bg, var(--background, #0a0b10));
-        --_surface: var(--i3d-surface, var(--card, #14161e));
-        --_border: var(--i3d-border, var(--border, #232838));
-        --_text: var(--i3d-text, var(--foreground, #eef0f6));
-        --_dim: var(--i3d-text-dim, var(--muted-foreground, #9aa0b2));
-        --_accent: var(--i3d-accent, var(--accent, #38e8ff));
-        --_mono: var(
-          --i3d-font-mono,
-          var(--font-mono, ui-monospace, 'SFMono-Regular', Menlo, monospace)
+        /* portaled out of .studio, so the token block is declared again here */
+        --i3d-bg: var(--background, #0a0b10);
+        --i3d-surface: var(--card, #14161e);
+        --i3d-border: var(--border, #232838);
+        --i3d-text: var(--foreground, #eef0f6);
+        --i3d-text-dim: var(--muted-foreground, #9aa0b2);
+        --i3d-accent: var(--accent, #38e8ff);
+        --i3d-font-mono: var(
+          --font-mono,
+          ui-monospace,
+          'SFMono-Regular',
+          Menlo,
+          monospace
         );
         /* one radius for the shell and everything docked to its edges — a
            tool panel reads as an instrument, not a card, so it stays tight */
-        --_pop-radius: 0.25rem;
+        --i3d-popover-radius: 0.25rem;
         position: relative;
         display: flex;
         flex-direction: column;
         max-height: min(70vh, calc(100vh - 48px));
         max-width: min(40rem, 85vw);
-        border-radius: var(--_pop-radius);
+        border-radius: var(--i3d-popover-radius);
         overflow: hidden;
-        background: var(--_surface);
-        color: var(--_text);
-        font-family: var(--_mono);
+        background: var(--i3d-surface);
+        color: var(--i3d-text);
+        font-family: var(--i3d-font-mono);
       }
       .i3d-pop-head {
         position: sticky;
@@ -184,8 +187,8 @@ export default class ImgTo3dPopover extends Component<Signature> {
         align-items: center;
         gap: 0.375rem;
         padding: 0.4375rem 0.4375rem 0.4375rem 0.625rem;
-        background: var(--_surface);
-        border-bottom: 1px solid var(--_border);
+        background: var(--i3d-surface);
+        border-bottom: 1px solid var(--i3d-border);
       }
       .i3d-pop-titles {
         flex: 1;
@@ -203,7 +206,7 @@ export default class ImgTo3dPopover extends Component<Signature> {
         font-weight: 600;
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--_accent);
+        color: var(--i3d-accent);
       }
       .i3d-pop-title {
         font-size: 0.6875rem;
@@ -212,7 +215,7 @@ export default class ImgTo3dPopover extends Component<Signature> {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        color: var(--_text);
+        color: var(--i3d-text);
       }
       .i3d-pop-close {
         flex: none;
@@ -224,21 +227,21 @@ export default class ImgTo3dPopover extends Component<Signature> {
         width: 1.125rem;
         height: 1.125rem;
         border-radius: 0.1875rem;
-        border: 1px solid var(--_border);
+        border: 1px solid var(--i3d-border);
         background: transparent;
-        color: var(--_dim);
+        color: var(--i3d-text-dim);
         font-size: 0.5625rem;
         line-height: 1;
         cursor: pointer;
         transition: 0.15s;
       }
       .i3d-pop-close:hover {
-        border-color: var(--_accent);
-        color: var(--_accent);
-        background: color-mix(in srgb, var(--_accent) 12%, transparent);
+        border-color: var(--i3d-accent);
+        color: var(--i3d-accent);
+        background: color-mix(in srgb, var(--i3d-accent) 12%, transparent);
       }
       .i3d-pop-close:focus-visible {
-        outline: 1px solid var(--_accent);
+        outline: 1px solid var(--i3d-accent);
         outline-offset: 1px;
       }
       .i3d-pop-body {
@@ -251,7 +254,7 @@ export default class ImgTo3dPopover extends Component<Signature> {
       .i3d-pop-foot {
         flex: none;
         padding: 0.5rem 0.625rem;
-        border-top: 1px solid var(--_border);
+        border-top: 1px solid var(--i3d-border);
       }
     </style>
   </template>

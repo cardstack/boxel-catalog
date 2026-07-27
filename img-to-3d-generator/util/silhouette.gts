@@ -33,7 +33,8 @@ function segmentCrop(
     diag?.push(reason);
     return null;
   };
-  if (!(bbox?.width > 0) || !(bbox?.height > 0)) return fail('bbox has no area');
+  if (!(bbox?.width > 0) || !(bbox?.height > 0))
+    return fail('bbox has no area');
   let sx = Math.round(bbox.left * image.width);
   let sy = Math.round(bbox.top * image.height);
   let sw = Math.max(4, Math.round(bbox.width * image.width));
@@ -389,8 +390,7 @@ export function traceSilhouetteSvg(
   }
   let fmt = (n: number) => Number(n.toFixed(1));
   let ys = rows.map((r) => r.y);
-  let d =
-    'M ' + halfs.map((hw, i) => `${fmt(axis + hw)} ${ys[i]}`).join(' L ');
+  let d = 'M ' + halfs.map((hw, i) => `${fmt(axis + hw)} ${ys[i]}`).join(' L ');
   for (let i = halfs.length - 1; i >= 0; i--) {
     d += ` L ${fmt(axis - halfs[i])} ${ys[i]}`;
   }
