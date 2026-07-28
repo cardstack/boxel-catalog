@@ -901,13 +901,13 @@ export class WineBottle extends CardDef {
           font-size: var(--boxel-font-size-sm);
           color: var(--_gold);
         }
-        .producer-link :global(a) {
+        .producer-link :deep(a) {
           color: var(--_gold);
           text-decoration: none;
           border-bottom: 1px solid var(--_rule);
           padding-bottom: 1px;
         }
-        .producer-link :global(a:hover) {
+        .producer-link :deep(a:hover) {
           border-bottom-color: var(--_gold);
         }
       </style>
