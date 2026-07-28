@@ -35,6 +35,7 @@ export const PRIMITIVES = [
   'arch',
   'prism',
   'tube',
+  'bone',
   'rock',
   'blob',
   'meshAsset',

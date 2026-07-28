@@ -14,12 +14,27 @@ import { parseSpecJson } from './spec-io';
 
 export const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export const VISION_MODEL = 'anthropic/claude-sonnet-5';
+// the model for the conversational "Refine with AI" room. Deliberately
+// NON-Anthropic: the ai-bot injects skill instructions as an inline system
+// message, which Anthropic's tightened API rejects ("role 'system' must follow
+// a 'user' message …"). Gemini Flash sidesteps that rule and is vision-strong
+// for the reference-vs-render diagnosis the assistant does in the room.
+// the conversational Refine room's model — shown in the chat UI. Non-Anthropic
+// (sidesteps the inline-system-message API error) and vision-capable for the
+// reference-vs-render diagnosis. Kept in step with REFINE_MODEL so the visible
+// room model and the edit model are the same.
+export const ASSISTANT_MODEL = 'google/gemini-3.5-flash';
+// the model the Refine Model command uses to turn ONE agreed instruction into a
+// spec change set (no image — the assistant already diagnosed visually). A fast
+// Gemini Flash is plenty for that structured-JSON edit and keeps refines snappy.
+export const REFINE_MODEL = 'google/gemini-3.5-flash';
 // the analysis stage is the gate for the whole pipeline — it classifies the
 // object, measures per-part bboxes, and decides which parts are 'revolved'
-// (which drives deterministic silhouette tracing). It needs the strongest
-// vision + spatial-measurement model regardless of which model the user picks
-// for spec generation, so it is pinned rather than following llmModel.
-export const ANALYSIS_MODEL = 'anthropic/claude-opus-4.8';
+// (which drives deterministic silhouette tracing). It is almost pure PERCEPTION
+// (image → bboxes/camera), where a fast Gemini Flash grounds bounding boxes at
+// least as well as a much slower/pricier reasoning model — so the gate is
+// pinned to Flash for speed/cost, independent of the spec model the user picks.
+export const ANALYSIS_MODEL = 'google/gemini-3.6-flash';
 // the vision models offered anywhere a model can be picked (studio) or
 // recorded (each SculptedModel round, the analyze command) — one shared list
 // so every "model" field enumerates the same options. VISION_MODEL must stay
@@ -73,28 +88,36 @@ export function seedFromStrings(parts: string[]): number {
 // vision calls run for minutes, so a single flap mid-request is common.
 // This pipeline's calls are INPUT-heavy, not output-heavy: the spec stage sends
 // roughly 7k tokens of system prompt, 1.7k of analysis and up to 11k of images to
-// get back about 2.3k tokens of JSON. The system prompt is byte-identical on every
-// single call, so marking it cacheable lets the provider skip re-processing it —
-// cheaper and quicker to first token.
+// get back about 2.3k tokens of JSON. Marking the system prompt cacheable lets
+// the provider skip re-processing it — cheaper and quicker to first token.
 //
-// Only Anthropic models are given the cache marker: the field is an Anthropic
+// A caller may pass several blocks. Only the FIRST carries the cache marker,
+// because only the first is guaranteed byte-identical across objects: the spec
+// stage sends its invariant contract as block 0 and this object's selected
+// build directives after it, so the expensive half still caches while the
+// per-object half varies freely. Order matters — a prefix cache is only a hit
+// up to the first byte that differs.
+//
+// Only Anthropic models are given the marker: the field is an Anthropic
 // extension, and a provider that does not understand a structured system message
 // is better off receiving the plain string it has always received.
-function systemMessage(llmModel: string, systemPrompt: string): any {
-  if (!/^anthropic\//.test(llmModel)) return systemPrompt;
-  return [
-    {
-      type: 'text',
-      text: systemPrompt,
-      cache_control: { type: 'ephemeral' },
-    },
-  ];
+function systemMessage(
+  llmModel: string,
+  systemPrompt: string | string[],
+): any {
+  let blocks = Array.isArray(systemPrompt) ? systemPrompt : [systemPrompt];
+  if (!/^anthropic\//.test(llmModel)) return blocks.join('\n\n');
+  return blocks.map((text, i) => ({
+    type: 'text',
+    text,
+    ...(i === 0 ? { cache_control: { type: 'ephemeral' } } : {}),
+  }));
 }
 
 export async function requestSpec(
   commandContext: any,
   llmModel: string,
-  systemPrompt: string,
+  systemPrompt: string | string[],
   userContent: any[],
   onLog?: (line: string) => void,
   parser: (raw: string) => any = parseSpecJson,

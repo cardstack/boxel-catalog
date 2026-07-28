@@ -127,6 +127,9 @@ export function parseAnalysisJson(raw: string) {
   parsed.attachments = Array.isArray(parsed.attachments)
     ? parsed.attachments
     : [];
+  // the build directives stage 1 nominates; absent on analyses cached before
+  // the field existed, where the plan's own structure supplies them instead
+  parsed.directives = Array.isArray(parsed.directives) ? parsed.directives : [];
   if (
     typeof parsed.camera?.azimuthDeg !== 'number' ||
     typeof parsed.camera?.elevationDeg !== 'number'

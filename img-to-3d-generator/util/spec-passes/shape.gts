@@ -18,11 +18,14 @@ import { hasNeutralAncestry, specBox } from '../spec-geometry';
 export function repairPrimitiveConventions(parsed: any): string[] {
   let logs: string[] = [];
   for (let c of parsed?.components ?? []) {
-    if (c?.primitive !== 'tube') continue;
+    // tube and bone both carry their placement in "dimensions" (a tube's swept
+    // points, a bone's two endpoints), so a non-zero "position" double-offsets
+    // them off where their points say they go
+    if (c?.primitive !== 'tube' && c?.primitive !== 'bone') continue;
     let p = Array.isArray(c.position) ? c.position.map(Number) : [];
     if (!p.length || p.every((n: number) => Math.abs(n || 0) < 0.001)) continue;
     logs.push(
-      `zeroed the position of '${c.nodeId}' — a tube's points already place it`,
+      `zeroed the position of '${c.nodeId}' — a ${c.primitive}'s points already place it`,
     );
     c.position = [0, 0, 0];
   }

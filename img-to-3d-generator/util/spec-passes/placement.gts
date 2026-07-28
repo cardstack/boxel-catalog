@@ -8,6 +8,7 @@
 // twice in opposite directions.
 
 import { hasNeutralAncestry, halfExtents, specBox } from '../spec-geometry';
+import { FACE_FEATURE } from './face';
 
 // The last line of defence, for when the plan and the spec are wrong the SAME
 // way. An analysis wrote "wheels rests-on main hull body" — inverting which part
@@ -28,6 +29,20 @@ import { hasNeutralAncestry, halfExtents, specBox } from '../spec-geometry';
 // underneath).
 export const SUPPORT_NAME =
   /\b(wheel|wheels|tyre|tire|track|tracks|caster|roller|foot|feet|leg|legs|skid|outrigger|castor)\b/i;
+
+// A feature can PROTRUDE (a bumper, a mirror) or be RECESSED (a window well, a
+// grille cavity, a sunken door panel, an air intake). The rest of the pipeline
+// assumes protrusion — resolveBuriedParts pushes any buried part back OUT — so
+// a recess needs its own opt-in: a component either flags "inset": true or its
+// name says so, and then it is seated INTO the surface instead of ejected.
+export const RECESS_NAME =
+  /\b(recess|recessed|sunken|inset|intake|vent|grille|grill|interior|cavity|well|window|windshield|windscreen|windscreens|windows)\b/i;
+export function isRecessed(c: any): boolean {
+  return (
+    c?.inset === true ||
+    RECESS_NAME.test(`${c?.nodeId ?? ''} ${c?.partRef ?? ''} ${c?.note ?? ''}`)
+  );
+}
 
 export function groundSupports(parsed: any): string[] {
   let logs: string[] = [];
@@ -131,6 +146,16 @@ export function resolveBuriedParts(parsed: any): string[] {
       c.primitive !== 'textDecal' &&
       c.primitive !== 'glow' &&
       !/shadow/i.test(String(c.nodeId)) &&
+      // facial features (eye / pupil / nose / mouth …) are MEANT to sit proud
+      // on the muzzle: their centre is legitimately inside it, and this pass's
+      // "leave by the nearest face" heuristic pushes them the wrong way — an
+      // eye out the back of the skull, a mouth down onto the chin. alignFace-
+      // Features already seats them; leave them to it.
+      !FACE_FEATURE.test(`${c.nodeId} ${c.partRef ?? ''} ${c.note ?? ''}`) &&
+      // a RECESSED feature (window well, grille cavity, sunken panel, interior)
+      // is DESIGNED to sit inside its host — ejecting it is the opposite of what
+      // it is for. seatRecesses / clampInteriorCavities place these instead.
+      !isRecessed(c) &&
       hasNeutralAncestry(c, byId),
   );
   if (components.length < 2) return logs;
@@ -218,6 +243,18 @@ export function resolveBuriedParts(parsed: any): string[] {
         // ring the host after expansion, and nudging the prototype breaks the
         // whole ring (a cap's knurl ridges were shoved 0.02 INTO the cap here)
         if (a.c.repeat) continue;
+        // A part buried in the very host it DECLARED a joint with is the
+        // surface seater's case, not this one, and the two disagree about
+        // which way is out. This pass leaves by the nearest box face, which is
+        // the cheapest exit and not always a real one: an eye sunk in a muzzle
+        // is nearest to the muzzle's BACK face, so the cheap exit surfaces it
+        // inside the skull, facing away from every camera. The seater knows
+        // the host is itself mounted on something and pushes out the exposed
+        // side instead. Burial in a part the spec never claimed to mount on is
+        // still this pass's problem — there is no joint there to reason from.
+        if (a.c.attachTo && String(a.c.attachTo) === String(b.c.nodeId)) {
+          continue;
+        }
         // two revolved bodies sharing an axis are concentric shells — a cap
         // skirt around a cap body, a collar around a neck. Their AABBs nest
         // completely, but the geometry is a ring AROUND the host; shoving one
@@ -413,6 +450,194 @@ export function clampToEnvelope(
       }
     }
     if (posChanged) c.position = pos;
+  }
+  return logs;
+}
+
+// Keeping a hollow body's interior cavity INSIDE its shell.
+//
+// The hollow-body recipe adds a dark "interior" box behind the windows so a cab
+// reads as a cabin you can see into. But the model sizes it by eye, and an
+// interior as big as (or bigger than) the shell pokes through the walls — the
+// dark box eats the yellow cab and the shell looks gone. The fix is unambiguous:
+// an interior belongs inside its shell, smaller on every axis and centred in it.
+// Shrinks via scale and recentres; never grows anything.
+export function clampInteriorCavities(parsed: any): string[] {
+  let logs: string[] = [];
+  let all: any[] = parsed?.components ?? [];
+  let byId = new Map<string, any>(all.map((c: any) => [c?.nodeId, c]));
+  let isInterior = (c: any) =>
+    /\b(interior|cavity)\b/i.test(
+      `${c?.nodeId} ${c?.partRef ?? ''} ${c?.note ?? ''}`,
+    );
+  // how much smaller than its shell an interior must stay, per axis
+  const FIT = 0.85;
+
+  for (let interior of all) {
+    if (interior.primitive === 'group' || !isInterior(interior)) continue;
+    let ih = halfExtents(interior);
+    let ibox = specBox(interior);
+    if (!ih || !ibox) continue;
+    let ic = [0, 1, 2].map((a) => (ibox.min[a] + ibox.max[a]) / 2);
+
+    // the shell: the part it attachTo, else the smallest solid box that
+    // contains the interior's centre (excluding other interiors and decals)
+    let host: any = interior.attachTo ? byId.get(interior.attachTo) : undefined;
+    if (!host || isInterior(host)) {
+      let best: { c: any; vol: number } | undefined;
+      for (let c of all) {
+        if (
+          c === interior ||
+          c.primitive === 'group' ||
+          isInterior(c) ||
+          c.primitive === 'glow' ||
+          c.primitive === 'textDecal' ||
+          c.primitive === 'curvedDecal'
+        ) {
+          continue;
+        }
+        let b = specBox(c);
+        let hh = halfExtents(c);
+        if (!b || !hh) continue;
+        if (
+          ic[0] > b.min[0] &&
+          ic[0] < b.max[0] &&
+          ic[1] > b.min[1] &&
+          ic[1] < b.max[1] &&
+          ic[2] > b.min[2] &&
+          ic[2] < b.max[2]
+        ) {
+          let vol = hh[0] * hh[1] * hh[2];
+          if (!best || vol < best.vol) best = { c, vol };
+        }
+      }
+      host = best?.c;
+    }
+    if (!host) continue;
+    let hh = halfExtents(host);
+    let hbox = specBox(host);
+    if (!hh || !hbox) continue;
+    let hc = [0, 1, 2].map((a) => (hbox.min[a] + hbox.max[a]) / 2);
+
+    // shrink any axis where the interior reaches past FIT of the shell
+    let scale = Array.isArray(interior.scale)
+      ? interior.scale.map(Number)
+      : [1, 1, 1];
+    let shrank = false;
+    for (let a = 0; a < 3; a++) {
+      let limit = hh[a] * FIT;
+      if (ih[a] > limit && ih[a] > 0) {
+        scale[a] = Number((scale[a] * (limit / ih[a])).toFixed(4));
+        shrank = true;
+      }
+    }
+    if (shrank) interior.scale = scale;
+
+    // recentre on the shell so it sits fully within it
+    if ([0, 1, 2].some((a) => Math.abs(ic[a] - hc[a]) > 0.001)) {
+      let p = Array.isArray(interior.position)
+        ? interior.position.map(Number)
+        : [0, 0, 0];
+      interior.position = [0, 1, 2].map((a) =>
+        Number((p[a] + hc[a] - ic[a]).toFixed(4)),
+      );
+      shrank = true;
+    }
+    if (shrank) {
+      logs.push(
+        `fitted '${interior.nodeId}' inside '${host.nodeId}' — an interior stays within its shell`,
+      );
+    }
+  }
+  return logs;
+}
+
+// The mirror of resolveBuriedParts: seating a RECESSED feature INTO its host.
+//
+// resolveBuriedParts pushes a buried part outward because the pipeline assumes
+// every feature protrudes. But a window well, a grille cavity, a sunken door
+// panel or an air intake goes the other way — its outer face sits just BELOW
+// the surrounding surface, and the shadow in that dip is what reads as depth.
+// This pushes such a part along the host face it sits on until its outer face
+// is RECESS_DEPTH under the surface. Interior/cavity boxes are left to
+// clampInteriorCavities (they are centred inside, not sunk into one face).
+export function seatRecesses(parsed: any): string[] {
+  let logs: string[] = [];
+  let all: any[] = parsed?.components ?? [];
+  let byId = new Map<string, any>(all.map((c: any) => [c?.nodeId, c]));
+  let isInterior = (c: any) =>
+    /\b(interior|cavity)\b/i.test(
+      `${c?.nodeId} ${c?.partRef ?? ''} ${c?.note ?? ''}`,
+    );
+  const RECESS_DEPTH = 0.03;
+
+  let enclosingHost = (part: any, pc: number[]) => {
+    let host: any = part.attachTo ? byId.get(part.attachTo) : undefined;
+    if (host && !isRecessed(host)) return host;
+    let best: { c: any; vol: number } | undefined;
+    for (let c of all) {
+      if (
+        c === part ||
+        c.primitive === 'group' ||
+        isRecessed(c) ||
+        c.primitive === 'glow' ||
+        c.primitive === 'textDecal' ||
+        c.primitive === 'curvedDecal'
+      ) {
+        continue;
+      }
+      let b = specBox(c);
+      let h = halfExtents(c);
+      if (!b || !h) continue;
+      if (
+        pc[0] > b.min[0] &&
+        pc[0] < b.max[0] &&
+        pc[1] > b.min[1] &&
+        pc[1] < b.max[1] &&
+        pc[2] > b.min[2] &&
+        pc[2] < b.max[2]
+      ) {
+        let vol = h[0] * h[1] * h[2];
+        if (!best || vol < best.vol) best = { c, vol };
+      }
+    }
+    return best?.c;
+  };
+
+  for (let part of all) {
+    if (part.primitive === 'group' || !isRecessed(part) || isInterior(part)) {
+      continue;
+    }
+    let pbox = specBox(part);
+    if (!pbox) continue;
+    let pc = [0, 1, 2].map((a) => (pbox.min[a] + pbox.max[a]) / 2);
+    let host = enclosingHost(part, pc);
+    if (!host) continue;
+    let hbox = specBox(host);
+    if (!hbox) continue;
+    let hc = [0, 1, 2].map((a) => (hbox.min[a] + hbox.max[a]) / 2);
+
+    // the host face this feature sits on = the axis it is most offset along
+    let off = [0, 1, 2].map((a) => pc[a] - hc[a]);
+    let axis = off.reduce(
+      (best, v, i) => (Math.abs(v) > Math.abs(off[best]) ? i : best),
+      0,
+    );
+    if (Math.abs(off[axis]) < 1e-4) continue;
+    let dir = off[axis] > 0 ? 1 : -1;
+    let hostSurface = dir > 0 ? hbox.max[axis] : hbox.min[axis];
+    let partOuter = dir > 0 ? pbox.max[axis] : pbox.min[axis];
+    // sink the outer face RECESS_DEPTH below the host surface
+    let delta = hostSurface - dir * RECESS_DEPTH - partOuter;
+    if (Math.abs(delta) < 0.005) continue;
+    let p = Array.isArray(part.position)
+      ? part.position.map(Number)
+      : [0, 0, 0];
+    p[axis] = Number(((p[axis] || 0) + delta).toFixed(4));
+    part.position = p;
+    logs.push(
+      `recessed '${part.nodeId}' into the '${host.nodeId}' surface (sunk ${RECESS_DEPTH})`,
+    );
   }
   return logs;
 }

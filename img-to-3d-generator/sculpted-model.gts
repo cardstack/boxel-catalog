@@ -12,7 +12,7 @@ import NumberField from 'https://cardstack.com/base/number';
 import DatetimeField from 'https://cardstack.com/base/datetime';
 import enumField from 'https://cardstack.com/base/enum';
 
-import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
+import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 
 import { generateViewerSrcdoc } from './util/code-export';
 import { VISION_MODEL_OPTIONS } from './util/llm-request';
@@ -29,7 +29,10 @@ import { VISION_MODEL_OPTIONS } from './util/llm-request';
 export class SculptedModel extends CardDef {
   static displayName = 'Sculpted Model';
 
-  @field referenceImage = contains(ImageSourceField);
+  // every reference view this build was made from — the same multi-image set
+  // the studio holds, so selecting a saved round re-attaches all its views,
+  // not just the primary photo
+  @field references = contains(MultiImageSourceField);
   // realm URL of the generated model .js — the model's stored form; the
   // source spec rides inside that file as its SCULPT_SPEC constant
   @field codeFileUrl = contains(StringField);
@@ -44,6 +47,12 @@ export class SculptedModel extends CardDef {
   @field analysis = contains(StringField);
   @field critique = contains(StringField);
   @field score = contains(NumberField);
+  // How well this round actually came out, as JSON: { residual, warnings[],
+  // featureCheck{}, plannedParts, builtParts }. Every one of these was already
+  // computed during the build and then thrown away with the session, which
+  // left no way to tell a prompt improvement from a prompt regression —
+  // keeping it on the round makes before/after a diff instead of a memory.
+  @field buildMetrics = contains(StringField);
   // snapshot of the render at save time — the kept result is viewable as an
   // image (gallery tiles) without rebuilding the 3D scene
   @field renderScreenshot = linksTo(() => ImageDef);
@@ -55,6 +64,11 @@ export class SculptedModel extends CardDef {
   // studio's prerendered history search without loading any cards
   @field sourceStudioId = contains(StringField);
   @field round = contains(NumberField);
+  // bumped every time this round's .js is edited IN PLACE (the AI Refine
+  // command). The studio folds it into the viewport iframe's cache-bust key,
+  // so an external in-place edit forces a re-fetch of the same-url file instead
+  // of showing the stale cached render.
+  @field revision = contains(NumberField);
   @field modelUsed = contains(
     enumField(StringField, {
       options: VISION_MODEL_OPTIONS,
@@ -211,10 +225,10 @@ export class SculptedModel extends CardDef {
             src={{@model.renderScreenshot.url}}
             alt='Render of {{@model.title}}'
           />
-        {{else if @model.referenceImage.resolvedUrl}}
+        {{else if @model.references.primaryUrl}}
           <img
             class='tile-image'
-            src={{@model.referenceImage.resolvedUrl}}
+            src={{@model.references.primaryUrl}}
             alt='Reference for {{@model.title}}'
           />
         {{/if}}
@@ -317,10 +331,10 @@ export class SculptedModel extends CardDef {
       <article class='fit {{unless this.hasLinkedTheme "i3d-default-theme"}}'>
         {{#if @model.renderScreenshot.url}}
           <img class='fit-image' src={{@model.renderScreenshot.url}} alt='' />
-        {{else if @model.referenceImage.resolvedUrl}}
+        {{else if @model.references.primaryUrl}}
           <img
             class='fit-image'
-            src={{@model.referenceImage.resolvedUrl}}
+            src={{@model.references.primaryUrl}}
             alt=''
           />
         {{/if}}

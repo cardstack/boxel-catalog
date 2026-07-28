@@ -3,20 +3,21 @@
 // (b) a self-contained .html viewer page (CDN three.js r147 + orbit harness)
 // whose realm URL works directly as an iframe src.
 //
-// The emitted code mirrors util/spec-interpreter.gts construction-for-
-// construction (same defaults, same clamps, same post-build passes) so the
-// exported model matches what the studio viewport shows. Only the used
-// primitives' geometry cases and only the needed helpers are emitted, so the
-// file stays readable. Known deliberate gaps, marked with comments in the
-// output: meshAsset nodes (dormant feature) are skipped.
+// This is the single geometry builder: the emitted code IS what the studio
+// viewport renders (via srcdoc) and what .glb export runs. Only the used
+// primitives' geometry cases and the needed helpers are emitted, so the file
+// stays readable. Known deliberate gaps, marked with comments in the output:
+// meshAsset nodes (dormant feature) are skipped.
 
 import {
   FINISH_PAINTER_SOURCES,
   FINISH_RUNTIME_SOURCES,
   type EmittableFn,
 } from './finishes';
+import { expandRepeatInstances } from './repeat-expand';
+import { seatSurfaceParts } from './surface-seat';
 
-// three.js UMD pins — keep in step with util/three-loader.gts
+// three.js UMD pins for the generated viewer harness
 const THREE_CDN =
   'https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js';
 const ROUNDED_BOX_CDN =
@@ -166,6 +167,19 @@ function clamp01(n: number | null | undefined, fallback: number): number {
   return Math.min(1, Math.max(0, n));
 }
 
+// perceived brightness 0..1 of a #rrggbb colour
+function hexLuminance(hex: string): number {
+  let m = /^#?([0-9a-f]{6})$/i.exec(String(hex ?? '').trim());
+  if (!m) return 0.5;
+  let n = parseInt(m[1], 16);
+  return (
+    (0.2126 * ((n >> 16) & 255) +
+      0.7152 * ((n >> 8) & 255) +
+      0.0722 * (n & 255)) /
+    255
+  );
+}
+
 // ---------------------------------------------------------------------------
 // material emission — same parameter derivation as the interpreter
 // ---------------------------------------------------------------------------
@@ -188,8 +202,22 @@ function emitMaterials(materials: ExportMaterial[], unlit: boolean): string[] {
       );
       continue;
     }
+    // glass safety clamp: a window declared with transmission but set LOW, or
+    // given a dark tint, renders as an opaque patch instead of see-through
+    // glass (the dump-truck windshield failure). A half-transmissive material
+    // is almost always a mistake — push real glass to clearly see-through and
+    // neutralise a dark tint so light passes.
+    let baseColor = m.baseColor || '#8a8f9c';
+    let transmissionVal =
+      typeof m.transmission === 'number'
+        ? clamp01(m.transmission, 0)
+        : undefined;
+    if (transmissionVal !== undefined && transmissionVal > 0) {
+      if (transmissionVal < 0.6) transmissionVal = 0.9;
+      if (hexLuminance(baseColor) < 0.3) baseColor = '#dfeef5';
+    }
     let params: string[] = [
-      `color: new THREE.Color(${q(m.baseColor || '#8a8f9c')})`,
+      `color: new THREE.Color(${q(baseColor)})`,
       `roughness: ${fmt(clamp01(m.roughness, 0.55))}`,
       `metalness: ${fmt(clamp01(m.metalness, 0.25))}`,
     ];
@@ -212,9 +240,9 @@ function emitMaterials(materials: ExportMaterial[], unlit: boolean): string[] {
       typeof m.sheen === 'number' ||
       typeof m.transmission === 'number';
     if (usePhysical) {
-      if (typeof m.transmission === 'number') {
+      if (transmissionVal !== undefined) {
         params.push(
-          `transmission: ${fmt(clamp01(m.transmission, 0))}`,
+          `transmission: ${fmt(transmissionVal)}`,
           'ior: 1.5',
           'thickness: 0.05',
         );
@@ -233,6 +261,14 @@ function emitMaterials(materials: ExportMaterial[], unlit: boolean): string[] {
       if (typeof m.sheen === 'number') {
         params.push(`sheen: ${fmt(clamp01(m.sheen, 0))}`);
       }
+    }
+    // give plain opaque non-metal surfaces a hint of clearcoat, so plastic and
+    // painted parts read as clean toy-gloss instead of flat matte. Metals,
+    // glass, and anything the spec already made physical keep their authored
+    // response — only the otherwise-Standard matte case is nudged.
+    if (!usePhysical && opacity >= 1 && clamp01(m.metalness, 0.25) < 0.5) {
+      params.push('clearcoat: 0.15', 'clearcoatRoughness: 0.35');
+      usePhysical = true;
     }
     params.push(`envMapIntensity: ${fmt(envIntensity)}`);
     let ctor = usePhysical ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial';
@@ -278,7 +314,10 @@ function emitMaterials(materials: ExportMaterial[], unlit: boolean): string[] {
 // geometry cases — the interpreter's buildGeometry, emitted per used primitive
 // ---------------------------------------------------------------------------
 
-const GEOMETRY_CASES: Record<string, string> = {
+// exported so a test can assert every solid primitive has a codegen case,
+// guarding the interpreter/codegen drift risk (a primitive added to one but not
+// the other renders differently in the live preview vs the saved .js file)
+export const GEOMETRY_CASES: Record<string, string> = {
   box: `    case 'box':
       return new THREE.BoxGeometry(d[0] ?? 1, d[1] ?? 1, d[2] ?? 1);`,
   roundedBox: `    case 'roundedBox': {
@@ -460,6 +499,17 @@ const GEOMETRY_CASES: Record<string, string> = {
       for (var i = 1; i + 2 <= d.length; i += 3) pts.push(new THREE.Vector3(d[i], d[i + 1], d[i + 2]));
       if (pts.length < 2) pts = [new THREE.Vector3(-0.5, 0, 0), new THREE.Vector3(0.5, 0, 0)];
       return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 64, radius, 12, false);
+    }`,
+  bone: `    case 'bone': {
+      // [radius, x0,y0,z0, x1,y1,z1] — capsule spanning the two points, auto-oriented
+      var boneR = Math.abs(d[0] ?? 0.1);
+      var a = new THREE.Vector3(d[1] ?? 0, d[2] ?? 0, d[3] ?? 0);
+      var b = new THREE.Vector3(d[4] ?? 0, d[5] ?? 0, d[6] ?? 0);
+      var dir = b.clone().sub(a); var len = dir.length();
+      var geo = new THREE.CapsuleGeometry(boneR, Math.max(0.01, len - boneR * 2), 12, 24);
+      if (len > 1e-6) geo.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize()));
+      geo.translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+      return geo;
     }`,
   lathe: `    case 'lathe': {
       // dimensions is a flat [x0,y0, x1,y1, ...] profile polyline
@@ -769,8 +819,13 @@ const ASSEMBLY_RUNTIME = `  // ===== assembly plumbing (mirrors the studio inter
         root.add(obj);
       }
     });
-    // declared joints — pull each part into ~0.03 overlap with its support
+    // declared joints — pull each part into ~0.03 overlap with its support.
+    // The ceiling scales with the object (as the backstop's does below) so a
+    // solver can only ever close an authoring gap, never carry a part across
+    // the model to the wrong side of it.
     root.updateWorldMatrix(true, true);
+    var jointSize = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+    var maxPull = 0.15 * Math.max(jointSize.x, jointSize.y, jointSize.z, 0.001);
     attachments.forEach(function (att) {
       var obj = objects.get(att.id);
       var target = objects.get(att.to);
@@ -789,67 +844,36 @@ const ASSEMBLY_RUNTIME = `  // ===== assembly plumbing (mirrors the studio inter
         if (a.min[axis] > b.max[axis]) delta[axis] = b.max[axis] - a.min[axis] + margin;
         else if (a.max[axis] < b.min[axis]) delta[axis] = b.min[axis] - a.max[axis] + margin;
       });
-      if (delta.lengthSq() === 0 || delta.length() > 1.5) return;
+      if (delta.lengthSq() === 0 || delta.length() > maxPull) return;
       var worldPos = obj.getWorldPosition(new THREE.Vector3());
       worldPos.add(delta);
       obj.position.copy(obj.parent ? obj.parent.worldToLocal(worldPos) : worldPos);
       obj.updateWorldMatrix(true, true);
     });
-    // repeat expansion — one declared part clones into N placed copies
+    // …then seat the features contact alone leaves wrong — buried inside the
+    // mass they mount on, or floating off it on one grazing rim
+    if (typeof seatSurfaceParts === 'function') {
+      seatSurfaceParts(THREE, objects, attachments.filter(function (att) {
+        return att.prim !== 'curvedDecal' && att.prim !== 'textDecal'
+          && att.prim !== 'glow' && att.prim !== 'tube';
+      }));
+    }
+    // repeat expansion — one declared part clones into N placed copies.
+    // expandRepeatInstances is emitted from the studio's own module source, so
+    // this arrays parts exactly the way the viewport does.
     repeats.forEach(function (req) {
       var original = objects.get(req.id);
       if (!original) return;
-      var rep = req.rep;
-      var count = Math.min(48, Math.max(0, Math.round(rep.count || 0)));
-      if (count < 2) return;
-      var parent = original.parent || root;
-      var axis = rep.axis === 'x' ? 'x' : rep.axis === 'z' ? 'z' : 'y';
-      var basePos = original.position.clone();
-      var baseRot = original.rotation.clone();
-      // RING CENTER for a radial array: the axis of the part it wraps around.
-      // The original's own in-plane position is already a point ON the circle,
-      // so adding the radius to it put every clone at twice the radius.
-      var center = basePos.clone();
-      var host = req.to ? objects.get(req.to) : undefined;
-      if (rep.mode === 'radial' && host && host !== original) {
-        var hostBox = new THREE.Box3().setFromObject(host);
-        if (!hostBox.isEmpty()) {
-          var hc = hostBox.getCenter(new THREE.Vector3());
-          parent.worldToLocal(hc);
-          if (axis === 'y') { center.x = hc.x; center.z = hc.z; }
-          else if (axis === 'x') { center.y = hc.y; center.z = hc.z; }
-          else { center.x = hc.x; center.y = hc.y; }
+      expandRepeatInstances(
+        THREE,
+        original,
+        req.rep,
+        req.to ? objects.get(req.to) : undefined,
+        root,
+        function (clone) {
+          clone.traverse(function (child) { if (child.isMesh) meshes.push(child); });
         }
-      }
-      // index 0 is the original itself, so the ring is coherent
-      var place = function (obj, i) {
-        if (rep.mode === 'radial') {
-          var radius = rep.radius != null ? rep.radius : 0.5;
-          var angle = (i / count) * Math.PI * 2;
-          var ca = Math.cos(angle) * radius, sa = Math.sin(angle) * radius;
-          if (axis === 'y') {
-            obj.position.set(center.x + ca, center.y, center.z + sa);
-            obj.rotation.y = baseRot.y + angle;
-          } else if (axis === 'x') {
-            obj.position.set(center.x, center.y + ca, center.z + sa);
-            obj.rotation.x = baseRot.x + angle;
-          } else {
-            obj.position.set(center.x + ca, center.y + sa, center.z);
-            obj.rotation.z = baseRot.z + angle;
-          }
-        } else {
-          var off = Array.isArray(rep.offset) ? rep.offset : [0.2, 0, 0];
-          obj.position.set(basePos.x + off[0] * i, basePos.y + off[1] * i, basePos.z + off[2] * i);
-        }
-      };
-      place(original, 0);
-      for (var i = 1; i < count; i++) {
-        var clone = original.clone(true);
-        clone.name = req.id + '-' + i;
-        place(clone, i);
-        parent.add(clone);
-        clone.traverse(function (child) { if (child.isMesh) meshes.push(child); });
-      }
+      );
     });
     // contact backstop — a part touching nothing is pulled into ~0.03 overlap
     // with the support it DECLARED, via the minimal per-axis translation
@@ -1048,6 +1072,18 @@ export function generateModelJs(spec: any, meta?: CodeExportMeta): string {
       .filter((f) => f && FINISH_PAINTER_SOURCES[f]),
   );
   if (usedFinishes.size) helperBlocks.push(emitFinishHelpers(usedFinishes));
+  // the repeat expander is emitted from its own module source rather than
+  // mirrored by hand — the two copies drifted once and every exported model
+  // arrayed its parts differently from the viewport
+  if (nodes.some((n) => n.repeat && typeof n.repeat === 'object')) {
+    helperBlocks.push(indentSource(String(expandRepeatInstances)));
+  }
+  // same reasoning for the surface seater: it is the difference between an eye
+  // sitting on a face and an eye hidden inside it, so the exported model must
+  // run the studio's own copy of it
+  if (nodes.some((n) => n.attachTo)) {
+    helperBlocks.push(indentSource(String(seatSurfaceParts)));
+  }
 
   // geometry builder with only the used primitive cases
   let cases = [...usedPrimitives]
@@ -1249,11 +1285,14 @@ export function generateViewerHarnessHtml(bakedModelUrl?: string): string {
 
   var camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
 
-  // near-neutral three-point light rig
-  var key = new THREE.DirectionalLight('#fffaf2', 1.2); key.position.set(4, 6, 5); key.castShadow = true;
-  var fill = new THREE.DirectionalLight('#f2f5ff', 0.45); fill.position.set(-5, 2, -2);
-  var rim = new THREE.DirectionalLight('#dffbff', 0.25); rim.position.set(0, 4, -6);
-  var dome = new THREE.HemisphereLight('#5a6070', '#15161c', 0.6);
+  // three-point + hemisphere rig: a STRONG key (so parts self-shadow and the
+  // form reads) over a MODEST fill/ambient. Bright enough to look like a studio
+  // shot, but the fill is deliberately low — too much fill floods the shadows
+  // and washes saturated colours flat under ACES tone mapping.
+  var key = new THREE.DirectionalLight('#fffaf2', 2.4); key.position.set(4, 6, 5); key.castShadow = true;
+  var fill = new THREE.DirectionalLight('#eaf1ff', 0.6); fill.position.set(-5, 2, -2);
+  var rim = new THREE.DirectionalLight('#dffbff', 0.5); rim.position.set(0, 4, -6);
+  var dome = new THREE.HemisphereLight('#aab4c6', '#2b303c', 0.9);
   scene.add(key, fill, rim, dome);
 
   // minimal PMREM environment so metals and glass have something to reflect

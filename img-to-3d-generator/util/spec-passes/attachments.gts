@@ -536,3 +536,148 @@ export function fitCurvedDecals(parsed: any): string[] {
   }
   return logs;
 }
+
+// A ring that WRAPS a barrel — a gun's muzzle collar, a barrel clamp, a hose
+// ferrule — is a torus/flatRing/arch whose hole faces ALONG the barrel's axis
+// and whose centre sits on the barrel's centreline. Models routinely author it
+// as an upright hoop standing beside the barrel instead: the general torus
+// orientation prose in spec-shape.gts asks for the right rotation, but "asks"
+// is not "guarantees" (a minigun came back with six hoops dangling under its
+// barrels). This is the ring cousin of fitCurvedDecals — the axis and the
+// centre come from the host, so nothing is left to a probabilistic guess.
+//
+// The host barrel's axis is its local +Y rotated by its own Euler triple (the
+// same XYZ-order corner math halfExtents uses). The ring is then snapped to the
+// NEAREST canonical axis so its hole wraps the barrel — axis ±Z → [0,0,0],
+// ±X → [0,π/2,0], ±Y → [-π/2,0,0] — which covers every real barrel orientation
+// without composing rotations (these passes carry no THREE), and a rare diagonal
+// barrel snaps to its dominant axis, still far better than a perpendicular hoop.
+export function seatRingCollars(parsed: any): string[] {
+  let logs: string[] = [];
+  let components: any[] = parsed?.components ?? [];
+  let byId = new Map(components.map((c: any) => [c.nodeId, c]));
+  let nums = (raw: any): number[] =>
+    Array.isArray(raw) ? raw : typeof raw === 'string' ? JSON.parse(raw) : [];
+  const HALF_PI = Math.PI / 2;
+
+  for (let ring of components) {
+    if (
+      ring?.primitive !== 'torus' &&
+      ring?.primitive !== 'flatRing' &&
+      ring?.primitive !== 'arch'
+    ) {
+      continue;
+    }
+    if (!ring.attachTo) continue;
+    let host: any = byId.get(ring.attachTo);
+    if (host?.primitive !== 'cylinder' && host?.primitive !== 'capsule') {
+      continue;
+    }
+    let d: number[];
+    let hostDims: number[];
+    let hostScale: number[];
+    let hostRot: number[];
+    let ringPos: number[];
+    let hostPos: number[];
+    try {
+      d = nums(ring.dimensions);
+      hostDims = nums(host.dimensions);
+      hostScale = nums(host.scale);
+      hostRot = nums(host.rotation);
+      ringPos = nums(ring.position);
+      hostPos = nums(host.position);
+    } catch {
+      continue;
+    }
+
+    // host barrel axis = local +Y rotated by the host's Euler XYZ triple
+    let [rx, ry, rz] = [hostRot[0] || 0, hostRot[1] || 0, hostRot[2] || 0];
+    let cx = Math.cos(rx);
+    let sx = Math.sin(rx);
+    let cy = Math.cos(ry);
+    let sy = Math.sin(ry);
+    let cz = Math.cos(rz);
+    let sz = Math.sin(rz);
+    let axis = [
+      sx * sy * cz - cx * sz,
+      sx * sy * sz + cx * cz,
+      sx * cy,
+    ];
+    // the world axis (0=x,1=y,2=z) the barrel most points along
+    let ax = 0;
+    for (let i = 1; i < 3; i++) {
+      if (Math.abs(axis[i]) > Math.abs(axis[ax])) ax = i;
+    }
+
+    // ---- orient: lay the ring's hole along the barrel ----
+    let target =
+      ax === 1 ? [-HALF_PI, 0, 0] : ax === 0 ? [0, HALF_PI, 0] : [0, 0, 0];
+    let ringRot = nums(ring.rotation);
+    let already =
+      Math.abs((ringRot[0] || 0) - target[0]) < 0.02 &&
+      Math.abs((ringRot[1] || 0) - target[1]) < 0.02 &&
+      Math.abs((ringRot[2] || 0) - target[2]) < 0.02;
+    if (!already) {
+      ring.rotation = target;
+      logs.push(
+        `oriented '${ring.nodeId}' to wrap the ${'xyz'[ax]}-axis barrel '${host.nodeId}'`,
+      );
+    }
+
+    // ---- centre: share the host's centreline on the two off-axis axes,
+    // keep the ring's own position ALONG the barrel (it sits at the muzzle) ----
+    let moved = false;
+    for (let i = 0; i < 3; i++) {
+      if (i === ax) continue;
+      if (Math.abs((ringPos[i] ?? 0) - (hostPos[i] ?? 0)) > 0.001) {
+        ringPos[i] = Number((hostPos[i] ?? 0).toFixed(4));
+        moved = true;
+      }
+    }
+    if (moved) {
+      ring.position = ringPos;
+      logs.push(`centred '${ring.nodeId}' on the barrel axis`);
+    }
+
+    // ---- radius: the hole hugs the barrel (+ a thin skin gap) ----
+    let sScale = [
+      Math.abs(hostScale[0] || 1),
+      Math.abs(hostScale[1] || 1),
+      Math.abs(hostScale[2] || 1),
+    ];
+    let hostR: number;
+    if (host.primitive === 'cylinder') {
+      hostR =
+        Math.max(Math.abs(hostDims[0] ?? 0.5), Math.abs(hostDims[1] ?? 0.5)) *
+        Math.max(sScale[0], sScale[2]);
+    } else {
+      hostR = Math.abs(hostDims[0] ?? 0.3) * Math.max(sScale[0], sScale[2]);
+    }
+    if (!(hostR > 0)) continue;
+    const SKIN = 0.01;
+    if (ring.primitive === 'torus') {
+      // [radius, tube] — hole radius = radius - tube, so wrap ⇒ radius = R + tube
+      let tube = Math.abs(d[1] ?? 0.05);
+      let wrapR = hostR + tube + SKIN;
+      if (Math.abs(Math.abs(d[0] ?? 0) - wrapR) > 0.005) {
+        let before = d[0];
+        d[0] = Number(wrapR.toFixed(4));
+        ring.dimensions = d;
+        logs.push(`fitted '${ring.nodeId}' around barrel radius (${before} → ${d[0]})`);
+      }
+    } else if (ring.primitive === 'flatRing') {
+      // [outerRx, outerRy, ringWidth, depth] — hole = outer - width
+      let width = Math.abs(d[2] ?? 0.05);
+      let wrapR = hostR + width + SKIN;
+      if (Math.abs(Math.abs(d[0] ?? 0) - wrapR) > 0.005) {
+        let before = d[0];
+        d[0] = Number(wrapR.toFixed(4));
+        d[1] = Number(wrapR.toFixed(4));
+        ring.dimensions = d;
+        logs.push(`fitted '${ring.nodeId}' around barrel radius (${before} → ${d[0]})`);
+      }
+    }
+    // arch: a partial ring — orient + centre only; its sweep/size is intentional
+  }
+  return logs;
+}

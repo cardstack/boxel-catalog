@@ -18,10 +18,13 @@ import { restartableTask } from 'ember-concurrency';
 
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import WriteTextFileCommand from '@cardstack/boxel-host/tools/write-text-file';
+import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
 import ImgTo3dPopover from './i3d-popover';
 
 import { fetchAsDataUrl, slugify, writeRealmImage } from '../util/realm-image';
 import {
+  cropWithBackgroundRemoved,
+  revolvedSilhouetteBbox,
   traceLatheProfile,
   traceSilhouetteSvg,
   type TracedOutline,
@@ -34,6 +37,7 @@ import {
 } from '../util/code-export';
 import {
   VISION_MODEL,
+  ASSISTANT_MODEL,
   ANALYSIS_MODEL,
   requestSpec,
   seedFromStrings,
@@ -44,29 +48,30 @@ import {
 } from '../util/pipeline-config';
 import { composeComparison } from '../util/comparison-sheet';
 import { serializeSpecForPrompt, parseDiffJson } from '../util/spec-io';
-import { applySpecDiff } from '../util/spec-diff';
+import {
+  applySpecDiff,
+  isRemovalInstruction,
+  narrowRemovalTargets,
+} from '../util/spec-diff';
 import {
   fitCurvedDecals,
   stripRedundantLabelParts,
   dropUnplannedParts,
   dropHairlineParts,
-  flagOverbuiltParts,
-  enforceAttachments,
-  groundSupports,
-  resolveBuriedParts,
-  flagFlatPalette,
-  flagInstanceCollisions,
-  flagSilhouetteNotch,
   flagUnrealizedParts,
-  repairMirroredAttachments,
-  separateCoplanarLayers,
-  repairPrimitiveConventions,
   clampToEnvelope,
   reconcileProportions,
-} from '../util/spec-passes';
-import { SPEC_SYSTEM_PROMPT } from '../prompts/spec';
+} from '../util/spec-passes/index';
+import { runStructurePasses } from '../util/spec-passes/run-all';
+import { buildSpecSystemPrompt } from '../prompts/spec';
+import { selectRecipeNames } from '../prompts/recipes';
 import { REFINE_SYSTEM_PROMPT } from '../prompts/refine';
 import { TARGETED_EDIT_PROMPT } from '../prompts/targeted-edit';
+import { COMPLETENESS_CRITIC_PROMPT } from '../prompts/completeness';
+
+import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
+import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
+import GeneratingOverlay from '../../components/generating-overlay';
 
 import { AnalyzeReferenceCommand } from '../commands/analyze-reference';
 import { SculptedModel } from '../sculpted-model';
@@ -210,6 +215,19 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     return (this.args.model as any)?.[realmURL]?.href;
   }
 
+  // one folder per studio card for this run's RUNTIME artifacts — the model
+  // .js, its render screenshots, and any cropped textures all live under
+  // img-to-3d/<studio-id>/ instead of filling the realm root. Lets a studio's
+  // whole output be found (and deleted) in one place, and avoids cross-studio
+  // filename clashes. These files are never part of a listing push (they are
+  // referenced by URL at runtime, not imported), so this is dev-realm tidiness
+  // only. Uses the id's last path segment; falls back when the card is unsaved.
+  get studioAssetDir(): string {
+    let id = (this.args.model as any)?.id as string | undefined;
+    let seg = id ? (id.split('/').filter(Boolean).pop() ?? '') : '';
+    return `img-to-3d/${slugify(seg, 'studio')}`;
+  }
+
   // the studio viewport embeds the harness via srcdoc (no .html request to
   // the realm, so no dependency on how text/html navigations route); the
   // URL form of the SAME page — viewer.html?model=… — is what Copy iframe
@@ -225,10 +243,22 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     if (this.draftViewerSrcdoc) return this.draftViewerSrcdoc;
     let url = this.currentCodeFileUrl;
     if (!url) return undefined;
-    // an in-place edit overwrites the same URL; the reload key cache-busts
-    // it so the iframe re-fetches the fresh content instead of the cache
-    if (!this.pendingViewportUrl && this.inPlaceReloadKey > 0) {
-      url += (url.includes('?') ? '&' : '?') + 'rk=' + this.inPlaceReloadKey;
+    // An in-place edit overwrites the SAME url, so the iframe must be told to
+    // re-fetch instead of serving the cached file. Two triggers, both folded
+    // into one cache-bust key: inPlaceReloadKey (the studio's OWN lasso edits)
+    // and the current creation's `revision`, which the AI Refine command bumps
+    // when it edits the round externally — reading it here makes the viewport
+    // reload reactively the moment that round's card updates.
+    if (!this.pendingViewportUrl) {
+      let rev = Number((this.currentCreation as any)?.revision ?? 0);
+      if (this.inPlaceReloadKey > 0 || rev > 0) {
+        url +=
+          (url.includes('?') ? '&' : '?') +
+          'rk=' +
+          this.inPlaceReloadKey +
+          '-' +
+          rev;
+      }
     }
     return generateViewerSrcdoc(url);
   }
@@ -328,12 +358,51 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     return this.phase === 'analyzing' || this.phase === 'building';
   }
 
+  get latestLogLine() {
+    return this.logLines[this.logLines.length - 1];
+  }
+
   get viewportHint() {
     if (this.hasModel || this.isRunning) return undefined;
     return this.hasReference ? 'ready — hit generate' : 'add a reference photo';
   }
 
   lastBuildWarnings: string[] = [];
+
+  // The round's own report card, persisted on the creation. Warnings are
+  // bucketed by their leading phrase rather than kept verbatim: the text
+  // carries part names, so counting raw strings compares two objects' names
+  // instead of their failure modes.
+  buildMetrics(parsed: any) {
+    let kinds: Record<string, number> = {};
+    for (let warning of this.lastBuildWarnings) {
+      let kind = String(warning).split(/[':(]/)[0].trim().toLowerCase();
+      kinds[kind] = (kinds[kind] ?? 0) + 1;
+    }
+    let featureCheck = parsed?.featureCheck ?? {};
+    return {
+      residual: this.lastCalibrationResidual,
+      score: typeof parsed?.score === 'number' ? parsed.score : null,
+      warningCount: this.lastBuildWarnings.length,
+      warningKinds: kinds,
+      featuresPassed: Object.values(featureCheck).filter((v) => v === true)
+        .length,
+      featuresFailed: Object.values(featureCheck).filter((v) => v !== true)
+        .length,
+      plannedParts: this.activeAnalysis?.partPlan?.length ?? null,
+      builtParts: Array.isArray(parsed?.components)
+        ? parsed.components.filter((c: any) => c?.primitive !== 'group').length
+        : null,
+      objectClass: this.activeAnalysis?.objectClass ?? null,
+      approaches: [
+        ...new Set(
+          (this.activeAnalysis?.partPlan ?? [])
+            .map((p: any) => p?.approach)
+            .filter(Boolean),
+        ),
+      ],
+    };
+  }
 
   // Mean deviation of the latest calibrated build from the analysis
   // targets. The automatic verification loop only spends another vision
@@ -476,6 +545,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     this.draftViewerSrcdoc = undefined;
     this.pendingViewportUrl = undefined;
     this.tracedEnvelope = null;
+    this.tracedOutline = undefined;
     this.phase = 'idle';
   };
 
@@ -819,10 +889,12 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       this.log('> type an edit instruction first');
       return;
     }
-    if (!this.inpaintTargets.length) {
-      this.log('> lasso some parts first');
-      return;
-    }
+    // no lasso is a valid edit: the instruction names the part instead. The
+    // request already says "No parts were pre-selected — resolve the targets
+    // from the instruction", TARGETED_EDIT_PROMPT has a section for it, and
+    // the bar reads "all parts" when nothing is drawn. This guard was the one
+    // layer that disagreed, and it made naming a part impossible — the quicker
+    // route of the two.
     this.inpaintBusy = true;
     try {
       this.errorMessage = null;
@@ -875,10 +947,24 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
 
       // the deterministic delete needs to know WHAT to delete, so it only
       // applies to an explicit selection; described removals go to the model
-      if (targets.length && /^(remove|delete|erase)\b/i.test(instruction)) {
+      if (targets.length && isRemovalInstruction(instruction)) {
+        // the lasso reports every mesh under it, so a sticker selection also
+        // catches the blade behind it. When the instruction names what to
+        // remove, that noun narrows the selection so "remove sticker" cannot
+        // take the blade with it.
+        let removeTargets = narrowRemovalTargets(
+          this.workingSpec.components,
+          targets,
+          instruction,
+        );
+        if (removeTargets.length < targets.length) {
+          this.log(
+            `> narrowed removal to ${removeTargets.length} part(s) the instruction names`,
+          );
+        }
         // deterministic removal — no LLM needed
         let spec = JSON.parse(JSON.stringify(this.workingSpec));
-        let dead = new Set(targets.map(String));
+        let dead = new Set(removeTargets.map(String));
         let changed = true;
         while (changed) {
           changed = false;
@@ -1006,13 +1092,29 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     this.historyLoading = true;
     try {
       let store = (this.args.context as any)?.store;
-      let entries: HistoryEntry[] = [];
+
+      // the live getCards query resolves asynchronously; on a fresh page load
+      // it is still running when the popover first opens. Reading `.instances`
+      // now would see an empty set and fall through to the (possibly stale)
+      // parentCreation walk — so wait for the query to settle first, bounded
+      // by a timeout in case the realm can't answer it.
+      let started = Date.now();
+      while (this.historyCards?.isLoading && Date.now() - started < 10000) {
+        await new Promise((r) => setTimeout(r, 150));
+      }
 
       // preferred: the studio-scoped query
-      let found: any[] = this.historyCards?.instances ?? [];
-      for (let card of found) {
-        if (!card?.codeFileUrl) continue;
-        entries.push({
+      // MERGE both sources rather than one-or-the-other: the live index query
+      // can lag (a just-generated round is not indexed yet) or miss rounds that
+      // predate sourceStudioId, while the in-memory parentCreation walk catches
+      // exactly those but not branches the walk can't reach. Union + dedup so a
+      // round shows if EITHER source knows about it.
+      let byKey = new Map<string, HistoryEntry>();
+      let add = (card: any) => {
+        if (!card?.codeFileUrl) return;
+        let key = card.id || card.codeFileUrl;
+        if (byKey.has(key)) return;
+        byKey.set(key, {
           id: card.id,
           codeFileUrl: card.codeFileUrl,
           objectName: card.objectName || 'model',
@@ -1020,37 +1122,36 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
           screenshotUrl: card.renderScreenshot?.url,
           srcdoc: generateViewerSrcdoc(card.codeFileUrl),
         });
-      }
-      if (entries.length) {
-        this.historyItems = entries;
-        return;
+      };
+
+      // source 1: the studio-scoped index query
+      for (let card of this.historyCards?.instances ?? []) add(card);
+
+      // source 2: walk parentCreation back from the newest in-memory rounds
+      // (latest AND the currently selected), which are present before the index
+      // catches up — this is what makes a freshly-made round appear immediately
+      for (let seed of [
+        this.args.model?.latestCreation,
+        this.args.model?.selectedCreation,
+      ]) {
+        let node: any = seed;
+        let guard = 0;
+        while (node && guard++ < 100) {
+          let card: any = node;
+          if (store?.get && card.id) {
+            let got = await store.get(card.id);
+            if (got && !(got as any).isCardError) card = got;
+          }
+          add(card);
+          node = card?.parentCreation;
+        }
       }
 
-      // fallback: walk parentCreation back from the newest round. Covers a
-      // realm that cannot answer the query, and rounds saved before
-      // sourceStudioId was stamped on them.
-      let node: any = this.args.model?.latestCreation;
-      let guard = 0;
-      while (node && guard++ < 100) {
-        let card: any = node;
-        // linked rounds load on demand — resolve a store-tracked instance
-        if (store?.get && card.id) {
-          let got = await store.get(card.id);
-          if (got && !(got as any).isCardError) card = got;
-        }
-        if (card?.codeFileUrl) {
-          entries.push({
-            id: card.id,
-            codeFileUrl: card.codeFileUrl,
-            objectName: card.objectName || 'model',
-            round: card.round ?? undefined,
-            screenshotUrl: card.renderScreenshot?.url,
-            srcdoc: generateViewerSrcdoc(card.codeFileUrl),
-          });
-        }
-        node = card?.parentCreation;
-      }
-      this.historyItems = entries;
+      // newest first by ROUND — createdAt is only minute-granular, so
+      // same-minute rounds would shuffle if sorted by time
+      this.historyItems = [...byKey.values()].sort(
+        (a, b) => (b.round ?? 0) - (a.round ?? 0),
+      );
     } finally {
       this.historyLoading = false;
     }
@@ -1065,22 +1166,26 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     let model = this.args.model;
     if (!model) return;
     this.draftViewerSrcdoc = undefined;
-    this.pendingViewportUrl = undefined;
-    let store = (this.args.context as any)?.store;
-    let card = store?.get && entry.id ? await store.get(entry.id) : undefined;
-    if (card && !(card as any).isCardError) {
-      model.selectedCreation = card as SculptedModel;
-    }
-    // force refine to re-read the spec from the selected file, not a stale
-    // in-memory one from a different round
+    // ALWAYS switch the viewport to the picked round's file first, from the
+    // entry's own codeFileUrl — so the click is never a silent no-op even when
+    // the store can't resolve the card yet (a just-made / not-yet-indexed
+    // round). Resolving selectedCreation below then re-attaches its full detail.
+    this.pendingViewportUrl = entry.codeFileUrl;
     this.workingSpec = null;
     this.activeAnalysis = null;
-    // a manual pick supersedes the single-level lasso undo + reload key
     this.inpaintUndoAvailable = false;
     this.inpaintUndoSpec = null;
     this.inPlaceReloadKey = 0;
     this.historyOpen = false;
     this.log(`> selected round ${entry.round ?? '?'} as current`);
+
+    let store = (this.args.context as any)?.store;
+    let card = store?.get && entry.id ? await store.get(entry.id) : undefined;
+    if (card && !(card as any).isCardError) {
+      model.selectedCreation = card as SculptedModel;
+      // the creation now drives the viewport; retire the transient pointer
+      this.pendingViewportUrl = undefined;
+    }
     await this.waitForViewer(entry.codeFileUrl);
   };
 
@@ -1092,6 +1197,47 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       realmURL: realm,
       cardModeAfterCreation: 'isolated',
     });
+  };
+
+  aiRefineLaunching = false;
+
+  // open the AI Assistant on the current round with the refine skill attached,
+  // so the assistant can SEE this model's reference + render, diagnose the
+  // differences conversationally, and (on approval) call the Refine Model
+  // command to apply each change as a new round. One room per studio.
+  startRefineWithAi = async () => {
+    let commandContext = this.args.context?.commandContext;
+    let creation = this.currentCreation;
+    if (this.aiRefineLaunching || !commandContext || !creation?.id) return;
+    this.aiRefineLaunching = true;
+    try {
+      let skillCardId = new URL('../Skill/refine-sculpt-skill', here).href;
+      await new UseAiAssistantCommand(commandContext).execute({
+        roomName: `Refine ${this.currentObjectName || 'model'}`,
+        // force a FRESH room each time — without this the command reuses
+        // whatever assistant room is currently open, carrying over unrelated
+        // context; 'new' makes it always create one
+        roomId: 'new',
+        openRoom: true,
+        // non-Anthropic on purpose — an Anthropic model here trips the ai-bot's
+        // inline-system-message ordering against the tightened Anthropic API
+        llmModel: ASSISTANT_MODEL,
+        // 'ask' so the assistant PROPOSES each Refine Model command and the
+        // user approves it before the model changes (paired with the command's
+        // requiresApproval: true in the skill).
+        llmMode: 'ask',
+        skillCardIds: [skillCardId],
+        attachedCardIds: [creation.id],
+        openCardIds: [creation.id],
+        // a natural opener shown as the user's own message — the diagnostic
+        // behaviour lives in the skill instructions, not here
+        prompt: `Let's refine this model against its reference — what looks off?`,
+      } as any);
+    } catch (e: any) {
+      this.errorMessage = e?.message ?? 'could not open the AI assistant';
+    } finally {
+      this.aiRefineLaunching = false;
+    }
   };
 
   // embedding the model anywhere = an iframe whose srcdoc carries the
@@ -1321,8 +1467,16 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       }, so author roughly ${plannedCount}-${
         plannedCount * 2
       } components (groups and the one ground shadow do not count). Every planned part must appear. Nothing else may: a component whose partRef is not one of the ${plannedCount} planned names is DELETED before the model is built, so inventing extra parts only throws away your own work.`;
+      // the invariant contract, plus only the build directives this object's
+      // own plan calls for
+      let specSystemPrompt = buildSpecSystemPrompt(analysis);
+      if (specSystemPrompt.length > 1) {
+        this.log(
+          `> directives: ${selectRecipeNames(analysis).join(', ') || 'none'}`,
+        );
+      }
       let parsed = await this.visionRequest(
-        SPEC_SYSTEM_PROMPT,
+        specSystemPrompt,
         [
           {
             type: 'text',
@@ -1364,61 +1518,25 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       // texturing spend work on it. Only the generate path is gated — a lasso
       // edit is allowed to add parts the plan never mentioned, because there
       // the user asked for them.
-      // measurement first: a hairline solid is a surface mark whatever it is
-      // called, so this gate cannot be evaded by relabelling the part
-      for (let line of dropHairlineParts(parsed)) {
-        this.log(`> ${line}`);
-      }
-      for (let line of dropUnplannedParts(parsed, analysis)) {
-        this.log(`> ${line}`);
-      }
-      // and the other direction: a planned part that nothing realizes
-      for (let line of flagUnrealizedParts(parsed, analysis)) {
-        this.log(`> ${line}`);
-      }
-      // padding hidden under a legitimate part name survives the gate — report
-      // it so it is visible in the log instead of only in the render
-      for (let line of flagOverbuiltParts(parsed, analysis)) {
-        this.log(`> ${line}`);
-      }
-      // the analysis' attachment lines are hard joints; hold the spec to them
-      // in its own coordinates, before any camera-derived pass runs
-      // a wrong attachTo makes the builder's joint solver drag geometry across
-      // the model, so the attachment graph is sanity-checked before anything
-      // reasons about it
-      for (let line of repairMirroredAttachments(parsed)) {
-        this.log(`> ${line}`);
-      }
-      for (let line of enforceAttachments(parsed, analysis)) {
-        this.log(`> ${line}`);
-      }
-      // runs AFTER the attachment lines: those can be inverted (a plan once
-      // said the wheels rest on the hull), and this is the check that no plan
-      // can overrule
-      for (let line of groundSupports(parsed)) {
-        this.log(`> ${line}`);
-      }
-      // seating two parts on the same support can bury one inside the other —
-      // check after the joints are enforced, not before
-      for (let line of resolveBuriedParts(parsed)) {
-        this.log(`> ${line}`);
-      }
-      for (let line of flagInstanceCollisions(parsed)) {
-        this.log(`> ${line}`);
-      }
-      for (let line of flagFlatPalette(parsed)) {
-        this.log(`> ${line}`);
-      }
-      for (let line of flagSilhouetteNotch(parsed)) {
-        this.log(`> ${line}`);
-      }
-      for (let line of repairPrimitiveConventions(parsed)) {
-        this.log(`> ${line}`);
-      }
-      for (let line of separateCoplanarLayers(parsed)) {
+      // the full deterministic structure/geometry repair chain, in its one
+      // documented order (see util/spec-passes/run-all.gts) — drop unplanned
+      // parts, enforce joints, guarantee + place the face, unbury, flag the
+      // rest. Kept as one call so the ordering lives (and is tested) in one place.
+      for (let line of runStructurePasses(parsed, analysis)) {
         this.log(`> ${line}`);
       }
       let outcome = await this.applyParsedSpec(parsed);
+
+      // completeness audit: one vision pass that ADDS whatever the reference
+      // shows and this build lacks (a missing eye, wheel, handle, limb). This
+      // is the general, category-agnostic guard against an under-built model —
+      // it replaces reasoning that would otherwise have to be hardcoded per
+      // object type. Skipped only when the user already asked to stop.
+      if (!this.stopRequested) {
+        let completed = await this.runCompletenessPass(referenceDataUrl);
+        if (completed) outcome = completed;
+      }
+
       let best = {
         score: outcome.score ?? -1,
         spec: this.workingSpec,
@@ -1601,6 +1719,56 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     return await this.applyParsedSpec(merged);
   }
 
+  // one completeness audit: compare the render to the reference and ADD the
+  // parts the build left out. This is the category-agnostic counterpart to the
+  // hardcoded face backstop — it catches a missing eye, wheel, handle or limb
+  // by looking at the two images, not by knowing what the object is. Unlike
+  // runRefinePass it allows additions (but never reshape/removal), so an
+  // omitted part can come back. Returns the build outcome, or the unchanged
+  // one when nothing was missing.
+  async runCompletenessPass(
+    referenceDataUrl: string,
+  ): Promise<{ score: number | undefined; featuresOk: boolean } | undefined> {
+    let flat = this.workingSpec?.inputKind === 'flat-graphic';
+    let analysis: any = this.currentAnalysis;
+    let renders = flat
+      ? [this.frameWindow?.captureScreenshot?.()].filter(Boolean)
+      : (this.frameWindow?.captureViews?.(analysis?.camera) ?? []).map(
+          (v: any) => v?.dataUrl ?? v,
+        );
+    if (!renders.length) return undefined;
+    this.phase = 'analyzing';
+    this.log('> completeness check: what does the reference show that this build lacks?');
+    let comparison = await composeComparison(referenceDataUrl, renders as string[], {
+      firstIsReferenceAngle: Boolean(analysis?.camera) && !flat,
+    });
+    let currentSpecJson = JSON.stringify(serializeSpecForPrompt(this.workingSpec));
+    let diff = await this.visionRequest(
+      COMPLETENESS_CRITIC_PROMPT,
+      [
+        {
+          type: 'text',
+          text: `Current spec JSON:\n${currentSpecJson}\n\nLEFT = reference photo, RIGHT = current render. Add every part the reference shows that the render is missing.`,
+        },
+        { type: 'image_url', image_url: { url: comparison } },
+      ],
+      parseDiffJson,
+    );
+    let addedCount = (diff.added ?? []).length;
+    let changedCount = (diff.changed ?? []).length;
+    if (!addedCount && !changedCount) {
+      this.log('> completeness check: nothing missing');
+      return undefined;
+    }
+    this.log(
+      `> completeness: added ${addedCount} missing part(s), nudged ${changedCount}`,
+    );
+    // additions + placement only — the critic must not delete or reshape the
+    // build it is completing
+    let merged = applySpecDiff(this.workingSpec, diff, { allowAdditions: true });
+    return await this.applyParsedSpec(merged);
+  }
+
   async encodeReference(): Promise<string> {
     let url = this.args.model?.references?.primaryUrl;
     if (!url) throw new Error('reference image is missing');
@@ -1632,7 +1800,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
   }
 
   async visionRequest(
-    systemPrompt: string,
+    systemPrompt: string | string[],
     userContent: any[],
     parser?: (raw: string) => any,
     validate?: (parsed: any) => string | null,
@@ -1747,12 +1915,17 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
   // outline replaces whatever profile the model invented, so cone-shaped
   // bottles cannot happen. Analysis usually splits ONE revolved silhouette
   // into stacked parts (body / shoulder / neck / base); those share an
-  // axis, so they are traced as a single union outline. Returns the part
-  // names the trace now embodies — reconciliation must not rescale them
-  // individually (that is what turned a bottle into a spinning top).
+  // axis, so they are traced as a single union outline. Objects whose
+  // revolved parts are NOT one stacked silhouette are left alone — see the
+  // guards below. Returns the part names the trace now embodies —
+  // reconciliation must not rescale them individually (that is what turned a
+  // bottle into a spinning top).
   async applyTracedProfiles(parsed: any): Promise<string[]> {
-    // stale envelope from a prior build must not clamp this one
+    // stale envelope from a prior build must not clamp this one, and its
+    // outline must not stay on screen claiming to be this build's — every
+    // path out of here below is a path that never reaches the trace
     this.tracedEnvelope = null;
+    this.tracedOutline = undefined;
     let plan: any[] = this.parsedAnalysis()?.partPlan ?? [];
     let revolved = plan.filter(
       (p: any) => p?.approach === 'revolved' && p?.bbox?.width > 0,
@@ -1765,16 +1938,15 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     let image = await this.loadReferenceImage();
     if (!image) return [];
 
-    // stacked revolved parts form one silhouette — trace their union
-    let left = Math.min(...revolved.map((p: any) => p.bbox.left));
-    let top = Math.min(...revolved.map((p: any) => p.bbox.top));
-    let right = Math.max(
-      ...revolved.map((p: any) => p.bbox.left + p.bbox.width),
-    );
-    let bottom = Math.max(
-      ...revolved.map((p: any) => p.bbox.top + p.bbox.height),
-    );
-    let cropBbox = { left, top, width: right - left, height: bottom - top };
+    // only trace when the revolved parts really are ONE stacked silhouette
+    // and that silhouette is the object itself — a round component inside a
+    // machine is neither, and tracing it hands the whole build a wrong
+    // envelope
+    let { bbox: cropBbox, skipped } = revolvedSilhouetteBbox(plan);
+    if (!cropBbox) {
+      this.log(`> ${skipped} — skipped silhouette trace`);
+      return [];
+    }
     // capture the segmented outline for the sidebar preview — this is the
     // exact contour the tracer sees, so a mismatch with the reference is
     // visible instead of hidden inside a failed build
@@ -1908,19 +2080,30 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       if (part?.artwork) {
         this.log(`> cropping '${decal.textureRef}' from its artwork region`);
       }
-      let sx = Math.round(bbox.left * image.width);
-      let sy = Math.round(bbox.top * image.height);
-      let sw = Math.max(1, Math.round(bbox.width * image.width));
-      let sh = Math.max(1, Math.round(bbox.height * image.height));
-      let canvas = document.createElement('canvas');
-      canvas.width = sw;
-      canvas.height = sh;
-      canvas.getContext('2d')!.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);
+      // Knock the photo's backdrop out of the crop first. A bbox is a
+      // rectangle and the artwork inside it usually is not, so an opaque crop
+      // carries a band of the backdrop onto the model — a foil capsule arrived
+      // as the capsule plus two white wings. Segmentation returns null when
+      // there is no background to remove (a label on glass, a placard on
+      // painted metal), and the plain opaque crop is right in that case.
+      let cut = cropWithBackgroundRemoved(image, bbox);
+      if (cut) this.log(`> cut background out of '${decal.textureRef}' crop`);
+      let canvas = cut;
+      if (!canvas) {
+        let sx = Math.round(bbox.left * image.width);
+        let sy = Math.round(bbox.top * image.height);
+        let sw = Math.max(1, Math.round(bbox.width * image.width));
+        let sh = Math.max(1, Math.round(bbox.height * image.height));
+        canvas = document.createElement('canvas');
+        canvas.width = sw;
+        canvas.height = sh;
+        canvas.getContext('2d')!.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);
+      }
       let base64 = canvas.toDataURL('image/webp', 0.92).split(',')[1];
       if (!base64) continue;
       let written = await writeRealmImage(this.args.context!.commandContext!, {
         realm: this.realmHref,
-        path: `textures/${slugify(decal.textureRef, 'artwork')}.webp`,
+        path: `${this.studioAssetDir}/textures/${slugify(decal.textureRef, 'artwork')}.webp`,
         base64,
         contentType: 'image/webp',
       });
@@ -1988,7 +2171,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       let rel =
         this.realmHref && curUrl.startsWith(this.realmHref)
           ? curUrl.slice(this.realmHref.length)
-          : `exports/${slug}-round-${round}.js`;
+          : `${this.studioAssetDir}/exports/${slug}-round-${round}.js`;
       await new WriteTextFileCommand(commandContext).execute({
         path: rel,
         content: generateModelJs(parsed, meta),
@@ -2032,7 +2215,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     // the model's stored form: a real three.js module in the realm, with
     // the source spec riding inside it as SCULPT_SPEC
     let written = await new WriteTextFileCommand(commandContext).execute({
-      path: `exports/${slug}-round-${round}.js`,
+      path: `${this.studioAssetDir}/exports/${slug}-round-${round}.js`,
       content: generateModelJs(parsed, meta),
       realm: this.realmHref,
       useNonConflictingFilename: true,
@@ -2051,22 +2234,20 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       this.log('> persisted viewer timed out — render archive may be missing');
     }
 
-    // persist this round as its own SculptedModel card and link it,
-    // carrying the same primary reference (ImageDef link for linked files,
-    // url otherwise)
-    let primary = model.references?.images?.[0];
-    let referenceCopy =
-      primary?.sourceMode === 'file' && primary?.file
-        ? new ImageSourceField({
-            file: primary.file,
-            sourceMode: 'file',
-          })
-        : new ImageSourceField({
-            url: primary?.resolvedUrl,
-            sourceMode: 'url',
-          });
+    // persist this round as its own SculptedModel card and link it, carrying
+    // EVERY reference view it was built from (not just the primary) — each
+    // image copied in its own mode (ImageDef link for linked files, url
+    // otherwise) so the saved round holds the same multi-image set the studio does
+    let sourceImages = model.references?.images ?? [];
+    let referencesCopy = new MultiImageSourceField({
+      images: sourceImages.map((img: any) =>
+        img?.sourceMode === 'file' && img?.file
+          ? new ImageSourceField({ file: img.file, sourceMode: 'file' })
+          : new ImageSourceField({ url: img?.resolvedUrl, sourceMode: 'url' }),
+      ),
+    });
     let creation = new SculptedModel({
-      referenceImage: referenceCopy,
+      references: referencesCopy,
       codeFileUrl,
       codeFile: this.makeCodeFileDef(codeFileUrl),
       objectName: parsed.objectName || 'model',
@@ -2077,6 +2258,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
         : undefined,
       critique: String(parsed.critique ?? ''),
       score: typeof parsed.score === 'number' ? parsed.score : null,
+      buildMetrics: JSON.stringify(this.buildMetrics(parsed)),
       renderScreenshot: await this.persistRenderScreenshot(
         parsed.objectName || 'model',
         round,
@@ -2091,6 +2273,9 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     let saved = (await new SaveCardCommand(commandContext).execute({
       card: creation,
       realm: (model as any)[realmURL]?.href,
+      // keep each round's card beside this studio's own assets, under
+      // img-to-3d/<studio-id>/rounds/, instead of the realm root
+      localDir: `${this.studioAssetDir}/rounds`,
     } as any)) as SculptedModel;
     // SaveCard returns a detached, GC-eligible instance — re-resolve a
     // store-tracked one before linking it as latestCreation
@@ -2105,6 +2290,16 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     model.latestCreation = creationCard;
     model.selectedCreation = creationCard;
     this.pendingViewportUrl = undefined;
+    // persist the studio card itself so these links survive a page reload —
+    // the parentCreation history walk roots at latestCreation, and relying on
+    // host auto-save alone left the pointer unsaved (empty history on refresh)
+    try {
+      await new SaveCardCommand(commandContext).execute({
+        card: model,
+      } as any);
+    } catch (e) {
+      this.log(`> could not persist studio link: ${(e as Error).message}`);
+    }
 
     // per-feature gate (img2threejs rule): a good global score cannot
     // excuse a failing identity feature
@@ -2129,7 +2324,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       if (!base64) return undefined;
       return await writeRealmImage(this.args.context!.commandContext!, {
         realm: (this.args.model as any)?.[realmURL]?.href,
-        path: `renders/${slugify(name, 'model')}-round-${round}.webp`,
+        path: `${this.studioAssetDir}/renders/${slugify(name, 'model')}-round-${round}.webp`,
         base64,
         contentType: 'image/webp',
       });
@@ -2397,15 +2592,34 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
           {{#if this.hasModel}}
             <button
               type='button'
+              class='refine-ai-btn'
+              disabled={{this.isRunning}}
+              {{on 'click' this.startRefineWithAi}}
+            >
+              ✨ Refine with AI
+            </button>
+          {{/if}}
+
+          {{!-- TEMPORARILY HIDDEN: the "Edit a part" (lasso/inpaint) feature and
+               its Undo companion — wrapped in an always-false conditional to
+               hide the UI while keeping the code intact. Restore by switching
+               the first guard back to this.hasModel and the second to
+               this.inpaintUndoAvailable. --}}
+          {{#if false}}
+            <button
+              type='button'
               class='lasso-btn {{if this.inpaintMode "is-on"}}'
               disabled={{this.isRunning}}
               {{on 'click' this.toggleInpaint}}
             >
-              {{if this.inpaintMode '✕ Exit Lasso Edit' '✏️ Lasso Edit'}}
+              {{! named for the instruction box, not the lasso: describing the
+                  edit is the main route and drawing round a part is the
+                  fallback for when it is hard to name }}
+              {{if this.inpaintMode '✕ Done editing' '✏️ Edit a part'}}
             </button>
           {{/if}}
 
-          {{#if this.inpaintUndoAvailable}}
+          {{#if false}}
             <button
               type='button'
               class='lasso-btn'
@@ -2488,7 +2702,10 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
                   <span class='inpaint-count'>{{this.inpaintTargetCount}}
                     selected</span>
                 {{else}}
-                  <span class='inpaint-count is-hint'>all parts</span>
+                  {{! not "all parts" — with no lasso the target is resolved
+                      FROM the instruction, so an unselected edit still touches
+                      only the part it names }}
+                  <span class='inpaint-count is-hint'>named below</span>
                 {{/if}}
                 <input
                   class='inpaint-input'
@@ -2520,6 +2737,21 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
               {{#if this.viewportHint}}
                 <p class='viewport-hint'>{{this.viewportHint}}</p>
               {{/if}}
+            </div>
+          {{/if}}
+          {{#if this.isRunning}}
+            {{! sweeps the viewport edge while a round is in flight. The wrapper
+                carries the knobs (a component invocation can't take this
+                template's scoped styles) and stays click-through so the model
+                underneath is still orbitable. }}
+            <div class='viewport-generating'>
+              <GeneratingOverlay @label={{this.phase}}>
+                {{#if this.latestLogLine}}
+                  <span class='viewport-generating-detail'>
+                    {{this.latestLogLine}}
+                  </span>
+                {{/if}}
+              </GeneratingOverlay>
             </div>
           {{/if}}
         </main>
@@ -2646,7 +2878,11 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       /* the ImgTo3dPopover shell owns the dark surface, scroll, width and
          the --i3d-* token block; this is just the content flow container */
       .history-body {
-        width: max-content;
+        /* a definite width, not max-content: the grid below sizes its columns
+           from the container, and a max-content container sized itself from
+           the columns instead — the two resolved to one card per row at full
+           popover width */
+        width: min(34rem, 78vw);
         max-width: 100%;
       }
       .history-popover-head {
@@ -2676,11 +2912,15 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       }
       .history-grid {
         display: grid;
-        /* fill the width instead of leaving a dead column: auto-fit collapses
-           empty tracks and minmax lets the remaining cards share the slack, so
-           two rounds stretch to half each rather than hugging the left edge */
-        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+        /* three per row, minmax(0,…) so a wide iframe can't push a track past
+           its share */
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0.5rem;
+      }
+      @media (max-width: 32rem) {
+        .history-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
       .history-card {
         position: relative;
@@ -2987,6 +3227,27 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
         opacity: 0.55;
         cursor: default;
       }
+      /* Refine with AI: same outline family, tinted with the accent so it
+         reads as the model's "improve this" action */
+      .refine-ai-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid
+          color-mix(in srgb, var(--i3d-accent) 45%, var(--i3d-border));
+        border-radius: 0.625rem;
+        background: color-mix(in srgb, var(--i3d-accent) 8%, transparent);
+        color: var(--i3d-accent);
+        font-family: var(--i3d-font-mono);
+        font-size: 0.75rem;
+        cursor: pointer;
+      }
+      .refine-ai-btn:hover:not(:disabled) {
+        border-color: var(--i3d-accent);
+        background: color-mix(in srgb, var(--i3d-accent) 16%, transparent);
+      }
+      .refine-ai-btn:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
       /* same visual family as lasso-btn, but it lives inside the photos
          section so it needs its own top spacing */
       .reanalyze-btn {
@@ -3206,6 +3467,26 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       .inpaint-clear:disabled {
         opacity: 0.5;
         cursor: default;
+      }
+      /* click-through frame around the live render while a round builds */
+      .viewport-generating {
+        --generating-surface: transparent;
+        --generating-accent: var(--i3d-accent);
+        --generating-label-color: var(--i3d-text-dim);
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .viewport-generating-detail {
+        position: relative;
+        z-index: 1;
+        max-width: 70%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-family: var(--i3d-font-mono);
+        font-size: 0.6875rem;
+        color: var(--i3d-text-dim);
       }
       .viewport-empty {
         display: grid;

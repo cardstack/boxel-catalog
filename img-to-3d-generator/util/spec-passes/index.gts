@@ -6,6 +6,7 @@ export * from './prune';
 export * from './placement';
 export * from './overlap';
 export * from './attachments';
+export * from './face';
 export * from './shape';
 export * from './materials';
 export * from './proportions';

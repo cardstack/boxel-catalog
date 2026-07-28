@@ -7,6 +7,61 @@
 
 import { serializeSpecForPrompt } from './spec-io';
 
+// Which lasso-selected parts a "remove X" instruction actually means.
+//
+// The lasso reports every mesh under its polygon, and a surface part — a
+// sticker, a label, a printed mark — always sits ON a solid, so the pick ray
+// hits that solid too: lassoing a blade sticker returns [sticker, blade]. The
+// deterministic delete used to remove EVERY selected part, so "remove sticker"
+// took the blade with it. When the instruction NAMES what to remove, that noun
+// is the authority over the lasso's spillover — narrow the selection to the
+// parts whose id / partRef / note match the noun (and, for sticker/label/decal
+// words, to the decal primitives, since the noun can never name the solid it
+// rides on). Returns the narrowed set only when it is a real, non-empty subset;
+// otherwise the original selection stands (a generic "remove this", or a lasso
+// that already matches the words), so nothing here can DELETE MORE than before.
+const REMOVE_VERB = /^(remove|delete|erase|drop|get rid of)\b/i;
+const DECAL_WORD =
+  /\b(sticker|label|decal|logo|print|graphic|wordmark|badge|marking|text)s?\b/i;
+const STOPWORD =
+  /^(the|a|an|this|that|these|those|part|parts|one|it|please|from|on|off|of|my|selected|whole|entire)$/i;
+
+export function isRemovalInstruction(instruction: string): boolean {
+  return REMOVE_VERB.test(String(instruction ?? '').trim());
+}
+
+export function narrowRemovalTargets(
+  components: any[],
+  lassoTargets: string[],
+  instruction: string,
+): string[] {
+  let text = String(instruction ?? '').trim();
+  if (!REMOVE_VERB.test(text) || lassoTargets.length < 2) return lassoTargets;
+  let nouns = text
+    .replace(REMOVE_VERB, '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w && !STOPWORD.test(w));
+  if (!nouns.length) return lassoTargets; // "remove this" — the lasso is all we have
+  let wantsDecal = DECAL_WORD.test(text);
+  let byId = new Map(components.map((c: any) => [String(c?.nodeId), c]));
+  let nameOf = (c: any) =>
+    `${c?.nodeId ?? ''} ${c?.partRef ?? ''} ${c?.note ?? ''}`.toLowerCase();
+  let isDecal = (c: any) =>
+    c?.primitive === 'textDecal' || c?.primitive === 'curvedDecal';
+  let named = lassoTargets.filter((id) => {
+    let c = byId.get(String(id));
+    if (!c) return false;
+    let name = nameOf(c);
+    if (nouns.some((n) => name.includes(n))) return true;
+    // a sticker/label word can only mean the decal — never the solid under it
+    return wantsDecal && isDecal(c);
+  });
+  return named.length && named.length < lassoTargets.length
+    ? named
+    : lassoTargets;
+}
+
 export function applySpecDiff(
   currentSpec: any,
   diff: any,

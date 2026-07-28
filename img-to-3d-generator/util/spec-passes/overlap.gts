@@ -20,8 +20,9 @@ import { hasNeutralAncestry, halfExtents, specBox } from '../spec-geometry';
 //   2. copies authored INDIVIDUALLY (front / mid / rear wheel as three separate
 //      components), which no repeat check would ever see — they are recognised
 //      by having the same primitive and the same dimensions
-// Report only: the fix is either a wider spacing or a smaller part, and which
-// one the reference calls for is not knowable from the coordinates.
+// A linear repeat whose step is too short is REPAIRED (widen the step — copies
+// must not overlap, unambiguous), while the individually-authored case is
+// report-only, since collapsing three hand-placed wheels is not this pass's call.
 export function flagInstanceCollisions(parsed: any): string[] {
   let logs: string[] = [];
   let all: any[] = parsed?.components ?? [];
@@ -81,8 +82,17 @@ export function flagInstanceCollisions(parsed: any): string[] {
         `'${c.nodeId}' repeats ${count}× with no offset — every copy lands on the same spot`,
       );
     } else if (step < extent * (1 - TOLERATED)) {
+      // widen the step to the part's own size along the repeat axis, so the
+      // copies stop fusing into a continuous band — a truck's 8 tires melting
+      // into one tank track is the classic case. Direction is kept; only the
+      // length grows. Repairable because the fix is unambiguous: copies must
+      // not overlap.
+      let sign = (offset[axis] ?? 0) < 0 ? -1 : 1;
+      offset[axis] = Number((sign * extent).toFixed(4));
+      rep.offset = offset;
+      c.repeat = rep;
       logs.push(
-        `'${c.nodeId}' repeats ${count}× at a step of ${step.toFixed(2)} but is ${extent.toFixed(2)} across that axis — copies overlap by ${(extent - step).toFixed(2)}`,
+        `widened '${c.nodeId}' repeat step ${step.toFixed(2)} → ${extent.toFixed(2)} so its ${count} copies stop fusing`,
       );
     }
   }

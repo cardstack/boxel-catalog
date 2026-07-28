@@ -183,27 +183,48 @@ export function reconcileProportions(
     // front window and a side window ended up at identical coordinates, sunk to
     // y 0 and half underground. Sizes still mean something (a window is that
     // fraction of the object either way), so only the MOVE is withheld.
-    let connected = (() => {
-      if (g.boxes.length < 2) return true;
-      let joined = [0];
-      let touches = (a: any, b: any) =>
-        [0, 1, 2].every(
-          (ax) =>
-            a.min[ax] <= b.max[ax] + 0.05 && b.min[ax] <= a.max[ax] + 0.05,
-        );
-      let grew = true;
-      while (grew) {
-        grew = false;
-        for (let i = 0; i < g.boxes.length; i++) {
-          if (joined.includes(i)) continue;
-          if (joined.some((j) => touches(g.boxes[i], g.boxes[j]))) {
-            joined.push(i);
-            grew = true;
+    // ...UNLESS the pieces are a mirrored set on ONE host. Two eyes on a
+    // muzzle are separate boxes, but they are separate the way the photo's
+    // "eyes" bbox is: it spans both of them, so their union centre is exactly
+    // what it measures. The house-windows case this rule was written for is
+    // different in a way the spec already records — those pieces name
+    // DIFFERENT hosts (front-wall, side-wall), and no single image bbox can
+    // place two faces at once.
+    //
+    // Getting this wrong is worse than not correcting at all, because it is
+    // selective: 'nose' is one component and gets recentred from its bbox
+    // while 'eyes' is two and keeps whatever y the model first guessed. Half
+    // the face measured and half of it invented is how the eyes ended up
+    // below the nose on a model whose every individual part passed its check.
+    let sharedHost = (() => {
+      let hosts = new Set(
+        [...g.comps].map((c: any) => String(c.attachTo ?? '').trim()),
+      );
+      return hosts.size === 1 && !hosts.has('');
+    })();
+    let connected =
+      sharedHost ||
+      (() => {
+        if (g.boxes.length < 2) return true;
+        let joined = [0];
+        let touches = (a: any, b: any) =>
+          [0, 1, 2].every(
+            (ax) =>
+              a.min[ax] <= b.max[ax] + 0.05 && b.min[ax] <= a.max[ax] + 0.05,
+          );
+        let grew = true;
+        while (grew) {
+          grew = false;
+          for (let i = 0; i < g.boxes.length; i++) {
+            if (joined.includes(i)) continue;
+            if (joined.some((j) => touches(g.boxes[i], g.boxes[j]))) {
+              joined.push(i);
+              grew = true;
+            }
           }
         }
-      }
-      return joined.length === g.boxes.length;
-    })();
+        return joined.length === g.boxes.length;
+      })();
     if (!connected) {
       logs.push(
         `'${ref}' is built as ${g.boxes.length} separate pieces — sizing only, they cannot share one image position`,

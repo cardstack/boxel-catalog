@@ -231,6 +231,247 @@ function repairLatheSilhouetteMask(
   return repaired;
 }
 
+// Average colour of a small patch, used to sample backdrop corners.
+function patchColor(
+  data: Uint8ClampedArray,
+  w: number,
+  x0: number,
+  y0: number,
+  size: number,
+): [number, number, number] {
+  let r = 0,
+    g = 0,
+    b = 0,
+    n = 0;
+  for (let y = y0; y < y0 + size; y++) {
+    for (let x = x0; x < x0 + size; x++) {
+      let i = (y * w + x) * 4;
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+      n++;
+    }
+  }
+  return [r / n, g / n, b / n];
+}
+
+function colorDistanceSq(a: number[], b: number[]): number {
+  return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+}
+
+// Squared RGB distance from the backdrop colour. Below CUT a pixel IS the
+// backdrop and goes fully transparent; above KEEP it is object and stays
+// opaque; between the two it is the antialiased rim and fades. Both are
+// deliberately tight — a product shot's ground is near-uniform, so a wide
+// tolerance starts eating pale parts of the object (a cream label, a chrome
+// bezel) rather than the ground.
+const CUT_TOLERANCE = 30 * 30;
+const KEEP_TOLERANCE = 55 * 55;
+
+function unionBox(boxes: SilhouetteBbox[]): SilhouetteBbox {
+  let left = Math.min(...boxes.map((b) => b.left));
+  let top = Math.min(...boxes.map((b) => b.top));
+  return {
+    left,
+    top,
+    width: Math.max(...boxes.map((b) => b.left + b.width)) - left,
+    height: Math.max(...boxes.map((b) => b.top + b.height)) - top,
+  };
+}
+
+// Which region of the reference to trace as THE object's revolved silhouette,
+// or a reason not to trace at all.
+//
+// Analysis usually splits one revolved body into stacked parts — a bottle's
+// body / shoulder / neck / lip — which share an axis, so the region to trace
+// is their union. Two conditions have to hold for that union to mean anything,
+// and a machine with a round component satisfies neither:
+//
+//   · ONE AXIS. Parts at opposite ends of an object are not a stack. A
+//     Thompson's drum magazine and barrel unioned to a box around the whole
+//     weapon, whose traced outline revolved into a wooden spinning top.
+//   · IT IS THE BODY. A single revolved part passes the axis test trivially —
+//     nothing disagrees with it — so a drum magazine alone would otherwise
+//     hand its own outline to the entire gun.
+//
+// The second condition matters more than the profile it rejects: the traced
+// outline also becomes the envelope every solid part is clamped into, so a
+// wrong trace does not just add one bad part, it displaces all the good ones.
+export function revolvedSilhouetteBbox(plan: any[]): {
+  bbox?: SilhouetteBbox;
+  skipped?: string;
+} {
+  let sized = (plan ?? []).filter((p: any) => p?.bbox?.width > 0);
+  let revolved = sized.filter((p: any) => p?.approach === 'revolved');
+  if (!revolved.length) return { skipped: 'no revolved parts' };
+
+  let bbox = unionBox(revolved.map((p: any) => p.bbox));
+  // PAIRWISE, not each-part-against-the-union: every part is inside the union
+  // by construction, so measuring against it always returns the part's own
+  // width and passes everything.
+  let overlap = (a: SilhouetteBbox, b: SilhouetteBbox) =>
+    Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left);
+  for (let i = 0; i < revolved.length; i++) {
+    for (let j = i + 1; j < revolved.length; j++) {
+      let a = revolved[i].bbox;
+      let b = revolved[j].bbox;
+      if (overlap(a, b) < 0.6 * Math.min(a.width, b.width)) {
+        return { skipped: 'revolved parts are not on one axis' };
+      }
+    }
+  }
+
+  let objectBox = unionBox(sized.map((p: any) => p.bbox));
+  if (
+    bbox.height < 0.6 * objectBox.height ||
+    bbox.width < 0.5 * objectBox.width
+  ) {
+    return { skipped: 'revolved parts are a detail, not the body' };
+  }
+  return { bbox };
+}
+
+// The photo's backdrop colour, sampled from the four image corners — which
+// are backdrop by construction on the product shots this pipeline is fed.
+// Returns null when those corners disagree, i.e. the reference has no clean
+// ground to key against and nothing should be cut.
+function referenceBackdrop(
+  image: HTMLImageElement,
+  diag?: string[],
+): [number, number, number] | null {
+  let side = 64;
+  let canvas = document.createElement('canvas');
+  canvas.width = side;
+  canvas.height = side;
+  let ctx = canvas.getContext('2d')!;
+  ctx.drawImage(image, 0, 0, side, side);
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, side, side).data;
+  } catch {
+    diag?.push('tainted canvas — backdrop unreadable (CORS)');
+    return null;
+  }
+  let patch = 4;
+  let far = side - patch;
+  let corners = [
+    patchColor(data, side, 0, 0, patch),
+    patchColor(data, side, far, 0, patch),
+    patchColor(data, side, 0, far, patch),
+    patchColor(data, side, far, far, patch),
+  ];
+  let backdrop = [0, 1, 2].map(
+    (c) => corners.reduce((s, k) => s + k[c], 0) / corners.length,
+  ) as [number, number, number];
+  if (corners.some((corner) => colorDistanceSq(corner, backdrop) >= 30 * 30)) {
+    diag?.push('reference has no uniform backdrop — crop left opaque');
+    return null;
+  }
+  return backdrop;
+}
+
+// Crops `bbox` out of the image with the BACKDROP knocked out to transparent,
+// for artwork that gets pasted onto the model as a decal.
+//
+// A bbox is a rectangle and the thing inside it rarely is: the region around a
+// bottle's foil capsule, or a character's face, is mostly the photo's ground.
+// Pasted as an opaque decal, that ground lands on the model as a pale slab
+// around the artwork — the capsule arrived wearing two white wings.
+//
+// Keyed against the WHOLE IMAGE's backdrop colour, never against the crop's
+// own corners. A crop's corners are only the backdrop when the crop happens to
+// straddle the object's edge; inside a wine label they are the label's cream
+// ground, and cutting on that answer keeps the lettering and throws the label
+// away. It also survives a crop that clips a neighbouring part — the capsule's
+// bbox catches the top of the bottle body, and that body is object, not ground.
+//
+// The crop keeps the bbox's full extent rather than trimming to what survived:
+// the decal's authored width/height were chosen for this rectangle, so
+// shrinking it would stretch the graphic across a plane it no longer matches.
+// Transparent margin costs nothing to render.
+//
+// Returns null — caller falls back to a plain opaque crop — when the reference
+// has no clean ground, when the crop lies entirely on the object (the common
+// and correct case for a label), or when the cut would take nearly everything.
+export function cropWithBackgroundRemoved(
+  image: HTMLImageElement,
+  bbox: SilhouetteBbox,
+  diag?: string[],
+): HTMLCanvasElement | null {
+  let backdrop = referenceBackdrop(image, diag);
+  if (!backdrop) return null;
+
+  let sx = Math.round(bbox.left * image.width);
+  let sy = Math.round(bbox.top * image.height);
+  let sw = Math.max(1, Math.round(bbox.width * image.width));
+  let sh = Math.max(1, Math.round(bbox.height * image.height));
+  let canvas = document.createElement('canvas');
+  canvas.width = sw;
+  canvas.height = sh;
+  let ctx = canvas.getContext('2d')!;
+  ctx.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);
+  let frame;
+  try {
+    frame = ctx.getImageData(0, 0, sw, sh);
+  } catch {
+    diag?.push('tainted canvas — artwork pixels unreadable (CORS)');
+    return null;
+  }
+  let pixels = frame.data;
+  let isBackdrop = (i: number) =>
+    colorDistanceSq([pixels[i], pixels[i + 1], pixels[i + 2]], backdrop);
+
+  // Is there any ground in this rectangle at all? Measured on the border ring
+  // rather than the four corners: a bbox drawn tight around a part is a few
+  // pixels of margin at most, so corner patches land on the part itself and
+  // report "no backdrop" for exactly the crops that need cutting. The ring is
+  // a far larger sample and degrades gracefully — a part flush against one
+  // edge of its own bbox still leaves the other three.
+  let border = 0;
+  let onBackdrop = 0;
+  let sample = (x: number, y: number) => {
+    border++;
+    if (isBackdrop((y * sw + x) * 4) < CUT_TOLERANCE) onBackdrop++;
+  };
+  for (let x = 0; x < sw; x++) {
+    sample(x, 0);
+    sample(x, sh - 1);
+  }
+  for (let y = 1; y < sh - 1; y++) {
+    sample(0, y);
+    sample(sw - 1, y);
+  }
+  if (onBackdrop / Math.max(1, border) < 0.12) {
+    diag?.push('crop lies on the object — left opaque');
+    return null;
+  }
+
+  // Ramp rather than threshold: a pixel well clear of the ground keeps its
+  // alpha, one indistinguishable from it goes fully transparent, and the
+  // antialiased rim in between fades. A hard cut leaves a jagged edge and a
+  // halo of ground colour one pixel wide all the way round the artwork.
+  let kept = 0;
+  for (let i = 0; i < pixels.length; i += 4) {
+    let d = isBackdrop(i);
+    let opacity =
+      d <= CUT_TOLERANCE
+        ? 0
+        : d >= KEEP_TOLERANCE
+          ? 1
+          : (d - CUT_TOLERANCE) / (KEEP_TOLERANCE - CUT_TOLERANCE);
+    pixels[i + 3] = Math.round(pixels[i + 3] * opacity);
+    if (opacity > 0.5) kept++;
+  }
+  let keptFraction = kept / (pixels.length / 4);
+  if (keptFraction < 0.03) {
+    diag?.push('cut would remove the whole crop — left opaque');
+    return null;
+  }
+  diag?.push(`cut backdrop, kept ${Math.round(keptFraction * 100)}% of the crop`);
+  ctx.putImageData(frame, 0, 0);
+  return canvas;
+}
+
 // Traces the part inside `bbox` (normalized to the image) and returns a
 // lathe dimensions array [x0,y0, x1,y1, ...] bottom→top, where x is the
 // half-width and y the height, both normalized so the profile spans
