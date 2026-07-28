@@ -17,6 +17,7 @@ import {
   repairMirroredAttachments,
   enforceAttachments,
   groundSupports,
+  attachOrphans,
   ensureFaceParts,
   alignFaceFeatures,
   seatRingCollars,
@@ -81,6 +82,14 @@ export function runStructurePasses(parsed: any, analysis: any): string[] {
   // grille cavity, sunken panel) is sunk INTO the host surface rather than
   // ejected — the mirror of resolveBuriedParts.
   run(seatRecesses(parsed));
+
+  // LAST placement step: after every mover has settled positions, give any part
+  // still lacking an attachTo the nearest one, so the render's joint solver and
+  // contact backstop seat it instead of leaving it floating. Runs after the
+  // movers (so "nearest mass" is judged on final coordinates) and after the face
+  // passes (so a synthesized eye/nose hangs off the face mass it was just placed
+  // against, not off some unrelated part).
+  run(attachOrphans(parsed));
 
   run(flagInstanceCollisions(parsed));
   run(flagFlatPalette(parsed));

@@ -109,6 +109,91 @@ export function groundSupports(parsed: any): string[] {
   return logs;
 }
 
+// The render seats a part ONLY towards the support it DECLARED: the joint solver
+// and the contact backstop both read `attachTo`, and a part that has none is
+// left exactly where it was authored — deliberately, so a blind nearest snap
+// cannot weld the whole model into a clump. But the spec prompt does not always
+// emit an attachTo for every part, and a face feature, a completeness-added
+// part, or any detail the model forgot to wire hangs in mid-air as a result —
+// the very floaters that today only an AI refine round fixes.
+//
+// This closes that gap without vision: every ORPHAN (a non-group, non-support
+// part with no attachTo, and not the anchor body) is GIVEN the joint it lacks,
+// pointed at the mass it is physically nearest to. It only ASSIGNS attachTo — it
+// moves nothing — so the render's own solvers do the seating, and both are
+// capped at 15% of the object, so a part genuinely far from everything is still
+// left in place rather than dragged across the model. The clump risk stays shut:
+// assignment is scoped to orphans (a part that already declared a joint keeps
+// it), and ties break toward the LARGER neighbour, so a detail hangs off a body,
+// not off another detail.
+export function attachOrphans(parsed: any): string[] {
+  let logs: string[] = [];
+  let all: any[] = parsed?.components ?? [];
+  let byId = new Map<string, any>(all.map((c: any) => [c?.nodeId, c]));
+  let parts = all.filter(
+    (c: any) =>
+      c?.nodeId && c.primitive !== 'group' && hasNeutralAncestry(c, byId),
+  );
+  if (parts.length < 2) return logs;
+  const SKIP = /shadow|glow/i;
+  let boxed = parts
+    .map((c) => {
+      let box = specBox(c);
+      let h = halfExtents(c);
+      if (!box || !h) return undefined;
+      return { c, min: box.min, max: box.max, vol: 8 * h[0] * h[1] * h[2] };
+    })
+    .filter(Boolean) as {
+    c: any;
+    min: number[];
+    max: number[];
+    vol: number;
+  }[];
+  if (boxed.length < 2) return logs;
+  let isSupport = (c: any) =>
+    SUPPORT_NAME.test(String(c.partRef ?? '')) ||
+    SUPPORT_NAME.test(String(c.nodeId ?? ''));
+  // the biggest non-support mass is the anchor everything ultimately hangs on;
+  // nothing carries the body, so it never gets an attachTo of its own
+  let anchor = boxed
+    .filter((b) => !isSupport(b.c) && !SKIP.test(String(b.c.nodeId)))
+    .sort((a, b) => b.vol - a.vol)[0];
+  // separation between two boxes on their farthest-apart axis: >0 is a real gap,
+  // <=0 means they already overlap (not floating)
+  let gapOf = (a: (typeof boxed)[number], b: (typeof boxed)[number]) =>
+    Math.max(
+      ...[0, 1, 2].map((ax) =>
+        Math.max(a.min[ax] - b.max[ax], b.min[ax] - a.max[ax]),
+      ),
+    );
+
+  for (let o of boxed) {
+    let c = o.c;
+    if (c.attachTo) continue; // already wired — leave it
+    if (anchor && c === anchor.c) continue; // the body hangs on nothing
+    if (isSupport(c)) continue; // supports are grounded, not hung
+    if (SKIP.test(String(c.nodeId))) continue;
+    let best: { t: (typeof boxed)[number]; g: number } | undefined;
+    for (let t of boxed) {
+      if (t === o || SKIP.test(String(t.c.nodeId))) continue;
+      let g = gapOf(o, t);
+      if (
+        !best ||
+        g < best.g - 0.001 ||
+        (Math.abs(g - best.g) <= 0.001 && t.vol > best.t.vol)
+      ) {
+        best = { t, g };
+      }
+    }
+    if (!best) continue;
+    c.attachTo = best.t.c.nodeId;
+    logs.push(
+      `gave '${c.nodeId}' an attachTo '${best.t.c.nodeId}' (had none — nearest mass, gap ${best.g.toFixed(2)}) so the builder seats it instead of leaving it floating`,
+    );
+  }
+  return logs;
+}
+
 // A part can be perfectly assembled and still be invisible: swallowed whole by
 // the part next to it. That is what happened to a house's lower hip roof, where
 // the analysis said both "lower hipped roof centered-above ground floor block"

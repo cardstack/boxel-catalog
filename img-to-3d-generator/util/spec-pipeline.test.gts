@@ -15,6 +15,7 @@ import {
   seatRingCollars,
   clampInteriorCavities,
   seatRecesses,
+  attachOrphans,
 } from './spec-passes/index';
 import { seatSurfaceParts } from './surface-seat';
 import {
@@ -1607,6 +1608,102 @@ export function runTests() {
           `the buried mouth was seated proud of the muzzle front, not pushed down (z=${mouth.position[2]})`,
         );
         assert.ok(Array.isArray(logs), 'the chain returns its log lines');
+      });
+
+      test('attachOrphans wires a part with no attachTo to its nearest mass', function (assert) {
+        let spec = {
+          components: [
+            { nodeId: 'root', primitive: 'group', position: [0, 0, 0] },
+            {
+              nodeId: 'body',
+              parentId: 'root',
+              primitive: 'box',
+              dimensions: [1, 1, 1],
+              position: [0, 0, 0],
+              rotation: [0, 0, 0],
+              scale: [1, 1, 1],
+              partRef: 'body',
+            },
+            {
+              // a small part authored floating off to the side with NO attachTo
+              nodeId: 'knob',
+              parentId: 'root',
+              primitive: 'box',
+              dimensions: [0.1, 0.1, 0.1],
+              position: [0.9, 0, 0],
+              rotation: [0, 0, 0],
+              scale: [1, 1, 1],
+              partRef: 'knob',
+            },
+          ],
+        };
+        let logs = attachOrphans(spec);
+        let knob = spec.components.find((c: any) => c.nodeId === 'knob')!;
+        let body = spec.components.find((c: any) => c.nodeId === 'body')!;
+        assert.strictEqual(
+          (knob as any).attachTo,
+          'body',
+          'the floating knob was given an attachTo pointing at the nearest mass',
+        );
+        assert.notOk(
+          (body as any).attachTo,
+          'the anchor body is left un-hung (nothing carries it)',
+        );
+        assert.ok(
+          logs.some((l) => l.includes('knob')),
+          'the assignment is logged',
+        );
+      });
+
+      test('attachOrphans leaves an already-wired part and supports alone', function (assert) {
+        let spec = {
+          components: [
+            { nodeId: 'root', primitive: 'group', position: [0, 0, 0] },
+            {
+              nodeId: 'hull',
+              parentId: 'root',
+              primitive: 'box',
+              dimensions: [1, 0.4, 1],
+              position: [0, 0.5, 0],
+              rotation: [0, 0, 0],
+              scale: [1, 1, 1],
+              partRef: 'hull',
+            },
+            {
+              nodeId: 'antenna',
+              parentId: 'root',
+              primitive: 'cylinder',
+              dimensions: [0.02, 0.02, 0.5],
+              position: [0, 1, 0],
+              rotation: [0, 0, 0],
+              scale: [1, 1, 1],
+              attachTo: 'hull',
+              partRef: 'antenna',
+            },
+            {
+              nodeId: 'wheel-left',
+              parentId: 'root',
+              primitive: 'cylinder',
+              dimensions: [0.2, 0.2, 0.1],
+              position: [-0.6, 0, 0],
+              rotation: [0, 0, 0],
+              scale: [1, 1, 1],
+              partRef: 'wheel',
+            },
+          ],
+        };
+        attachOrphans(spec);
+        let antenna = spec.components.find((c: any) => c.nodeId === 'antenna')!;
+        let wheel = spec.components.find((c: any) => c.nodeId === 'wheel-left')!;
+        assert.strictEqual(
+          (antenna as any).attachTo,
+          'hull',
+          'a part that already declared a joint keeps it',
+        );
+        assert.notOk(
+          (wheel as any).attachTo,
+          'a support is left for groundSupports, not hung off a neighbour',
+        );
       });
 
       test('codegen forces a dark, low-transmission glass to real see-through glass', function (assert) {

@@ -44,6 +44,7 @@ import {
 } from '../util/llm-request';
 import {
   AUTO_REFINE_ROUNDS,
+  AUTO_VERIFY_ROUNDS,
   REFINE_TARGET_SCORE,
 } from '../util/pipeline-config';
 import { composeComparison } from '../util/comparison-sheet';
@@ -1587,13 +1588,13 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       let autoVerifyRounds = 0;
       while (
         !this.stopRequested &&
-        autoVerifyRounds < 2 &&
+        autoVerifyRounds < AUTO_VERIFY_ROUNDS &&
         typeof this.lastCalibrationResidual === 'number' &&
         this.lastCalibrationResidual > 0.12
       ) {
         autoVerifyRounds++;
         this.log(
-          `> auto-verify: residual ${(this.lastCalibrationResidual * 100).toFixed(0)}% — refining (${autoVerifyRounds}/2)…`,
+          `> auto-verify: residual ${(this.lastCalibrationResidual * 100).toFixed(0)}% — refining (${autoVerifyRounds}/${AUTO_VERIFY_ROUNDS})…`,
         );
         outcome = await this.runRefinePass(referenceDataUrl, autoVerifyRounds);
         if (
