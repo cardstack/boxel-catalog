@@ -18,7 +18,10 @@ export interface GeneratingOverlaySignature {
 // async result (an AI image, a generated plan, …) is on its way. Give the host
 // box a size (width / aspect-ratio) via ...attributes or a wrapping element.
 // Accent colour is theme-neutral by default (--boxel-highlight) and overridable
-// with @color or the --generating-accent custom property.
+// with @color or the --generating-accent custom property. Set
+// --generating-surface: transparent to lay it over live content (a canvas, an
+// iframe) instead of standing in for it, and --generating-label-color to keep
+// the label legible on a dark surface.
 export default class GeneratingOverlay extends GlimmerComponent<GeneratingOverlaySignature> {
   private get style() {
     return this.args.color
@@ -45,13 +48,15 @@ export default class GeneratingOverlay extends GlimmerComponent<GeneratingOverla
         position: relative;
         overflow: hidden;
         display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
         align-items: center;
         justify-content: center;
         width: 100%;
         height: 100%;
         min-height: 6rem;
         border-radius: var(--boxel-border-radius, 0.5rem);
-        background: var(--boxel-100, #f8f7fa);
+        background: var(--generating-surface, var(--boxel-100, #f8f7fa));
       }
       /* rotating conic-gradient border ring */
       .generating::before {
@@ -103,7 +108,7 @@ export default class GeneratingOverlay extends GlimmerComponent<GeneratingOverla
         font-weight: 600;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: var(--boxel-450, #919191);
+        color: var(--generating-label-color, var(--boxel-450, #919191));
       }
       @keyframes generating-sweep {
         to {

@@ -16,7 +16,7 @@ import CopyCheckIcon from '@cardstack/boxel-icons/copy-check';
 import CornerDownRightIcon from '@cardstack/boxel-icons/corner-down-right';
 import LockIcon from '@cardstack/boxel-icons/lock';
 import { GenerateAiImageCommand } from '../commands/generate-ai-image';
-import GeneratingOverlay from './generating-overlay';
+import GeneratingOverlay from '../../components/generating-overlay';
 import type { AiImage } from '../ai-image';
 import { modeLabel, formatTime, type AiImageMode } from '../ai-image';
 import type { AiImageGenerator } from '../ai-image-generator';
@@ -978,7 +978,10 @@ export class AiImageGeneratorIsolated extends Component<
             aria-modal='true'
             aria-labelledby='ai-image-refine-title'
           >
-            <header class='edit-head'>
+            {{! a modal title bar, not a page banner — a plain div so it does
+                not register as a second <header> landmark alongside the studio
+                header (the dialog is already labelled by its h2) }}
+            <div class='edit-head'>
               <h2 id='ai-image-refine-title'>Refine image</h2>
               <button
                 type='button'
@@ -986,7 +989,7 @@ export class AiImageGeneratorIsolated extends Component<
                 aria-label='Close editor'
                 {{on 'click' this.closeEdit}}
               >×</button>
-            </header>
+            </div>
 
             <section class='edit-body'>
               <div class='edit-tabs' role='tablist'>

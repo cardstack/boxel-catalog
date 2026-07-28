@@ -28,7 +28,9 @@ import { getLoaderService, loadCommandModule } from './utils';
 import ExecuteAtomicOperationsCommand from '@cardstack/boxel-host/commands/execute-atomic-operations';
 import FetchCardJsonCommand from '@cardstack/boxel-host/commands/fetch-card-json';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import ReadBinaryFileCommand from '@cardstack/boxel-host/commands/read-binary-file';
 import ReadSourceCommand from '@cardstack/boxel-host/commands/read-source';
+import WriteBinaryFileCommand from '@cardstack/boxel-host/commands/write-binary-file';
 import SerializeCardCommand from '@cardstack/boxel-host/commands/serialize-card';
 import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
 
@@ -43,9 +45,11 @@ export type InstanceOperation = {
 };
 
 // file-meta resources are JSON projections of binary files in the source
-// realm. The atomic endpoint only accepts card/source types; binaries continue
-// to resolve cross-realm via the parent card's relationship data.id, so we
-// drop file-meta documents rather than try to copy them.
+// realm — they carry no bytes, and the atomic endpoint only accepts
+// card/source types. Returning undefined here signals the caller to copy the
+// underlying binary via a per-file octet-stream write instead; the parent
+// card's relative links.self then resolves to that copy inside the install
+// directory.
 export function buildInstanceOperation(
   doc: unknown,
   copyInstanceMeta: CopyInstanceMeta,
@@ -161,15 +165,35 @@ export default class ListingInstallCommand extends Command<
       }),
     );
 
+    let binaryCopies: { sourceUrl: string; targetPath: string }[] = [];
     let instanceOperations = await Promise.all(
       plan.instancesCopy.map(async (copyInstanceMeta: CopyInstanceMeta) => {
-        let { sourceCard } = copyInstanceMeta;
+        let { sourceCard, lid } = copyInstanceMeta;
         let { document: doc } = await new FetchCardJsonCommand(
           this.commandContext,
         ).execute({ cardIdentifier: sourceCard.id });
-        return buildInstanceOperation(doc, copyInstanceMeta, realmUrl);
+        let operation = buildInstanceOperation(doc, copyInstanceMeta, realmUrl);
+        if (!operation) {
+          binaryCopies.push({ sourceUrl: sourceCard.id, targetPath: lid });
+        }
+        return operation;
       }),
     );
+
+    // Binaries are written before the atomic batch so installed cards resolve
+    // their file links as soon as they index. There is no rollback: an atomic
+    // failure leaves these copies orphaned in the fresh install directory.
+    for (let { sourceUrl, targetPath } of binaryCopies) {
+      let { base64Content, contentType } = await new ReadBinaryFileCommand(
+        this.commandContext,
+      ).execute({ fileIdentifier: sourceUrl });
+      await new WriteBinaryFileCommand(this.commandContext).execute({
+        realm: realmUrl,
+        path: targetPath,
+        base64Content,
+        contentType,
+      });
+    }
 
     const operations = [
       ...sourceOperations,

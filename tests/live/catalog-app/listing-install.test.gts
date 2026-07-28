@@ -36,6 +36,7 @@ const testDestinationRealmURL = `http://test-realm/test2/`;
 //listing
 const authorListingId = `${mockCatalogURL}Listing/author`;
 const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;
+const photoPostListingId = `${mockCatalogURL}Listing/photo-post`;
 
 export function runTests() {
   module.skip(
@@ -164,6 +165,32 @@ export function runTests() {
             await verifyFileInFileTree(assert, authorExamplePath);
             await openDir(assert, authorCompanyExamplePath);
             await verifyFileInFileTree(assert, authorCompanyExamplePath);
+          });
+
+          test('listing installs binary files linked from examples', async function (assert) {
+            const listingName = 'photo-post';
+
+            await executeCommand(
+              ListingInstallCommand,
+              photoPostListingId,
+              testDestinationRealmURL,
+            );
+            await visitOperatorMode({
+              submode: 'code',
+              fileView: 'browser',
+              codePath: `${testDestinationRealmURL}index`,
+            });
+
+            let outerFolder = await verifyFolderWithUUIDInFileTree(
+              assert,
+              listingName,
+            );
+            let examplePath = `${outerFolder}photo-post/PhotoPost/example.json`;
+            await openDir(assert, examplePath);
+            await verifyFileInFileTree(assert, examplePath);
+            let photoPath = `${outerFolder}photo-post/photo.png`;
+            await openDir(assert, photoPath);
+            await verifyFileInFileTree(assert, photoPath);
           });
 
           test('field listing', async function (assert) {
