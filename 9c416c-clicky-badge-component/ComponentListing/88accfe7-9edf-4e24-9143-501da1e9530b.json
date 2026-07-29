@@ -1,0 +1,48 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "ClickyBadge Component",
+      "summary": "A clickable badge component that displays a label and toggles its active state when clicked. It visually indicates its status by changing background color and updating its label to reflect whether it is \"Active\" or \"Idle\". Designed as an interactive UI element for status indication or toggling actions within a user interface.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "ComponentListing"
+      }
+    },
+    "relationships": {
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/6ec0cfec-4bfc-4dc1-bd2b-ff3c9b6e0b15"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Tag/card"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://realms-staging.stack.cards/catalog/Category/ui-components-design"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/clickybadge-85c3332c.png"
+        }
+      }
+    }
+  }
+}
