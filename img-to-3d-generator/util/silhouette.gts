@@ -467,7 +467,9 @@ export function cropWithBackgroundRemoved(
     diag?.push('cut would remove the whole crop — left opaque');
     return null;
   }
-  diag?.push(`cut backdrop, kept ${Math.round(keptFraction * 100)}% of the crop`);
+  diag?.push(
+    `cut backdrop, kept ${Math.round(keptFraction * 100)}% of the crop`,
+  );
   ctx.putImageData(frame, 0, 0);
   return canvas;
 }

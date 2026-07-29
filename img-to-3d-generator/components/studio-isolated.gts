@@ -1739,11 +1739,19 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
         );
     if (!renders.length) return undefined;
     this.phase = 'analyzing';
-    this.log('> completeness check: what does the reference show that this build lacks?');
-    let comparison = await composeComparison(referenceDataUrl, renders as string[], {
-      firstIsReferenceAngle: Boolean(analysis?.camera) && !flat,
-    });
-    let currentSpecJson = JSON.stringify(serializeSpecForPrompt(this.workingSpec));
+    this.log(
+      '> completeness check: what does the reference show that this build lacks?',
+    );
+    let comparison = await composeComparison(
+      referenceDataUrl,
+      renders as string[],
+      {
+        firstIsReferenceAngle: Boolean(analysis?.camera) && !flat,
+      },
+    );
+    let currentSpecJson = JSON.stringify(
+      serializeSpecForPrompt(this.workingSpec),
+    );
     let diff = await this.visionRequest(
       COMPLETENESS_CRITIC_PROMPT,
       [
@@ -1766,7 +1774,9 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     );
     // additions + placement only — the critic must not delete or reshape the
     // build it is completing
-    let merged = applySpecDiff(this.workingSpec, diff, { allowAdditions: true });
+    let merged = applySpecDiff(this.workingSpec, diff, {
+      allowAdditions: true,
+    });
     return await this.applyParsedSpec(merged);
   }
 
@@ -2601,11 +2611,11 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
             </button>
           {{/if}}
 
-          {{!-- TEMPORARILY HIDDEN: the "Edit a part" (lasso/inpaint) feature and
+          {{! TEMPORARILY HIDDEN: the "Edit a part" (lasso/inpaint) feature and
                its Undo companion — wrapped in an always-false conditional to
                hide the UI while keeping the code intact. Restore by switching
                the first guard back to this.hasModel and the second to
-               this.inpaintUndoAvailable. --}}
+               this.inpaintUndoAvailable. }}
           {{#if false}}
             <button
               type='button'

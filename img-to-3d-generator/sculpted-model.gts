@@ -332,11 +332,7 @@ export class SculptedModel extends CardDef {
         {{#if @model.renderScreenshot.url}}
           <img class='fit-image' src={{@model.renderScreenshot.url}} alt='' />
         {{else if @model.references.primaryUrl}}
-          <img
-            class='fit-image'
-            src={{@model.references.primaryUrl}}
-            alt=''
-          />
+          <img class='fit-image' src={{@model.references.primaryUrl}} alt='' />
         {{/if}}
         <div class='fit-info'>
           <h3 class='fit-title'>{{@model.title}}</h3>

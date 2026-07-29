@@ -101,10 +101,7 @@ export function seedFromStrings(parts: string[]): number {
 // Only Anthropic models are given the marker: the field is an Anthropic
 // extension, and a provider that does not understand a structured system message
 // is better off receiving the plain string it has always received.
-function systemMessage(
-  llmModel: string,
-  systemPrompt: string | string[],
-): any {
+function systemMessage(llmModel: string, systemPrompt: string | string[]): any {
   let blocks = Array.isArray(systemPrompt) ? systemPrompt : [systemPrompt];
   if (!/^anthropic\//.test(llmModel)) return blocks.join('\n\n');
   return blocks.map((text, i) => ({

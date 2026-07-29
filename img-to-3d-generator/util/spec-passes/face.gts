@@ -240,7 +240,9 @@ export function alignFaceFeatures(parsed: any, analysis?: any): string[] {
     let muzzle = all
       .filter(
         (c: any) =>
-          solid(c) && FACE_MASS.test(nameOf(c)) && !FACE_FEATURE.test(nameOf(c)),
+          solid(c) &&
+          FACE_MASS.test(nameOf(c)) &&
+          !FACE_FEATURE.test(nameOf(c)),
       )
       .sort((a: any, b: any) => volume(b) - volume(a))[0];
     let anchorBox = (muzzle ? boxOf(muzzle) : headBox) ?? headBox;
@@ -260,7 +262,9 @@ export function alignFaceFeatures(parsed: any, analysis?: any): string[] {
       if (ctr[2] <= frontZ - 0.4 * h[2]) return;
       let y = anchorBox.max[1] - yFrac * anchorH;
       moveTo(primary, [ac[0], y, frontZ - 0.6 * h[2]], [1, 2]);
-      logs.push(`seated '${primary.nodeId}' on the muzzle front (no ${label} landmark)`);
+      logs.push(
+        `seated '${primary.nodeId}' on the muzzle front (no ${label} landmark)`,
+      );
     };
     seatFront(/\bnose|nostril\b/i, 0.45, 'nose');
     seatFront(/\bmouth|lips?\b/i, 0.72, 'mouth');

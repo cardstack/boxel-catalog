@@ -598,11 +598,7 @@ export function seatRingCollars(parsed: any): string[] {
     let sy = Math.sin(ry);
     let cz = Math.cos(rz);
     let sz = Math.sin(rz);
-    let axis = [
-      sx * sy * cz - cx * sz,
-      sx * sy * sz + cx * cz,
-      sx * cy,
-    ];
+    let axis = [sx * sy * cz - cx * sz, sx * sy * sz + cx * cz, sx * cy];
     // the world axis (0=x,1=y,2=z) the barrel most points along
     let ax = 0;
     for (let i = 1; i < 3; i++) {
@@ -663,7 +659,9 @@ export function seatRingCollars(parsed: any): string[] {
         let before = d[0];
         d[0] = Number(wrapR.toFixed(4));
         ring.dimensions = d;
-        logs.push(`fitted '${ring.nodeId}' around barrel radius (${before} → ${d[0]})`);
+        logs.push(
+          `fitted '${ring.nodeId}' around barrel radius (${before} → ${d[0]})`,
+        );
       }
     } else if (ring.primitive === 'flatRing') {
       // [outerRx, outerRy, ringWidth, depth] — hole = outer - width
@@ -674,7 +672,9 @@ export function seatRingCollars(parsed: any): string[] {
         d[0] = Number(wrapR.toFixed(4));
         d[1] = Number(wrapR.toFixed(4));
         ring.dimensions = d;
-        logs.push(`fitted '${ring.nodeId}' around barrel radius (${before} → ${d[0]})`);
+        logs.push(
+          `fitted '${ring.nodeId}' around barrel radius (${before} → ${d[0]})`,
+        );
       }
     }
     // arch: a partial ring — orient + centre only; its sweep/size is intentional
