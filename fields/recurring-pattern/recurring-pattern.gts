@@ -227,11 +227,7 @@ class RecurringPatternFieldEdit extends Component<
                 {{#each this.weekDays as |day|}}
                   <Pill
                     @kind='button'
-                    @variant={{if
-                      (this.isWeekdaySelected day.value)
-                      'primary'
-                      ''
-                    }}
+                    @variant={{if (this.isWeekdaySelected day.value) 'primary'}}
                     @size='small'
                     {{on 'click' (fn this.toggleWeekday day.value)}}
                     data-test-weekday={{day.value}}

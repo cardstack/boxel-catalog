@@ -10,7 +10,7 @@ import type { SortOption } from './sort';
 
 export interface LayoutFilter {
   displayName: string;
-  icon: CardOrFieldTypeIcon;
+  icon?: CardOrFieldTypeIcon | string;
   cardTypeName?: string;
   createNewButtonText?: string;
   isCreateNewDisabled?: boolean;
