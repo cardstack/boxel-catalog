@@ -54,6 +54,11 @@ import { Tag } from './tag';
 
 const DETAIL_TABS = ['Summary', 'Includes', 'Examples', 'License'];
 
+// Temporary alongside push-to-submissions.yml, so reviewers can remix a PR preview.
+const REMIXABLE_REVIEW_REALMS = [
+  'https://realms-staging.stack.cards/submissions/',
+];
+
 class EmbeddedTemplate extends Component<typeof Listing> {
   @tracked selectedTab = 'Summary';
   @tracked selectedShot = 0;
@@ -88,8 +93,14 @@ class EmbeddedTemplate extends Component<typeof Listing> {
     return [];
   }
 
-  get isInCatalogRealm(): boolean {
-    return this.args.model[realmURL]?.href.endsWith('/catalog/') ?? false;
+  get isRemixableRealm(): boolean {
+    let realm = this.args.model[realmURL]?.href;
+    if (!realm) {
+      return false;
+    }
+    return (
+      realm.endsWith('/catalog/') || REMIXABLE_REVIEW_REALMS.includes(realm)
+    );
   }
 
   get actions() {
@@ -435,7 +446,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                 @name='Remix into my realm'
                 @writableRealms={{this.writableRealms}}
                 @onAction={{this.remix}}
-                @hide={{not this.isInCatalogRealm}}
+                @hide={{not this.isRemixableRealm}}
               />
             {{/if}}
             {{#if this.actions.preview}}
