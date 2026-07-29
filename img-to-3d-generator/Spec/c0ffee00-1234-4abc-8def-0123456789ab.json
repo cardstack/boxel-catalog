@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../util/pipeline-config",
+        "name": "AUTO_REFINE_ROUNDS"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "pipeline-config",
+      "cardDescription": "Loop-policy knobs for the generate/refine cycle (AUTO_REFINE_ROUNDS, AUTO_VERIFY_ROUNDS, REFINE_TARGET_SCORE).",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

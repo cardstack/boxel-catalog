@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../prompts/completeness",
+        "name": "COMPLETENESS_CRITIC_PROMPT"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "completeness",
+      "cardDescription": "System prompt module: prompts/completeness.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

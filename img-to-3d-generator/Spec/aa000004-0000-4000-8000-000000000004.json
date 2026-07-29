@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../prompts/spec-shape",
+        "name": "SPEC_JSON_SHAPE"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "spec-shape",
+      "cardDescription": "System prompt module: prompts/spec-shape.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

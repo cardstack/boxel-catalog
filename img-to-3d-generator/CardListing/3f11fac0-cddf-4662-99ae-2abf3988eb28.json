@@ -1,0 +1,453 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Img-to-3D Generator",
+      "summary": "Turn a product photo into an editable 3D model. Drop in a reference image and the studio analyzes the object, plans its parts, and rebuilds it as a procedural Three.js sculpture you can spin, export, and refine — no modeling skills needed. It works best on simple, regular geometry and hard-surface objects — bottles, cans, mugs, furniture, boxes, cylinders and revolved shapes — where a handful of primitives capture the form cleanly. It reproduces real labels and printed graphics from the photo (and tells a stuck-on sticker apart from a print applied straight onto the surface), saves every generation as an editable code file with full version history, and lets you fine-tune the result conversationally through the built-in AI assistant or export it as a .glb. Highly organic or precision-mechanical subjects (faces, figures, firearms) are harder and may only approximate.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../ImgTo3dStudio/282993ec-cba6-4130-bc27-582b997caf06"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../ImgTo3dStudio/182b81b7-103b-47c5-b282-938b20d1740f"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/content-creation"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/ai"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/app"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/29ec246d-0239-474f-80cf-307c8bbf2ed0"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/c729ec24-6d02-4917-8f00-cf307c8bbf2e"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/d411a892-1fc7-49ec-a46d-0239174f00cf"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/541fdc6f-52d4-42c6-aa5b-2a8da1c2b4ac"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/2e55541f-dc6f-42d4-82c6-6a5b2a8da1c2"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/55541fdc-6f52-44c2-866a-5b2a8da1c2b4"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/6350f690-2d3b-4e86-bd4a-4c5602baa7c6"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/6d023917-4f00-4f30-bc8b-bf2ed08bb743"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/0239174f-00cf-407c-8bbf-2ed08bb74310"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/aad411a8-921f-4729-ac24-6d0239174f00"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/921fc729-ec24-4d02-b917-4f00cf307c8b"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/2f18fbdf-6350-4690-ad3b-1e86bd4a4c56"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/b1a52f18-fbdf-4350-b690-2d3b1e86bd4a"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/8a50bf6f-70b7-4b52-a46e-5eba44295bbd"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../Spec/52a46e5e-ba44-495b-bd70-155e047a4dc4"
+        }
+      },
+      "specs.15": {
+        "links": {
+          "self": "../Spec/ba44295b-bd70-455e-847a-4dc40b408c48"
+        }
+      },
+      "specs.16": {
+        "links": {
+          "self": "../Spec/d0c16223-8a50-4f6f-b0b7-3b52a46e5eba"
+        }
+      },
+      "specs.17": {
+        "links": {
+          "self": "../Spec/1fc729ec-246d-4239-974f-00cf307c8bbf"
+        }
+      },
+      "specs.18": {
+        "links": {
+          "self": "../Spec/5270b8aa-d411-4892-9fc7-29ec246d0239"
+        }
+      },
+      "specs.19": {
+        "links": {
+          "self": "../Spec/ec246d02-3917-4f00-8f30-7c8bbf2ed08b"
+        }
+      },
+      "specs.20": {
+        "links": {
+          "self": "../Spec/c162238a-50bf-4f70-b73b-52a46e5eba44"
+        }
+      },
+      "specs.21": {
+        "links": {
+          "self": "../Spec/d08bb743-105a-44af-90c1-62238a50bf6f"
+        }
+      },
+      "specs.22": {
+        "links": {
+          "self": "../Spec/cf307c8b-bf2e-408b-b743-105a34afd0c1"
+        }
+      },
+      "specs.23": {
+        "links": {
+          "self": "../Spec/44295bbd-7015-4e04-ba4d-c40b408c4852"
+        }
+      },
+      "specs.24": {
+        "links": {
+          "self": "../Spec/43105a34-afd0-4162-a38a-50bf6f70b73b"
+        }
+      },
+      "specs.25": {
+        "links": {
+          "self": "../Spec/695270b8-aad4-41a8-921f-c729ec246d02"
+        }
+      },
+      "specs.26": {
+        "links": {
+          "self": "../Spec/62238a50-bf6f-40b7-bb52-a46e5eba4429"
+        }
+      },
+      "specs.27": {
+        "links": {
+          "self": "../Spec/4f00cf30-7c8b-4f2e-908b-b743105a34af"
+        }
+      },
+      "specs.28": {
+        "links": {
+          "self": "../Spec/295bbd70-155e-447a-8dc4-0b408c48521d"
+        }
+      },
+      "specs.29": {
+        "links": {
+          "self": "../Spec/bf2ed08b-b743-405a-b4af-d0c162238a50"
+        }
+      },
+      "specs.30": {
+        "links": {
+          "self": "../Spec/5eba4429-5bbd-4015-9e04-7a4dc40b408c"
+        }
+      },
+      "specs.31": {
+        "links": {
+          "self": "../Spec/307c8bbf-2ed0-4bb7-8310-5a34afd0c162"
+        }
+      },
+      "specs.32": {
+        "links": {
+          "self": "../Spec/6a47deb1-a52f-48fb-9f63-50f6902d3b1e"
+        }
+      },
+      "specs.33": {
+        "links": {
+          "self": "../Spec/deb1a52f-18fb-4f63-90f6-902d3b1e86bd"
+        }
+      },
+      "specs.34": {
+        "links": {
+          "self": "../Spec/5b6a47de-b1a5-4f18-bbdf-6350f6902d3b"
+        }
+      },
+      "specs.35": {
+        "links": {
+          "self": "../Spec/34afd0c1-6223-4a50-bf6f-70b73b52a46e"
+        }
+      },
+      "specs.36": {
+        "links": {
+          "self": "../Spec/2ed08bb7-4310-4a34-afd0-c162238a50bf"
+        }
+      },
+      "specs.37": {
+        "links": {
+          "self": "../Spec/7c8bbf2e-d08b-4743-905a-34afd0c16223"
+        }
+      },
+      "specs.38": {
+        "links": {
+          "self": "../Spec/8bb74310-5a34-4fd0-8162-238a50bf6f70"
+        }
+      },
+      "specs.39": {
+        "links": {
+          "self": "../Spec/50bf6f70-b73b-42a4-ae5e-ba44295bbd70"
+        }
+      },
+      "specs.40": {
+        "links": {
+          "self": "../Spec/6e5eba44-295b-4d70-955e-047a4dc40b40"
+        }
+      },
+      "specs.41": {
+        "links": {
+          "self": "../Spec/68805b6a-47de-41a5-af18-fbdf6350f690"
+        }
+      },
+      "specs.42": {
+        "links": {
+          "self": "../Spec/11a8921f-c729-4c24-ad02-39174f00cf30"
+        }
+      },
+      "specs.43": {
+        "links": {
+          "self": "../Spec/70b8aad4-11a8-421f-8729-ec246d023917"
+        }
+      },
+      "specs.44": {
+        "links": {
+          "self": "../Spec/a8921fc7-29ec-446d-8239-174f00cf307c"
+        }
+      },
+      "specs.45": {
+        "links": {
+          "self": "../Spec/b8aad411-a892-4fc7-a9ec-246d0239174f"
+        }
+      },
+      "specs.46": {
+        "links": {
+          "self": "../Spec/39174f00-cf30-4c8b-bf2e-d08bb743105a"
+        }
+      },
+      "specs.47": {
+        "links": {
+          "self": "../Spec/bd70155e-047a-4dc4-8b40-8c48521d9237"
+        }
+      },
+      "specs.48": {
+        "links": {
+          "self": "../Spec/70b73b52-a46e-4eba-8429-5bbd70155e04"
+        }
+      },
+      "specs.49": {
+        "links": {
+          "self": "../Spec/b743105a-34af-40c1-a223-8a50bf6f70b7"
+        }
+      },
+      "specs.50": {
+        "links": {
+          "self": "../Spec/5bbd7015-5e04-4a4d-840b-408c48521d92"
+        }
+      },
+      "specs.51": {
+        "links": {
+          "self": "../Spec/238a50bf-6f70-473b-92a4-6e5eba44295b"
+        }
+      },
+      "specs.52": {
+        "links": {
+          "self": "../Spec/805b6a47-deb1-452f-98fb-df6350f6902d"
+        }
+      },
+      "specs.53": {
+        "links": {
+          "self": "../Spec/a52f18fb-df63-40f6-902d-3b1e86bd4a4c"
+        }
+      },
+      "specs.54": {
+        "links": {
+          "self": "../Spec/47deb1a5-2f18-4bdf-a350-f6902d3b1e86"
+        }
+      },
+      "specs.55": {
+        "links": {
+          "self": "../Spec/174f00cf-307c-4bbf-aed0-8bb743105a34"
+        }
+      },
+      "specs.56": {
+        "links": {
+          "self": "../Spec/bf6f70b7-3b52-446e-9eba-44295bbd7015"
+        }
+      },
+      "specs.57": {
+        "links": {
+          "self": "../Spec/8bbf2ed0-8bb7-4310-9a34-afd0c162238a"
+        }
+      },
+      "specs.58": {
+        "links": {
+          "self": "../Spec/246d0239-174f-40cf-b07c-8bbf2ed08bb7"
+        }
+      },
+      "specs.59": {
+        "links": {
+          "self": "../Spec/00cf307c-8bbf-4ed0-8bb7-43105a34afd0"
+        }
+      },
+      "specs.60": {
+        "links": {
+          "self": "../Spec/6f70b73b-52a4-4e5e-ba44-295bbd70155e"
+        }
+      },
+      "specs.61": {
+        "links": {
+          "self": "../Spec/105a34af-d0c1-4223-8a50-bf6f70b73b52"
+        }
+      },
+      "specs.62": {
+        "links": {
+          "self": "../Spec/a46e5eba-4429-4bbd-b015-5e047a4dc40b"
+        }
+      },
+      "specs.63": {
+        "links": {
+          "self": "../Spec/5a34afd0-c162-438a-90bf-6f70b73b52a4"
+        }
+      },
+      "specs.64": {
+        "links": {
+          "self": "../Spec/b73b52a4-6e5e-4a44-a95b-bd70155e047a"
+        }
+      },
+      "specs.65": {
+        "links": {
+          "self": "../Spec/3b52a46e-5eba-4429-9bbd-70155e047a4d"
+        }
+      },
+      "specs.66": {
+        "links": {
+          "self": "../Spec/18fbdf63-50f6-402d-bb1e-86bd4a4c5602"
+        }
+      },
+      "specs.67": {
+        "links": {
+          "self": "../Spec/afd0c162-238a-40bf-af70-b73b52a46e5e"
+        }
+      },
+      "specs.68": {
+        "links": {
+          "self": "../Spec/c0ffee00-1234-4abc-8def-0123456789ab"
+        }
+      },
+      "specs.69": {
+        "links": {
+          "self": "../Spec/deadbeef-1234-4abc-8def-0123456789ab"
+        }
+      },
+      "specs.70": {
+        "links": {
+          "self": "../Spec/aa000001-0000-4000-8000-000000000001"
+        }
+      },
+      "specs.71": {
+        "links": {
+          "self": "../Spec/aa000002-0000-4000-8000-000000000002"
+        }
+      },
+      "specs.72": {
+        "links": {
+          "self": "../Spec/aa000003-0000-4000-8000-000000000003"
+        }
+      },
+      "specs.73": {
+        "links": {
+          "self": "../Spec/aa000004-0000-4000-8000-000000000004"
+        }
+      },
+      "specs.74": {
+        "links": {
+          "self": "../Spec/aa000005-0000-4000-8000-000000000005"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/01-empty-generator-card.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/02-generating.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/03-refine-with-ai.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/04-final-result-card.png"
+        }
+      },
+      "skills.0": {
+        "links": {
+          "self": "../Skill/refine-sculpt-skill"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      }
+    }
+  }
+}

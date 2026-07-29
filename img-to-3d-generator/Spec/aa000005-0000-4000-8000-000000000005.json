@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../prompts/targeted-edit",
+        "name": "TARGETED_EDIT_PROMPT"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "targeted-edit",
+      "cardDescription": "System prompt module: prompts/targeted-edit.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

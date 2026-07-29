@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "references": {
+        "images": []
+      },
+      "llmModel": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../img-to-3d-studio",
+        "name": "ImgTo3dStudio"
+      }
+    }
+  }
+}
