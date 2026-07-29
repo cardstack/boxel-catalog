@@ -20,14 +20,14 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/catalog/img-to-3d-generator/img-to-3d-studio",
+        "module": "../img-to-3d-studio",
         "name": "ImgTo3dStudio"
       }
     },
     "relationships": {
       "references.images.0.file": {
         "links": {
-          "self": "../4b6602-wine-cellar-card-definition/CloudyBaySauvignonBlanc.webp"
+          "self": "../../4b6602-wine-cellar-card-definition/CloudyBaySauvignonBlanc.webp"
         }
       },
       "references.newImage": {
