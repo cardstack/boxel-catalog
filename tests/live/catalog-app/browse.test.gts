@@ -33,7 +33,7 @@ import {
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const testDestinationRealmURL = `http://test-realm/test2/`;
-// A realm URL ending with /catalog/ so isInCatalogRealm returns true
+// A realm URL ending with /catalog/ so isRemixableRealm returns true
 const catalogRealmMockURL = `http://test-realm/catalog/`;
 
 //listing
@@ -90,7 +90,7 @@ export function runTests() {
             ...makeDestinationRealmContents(),
           },
         });
-        // Catalog realm whose URL ends with /catalog/ so isInCatalogRealm returns true
+        // Catalog realm whose URL ends with /catalog/ so isRemixableRealm returns true
         await setupAcceptanceTestRealm({
           realmURL: catalogRealmMockURL,
           mockMatrixUtils,

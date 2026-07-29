@@ -46,7 +46,7 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
 
       <div class='mini-skip-controls'>
         <Button
-          @kind='ghost'
+          @kind='text-only'
           class='skip-btn'
           {{on 'click' (fn @player.skipTime -15)}}
         >
@@ -61,7 +61,7 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
           <span>15</span>
         </Button>
         <Button
-          @kind='ghost'
+          @kind='text-only'
           class='skip-btn'
           {{on 'click' (fn @player.skipTime 15)}}
         >

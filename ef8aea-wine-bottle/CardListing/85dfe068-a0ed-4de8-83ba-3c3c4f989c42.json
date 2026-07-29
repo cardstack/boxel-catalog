@@ -9,7 +9,7 @@
     "type": "card",
     "attributes": {
       "name": "Wine Bottle",
-      "summary": "The WineBottle component defines a comprehensive data structure and presentation for individual wine bottles, capturing details such as producer, varietal, region, wine type, vintage year, purchase date, drinking window, purchase price, current value, score, bottles remaining, and liquid color. It includes multiple visual representations, such as detailed cards with images, labels, and wine glass illustrations, as well as simplified inline and fitted views for embedding. The component also calculates and displays the value change, drinking window status, and related metrics to facilitate wine collection management and visualization.",
+      "summary": "Track a wine collection one bottle at a time. Each Wine Bottle card answers the two questions a collector actually asks: is it ready to drink, and what is it worth now? A drinking-window marker shows whether the wine is still on hold, at peak, or past it, and the purchase price sits next to the current value with the gain or loss worked out. Producer, varietal, region, vintage, wine type, tasting score, bottles remaining and a label photo complete the record.\n\nBuilt to work inside a collection-tracking or cellar-inventory app. The isolated view is a full cellar sheet; the embedded row and the four fitted sizes are designed for inventory lists and grids, so a Wine Cellar card can link many bottles and roll them up into totals, average score and a shared drinking-window timeline. Wines with no label photo fall back to a wine-glass illustration — bowl shape by wine type, tinted to the wine's own color — so a part-filled collection still looks deliberate. Colors and fonts are exposed as CSS custom properties for theming.",
       "cardInfo": {
         "name": null,
         "notes": null,
@@ -41,6 +41,11 @@
       "images.0": {
         "links": {
           "self": "../Screenshots/wine-bottle-screenshot.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/wine-bottle-no-label-screenshot.png"
         }
       },
       "publisher": {

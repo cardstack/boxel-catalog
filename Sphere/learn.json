@@ -8,7 +8,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../catalog-app/listing/sphere",
+        "module": "@cardstack/catalog/catalog-app/listing/sphere",
         "name": "Sphere"
       }
     }

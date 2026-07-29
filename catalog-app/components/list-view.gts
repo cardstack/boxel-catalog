@@ -13,12 +13,17 @@ import {
 } from '@cardstack/boxel-ui/icons';
 import { ViewSelector, type ViewItem } from '@cardstack/boxel-ui/components';
 
-type ViewOption = 'strip' | 'grid';
+const VIEW_OPTION_IDS = ['strip', 'grid'] as const;
+type ViewOption = (typeof VIEW_OPTION_IDS)[number];
 
 const CATALOG_VIEW_OPTIONS: ViewItem[] = [
   { id: 'strip', icon: StripIcon },
   { id: 'grid', icon: GridIcon },
 ];
+
+function isViewOption(id: string): id is ViewOption {
+  return VIEW_OPTION_IDS.some((option) => option === id);
+}
 
 interface ListViewArgs {
   Args: {
@@ -32,8 +37,10 @@ interface ListViewArgs {
 export default class ListView extends GlimmerComponent<ListViewArgs> {
   @tracked private selectedView: ViewOption = 'grid';
 
-  @action private onChangeView(id: ViewOption) {
-    this.selectedView = id;
+  @action private onChangeView(id: string) {
+    if (isViewOption(id)) {
+      this.selectedView = id;
+    }
   }
 
   <template>
