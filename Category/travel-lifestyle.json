@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "Category",
-        "module": "../catalog-app/listing/category"
+        "module": "@cardstack/catalog/catalog-app/listing/category"
       }
     },
     "type": "card",

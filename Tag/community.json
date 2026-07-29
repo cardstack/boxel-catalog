@@ -13,7 +13,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../catalog-app/listing/tag",
+        "module": "@cardstack/catalog/catalog-app/listing/tag",
         "name": "Tag"
       }
     },

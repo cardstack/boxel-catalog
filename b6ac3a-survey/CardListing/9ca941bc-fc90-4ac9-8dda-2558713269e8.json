@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "CardListing",
-        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing"
+        "module": "@cardstack/catalog/catalog-app/listing/listing"
       }
     },
     "type": "card",
