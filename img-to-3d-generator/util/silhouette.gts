@@ -268,6 +268,16 @@ function colorDistanceSq(a: number[], b: number[]): number {
 const CUT_TOLERANCE = 30 * 30;
 const KEEP_TOLERANCE = 55 * 55;
 
+// Surface-print keying on a NEUTRAL surface (a logo on a black/white/grey mug,
+// phone, or metal) keys by CHROMA, not colour distance: the surface is neutral
+// at every brightness across its glossy gradient (near-black shadow to grey
+// highlight all have chroma ~0), while the ink is chromatic. A single-colour
+// key can't span that whole gradient, but "drop the low-chroma pixels" removes
+// all of it at once and keeps only the ink. chroma = max(r,g,b) - min(r,g,b).
+const NEUTRAL_SURFACE_CHROMA = 26; // border colour below this ⇒ neutral surface
+const CUT_CHROMA = 26; // at/below ⇒ surface, fully transparent
+const KEEP_CHROMA = 68; // at/above ⇒ ink, fully opaque
+
 function unionBox(boxes: SilhouetteBbox[]): SilhouetteBbox {
   let left = Math.min(...boxes.map((b) => b.left));
   let top = Math.min(...boxes.map((b) => b.top));
@@ -370,6 +380,37 @@ function referenceBackdrop(
   return backdrop;
 }
 
+// Average colour of a crop's one-pixel border ring, from its already-decoded
+// pixel data. For a graphic printed directly on a part, that ring is the
+// surface the ink sits on — the colour surface-print keying removes.
+function cropBorderColor(
+  pixels: Uint8ClampedArray,
+  sw: number,
+  sh: number,
+): [number, number, number] {
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  let add = (x: number, y: number) => {
+    let i = (y * sw + x) * 4;
+    r += pixels[i];
+    g += pixels[i + 1];
+    b += pixels[i + 2];
+    n++;
+  };
+  for (let x = 0; x < sw; x++) {
+    add(x, 0);
+    add(x, sh - 1);
+  }
+  for (let y = 1; y < sh - 1; y++) {
+    add(0, y);
+    add(sw - 1, y);
+  }
+  n = Math.max(1, n);
+  return [r / n, g / n, b / n];
+}
+
 // Crops `bbox` out of the image with the BACKDROP knocked out to transparent,
 // for artwork that gets pasted onto the model as a decal.
 //
@@ -393,13 +434,22 @@ function referenceBackdrop(
 // Returns null — caller falls back to a plain opaque crop — when the reference
 // has no clean ground, when the crop lies entirely on the object (the common
 // and correct case for a label), or when the cut would take nearly everything.
+//
+// surfacePrint mode is the OPPOSITE keying target, for graphics that are
+// printed / laser-etched / silk-screened directly onto the part's own surface
+// (a logo on a mug, a print on a shirt) rather than applied as a separate
+// label patch. There the thing to remove is the SURFACE the ink sits on — the
+// crop's own border colour — leaving only the ink, so the part's real material
+// shows through instead of an opaque rectangle of surface. Keyed against the
+// crop's border ring, and the "is there ground" bail is skipped (the border IS
+// the surface we mean to cut).
 export function cropWithBackgroundRemoved(
   image: HTMLImageElement,
   bbox: SilhouetteBbox,
   diag?: string[],
+  opts?: { surfacePrint?: boolean },
 ): HTMLCanvasElement | null {
-  let backdrop = referenceBackdrop(image, diag);
-  if (!backdrop) return null;
+  let surfacePrint = opts?.surfacePrint ?? false;
 
   let sx = Math.round(bbox.left * image.width);
   let sy = Math.round(bbox.top * image.height);
@@ -418,32 +468,63 @@ export function cropWithBackgroundRemoved(
     return null;
   }
   let pixels = frame.data;
+
+  // label mode keys the whole-image backdrop; surface-print keys the crop's
+  // OWN border ring — the surface colour the ink is printed on.
+  let backdrop = surfacePrint
+    ? cropBorderColor(pixels, sw, sh)
+    : referenceBackdrop(image, diag);
+  if (!backdrop) return null;
+  if (surfacePrint) {
+    diag?.push(
+      `surface-print: keying out the surface colour rgb(${backdrop
+        .map((n) => Math.round(n))
+        .join(',')})`,
+    );
+  }
   let isBackdrop = (i: number) =>
     colorDistanceSq([pixels[i], pixels[i + 1], pixels[i + 2]], backdrop);
+
+  // a neutral surface (black/white/grey) can't be keyed by a single colour
+  // across its glossy gradient — key it by chroma instead (drop the neutral
+  // pixels at every brightness, keep the chromatic ink).
+  let surfaceChroma =
+    Math.max(backdrop[0], backdrop[1], backdrop[2]) -
+    Math.min(backdrop[0], backdrop[1], backdrop[2]);
+  let chromaKey = surfacePrint && surfaceChroma < NEUTRAL_SURFACE_CHROMA;
+  if (chromaKey) {
+    diag?.push('surface-print: neutral surface — keying by ink chroma');
+  }
+  let pixelChroma = (i: number) =>
+    Math.max(pixels[i], pixels[i + 1], pixels[i + 2]) -
+    Math.min(pixels[i], pixels[i + 1], pixels[i + 2]);
 
   // Is there any ground in this rectangle at all? Measured on the border ring
   // rather than the four corners: a bbox drawn tight around a part is a few
   // pixels of margin at most, so corner patches land on the part itself and
   // report "no backdrop" for exactly the crops that need cutting. The ring is
   // a far larger sample and degrades gracefully — a part flush against one
-  // edge of its own bbox still leaves the other three.
-  let border = 0;
-  let onBackdrop = 0;
-  let sample = (x: number, y: number) => {
-    border++;
-    if (isBackdrop((y * sw + x) * 4) < CUT_TOLERANCE) onBackdrop++;
-  };
-  for (let x = 0; x < sw; x++) {
-    sample(x, 0);
-    sample(x, sh - 1);
-  }
-  for (let y = 1; y < sh - 1; y++) {
-    sample(0, y);
-    sample(sw - 1, y);
-  }
-  if (onBackdrop / Math.max(1, border) < 0.12) {
-    diag?.push('crop lies on the object — left opaque');
-    return null;
+  // edge of its own bbox still leaves the other three. Skipped for surface
+  // print: the border ring is the surface, so it is 100% "backdrop" by design.
+  if (!surfacePrint) {
+    let border = 0;
+    let onBackdrop = 0;
+    let sample = (x: number, y: number) => {
+      border++;
+      if (isBackdrop((y * sw + x) * 4) < CUT_TOLERANCE) onBackdrop++;
+    };
+    for (let x = 0; x < sw; x++) {
+      sample(x, 0);
+      sample(x, sh - 1);
+    }
+    for (let y = 1; y < sh - 1; y++) {
+      sample(0, y);
+      sample(sw - 1, y);
+    }
+    if (onBackdrop / Math.max(1, border) < 0.12) {
+      diag?.push('crop lies on the object — left opaque');
+      return null;
+    }
   }
 
   // Ramp rather than threshold: a pixel well clear of the ground keeps its
@@ -452,13 +533,24 @@ export function cropWithBackgroundRemoved(
   // halo of ground colour one pixel wide all the way round the artwork.
   let kept = 0;
   for (let i = 0; i < pixels.length; i += 4) {
-    let d = isBackdrop(i);
-    let opacity =
-      d <= CUT_TOLERANCE
-        ? 0
-        : d >= KEEP_TOLERANCE
-          ? 1
-          : (d - CUT_TOLERANCE) / (KEEP_TOLERANCE - CUT_TOLERANCE);
+    let opacity;
+    if (chromaKey) {
+      let c = pixelChroma(i);
+      opacity =
+        c <= CUT_CHROMA
+          ? 0
+          : c >= KEEP_CHROMA
+            ? 1
+            : (c - CUT_CHROMA) / (KEEP_CHROMA - CUT_CHROMA);
+    } else {
+      let d = isBackdrop(i);
+      opacity =
+        d <= CUT_TOLERANCE
+          ? 0
+          : d >= KEEP_TOLERANCE
+            ? 1
+            : (d - CUT_TOLERANCE) / (KEEP_TOLERANCE - CUT_TOLERANCE);
+    }
     pixels[i + 3] = Math.round(pixels[i + 3] * opacity);
     if (opacity > 0.5) kept++;
   }
@@ -575,68 +667,4 @@ export function traceLatheProfile(
     );
   }
   return profile;
-}
-
-export interface TracedOutline {
-  // SVG path string in the crop's own pixel space (0..width, 0..height)
-  path: string;
-  width: number;
-  height: number;
-}
-
-// The RAW segmented outline as an SVG path — the actual contour the tracer
-// sees, at full row resolution and WITHOUT the unimodal clamp the lathe uses.
-// A viewer can render this next to the reference to see exactly what was traced
-// (and where it's imperfect). Same segmentation as traceLatheProfile, so the
-// displayed outline and the built profile always agree on the foreground.
-export function traceSilhouetteSvg(
-  image: HTMLImageElement,
-  bbox: SilhouetteBbox,
-  diag?: string[],
-): TracedOutline | null {
-  let seg = segmentCrop(image, bbox, diag);
-  if (!seg) return null;
-  let { w, h } = seg;
-  // same repaired mask the lathe profile uses — so preview and body agree
-  let outside = repairLatheSilhouetteMask(seg.outside, w, h);
-  let rows: { y: number; min: number; max: number }[] = [];
-  for (let y = 0; y < h; y++) {
-    let minX = -1;
-    let maxX = -1;
-    for (let x = 0; x < w; x++) {
-      if (outside[y * w + x] === 0) {
-        if (minX < 0) minX = x;
-        maxX = x;
-      }
-    }
-    if (minX >= 0) rows.push({ y, min: minX, max: maxX });
-  }
-  if (rows.length < 3) {
-    diag?.push('outline has too few solid rows to draw');
-    return null;
-  }
-  // draw the SAME unimodal, axis-symmetric envelope the lathe body is built
-  // from — so the preview shows the shape that actually gets sculpted, not the
-  // raw per-row spans (which zig-zag through a label even after mask repair).
-  let centers = rows.map((r) => (r.min + r.max) / 2).sort((a, b) => a - b);
-  let axis = centers[Math.floor(centers.length / 2)];
-  let halfs = rows.map((r) => Math.max(axis - r.min, r.max - axis));
-  let peak = halfs.reduce((b, v, i) => (v > halfs[b] ? i : b), 0);
-  // non-increasing away from the widest point in both directions (a small lip
-  // flare at the very top is allowed)
-  for (let i = peak - 1; i >= 0; i--) {
-    let flare = i <= 1 ? 1.2 : 1;
-    halfs[i] = Math.min(halfs[i], halfs[i + 1] * flare);
-  }
-  for (let i = peak + 1; i < halfs.length; i++) {
-    halfs[i] = Math.min(halfs[i], halfs[i - 1]);
-  }
-  let fmt = (n: number) => Number(n.toFixed(1));
-  let ys = rows.map((r) => r.y);
-  let d = 'M ' + halfs.map((hw, i) => `${fmt(axis + hw)} ${ys[i]}`).join(' L ');
-  for (let i = halfs.length - 1; i >= 0; i--) {
-    d += ` L ${fmt(axis - halfs[i])} ${ys[i]}`;
-  }
-  d += ' Z';
-  return { path: d, width: w, height: h };
 }

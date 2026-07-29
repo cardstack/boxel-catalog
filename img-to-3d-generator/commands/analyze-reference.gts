@@ -49,6 +49,10 @@ class AnalyzeReferenceOutput extends CardDef {
   // Headline facts, surfaced for logging / quick inspection.
   @field objectType = contains(StringField);
   @field objectClass = contains(StringField);
+  // recommended build backend ("primitive" | "mesh") + a one-line reason, so a
+  // caller can route (or warn) without re-parsing the full analysis document.
+  @field buildBackend = contains(StringField);
+  @field backendReason = contains(StringField);
   @field partCount = contains(NumberField);
   @field identityFeatures = containsMany(StringField);
 }
@@ -111,6 +115,8 @@ export class AnalyzeReferenceCommand extends Command<
       analysisJson: JSON.stringify(analysis),
       objectType: analysis.objectType ?? '',
       objectClass: analysis.objectClass ?? '',
+      buildBackend: analysis.buildBackend ?? '',
+      backendReason: analysis.backendReason ?? '',
       partCount: analysis.partPlan?.length ?? 0,
       identityFeatures: analysis.identityFeatures ?? [],
     });

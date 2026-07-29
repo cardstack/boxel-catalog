@@ -26,13 +26,12 @@ import {
   slugify,
   writeRealmImage,
   ANALYZE_MAX_EDGE,
+  BUILD_SECONDARY_EDGE,
 } from '../util/realm-image';
 import {
   cropWithBackgroundRemoved,
   revolvedSilhouetteBbox,
   traceLatheProfile,
-  traceSilhouetteSvg,
-  type TracedOutline,
 } from '../util/silhouette';
 import {
   generateModelJs,
@@ -77,7 +76,7 @@ import { COMPLETENESS_CRITIC_PROMPT } from '../prompts/completeness';
 
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
-import GeneratingOverlay from '../../components/generating-overlay';
+import GeneratingOverlay from '@cardstack/catalog/components/generating-overlay';
 
 import { AnalyzeReferenceCommand } from '../commands/analyze-reference';
 import { SculptedModel } from '../sculpted-model';
@@ -109,7 +108,11 @@ class StudioViewState {
   @tracked errorMessage: string | null = null;
   @tracked logLines: string[] = [];
   @tracked draftViewerSrcdoc: string | undefined;
-  @tracked tracedOutline: TracedOutline | undefined;
+  // the persisted model's viewer, with its .js source INLINED into the srcdoc.
+  // The iframe is a bare document with no realm auth, so a private realm 401s a
+  // fetch-by-URL viewer ("could not load model (401)"); inlining the source
+  // (fetched by the studio, which IS authenticated) sidesteps that entirely.
+  @tracked persistedSrcdoc: string | undefined;
   @tracked stopRequested = false;
   @tracked historyOpen = false;
   @tracked historyItems: HistoryEntry[] = [];
@@ -141,6 +144,11 @@ class StudioViewState {
   // analysis stage AND skips the structure lock (which would otherwise freeze
   // the old plan's part graph anyway), then clears the flag.
   @tracked reanalyzeRequested = false;
+  // the completeness pass is a whole extra vision+render round-trip, so it is
+  // skipped when the build already realized every planned part. This flag lets
+  // the user force it back on for a complex object where the plan itself may
+  // have under-described the reference.
+  @tracked forceCompleteness = false;
 }
 
 export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
@@ -192,14 +200,12 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     this.state.draftViewerSrcdoc = value;
   }
 
-  // the segmented outline the tracer extracted from the reference, shown in
-  // the sidebar so the user can judge it against the photo
-  get tracedOutline() {
-    return this.state.tracedOutline;
+  get persistedSrcdoc() {
+    return this.state.persistedSrcdoc;
   }
 
-  set tracedOutline(value: TracedOutline | undefined) {
-    this.state.tracedOutline = value;
+  set persistedSrcdoc(value: string | undefined) {
+    this.state.persistedSrcdoc = value;
   }
 
   private draftSequence = 0;
@@ -245,29 +251,55 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     this.state.inPlaceReloadKey = v;
   }
 
-  get viewerSrcdoc(): string | undefined {
-    if (this.draftViewerSrcdoc) return this.draftViewerSrcdoc;
+  // identity of the model the viewport should show: its url plus the two
+  // reload triggers (the studio's own lasso edits via inPlaceReloadKey, and the
+  // AI Refine command's `revision` bump). When this changes, the source is
+  // re-fetched and re-inlined, which is how an in-place overwrite reloads.
+  get viewerKey(): string | undefined {
     let url = this.currentCodeFileUrl;
     if (!url) return undefined;
-    // An in-place edit overwrites the SAME url, so the iframe must be told to
-    // re-fetch instead of serving the cached file. Two triggers, both folded
-    // into one cache-bust key: inPlaceReloadKey (the studio's OWN lasso edits)
-    // and the current creation's `revision`, which the AI Refine command bumps
-    // when it edits the round externally — reading it here makes the viewport
-    // reload reactively the moment that round's card updates.
-    if (!this.pendingViewportUrl) {
-      let rev = Number((this.currentCreation as any)?.revision ?? 0);
-      if (this.inPlaceReloadKey > 0 || rev > 0) {
-        url +=
-          (url.includes('?') ? '&' : '?') +
-          'rk=' +
-          this.inPlaceReloadKey +
-          '-' +
-          rev;
-      }
-    }
-    return generateViewerSrcdoc(url);
+    let rev = Number((this.currentCreation as any)?.revision ?? 0);
+    return `${url}|${this.inPlaceReloadKey}|${rev}`;
   }
+
+  // non-tracked dedupe guard so the render-time getter kicks the loader off at
+  // most once per key without writing tracked state mid-render.
+  private requestedViewerKey: string | undefined;
+
+  get viewerSrcdoc(): string | undefined {
+    if (this.draftViewerSrcdoc) return this.draftViewerSrcdoc;
+    let key = this.viewerKey;
+    if (!key) return undefined;
+    if (key !== this.requestedViewerKey) {
+      this.requestedViewerKey = key;
+      this.loadPersistedViewer.perform(this.currentCodeFileUrl!);
+    }
+    return this.persistedSrcdoc;
+  }
+
+  // Fetch the model's .js source over the studio's AUTHENTICATED network and
+  // embed it directly in the viewer srcdoc, so the iframe never issues an
+  // unauthenticated fetch-by-URL to the realm (which 401s on a private realm).
+  // The codeFileUrl doubles as the readiness token, matching waitForViewer.
+  async buildInlineSrcdoc(url: string): Promise<string | undefined> {
+    try {
+      let response = await fetch(url, {
+        headers: { Accept: 'application/vnd.card+source' },
+      });
+      if (!response.ok) return undefined;
+      let code = await response.text();
+      return generateViewerSrcdocInline(code, url);
+    } catch {
+      return undefined;
+    }
+  }
+
+  loadPersistedViewer = restartableTask(async (url: string) => {
+    let srcdoc = await this.buildInlineSrcdoc(url);
+    // fall back to the fetch-by-URL viewer if the source read failed — on a
+    // public realm that still renders; on a private one it surfaces the 401.
+    this.persistedSrcdoc = srcdoc ?? generateViewerSrcdoc(url);
+  });
 
   // ---- current selection (all detail is read from the linked creation) ----
   // the creation shown in the viewport: the explicitly selected one, else
@@ -515,6 +547,23 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     this.state.reanalyzeRequested = value;
   }
 
+  get forceCompleteness() {
+    return this.state.forceCompleteness;
+  }
+
+  set forceCompleteness(value: boolean) {
+    this.state.forceCompleteness = value;
+  }
+
+  toggleForceCompleteness = () => {
+    this.forceCompleteness = !this.forceCompleteness;
+    this.log(
+      this.forceCompleteness
+        ? '> completeness pass forced ON for the next Generate'
+        : '> completeness pass back to auto (skipped when nothing is missing)',
+    );
+  };
+
   // the escape hatch for a bad plan — visible only when there IS a cached
   // plan the next Generate would otherwise silently reuse
   get canRequestReanalyze(): boolean {
@@ -551,7 +600,6 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     this.draftViewerSrcdoc = undefined;
     this.pendingViewportUrl = undefined;
     this.tracedEnvelope = null;
-    this.tracedOutline = undefined;
     this.phase = 'idle';
   };
 
@@ -1126,7 +1174,9 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
           objectName: card.objectName || 'model',
           round: card.round ?? undefined,
           screenshotUrl: card.renderScreenshot?.url,
-          srcdoc: generateViewerSrcdoc(card.codeFileUrl),
+          // filled in below with the source INLINED (see buildInlineSrcdoc) so
+          // each history tile's iframe needs no authed fetch on a private realm
+          srcdoc: '',
         });
       };
 
@@ -1153,9 +1203,19 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
         }
       }
 
+      // inline each tile's source (authenticated fetch by the studio) so the
+      // tiles render on a private realm; fall back to the URL viewer per-entry.
+      let entries = [...byKey.values()];
+      await Promise.all(
+        entries.map(async (e) => {
+          e.srcdoc =
+            (await this.buildInlineSrcdoc(e.codeFileUrl)) ??
+            generateViewerSrcdoc(e.codeFileUrl);
+        }),
+      );
       // newest first by ROUND — createdAt is only minute-granular, so
       // same-minute rounds would shuffle if sorted by time
-      this.historyItems = [...byKey.values()].sort(
+      this.historyItems = entries.sort(
         (a, b) => (b.round ?? 0) - (a.round ?? 0),
       );
     } finally {
@@ -1423,6 +1483,17 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
           `> camera: ${analysis.camera.azimuthDeg}° az / ${analysis.camera.elevationDeg}° el`,
         );
       }
+      // backend recommendation: warn when the analysis judged the primitive
+      // vocabulary can only approximate this object (a firearm, a face). The
+      // mesh backend is not wired yet, so this is an honest heads-up, not a
+      // route — the build still runs on primitives below.
+      if (analysis.buildBackend === 'mesh') {
+        this.log(
+          `> ⚑ mesh recommended — primitive can only approximate this${
+            analysis.backendReason ? ` (${analysis.backendReason})` : ''
+          }`,
+        );
+      }
       timings.push(
         `analyze ${secSince(tAnalyze)}s${sameReference ? ' (cached)' : ''}`,
       );
@@ -1541,6 +1612,12 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       if (analysis.identityFeatures.length) {
         parsed.identityFeatures = analysis.identityFeatures;
       }
+      // the analysis also owns the backend recommendation — carry it onto the
+      // spec so it persists on the saved model (provenance for a future mesh
+      // route). The build LLM does not emit it.
+      if (analysis.buildBackend) {
+        parsed.buildBackend = analysis.buildBackend;
+      }
       // the analysis also owns the part INVENTORY: anything the build stage
       // invented on top of the plan goes now, before tracing / clamping /
       // texturing spend work on it. Only the generate path is gated — a lasso
@@ -1559,16 +1636,33 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       this.log(`> ⏱ ${timings[timings.length - 1]}`);
 
       // completeness audit: one vision pass that ADDS whatever the reference
-      // shows and this build lacks (a missing eye, wheel, handle, limb). This
-      // is the general, category-agnostic guard against an under-built model —
-      // it replaces reasoning that would otherwise have to be hardcoded per
-      // object type. Skipped only when the user already asked to stop.
-      if (!this.stopRequested) {
+      // shows and this build lacks (a missing eye, wheel, handle, limb). It is
+      // a whole extra vision+render round-trip, so gate it: when the build
+      // already realized every planned part there is nothing for it to add, and
+      // it is skipped. A user can force it back on (forceCompleteness) for a
+      // complex object whose plan may itself have under-described the photo.
+      let unrealized = flagUnrealizedParts(parsed, analysis).filter((line) =>
+        line.includes('NO component realizes'),
+      );
+      if (
+        !this.stopRequested &&
+        (this.forceCompleteness || unrealized.length)
+      ) {
+        if (this.forceCompleteness) {
+          this.log('> completeness: forced on');
+        } else {
+          this.log(
+            `> completeness: ${unrealized.length} planned part(s) unrealized — auditing`,
+          );
+        }
         let tComplete = Date.now();
         let completed = await this.runCompletenessPass(referenceDataUrl);
         if (completed) outcome = completed;
         timings.push(`completeness ${secSince(tComplete)}s`);
         this.log(`> ⏱ ${timings[timings.length - 1]}`);
+      } else if (!this.stopRequested) {
+        this.log('> completeness: skipped (all planned parts realized)');
+        timings.push('completeness skipped');
       }
 
       let best = {
@@ -1667,7 +1761,6 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       // one line that survives the last-6 log window, plus a console copy so
       // the full per-stage breakdown persists for inspection after the run.
       this.log(`> ${timingSummary}`);
-      // eslint-disable-next-line no-console
       console.log(`[img-to-3d] ${timingSummary}`);
       this.log('> rebuilt in code ✓');
     } catch (e: any) {
@@ -1833,8 +1926,12 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       Boolean,
     );
     return Promise.all(
-      urls.slice(0, 6).map((u: string) =>
+      urls.slice(0, 6).map((u: string, i: number) =>
         fetchAsDataUrl(u, {
+          // primary view keeps full detail (labels/artwork are cropped from
+          // it); the extra views only inform depth, so shrink them to cut the
+          // build stage's input vision tokens.
+          maxEdge: i === 0 ? undefined : BUILD_SECONDARY_EDGE,
           commandContext: this.args.context?.commandContext,
         }),
       ),
@@ -1972,11 +2069,9 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
   // reconciliation must not rescale them individually (that is what turned a
   // bottle into a spinning top).
   async applyTracedProfiles(parsed: any): Promise<string[]> {
-    // stale envelope from a prior build must not clamp this one, and its
-    // outline must not stay on screen claiming to be this build's — every
+    // stale envelope from a prior build must not clamp this one — every
     // path out of here below is a path that never reaches the trace
     this.tracedEnvelope = null;
-    this.tracedOutline = undefined;
     let plan: any[] = this.parsedAnalysis()?.partPlan ?? [];
     let revolved = plan.filter(
       (p: any) => p?.approach === 'revolved' && p?.bbox?.width > 0,
@@ -1998,10 +2093,6 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       this.log(`> ${skipped} — skipped silhouette trace`);
       return [];
     }
-    // capture the segmented outline for the sidebar preview — this is the
-    // exact contour the tracer sees, so a mismatch with the reference is
-    // visible instead of hidden inside a failed build
-    this.tracedOutline = traceSilhouetteSvg(image, cropBbox) ?? undefined;
     let traceDiag: string[] = [];
     let traced = traceLatheProfile(image, cropBbox, 16, traceDiag);
     if (!traced) {
@@ -2137,8 +2228,22 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       // as the capsule plus two white wings. Segmentation returns null when
       // there is no background to remove (a label on glass, a placard on
       // painted metal), and the plain opaque crop is right in that case.
-      let cut = cropWithBackgroundRemoved(image, bbox);
-      if (cut) this.log(`> cut background out of '${decal.textureRef}' crop`);
+      //
+      // direct-print graphics (a logo laser-printed on a mug, a print on a
+      // shirt) are NOT a separate patch: the surface they sit on is the part
+      // itself, so key out the crop's own surface colour and leave only the
+      // ink — otherwise the crop lands as an opaque rectangle of surface.
+      let surfacePrint = part?.printMode === 'direct-print';
+      let cut = cropWithBackgroundRemoved(image, bbox, undefined, {
+        surfacePrint,
+      });
+      if (cut) {
+        this.log(
+          surfacePrint
+            ? `> keyed the surface out of '${decal.textureRef}' — only the print remains`
+            : `> cut background out of '${decal.textureRef}' crop`,
+        );
+      }
       let canvas = cut;
       if (!canvas) {
         let sx = Math.round(bbox.left * image.width);
@@ -2302,6 +2407,8 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       codeFileUrl,
       codeFile: this.makeCodeFileDef(codeFileUrl),
       objectName: parsed.objectName || 'model',
+      buildBackend:
+        parsed.buildBackend ?? this.activeAnalysis?.buildBackend ?? undefined,
       // the analysis this build followed rides on the creation itself, so
       // selecting this version later re-attaches its measured targets
       analysis: this.activeAnalysis
@@ -2614,6 +2721,19 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
                 }}
               </button>
             {{/if}}
+            <button
+              type='button'
+              class='reanalyze-btn {{if this.forceCompleteness "is-on"}}'
+              disabled={{this.isRunning}}
+              title='The completeness pass (an extra vision+render round-trip that adds missing parts) is skipped when the build already realized every planned part. Force it on for a complex object whose plan may have under-described the photo.'
+              {{on 'click' this.toggleForceCompleteness}}
+            >
+              {{if
+                this.forceCompleteness
+                '✓ completeness forced on — click for auto'
+                '⊘ completeness: auto (skip when complete)'
+              }}
+            </button>
           </section>
 
           <button
@@ -2686,20 +2806,6 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
 
           {{#if this.errorMessage}}
             <p class='error' role='alert'>{{this.errorMessage}}</p>
-          {{/if}}
-
-          {{#if this.tracedOutline}}
-            <figure class='traced-outline' aria-label='Traced silhouette'>
-              <figcaption class='traced-outline-label'>traced outline</figcaption>
-              <svg
-                class='traced-outline-svg'
-                viewBox='0 0 {{this.tracedOutline.width}}
-                  {{this.tracedOutline.height}}'
-                preserveAspectRatio='xMidYMid meet'
-              >
-                <path d={{this.tracedOutline.path}} />
-              </svg>
-            </figure>
           {{/if}}
 
           {{#if this.logLines.length}}
@@ -3376,34 +3482,6 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       }
       .log-line:last-child {
         color: var(--i3d-accent);
-      }
-      .traced-outline {
-        margin: 0;
-        padding: 0.5rem;
-        border: 1px solid var(--i3d-border);
-        border-radius: 0.5rem;
-        background: var(--i3d-surface);
-        display: flex;
-        flex-direction: column;
-        gap: 0.375rem;
-      }
-      .traced-outline-label {
-        font-family: var(--i3d-font-mono);
-        font-size: 0.625rem;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: var(--i3d-text-dim);
-      }
-      .traced-outline-svg {
-        display: block;
-        width: 100%;
-        height: 8rem;
-      }
-      .traced-outline-svg path {
-        fill: color-mix(in srgb, var(--i3d-accent) 22%, transparent);
-        stroke: var(--i3d-accent);
-        stroke-width: 1.25;
-        vector-effect: non-scaling-stroke;
       }
       .viewport {
         position: relative;

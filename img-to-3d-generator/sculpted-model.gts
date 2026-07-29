@@ -40,6 +40,10 @@ export class SculptedModel extends CardDef {
   // stays the embed/viewer contract, this is the clickable file reference
   @field codeFile = linksTo(() => FileDef);
   @field objectName = contains(StringField);
+  // backend the analysis recommended for this object ("primitive" | "mesh").
+  // Provenance for a future mesh route — also lives inside `analysis`, surfaced
+  // here for quick display/query. See prompts/analyze.gts BACKEND rule.
+  @field buildBackend = contains(StringField);
   // stage-1 analysis JSON (object type, camera, per-part measured bboxes,
   // attachment constraints, _refSig) this build followed — kept on the
   // creation so selecting this version in the studio re-attaches its measured

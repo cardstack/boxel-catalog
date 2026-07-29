@@ -25,6 +25,7 @@ export function serializeSpecForPrompt(spec: any) {
     inputKind: spec.inputKind,
     identityFeatures: spec.identityFeatures ?? [],
     objectClass: spec.objectClass,
+    buildBackend: spec.buildBackend,
     complexity: spec.complexity,
     materials: (spec.materials ?? []).map((m: any) => ({
       materialId: m.materialId,
@@ -177,6 +178,7 @@ export function specFieldFromParsed(parsed: any): SculptSpecField {
       ? parsed.identityFeatures.map((f: any) => String(f)).slice(0, 6)
       : [],
     objectClass: parsed.objectClass,
+    buildBackend: parsed.buildBackend,
     complexity: parsed.complexity,
     materials: parsed.materials.map(
       (m: any) =>

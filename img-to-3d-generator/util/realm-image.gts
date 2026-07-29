@@ -32,6 +32,12 @@ const MAX_VISION_EDGE = 1568;
 // keeps MAX_VISION_EDGE so printed artwork still reproduces faithfully.
 export const ANALYZE_MAX_EDGE = 1024;
 
+// The BUILD stage sends the primary view at full MAX_VISION_EDGE so printed
+// artwork reproduces faithfully, but the additional views only inform depth /
+// thickness — a smaller cap on those trims the build request's input vision
+// tokens (and time-to-first-token) without touching label fidelity.
+export const BUILD_SECONDARY_EDGE = 1024;
+
 // A pasted image URL points at somebody else's CDN, and a browser fetch to a
 // third-party host fails with "Failed to fetch" unless that host sends
 // Access-Control-Allow-Origin — which product-image CDNs essentially never do.

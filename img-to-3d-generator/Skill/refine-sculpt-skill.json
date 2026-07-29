@@ -20,7 +20,7 @@
         {
           "codeRef": {
             "name": "default",
-            "module": "@cardstack/catalog/img-to-3d-generator/commands/refine-sculpt-command"
+            "module": "../commands/refine-sculpt-command"
           },
           "requiresApproval": true
         }

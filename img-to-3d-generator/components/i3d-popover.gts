@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { htmlSafe, type SafeString } from '@ember/template';
-import Popover from '../../46f065-popover/popover';
+import Popover from '@cardstack/catalog/46f065-popover/popover';
 import type { Placement } from '@floating-ui/dom';
 
 type PopKind = 'details' | 'edit' | 'tools';

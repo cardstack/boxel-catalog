@@ -159,6 +159,7 @@ export function applySpecDiff(
     objectName: diff.objectName ?? base.objectName,
     inputKind: diff.inputKind ?? base.inputKind,
     objectClass: diff.objectClass ?? base.objectClass,
+    buildBackend: diff.buildBackend ?? base.buildBackend,
     complexity: diff.complexity ?? base.complexity,
     identityFeatures: Array.isArray(diff.identityFeatures)
       ? diff.identityFeatures

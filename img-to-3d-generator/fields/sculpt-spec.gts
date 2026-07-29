@@ -62,6 +62,15 @@ const ComplexityField = enumField(StringField, {
   displayName: 'Complexity',
 });
 
+// which backend the analysis recommends for this object. "primitive" is the
+// only one wired today; "mesh" flags an object (a firearm, a face) the
+// primitive vocabulary can only approximate, so a future mesh service can
+// route it — see prompts/analyze.gts BACKEND rule.
+const BuildBackendField = enumField(StringField, {
+  options: ['primitive', 'mesh'],
+  displayName: 'Build Backend',
+});
+
 // PBR parameters for one THREE.MeshStandardMaterial, referenced from
 // component nodes by materialId.
 export class MaterialSpecField extends FieldDef {
@@ -148,6 +157,7 @@ export class SculptSpecField extends FieldDef {
   // per-feature gate: a good global score cannot excuse a wrong feature)
   @field identityFeatures = containsMany(StringField);
   @field objectClass = contains(ObjectClassField);
+  @field buildBackend = contains(BuildBackendField);
   @field complexity = contains(ComplexityField);
   @field components = containsMany(ComponentNodeField);
   @field materials = containsMany(MaterialSpecField);
@@ -176,6 +186,7 @@ export class SculptSpecField extends FieldDef {
         </header>
         <ul class='spec-chips'>
           {{#if @model.objectClass}}<li>{{@model.objectClass}}</li>{{/if}}
+          {{#if @model.buildBackend}}<li>{{@model.buildBackend}}</li>{{/if}}
           {{#if @model.complexity}}<li>{{@model.complexity}}</li>{{/if}}
           {{#if @model.inputKind}}<li>{{@model.inputKind}}</li>{{/if}}
         </ul>
