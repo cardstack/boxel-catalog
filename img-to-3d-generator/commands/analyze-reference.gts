@@ -37,6 +37,10 @@ class AnalyzeReferenceInput extends CardDef {
       displayName: 'Vision Model',
     }),
   );
+  // Longest-edge cap for the reference images this stage sends. Analysis is
+  // pure structural perception, so a smaller cap trims input vision tokens and
+  // speeds the stage up; left unset it falls back to the shared vision cap.
+  @field maxEdge = contains(NumberField);
 }
 
 class AnalyzeReferenceOutput extends CardDef {
@@ -73,6 +77,7 @@ export class AnalyzeReferenceCommand extends Command<
         type: 'image_url',
         image_url: {
           url: await fetchAsDataUrl(url, {
+            maxEdge: input.maxEdge || undefined,
             commandContext: this.commandContext,
           }),
         },
@@ -96,7 +101,10 @@ export class AnalyzeReferenceCommand extends Command<
       ],
       undefined,
       parseAnalysisJson,
-      { seed: seedFromStrings(urls) },
+      // analysis is pure structural perception. This model MAKES reasoning
+      // mandatory (disabling it 400s), so instead push the thinking budget to
+      // the floor — the stage was measured at ~29s with default reasoning.
+      { seed: seedFromStrings(urls), reasoning: { effort: 'low' } },
     );
 
     return new AnalyzeReferenceOutput({

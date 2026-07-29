@@ -132,6 +132,10 @@ export async function requestSpec(
     temperature?: number;
     seed?: number;
     validate?: (parsed: any) => string | null;
+    // OpenRouter reasoning control. The analysis stage is pure perception, so
+    // passing { enabled: false } stops a "thinking" model (e.g. Gemini flash)
+    // from spending seconds emitting reasoning tokens before the JSON.
+    reasoning?: { enabled?: boolean; max_tokens?: number; effort?: string };
   },
 ) {
   let temperature = options?.temperature ?? SPEC_TEMPERATURE;
@@ -150,6 +154,7 @@ export async function requestSpec(
         max_tokens: 24000,
         temperature,
         ...(typeof seed === 'number' ? { seed } : {}),
+        ...(options?.reasoning ? { reasoning: options.reasoning } : {}),
         messages: [
           { role: 'system', content: systemMessage(llmModel, systemPrompt) },
           { role: 'user', content },

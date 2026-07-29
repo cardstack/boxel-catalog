@@ -21,7 +21,12 @@ import WriteTextFileCommand from '@cardstack/boxel-host/tools/write-text-file';
 import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
 import ImgTo3dPopover from './i3d-popover';
 
-import { fetchAsDataUrl, slugify, writeRealmImage } from '../util/realm-image';
+import {
+  fetchAsDataUrl,
+  slugify,
+  writeRealmImage,
+  ANALYZE_MAX_EDGE,
+} from '../util/realm-image';
 import {
   cropWithBackgroundRemoved,
   revolvedSilhouetteBbox,
@@ -1325,6 +1330,15 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     try {
       this.errorMessage = null;
       this.logLines = [];
+      // per-stage wall-clock: the LLM+render round-trips are the whole cost
+      // of a generate, so time each one — you cannot decide which stage to
+      // cut without seeing where the minute actually goes.
+      let genStart = Date.now();
+      let secSince = (t: number) => ((Date.now() - t) / 1000).toFixed(1);
+      // the log panel only keeps the last ~6 lines, so per-stage timings
+      // scroll off before the run ends. Collect them and print one surviving
+      // summary line at the end (also mirrored to the browser console).
+      let timings: string[] = [];
       this.phase = 'analyzing';
       this.log('> probing reference image…');
       let referenceDataUrl = await this.encodeReference();
@@ -1351,6 +1365,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       // changed reference (different signature) forces a fresh analysis.
       let refUrls = (model.references?.resolvedUrls ?? []).filter(Boolean);
       let refSig = refUrls.join('|');
+      let tAnalyze = Date.now();
       let analysis: any = null;
       let sameReference = false;
       // the cached analysis now lives on the selected creation, not the
@@ -1383,6 +1398,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
         ).execute({
           imageUrls: refUrls,
           model: ANALYSIS_MODEL,
+          maxEdge: ANALYZE_MAX_EDGE,
         } as any);
         analysis = JSON.parse(analysisResult.analysisJson);
         // stamp the reference signature so a later Generate can tell the
@@ -1407,6 +1423,10 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
           `> camera: ${analysis.camera.azimuthDeg}° az / ${analysis.camera.elevationDeg}° el`,
         );
       }
+      timings.push(
+        `analyze ${secSince(tAnalyze)}s${sameReference ? ' (cached)' : ''}`,
+      );
+      this.log(`> ⏱ ${timings[timings.length - 1]}`);
 
       // a stop request lands at the next stage boundary — the in-flight
       // vision call cannot be recalled, but the NEXT one can be skipped
@@ -1457,7 +1477,12 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       }
 
       // stage 2 — build the spec, honoring the stage-1 plan
+      // the header status otherwise stays on "ANALYZING" through the entire
+      // build/render/completeness stretch, making a slow build look like a
+      // hung analysis — move it to "BUILDING" now that analysis is done.
+      this.phase = 'building';
       this.log('> authoring sculpt spec…');
+      let tBuild = Date.now();
       // the plan's own length IS the part budget. The system prompt can only
       // say "follow the plan" in the abstract; stating the number here — plus
       // the fact that unplanned parts are deleted rather than rendered —
@@ -1510,6 +1535,8 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
           );
         },
       );
+      timings.push(`build ${secSince(tBuild)}s`);
+      this.log(`> ⏱ ${timings[timings.length - 1]}`);
       // the analysis owns identity — its features gate the refine rounds
       if (analysis.identityFeatures.length) {
         parsed.identityFeatures = analysis.identityFeatures;
@@ -1526,7 +1553,10 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       for (let line of runStructurePasses(parsed, analysis)) {
         this.log(`> ${line}`);
       }
+      let tRender = Date.now();
       let outcome = await this.applyParsedSpec(parsed);
+      timings.push(`render ${secSince(tRender)}s`);
+      this.log(`> ⏱ ${timings[timings.length - 1]}`);
 
       // completeness audit: one vision pass that ADDS whatever the reference
       // shows and this build lacks (a missing eye, wheel, handle, limb). This
@@ -1534,8 +1564,11 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       // it replaces reasoning that would otherwise have to be hardcoded per
       // object type. Skipped only when the user already asked to stop.
       if (!this.stopRequested) {
+        let tComplete = Date.now();
         let completed = await this.runCompletenessPass(referenceDataUrl);
         if (completed) outcome = completed;
+        timings.push(`completeness ${secSince(tComplete)}s`);
+        this.log(`> ⏱ ${timings[timings.length - 1]}`);
       }
 
       let best = {
@@ -1629,6 +1662,13 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       }
 
       this.phase = 'done';
+      timings.push(`total ${secSince(genStart)}s`);
+      let timingSummary = `⏱ ${timings.join(' · ')}`;
+      // one line that survives the last-6 log window, plus a console copy so
+      // the full per-stage breakdown persists for inspection after the run.
+      this.log(`> ${timingSummary}`);
+      // eslint-disable-next-line no-console
+      console.log(`[img-to-3d] ${timingSummary}`);
       this.log('> rebuilt in code ✓');
     } catch (e: any) {
       this.draftViewerSrcdoc = undefined;

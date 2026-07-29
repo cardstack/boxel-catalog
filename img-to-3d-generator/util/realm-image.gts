@@ -23,6 +23,15 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 // blinks, and a bigger, slower request is simply exposed to more blinks.
 const MAX_VISION_EDGE = 1568;
 
+// The analysis stage only does structural perception — count the parts, read
+// each part's normalized bbox, judge the camera. None of that needs full detail
+// (the bboxes are resolution-independent fractions, and the real label pixels
+// are cropped from the full-res image later, in the build/silhouette stage), so
+// analysis sends a smaller image: fewer input vision tokens, faster time-to-
+// first-token on the stage that gates everything downstream. The BUILD stage
+// keeps MAX_VISION_EDGE so printed artwork still reproduces faithfully.
+export const ANALYZE_MAX_EDGE = 1024;
+
 // A pasted image URL points at somebody else's CDN, and a browser fetch to a
 // third-party host fails with "Failed to fetch" unless that host sends
 // Access-Control-Allow-Origin — which product-image CDNs essentially never do.
