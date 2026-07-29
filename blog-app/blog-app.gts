@@ -133,7 +133,13 @@ import AuthorIcon from '@cardstack/boxel-icons/square-user';
 import { BlogPost } from './blog-post';
 import { Game } from './games/game';
 
-type ViewOption = 'card' | 'strip' | 'grid';
+// ViewSelector is used here without @items, so these mirror its own defaults.
+const VIEW_OPTION_IDS = ['card', 'strip', 'grid'] as const;
+type ViewOption = (typeof VIEW_OPTION_IDS)[number];
+
+function isViewOption(id: string): id is ViewOption {
+  return VIEW_OPTION_IDS.some((option) => option === id);
+}
 
 export const toISOString = (datetime: Date) => datetime.toISOString();
 
@@ -531,7 +537,9 @@ class BlogAppTemplate extends Component<typeof BlogApp> {
   }
 
   @action private onChangeView(id: string) {
-    this.selectedView = id as ViewOption;
+    if (isViewOption(id)) {
+      this.selectedView = id;
+    }
   }
 
   @action private onSort(option: SortOption) {
