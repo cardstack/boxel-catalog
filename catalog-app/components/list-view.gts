@@ -32,8 +32,8 @@ interface ListViewArgs {
 export default class ListView extends GlimmerComponent<ListViewArgs> {
   @tracked private selectedView: ViewOption = 'grid';
 
-  @action private onChangeView(id: ViewOption) {
-    this.selectedView = id;
+  @action private onChangeView(id: string) {
+    this.selectedView = id as ViewOption;
   }
 
   <template>
