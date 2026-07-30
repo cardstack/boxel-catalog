@@ -24,7 +24,8 @@
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
-      }
+      },
+      "buildBackend": null
     },
     "relationships": {
       "codeFile": {
@@ -50,7 +51,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../../../../sculpted-model",
+        "module": "@cardstack/catalog/4376bf-img-to-3d-generator/sculpted-model",
         "name": "SculptedModel"
       }
     }
