@@ -41,7 +41,7 @@ const testDestinationRealmURL = `http://test-realm/test2/`;
 const themeListingId = `${mockCatalogURL}ThemeListing/cardstack-theme`;
 
 export function runTests() {
-  module.skip(
+  module(
     'Acceptance | Catalog | catalog app - listing remix',
     function (hooks) {
       setupApplicationTest(hooks);

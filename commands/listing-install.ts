@@ -71,6 +71,12 @@ export function buildInstanceOperation(
   delete (doc as any).data.id;
   delete (doc as any).included;
   let cardResource = (doc as any).data as LooseCardResource;
+  // Point the copy at the module the planner decided it should adopt from. For
+  // a base-realm def that is the original ref; for a module copied into this
+  // install directory it is the copy's location. Without this the copy keeps
+  // the source realm's `adoptsFrom` and resolves against the catalog realm (or
+  // survives only by accident when the ref happened to be relative).
+  cardResource.meta.adoptsFrom = copyInstanceMeta.targetCodeRef;
   let href = join(realmIdentifier, copyInstanceMeta.lid) + '.json';
   return { op: 'add', href, data: cardResource };
 }
