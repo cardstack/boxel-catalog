@@ -25,14 +25,10 @@ jobs:
       # so it doesn't move HEAD off the PR commit during service startup.
       SKIP_CATALOG_UPDATE: '1'
     steps:
-      # TEMP: pin to the companion branch so this PR's own Live Tests job can
-      # prove the fix end to end before cardstack/boxel#5631 merges. Revert to
-      # the default branch before merging this PR.
-      # Checkout the boxel monorepo
+      # Checkout the boxel monorepo 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
-          ref: cs-12078-make-the-catalog-install-planner-rri-native
 
       # Checkout this catalog repo directly into the monorepo's catalog location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
