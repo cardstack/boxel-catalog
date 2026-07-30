@@ -22,9 +22,9 @@ import { VISION_MODEL_OPTIONS } from './util/llm-request';
 // the studio is saved as one of these, so each model is an independent,
 // searchable, linkable card in the realm (mirroring the AiImage pattern).
 //
-// The model itself lives OUTSIDE the card   as a realm .js file (real code,
+// The model itself lives OUTSIDE the card as a realm .js file (real code,
 // with the source spec embedded as a SCULPT_SPEC constant) — the card only
-// carries its URL. Rendering goes through the shared exports/viewer.html
+// links to it. Rendering goes through the shared exports/viewer.html
 // harness, which any iframe can load.
 export class SculptedModel extends CardDef {
   static displayName = 'Sculpted Model';
@@ -33,11 +33,11 @@ export class SculptedModel extends CardDef {
   // the studio holds, so selecting a saved round re-attaches all its views,
   // not just the primary photo
   @field references = contains(MultiImageSourceField);
-  // realm URL of the generated model .js — the model's stored form; the
-  // source spec rides inside that file as its SCULPT_SPEC constant
-  @field codeFileUrl = contains(StringField);
-  // the same generated .js as an openable file link (FileDef) — codeFileUrl
-  // stays the embed/viewer contract, this is the clickable file reference
+  // the generated model .js — the model's stored form, with the source spec
+  // riding inside it as its SCULPT_SPEC constant. A link (not a URL string) so
+  // the realm serializes it relative to this card and resolves it against
+  // whichever realm the card is served from; read `codeFile.url` for the
+  // absolute URL the viewer harness and the file reader need.
   @field codeFile = linksTo(() => FileDef);
   @field objectName = contains(StringField);
   // backend the analysis recommended for this object ("primitive" | "mesh").
@@ -64,9 +64,14 @@ export class SculptedModel extends CardDef {
   // refined, so the studio only ever holds the latest card and older rounds
   // load on demand as you walk the chain
   @field parentCreation = linksTo(() => SculptedModel);
-  // id of the ImgTo3dStudio card that produced this round — scopes the
-  // studio's prerendered history search without loading any cards
-  @field sourceStudioId = contains(StringField);
+  // the ImgTo3dStudio card that produced this round — scopes the studio's
+  // prerendered history search, which filters on `sourceStudio.id` (a link's
+  // id is always in the search doc, so the hop needs no `searchable: true`).
+  // A link rather than an id string so the stored form is realm-relative and
+  // the listing stays portable across realms. Typed as CardDef because
+  // img-to-3d-studio.gts imports this module — naming the studio class here
+  // would close a module cycle — and only the link's id is ever read.
+  @field sourceStudio = linksTo(() => CardDef);
   @field round = contains(NumberField);
   // bumped every time this round's .js is edited IN PLACE (the AI Refine
   // command). The studio folds it into the viewport iframe's cache-bust key,
@@ -93,7 +98,7 @@ export class SculptedModel extends CardDef {
     // the viewer harness renders the model's .js file, inlined via srcdoc
     // (external sites embed the same harness by its viewer.html URL)
     get viewerSrcdoc() {
-      let codeFileUrl = this.args.model?.codeFileUrl;
+      let codeFileUrl = this.args.model?.codeFile?.url;
       if (!codeFileUrl) return undefined;
       return generateViewerSrcdoc(codeFileUrl);
     }

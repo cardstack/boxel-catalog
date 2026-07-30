@@ -61,7 +61,7 @@ export class ImgTo3dStudio extends CardDef {
       <article class='tile {{unless this.hasLinkedTheme "i3d-default-theme"}}'>
         <header class='tile-header'>
           <h3 class='tile-title'>{{@model.title}}</h3>
-          {{#if @model.selectedCreation.codeFileUrl}}
+          {{#if @model.selectedCreation.codeFile.url}}
             <p class='tile-tag'>rebuilt in code</p>
           {{/if}}
         </header>

@@ -311,7 +311,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
   // the .js in the viewport: the just-built file mid-run (pendingViewportUrl),
   // otherwise the selected creation's file
   get currentCodeFileUrl(): string | undefined {
-    return this.pendingViewportUrl ?? this.currentCreation?.codeFileUrl;
+    return this.pendingViewportUrl ?? this.currentCreation?.codeFile?.url;
   }
 
   get currentObjectName(): string | undefined {
@@ -1124,7 +1124,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     return {
       filter: {
         on: sculptedModelRef,
-        eq: { sourceStudioId: id },
+        eq: { 'sourceStudio.id': id },
       },
       sort: [{ on: sculptedModelRef, by: 'createdAt', direction: 'desc' }],
     };
@@ -1165,12 +1165,13 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       // round shows if EITHER source knows about it.
       let byKey = new Map<string, HistoryEntry>();
       let add = (card: any) => {
-        if (!card?.codeFileUrl) return;
-        let key = card.id || card.codeFileUrl;
+        let codeFileUrl = card?.codeFile?.url;
+        if (!codeFileUrl) return;
+        let key = card.id || codeFileUrl;
         if (byKey.has(key)) return;
         byKey.set(key, {
           id: card.id,
-          codeFileUrl: card.codeFileUrl,
+          codeFileUrl,
           objectName: card.objectName || 'model',
           round: card.round ?? undefined,
           screenshotUrl: card.renderScreenshot?.url,
@@ -2298,7 +2299,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     // in-place mode (lasso edits): overwrite the CURRENT round's file + card
     // instead of spawning a new instance. Falls back to a new round if there
     // is no current creation to overwrite.
-    let inPlace = Boolean(opts.inPlace && current?.codeFileUrl);
+    let inPlace = Boolean(opts.inPlace && current?.codeFile?.url);
     let previous = model.latestCreation;
     let round = inPlace ? (current!.round ?? 1) : (previous?.round ?? 0) + 1;
     let meta = {
@@ -2323,7 +2324,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
 
     if (inPlace) {
       // rewrite the current round's exact file, keep the same card
-      let curUrl = current!.codeFileUrl!;
+      let curUrl = current!.codeFile!.url!;
       let rel =
         this.realmHref && curUrl.startsWith(this.realmHref)
           ? curUrl.slice(this.realmHref.length)
@@ -2404,7 +2405,6 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
     });
     let creation = new SculptedModel({
       references: referencesCopy,
-      codeFileUrl,
       codeFile: this.makeCodeFileDef(codeFileUrl),
       objectName: parsed.objectName || 'model',
       buildBackend:
@@ -2426,7 +2426,7 @@ export class StudioIsolated extends Component<typeof ImgTo3dStudio> {
       modelUsed: model.llmModel || VISION_MODEL,
       createdAt: new Date(),
       // scopes the prerendered history search to this studio card
-      sourceStudioId: model.id,
+      sourceStudio: model,
     });
     let saved = (await new SaveCardCommand(commandContext).execute({
       card: creation,

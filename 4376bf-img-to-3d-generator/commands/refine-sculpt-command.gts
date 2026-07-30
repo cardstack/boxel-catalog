@@ -82,17 +82,17 @@ export default class RefineSculptCommand extends Command<
     // stale and edits would land on the wrong (older) round. Resolve the live
     // current round from the source studio; fall back to the attached card.
     let creation = attached;
-    if (attached?.sourceStudioId) {
+    if (attached?.sourceStudio?.id) {
       let studio: any = await new GetCardCommand(this.commandContext).execute({
-        cardId: attached.sourceStudioId,
+        cardId: attached.sourceStudio.id,
       });
       let current = studio?.selectedCreation ?? studio?.latestCreation;
-      if (current?.id && current.codeFileUrl) {
+      if (current?.id && current.codeFile?.url) {
         creation = current as SculptedModel;
       }
     }
 
-    let codeFileUrl = creation.codeFileUrl;
+    let codeFileUrl = creation.codeFile?.url;
     if (!codeFileUrl) {
       throw new Error('that model has no code file to refine');
     }
