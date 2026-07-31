@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../utils/tree-engine",
+        "name": "makeUniforms"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "makeUniforms",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

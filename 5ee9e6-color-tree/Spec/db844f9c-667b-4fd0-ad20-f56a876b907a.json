@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../utils/munsell",
+        "name": "maxChroma"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "maxChroma",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

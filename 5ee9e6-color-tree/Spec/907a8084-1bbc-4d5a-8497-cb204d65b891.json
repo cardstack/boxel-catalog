@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# ColorTree\n\n## Summary\n\nThe `ColorTree` card is a card that displays a color tree, allowing users to select a color and view its Munsell color notation. It has three display formats: isolated, embedded, and fitted.\n\n## Import\n\n```javascript\nimport { ColorTree } from '../color-tree';\n```\n\n## Usage as a Field\n\nYou can use the `ColorTree` card as a field within a consuming card or field. Here's an example:\n\n```gts\nexport class MyCard extends CardDef {\n  @field colorTree = contains(ColorTree);\n}\n```\n\n## Template Usage\n\nTo use the `ColorTree` card inside a template, you can do the following:\n\n```hbs\n<@fields.colorTree @format=\"isolated\" />\n```\n\nThis will render the `ColorTree` card in its isolated format.\n\nFor the embedded and fitted formats, you can use:\n\n```hbs\n<@fields.colorTree @format=\"embedded\" />\n<@fields.colorTree @format=\"fitted\" />\n```",
+      "ref": {
+        "name": "ColorTree",
+        "module": "../color-tree"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Color Tree",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
