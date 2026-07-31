@@ -1,7 +1,7 @@
-import { waitFor } from '@ember/test-helpers';
+import { settled, waitFor } from '@ember/test-helpers';
 
 import { getService } from '@universal-ember/test-support';
-import { module, skip } from 'qunit';
+import { module, skip, test } from 'qunit';
 
 import ListingCreateCommand from '../../../commands/listing-create';
 
@@ -38,16 +38,8 @@ import {
 const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
-//license
-const mitLicenseId = `${mockCatalogURL}License/mit`;
-//category
-const writingCategoryId = `${mockCatalogURL}Category/writing`;
-
-//tags
-const calculatorTagId = `${mockCatalogURL}Tag/calculator`;
-
 export function runTests() {
-  module.skip(
+  module(
     'Acceptance | Catalog | catalog app - listing create',
     function (hooks) {
       setupApplicationTest(hooks);
@@ -182,15 +174,34 @@ export function runTests() {
                           },
                         ],
                       });
-                    } else if (systemLower.includes('representing tag')) {
-                      // Deterministic tag selection
-                      content = JSON.stringify([calculatorTagId]);
-                    } else if (systemLower.includes('representing category')) {
-                      // Deterministic category selection
-                      content = JSON.stringify([writingCategoryId]);
-                    } else if (systemLower.includes('representing license')) {
-                      // Deterministic license selection
-                      content = JSON.stringify([mitLicenseId]);
+                    } else if (systemLower.includes('selection assistant')) {
+                      // SearchAndChoose sends a numbered candidate list and
+                      // expects option numbers back; answer with the number
+                      // of the fixture entry for the type being chosen.
+                      const wantedTitle = user.includes('for "Tag"')
+                        ? 'calculator'
+                        : user.includes('for "Category"')
+                          ? 'writing'
+                          : user.includes('for "License"')
+                            ? 'mit license'
+                            : undefined;
+                      if (wantedTitle) {
+                        // Options are "N. Name — summary"; compare the name
+                        // segment exactly so a summary mentioning the word
+                        // doesn't shadow the wanted entry.
+                        const line = user.split('\n').find((l: string) => {
+                          const m = l.trim().match(/^\d+\.\s+(.*)$/);
+                          if (!m) {
+                            return false;
+                          }
+                          const name = m[1].split(' — ')[0].trim();
+                          return name.toLowerCase() === wantedTitle;
+                        });
+                        const num = line ? parseInt(line.trim(), 10) : NaN;
+                        content = JSON.stringify(
+                          Number.isNaN(num) ? [] : [num],
+                        );
+                      }
                     }
 
                     return new Response(
@@ -231,7 +242,7 @@ export function runTests() {
               },
             },
           ]);
-          skip('card listing with single dependency module', async function (assert) {
+          test('card listing with single dependency module', async function (assert) {
             const cardId = mockCatalogURL + 'author/Author/example';
             const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
@@ -247,6 +258,10 @@ export function runTests() {
             });
             const interim = result?.listing as any;
             assert.ok(interim, 'Interim listing exists');
+            // The command returns before its auto-patch tasks run; they land
+            // via the backgroundWork promise on the result.
+            await (result as any).backgroundWork;
+            await settled();
             assert.strictEqual((interim as any).name, 'Mock Listing Title');
             assert.strictEqual(
               (interim as any).summary,
@@ -280,37 +295,35 @@ export function runTests() {
                 'Mock listing summary sentence.',
                 'Listing summary populated from autoPatchSummary mock response',
               );
+              // Only the listed export gets a spec — other exports of the
+              // same module (AuthorCompany) are deliberately not spec'd.
               assert.strictEqual(
                 listing.specs.length,
-                2,
-                'Listing should have two specs',
+                1,
+                'Listing should have one spec',
               );
               assert.true(
                 listing.specs.some((spec: any) => spec.ref.name === 'Author'),
                 'Listing should have an Author spec',
               );
-              assert.true(
-                listing.specs.some(
-                  (spec: any) => spec.ref.name === 'AuthorCompany',
-                ),
-                'Listing should have an AuthorCompany spec',
-              );
-              // Deterministic autoLink assertions from proxy mock
+              // Deterministic autoLink assertions from proxy mock. The
+              // chooser's candidate list spans every readable realm (the
+              // mock catalog plus the real one) and presents titles only,
+              // so assert on the linked card's name rather than a
+              // realm-specific id.
               assert.ok((listing as any).license, 'License linked');
               assert.strictEqual(
-                (listing as any).license.id,
-                mitLicenseId,
-                'License id matches mitLicenseId',
+                (listing as any).license.name,
+                'MIT License',
+                'License name matches the mocked selection',
               );
               assert.ok(
                 Array.isArray((listing as any).tags),
                 'Tags array exists',
               );
               assert.true(
-                (listing as any).tags.some(
-                  (t: any) => t.id === calculatorTagId,
-                ),
-                'Contains calculator tag id',
+                (listing as any).tags.some((t: any) => t.name === 'Calculator'),
+                'Contains calculator tag',
               );
               assert.ok(
                 Array.isArray((listing as any).categories),
@@ -318,14 +331,14 @@ export function runTests() {
               );
               assert.true(
                 (listing as any).categories.some(
-                  (c: any) => c.id === writingCategoryId,
+                  (c: any) => c.name === 'Writing',
                 ),
-                'Contains writing category id',
+                'Contains writing category',
               );
             }
           });
 
-          skip('listing will only create specs with recognised imports from realms it can read from', async function (assert) {
+          test('listing will only create specs with recognised imports from realms it can read from', async function (assert) {
             const cardId = mockCatalogURL + 'UnrecognisedImports/example';
             const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
@@ -369,6 +382,11 @@ export function runTests() {
             }
           });
 
+          // Skipped: written against the pre-storefront isolated-view DOM
+          // (data-test-catalog-listing-embedded-* sections) and the old
+          // open-on-stack flow — the create command no longer navigates;
+          // the host's create-listing-modal opens code mode with an
+          // isolated preview instead. Needs a rewrite against that flow.
           skip('app listing', async function (assert) {
             const cardId = mockCatalogURL + 'blog-app/BlogApp/example';
             const commandService = getService('tool-service');
@@ -383,13 +401,17 @@ export function runTests() {
               },
               targetRealm: testDestinationRealmURL,
             });
-            // Assert store-level (in-memory) results BEFORE navigating to code mode
+            // Assert store-level (in-memory) results BEFORE navigating to code
+            // mode. The command returns before its auto-patch tasks run; they
+            // land via the backgroundWork promise on the result.
             let immediateListing = createResult?.listing as any;
             assert.ok(immediateListing, 'Listing object returned from command');
+            await (createResult as any).backgroundWork;
+            await settled();
             assert.strictEqual(
               immediateListing.name,
               'Mock Listing Title',
-              'Immediate listing has patched name before persistence',
+              'Listing has patched name from autoPatchName mock response',
             );
             assert.strictEqual(
               immediateListing.summary,
@@ -401,9 +423,9 @@ export function runTests() {
               'Immediate listing has linked license before persistence',
             );
             assert.strictEqual(
-              immediateListing.license?.id,
-              mitLicenseId,
-              'Immediate listing license id matches mitLicenseId',
+              immediateListing.license?.name,
+              'MIT License',
+              'Immediate listing license name matches the mocked selection',
             );
             // Lint: avoid logical expression inside assertion
             assert.ok(
@@ -417,8 +439,8 @@ export function runTests() {
               );
             }
             assert.true(
-              immediateListing.tags.some((t: any) => t.id === calculatorTagId),
-              'Immediate listing includes calculator tag id',
+              immediateListing.tags.some((t: any) => t.name === 'Calculator'),
+              'Immediate listing includes calculator tag',
             );
             assert.ok(
               Array.isArray(immediateListing.categories),
@@ -432,9 +454,9 @@ export function runTests() {
             }
             assert.true(
               immediateListing.categories.some(
-                (c: any) => c.id === writingCategoryId,
+                (c: any) => c.name === 'Writing',
               ),
-              'Immediate listing includes writing category id',
+              'Immediate listing includes writing category',
             );
             assert.ok(
               Array.isArray(immediateListing.specs),
@@ -559,9 +581,9 @@ export function runTests() {
                 'autoLinkLicense populated listing.license',
               );
               assert.strictEqual(
-                (listing as any).license?.id,
-                mitLicenseId,
-                'Persisted listing license id matches mitLicenseId',
+                (listing as any).license?.name,
+                'MIT License',
+                'Persisted listing license name matches the mocked selection',
               );
               assert.ok(
                 Array.isArray((listing as any).tags),
@@ -574,10 +596,8 @@ export function runTests() {
                 );
               }
               assert.true(
-                (listing as any).tags.some(
-                  (t: any) => t.id === calculatorTagId,
-                ),
-                'Persisted listing includes calculator tag id',
+                (listing as any).tags.some((t: any) => t.name === 'Calculator'),
+                'Persisted listing includes calculator tag',
               );
               assert.ok(
                 Array.isArray((listing as any).categories),
@@ -591,13 +611,17 @@ export function runTests() {
               }
               assert.true(
                 (listing as any).categories.some(
-                  (c: any) => c.id === writingCategoryId,
+                  (c: any) => c.name === 'Writing',
                 ),
-                'Persisted listing includes writing category id',
+                'Persisted listing includes writing category',
               );
             }
           });
 
+          // Skipped: the create command no longer opens the listing on the
+          // interact-mode stack — the host's create-listing-modal navigates
+          // to code mode with an isolated preview after executing it, so
+          // that flow is the modal's to test.
           skip('after create command, listing card opens on stack in interact mode', async function (assert) {
             const cardId = mockCatalogURL + 'author/Author/example';
             const commandService = getService('tool-service');
