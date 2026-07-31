@@ -177,14 +177,17 @@ export function runTests() {
                     } else if (systemLower.includes('selection assistant')) {
                       // SearchAndChoose sends a numbered candidate list and
                       // expects option numbers back; answer with the number
-                      // of the fixture entry for the type being chosen.
-                      const wantedTitle = user.includes('for "Tag"')
+                      // of the fixture entry for the type being chosen, or
+                      // an empty selection for any other candidate type.
+                      const userLower = user.toLowerCase();
+                      const wantedTitle = userLower.includes('for "tag"')
                         ? 'calculator'
-                        : user.includes('for "Category"')
+                        : userLower.includes('for "category"')
                           ? 'writing'
-                          : user.includes('for "License"')
+                          : userLower.includes('for "license"')
                             ? 'mit license'
                             : undefined;
+                      let num = NaN;
                       if (wantedTitle) {
                         // Options are "N. Name — summary"; compare the name
                         // segment exactly so a summary mentioning the word
@@ -197,11 +200,9 @@ export function runTests() {
                           const name = m[1].split(' — ')[0].trim();
                           return name.toLowerCase() === wantedTitle;
                         });
-                        const num = line ? parseInt(line.trim(), 10) : NaN;
-                        content = JSON.stringify(
-                          Number.isNaN(num) ? [] : [num],
-                        );
+                        num = line ? parseInt(line.trim(), 10) : NaN;
                       }
+                      content = JSON.stringify(Number.isNaN(num) ? [] : [num]);
                     }
 
                     return new Response(
