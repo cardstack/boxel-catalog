@@ -16,7 +16,9 @@ export class FileContentField extends FieldDef {
   @field contents = contains(StringField);
   // True when contents are base64 bytes rather than source text. Set by the
   // collector from how it read the file — extension sniffing misclassifies
-  // e.g. a generated .js FileDef, which is read as binary.
+  // e.g. a generated .js FileDef, which is read as binary. Undefined on
+  // instances that predate the flag; consumers must fall back to a filename
+  // heuristic then.
   @field isBinary = contains(BooleanField);
 
   static atom = class Atom extends Component<typeof FileContentField> {
