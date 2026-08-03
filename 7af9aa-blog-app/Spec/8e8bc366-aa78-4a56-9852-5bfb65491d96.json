@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# buildBlogThemeCss\n\n## Summary\n\nBuilds the stylesheet a blog card injects: the `.blog-scope` default token block (colors chained to the semantic theme vocabulary, wrapped in `@layer blog-defaults`) plus, when a Theme card is linked, its `cssImports` and un-layered `cssVariables` so the theme wins. Shared by BlogApp, BlogPost, and Author.\n\n```js\nimport { buildBlogThemeCss, themeStyleFor } from '../blog-defaults';\n```\n",
+      "ref": {
+        "module": "../blog-defaults",
+        "name": "buildBlogThemeCss"
+      },
+      "specType": null,
+      "containedExamples": null,
+      "cardTitle": "buildBlogThemeCss",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

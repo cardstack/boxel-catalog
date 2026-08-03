@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Author\n\n## Summary\n\nA writer profile: full name, bio, portrait, contact links (email, LinkedIn, X), and a long-form markdown bio. Ships isolated, embedded, atom, and a 16-tier fitted template. Rendered as the byline (atom) on BlogPosts and as \"About the author\" bios under articles.\n\n## Import\n\n```js\nimport { Author } from '../author';\n```\n\n## Usage\n\n`@field authors = linksToMany(Author)` on a post; render with `@format='atom'` for bylines.\n",
+      "ref": {
+        "module": "../author",
+        "name": "Author"
+      },
+      "specType": "card",
+      "containedExamples": null,
+      "cardTitle": "Author",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

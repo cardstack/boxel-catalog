@@ -1,0 +1,168 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Blog App",
+      "summary": "Running a publication shouldn't mean wrestling a CMS. Blog App is a whole magazine in one card: a NYT-style front page where you drag stories onto the lead and featured slots, a Writer's Picks rail, playable games, and a post reader that doubles as the editor — headline, cover, body, categories and byline are all edited inline, right on the page.\n\nOpen the demo to see it shine: browse the Ramped magazine, drag a story into the lead slot, then open any post and double-click the headline to rewrite it. Link a Theme card and the entire site re-skins itself.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../BlogApp/ramped"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../BlogApp/fresh-blog"
+        }
+      },
+      "supportingCards.0": {
+        "links": {
+          "self": "../Theme/modern-magazine"
+        }
+      },
+      "supportingCards.1": {
+        "links": {
+          "self": "../Theme/warm-editorial"
+        }
+      },
+      "supportingCards.2": {
+        "links": {
+          "self": "../Theme/neon-brutalist"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/94226da2-0f95-4d1f-97ab-1477427b8dd7"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/29331009-1a5b-41f8-b7e2-18b049b8df71"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/2fa1e29b-2e66-4127-bb5c-e45ddadeac2d"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/8117c2fb-58ef-4921-9c45-50b836bc447a"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/53e7c463-49c6-471f-a70e-b2a6b7fa5fe2"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/26fe9e6a-73ae-4f37-88d6-b598b4a312f5"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/f207ff88-cbf1-405c-81c0-bcad97229e41"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/943d4f4e-85c1-45f0-9285-c1183ba59c30"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/fd1a9d47-8232-492b-ac81-f147dafc5580"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/8e8bc366-aa78-4a56-9852-5bfb65491d96"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/1fbf15ac-e9d3-4a54-9051-3c4b60053a20"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/1aae8a74-1869-4864-bb5c-61897a860b47"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/b9b9919b-34c5-49c6-8250-5c0e3b323853"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/b38c9546-3594-46b2-b6c2-d361b87baea3"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../Spec/11e5f90d-655a-4c1d-ae0e-50a492c3eece"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/blog-app-thumbnail.png"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../Tag/app"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../Category/content-creation"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/01-hero-front-page.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/02-post-reader-inline-edit.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/03-picks-and-latest.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/04-theme-reskin.png"
+        }
+      },
+      "skills": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      }
+    }
+  }
+}
