@@ -9,7 +9,10 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import DatetimeField from 'https://cardstack.com/base/datetime';
-import { FileContentField } from '../fields/file-content/file-content';
+import {
+  FileContentField,
+  FileManifestEntryField,
+} from '../fields/file-content/file-content';
 import GitPullRequestIcon from '@cardstack/boxel-icons/git-pull-request';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import CopyIcon from '@cardstack/boxel-icons/copy';
@@ -839,7 +842,9 @@ export class PrCard extends CardDef {
   @field submittedBy = contains(StringField);
   @field submittedAt = contains(DatetimeField);
 
-  // === Submission file contents ===
+  // === Submission files ===
+  @field fileManifest = containsMany(FileManifestEntryField);
+  // Deprecated: no longer written; kept so pre-manifest instances deserialize.
   @field allFileContents = containsMany(FileContentField);
 
   // === Computed ===

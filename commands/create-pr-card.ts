@@ -6,7 +6,10 @@ import StringField from 'https://cardstack.com/base/string';
 import { JsonField } from 'https://cardstack.com/base/commands/search-card-result';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { FileContentField } from '../fields/file-content/file-content';
+import {
+  FileContentField,
+  FileManifestEntryField,
+} from '../fields/file-content/file-content';
 import { PrCard } from '../pr-card/pr-card';
 
 class CreatePrCardInput extends CardDef {
@@ -14,6 +17,8 @@ class CreatePrCardInput extends CardDef {
   @field branchName = contains(StringField);
   @field submittedBy = contains(StringField);
   @field prSummary = contains(MarkdownField);
+  @field fileManifest = contains(JsonField);
+  // Deprecated: pre-manifest callers send full contents; still honored.
   @field allFileContents = contains(JsonField);
 }
 
@@ -28,9 +33,21 @@ export default class CreatePrCardCommand extends Command<
   }
 
   protected async run(input: CreatePrCardInput): Promise<PrCard> {
-    let { realm, branchName, submittedBy, prSummary, allFileContents } = input;
+    let { realm, branchName, submittedBy, prSummary, fileManifest } = input;
 
-    let rawFiles = Array.isArray(allFileContents) ? allFileContents : [];
+    let rawManifest = Array.isArray(fileManifest) ? fileManifest : [];
+    let manifestEntries = rawManifest.map(
+      (entry: any) =>
+        new FileManifestEntryField({
+          filename: entry.filename ?? entry.path ?? '',
+          size: typeof entry.size === 'number' ? entry.size : 0,
+          kind: entry.kind ?? 'text',
+        }),
+    );
+
+    let rawFiles = Array.isArray(input.allFileContents)
+      ? input.allFileContents
+      : [];
     let fileContents = rawFiles.map(
       (file: any) =>
         new FileContentField({
@@ -44,6 +61,7 @@ export default class CreatePrCardCommand extends Command<
       submittedBy,
       prSummary,
       submittedAt: new Date(),
+      fileManifest: manifestEntries,
       allFileContents: fileContents,
     });
 

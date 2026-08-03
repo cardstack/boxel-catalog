@@ -7,6 +7,7 @@ import {
   field,
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
+import NumberField from 'https://cardstack.com/base/number';
 import FileCodeIcon from '@cardstack/boxel-icons/file-code';
 
 export class FileContentField extends FieldDef {
@@ -150,6 +151,73 @@ export class FileContentField extends FieldDef {
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 6;
+        }
+      </style>
+    </template>
+  };
+}
+
+export class FileManifestEntryField extends FieldDef {
+  @field filename = contains(StringField);
+  @field size = contains(NumberField);
+  @field kind = contains(StringField); // 'text' | 'binary'
+
+  static atom = class Atom extends Component<typeof FileManifestEntryField> {
+    get filename() {
+      return this.args.model.filename ?? 'Untitled';
+    }
+
+    get formattedSize() {
+      const size = this.args.model.size ?? 0;
+      if (size >= 1024 * 1024) {
+        return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+      }
+      if (size >= 1024) {
+        return `${(size / 1024).toFixed(1)} KB`;
+      }
+      return `${size} B`;
+    }
+
+    <template>
+      <span class='file-atom'>
+        <FileCodeIcon class='file-atom-icon' width='12' height='12' />
+        <span class='file-atom-name'>{{this.filename}}</span>
+        <span class='file-atom-size'>{{this.formattedSize}}</span>
+      </span>
+      <style scoped>
+        .file-atom {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 2px 6px;
+          background: var(--muted, #f6f8fa);
+          border-radius: var(--boxel-border-radius-sm);
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        .file-atom-icon {
+          flex-shrink: 0;
+          color: var(--muted-foreground, #656d76);
+        }
+
+        .file-atom-name {
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 500;
+          font-family: var(--boxel-monospace-font-family);
+          color: var(--foreground, #1f2328);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          min-width: 0;
+        }
+
+        .file-atom-size {
+          flex-shrink: 0;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--boxel-font-family);
+          color: var(--muted-foreground, #656d76);
+          white-space: nowrap;
         }
       </style>
     </template>
