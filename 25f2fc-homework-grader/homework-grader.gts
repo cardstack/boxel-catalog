@@ -15,7 +15,7 @@ import {
   IconButton,
   ProgressBar,
 } from '@cardstack/boxel-ui/components';
-import { add, and, eq } from '@cardstack/boxel-ui/helpers';
+import { add, and, bool, eq } from '@cardstack/boxel-ui/helpers';
 import {
   CardDef,
   Component,
@@ -933,7 +933,9 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                 }}
               </p>
             </div>
-            {{#if (and @model.gradingSkill @model.questions.length)}}
+            {{#if
+              (and (bool @model.gradingSkill) (bool @model.questions.length))
+            }}
               <Button
                 class='hw-grade-btn {{if this.isGrading "is-loading"}}'
                 @kind='primary'

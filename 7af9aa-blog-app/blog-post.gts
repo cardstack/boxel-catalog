@@ -23,7 +23,7 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
+import { bool, eq, or } from '@cardstack/boxel-ui/helpers';
 
 import {
   buildBlogThemeCss,
@@ -971,7 +971,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
           >
             <:slot as |slotName|>
               {{#if (eq slotName 'featuredImage')}}
-                {{#if (or @model.featuredImage.imageUrl this.canEdit)}}
+                {{#if (or (bool @model.featuredImage.imageUrl) this.canEdit)}}
                   <EditableField
                     @isEditing={{eq this.editingField 'featuredImage'}}
                     @canEdit={{this.canEdit}}
