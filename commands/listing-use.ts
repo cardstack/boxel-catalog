@@ -2,8 +2,8 @@ import {
   Command,
   codeRefWithAbsoluteIdentifier,
   isResolvedCodeRef,
-  loadCardDef,
   generateInstallFolderName,
+  join,
   rri,
 } from '@cardstack/runtime-common';
 
@@ -15,7 +15,7 @@ import type { Skill } from 'https://cardstack.com/base/skill';
 import { loadCommandModule, getLoaderService } from './utils';
 
 import CopyCardToRealmCommand from '@cardstack/boxel-host/commands/copy-card';
-import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import ExecuteAtomicOperationsCommand from '@cardstack/boxel-host/commands/execute-atomic-operations';
 import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
 
 import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
@@ -54,6 +54,11 @@ export default class ListingUseCommand extends Command<
       this.commandContext,
     ).loader.getVirtualNetwork()!;
 
+    // A blank instance is just a doc adopting from the spec's ref — write it
+    // directly rather than loading the card class and instantiating it, so
+    // the realm materializes field defaults at load time and the command
+    // never has to fetch modules.
+    let operations = [];
     for (const spec of specsWithoutFields) {
       if (spec.isComponent) {
         return;
@@ -67,14 +72,16 @@ export default class ListingUseCommand extends Command<
       if (!isResolvedCodeRef(ref)) {
         throw new Error('ref is not a resolved code ref');
       }
-      let Klass = await loadCardDef(ref, {
-        loader: getLoaderService(this.commandContext).loader,
+      operations.push({
+        op: 'add' as const,
+        href: join(realmUrl, localDir, ref.name, crypto.randomUUID()) + '.json',
+        data: { type: 'card', meta: { adoptsFrom: ref } },
       });
-      let card = new Klass({}) as CardAPI.CardDef;
-      await new SaveCardCommand(this.commandContext).execute({
-        card,
-        realm: realmUrl,
-        localDir,
+    }
+    if (operations.length > 0) {
+      await new ExecuteAtomicOperationsCommand(this.commandContext).execute({
+        realmIdentifier: realmUrl,
+        operations,
       });
     }
 
