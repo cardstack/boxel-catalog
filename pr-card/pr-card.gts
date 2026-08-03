@@ -844,7 +844,8 @@ export class PrCard extends CardDef {
 
   // === Submission files ===
   @field fileManifest = containsMany(FileManifestEntryField);
-  // Deprecated: no longer written; kept so pre-manifest instances deserialize.
+  // Deprecated: written only for pre-manifest callers; kept so older
+  // instances deserialize.
   @field allFileContents = containsMany(FileContentField);
 
   // === Computed ===

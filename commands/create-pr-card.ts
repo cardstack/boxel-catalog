@@ -45,16 +45,18 @@ export default class CreatePrCardCommand extends Command<
         }),
     );
 
-    let rawFiles = Array.isArray(input.allFileContents)
-      ? input.allFileContents
-      : [];
-    let fileContents = rawFiles.map(
-      (file: any) =>
-        new FileContentField({
-          filename: file.filename ?? file.path ?? '',
-          contents: file.contents ?? file.content ?? '',
-        }),
-    );
+    // Legacy callers send full contents instead of a manifest; store them
+    // only when no manifest was provided so manifest-flow cards stay small.
+    let fileContents: FileContentField[] = [];
+    if (manifestEntries.length === 0 && Array.isArray(input.allFileContents)) {
+      fileContents = input.allFileContents.map(
+        (file: any) =>
+          new FileContentField({
+            filename: file.filename ?? file.path ?? '',
+            contents: file.contents ?? file.content ?? '',
+          }),
+      );
+    }
 
     let card = new PrCard({
       branchName,
