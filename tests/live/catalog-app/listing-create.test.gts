@@ -619,36 +619,62 @@ export function runTests() {
             }
           });
 
-          // Skipped: the create command no longer opens the listing on the
-          // interact-mode stack — the host's create-listing-modal navigates
-          // to code mode with an isolated preview after executing it, so
-          // that flow is the modal's to test.
-          skip('after create command, listing card opens on stack in interact mode', async function (assert) {
-            const cardId = mockCatalogURL + 'author/Author/example';
+          test('open cards of other types and explicit ids become supportingCards', async function (assert) {
+            const authorExampleId = mockCatalogURL + 'author/Author/example';
+            const companyExampleId =
+              mockCatalogURL + 'author/AuthorCompany/example';
+            const publisherId = mockCatalogURL + 'Publisher/boxel-publisher';
             const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
               commandService.commandContext,
             );
-
-            let r = await command.execute({
-              openCardIds: [cardId],
+            const result = await command.execute({
+              openCardIds: [authorExampleId, companyExampleId],
+              // authorExampleId is deliberately listed here too: a card
+              // classified as an example must stay an example
+              supportingCardIds: [publisherId, authorExampleId],
               codeRef: {
                 module: rri(`${mockCatalogURL}author/author.gts`),
                 name: 'Author',
               },
               targetRealm: mockCatalogURL,
             });
+            const interim = result?.listing as any;
+            assert.ok(interim, 'Listing created');
+            await (result as any).backgroundWork;
+            await settled();
 
-            await verifySubmode(assert, 'interact');
-            const listing = r?.listing as any;
-            const createdId = listing.id;
-            assert.ok(createdId, 'Listing id should be present');
-            await waitForCardOnStack(createdId);
-            assert
-              .dom(`[data-test-stack-card="${createdId}"]`)
-              .exists(
-                'Created listing card (by persisted id) is displayed on stack after command execution',
-              );
+            // Assert on the persisted document: the command's contract is
+            // the relationships it writes, and the in-memory instance's
+            // linksToMany entries resolve lazily.
+            let rawResponse = await getService('network').fetch(
+              interim.id + '.json',
+              { headers: { Accept: 'application/vnd.card+json' } },
+            );
+            let rawDoc = await rawResponse.json();
+            const relationships = rawDoc?.data?.relationships ?? {};
+            const linkTargets = (prefix: string) =>
+              Object.entries(relationships)
+                .filter(([key]) => key.startsWith(`${prefix}.`))
+                .map(([, value]: [string, any]) => value?.data?.id);
+
+            assert.true(
+              linkTargets('examples').includes(authorExampleId),
+              'open card of the listed type is linked as an example',
+            );
+            const supportingIds = linkTargets('supportingCards');
+            assert.true(
+              supportingIds.includes(companyExampleId),
+              'open card of another type is linked as a supportingCard',
+            );
+            assert.true(
+              supportingIds.includes(publisherId),
+              'explicit supportingCardIds are linked as supportingCards',
+            );
+            assert.false(
+              supportingIds.includes(authorExampleId),
+              'a card classified as an example is not duplicated into supportingCards',
+            );
           });
         });
       });
