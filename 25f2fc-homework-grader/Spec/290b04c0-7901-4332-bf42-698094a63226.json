@@ -22,7 +22,7 @@
         "name": "GradeField",
         "module": "../homework-grader"
       },
-      "readMe": null,
+      "readMe": "# GradeField\n\n## Summary\n\nGradeField holds the AI's grading result for an assignment: `overallGrade` (letter A–F), `overallFeedback` (a brief markdown summary of the whole assignment), `questionPoints` (containsMany numbers, one per question, same order as the questions array), `questionFeedbacks` (containsMany markdown, one focused feedback entry per question), and a computed `overallPoints` that sums the per-question points. The grading skill fills all of these in one act-mode patch; `isGradeConsistent` (exported from `../homework-grader`) checks the arrays line up with the question count.\n\n## Usage as a Field\n\n```ts\n@field grade = contains(GradeField);\n```\n\n## Template Usage\n\n```handlebars\n<@fields.grade />\n{{@model.grade.overallGrade}} · {{@model.grade.overallPoints}} pts\n```\n",
       "cardInfo": {
         "name": null,
         "notes": null,

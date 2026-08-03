@@ -18,6 +18,26 @@
       }
     },
     "relationships": {
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/01-hero-graded.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/02-empty-assignment.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/03-question-feedback.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/04-grade-with-ai.png"
+        }
+      },
       "tags.0": {
         "links": {
           "self": "../../Tag/ai"
@@ -41,11 +61,6 @@
       "specs.2": {
         "links": {
           "self": "../Spec/5455e5c1-1d62-41c9-ae39-f2ff09da9b83"
-        }
-      },
-      "images.0": {
-        "links": {
-          "self": "../Screenshots/homework-grader-screenshot.png"
         }
       },
       "skills.0": {
@@ -81,6 +96,11 @@
       "cardInfo.cardThumbnail": {
         "links": {
           "self": "../ListingThumbnails/homeworkgrader-73e64906.png"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../HomeworkGrader/fresh-assignment"
         }
       }
     }

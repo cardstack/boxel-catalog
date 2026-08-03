@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "instructions": null,
+      "questions": [],
+      "grade": {
+        "overallGrade": null,
+        "overallFeedback": null,
+        "questionPoints": [],
+        "questionFeedbacks": []
+      },
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": "",
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "gradingSkill": {
+        "links": {
+          "self": "../Skill/dc116967-432e-4864-93aa-d7ea3f335d24"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../homework-grader",
+        "name": "HomeworkGrader"
+      }
+    }
+  }
+}

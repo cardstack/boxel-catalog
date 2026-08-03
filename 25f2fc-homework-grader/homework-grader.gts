@@ -15,7 +15,7 @@ import {
   IconButton,
   ProgressBar,
 } from '@cardstack/boxel-ui/components';
-import { add, eq } from '@cardstack/boxel-ui/helpers';
+import { add, and, eq } from '@cardstack/boxel-ui/helpers';
 import {
   CardDef,
   Component,
@@ -26,22 +26,107 @@ import {
   linksTo,
 } from 'https://cardstack.com/base/card-api';
 import BooleanField from 'https://cardstack.com/base/boolean';
+import enumField from 'https://cardstack.com/base/enum';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import NumberField from 'https://cardstack.com/base/number';
 import { Skill } from 'https://cardstack.com/base/skill';
 import StringField from 'https://cardstack.com/base/string';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 
+// True when a returned grade is structurally consistent with the assignment:
+// a letter grade plus per-question points (and feedbacks, when present)
+// matching the question count. Exported so live tests can hit it directly.
+export function isGradeConsistent(
+  grade:
+    | {
+        overallGrade?: string | null;
+        questionPoints?: (number | null)[];
+        questionFeedbacks?: (string | null)[];
+      }
+    | null
+    | undefined,
+  questionCount: number,
+): boolean {
+  if (!grade?.overallGrade) return false;
+  if ((grade.questionPoints?.length ?? 0) !== questionCount) return false;
+  let feedbacks = grade.questionFeedbacks;
+  if (feedbacks && feedbacks.length > 0 && feedbacks.length !== questionCount) {
+    return false;
+  }
+  return true;
+}
+
+// letter grades the grading skill is allowed to award (see the skill's
+// grading scale) — an enum so the edit UI is a picker, not free text
+export const LetterGradeField = enumField(StringField, {
+  options: ['A', 'B', 'C', 'D', 'E', 'F'].map((g) => ({ value: g, label: g })),
+});
+
 export class GradeField extends FieldDef {
-  @field overallGrade = contains(StringField);
+  @field overallGrade = contains(LetterGradeField);
   @field overallFeedback = contains(MarkdownField);
   @field questionPoints = containsMany(NumberField);
+  // one feedback entry per question, same order/length as questionPoints
+  @field questionFeedbacks = containsMany(MarkdownField);
 
   @field overallPoints = contains(NumberField, {
     computeVia: function (this: GradeField) {
       return this.questionPoints.reduce((acc, num) => acc + (num || 0), 0);
     },
   });
+
+  static edit = class Edit extends Component<typeof GradeField> {
+    <template>
+      <div class='g-edit'>
+        <label class='g-edit-field g-edit-grade'>
+          <span class='g-edit-label'>Overall grade</span>
+          <@fields.overallGrade @format='edit' />
+        </label>
+        <label class='g-edit-field'>
+          <span class='g-edit-label'>Overall feedback</span>
+          <@fields.overallFeedback @format='edit' />
+        </label>
+        <label class='g-edit-field'>
+          <span class='g-edit-label'>Points per question</span>
+          <@fields.questionPoints @format='edit' />
+        </label>
+        <label class='g-edit-field'>
+          <span class='g-edit-label'>Feedback per question</span>
+          <@fields.questionFeedbacks @format='edit' />
+        </label>
+      </div>
+      <style scoped>
+        .g-edit {
+          --g-accent: var(--primary, #2563eb);
+          --g-text: var(--foreground, #0f172a);
+          --g-muted: var(--muted-foreground, #64748b);
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          color: var(--g-text);
+        }
+        .g-edit-grade {
+          max-width: 140px;
+        }
+        .g-edit-field {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          min-width: 0;
+        }
+        .g-edit-label {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.07em;
+          text-transform: uppercase;
+          color: var(--g-muted);
+        }
+        .g-edit-field:focus-within .g-edit-label {
+          color: var(--g-accent);
+        }
+      </style>
+    </template>
+  };
 
   static embedded = class Embedded extends Component<typeof GradeField> {
     get gradeClass() {
@@ -87,26 +172,26 @@ export class GradeField extends FieldDef {
           justify-content: center;
           font-size: 20px;
           font-weight: 800;
-          color: white;
-          background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+          color: var(--c-on-blue, #ffffff);
+          background: #2563eb;
         }
 
         .grade-circle.grade-A {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: #10b981;
         }
 
         .grade-circle.grade-B {
-          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          background: #2563eb;
         }
 
         .grade-circle.grade-C {
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          background: #f59e0b;
         }
 
         .grade-circle.grade-D,
         .grade-circle.grade-E,
         .grade-circle.grade-F {
-          background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+          background: #ef4444;
         }
 
         .details-column {
@@ -221,6 +306,57 @@ export class QuestionField extends FieldDef {
     },
   });
 
+  static edit = class Edit extends Component<typeof QuestionField> {
+    <template>
+      <div class='q-edit'>
+        <label class='q-edit-field'>
+          <span class='q-edit-label'>Question</span>
+          <@fields.questionText @format='edit' />
+        </label>
+        <label class='q-edit-field q-edit-points'>
+          <span class='q-edit-label'>Max points</span>
+          <@fields.maxPoints @format='edit' />
+        </label>
+      </div>
+      <style scoped>
+        .q-edit {
+          --q-accent: var(--primary, #2563eb);
+          --q-text: var(--foreground, #0f172a);
+          --q-muted: var(--muted-foreground, #64748b);
+          --q-border: var(--border, #e2e8f0);
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          color: var(--q-text);
+        }
+        .q-edit-points {
+          max-width: 120px;
+        }
+        .q-edit-field {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          min-width: 0;
+        }
+        .q-edit-label {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.07em;
+          text-transform: uppercase;
+          color: var(--q-muted);
+        }
+        .q-edit-field :deep(.boxel-input),
+        .q-edit-field :deep(input),
+        .q-edit-field :deep(textarea) {
+          font-size: 13px;
+        }
+        .q-edit-field:focus-within .q-edit-label {
+          color: var(--q-accent);
+        }
+      </style>
+    </template>
+  };
+
   static embedded = class Embedded extends Component<typeof QuestionField> {
     <template>
       <div class='embedded-question'>
@@ -290,12 +426,20 @@ export class QuestionField extends FieldDef {
 }
 
 class HomeworkIsolated extends Component<typeof HomeworkGrader> {
+  get hasLinkedTheme(): boolean {
+    return Boolean((this.args.model as any)?.cardInfo?.theme);
+  }
+
   @tracked isGrading = false;
   @tracked lastGradedAnswers: string | null = null;
-  @tracked activeTab: 'overview' | 'questions' | 'feedback' = 'overview';
+  @tracked activeTab: 'overview' | 'questions' = 'overview';
   @tracked showToast = false;
   @tracked toastGrade: string | null = null;
   @tracked showAnswerUpdateToast = false;
+  @tracked gradeError: string | null = null;
+  @tracked editingQuestionIndex = -1;
+  @tracked armedRemoveIndex = -1;
+  _disarmTimer: ReturnType<typeof setTimeout> | null = null;
   roomId: string | null = null;
   _gradePoller: ReturnType<typeof setInterval> | null = null;
   _lastSeenAnswers: string | null = null;
@@ -313,14 +457,27 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
     this._answerPoller = setInterval(() => {
       const current = this.currentAnswersSnapshot;
       if (current !== this._lastSeenAnswers) {
+        // adding/removing a question changes the snapshot length — that's a
+        // structure change, not an answer mutation, so move the baseline
+        // silently; the re-grade prompt is only for edited answers on an
+        // already-graded assignment
+        const prevLen = JSON.parse(this._lastSeenAnswers ?? '[]').length;
+        const currLen = JSON.parse(current).length;
+        const answersMutated = prevLen === currLen;
         this._lastSeenAnswers = current;
-        this.debouncedShowAnswerUpdateToast();
+        if (answersMutated && this.hasGrade) {
+          this.debouncedShowAnswerUpdateToast();
+        }
       }
     }, 500);
   }
 
   willDestroy() {
     super.willDestroy();
+    if (this._disarmTimer) {
+      clearTimeout(this._disarmTimer);
+      this._disarmTimer = null;
+    }
     if (this._answerPoller) {
       clearInterval(this._answerPoller);
       this._answerPoller = null;
@@ -354,7 +511,14 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
     this._gradePoller = setInterval(() => {
       attempts++;
       const current = this.args.model?.grade?.overallGrade ?? null;
-      if (current && current !== prevGrade) {
+      if (
+        current &&
+        current !== prevGrade &&
+        isGradeConsistent(
+          this.args.model?.grade,
+          this.args.model?.questions?.length ?? 0,
+        )
+      ) {
         clearInterval(this._gradePoller!);
         this._gradePoller = null;
         this.toastGrade = current;
@@ -389,9 +553,14 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
   }
 
   get hasGrade() {
+    // a grade only counts while it still matches the question structure —
+    // adding/removing questions invalidates every score/feedback display
     return Boolean(
       this.args.model.grade?.overallGrade &&
-      this.args.model.grade?.questionPoints.length > 0,
+      isGradeConsistent(
+        this.args.model.grade,
+        this.args.model?.questions?.length ?? 0,
+      ),
     );
   }
 
@@ -424,15 +593,16 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
     );
   }
 
-  setTab = (tab: 'overview' | 'questions' | 'feedback') => {
+  setTab = (tab: 'overview' | 'questions') => {
     this.activeTab = tab;
   };
 
   getPointsDisplay = (questionIndex: number) => {
     const question = this.args.model?.questions?.[questionIndex];
     const maxPoints = question?.maxPoints ?? 5;
-    const earnedPoints =
-      this.args.model?.grade?.questionPoints?.[questionIndex];
+    const earnedPoints = this.hasGrade
+      ? this.args.model?.grade?.questionPoints?.[questionIndex]
+      : undefined;
     return {
       earned: earnedPoints ?? 0,
       max: maxPoints,
@@ -441,9 +611,19 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
   };
 
   getQuestionTitle = (index: number): string => {
-    return (
-      this.args.model?.questions?.[index]?.cardTitle ?? `Question ${index + 1}`
-    );
+    // questions are identified by position only — the numbered circle plus
+    // "Question N" (cardTitle isn't part of the authoring UI)
+    return `Question ${index + 1}`;
+  };
+
+  getQuestionExcerpt = (index: number): string => {
+    let text = this.args.model?.questions?.[index]?.questionText ?? '';
+    let plain = String(text)
+      .replace(/[#*_>`]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!plain) return `Question ${index + 1}`;
+    return plain.length > 46 ? plain.slice(0, 46).trimEnd() + '…' : plain;
   };
 
   getMaxForQuestion = (index: number): number => {
@@ -469,6 +649,58 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
 
   getQuestionField = (index: number) => {
     return this.args.fields?.questions?.[index];
+  };
+
+  dismissError = () => {
+    this.gradeError = null;
+  };
+
+  getQuestionFeedback = (index: number): string | undefined => {
+    if (!this.hasGrade) return undefined;
+    return this.args.model?.grade?.questionFeedbacks?.[index] || undefined;
+  };
+
+  // changing the question structure invalidates any existing grade — its
+  // per-question points/feedbacks are keyed by index, so clear it outright
+  // rather than leaving stale data behind
+  clearGrade = () => {
+    if (this.args.model.grade?.overallGrade) {
+      this.args.model.grade = new GradeField();
+    }
+  };
+
+  addQuestion = () => {
+    let q = new QuestionField();
+    q.maxPoints = 10;
+    this.args.model.questions = [...(this.args.model.questions ?? []), q];
+    this.clearGrade();
+    // open the new question in author mode right away
+    this.editingQuestionIndex = (this.args.model.questions?.length ?? 1) - 1;
+  };
+
+  // two-tap delete (same pattern as TSP's armed clear): the first click arms
+  // the button for a few seconds, only a second click actually removes
+  removeQuestion = (index: number) => {
+    if (this.armedRemoveIndex !== index) {
+      this.armedRemoveIndex = index;
+      if (this._disarmTimer) clearTimeout(this._disarmTimer);
+      this._disarmTimer = setTimeout(() => {
+        this.armedRemoveIndex = -1;
+      }, 3500);
+      return;
+    }
+    if (this._disarmTimer) clearTimeout(this._disarmTimer);
+    this.armedRemoveIndex = -1;
+    this.args.model.questions = (this.args.model.questions ?? []).filter(
+      (_q: QuestionField, i: number) => i !== index,
+    );
+    this.clearGrade();
+    this.editingQuestionIndex = -1;
+  };
+
+  toggleEditQuestion = (index: number) => {
+    this.editingQuestionIndex =
+      this.editingQuestionIndex === index ? -1 : index;
   };
 
   get scoreRingStyle() {
@@ -506,6 +738,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
     this.lastGradedAnswers = this.currentAnswersSnapshot;
     this._lastSeenAnswers = this.currentAnswersSnapshot;
     const prevGrade = this.args.model?.grade?.overallGrade ?? null;
+    this.gradeError = null;
     this.roomId = null;
     try {
       let commandContext = this.args.context?.commandContext;
@@ -520,14 +753,29 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       this.startGradePolling(prevGrade);
     } catch (error) {
       console.error('Error grading homework:', error);
-      alert('There was an error grading your homework. Please try again.');
+      this.gradeError =
+        error instanceof Error
+          ? error.message
+          : 'There was an error grading your homework. Please try again.';
     } finally {
       this.isGrading = false;
     }
   };
 
   <template>
-    <article class='hw-app'>
+    <article class='hw-app {{unless this.hasLinkedTheme "hw-default-theme"}}'>
+
+      {{#if this.gradeError}}
+        <aside class='hw-error-banner' role='alert' aria-label='Grading error'>
+          <span class='hw-error-text'>{{this.gradeError}}</span>
+          <button
+            type='button'
+            class='hw-error-dismiss'
+            aria-label='Dismiss error'
+            {{on 'click' this.dismissError}}
+          >✕</button>
+        </aside>
+      {{/if}}
 
       {{! Answer-update floating toast }}
       {{#if this.showAnswerUpdateToast}}
@@ -583,7 +831,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       <div class='hw-layout'>
 
         {{! Sidebar }}
-        <aside class='hw-sidebar'>
+        <aside class='hw-sidebar' aria-label='Assignment summary'>
           <div class='hw-sidebar-top'>
             <div class='hw-sidebar-brand'>
               <div class='hw-brand-icon'>
@@ -650,25 +898,6 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                   /></svg>
                 Questions
               </Button>
-              <Button
-                class='hw-nav-btn
-                  {{if (eq this.activeTab "feedback") "is-active"}}'
-                @kind='text-only'
-                @size='small'
-                {{on 'click' (fn this.setTab 'feedback')}}
-              >
-                <svg
-                  width='16'
-                  height='16'
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  stroke='currentColor'
-                  stroke-width='2'
-                ><path
-                    d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'
-                  /></svg>
-                Feedback
-              </Button>
             </nav>
           </div>
 
@@ -681,27 +910,6 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                 aria-hidden='true'
               />
             {{/if}}
-            <div class='hw-sidebar-cta'>
-              <p class='hw-cta-title'>Keep improving!</p>
-              <p class='hw-cta-body'>Review your feedback and re-grade to boost
-                your score.</p>
-              {{#if @model.gradingSkill}}
-                <Button
-                  class='hw-cta-btn {{if this.isGrading "is-loading"}}'
-                  @kind='primary'
-                  @size='small'
-                  @disabled={{this.isGrading}}
-                  {{on 'click' this.grade}}
-                >
-                  <span class='hw-btn-icon'>↺</span>
-                  {{if
-                    this.isGrading
-                    'Grading…'
-                    (if this.hasGrade 'Re-grade Assignment' 'Grade Homework')
-                  }}
-                </Button>
-              {{/if}}
-            </div>
           </div>
         </aside>
 
@@ -713,7 +921,6 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
               <h2 class='hw-topbar-heading'>
                 {{if (eq this.activeTab 'overview') 'Overview'}}
                 {{if (eq this.activeTab 'questions') 'Questions'}}
-                {{if (eq this.activeTab 'feedback') 'Feedback'}}
               </h2>
               <p class='hw-topbar-sub'>
                 {{if
@@ -722,15 +929,11 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                 }}
                 {{if
                   (eq this.activeTab 'questions')
-                  'Answer each question below'
-                }}
-                {{if
-                  (eq this.activeTab 'feedback')
-                  'Detailed feedback from your grader'
+                  'Answer each question and review its feedback'
                 }}
               </p>
             </div>
-            {{#if @model.gradingSkill}}
+            {{#if (and @model.gradingSkill @model.questions.length)}}
               <Button
                 class='hw-grade-btn {{if this.isGrading "is-loading"}}'
                 @kind='primary'
@@ -749,7 +952,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
           </header>
 
           {{#if this.isGradeStale}}
-            <aside class='hw-stale-banner'>
+            <aside class='hw-stale-banner' aria-label='Stale grade notice'>
               <span>⚠</span>
               <p>Answers updated — click
                 <strong>Re-grade</strong>
@@ -806,7 +1009,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                     {{#each @model.grade.questionPoints as |pts qi|}}
                       <div class='hw-bd-row'>
                         <span class='hw-bd-label'>Q{{add qi 1}}.
-                          {{this.getQuestionTitle qi}}</span>
+                          {{this.getQuestionExcerpt qi}}</span>
                         <div class='hw-bd-track'>
                           <div
                             class='hw-bd-fill'
@@ -849,8 +1052,8 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                       class='hw-view-feedback-btn'
                       @kind='secondary'
                       @size='small'
-                      {{on 'click' (fn this.setTab 'feedback')}}
-                    >View Full Feedback →</Button>
+                      {{on 'click' (fn this.setTab 'questions')}}
+                    >Per-question feedback →</Button>
                   </section>
                 {{/if}}
 
@@ -862,6 +1065,10 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                     {{#if @model.gradingSkill}}
                       <p class='hw-pending-hint'>Complete your answers and click
                         <em>Grade Homework</em></p>
+                    {{else}}
+                      <p class='hw-pending-hint'>Link a grading skill (open the
+                        card editor and pick one under
+                        <em>Grading Skill</em>) to enable AI grading.</p>
                     {{/if}}
                   </div>
                 </section>
@@ -869,6 +1076,13 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
 
               <section class='hw-questions-overview'>
                 <h3 class='hw-section-title'>Questions</h3>
+                {{#unless @model.questions.length}}
+                  <div class='hw-empty-questions'>
+                    <p class='hw-empty-title'>No questions yet</p>
+                    <p class='hw-empty-hint'>Head to the Questions tab and add
+                      your first question to build the assignment.</p>
+                  </div>
+                {{/unless}}
                 {{#each @model.questions as |_question qi|}}
                   <Button
                     class='hw-q-item'
@@ -878,7 +1092,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                   >
                     <div class='hw-q-num'>{{add qi 1}}</div>
                     <div class='hw-q-meta'>
-                      <span class='hw-q-name'>{{this.getQuestionTitle
+                      <span class='hw-q-name'>{{this.getQuestionExcerpt
                           qi
                         }}</span>
                       {{#let (this.getPointsDisplay qi) as |pts|}}
@@ -960,46 +1174,74 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                           <span class='hw-question-max'>{{pts.max}} pts</span>
                         {{/if}}
                       {{/let}}
+                      <button
+                        type='button'
+                        class='hw-q-edit
+                          {{if (eq qi this.editingQuestionIndex) "is-on"}}'
+                        title={{if
+                          (eq qi this.editingQuestionIndex)
+                          'Done editing'
+                          'Edit this question'
+                        }}
+                        aria-label='Edit question {{add qi 1}}'
+                        {{on 'click' (fn this.toggleEditQuestion qi)}}
+                      >✎</button>
+                      <button
+                        type='button'
+                        class='hw-q-remove
+                          {{if (eq qi this.armedRemoveIndex) "is-armed"}}'
+                        title={{if
+                          (eq qi this.armedRemoveIndex)
+                          'Click again to remove this question'
+                          'Remove this question'
+                        }}
+                        aria-label='Remove question {{add qi 1}}'
+                        {{on 'click' (fn this.removeQuestion qi)}}
+                      >{{if
+                          (eq qi this.armedRemoveIndex)
+                          'Confirm ✕'
+                          '✕'
+                        }}</button>
                     </div>
                     <div class='hw-question-body'>
                       {{#let (this.getQuestionField qi) as |questionField|}}
                         {{#if questionField}}
-                          {{component questionField format='fitted'}}
+                          {{#if (eq qi this.editingQuestionIndex)}}
+                            {{component questionField format='edit'}}
+                          {{else}}
+                            {{component questionField format='fitted'}}
+                          {{/if}}
                         {{/if}}
                       {{/let}}
                     </div>
+                    {{#unless (eq qi this.editingQuestionIndex)}}
+                      {{#if (this.getQuestionFeedback qi)}}
+                        <div class='hw-q-feedback'>
+                          <span class='hw-q-feedback-label'>Feedback</span>
+                          <p
+                            class='hw-q-feedback-text'
+                          >{{this.getQuestionFeedback qi}}</p>
+                        </div>
+                      {{/if}}
+                    {{/unless}}
                   </article>
+                {{else}}
+                  <div class='hw-empty-questions'>
+                    <p class='hw-empty-title'>No questions yet</p>
+                    <p class='hw-empty-hint'>Add your first question to build
+                      the assignment.</p>
+                  </div>
                 {{/each}}
+                <Button
+                  class='hw-add-question'
+                  @kind='secondary'
+                  @size='small'
+                  {{on 'click' this.addQuestion}}
+                >+ Add question</Button>
               </section>
             {{/if}}
 
             {{! FEEDBACK TAB }}
-            {{#if (eq this.activeTab 'feedback')}}
-              <section class='hw-feedback-full'>
-                {{#if this.hasGrade}}
-                  <div class='hw-feedback-header'>
-                    <div class='hw-feedback-grade-badge'>
-                      {{@model.grade.overallGrade}}
-                    </div>
-                    <div class='hw-feedback-grade-meta'>
-                      <span class='hw-feedback-score'>{{this.totalPoints}}
-                        /
-                        {{this.maxPoints}}
-                        pts</span>
-                      <span class='hw-feedback-pct'>{{this.percentage}}% ·
-                        {{this.gradeVerdict}}</span>
-                    </div>
-                  </div>
-                  <div class='hw-feedback-content'>
-                    <@fields.grade />
-                  </div>
-                {{else}}
-                  <p class='hw-no-feedback'>No feedback yet — grade your
-                    homework first.</p>
-                {{/if}}
-              </section>
-            {{/if}}
-
           </main>
         </div>
       </div>
@@ -1008,21 +1250,45 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
 
     <style scoped>
       /* ── Design tokens + base ── */
+      /* Default palette when NO theme is linked — pins the semantic tokens
+         so app-level defaults can't restyle the card arbitrarily. A linked
+         theme omits this class, so its tokens win. */
+      .hw-default-theme {
+        --background: #f1f5f9;
+        --foreground: #0f172a;
+        --card: #ffffff;
+        --card-foreground: #0f172a;
+        --muted: #f1f5f9;
+        --muted-foreground: #64748b;
+        --border: #e2e8f0;
+        --primary: #2563eb;
+        --primary-foreground: #ffffff;
+        --destructive: #ef4444;
+        --radius: 10px;
+      }
+
       .hw-app {
-        --c-blue: #2563eb;
-        --c-blue-hover: #1d4ed8;
-        --c-blue-bg: #eff6ff;
-        --c-blue-border: #bfdbfe;
-        --c-blue-muted: #93c5fd;
-        --c-bg: #f1f5f9;
-        --c-white: #ffffff;
-        --c-text: #0f172a;
-        --c-text-2: #1e293b;
-        --c-muted: #64748b;
-        --c-border: #e2e8f0;
-        --c-border-2: #cbd5e1;
+        container-type: inline-size;
+        container-name: hw-app;
+        /* Each token resolves to the active theme token (--primary,
+           --foreground, …) with the card's blue-slate default as the
+           literal fallback. Derived shades come from color-mix so a theme
+           only has to supply the semantic set. */
+        --c-blue: var(--primary, #2563eb);
+        --c-blue-hover: color-mix(in srgb, var(--c-blue) 85%, #000000);
+        --c-blue-bg: color-mix(in srgb, var(--c-blue) 8%, var(--c-white));
+        --c-blue-border: color-mix(in srgb, var(--c-blue) 28%, var(--c-white));
+        --c-blue-muted: color-mix(in srgb, var(--c-blue) 45%, var(--c-white));
+        --c-on-blue: var(--primary-foreground, #ffffff);
+        --c-bg: var(--background, #f1f5f9);
+        --c-white: var(--card, #ffffff);
+        --c-text: var(--foreground, #0f172a);
+        --c-text-2: var(--foreground, #1e293b);
+        --c-muted: var(--muted-foreground, #64748b);
+        --c-border: var(--border, #e2e8f0);
+        --c-border-2: var(--border, #cbd5e1);
         --c-success: #10b981;
-        --c-danger: #ef4444;
+        --c-danger: var(--destructive, #ef4444);
         --c-warn: #f59e0b;
         --c-shadow:
           0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -1079,7 +1345,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         height: 34px;
         border-radius: 8px;
         background: var(--c-blue);
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1288,7 +1554,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         display: flex;
         align-items: center;
         gap: 8px;
-        background: #fffbeb;
+        background: color-mix(in srgb, var(--c-warn) 10%, var(--c-white));
         border-bottom: 1px solid #fde68a;
         padding: 8px 24px;
         font-size: 13px;
@@ -1304,6 +1570,61 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         flex-direction: column;
         gap: 16px;
         min-height: 0;
+        /* isolated width varies with the host panels (e.g. AI assistant
+           open), so layout shifts key off the card's own width */
+        container-type: inline-size;
+        container-name: hw-main;
+      }
+
+      /* Very narrow card: the fixed 220px sidebar would starve the body, so
+         the whole layout stacks — sidebar becomes a top strip */
+      @container hw-app (max-width: 640px) {
+        .hw-layout {
+          flex-direction: column;
+        }
+        .hw-sidebar {
+          width: 100%;
+          border-right: none;
+          border-bottom: 1px solid var(--c-border);
+        }
+        .hw-sidebar-bottom {
+          display: none;
+        }
+      }
+
+      /* Narrow container: stack every multi-column row instead of letting
+         text squeeze into slivers */
+      @container hw-main (max-width: 560px) {
+        .hw-score-left {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 14px;
+        }
+        .hw-score-divider {
+          display: none;
+        }
+        .hw-score-card .hw-breakdown {
+          flex: 1 1 100%;
+          border-top: 1px solid var(--c-border);
+        }
+        .hw-feedback-preview {
+          flex-direction: column;
+          align-items: stretch;
+          text-align: left;
+        }
+        .hw-view-feedback-btn {
+          align-self: flex-start;
+        }
+        .hw-q-score-strip {
+          flex-wrap: wrap;
+        }
+        .hw-q-strip-sep {
+          display: none;
+        }
+        .hw-question-header {
+          flex-wrap: wrap;
+        }
       }
 
       /* ── Score card ── */
@@ -1402,10 +1723,6 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         color: var(--c-muted);
         margin: 0;
         max-width: 30ch;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
       }
 
       .hw-score-divider {
@@ -1540,7 +1857,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         height: 32px;
         border-radius: 8px;
         background: var(--c-blue);
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1634,7 +1951,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         height: 30px;
         border-radius: 50%;
         background: var(--c-blue);
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1712,7 +2029,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: white;
+        background: var(--c-white);
         color: var(--c-blue);
         display: flex;
         align-items: center;
@@ -1731,7 +2048,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-q-strip-pts {
         font-size: 15px;
         font-weight: 700;
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         line-height: 1;
       }
 
@@ -1756,7 +2073,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-instructions {
-        background: #fffbeb;
+        background: color-mix(in srgb, var(--c-warn) 10%, var(--c-white));
         border: 1px solid #fde68a;
         border-radius: 10px;
         padding: 14px 16px;
@@ -1832,72 +2149,121 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         min-height: 140px;
       }
 
-      /* ── Feedback full tab ── */
-      .hw-feedback-full {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .hw-feedback-header {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 16px 20px;
-        background: var(--c-white);
-        border: 1px solid var(--c-border);
-        border-radius: 12px;
-        box-shadow: var(--c-shadow);
-      }
-
-      .hw-feedback-grade-badge {
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--c-blue) 0%, #7c3aed 100%);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        font-weight: 800;
+      .hw-q-edit {
         flex-shrink: 0;
-        box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--c-border);
+        border-radius: 50%;
+        background: var(--c-white);
+        color: var(--c-muted);
+        font-size: 12px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .hw-q-edit.is-on,
+      .hw-q-edit:hover {
+        color: var(--c-on-blue, #ffffff);
+        background: var(--c-blue);
+        border-color: var(--c-blue);
       }
 
-      .hw-feedback-grade-meta {
+      .hw-q-remove {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--c-border);
+        border-radius: 50%;
+        background: var(--c-white);
+        color: var(--c-muted);
+        font-size: 12px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .hw-q-remove:hover {
+        color: var(--c-danger, #dc2626);
+        border-color: currentColor;
+      }
+      .hw-q-remove.is-armed {
+        width: auto;
+        padding: 0 10px;
+        border-radius: 12px;
+        background: var(--c-danger);
+        border-color: var(--c-danger);
+        color: #ffffff;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .hw-q-feedback {
+        border-top: 1px solid var(--c-border);
+        background: var(--c-bg);
+        padding: 12px 16px;
+      }
+      .hw-q-feedback-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--c-muted);
+        margin-bottom: 4px;
+      }
+      .hw-q-feedback-text {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--c-text);
+        white-space: pre-line;
+      }
+
+      .hw-error-banner {
         display: flex;
-        flex-direction: column;
-        gap: 3px;
+        align-items: center;
+        gap: 10px;
+        margin: 12px 16px 0;
+        padding: 10px 14px;
+        border: 1px solid var(--c-danger);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--c-danger) 8%, var(--c-white));
+        color: var(--c-text);
+        font-size: 13px;
+      }
+      .hw-error-text {
+        flex: 1;
+      }
+      .hw-error-dismiss {
+        flex-shrink: 0;
+        border: none;
+        background: transparent;
+        color: var(--c-muted);
+        cursor: pointer;
+        font-size: 13px;
       }
 
-      .hw-feedback-score {
-        font-size: 18px;
+      .hw-empty-questions {
+        border: 1.5px dashed var(--c-border);
+        border-radius: 10px;
+        padding: 26px 20px;
+        text-align: center;
+      }
+      .hw-empty-title {
+        margin: 0 0 4px;
+        font-size: 14px;
         font-weight: 700;
         color: var(--c-text);
       }
-
-      .hw-feedback-pct {
-        font-size: 13px;
-        color: var(--c-muted);
-      }
-
-      .hw-feedback-content {
-        background: var(--c-white);
-        border: 1px solid var(--c-border);
-        border-radius: 12px;
-        padding: 24px 28px;
-        box-shadow: var(--c-shadow);
-      }
-
-      .hw-no-feedback {
-        font-size: 14px;
-        color: var(--c-muted);
-        font-style: italic;
-        text-align: center;
-        padding: 40px 0;
+      .hw-empty-hint {
         margin: 0;
+        font-size: 12.5px;
+        color: var(--c-muted);
       }
+
+      .hw-add-question {
+        align-self: flex-start;
+      }
+
+      /* ── Feedback full tab ── */
 
       /* ── Grade notification toast ── */
       .hw-grade-toast {
@@ -1930,7 +2296,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--c-blue) 0%, #7c3aed 100%);
+        background: var(--c-blue);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1940,7 +2306,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-toast-letter {
         font-size: 17px;
         font-weight: 800;
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         line-height: 1;
       }
 
@@ -2070,6 +2436,16 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
 }
 
 class HomeworkFitted extends Component<typeof HomeworkGrader> {
+  get hasLinkedTheme(): boolean {
+    return Boolean((this.args.model as any)?.cardInfo?.theme);
+  }
+
+  get fittedClasses(): string {
+    let classes = [this.gradeClass];
+    if (!this.hasLinkedTheme) classes.push('hw-default-theme');
+    return classes.join(' ');
+  }
+
   get hasGrade() {
     return !!this.args.model?.grade?.overallGrade;
   }
@@ -2112,7 +2488,7 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
   }
 
   <template>
-    <article class='hw-fitted {{this.gradeClass}}'>
+    <article class='hw-fitted {{this.fittedClasses}}'>
 
       {{! ══ BADGE ≤150 × <170 ══ }}
       <section class='badge'>
@@ -2226,19 +2602,34 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
     </article>
 
     <style scoped>
+      .hw-default-theme {
+        --background: #f1f5f9;
+        --foreground: #0f172a;
+        --card: #ffffff;
+        --card-foreground: #0f172a;
+        --muted: #f1f5f9;
+        --muted-foreground: #64748b;
+        --border: #e2e8f0;
+        --primary: #2563eb;
+        --primary-foreground: #ffffff;
+        --destructive: #ef4444;
+        --radius: 10px;
+      }
+
       .hw-fitted {
-        --c-blue: #2563eb;
-        --c-blue-bg: #eff6ff;
-        --c-blue-border: #bfdbfe;
-        --c-bg: #f1f5f9;
-        --c-white: #ffffff;
-        --c-text: #0f172a;
-        --c-text-2: #1e293b;
-        --c-muted: #64748b;
-        --c-border: #e2e8f0;
+        --c-blue: var(--primary, #2563eb);
+        --c-blue-bg: color-mix(in srgb, var(--c-blue) 8%, var(--c-white));
+        --c-blue-border: color-mix(in srgb, var(--c-blue) 28%, var(--c-white));
+        --c-on-blue: var(--primary-foreground, #ffffff);
+        --c-bg: var(--background, #f1f5f9);
+        --c-white: var(--card, #ffffff);
+        --c-text: var(--foreground, #0f172a);
+        --c-text-2: var(--foreground, #1e293b);
+        --c-muted: var(--muted-foreground, #64748b);
+        --c-border: var(--border, #e2e8f0);
         --c-success: #10b981;
         --c-warn: #f59e0b;
-        --c-danger: #ef4444;
+        --c-danger: var(--destructive, #ef4444);
         --c-grade: var(--c-blue);
         --c-shadow:
           0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -2294,11 +2685,7 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        background: linear-gradient(
-          135deg,
-          var(--c-grade) 0%,
-          color-mix(in srgb, var(--c-grade) 70%, #7c3aed) 100%
-        );
+        background: var(--c-grade);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2308,12 +2695,12 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
       .badge-letter {
         font-size: 24px;
         font-weight: 800;
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         line-height: 1;
       }
 
       .badge-book {
-        color: white;
+        color: var(--c-on-blue, #ffffff);
       }
 
       .badge-title {
@@ -2347,17 +2734,13 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background: linear-gradient(
-          135deg,
-          var(--c-grade) 0%,
-          color-mix(in srgb, var(--c-grade) 70%, #7c3aed) 100%
-        );
+        background: var(--c-grade);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 14px;
         font-weight: 800;
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         line-height: 1;
       }
 
@@ -2424,7 +2807,7 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         flex-shrink: 0;
       }
 
@@ -2453,11 +2836,7 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         width: clamp(44px, 12cqh, 64px);
         height: clamp(44px, 12cqh, 64px);
         border-radius: 50%;
-        background: linear-gradient(
-          135deg,
-          var(--c-grade) 0%,
-          color-mix(in srgb, var(--c-grade) 70%, #7c3aed) 100%
-        );
+        background: var(--c-grade);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2467,7 +2846,7 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
       .tile-grade-letter {
         font-size: clamp(22px, 6cqh, 32px);
         font-weight: 800;
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         line-height: 1;
       }
 
@@ -2531,11 +2910,7 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         width: clamp(44px, 10cqh, 64px);
         height: clamp(44px, 10cqh, 64px);
         border-radius: 50%;
-        background: linear-gradient(
-          135deg,
-          var(--c-grade) 0%,
-          color-mix(in srgb, var(--c-grade) 70%, #7c3aed) 100%
-        );
+        background: var(--c-grade);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2546,7 +2921,7 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
       .card-grade-letter {
         font-size: clamp(22px, 5cqh, 32px);
         font-weight: 800;
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         line-height: 1;
       }
 
@@ -2600,7 +2975,7 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
+        color: var(--c-on-blue, #ffffff);
         flex-shrink: 0;
       }
 

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# QuestionField\n\n## Summary\n\nQuestionField is one assignment question: `cardTitle` (the question's short name), `questionText` (markdown prompt), `answer` (the student's markdown answer, edited inline from the isolated view), `maxPoints`, and a computed `isAnswered`. The grader holds questions in a `containsMany`, and the AI awards `questionPoints[i]` / writes `questionFeedbacks[i]` against the same index.\n\n## Usage as a Field\n\n```ts\n@field questions = containsMany(QuestionField);\n```\n\n## Template Usage\n\n```handlebars\n{{#each @model.questions as |q|}}{{q.cardTitle}}{{/each}}\n```\n\nEach question renders with its own embedded and fitted views; the fitted view embeds an editable answer field.\n",
       "ref": {
         "module": "../homework-grader",
         "name": "QuestionField"
