@@ -1,7 +1,7 @@
-import { waitFor } from '@ember/test-helpers';
+import { settled } from '@ember/test-helpers';
 
 import { getService } from '@universal-ember/test-support';
-import { module, skip } from 'qunit';
+import { module, test } from 'qunit';
 
 import ListingCreateCommand from '../../../commands/listing-create';
 
@@ -38,16 +38,8 @@ import {
 const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
-//license
-const mitLicenseId = `${mockCatalogURL}License/mit`;
-//category
-const writingCategoryId = `${mockCatalogURL}Category/writing`;
-
-//tags
-const calculatorTagId = `${mockCatalogURL}Tag/calculator`;
-
 export function runTests() {
-  module.skip(
+  module(
     'Acceptance | Catalog | catalog app - listing create',
     function (hooks) {
       setupApplicationTest(hooks);
@@ -87,23 +79,6 @@ export function runTests() {
           },
         });
       });
-
-      /**
-       * Waits for a card to appear on the stack with optional title verification
-       */
-      async function waitForCardOnStack(
-        cardId: string,
-        expectedTitle?: string,
-      ) {
-        await waitFor(
-          `[data-test-stack-card="${cardId}"] [data-test-boxel-card-header-title]`,
-        );
-        if (expectedTitle) {
-          await waitFor(
-            `[data-test-stack-card="${cardId}"] [data-test-boxel-card-header-title]`,
-          );
-        }
-      }
 
       module('listing commands', function (hooks) {
         hooks.beforeEach(async function () {
@@ -182,15 +157,35 @@ export function runTests() {
                           },
                         ],
                       });
-                    } else if (systemLower.includes('representing tag')) {
-                      // Deterministic tag selection
-                      content = JSON.stringify([calculatorTagId]);
-                    } else if (systemLower.includes('representing category')) {
-                      // Deterministic category selection
-                      content = JSON.stringify([writingCategoryId]);
-                    } else if (systemLower.includes('representing license')) {
-                      // Deterministic license selection
-                      content = JSON.stringify([mitLicenseId]);
+                    } else if (systemLower.includes('selection assistant')) {
+                      // SearchAndChoose sends a numbered candidate list and
+                      // expects option numbers back; answer with the number
+                      // of the fixture entry for the type being chosen, or
+                      // an empty selection for any other candidate type.
+                      const userLower = user.toLowerCase();
+                      const wantedTitle = userLower.includes('for "tag"')
+                        ? 'calculator'
+                        : userLower.includes('for "category"')
+                          ? 'writing'
+                          : userLower.includes('for "license"')
+                            ? 'mit license'
+                            : undefined;
+                      let num = NaN;
+                      if (wantedTitle) {
+                        // Options are "N. Name — summary"; compare the name
+                        // segment exactly so a summary mentioning the word
+                        // doesn't shadow the wanted entry.
+                        const line = user.split('\n').find((l: string) => {
+                          const m = l.trim().match(/^\d+\.\s+(.*)$/);
+                          if (!m) {
+                            return false;
+                          }
+                          const name = m[1].split(' — ')[0].trim();
+                          return name.toLowerCase() === wantedTitle;
+                        });
+                        num = line ? parseInt(line.trim(), 10) : NaN;
+                      }
+                      content = JSON.stringify(Number.isNaN(num) ? [] : [num]);
                     }
 
                     return new Response(
@@ -231,7 +226,7 @@ export function runTests() {
               },
             },
           ]);
-          skip('card listing with single dependency module', async function (assert) {
+          test('card listing with single dependency module', async function (assert) {
             const cardId = mockCatalogURL + 'author/Author/example';
             const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
@@ -247,6 +242,10 @@ export function runTests() {
             });
             const interim = result?.listing as any;
             assert.ok(interim, 'Interim listing exists');
+            // The command returns before its auto-patch tasks run; they land
+            // via the backgroundWork promise on the result.
+            await (result as any).backgroundWork;
+            await settled();
             assert.strictEqual((interim as any).name, 'Mock Listing Title');
             assert.strictEqual(
               (interim as any).summary,
@@ -280,37 +279,35 @@ export function runTests() {
                 'Mock listing summary sentence.',
                 'Listing summary populated from autoPatchSummary mock response',
               );
+              // Only the listed export gets a spec — other exports of the
+              // same module (AuthorCompany) are deliberately not spec'd.
               assert.strictEqual(
                 listing.specs.length,
-                2,
-                'Listing should have two specs',
+                1,
+                'Listing should have one spec',
               );
               assert.true(
                 listing.specs.some((spec: any) => spec.ref.name === 'Author'),
                 'Listing should have an Author spec',
               );
-              assert.true(
-                listing.specs.some(
-                  (spec: any) => spec.ref.name === 'AuthorCompany',
-                ),
-                'Listing should have an AuthorCompany spec',
-              );
-              // Deterministic autoLink assertions from proxy mock
+              // Deterministic autoLink assertions from proxy mock. The
+              // chooser's candidate list spans every readable realm (the
+              // mock catalog plus the real one) and presents titles only,
+              // so assert on the linked card's name rather than a
+              // realm-specific id.
               assert.ok((listing as any).license, 'License linked');
               assert.strictEqual(
-                (listing as any).license.id,
-                mitLicenseId,
-                'License id matches mitLicenseId',
+                (listing as any).license.name,
+                'MIT License',
+                'License name matches the mocked selection',
               );
               assert.ok(
                 Array.isArray((listing as any).tags),
                 'Tags array exists',
               );
               assert.true(
-                (listing as any).tags.some(
-                  (t: any) => t.id === calculatorTagId,
-                ),
-                'Contains calculator tag id',
+                (listing as any).tags.some((t: any) => t.name === 'Calculator'),
+                'Contains calculator tag',
               );
               assert.ok(
                 Array.isArray((listing as any).categories),
@@ -318,14 +315,14 @@ export function runTests() {
               );
               assert.true(
                 (listing as any).categories.some(
-                  (c: any) => c.id === writingCategoryId,
+                  (c: any) => c.name === 'Writing',
                 ),
-                'Contains writing category id',
+                'Contains writing category',
               );
             }
           });
 
-          skip('listing will only create specs with recognised imports from realms it can read from', async function (assert) {
+          test('listing will only create specs with recognised imports from realms it can read from', async function (assert) {
             const cardId = mockCatalogURL + 'UnrecognisedImports/example';
             const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
@@ -369,261 +366,62 @@ export function runTests() {
             }
           });
 
-          skip('app listing', async function (assert) {
-            const cardId = mockCatalogURL + 'blog-app/BlogApp/example';
+          test('open cards of other types and explicit ids become supportingCards', async function (assert) {
+            const authorExampleId = mockCatalogURL + 'author/Author/example';
+            const companyExampleId =
+              mockCatalogURL + 'author/AuthorCompany/example';
+            const publisherId = mockCatalogURL + 'Publisher/boxel-publisher';
             const commandService = getService('tool-service');
             const command = new ListingCreateCommand(
               commandService.commandContext,
             );
-            const createResult = await command.execute({
-              openCardIds: [cardId],
-              codeRef: {
-                module: rri(`${mockCatalogURL}blog-app/blog-app.gts`),
-                name: 'BlogApp',
-              },
-              targetRealm: testDestinationRealmURL,
-            });
-            // Assert store-level (in-memory) results BEFORE navigating to code mode
-            let immediateListing = createResult?.listing as any;
-            assert.ok(immediateListing, 'Listing object returned from command');
-            assert.strictEqual(
-              immediateListing.name,
-              'Mock Listing Title',
-              'Immediate listing has patched name before persistence',
-            );
-            assert.strictEqual(
-              immediateListing.summary,
-              'Mock listing summary sentence.',
-              'Immediate listing has patched summary before persistence',
-            );
-            assert.ok(
-              immediateListing.license,
-              'Immediate listing has linked license before persistence',
-            );
-            assert.strictEqual(
-              immediateListing.license?.id,
-              mitLicenseId,
-              'Immediate listing license id matches mitLicenseId',
-            );
-            // Lint: avoid logical expression inside assertion
-            assert.ok(
-              Array.isArray(immediateListing.tags),
-              'Immediate listing tags is an array before persistence',
-            );
-            if (Array.isArray(immediateListing.tags)) {
-              assert.ok(
-                immediateListing.tags.length > 0,
-                'Immediate listing has linked tag(s) before persistence',
-              );
-            }
-            assert.true(
-              immediateListing.tags.some((t: any) => t.id === calculatorTagId),
-              'Immediate listing includes calculator tag id',
-            );
-            assert.ok(
-              Array.isArray(immediateListing.categories),
-              'Immediate listing categories is an array before persistence',
-            );
-            if (Array.isArray(immediateListing.categories)) {
-              assert.ok(
-                immediateListing.categories.length > 0,
-                'Immediate listing has linked category(ies) before persistence',
-              );
-            }
-            assert.true(
-              immediateListing.categories.some(
-                (c: any) => c.id === writingCategoryId,
-              ),
-              'Immediate listing includes writing category id',
-            );
-            assert.ok(
-              Array.isArray(immediateListing.specs),
-              'Immediate listing specs is an array before persistence',
-            );
-            if (Array.isArray(immediateListing.specs)) {
-              assert.strictEqual(
-                immediateListing.specs.length,
-                5,
-                'Immediate listing has expected number of specs before persistence',
-              );
-            }
-            assert.ok(
-              Array.isArray(immediateListing.examples),
-              'Immediate listing examples is an array before persistence',
-            );
-            if (Array.isArray(immediateListing.examples)) {
-              assert.strictEqual(
-                immediateListing.examples.length,
-                1,
-                'Immediate listing has expected examples before persistence',
-              );
-            }
-            // Header/title: wait for persisted id (listing.id) then assert via stack card selector
-            const persistedId = immediateListing.id;
-            assert.ok(persistedId, 'Immediate listing has a persisted id');
-            await waitForCardOnStack(persistedId);
-            assert
-              .dom(
-                `[data-test-stack-card="${persistedId}"] [data-test-boxel-card-header-title]`,
-              )
-              .containsText(
-                'Mock Listing Title',
-                'Isolated view shows patched name (persisted id)',
-              );
-            // Summary section
-            assert
-              .dom('[data-test-catalog-listing-embedded-summary-section]')
-              .containsText(
-                'Mock listing summary sentence.',
-                'Isolated view shows patched summary',
-              );
-
-            // License section should not show fallback text
-            assert
-              .dom('[data-test-catalog-listing-embedded-license-section]')
-              .doesNotContainText(
-                'No License Provided',
-                'License section populated (autoLinkLicense)',
-              );
-
-            // Tags section
-            assert
-              .dom('[data-test-catalog-listing-embedded-tags-section]')
-              .doesNotContainText(
-                'No Tags Provided',
-                'Tags section populated (autoLinkTag)',
-              );
-
-            // Categories section
-            assert
-              .dom('[data-test-catalog-listing-embedded-categories-section]')
-              .doesNotContainText(
-                'No Categories Provided',
-                'Categories section populated (autoLinkCategory)',
-              );
-            await visitOperatorMode({
-              submode: 'code',
-              fileView: 'browser',
-              codePath: `${testDestinationRealmURL}index`,
-            });
-            await verifySubmode(assert, 'code');
-            const instanceFolder = 'AppListing/';
-            await openDir(assert, instanceFolder);
-            const persistedListingId = await verifyJSONWithUUIDInFolder(
-              assert,
-              instanceFolder,
-            );
-            if (persistedListingId) {
-              const listing = (await getService('store').get(
-                persistedListingId,
-              )) as CardListing;
-              assert.ok(listing, 'Listing should be created');
-              assert.strictEqual(
-                listing.specs.length,
-                5,
-                'Listing should have five specs',
-              );
-              [
-                'Author',
-                'AuthorCompany',
-                'BlogPost',
-                'BlogApp',
-                'AppCard',
-              ].forEach((specName) => {
-                assert.true(
-                  listing.specs.some((spec: any) => spec.ref.name === specName),
-                  `Listing should have a ${specName} spec`,
-                );
-              });
-              assert.strictEqual(
-                listing.examples.length,
-                1,
-                'Listing should have one example',
-              );
-
-              // Assert autoPatch fields populated (from proxy mock responses)
-              assert.strictEqual(
-                (listing as any).name,
-                'Mock Listing Title',
-                'autoPatchName populated listing.name',
-              );
-              assert.strictEqual(
-                (listing as any).summary,
-                'Mock listing summary sentence.',
-                'autoPatchSummary populated listing.summary',
-              );
-
-              // Basic object-level sanity for autoLink fields (they should exist, may be arrays)
-              assert.ok(
-                (listing as any).license,
-                'autoLinkLicense populated listing.license',
-              );
-              assert.strictEqual(
-                (listing as any).license?.id,
-                mitLicenseId,
-                'Persisted listing license id matches mitLicenseId',
-              );
-              assert.ok(
-                Array.isArray((listing as any).tags),
-                'autoLinkTag populated listing.tags array',
-              );
-              if (Array.isArray((listing as any).tags)) {
-                assert.ok(
-                  (listing as any).tags.length > 0,
-                  'autoLinkTag populated listing.tags with at least one tag',
-                );
-              }
-              assert.true(
-                (listing as any).tags.some(
-                  (t: any) => t.id === calculatorTagId,
-                ),
-                'Persisted listing includes calculator tag id',
-              );
-              assert.ok(
-                Array.isArray((listing as any).categories),
-                'autoLinkCategory populated listing.categories array',
-              );
-              if (Array.isArray((listing as any).categories)) {
-                assert.ok(
-                  (listing as any).categories.length > 0,
-                  'autoLinkCategory populated listing.categories with at least one category',
-                );
-              }
-              assert.true(
-                (listing as any).categories.some(
-                  (c: any) => c.id === writingCategoryId,
-                ),
-                'Persisted listing includes writing category id',
-              );
-            }
-          });
-
-          skip('after create command, listing card opens on stack in interact mode', async function (assert) {
-            const cardId = mockCatalogURL + 'author/Author/example';
-            const commandService = getService('tool-service');
-            const command = new ListingCreateCommand(
-              commandService.commandContext,
-            );
-
-            let r = await command.execute({
-              openCardIds: [cardId],
+            const result = await command.execute({
+              openCardIds: [authorExampleId, companyExampleId],
+              // authorExampleId is deliberately listed here too: a card
+              // classified as an example must stay an example
+              supportingCardIds: [publisherId, authorExampleId],
               codeRef: {
                 module: rri(`${mockCatalogURL}author/author.gts`),
                 name: 'Author',
               },
               targetRealm: mockCatalogURL,
             });
+            const interim = result?.listing as any;
+            assert.ok(interim, 'Listing created');
+            await (result as any).backgroundWork;
+            await settled();
 
-            await verifySubmode(assert, 'interact');
-            const listing = r?.listing as any;
-            const createdId = listing.id;
-            assert.ok(createdId, 'Listing id should be present');
-            await waitForCardOnStack(createdId);
-            assert
-              .dom(`[data-test-stack-card="${createdId}"]`)
-              .exists(
-                'Created listing card (by persisted id) is displayed on stack after command execution',
-              );
+            // Assert on the persisted document: the command's contract is
+            // the relationships it writes, and the in-memory instance's
+            // linksToMany entries resolve lazily.
+            let rawResponse = await getService('network').fetch(
+              interim.id + '.json',
+              { headers: { Accept: 'application/vnd.card+json' } },
+            );
+            let rawDoc = await rawResponse.json();
+            const relationships = rawDoc?.data?.relationships ?? {};
+            const linkTargets = (prefix: string) =>
+              Object.entries(relationships)
+                .filter(([key]) => key.startsWith(`${prefix}.`))
+                .map(([, value]: [string, any]) => value?.data?.id);
+
+            assert.true(
+              linkTargets('examples').includes(authorExampleId),
+              'open card of the listed type is linked as an example',
+            );
+            const supportingIds = linkTargets('supportingCards');
+            assert.true(
+              supportingIds.includes(companyExampleId),
+              'open card of another type is linked as a supportingCard',
+            );
+            assert.true(
+              supportingIds.includes(publisherId),
+              'explicit supportingCardIds are linked as supportingCards',
+            );
+            assert.false(
+              supportingIds.includes(authorExampleId),
+              'a card classified as an example is not duplicated into supportingCards',
+            );
           });
         });
       });
