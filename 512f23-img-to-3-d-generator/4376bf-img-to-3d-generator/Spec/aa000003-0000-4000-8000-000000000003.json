@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../prompts/refine",
+        "name": "REFINE_SYSTEM_PROMPT"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "refine",
+      "cardDescription": "System prompt module: prompts/refine.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

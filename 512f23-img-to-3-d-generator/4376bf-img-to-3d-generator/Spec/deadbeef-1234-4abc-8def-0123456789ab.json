@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../util/spec-passes/index",
+        "name": "fitCurvedDecals"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "spec-passes",
+      "cardDescription": "Barrel that re-exports the deterministic structure/geometry repair passes.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

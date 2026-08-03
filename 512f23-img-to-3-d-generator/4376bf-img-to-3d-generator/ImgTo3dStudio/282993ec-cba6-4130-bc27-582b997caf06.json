@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "references": {
+        "images": [
+          {
+            "url": "https://static.vecteezy.com/system/resources/thumbnails/027/182/338/small/trailler-truck-isolated-on-a-transparent-background-png.png",
+            "sourceMode": "url"
+          }
+        ]
+      },
+      "llmModel": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../img-to-3d-studio",
+        "name": "ImgTo3dStudio"
+      }
+    },
+    "relationships": {
+      "selectedCreation": {
+        "links": {
+          "self": "../img-to-3d/282993ec-cba6-4130-bc27-582b997caf06/rounds/SculptedModel/feb20557-8e81-4aef-b70f-c842a1584b43"
+        }
+      },
+      "latestCreation": {
+        "links": {
+          "self": "../img-to-3d/282993ec-cba6-4130-bc27-582b997caf06/rounds/SculptedModel/feb20557-8e81-4aef-b70f-c842a1584b43"
+        }
+      }
+    }
+  }
+}
