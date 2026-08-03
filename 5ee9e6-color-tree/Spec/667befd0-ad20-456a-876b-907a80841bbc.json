@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# toHex2\n\n## Summary\n\nConverts one color channel in `[0, 1]` to a two-digit lowercase hex byte, clamping out-of-range input.\n\n## Import\n\n```javascript\nimport { toHex2 } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\ntoHex2(1); // 'ff'\ntoHex2(0.5); // '80'\n```",
       "ref": {
         "module": "../utils/munsell",
         "name": "toHex2"

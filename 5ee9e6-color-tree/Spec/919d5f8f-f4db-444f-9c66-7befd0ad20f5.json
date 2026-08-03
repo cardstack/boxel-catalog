@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# makeUniforms\n\n## Summary\n\nBuilds the shared uniform set used by all four shader passes (voxels, halo, grid, ring): animation time, tree/sphere morph, atlas open/closed, chroma clamp, slice mode and position, lattice density, glow, scale, plus the camera-basis vectors (`uCamR` / `uCamU` / `uCamF`) and pick anchor as `THREE.Vector3` slots. Lives in `tree-engine` because that module is the single owner of the CDN three.js import.\n\n## Import\n\n```javascript\nimport { makeUniforms, type Uniforms } from '../utils/tree-engine';\n```\n\n## Usage\n\n```javascript\nlet uniforms = makeUniforms();\nlet material = new THREE.ShaderMaterial({\n  uniforms,\n  vertexShader: VOXEL_VSH,\n  fragmentShader: VOXEL_FSH,\n});\nuniforms.uMorph.value = 1; // morph the tree into Itten's sphere\n```",
       "ref": {
         "module": "../utils/tree-engine",
         "name": "makeUniforms"

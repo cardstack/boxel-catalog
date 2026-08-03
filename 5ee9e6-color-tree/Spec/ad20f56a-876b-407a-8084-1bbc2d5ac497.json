@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# hueLabel\n\n## Summary\n\nThe Munsell principal-hue name (`5R`, `5YR`, \u2026 `5RP`) nearest to a fractional hue position `h` in `[0, 1)`.\n\n## Import\n\n```javascript\nimport { hueLabel } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nhueLabel(0); // '5R'\nhueLabel(0.5); // '5BG'\n```",
       "ref": {
         "module": "../utils/munsell",
         "name": "hueLabel"

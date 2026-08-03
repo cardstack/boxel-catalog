@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# hslToRgb\n\n## Summary\n\nConverts HSL (hue in degrees \u2014 any value, normalized internally; saturation and lightness in `[0, 1]`) to an `[r, g, b]` triple with each channel in `[0, 1]`.\n\n## Import\n\n```javascript\nimport { hslToRgb } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nlet [r, g, b] = hslToRgb(212, 0.8, 0.5);\n```",
       "ref": {
         "module": "../utils/munsell",
         "name": "hslToRgb"

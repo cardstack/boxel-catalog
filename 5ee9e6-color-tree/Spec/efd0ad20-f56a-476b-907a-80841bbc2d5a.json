@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# chipHex\n\n## Summary\n\nThe display color of one Munsell chip as a CSS hex string \u2014 `chipColor` composed with `toHex2`. Takes hue `h` (fraction in `[0, 1)`), value `v` (0\u201310), and chroma `c`.\n\n## Import\n\n```javascript\nimport { chipHex } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nlet hex = chipHex(0, 5, 14); // vivid 5R at value 5, e.g. '#c93a52'\n```",
       "ref": {
         "module": "../utils/munsell",
         "name": "chipHex"

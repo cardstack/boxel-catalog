@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# chipColor\n\n## Summary\n\nThe display color of one Munsell chip as an `[r, g, b]` triple in `[0, 1]`, from hue `h` (fraction in `[0, 1)`), value `v` (0\u201310), and chroma `c`. Chips with chroma below 0.5 render as the neutral gray trunk (a slightly cool gray whose lightness tracks value); chromatic chips map through `lerpWrapDeg` and `hslToRgb`.\n\n## Import\n\n```javascript\nimport { chipColor } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nlet rgb = chipColor(0.7, 3, 12); // a deep purple-blue chip\n```",
       "ref": {
         "module": "../utils/munsell",
         "name": "chipColor"

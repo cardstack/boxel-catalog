@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# ColorTreeFitted\n\n## Summary\n\nThe fitted format of the `ColorTree` card, for grid and thumbnail sizes. Delegates to boxel-ui's `FittedCard` (which owns the container queries, size quanta, and clamping) and shows the picked Munsell notation as the title, the hex as the subtitle, and the swatch as meta. Paints with the linked theme's `--card` / `--card-foreground` pair, falling back to the card's night-sky brand when no theme is linked.\n\n## Import\n\n```javascript\nimport { ColorTreeFitted } from '../components/color-tree-fitted';\n```\n\n## Usage\n\nWired as the card's fitted format:\n\n```gts\nexport class ColorTree extends CardDef {\n  static fitted = ColorTreeFitted;\n}\n```\n\nRendered wherever a `ColorTree` appears in a grid:\n\n```hbs\n<@fields.colorTree @format='fitted' />\n```",
       "ref": {
         "module": "../components/color-tree-fitted",
         "name": "ColorTreeFitted"

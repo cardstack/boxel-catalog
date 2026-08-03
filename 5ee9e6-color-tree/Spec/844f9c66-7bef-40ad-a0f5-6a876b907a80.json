@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# lerpWrap\n\n## Summary\n\nSmoothstep-interpolates a 10-entry per-hue table (like `C_PEAK` or `V_PEAK`) at a fractional hue position `h` in `[0, 1)`, wrapping around the hue circle so `5RP` blends back into `5R`.\n\n## Import\n\n```javascript\nimport { lerpWrap, C_PEAK } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nlet peakChroma = lerpWrap(C_PEAK, 0.35); // peak chroma between 5GY and 5G\n```",
       "ref": {
         "module": "../utils/munsell",
         "name": "lerpWrap"
