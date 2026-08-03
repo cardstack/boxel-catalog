@@ -1,4 +1,3 @@
-import { getOwner } from '@ember/owner';
 import { visit, waitFor, waitUntil } from '@ember/test-helpers';
 
 import { getService } from '@universal-ember/test-support';
@@ -23,13 +22,15 @@ const CATALOG_READINESS_URL = `${catalogRealmURL}_readiness-check?acceptHeader=a
 // Force host mode on the real service instance rather than registering a
 // stub class: the index route leans on the rest of its interface (routing
 // map, head template, …), which must keep working.
-function forceHostMode(owner: object) {
-  let hostModeService = (owner as any).lookup('service:host-mode-service');
+function forceHostMode() {
+  let hostModeService = getService('host-mode-service');
   Object.defineProperty(hostModeService, 'isActive', {
     get: () => true,
+    configurable: true,
   });
   Object.defineProperty(hostModeService, 'hostModeOrigin', {
     get: () => new URL(catalogRealmURL).origin,
+    configurable: true,
   });
 }
 
@@ -52,7 +53,7 @@ export function runTests() {
       setupUserSubscription();
       setupAuthEndpoints();
       setCatalogRealmURL(catalogRealmURL);
-      forceHostMode(getOwner(this)!);
+      forceHostMode();
     });
 
     test('visiting /catalog/ renders the catalog index card', async function (assert) {
