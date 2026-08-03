@@ -16,7 +16,12 @@
         "cardThumbnailURL": null
       },
       "fullName": "Cheche",
-      "category": "friends"
+      "category": "friends",
+      "dietary": [],
+      "photo": {
+        "url": null,
+        "sourceMode": null
+      }
     },
     "relationships": {
       "parentGuest": {

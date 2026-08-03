@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# RoleField\n\n## Summary\n\nRoleField is the host-role enum — a `StringField` enum listing the wedding roles a Host can hold (as defined by `HOST_ROLES` in `../host`). It distinguishes the couple and their key helpers from ordinary guests so the planner's host panel and the print sheet can label them correctly.\n\n## Import\n\n```js\nimport { RoleField } from '../host';\n```\n\n## Usage as a Field\n\n```ts\n@field role = contains(RoleField);\n```\n\n## Template Usage\n\n```handlebars\n{{@model.role}}\n```\n",
+      "ref": {
+        "module": "../host",
+        "name": "RoleField"
+      },
+      "specType": "field",
+      "containedExamples": null,
+      "cardTitle": "RoleField",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

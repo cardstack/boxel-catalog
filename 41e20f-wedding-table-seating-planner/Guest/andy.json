@@ -16,7 +16,12 @@
         "cardThumbnailURL": null
       },
       "category": "brides-family",
-      "fullName": "Andy"
+      "fullName": "Andy",
+      "dietary": [],
+      "photo": {
+        "url": null,
+        "sourceMode": null
+      }
     },
     "relationships": {
       "parentGuest": {

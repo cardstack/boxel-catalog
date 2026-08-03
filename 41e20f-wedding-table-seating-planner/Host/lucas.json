@@ -15,7 +15,11 @@
         "summary": null,
         "cardThumbnailURL": null
       },
-      "fullName": "Lucas"
+      "fullName": "Lucas",
+      "photo": {
+        "url": null,
+        "sourceMode": null
+      }
     },
     "relationships": {
       "cardInfo.theme": {
