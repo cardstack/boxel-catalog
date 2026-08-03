@@ -18,9 +18,54 @@
       }
     },
     "relationships": {
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/01-hero-budget.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/02-empty-trip.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/03-edit-stop-cost.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/04-plan-with-ai.png"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../TravelItinerary/0dfb17d9-2d85-41e9-a02b-42b9038283c5"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../TravelItinerary/a9585662-1b2d-4d0e-b3f7-b8f0651b5b1c"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../TravelItinerary/fresh-trip"
+        }
+      },
       "tags.0": {
         "links": {
           "self": "../../Tag/app"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "../../Tag/ai"
         }
       },
       "license": {
@@ -103,11 +148,6 @@
           "self": "../Spec/7585acfc-309b-43fc-8413-ae2890bb4cb4"
         }
       },
-      "images.0": {
-        "links": {
-          "self": "../Screenshots/0dfb17d9-2d85-41e9-a02b-42b9038283c5-f4eada46.png"
-        }
-      },
       "skills.0": {
         "links": {
           "self": "../Skill/travel-planner-skill"
@@ -116,26 +156,6 @@
       "publisher": {
         "links": {
           "self": null
-        }
-      },
-      "examples.0": {
-        "links": {
-          "self": "../TravelItinerary/0dfb17d9-2d85-41e9-a02b-42b9038283c5"
-        }
-      },
-      "examples.1": {
-        "links": {
-          "self": "../TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e"
-        }
-      },
-      "examples.2": {
-        "links": {
-          "self": "../TravelItinerary/a9585662-1b2d-4d0e-b3f7-b8f0651b5b1c"
-        }
-      },
-      "examples.3": {
-        "links": {
-          "self": "../Theme/airbnb"
         }
       },
       "categories.0": {
@@ -151,6 +171,16 @@
       "cardInfo.cardThumbnail": {
         "links": {
           "self": "../ListingThumbnails/travel-itinerary-c6ca7301.png"
+        }
+      },
+      "supportingCards.0": {
+        "links": {
+          "self": "../Theme/tropic-lagoon"
+        }
+      },
+      "supportingCards.1": {
+        "links": {
+          "self": "../Theme/midnight-voyager"
         }
       }
     }

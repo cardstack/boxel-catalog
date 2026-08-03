@@ -8,6 +8,7 @@ import {
 import DateRangeField from 'https://cardstack.com/base/date-range-field';
 import enumField from 'https://cardstack.com/base/enum';
 import NumberField from 'https://cardstack.com/base/number';
+import CurrencyField from 'https://cardstack.com/base/currency';
 import StringField from 'https://cardstack.com/base/string';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 import TimeField from 'https://cardstack.com/base/time';
@@ -47,6 +48,9 @@ export class ItineraryStop extends FieldDef {
   @field startTime = contains(TimeField);
   @field endTime = contains(TimeField);
   @field category = contains(CategoryField);
+  // estimated spend for this stop, in the trip's currency (a plain number so
+  // the trip total stays a simple sum — the currency lives once, on the trip)
+  @field estimatedCost = contains(NumberField);
   @field notes = contains(TextAreaField);
 }
 
@@ -77,6 +81,23 @@ export class TravelItinerary extends CardDef {
   // A QR code for sharing this trip. Not computed — the traveller manually
   // enters the card instance id / URL into the field's `data` in edit mode.
   @field shareTripCode = contains(QRField);
+
+  // the single currency every stop's estimatedCost is quoted in
+  @field currency = contains(CurrencyField);
+
+  // whole-trip estimate, summed from every stop that has a cost
+  @field estimatedTotalCost = contains(NumberField, {
+    computeVia: function (this: TravelItinerary) {
+      return (this.stops ?? []).reduce(
+        (sum, stop) => sum + (stop?.estimatedCost ?? 0),
+        0,
+      );
+    },
+  });
+
+  get currencySymbol() {
+    return this.currency?.symbol ?? '$';
+  }
 
   @field title = contains(StringField, {
     computeVia: function (this: TravelItinerary) {

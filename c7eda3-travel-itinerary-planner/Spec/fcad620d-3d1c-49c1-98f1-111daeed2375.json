@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# map-render module (shared)\n\nCross-listing reference to the shared map-render module's default export. Documented here so the listing's dependency graph is explicit; see the component's own listing for full usage.\n",
       "ref": {
         "module": "../../components/map-render",
         "name": "default"

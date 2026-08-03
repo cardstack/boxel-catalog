@@ -1,6 +1,6 @@
 import type { ItineraryStop } from '../travel-itinerary';
 import { Component } from 'https://cardstack.com/base/card-api';
-import { categoryStyle } from '../utils/index';
+import { categoryStyle, formatCost } from '../utils/index';
 
 export class ItineraryStopEmbedded extends Component<typeof ItineraryStop> {
   get timeRange() {
@@ -37,6 +37,9 @@ export class ItineraryStopEmbedded extends Component<typeof ItineraryStop> {
         {{/if}}
         {{#if @model.category}}
           <span class='stop-cat'>{{@model.category}}</span>
+        {{/if}}
+        {{#if @model.estimatedCost}}
+          <span class='stop-cost'>{{formatCost @model.estimatedCost}}</span>
         {{/if}}
       </div>
       {{#if this.locationLabel}}
@@ -78,7 +81,19 @@ export class ItineraryStopEmbedded extends Component<typeof ItineraryStop> {
       .stop-time {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        color: var(--stop-color);
+        color: color-mix(
+          in srgb,
+          var(--stop-color) 62%,
+          var(--c-text, #222222) 38%
+        );
+      }
+      .stop-cost {
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
+        color: var(--ti-cost, var(--foreground, #222222));
+        background: var(--ti-cost-bg, var(--muted, #f3f3f3));
+        border-radius: 999px;
+        padding: 1px 8px;
       }
       .stop-cat {
         font-size: var(--boxel-font-size-xs);

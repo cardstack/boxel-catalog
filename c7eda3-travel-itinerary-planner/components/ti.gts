@@ -30,9 +30,13 @@ import Popover from '@cardstack/catalog/46f065-popover/popover';
 import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
 import { ItineraryStop } from '../travel-itinerary';
 import type { TravelItinerary } from '../travel-itinerary';
-import { addHours, categoryStyle } from '../utils/index';
+import { addHours, categoryStyle, formatCost } from '../utils/index';
 
 export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
+  get hasLinkedTheme(): boolean {
+    return Boolean((this.args.model as any)?.cardInfo?.theme);
+  }
+
   @tracked selectedIndex = -1;
   @tracked editingIndex = -1;
   @tracked collapsedDays: number[] = [];
@@ -392,7 +396,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
   }
 
   <template>
-    <article class='ti-app'>
+    <article class='ti-app {{unless this.hasLinkedTheme "ti-default-theme"}}'>
       <header class='ti-top'>
         <div class='ti-brand'>
           <div class='ti-brand-icon'><PlaneIcon width='20' height='20' /></div>
@@ -487,9 +491,32 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
             </label>
           </div>
 
+          {{#if @model.estimatedTotalCost}}
+            <div class='ti-budget-bar'>
+              <span class='ti-budget-head'>
+                <span class='ti-budget-label'>Trip budget</span>
+                <span class='ti-budget-sub'>estimated total</span>
+              </span>
+              <span
+                class='ti-budget-amount'
+                title='Estimated trip total, summed from every stop with a cost'
+              >{{formatCost
+                  @model.estimatedTotalCost
+                  @model.currencySymbol
+                }}</span>
+              <div
+                class='ti-budget-currency'
+                title='Budget currency — every stop cost is quoted in this'
+              >
+                <@fields.currency @format='edit' />
+              </div>
+            </div>
+          {{/if}}
+
           <div class='ti-list-head'>
             <h2 class='ti-list-title'>Itinerary
-              <span class='ti-list-count'>{{this.stops.length}}</span></h2>
+              <span class='ti-list-count'>{{this.stops.length}}</span>
+            </h2>
             <Button
               class='ti-add-day'
               @kind='secondary'
@@ -559,6 +586,12 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
                                 entry.stop.location.searchKey
                                 'Untitled stop'
                               }}</span>
+                            {{#if entry.stop.estimatedCost}}
+                              <span class='ti-stop-cost'>{{formatCost
+                                  entry.stop.estimatedCost
+                                  @model.currencySymbol
+                                }}</span>
+                            {{/if}}
                           </button>
                           <button
                             type='button'
@@ -670,6 +703,22 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
     </article>
 
     <style scoped>
+      /* Default palette when NO theme is linked — pins the semantic tokens
+         to the Airbnb look so app-level defaults (e.g. a mint --primary)
+         can't restyle the card arbitrarily. A linked theme omits this
+         class, so its tokens win. */
+      .ti-default-theme {
+        --background: #ffffff;
+        --foreground: #222222;
+        --card: #ffffff;
+        --card-foreground: #222222;
+        --muted: #f7f7f7;
+        --muted-foreground: #717171;
+        --border: #dddddd;
+        --primary: #ff385c;
+        --primary-foreground: #ffffff;
+        --radius: 10px;
+      }
       .ti-app {
         /* Brand palette: each token resolves to the active design-system
            theme token (--primary, --foreground, …) so a linked brand-guide
@@ -681,11 +730,12 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         --c-accent-dark: #bd1e59;
         --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
         --c-text: var(--foreground, #222222);
-        --c-text-light: #ffffff;
+        --c-text-light: var(--primary-foreground, #ffffff);
         --c-muted: var(--muted-foreground, #717171);
         --c-border: var(--border, #dddddd);
         --c-border-light: var(--border, #ebebeb);
         --c-bg: var(--muted, #f7f7f7);
+        --c-card: var(--card, #ffffff);
         height: 100%;
         min-height: 100%;
         display: flex;
@@ -708,7 +758,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         align-items: center;
         justify-content: space-between;
         gap: var(--boxel-sp);
-        background: #fff;
+        background: var(--c-card, #ffffff);
         border-bottom: 1px solid var(--c-border-light);
         padding: 16px 24px;
         flex-shrink: 0;
@@ -763,7 +813,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       .ti-ai-chip {
         border: 1px solid var(--c-border);
-        background: #fff;
+        background: var(--c-card, #ffffff);
         color: var(--c-text);
         border-radius: 999px;
         padding: 7px 13px;
@@ -828,7 +878,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         padding: 12px;
         border: 1px solid var(--c-border-light);
         border-radius: 14px;
-        background: #fff;
+        background: var(--c-card, #ffffff);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         animation: ti-msg-in 0.18s ease both;
       }
@@ -884,7 +934,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         height: 24px;
         border: 1px solid var(--c-border-light);
         border-radius: 7px;
-        background: #fff;
+        background: var(--c-card, #ffffff);
         color: var(--c-muted);
         cursor: pointer;
         transition:
@@ -913,6 +963,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         --c-border: var(--border, #dddddd);
         --c-border-light: var(--border, #ebebeb);
         --c-bg: var(--muted, #f7f7f7);
+        --c-card: var(--card, #ffffff);
         display: flex;
         flex-direction: column;
         width: 320px;
@@ -947,7 +998,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         width: 100%;
         min-width: 0;
         font-size: 12px;
-        background: #fff;
+        background: var(--c-card, #ffffff);
         border: 1px solid var(--c-border-light);
         border-radius: 10px;
         padding: 10px;
@@ -985,7 +1036,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         flex-shrink: 0;
         border: 1px solid var(--c-border);
         border-radius: 50%;
-        background: #fff;
+        background: var(--c-card, #ffffff);
         color: var(--c-muted);
         cursor: pointer;
         transition:
@@ -1048,7 +1099,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         font: inherit;
         font-size: 13px;
         color: var(--c-text);
-        background: #fff;
+        background: var(--c-card, #ffffff);
         border: 1px solid var(--c-border);
         border-radius: 999px;
         padding: 9px 14px;
@@ -1090,11 +1141,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         padding: 11px 14px;
         border-radius: 12px;
         border: none;
-        background: linear-gradient(
-          90deg,
-          var(--c-accent) 0%,
-          var(--c-accent-dark) 100%
-        );
+        background: var(--c-accent);
         color: var(--c-text-light);
         font-size: 13px;
         font-weight: 700;
@@ -1125,7 +1172,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         font: inherit;
         font-size: 13px;
         color: var(--c-text);
-        background: #fff;
+        background: var(--c-card, #ffffff);
         border: 1px solid var(--c-border);
         border-radius: 12px;
         padding: 9px 12px;
@@ -1160,7 +1207,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-panel {
         width: 340px;
         flex-shrink: 0;
-        background: #fff;
+        background: var(--c-card, #ffffff);
         border-right: 1px solid var(--c-border-light);
         display: flex;
         flex-direction: column;
@@ -1213,7 +1260,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         height: 36px;
         border-radius: 50%;
         border: 1px solid var(--c-border);
-        background: #fff;
+        background: var(--c-card, #ffffff);
         color: var(--c-text);
         cursor: pointer;
         transition:
@@ -1240,10 +1287,11 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         --c-accent-dark: #bd1e59;
         --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
         --c-text: var(--foreground, #222222);
-        --c-text-light: #ffffff;
+        --c-text-light: var(--primary-foreground, #ffffff);
         --c-muted: var(--muted-foreground, #717171);
         --c-border-light: var(--border, #ebebeb);
         --c-bg: var(--muted, #f7f7f7);
+        --c-card: var(--card, #ffffff);
         width: 200px;
         max-width: 100%;
         display: flex;
@@ -1309,11 +1357,57 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         border-radius: 999px;
         padding: 1px 9px;
       }
+      .ti-currency {
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      .ti-budget-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        /* inverted receipt-style total strip: foreground as fill, background
+           as text, so it stays paired under any linked theme */
+        background: var(--c-text);
+        color: var(--background, #ffffff);
+      }
+      .ti-budget-head {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      .ti-budget-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .ti-budget-sub {
+        font-size: 10px;
+        opacity: 0.6;
+      }
+      .ti-budget-amount {
+        font-size: 15px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      .ti-budget-currency {
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      .ti-budget-currency :deep(.currency-field-edit) {
+        min-width: 84px;
+        font-size: 12px;
+      }
       .ti-add-day {
         --boxel-button-border-radius: 999px;
         --boxel-button-border-color: var(--c-text);
         --boxel-button-text-color: var(--c-text);
         font-weight: 700;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
 
       .ti-days {
@@ -1337,7 +1431,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         text-align: left;
         position: sticky;
         top: 0;
-        background: #fff;
+        background: var(--c-card, #ffffff);
         z-index: 2;
         border-radius: 8px;
       }
@@ -1388,7 +1482,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         display: flex;
         align-items: center;
         gap: 2px;
-        background: #fff;
+        background: var(--c-card, #ffffff);
         border: 1px solid var(--c-border-light);
         border-radius: 14px;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -1470,9 +1564,22 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-stop-time {
         font-size: 12px;
         font-weight: 700;
-        color: var(--stop-color);
+        color: color-mix(
+          in srgb,
+          var(--stop-color) 62%,
+          var(--c-text, #222222) 38%
+        );
         font-variant-numeric: tabular-nums;
         flex-shrink: 0;
+      }
+      .ti-stop-cost {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--c-muted, var(--muted-foreground, #717171));
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+        margin-left: auto;
+        padding-right: 4px;
       }
       .ti-stop-name {
         font-size: 14px;
@@ -1569,7 +1676,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         flex-shrink: 0;
         display: flex;
         flex-direction: column;
-        background: #fff;
+        background: var(--c-card, #ffffff);
         border-left: 1px solid var(--c-border-light);
         box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
         z-index: 1100;
@@ -1654,7 +1761,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         max-width: calc(100% - 28px);
         overflow-x: auto;
         padding: 5px;
-        background: #fff;
+        background: var(--c-card, #ffffff);
         border-radius: 999px;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
       }
@@ -1702,6 +1809,10 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
 }
 
 export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
+  get hasLinkedTheme(): boolean {
+    return Boolean((this.args.model as any)?.cardInfo?.theme);
+  }
+
   get title() {
     return (
       this.args.model?.tripTitle?.trim() ||
@@ -1793,7 +1904,7 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
   }
 
   <template>
-    <div class='fitted-trip'>
+    <div class='fitted-trip {{unless this.hasLinkedTheme "ti-default-theme"}}'>
       <div class='badge'>
         <span class='ft-icon'><PlaneIcon width='16' height='16' /></span>
         <span class='ft-title'>{{this.title}}</span>
@@ -1881,15 +1992,28 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
     </div>
 
     <style scoped>
+      .ti-default-theme {
+        --background: #ffffff;
+        --foreground: #222222;
+        --card: #ffffff;
+        --card-foreground: #222222;
+        --muted: #f7f7f7;
+        --muted-foreground: #717171;
+        --border: #dddddd;
+        --primary: #ff385c;
+        --primary-foreground: #ffffff;
+        --radius: 10px;
+      }
       .fitted-trip {
         /* See TravelItineraryIsolated above for the design-system-token / literal palette. */
         --c-accent: var(--primary, #ff385c);
         --c-accent-dark: #bd1e59;
         --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
         --c-text: var(--foreground, #222222);
-        --c-text-light: #ffffff;
+        --c-text-light: var(--primary-foreground, #ffffff);
         --c-muted: var(--muted-foreground, #717171);
         --c-bg: var(--muted, #f7f7f7);
+        --c-card: var(--card, #ffffff);
         width: 100%;
         height: 100%;
         font-family:
@@ -1991,11 +2115,7 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           align-items: center;
           gap: 10px;
           padding: 12px 14px;
-          background: linear-gradient(
-            135deg,
-            var(--c-accent) 0%,
-            var(--c-accent-dark) 100%
-          );
+          background: var(--c-accent);
           color: var(--c-text-light);
         }
         .t-hero-icon {
@@ -2084,11 +2204,7 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           align-items: flex-start;
           gap: 14px;
           padding: 18px 20px;
-          background: linear-gradient(
-            135deg,
-            var(--c-accent) 0%,
-            var(--c-accent-dark) 100%
-          );
+          background: var(--c-accent);
           color: var(--c-text-light);
         }
         .c-hero-icon {

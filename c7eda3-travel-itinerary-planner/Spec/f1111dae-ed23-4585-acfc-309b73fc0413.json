@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# accentStyle\n\nBuilds an inline style pinning `--stop-color` to an explicit color, for callers that already resolved the hue.\n\n```ts\n<span style={{accentStyle color}}>\n```\n",
       "ref": {
         "module": "../utils/index",
         "name": "accentStyle"
