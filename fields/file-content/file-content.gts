@@ -8,11 +8,16 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import NumberField from 'https://cardstack.com/base/number';
+import BooleanField from 'https://cardstack.com/base/boolean';
 import FileCodeIcon from '@cardstack/boxel-icons/file-code';
 
 export class FileContentField extends FieldDef {
   @field filename = contains(StringField);
   @field contents = contains(StringField);
+  // True when contents are base64 bytes rather than source text. Set by the
+  // collector from how it read the file — extension sniffing misclassifies
+  // e.g. a generated .js FileDef, which is read as binary.
+  @field isBinary = contains(BooleanField);
 
   static atom = class Atom extends Component<typeof FileContentField> {
     get filename() {

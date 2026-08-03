@@ -43,6 +43,7 @@ const log = logger('commands:collect-submission-files');
 interface FileWithContent {
   path: string;
   content: string;
+  isBinary: boolean;
 }
 
 class CollectSubmissionFilesInput extends CardDef {
@@ -81,6 +82,7 @@ export default class CollectSubmissionFilesCommand extends Command<
           new FileContentField({
             filename: file.path,
             contents: file.content,
+            isBinary: file.isBinary,
           }),
       ),
     });
@@ -257,6 +259,7 @@ export default class CollectSubmissionFilesCommand extends Command<
         filesWithContent.push({
           path,
           content: rewriteReferences(source.content, path),
+          isBinary: false,
         });
 
         if (thumbnailUrl && thumbnailPath && !seenPaths.has(thumbnailPath)) {
@@ -267,6 +270,7 @@ export default class CollectSubmissionFilesCommand extends Command<
           filesWithContent.push({
             path: thumbnailPath,
             content: binary.base64Content ?? '',
+            isBinary: true,
           });
         }
 
@@ -281,6 +285,7 @@ export default class CollectSubmissionFilesCommand extends Command<
           filesWithContent.push({
             path: imagePath,
             content: binary.base64Content ?? '',
+            isBinary: true,
           });
         }
       }
@@ -301,6 +306,7 @@ export default class CollectSubmissionFilesCommand extends Command<
           filesWithContent.push({
             path,
             content: rewriteReferences(source.content, path),
+            isBinary: false,
           });
         } catch (e: any) {
           if (isAccessError(e)) {
@@ -329,6 +335,7 @@ export default class CollectSubmissionFilesCommand extends Command<
           filesWithContent.push({
             path,
             content: rewriteReferences(source.content, path),
+            isBinary: false,
           });
         } catch (e: any) {
           if (isAccessError(e)) {
@@ -354,6 +361,7 @@ export default class CollectSubmissionFilesCommand extends Command<
         filesWithContent.push({
           path,
           content: binary.base64Content ?? '',
+          isBinary: true,
         });
       } catch (e: any) {
         if (isAccessError(e)) {
