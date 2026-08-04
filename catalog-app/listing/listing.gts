@@ -279,7 +279,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
           <p class='lede'>{{@model.cardDescription}}</p>
         {{/if}}
         {{#if this.publisherHandle}}
-          <div class='byline'>by
+          <div class='byline' data-test-listing-publisher>by
             <strong>{{this.publisherHandle}}</strong></div>
         {{/if}}
       </section>
@@ -364,7 +364,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                 together. Each piece is independently remixable.</p>
               {{#if this.hasNonEmptySpecBreakdown}}
                 {{#each-in this.specBreakdown as |kind specs|}}
-                  <div class='include-group'>
+                  <div
+                    class='include-group'
+                    data-test-listing-spec-group={{kind}}
+                  >
                     <div class='include-group-head'>
                       <span
                         class='include-dot'
@@ -453,6 +456,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
               <button
                 type='button'
                 class='remix-secondary'
+                data-test-listing-preview-button
                 {{on 'click' this.preview}}
               >▷ Try live preview</button>
             {{/if}}
@@ -460,6 +464,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
               <button
                 type='button'
                 class='remix-secondary'
+                data-test-listing-use-skills-button
                 {{on 'click' this.skillActions.addSkillsToRoom}}
               >Use Skills</button>
             {{/if}}
@@ -475,7 +480,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
           </div>
 
           {{#if this.hasTags}}
-            <div class='tags-card'>
+            <div class='tags-card' data-test-listing-tags>
               <div class='tags-title'>Tags</div>
               <div class='tags-list'>
                 {{#each @model.tags as |tag|}}
