@@ -448,7 +448,13 @@ export function runTests() {
             assert
               .dom('[data-test-storefront-search]')
               .hasValue('', 'the search input is cleared');
-            await waitForGrid();
+            await waitUntil(
+              () =>
+                document.querySelectorAll(
+                  '[data-test-cards-grid-cards] [data-test-cards-grid-item]',
+                ).length === 11,
+              { timeout: 10_000 },
+            );
             assert
               .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
               .exists({ count: 11 }, 'the full gallery returns');
