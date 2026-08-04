@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# stripRedundantLabelParts\n\n## Summary\n\nA pruning pass in the img-to-3d pipeline for textured labels. A part carrying a real cropped-artwork image (`textureRef`) IS the whole printed label — its text, wordmarks, crests and borders already baked in. When the model also stacks re-typed textDecals, crest discs, or border boxes on top of it, they double-print the same content blurred and offset. This drops every untextured flat-graphic part (textDecal, curvedDecal, disc, plane, roundedPlate, box, extruded shapes) whose `attachTo` chain leads to a textured decal. Genuine solids that merely touch the label are never dropped.\n\n## Import\n\n```ts\nimport { stripRedundantLabelParts } from '../util/spec-passes/prune';\n```\n\n## Usage\n\nNot part of `runStructurePasses` — it runs in the studio's `applyParsedSpec` (components/studio-isolated.gts), after `applyTextures` and the envelope clamp, before `fitCurvedDecals`. Receives the parsed spec, replaces `parsed.components` in place, returns log lines per dropped part.\n",
       "ref": {
         "module": "../util/spec-passes/prune",
         "name": "stripRedundantLabelParts"

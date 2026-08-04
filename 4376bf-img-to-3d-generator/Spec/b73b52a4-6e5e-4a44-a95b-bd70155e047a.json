@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# runStructurePasses\n\n## Summary\n\nThe one ordered run of the img-to-3d deterministic structure-repair chain. Every pass it calls is pure — `(parsed[, analysis]) => string[]` log lines, mutating the spec in place — and the ORDER is load-bearing: inventory pruning first (hairline, unplanned, unrealized, overbuilt), then attachment repair and enforcement, grounding of supports, face synthesis and alignment, ring-collar seating, burial resolution, interior and recess fitting, orphan attachment, and finally the flag passes plus primitive-convention and coplanar-layer fixes. Centralising the sequence here keeps the \"why this order\" notes next to the calls and lets a test run the whole chain instead of each pass in isolation.\n\n## Import\n\n```ts\nimport { runStructurePasses } from '../util/spec-passes/run-all';\n```\n\n## Usage\n\nCalled by the studio's `generate()` (components/studio-isolated.gts) on a freshly built spec, which prefixes each returned line with \"> \" for its console, and by the integration test. Receives (parsed, analysis); returns every pass's log lines in order.\n",
       "ref": {
         "module": "../util/spec-passes/run-all",
         "name": "runStructurePasses"

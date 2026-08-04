@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# groundSupports\n\n## Summary\n\nA placement repair in the img-to-3d structure chain, and the last line of defence when the plan and spec are wrong the same way (an analysis once wrote \"wheels rests-on main hull body\", putting the tyres on the roof). What no plan can overrule is that a thing stands on its supports: any part whose name matches `SUPPORT_NAME` (wheel, tyre, track, foot, leg, skid, …) whose centre sits above the midline of the body — the biggest non-support volume — is mirrored to the other side of the body, preserving the distance the spec intended. It also reports non-support parts hanging below the lowest support (they would scrape the ground).\n\n## Import\n\n```ts\nimport { groundSupports } from '../util/spec-passes/placement';\n```\n\n## Usage\n\nRuns in `runStructurePasses` after `repairMirroredAttachments` and `enforceAttachments`, which deliberately refuse inverted support lines so this pass can fix them from coordinates. Mutates support positions in place; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/placement",
         "name": "groundSupports"

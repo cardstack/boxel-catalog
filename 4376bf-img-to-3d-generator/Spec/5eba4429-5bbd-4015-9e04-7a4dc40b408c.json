@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# narrowRemovalTargets\n\n## Summary\n\nDecides which lasso-selected parts a \"remove X\" instruction actually means. A lasso over a sticker also catches the solid under it, so when the instruction names a noun, the selection is narrowed to parts whose `nodeId`/`partRef`/`note` contain that noun — and for sticker/label/decal words, to the decal primitives (`textDecal`/`curvedDecal`), since the noun can never name the solid the decal rides on. The narrowed set is returned only when it is a real, non-empty subset; otherwise the original selection stands, so this can never delete MORE than before.\n\n## Import\n\n```ts\nimport { narrowRemovalTargets } from '../util/spec-diff';\n```\n\n## Usage\n\nCalled by the studio's deterministic-delete path (`components/studio-isolated.gts`) with the spec's components, the lasso's target ids, and the instruction text; the result feeds `applySpecDiff` as `removedNodeIds`.",
       "ref": {
         "module": "../util/spec-diff",
         "name": "narrowRemovalTargets"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# mulberry32\n\n## Summary\n\nA tiny seeded pseudo-random number generator: given a 32-bit seed it returns a function producing deterministic floats in [0, 1). It is what makes every procedural surface finish reproducible — the same material id always paints the same grime blotches, scratches, and streaks, so a model looks identical on every rebuild.\n\n## Import\n\n```ts\nimport { mulberry32 } from '../util/finishes';\n```\n\n## Usage\n\n`makeFinishTexture` in the same module seeds it from the material id (via the FNV-1a `seedFrom` helper) and hands the generator to each finish painter. It is also a member of `FINISH_RUNTIME_SOURCES`, which `../util/code-export` emits verbatim via `Function.prototype.toString()` into exported model .js files, so standalone models paint their finishes with exactly the same RNG.",
       "ref": {
         "module": "../util/finishes",
         "name": "mulberry32"

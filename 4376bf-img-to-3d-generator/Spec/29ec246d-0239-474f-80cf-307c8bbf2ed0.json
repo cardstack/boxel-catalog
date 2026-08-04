@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# AnalyzeReferenceCommand\n\n## Summary\n\nStage 1 of the image-to-3D pipeline as its own host Command (\"Analyze Reference Images\"). Input: `imageUrls` (resolved reference URLs, primary first, up to 6 used), an optional `model` (enum over `VISION_MODEL_OPTIONS`), and an optional `maxEdge` longest-edge cap that trims vision tokens for this perception-only stage. `run()` fetches each image as a data URL via `fetchAsDataUrl`, sends `ANALYZE_SYSTEM_PROMPT` through `requestSpec` with a seed derived from the URLs (`seedFromStrings`) and `reasoning: { effort: 'low' }` — so one photo set reproduces the same plan — and parses the reply with `parseAnalysisJson`. The output card carries the full `analysisJson` verbatim for the spec stage, plus headline facts: objectType, objectClass, buildBackend and backendReason, partCount, and identityFeatures.\n\n## Import\n\n```ts\nimport { AnalyzeReferenceCommand } from '../commands/analyze-reference';\n```\n\n## Usage\n\n`StudioIsolated` runs it at the start of every generation; splitting the stage out makes the plan an inspectable, reusable artifact — the studio persists it on the `SculptedModel`, a human can correct it before the spec stage, an AI-assistant skill can call it as a tool, and a bad plan can be re-run without re-running the whole generation.",
       "ref": {
         "module": "../commands/analyze-reference",
         "name": "AnalyzeReferenceCommand"

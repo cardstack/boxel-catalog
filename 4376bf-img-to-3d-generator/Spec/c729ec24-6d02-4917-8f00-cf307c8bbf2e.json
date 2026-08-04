@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# ImgTo3dPopover\n\n## Summary\n\nThe shared popover shell for the img-to-3d studio, rendered into the catalog `<Popover>`'s `:tools` block. The catalog Popover owns floating-ui positioning and Esc/outside-click dismissal; this shell paints its own deep-space dark surface over the catalog chrome and — because the Popover portals content out of the card's theme scope — re-declares the `--i3d-*` token block so yielded content resolves the same tokens as inside `.studio`. It renders a sticky header (kicker/title, or a custom `:header` block, always with an appended ✕ close button wired to `@onClose`), a scrollable `:body`, and an optional pinned `:foot`. Args pass through anchor selector, open flag, and Popover positioning (kind, anchoring, placement, size, backdrop, elevation, offset) with studio defaults; it also sets `--bx-popover-radius: 3px` to square off the floating chrome.\n\n## Import\n\n```ts\nimport ImgTo3dPopover from '../components/i3d-popover';\n```\n\n## Usage\n\nUsed by `StudioIsolated` (`components/studio-isolated.gts`) as the shell of the history popover, which lists past generation rounds; the shell owns the panel's dark surface, scrolling and width.",
       "ref": {
         "module": "../components/i3d-popover",
         "name": "default"

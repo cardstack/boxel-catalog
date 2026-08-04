@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# MaterialSpecField\n\n## Summary\n\nThe PBR parameters for one `THREE.MeshStandardMaterial`, referenced from component nodes by `materialId`. Fields: `materialId`, `baseColor` and `emissive` (ColorField), `roughness`, `metalness`, `opacity`, plus the optional physical extensions `clearcoat`, `sheen` and `transmission` — setting any of these switches the interpreter to `MeshPhysicalMaterial`, with `transmission` rendering real see-through glass with refraction — an optional procedural `finish` (worn | brushed | hazard | tread | camo | louver | patina | knurl) painted by the interpreter, and `emissiveIntensity` (0–2). The computed title is the materialId.\n\n## Import\n\n```ts\nimport { MaterialSpecField } from '../fields/sculpt-spec';\n```\n\n## Usage\n\nContained as `containsMany` in `SculptSpecField.materials`; instances are built from parsed LLM output by `specFieldFromParsed` in `util/spec-io.gts`, and `SculptSpecField`'s embedded view renders each one as a hex-validated color swatch.",
       "ref": {
         "module": "../fields/sculpt-spec",
         "name": "MaterialSpecField"

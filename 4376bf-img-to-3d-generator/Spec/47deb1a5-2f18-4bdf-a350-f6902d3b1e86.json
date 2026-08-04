@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# resolveBuriedParts\n\n## Summary\n\nA placement repair in the img-to-3d structure chain. A part can be perfectly assembled and invisible — swallowed whole by its neighbour (a lower hip roof 90% inside a storey box). A solid whose CENTRE lies inside a larger part and whose volume overlaps it by more than 50% is pushed out through the host's nearest face, keeping the 0.03 overlap the assembly rules want. Moves are capped at 15% of the object, one move per part, over up to three settle passes. Decals, glows, shadows, face features, recessed parts, repeat prototypes, concentric revolved shells, parts attached to that very host, and parts comparable in size to their host are all exempt; those cases are reported instead.\n\n## Import\n\n```ts\nimport { resolveBuriedParts } from '../util/spec-passes/placement';\n```\n\n## Usage\n\nRuns in `runStructurePasses` after the face passes and ring seating, before cavity/recess fitting. Mutates positions in place; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/placement",
         "name": "resolveBuriedParts"

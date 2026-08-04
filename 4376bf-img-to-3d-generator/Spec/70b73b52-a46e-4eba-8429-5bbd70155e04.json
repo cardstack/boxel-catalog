@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# flagFlatPalette\n\n## Summary\n\nA report-only materials pass in the img-to-3d structure chain. A reply that gives every part the same mid-grey satisfies the schema and produces a model nobody can read — one brass-and-teal machine came back with nine of twelve materials inside a single olive band, because colours were sampled off a warm-lit render. Two object-agnostic measurements: material pairs whose baseColor is perceptually indistinguishable (a green-weighted RGB distance under ~12 — two spec slots spent on one surface), and, when at least six materials carry a hue, 70%+ of hues packed into one 40° band. Finishes that replace the base colour (hazard, camo, louver) are excluded. Which colour should change is a judgement about the photo, so it only reports.\n\n## Import\n\n```ts\nimport { flagFlatPalette } from '../util/spec-passes/materials';\n```\n\n## Usage\n\nRuns in `runStructurePasses` among the late flag passes. Receives the parsed spec, mutates nothing, returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/materials",
         "name": "flagFlatPalette"

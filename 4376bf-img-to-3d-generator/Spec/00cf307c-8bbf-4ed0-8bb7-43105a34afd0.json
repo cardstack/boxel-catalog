@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# dropHairlineParts\n\n## Summary\n\nA pruning pass in the img-to-3d structure-repair chain. It detects hairline solids — geometry so thin it renders as a wire hanging in space (a mould seam, panel gap, or printed line modelled as a tiny tube). The gate is deliberately name-blind and purely dimensional: tubes with radius under 0.02, tori with tube under 0.008, and boxes/roundedBoxes/cylinders with two extents under 0.015 world units are deleted. Removal cascades: any child parented to a dropped part is dropped too, since a surviving child would inherit root coordinates and fly off on its own.\n\n## Import\n\n```ts\nimport { dropHairlineParts } from '../util/spec-passes/prune';\n```\n\n## Usage\n\nRuns first in `runStructurePasses`, before any other inventory or placement pass. It receives the parsed spec, mutates `parsed.components` in place by filtering out condemned parts, and returns log lines describing each drop. The effect is that surface marks stop rendering as dark lines crossing the model.\n",
       "ref": {
         "module": "../util/spec-passes/prune",
         "name": "dropHairlineParts"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# generateViewerSrcdoc\n\n## Summary\n\nReturns the viewer harness HTML with the model .js URL baked in (`window.SCULPT_MODEL_URL`), for use as an iframe's `srcdoc` attribute. Because the document arrives via srcdoc, the browser never requests an .html file from the realm — so it works regardless of how the realm routes text/html navigations — and a srcdoc document inherits the embedding page's origin, so the studio can still call the harness's window API and the model .js fetch stays same-origin. Implemented as a one-line delegation to `generateViewerHarnessHtml(modelUrl)`.\n\n## Import\n\n```ts\nimport { generateViewerSrcdoc } from '../util/code-export';\n```\n\n## Usage\n\n`SculptedModel` (`sculpted-model.gts`) renders every exported model through it, and the studio (`components/studio-isolated.gts`) falls back to it when reading the model source for inline embedding fails.",
       "ref": {
         "module": "../util/code-export",
         "name": "generateViewerSrcdoc"

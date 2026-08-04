@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# REFINE_SYSTEM_PROMPT\n\n## Summary\n\nThe system prompt for the self-review refine pass. The model compares a comparison sheet (reference photo plus labeled renders, including a \"RENDER @ REF ANGLE\" pane when available) against the current spec JSON and returns a MINIMAL change set: `changed` entries repositioning/rescaling existing nodeIds and `materialsChanged` recoloring materials, plus a `critique`, a `score` capped at 90, and a per-identityFeature `featureCheck` gate. It explicitly forbids shape changes — no new components, no deletions, no edits to `primitive` or `dimensions` — and puts orientation fixes (wheels lying flat, tines pointing sideways) first.\n\n## Import\n\n```ts\nimport { REFINE_SYSTEM_PROMPT } from '../prompts/refine';\n```\n\n## Usage\n\nSent by `StudioIsolated` during the auto-refine rounds of a generation (up to `AUTO_REFINE_ROUNDS`, stopping at `REFINE_TARGET_SCORE`); the returned diff is applied to the spec with `applySpecDiff`.",
       "ref": {
         "module": "../prompts/refine",
         "name": "REFINE_SYSTEM_PROMPT"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# flagOverbuiltParts\n\n## Summary\n\nA report-only pass in the img-to-3d structure-repair chain. The `partRef` gate catches parts the plan never mentions; this catches the other half of padding — burying many invented components under ONE legitimate part name (a single planned screwcap realized as body + skirt + rib band + 20 knurl blocks). The allowance comes from the part's own plan approach: `curved-chain` and `freeform-mesh` parts may honestly be up to 10 components, everything else 4. Which of a padded part's components are the invented ones cannot be known from counting, so nothing is deleted — the log makes the padding visible for the refine round or a human.\n\n## Import\n\n```ts\nimport { flagOverbuiltParts } from '../util/spec-passes/prune';\n```\n\n## Usage\n\nRuns in `runStructurePasses` right after `flagUnrealizedParts`. Receives (parsed, analysis), mutates nothing, returns log lines naming each over-built part and its component count.\n",
       "ref": {
         "module": "../util/spec-passes/prune",
         "name": "flagOverbuiltParts"

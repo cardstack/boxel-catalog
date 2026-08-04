@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# specFromModelJs\n\n## Summary\n\nReads the embedded `SCULPT_SPEC` back out of a generated model .js file: it matches the `^var SCULPT_SPEC = (.*);$` line and JSON-parses the capture, returning the plain spec object or `null` when the line is absent or unparseable. This is the studio's only way to recover a working spec from a persisted model, since the .js file — not the card instance — carries the spec.\n\n## Import\n\n```ts\nimport { specFromModelJs } from '../util/code-export';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) calls it after fetching a model file's source to restore `workingSpec` when loading a creation or a previous round, and `RefineSculptCommand` reads the current spec out of the model file before applying a diff and regenerating.",
       "ref": {
         "module": "../util/code-export",
         "name": "specFromModelJs"

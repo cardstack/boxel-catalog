@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# applySpecDiff\n\n## Summary\n\nMerges a model-authored change set into the current spec and returns the merged plain spec. `changed` entries update position/rotation/scale/grounded/materialId on existing nodes (dimensions only with `allowReshape`); a part's `primitive` is frozen on every path. `added` parts are accepted only with `allowAdditions`, a primitive, and a fresh nodeId; `removedNodeIds` are honoured only with `allowRemoval` and cascade to children. Material changes replace by `materialId`. The option gates encode policy: a user-directed edit may resize and add parts, the automatic refine pass may not.\n\n## Import\n\n```ts\nimport { applySpecDiff } from '../util/spec-diff';\n```\n\n## Usage\n\nCalled by the studio (`components/studio-isolated.gts`) after `parseDiffJson` on refine and targeted-edit replies, and by `RefineSculptCommand`, which regenerates the model .js from the merged spec.",
       "ref": {
         "module": "../util/spec-diff",
         "name": "applySpecDiff"

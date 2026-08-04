@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# clampToEnvelope\n\n## Summary\n\nA placement pass in the img-to-3d pipeline for revolved objects. The traced silhouette is the object's true outer boundary, and a capsule, ring, or collar wider than the neck — or a part that slid off-axis — pokes past the outline and reads as floating. Given the world-space envelope (half-width per height, `{ y, half }[]` from the traced lathe profile), it lowers a part whose centre floats above the silhouette top onto the top edge, scales an on-axis over-wide solid down to the local half-width (X, and Z too when `revolved`), and slides an off-axis part toward the axis. Lathes, tubes, extrusions and meshes are skipped; decal radii belong to `fitCurvedDecals`.\n\n## Import\n\n```ts\nimport { clampToEnvelope } from '../util/spec-passes/placement';\n```\n\n## Usage\n\nNot in `runStructurePasses` — the studio's `applyParsedSpec` calls `clampToEnvelope(parsed, this.tracedEnvelope, true)` only when silhouette tracing succeeded. Mutates positions/scales in place; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/placement",
         "name": "clampToEnvelope"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# specFieldFromParsed\n\n## Summary\n\nMaterializes a parsed spec reply (the output of `parseSpecJson`) into a `SculptSpecField` instance: it constructs `MaterialSpecField` and `ComponentNodeField` children, coerces ids to strings, caps `identityFeatures` at six entries, normalizes `inputKind` to `'object'` unless it is exactly `'flat-graphic'`, and JSON-stringifies each component's `dimensions`/`position`/`rotation`/`scale`/`repeat` into the string-backed field storage. It is the inverse direction of `serializeSpecForPrompt`.\n\n## Import\n\n```ts\nimport { specFieldFromParsed } from '../util/spec-io';\n```\n\n## Usage\n\nReceives the plain parsed object and returns a new `SculptSpecField`. No component or command in this listing currently imports it — the studio works with plain parsed specs and persists them inside generated model .js files — but it is the packaged path for putting a parsed spec into the card fields defined in `../fields/sculpt-spec`.",
       "ref": {
         "module": "../util/spec-io",
         "name": "specFieldFromParsed"

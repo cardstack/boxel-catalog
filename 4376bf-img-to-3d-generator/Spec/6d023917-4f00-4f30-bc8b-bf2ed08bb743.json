@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# selectRecipeNames\n\n## Summary\n\nThe pure selector deciding which `RECIPES` blocks an object's spec prompt gets. It unions two independent sources: (1) the directive names stage 1 nominated in `analysis.directives`, filtered to names that exist in `RECIPES`, and (2) what the plan's own structure implies — declared part `approach` values, an `artwork` bbox, `objectClass`, and regex matches over objectType/part names/surface notes (face-feature words trigger `character`, wall/roof words trigger `architectural`, wheel/hull words trigger `vehicle`, and so on). Analysis in, ordered recipe-name array out, no side effects — so it is cheap to unit-test.\n\n## Import\n\n```ts\nimport { selectRecipeNames } from '../prompts/recipes';\n```\n\n## Usage\n\n`selectRecipes` maps its result to recipe text for the spec prompt; `StudioIsolated` also calls it directly to log which directives a generation selected (`> directives: ...` in the build log).",
       "ref": {
         "module": "../prompts/recipes",
         "name": "selectRecipeNames"

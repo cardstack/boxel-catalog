@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# requestSpec\n\n## Summary\n\nThe one place this pipeline talks to a model: one vision round-trip through the Boxel proxy to OpenRouter, returning the parsed reply. It pins temperature to 0 by default, forwards an optional seed and reasoning control, and marks the first system block cacheable on Anthropic models. Transient failures retry with backoff — 4 attempts for bad replies (with corrective nudges for truncation, non-JSON, or a `validate` complaint), 7 with longer delays for network drops. An incomplete-but-parseable reply is re-asked once, then used anyway. A 403 is surfaced as \"out of AI credits\".\n\n## Import\n\n```ts\nimport { requestSpec } from '../util/llm-request';\n```\n\n## Usage\n\nEvery stage calls it — the studio's spec/refine/targeted-edit calls, `AnalyzeReferenceCommand` (with `parseAnalysisJson`), and `RefineSculptCommand` (with `parseDiffJson`); the `parser` argument defaults to `parseSpecJson`.",
       "ref": {
         "module": "../util/llm-request",
         "name": "requestSpec"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# isRecessed\n\n## Summary\n\nA predicate shared by the img-to-3d placement passes. The pipeline's default assumption is that every feature PROTRUDES — `resolveBuriedParts` pushes buried parts back out — so a feature designed to sit INTO its host needs an opt-out. A component counts as recessed when it flags `inset: true` or when its nodeId, partRef, or note matches `RECESS_NAME` (recess, sunken, inset, intake, vent, grille, interior, cavity, well, window, windshield, and variants). It reads the component only; nothing is mutated.\n\n## Import\n\n```ts\nimport { isRecessed } from '../util/spec-passes/placement';\n```\n\n## Usage\n\nCalled inside the placement module itself: `resolveBuriedParts` uses it to exempt recessed features from being ejected out of their host, and `seatRecesses` uses it (plus its `attachTo`/enclosing-host search) to pick which parts get sunk into a surface. Receives a component, returns a boolean.\n",
       "ref": {
         "module": "../util/spec-passes/placement",
         "name": "isRecessed"

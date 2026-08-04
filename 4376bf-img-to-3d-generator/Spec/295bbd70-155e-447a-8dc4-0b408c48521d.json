@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# traceLatheProfile\n\n## Summary\n\nTraces a rotationally symmetric part's lathe profile straight from the reference photo's pixels instead of trusting the vision model to invent one. It segments the crop by color threshold against the corner-sampled backdrop, repairs label/reflection gaps in the mask, samples per-row half-widths bottom→top, enforces a unimodal shape prior (never narrowing before the widest point, never widening after, small lip flare excepted), and returns a normalized `[x0,y0, x1,y1, …]` dimensions array starting closed on the axis — or `null` with a reason pushed to `diag` when the crop cannot segment cleanly.\n\n## Import\n\n```ts\nimport { traceLatheProfile } from '../util/silhouette';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) calls it with the loaded reference image and the bbox chosen by `revolvedSilhouetteBbox`, using 16 samples; the traced profile replaces the model-invented lathe dimensions for the revolved body.",
       "ref": {
         "module": "../util/silhouette",
         "name": "traceLatheProfile"

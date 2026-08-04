@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# SPEC_JSON_SHAPE\n\n## Summary\n\nThe response contract for the spec stage, as one prose constant: the JSON shape the model must return (materials with PBR fields and procedural finishes, components with partRef/textureRef/repeat/attachTo/anchor/grounded), the dimension semantics of every primitive (interpolated from `PRIMITIVES` in `fields/sculpt-spec`), objectClass strategy, material families, the canonical world frame (-Z forward, +Y up, +X right), an orientation cheat sheet, and the universal modelling rules. Craft rules only some objects need live in `prompts/recipes` instead; invariants the repair passes enforce get one line each.\n\n## Import\n\n```ts\nimport { SPEC_JSON_SHAPE } from '../prompts/spec-shape';\n```\n\n## Usage\n\nInterpolated into `SPEC_SYSTEM_PROMPT` in `prompts/spec.gts`, the invariant first block of the stage-2 system prompt built by `buildSpecSystemPrompt`; keeping it byte-identical across objects is what preserves the upstream prompt-cache hit.",
       "ref": {
         "module": "../prompts/spec-shape",
         "name": "SPEC_JSON_SHAPE"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# ensureFaceParts\n\n## Summary\n\nA face pass in the img-to-3d structure chain: guaranteeing a face HAS a face. The LLM routinely ships a character with no eyes or mouth, and `dropUnplannedParts` guarantees nothing downstream can add them back. For anything that reads as a face — a head-named solid plus ears, a muzzle/face mass, or a stage-1 `character` directive — it synthesises the missing core features (two eyes with pupils, a nose, a mouth) as ellipsoid spheres sized and placed from the head/muzzle geometry, reusing or creating white/black/red materials. Additive and idempotent: existing features under any name are left alone, and a beak/bill/snout counts as both nose and mouth, so a duck never grows a second nose.\n\n## Import\n\n```ts\nimport { ensureFaceParts } from '../util/spec-passes/face';\n```\n\n## Usage\n\nRuns in `runStructurePasses` after the pruning gates and before `alignFaceFeatures`, which then refines the synthesized parts. Pushes new components into `parsed.components`; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/face",
         "name": "ensureFaceParts"

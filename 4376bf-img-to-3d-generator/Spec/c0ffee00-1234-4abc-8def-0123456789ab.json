@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# AUTO_REFINE_ROUNDS\n\n## Summary\n\nLoop-policy constant: how many automatic refine passes run after the initial generation, where each pass costs one vision call and several minutes. It is `0` by default, so one Generate produces exactly one model file; setting it above zero re-enables the render-vs-reference correction loop. It lives in `pipeline-config` — separate from the request transport — so the knobs worth turning when the pipeline is too slow or not accurate enough are findable without reading request code (alongside `REFINE_TARGET_SCORE` and `AUTO_VERIFY_ROUNDS`).\n\n## Import\n\n```ts\nimport { AUTO_REFINE_ROUNDS } from '../util/pipeline-config';\n```\n\n## Usage\n\nThe studio's generation task (`components/studio-isolated.gts`) iterates `for (let round = 0; round < AUTO_REFINE_ROUNDS; round++)` after the deterministic build, running one comparison-sheet refine call per round.",
       "ref": {
         "module": "../util/pipeline-config",
         "name": "AUTO_REFINE_ROUNDS"

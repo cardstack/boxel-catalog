@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# parseAnalysisJson\n\n## Summary\n\nParses the analysis-stage reply (stage 1 of the v2 pipeline): the object type, per-part plan with bboxes, build recipe, identity features, attachments, and build directives. Like the other spec-io parsers it tolerates markdown fences and trailing commas. It throws when `partPlan` is missing or empty, defaults `buildRecipe`, `identityFeatures`, `attachments`, and `directives` to empty arrays, and drops `camera` unless both `azimuthDeg` and `elevationDeg` are numbers.\n\n## Import\n\n```ts\nimport { parseAnalysisJson } from '../util/spec-io';\n```\n\n## Usage\n\n`AnalyzeReferenceCommand` (`commands/analyze-reference.gts`) passes it as the `parser` argument to `requestSpec`, so the analysis vision call returns a validated plan object. The parsed plan's recipe is then injected into the build request, and its `revolved` parts drive deterministic silhouette tracing.",
       "ref": {
         "module": "../util/spec-io",
         "name": "parseAnalysisJson"

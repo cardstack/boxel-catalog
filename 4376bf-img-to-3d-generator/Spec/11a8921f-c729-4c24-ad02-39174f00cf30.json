@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# enforceAttachments\n\n## Summary\n\nAn attachment pass in the img-to-3d structure chain. The analysis writes prose joint lines (\"balcony railing rests-on balcony platform\") that the spec prompt calls hard joints, but nothing checked them numerically — contact at a corner satisfies the interpreter while a roof sits nowhere near centred. Working purely in the spec's own coordinates (no camera model), it REPAIRS the two unambiguous constraints — `centered-above` and `rests-on` seat the subject group on top of its target with a 0.03 overlap, recentring only when it is already roughly centred — and reports `inset-into`, `flush-top`, and `attached-left/right/front/back` violations. It refuses inverted lines (a support never rests on the body it carries; a subject the spec placed below its target is left alone).\n\n## Import\n\n```ts\nimport { enforceAttachments } from '../util/spec-passes/attachments';\n```\n\n## Usage\n\nRuns in `runStructurePasses` after `repairMirroredAttachments`, before `groundSupports`. Receives (parsed, analysis); mutates positions in place; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/attachments",
         "name": "enforceAttachments"

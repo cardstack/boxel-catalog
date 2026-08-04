@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# repairPrimitiveConventions\n\n## Summary\n\nA shape pass in the img-to-3d structure chain. A few primitives carry their own geometry in `dimensions` rather than being placed by `position`: a tube's dimensions ARE its swept curve and a bone's are its two endpoints, in the node's own frame. A spec that gives such a part both a point list and a non-zero position double-offsets it — a truck's exhaust run was authored along the hull's flank and then offset to y -1.26, ending up as a brown hook floating across the body. The repair is unambiguous because the points already say where the part goes: any tube or bone with a non-negligible position has it zeroed to [0, 0, 0].\n\n## Import\n\n```ts\nimport { repairPrimitiveConventions } from '../util/spec-passes/shape';\n```\n\n## Usage\n\nRuns near the end of `runStructurePasses`, after the flag passes and before `separateCoplanarLayers`. Mutates `position` in place; returns one log line per zeroed part.\n",
       "ref": {
         "module": "../util/spec-passes/shape",
         "name": "repairPrimitiveConventions"

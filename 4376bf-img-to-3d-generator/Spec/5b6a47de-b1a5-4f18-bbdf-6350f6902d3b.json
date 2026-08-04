@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# localCentreOffset\n\n## Summary\n\nReturns where a primitive's geometry sits relative to its node origin, as an `[x, y, z]` offset. For every primitive except `extrudedPolygon`/`extrudedSpline` the answer is `[0, 0, 0]` — their geometry is centred. The extruded shapes are centred in Z only: their outline keeps the author's own X/Y coordinates, so this function reads the outline points from `dimensions`, computes the outline's midpoint, and scales it by the node's scale. Ignoring this offset once mis-measured exactly the part that matters most on a traced vehicle — its body.\n\n## Import\n\n```ts\nimport { localCentreOffset } from '../util/spec-geometry';\n```\n\n## Usage\n\nCalled only by `specBox` in the same module, which adds the offset (rotated into the node's frame when the part is rotated) to the authored position before applying half extents.",
       "ref": {
         "module": "../util/spec-geometry",
         "name": "localCentreOffset"

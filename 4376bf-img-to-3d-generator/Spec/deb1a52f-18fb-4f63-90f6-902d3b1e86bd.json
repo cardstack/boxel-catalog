@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# halfExtents\n\n## Summary\n\nReturns a component's half extents `[hx, hy, hz]` from its authored dimensions, scale, and rotation — the spec-side equivalent of a Box3. It starts from `localHalfExtents` and, when the part is rotated, rotates the box's eight corners through the XYZ Euler triple and takes the widest reach per axis, so a wheel (a cylinder turned 90°) measures its true height rather than its unrotated one. Primitives whose extents are ambiguous return `undefined` and must be left alone rather than guessed at.\n\n## Import\n\n```ts\nimport { halfExtents } from '../util/spec-geometry';\n```\n\n## Usage\n\nUsed throughout `util/spec-passes/` (`overlap.gts`, `attachments.gts`, `placement.gts`) for constraint checks, and by `specBox` in this module to build the component's world axis-aligned box.",
       "ref": {
         "module": "../util/spec-geometry",
         "name": "halfExtents"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# separateCoplanarLayers\n\n## Summary\n\nAn overlap pass in the img-to-3d structure chain. Coplanar overlapping faces have no depth order, so the renderer picks a winner per pixel from floating-point noise and the surface strobes as the camera moves — a starburst icon with twelve rays at exactly z 0.105 flickered in a checkerboard at the hub. This pass groups genuinely FLAT parts (z half-extent under a quarter of the face's smaller side) by the z they were authored at to four decimals, and where members of a layer actually overlap in the plane, staggers each subsequent member by 0.0005 — far below anything visible, but enough for the depth buffer to sort.\n\n## Import\n\n```ts\nimport { separateCoplanarLayers } from '../util/spec-passes/overlap';\n```\n\n## Usage\n\nRuns as the final pass in `runStructurePasses`. Receives the parsed spec, mutates z positions in place, and returns one log line per separated layer.\n",
       "ref": {
         "module": "../util/spec-passes/overlap",
         "name": "separateCoplanarLayers"

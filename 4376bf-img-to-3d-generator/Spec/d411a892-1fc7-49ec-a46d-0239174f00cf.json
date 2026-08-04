@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# StudioIsolated\n\n## Summary\n\nThe isolated-format component of `ImgTo3dStudio` — the whole instrument panel, kept apart from the card file so the card says what a studio IS while this several-thousand-line class is what the view DOES. It renders the reference strip, the viewport iframes (a draft srcdoc during builds, the persisted model's .js inlined into the srcdoc so private-realm auth never 401s), the build log, the lasso/instruction inpaint editor, and the history popover. Its generate pipeline runs `AnalyzeReferenceCommand`, requests the spec with `buildSpecSystemPrompt`, repairs it with the `util/spec-passes` structure passes, then loops refine (`REFINE_SYSTEM_PROMPT`) and completeness (`COMPLETENESS_CRITIC_PROMPT`) rounds, persisting each round as a `SculptedModel` card linked from the studio.\n\n## Import\n\n```ts\nimport { StudioIsolated } from '../components/studio-isolated';\n```\n\n## Usage\n\nAssigned as `static isolated = StudioIsolated` in `img-to-3d-studio.gts`; lasso edits send `TARGETED_EDIT_PROMPT` and overwrite the current round in place with a one-click undo, and history entries load by walking each round's `parentCreation` chain.",
       "ref": {
         "module": "../components/studio-isolated",
         "name": "StudioIsolated"

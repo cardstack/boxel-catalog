@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# specBox\n\n## Summary\n\nComputes a component's world-ish axis-aligned bounding box `{ min, max }` from the spec alone: authored position, plus the geometry's own offset from its origin (`localCentreOffset`, rotated through the node's Euler rotation when present), plus rotated half extents (`halfExtents`). Returns `undefined` for primitives whose extents cannot be described. Every pass that reasons about where a part IS should use this rather than position ± halfExtents, so no two passes disagree about a part's box and push it twice in opposite directions.\n\n## Import\n\n```ts\nimport { specBox } from '../util/spec-geometry';\n```\n\n## Usage\n\nCalled by the structure passes in `util/spec-passes/` (`shape.gts`, `overlap.gts`, `placement.gts`) — envelope clamping, collision flagging, and silhouette-notch checks all measure parts through it.",
       "ref": {
         "module": "../util/spec-geometry",
         "name": "specBox"

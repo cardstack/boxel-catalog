@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# seedFromStrings\n\n## Summary\n\nHashes a list of strings into a deterministic sampling seed using 32-bit FNV-1a, with a separator byte between parts so `['ab','c']` and `['a','bc']` cannot collide, and the result kept below 2^31 because some providers reject larger seeds. Derived from the reference image URLs rather than random, it closes the reproducibility gap that temperature 0 alone leaves: the same photos always take the same sampling path, while a new photo set gets its own seed instead of inheriting the previous object's.\n\n## Import\n\n```ts\nimport { seedFromStrings } from '../util/llm-request';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) and `AnalyzeReferenceCommand` compute `seedFromStrings(referenceUrls)` and pass the result as the `seed` option to `requestSpec`, which forwards it to providers that honour it (Gemini and OpenAI-family; Anthropic ignores it harmlessly).",
       "ref": {
         "module": "../util/llm-request",
         "name": "seedFromStrings"

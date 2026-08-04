@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# buildSpecSystemPrompt\n\n## Summary\n\nBuilds the stage-2 (spec build) system prompt as an array of content blocks: `SPEC_SYSTEM_PROMPT` — the invariant contract carrying `SPEC_JSON_SHAPE` — first, then, only when `selectRecipes(analysis)` returns text, a second block of build directives selected from this object's own analysis. Two blocks instead of one concatenated string keeps the invariant half byte-identical across objects so it keeps its prompt-cache hit; with no analysis (or no partPlan) it degrades to the self-contained contract alone.\n\n## Import\n\n```ts\nimport { buildSpecSystemPrompt } from '../prompts/spec';\n```\n\n## Usage\n\nCalled by `StudioIsolated` (`components/studio-isolated.gts`) when it issues the spec-build LLM request after the analysis stage; the returned block array is passed to `requestSpec`, whose `systemMessage()` in `util/llm-request.gts` exploits the cacheable first block.",
       "ref": {
         "module": "../prompts/spec",
         "name": "buildSpecSystemPrompt"

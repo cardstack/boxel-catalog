@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# fitCurvedDecals\n\n## Summary\n\nDeterministic decal fitting in the img-to-3d pipeline, reached here through the spec-passes barrel module (`index` re-exports every pass; the implementation lives in `./attachments`). A curvedDecal must hug the body it attaches to, but the authored radius is only probabilistically right — too large reads as a label floating beside the bottle. It walks each decal's `attachTo` chain to the first solid host, centres the decal on the host axis, fits its radius to the host's real radius at the decal's own height (+0.01 skin, sampling lathe profiles within the band), clamps its height and vertical centre into the host, and slims cylinders riding a lathe neck to 1.3× the wall radius.\n\n## Import\n\n```ts\nimport { fitCurvedDecals } from '../util/spec-passes/index';\n```\n\n## Usage\n\nThe studio calls it in `applyParsedSpec` and again after `reconcileProportions` corrections; it is not part of `runStructurePasses`. Mutates dimensions/positions in place; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/index",
         "name": "fitCurvedDecals"

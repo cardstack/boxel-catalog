@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# slugify\n\n## Summary\n\nTurns a name into a filesystem-safe slug: lowercases, strips one trailing file extension, replaces every non-alphanumeric run with a single hyphen, and trims leading/trailing hyphens. When nothing survives, the `fallback` argument (default `'image'`) is returned instead, so callers always get a usable path segment.\n\n## Import\n\n```ts\nimport { slugify } from '../util/realm-image';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) uses it wherever a realm path is built from user-visible names: the per-studio asset directory (`img-to-3d/<slug>`), model .js filenames from the object name, and cropped decal texture filenames from `textureRef` — each with a purpose-specific fallback (`'studio'`, `'model'`, `'artwork'`). Receives a string, returns a slug string.",
       "ref": {
         "module": "../util/realm-image",
         "name": "slugify"

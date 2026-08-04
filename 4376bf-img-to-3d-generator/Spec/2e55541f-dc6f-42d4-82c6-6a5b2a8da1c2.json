@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# ComponentNodeField\n\n## Summary\n\nOne node of a sculpt spec's model tree. Nodes form a flat list linked by `parentId` (FieldDefs cannot nest recursively); the viewer interpreter rebuilds the tree. Fields: `nodeId`, `primitive` (an enum over the `PRIMITIVES` vocabulary), `dimensions`/`position`/`rotation`/`scale` held as JSON number-array strings so the LLM can author them and humans can tweak them in edit view, `materialId`, `text` (textDecal label), `partRef` (the analysis partPlan name this component realizes, used to reconcile measured proportions), `textureRef`/`textureUrl` (reference-crop decal artwork), `repeat` (linear/radial clone system), `assetUrl` (meshAsset .glb), `attachTo` (the structural support the constraint solver pulls it against), and `note`. The computed title reads `nodeId · primitive`.\n\n## Import\n\n```ts\nimport { ComponentNodeField } from '../fields/sculpt-spec';\n```\n\n## Usage\n\nContained as `containsMany` in `SculptSpecField.components`; instances are materialized from parsed LLM output by `specFieldFromParsed` in `util/spec-io.gts` and translated into three.js code by `util/code-export.gts`.",
       "ref": {
         "module": "../fields/sculpt-spec",
         "name": "ComponentNodeField"

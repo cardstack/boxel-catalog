@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# selectRecipes\n\n## Summary\n\nTurns an analysis document into the recipe text for the spec prompt: it maps the names returned by `selectRecipeNames(analysis)` to their blocks in the `RECIPES` table (revolved, organic, character, flatGraphic, wrapDecal, boxy, grip, roundedShell, artwork, architectural, vehicle, machineDetail, finishes) and joins them with blank lines. These are craft rules only some objects need — each costs a couple of thousand tokens of model attention, so an object only receives the ones its own plan triggers; an object triggering none yields an empty string.\n\n## Import\n\n```ts\nimport { selectRecipes } from '../prompts/recipes';\n```\n\n## Usage\n\nCalled by `buildSpecSystemPrompt` in `prompts/spec.gts`: a non-empty result becomes the second system-prompt block (\"Build directives for THIS object\"), while an empty result leaves the invariant contract block alone.",
       "ref": {
         "module": "../prompts/recipes",
         "name": "selectRecipes"

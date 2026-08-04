@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# parseDiffJson\n\n## Summary\n\nParses a refine or targeted-edit change-set reply: critique/score/featureCheck plus the `changed`, `removedNodeIds`, `materialsChanged`, and `added` arrays. It strips markdown fences, slices out the JSON object, retries once with trailing commas removed, and throws when no JSON is present. Unlike `parseSpecJson`, all four change arrays may legitimately be empty, so each is simply defaulted to `[]` rather than rejected.\n\n## Import\n\n```ts\nimport { parseDiffJson } from '../util/spec-io';\n```\n\n## Usage\n\nPassed as the `parser` to `requestSpec` by the studio's refine and targeted-edit calls (`components/studio-isolated.gts`) and by `RefineSculptCommand` (`commands/refine-sculpt-command.gts`). The parsed diff then goes to `applySpecDiff` in `../util/spec-diff` to be merged into the current spec.",
       "ref": {
         "module": "../util/spec-io",
         "name": "parseDiffJson"

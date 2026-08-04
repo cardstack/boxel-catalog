@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# hasNeutralAncestry\n\n## Summary\n\nAnswers whether a component's authored position can be read as a world coordinate: it walks the parent chain (via the `byId` map) and returns `true` only when every ancestor's position and rotation are ~0 and scale is ~1. A parentId cycle returns `false`; an unknown parent counts as root. This gate exists because the spec-side geometry passes treat positions as world space, which is wrong for parts under a real transform — moving those would drag correctly-placed parts somewhere wrong.\n\n## Import\n\n```ts\nimport { hasNeutralAncestry } from '../util/spec-geometry';\n```\n\n## Usage\n\nCalled by the structure passes in `util/spec-passes/` (`placement.gts`, `shape.gts`, `overlap.gts`) to filter which components each pass may measure or move; anything under a non-neutral transform is skipped and left to the interpreter's own world-space solvers.",
       "ref": {
         "module": "../util/spec-geometry",
         "name": "hasNeutralAncestry"

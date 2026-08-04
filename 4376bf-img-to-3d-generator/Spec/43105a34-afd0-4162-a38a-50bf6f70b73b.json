@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# writeRealmImage\n\n## Summary\n\nWrites base64 image bytes into the realm as a binary file and returns a file-backed `ImageDef` card whose file URL is the card id — no separate instance JSON is created. It executes `WriteBinaryFileCommand` with `useNonConflictingFilename: true`, so an existing file is never overwritten; if the write returns no file identifier it returns `undefined`. The resulting `ImageDef` carries `id`, `url`, `sourceUrl`, `name` (last path segment), and `contentType`.\n\n## Import\n\n```ts\nimport { writeRealmImage } from '../util/realm-image';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) calls it with the command context plus `{ realm, path, base64, contentType }` to persist cropped decal textures (under `<studioAssetDir>/textures/`) and render screenshots into the realm.",
       "ref": {
         "module": "../util/realm-image",
         "name": "writeRealmImage"

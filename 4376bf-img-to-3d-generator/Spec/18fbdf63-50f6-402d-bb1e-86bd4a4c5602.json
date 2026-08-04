@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# flagSilhouetteNotch\n\n## Summary\n\nA report-only shape pass in the img-to-3d structure chain — the silhouette-level counterpart of the buried-part check: there a part exists but cannot be seen; here the silhouette says a part should exist and none does. It samples the model's height profile in 24 steps along its longest horizontal axis (a vehicle's length), restricted to the central slab so thin flank parts cannot paper over the gap, and looks for a LONG dip — at least 15% of the span, under 65% of the tallest height — with taller structure on BOTH sides. A dip at either end is a nose or tail; a flanked valley is a body part nobody built. Which part is missing is a question about the photograph, so nothing is repaired.\n\n## Import\n\n```ts\nimport { flagSilhouetteNotch } from '../util/spec-passes/shape';\n```\n\n## Usage\n\nRuns late in `runStructurePasses`, among the flag passes. Receives the parsed spec, mutates nothing, returns at most one descriptive log line.\n",
       "ref": {
         "module": "../util/spec-passes/shape",
         "name": "flagSilhouetteNotch"

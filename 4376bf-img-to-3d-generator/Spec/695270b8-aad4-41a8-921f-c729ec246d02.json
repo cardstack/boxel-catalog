@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# expandRepeatInstances\n\n## Summary\n\nExpands one declared part into N placed copies (count capped at 48): `linear` mode steps each clone by `offset`, `radial` mode carries clones rigidly around a ring — the orbital spin composes OUTSIDE the part's own orientation so pre-aimed parts stay parallel, and the ring centre comes from the declared host's bounding box rather than the part's own position (which would double the radius). Index 0 re-places the original itself so it sits on its own ring. Written as a hoisting declaration with no module-level references and no `?.`/`??`, because its source is emitted verbatim into exported models.\n\n## Import\n\n```ts\nimport { expandRepeatInstances } from '../util/repeat-expand';\n```\n\n## Usage\n\nThis is the ONE implementation: `../util/code-export` emits it via `Function.prototype.toString()` into every generated model .js that uses `repeat`, so the studio viewport and standalone exports array parts identically — hand-copied twins drifted once.",
       "ref": {
         "module": "../util/repeat-expand",
         "name": "expandRepeatInstances"

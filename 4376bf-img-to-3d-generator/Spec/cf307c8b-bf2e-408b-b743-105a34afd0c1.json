@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# fetchAsDataUrl\n\n## Summary\n\nFetches an image URL and returns it as a data URL sized for vision-model input. It reads the bytes directly, falling back to the Boxel proxy (`SendRequestViaProxyCommand`) when a cross-origin CDN blocks the browser read, then downscales anything whose long edge exceeds `maxEdge` (default 1568 — the edge vision providers resize to anyway) and re-encodes to WebP, which keeps alpha. Images already small enough are returned untouched, a degraded encode is discarded in favour of the original, and decode failures never block a generation.\n\n## Import\n\n```ts\nimport { fetchAsDataUrl } from '../util/realm-image';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) and `AnalyzeReferenceCommand` call it on every reference image before a vision request, passing stage-specific `maxEdge` values (`ANALYZE_MAX_EDGE`, `BUILD_SECONDARY_EDGE`) and the command context for the proxy fallback.",
       "ref": {
         "module": "../util/realm-image",
         "name": "fetchAsDataUrl"

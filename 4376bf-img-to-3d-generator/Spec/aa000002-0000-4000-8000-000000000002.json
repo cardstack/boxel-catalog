@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# COMPLETENESS_CRITIC_PROMPT\n\n## Summary\n\nThe system prompt for the completeness-critic pass: the model receives a comparison sheet (reference photo leftmost, then front/side/three-quarter renders) plus the current spec JSON, and must find every part the reference clearly shows that the render is missing — with an explicit reminder that glazing and openings are the most-missed parts. Unlike the conservative refine pass, this pass is allowed to ADD parts (and nudge grossly misplaced ones), returning `critique`, `score`, `changed`, `added` and `materialsChanged`; it may not change primitives or dimensions, and may not remove parts.\n\n## Import\n\n```ts\nimport { COMPLETENESS_CRITIC_PROMPT } from '../prompts/completeness';\n```\n\n## Usage\n\nSent by `StudioIsolated` (`components/studio-isolated.gts`) as an extra vision round during generation; the pass is skipped when the build already realized every planned part, unless the user sets the `forceCompleteness` toggle.",
       "ref": {
         "module": "../prompts/completeness",
         "name": "COMPLETENESS_CRITIC_PROMPT"

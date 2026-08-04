@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# seatRecesses\n\n## Summary\n\nA placement repair in the img-to-3d structure chain — the mirror of `resolveBuriedParts`. The pipeline assumes every feature protrudes, but a window well, grille cavity, sunken panel or air intake goes the other way: its outer face sits just below the surrounding surface, and the shadow in that dip is what reads as depth. For each part `isRecessed` matches (excluding interior/cavity boxes, which `clampInteriorCavities` owns), it finds the host (the `attachTo` target or the smallest enclosing solid), picks the host face the feature sits on (the axis of largest offset from the host centre), and moves the part along that axis until its outer face is 0.03 under the host surface.\n\n## Import\n\n```ts\nimport { seatRecesses } from '../util/spec-passes/placement';\n```\n\n## Usage\n\nRuns in `runStructurePasses` right after `clampInteriorCavities`, before `attachOrphans`. Mutates positions in place; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/placement",
         "name": "seatRecesses"

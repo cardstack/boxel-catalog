@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# plainSpec\n\n## Summary\n\nReturns the normalized, JSON-safe form of a sculpt spec: object name/kind/class/complexity, identity features, materials via `specMaterials`, and components via `specNodes` reduced to plain nodeId/parentId/primitive/dimensions/position/rotation/scale/material/decal/repeat/attachTo/note fields. This is the shape that rides inside every generated model .js file as the `SCULPT_SPEC` constant — card instances no longer persist the spec, so the file is the carrier.\n\n## Import\n\n```ts\nimport { plainSpec } from '../util/code-export';\n```\n\n## Usage\n\nCalled by `generateModelJs` in the same module when emitting the `var SCULPT_SPEC = …` line; `specFromModelJs` reads that JSON back out later. Receives a spec (card field or plain object), returns a plain object safe to `JSON.stringify`.",
       "ref": {
         "module": "../util/code-export",
         "name": "plainSpec"

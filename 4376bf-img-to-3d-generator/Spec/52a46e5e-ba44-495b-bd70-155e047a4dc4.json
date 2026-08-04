@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# generateViewerHarnessHtml\n\n## Summary\n\nGenerates the shared viewer page's full HTML (one per generator, not per model): a three.js r0.147 scene with the same lighting rig and orbit as the studio viewport, loaded from CDN script tags. The harness resolves its model source in priority order — `window.SCULPT_MODEL_INLINE` (draft builds), `window.SCULPT_MODEL_URL` (baked in via the `bakedModelUrl` argument), or the `?model=` query param (external iframes) — executes the model code via `new Function`, and exposes `captureScreenshot()` / `captureViews(refCamera)` / `exportGlb()` on `window` for same-origin embedders.\n\n## Import\n\n```ts\nimport { generateViewerHarnessHtml } from '../util/code-export';\n```\n\n## Usage\n\nCalled by `generateViewerSrcdoc` (which bakes a model URL in) and `generateViewerSrcdocInline` (which injects inline code) in the same module; those two are what the studio and `SculptedModel` actually embed.",
       "ref": {
         "module": "../util/code-export",
         "name": "generateViewerHarnessHtml"

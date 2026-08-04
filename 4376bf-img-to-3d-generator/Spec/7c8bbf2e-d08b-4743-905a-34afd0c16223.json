@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# serializeSpecForPrompt\n\n## Summary\n\nProduces a compact plain-JSON view of the current sculpt spec for a model prompt: object metadata, trimmed material entries (optional PBR fields only when present), and component entries with `dimensions`/`position`/`rotation`/`scale` normalized to arrays (JSON-parsing string-stored values). The `repeat` object is deliberately passed through verbatim — coercing it through the array normalizer once destroyed every repeat/mirror system on each refine round.\n\n## Import\n\n```ts\nimport { serializeSpecForPrompt } from '../util/spec-io';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) and `RefineSculptCommand` serialize the working spec with it before sending refine/targeted-edit requests, and `applySpecDiff` in `../util/spec-diff` uses it as the base representation a diff is merged onto. Receives a spec (card field or plain object), returns a plain serializable object.",
       "ref": {
         "module": "../util/spec-io",
         "name": "serializeSpecForPrompt"

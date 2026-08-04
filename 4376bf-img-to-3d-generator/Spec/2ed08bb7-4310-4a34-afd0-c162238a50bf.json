@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# localHalfExtents\n\n## Summary\n\nReturns a component's unrotated half extents `[hx, hy, hz]` from its `dimensions` (array or JSON string) and scale, using each primitive's own dimension semantics: box/roundedBox halve each dimension, cylinder uses its max radius, a 4-segment cone squares up to face-to-face width, capsule adds its end caps, torus adds tube to radius, extruded shapes measure their outline's half width/height, and so on. Primitives not centred on their origin (lathe, hemisphere, arch, tube) return `undefined` — callers must treat them as unmeasurable rather than guess.\n\n## Import\n\n```ts\nimport { localHalfExtents } from '../util/spec-geometry';\n```\n\n## Usage\n\nCalled by `halfExtents` in the same module, which layers rotation on top; the repair passes consume it through `halfExtents`/`specBox` rather than directly.",
       "ref": {
         "module": "../util/spec-geometry",
         "name": "localHalfExtents"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# dropUnplannedParts\n\n## Summary\n\nA pruning pass in the img-to-3d structure-repair chain. The analysis `partPlan` is the agreed inventory of what the photo contains, and every component must name the plan entry it realizes in `partRef`. This pass deletes any non-group component whose `partRef` matches no planned part — the invented mould seams, extra ribs, and collars the spec stage over-produces, which the assembly solver would otherwise glue onto their nearest neighbour. Matching is tolerant (alphanumerics only, containment counts for stems of 4+ characters), shadow-named parts are exempt, and deletion cascades to children. A spec without a plan passes through untouched.\n\n## Import\n\n```ts\nimport { dropUnplannedParts } from '../util/spec-passes/prune';\n```\n\n## Usage\n\nRuns second in `runStructurePasses`, after `dropHairlineParts`. It receives the parsed spec and the analysis, mutates `parsed.components` in place, and returns log lines naming each dropped part and why.\n",
       "ref": {
         "module": "../util/spec-passes/prune",
         "name": "dropUnplannedParts"

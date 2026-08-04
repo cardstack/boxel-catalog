@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# generateModelJs\n\n## Summary\n\nGenerates the standalone model .js file from a sculpt spec: a `buildSculpture(THREE)` function returning `{ group, meshes }`, with one `addPart()` line per component, emitted materials, and only the helper blocks the spec needs — geometry cases, decal/glow/finish painters, and, emitted verbatim from their own module source via `Function.prototype.toString()`, `expandRepeatInstances` and `seatSurfaceParts`, so exported models behave exactly like the viewport. The file ends with a machine-readable `var SCULPT_SPEC = …` line and a CommonJS export. `meta` adds round/score provenance comments.\n\n## Import\n\n```ts\nimport { generateModelJs } from '../util/code-export';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) generates draft and persisted model files with it, and `RefineSculptCommand` regenerates the file from a merged spec; the output is written to the realm via `WriteTextFileCommand`.",
       "ref": {
         "module": "../util/code-export",
         "name": "generateModelJs"

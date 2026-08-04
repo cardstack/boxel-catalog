@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# composeComparison\n\n## Summary\n\nPacks the reference photo beside one or more labeled render angles into a single JPEG contact sheet (returned as a data URL), so the refine model compares them in one glance — it reviews exactly one image per round but sees the build from every side, because 3D errors hide from single angles. Each image is drawn at a shared height (384px when there are multiple renders, 512px for one) with a label strip on top: `REFERENCE`, then `RENDER` or the angle labels (`RENDER @ REF ANGLE`, `RENDER FRONT`, `RENDER SIDE`, `RENDER 3/4` when `firstIsReferenceAngle` is set).\n\n## Import\n\n```ts\nimport { composeComparison } from '../util/comparison-sheet';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) composes the sheet from the reference data URL and captured viewport renders before each refine and completeness-audit vision call; the returned data URL goes into the request's image content.",
       "ref": {
         "module": "../util/comparison-sheet",
         "name": "composeComparison"

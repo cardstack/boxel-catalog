@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# makeFinishTexture\n\n## Summary\n\nPaints a named procedural surface finish onto a 1024×1024 canvas and returns it as a `THREE.CanvasTexture` (sRGB, repeat-wrapped, anisotropy 8). Supported finishes: `worn`, `brushed`, `hazard`, `tread`, `camo` (tinted by `baseColor`), `louver`, `patina`, `knurl`; any other name returns `undefined`. Painting is deterministic — the RNG is seeded from `seedText` (the material id) — and no image files are involved; the painted canvas doubles as color map and roughnessMap, which is what makes surfaces read as weathered rather than plastic.\n\n## Import\n\n```ts\nimport { makeFinishTexture } from '../util/finishes';\n```\n\n## Usage\n\nExported model .js files run a `makeFinishTexture` that `../util/code-export` re-emits from this module's painter sources (`FINISH_PAINTER_SOURCES`/`FINISH_RUNTIME_SOURCES`), applying the texture as map+roughnessMap — or as bumpMap for the relief finishes tread/knurl.",
       "ref": {
         "module": "../util/finishes",
         "name": "makeFinishTexture"

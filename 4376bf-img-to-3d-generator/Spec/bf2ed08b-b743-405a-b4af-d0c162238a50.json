@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# isRemovalInstruction\n\n## Summary\n\nTests whether a user's targeted-edit instruction is a removal: it trims the string and matches it against the removal-verb pattern `^(remove|delete|erase|drop|get rid of)\\b` (case-insensitive). Null/undefined input returns `false`. It is the gate that decides whether a lasso-selected edit can take the deterministic delete path instead of a model round-trip.\n\n## Import\n\n```ts\nimport { isRemovalInstruction } from '../util/spec-diff';\n```\n\n## Usage\n\nCalled by the studio's targeted-edit handler (`components/studio-isolated.gts`): when lasso targets exist and the instruction is a removal, the studio narrows the targets with `narrowRemovalTargets` and deletes them directly via `applySpecDiff` with `allowRemoval`, skipping the LLM entirely for a plain \"remove X\".",
       "ref": {
         "module": "../util/spec-diff",
         "name": "isRemovalInstruction"

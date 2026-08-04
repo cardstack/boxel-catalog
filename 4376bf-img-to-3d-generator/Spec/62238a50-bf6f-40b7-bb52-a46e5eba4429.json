@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# revolvedSilhouetteBbox\n\n## Summary\n\nDecides which region of the reference to trace as THE object's revolved silhouette, or why not to trace at all. It unions the bboxes of the analysis plan's `revolved` parts, then enforces two conditions: the parts must share one axis (checked pairwise — each pair must overlap by at least 60% of the narrower width), and the union must BE the body (at least 60% of the object's height and 50% of its width), so a single round detail like a drum magazine cannot hand its outline to the whole object. Returns `{ bbox }` or `{ skipped: reason }`.\n\n## Import\n\n```ts\nimport { revolvedSilhouetteBbox } from '../util/silhouette';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) calls it with the analysis part plan; a returned bbox goes to `traceLatheProfile`, and a `skipped` reason is logged instead of tracing.",
       "ref": {
         "module": "../util/silhouette",
         "name": "revolvedSilhouetteBbox"

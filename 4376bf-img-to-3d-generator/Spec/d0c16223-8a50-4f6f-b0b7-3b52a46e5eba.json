@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# generateViewerSrcdocInline\n\n## Summary\n\nReturns the viewer harness HTML with the model CODE embedded directly (`window.SCULPT_MODEL_INLINE`), so no realm file is involved. The injected script is `</`-escaped so the model source cannot break out of its script tag. The `token` argument stands in for the model URL, keeping readiness checks identical to persisted models. Used for draft builds — the studio measures a draft's proportions and corrects the spec before any file is written — and on private realms, where inlining avoids the iframe's unauthenticated fetch-by-URL 401ing.\n\n## Import\n\n```ts\nimport { generateViewerSrcdocInline } from '../util/code-export';\n```\n\n## Usage\n\nThe studio (`components/studio-isolated.gts`) calls it with fetched model source (over its authenticated network) in `buildInlineSrcdoc`, and with freshly generated draft code before persisting anything.",
       "ref": {
         "module": "../util/code-export",
         "name": "generateViewerSrcdocInline"

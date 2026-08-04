@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# alignFaceFeatures\n\n## Summary\n\nA face pass in the img-to-3d structure chain. Every feature can be planned, attached, unburied and inside the silhouette while the whole cluster sits on the side of the head; the canonical frame fixes the front at -Z, so this is enforceable. Three repairs: (1) the feature cluster's mean offset from the head centre gives the authored facing, and a cluster more than 20° off is rotated as one unit onto -Z; (2) measured face landmarks from the analysis set each feature's height and snap its depth onto the head's front surface (y/z only — landmark x is unreliable off-front), or without landmarks a too-deep nose/mouth is seated just proud of the muzzle; (3) a muzzle/face mass whose centre is outside the head is embedded into the skull on the facial midline. Vertical-order violations (nose above eyes) are reported only.\n\n## Import\n\n```ts\nimport { alignFaceFeatures } from '../util/spec-passes/face';\n```\n\n## Usage\n\nRuns in `runStructurePasses` right after `ensureFaceParts`, before `resolveBuriedParts` would eject an embedded muzzle. Mutates positions/rotations; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/face",
         "name": "alignFaceFeatures"

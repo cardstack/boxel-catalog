@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# seatRingCollars\n\n## Summary\n\nAn attachment pass in the img-to-3d structure chain — the ring cousin of `fitCurvedDecals`. A ring that wraps a barrel (a muzzle collar, barrel clamp, hose ferrule) must have its hole facing along the barrel's axis and its centre on the centreline, but models routinely author it as an upright hoop standing beside the barrel. For each torus/flatRing/arch attached to a cylinder or capsule, it derives the barrel's axis from the host's Euler rotation, snaps the ring's rotation to the nearest canonical axis, centres it on the barrel's two off-axis coordinates (keeping its position along the barrel), and fits torus/flatRing radii so the hole hugs the barrel radius plus a 0.01 skin. Arches keep their sweep.\n\n## Import\n\n```ts\nimport { seatRingCollars } from '../util/spec-passes/attachments';\n```\n\n## Usage\n\nRuns in `runStructurePasses` after the face passes, before `resolveBuriedParts`, so a seated collar is not read as floating. Mutates rotation/position/dimensions; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/attachments",
         "name": "seatRingCollars"

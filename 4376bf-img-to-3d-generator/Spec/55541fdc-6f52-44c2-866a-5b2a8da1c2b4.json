@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# SculptSpecField\n\n## Summary\n\nThe FieldDef holding one complete procedural model spec — the studio's structured form of an LLM spec-stage response. Fields: `objectName`, `inputKind` (object | flat-graphic), `identityFeatures` (the 3–5 features the refine loop's per-feature gate verifies one by one), `objectClass` (hard-surface | organic | hybrid), `buildBackend` (primitive | mesh), `complexity`, `components` (containsMany `ComponentNodeField`) and `materials` (containsMany `MaterialSpecField`). The module also exports the `PRIMITIVES` vocabulary the prompts interpolate. Its embedded view shows the object name, part count, class/backend/complexity/kind chips, up to 8 material swatches (only validated hex colors reach inline styles), and the identity-feature list; the atom view is `name · N parts`.\n\n## Import\n\n```ts\nimport { SculptSpecField } from '../fields/sculpt-spec';\n```\n\n## Usage\n\nMaterialized from parsed LLM JSON by `specFieldFromParsed` in `util/spec-io.gts`; `util/code-export.gts` translates it into a standalone three.js model file (with the spec embedded as its `SCULPT_SPEC` constant), and the structure passes in `util/spec-passes/` repair it between pipeline stages.",
       "ref": {
         "module": "../fields/sculpt-spec",
         "name": "SculptSpecField"

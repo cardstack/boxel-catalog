@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# clampInteriorCavities\n\n## Summary\n\nA placement repair in the img-to-3d structure chain for hollow bodies. The hollow-body recipe adds a dark \"interior\" box behind the windows so a cab reads as a cabin, but the model sizes it by eye — an interior as big as its shell pokes through the walls and the dark box eats the body. This pass finds parts named interior/cavity, resolves their shell (the `attachTo` host, else the smallest solid box containing the interior's centre), shrinks any axis where the interior reaches past 85% of the shell's half-extent (via scale — it never grows anything), and recentres it inside the shell.\n\n## Import\n\n```ts\nimport { clampInteriorCavities } from '../util/spec-passes/placement';\n```\n\n## Usage\n\nRuns in `runStructurePasses` after `resolveBuriedParts` (which is told to leave interiors alone) so the shell is already placed when the cavity is fitted to it. Mutates scale/position in place; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/placement",
         "name": "clampInteriorCavities"

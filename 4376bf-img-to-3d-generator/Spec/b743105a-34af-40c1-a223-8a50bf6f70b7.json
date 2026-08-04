@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# flagInstanceCollisions\n\n## Summary\n\nAn overlap pass in the img-to-3d structure chain. Copies of one feature that overlap fuse into a single lump and z-fight into a dark smear — a six-wheeled truck came out with a black streak for wheels. Two causes are measured off the part's own extents, no naming involved: a linear `repeat` whose step is shorter than the part is REPAIRED (the step is widened to the part's extent on the repeat axis, keeping direction — copies must not overlap), while radial repeats whose chord is too tight and individually authored copies (same primitive, same dimensions, overlapping by over 10% of the smaller volume) are reported only, since collapsing hand-placed wheels is not this pass's call.\n\n## Import\n\n```ts\nimport { flagInstanceCollisions } from '../util/spec-passes/overlap';\n```\n\n## Usage\n\nRuns in `runStructurePasses` after the placement movers. Mutates only repeat offsets; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/overlap",
         "name": "flagInstanceCollisions"

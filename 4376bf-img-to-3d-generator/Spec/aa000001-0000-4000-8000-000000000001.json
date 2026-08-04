@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# ANALYZE_SYSTEM_PROMPT\n\n## Summary\n\nThe stage-1 system prompt of the image-to-3D pipeline. It tells a vision model to study one or more reference views of an object — without building geometry — and reply with a JSON construction plan: objectType, objectClass, complexity, a buildBackend recommendation (primitive vs mesh), a camera estimate, a partPlan whose entries carry measured normalized bboxes, depthRatio, material/surface notes and optional artwork, printMode and face-landmark data, an attachments list, an object-specific buildRecipe, and the directive names that select craft-rule blocks for stage 2. The primitive vocabulary is interpolated from `PRIMITIVES` in `fields/sculpt-spec`.\n\n## Import\n\n```ts\nimport { ANALYZE_SYSTEM_PROMPT } from '../prompts/analyze';\n```\n\n## Usage\n\nSent by `AnalyzeReferenceCommand.run()` (`commands/analyze-reference.gts`) via `requestSpec`, with a seed derived from the reference URLs and `reasoning: { effort: 'low' }`, so re-running on the same photo set reproduces the same plan; the reply is parsed with `parseAnalysisJson`.",
       "ref": {
         "module": "../prompts/analyze",
         "name": "ANALYZE_SYSTEM_PROMPT"

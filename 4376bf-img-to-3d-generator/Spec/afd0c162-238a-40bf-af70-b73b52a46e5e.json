@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# seatSurfaceParts\n\n## Summary\n\nSeats feature parts on the rounded mass they are mounted on, fixing the two placement errors box tests call correct: BURIED (a part entirely inside its host) and hidden-side placement (an authored offset pointing into the model instead of out). It models each mass as an ellipsoid, orders joints host-first, carries children of moved hosts along, and only acts on compact features clearly smaller than their host — a correction larger than the host's own radius is logged and left for refine. Returns log lines describing what moved. Written with no module-level references or `?.`/`??` so its source can be emitted verbatim.\n\n## Import\n\n```ts\nimport { seatSurfaceParts } from '../util/surface-seat';\n```\n\n## Usage\n\n`../util/code-export` emits it via `Function.prototype.toString()` into any generated model whose parts declare `attachTo`, so exported models and the studio viewport seat parts identically.",
       "ref": {
         "module": "../util/surface-seat",
         "name": "seatSurfaceParts"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# cropWithBackgroundRemoved\n\n## Summary\n\nCrops `bbox` (normalized coordinates) out of the reference image with the background knocked out to transparent, returning a canvas for artwork pasted onto the model as a decal — or `null` when the caller should fall back to a plain opaque crop. Default mode keys against the whole image's backdrop colour with a soft alpha ramp; `surfacePrint` mode keys the opposite target — the crop's own border colour (the surface the ink sits on), switching to chroma keying on neutral black/white/grey surfaces so only the chromatic ink survives. The crop keeps the bbox's full extent so the decal's authored size still matches.\n\n## Import\n\n```ts\nimport { cropWithBackgroundRemoved } from '../util/silhouette';\n```\n\n## Usage\n\nCalled by the studio's texture-crop step (`components/studio-isolated.gts`) when cutting decal artwork from the reference before writing it to the realm as a WebP texture.",
       "ref": {
         "module": "../util/silhouette",
         "name": "cropWithBackgroundRemoved"

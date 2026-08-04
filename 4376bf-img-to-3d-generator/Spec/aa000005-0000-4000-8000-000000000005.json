@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# TARGETED_EDIT_PROMPT\n\n## Summary\n\nThe system prompt for the user-directed edit pass: the model receives the current spec JSON, a list of lasso-SELECTED nodeIds, the user's instruction, and a comparison sheet, and must apply the instruction to those parts only — always diagnosing against the reference photo first. It may reposition, resize (scale or dimensions), recolor via the two sanctioned recolor paths, ground, remove listed parts, and ADD missing parts authored like spec components, but never change an existing part's primitive. When the selection is empty the model resolves targets itself from the instruction and the semantic nodeIds.\n\n## Import\n\n```ts\nimport { TARGETED_EDIT_PROMPT } from '../prompts/targeted-edit';\n```\n\n## Usage\n\nSent from two places: `StudioIsolated`'s lasso inpaint flow (which overwrites the current round in place with one-click undo), and `commands/refine-sculpt-command.gts`, the AI-assistant refine command that edits a SculptedModel's .js in place instead of spawning a new round.",
       "ref": {
         "module": "../prompts/targeted-edit",
         "name": "TARGETED_EDIT_PROMPT"

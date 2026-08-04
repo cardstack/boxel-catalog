@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# repairMirroredAttachments\n\n## Summary\n\nAn attachment pass in the img-to-3d structure chain. `attachTo` names the part that holds this one up, and the builder's joint solver pulls the subject until it overlaps that target — so a wrong joint drags geometry across the model. A spec once set `wheel-right attachTo wheel-left`, and the solver hauled the whole right-hand wheel row onto the left flank. This detects a part whose target is its own MIRROR — same primitive and dimensions, sitting apart on opposite sides of the object's centre — and re-points the joint at the target's own `attachTo` when it has one, otherwise deletes it. Touching copies (a stacked rib, a chain link) are a real joint and left alone.\n\n## Import\n\n```ts\nimport { repairMirroredAttachments } from '../util/spec-passes/attachments';\n```\n\n## Usage\n\nRuns first of the attachment passes in `runStructurePasses`, before `enforceAttachments`. Mutates `attachTo` fields in place; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/attachments",
         "name": "repairMirroredAttachments"

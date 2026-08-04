@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# fitCurvedDecals\n\n## Summary\n\nDeterministic decal fitting in the img-to-3d pipeline — the lateral cousin of gravity snap. A curvedDecal must hug the body it attaches to, but the model's authored radius is only probabilistically right, and a too-large radius reads as a label floating beside the bottle. For each curvedDecal it walks the `attachTo` chain to the first solid host, snaps the decal's x/z onto the host axis, fits its radius to the host's real radius at the decal's own height (+0.01 skin) — sampling a lathe profile within the decal's band — and clamps its height and vertical centre inside the host. It also slims cylinders riding a lathe (caps, foils) to 1.3× the neck wall.\n\n## Import\n\n```ts\nimport { fitCurvedDecals } from '../util/spec-passes/attachments';\n```\n\n## Usage\n\nNot in `runStructurePasses` — the studio calls it in `applyParsedSpec` and again after `reconcileProportions` corrections. Mutates dimensions/positions; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/attachments",
         "name": "fitCurvedDecals"

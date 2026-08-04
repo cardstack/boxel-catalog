@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# attachOrphans\n\n## Summary\n\nA placement pass in the img-to-3d structure chain. The render's joint solver and contact backstop only seat a part toward the support it DECLARED in `attachTo`; a part with none is left exactly where authored — so a face feature or forgotten detail hangs in mid-air. This pass gives every orphan (a non-group, non-support part with no `attachTo`, excluding the anchor body, shadows and glows) the joint it lacks, pointed at the mass its bounding box is nearest to, with ties broken toward the LARGER neighbour so details hang off bodies, not other details. It only assigns `attachTo` — it moves nothing; the render's own solvers do the seating.\n\n## Import\n\n```ts\nimport { attachOrphans } from '../util/spec-passes/placement';\n```\n\n## Usage\n\nRuns as the last placement step in `runStructurePasses`, after all movers have settled final coordinates and after the face passes. Mutates `attachTo` fields in place; returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/placement",
         "name": "attachOrphans"

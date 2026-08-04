@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# parseSpecJson\n\n## Summary\n\nExtracts and parses the sculpt-spec JSON out of a raw model reply. It strips markdown code fences, slices from the first `{` to the last `}`, and on a parse failure retries once with trailing commas removed (a common LLM slip). It throws if no JSON is present or if `components` is missing/empty, and normalizes `materials` to an array.\n\n## Import\n\n```ts\nimport { parseSpecJson } from '../util/spec-io';\n```\n\n## Usage\n\nIt is the default `parser` argument of `requestSpec` in `../util/llm-request`, so any spec-stage vision call that does not pass its own parser runs its reply through this function. Its \"did not return JSON / no components\" error messages are what the retry loop in `requestSpec` matches to trigger a corrective re-ask.",
       "ref": {
         "module": "../util/spec-io",
         "name": "parseSpecJson"

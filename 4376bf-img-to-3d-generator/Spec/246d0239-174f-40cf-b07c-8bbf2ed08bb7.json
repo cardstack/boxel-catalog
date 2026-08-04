@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# reconcileProportions\n\n## Summary\n\nMeasured proportion reconciliation in the img-to-3d pipeline — the heart of \"LLM names structure, math writes numbers\". The draft build is rendered and measured in the viewer (real world-space boxes), each `partRef` group is compared against its analysis bbox target (normalized to the object's union bounds), and size and placement corrections are written back deterministically — zero vision calls. Widths are skipped when the camera is over 30° off front; vertical MOVES are withheld above 25° elevation and for split groups that share no host and do not touch (sizes still apply). Per-part scale is clamped so the FINAL scale stays within 0.4–2.5×, preventing compounding rounds from driving a part degenerate. Tubes and decal sizes are never touched.\n\n## Import\n\n```ts\nimport { reconcileProportions } from '../util/spec-passes/proportions';\n```\n\n## Usage\n\nCalled by the studio's `reconcileDraftProportions` after `renderDraftAndMeasure`, not in `runStructurePasses`. Receives (parsed, analysis, measured, skipRefs); returns `{ logs, residual }` — the mean deviation the auto-verify loop gates on.\n",
       "ref": {
         "module": "../util/spec-passes/proportions",
         "name": "reconcileProportions"

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# flagUnrealizedParts\n\n## Summary\n\nA report-only pass in the img-to-3d structure-repair chain — the mirror of `dropUnplannedParts`. It detects plan entries that NO component realizes: a part the reference plainly has (a bottle's front label, say) that the build simply never authored. It also reports declared materials no component uses, which is often the only trace of a part that was planned, given paint, and never built. Plan parts with approach `revolved` are exempt when a lathe exists to have absorbed them. Geometry cannot be invented from a part name, so nothing is repaired.\n\n## Import\n\n```ts\nimport { flagUnrealizedParts } from '../util/spec-passes/prune';\n```\n\n## Usage\n\nRuns in `runStructurePasses` after the pruning drops; the studio's `generate()` also calls it directly (components/studio-isolated.gts) to decide whether the vision completeness audit is worth its round-trip. Receives (parsed, analysis), mutates nothing, returns log lines.\n",
       "ref": {
         "module": "../util/spec-passes/prune",
         "name": "flagUnrealizedParts"
