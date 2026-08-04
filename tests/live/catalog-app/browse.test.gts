@@ -460,15 +460,17 @@ export function runTests() {
           const dots = document.querySelectorAll(
             `[data-test-cards-grid-item="${personListingId}"] .carousel-dot`,
           );
+          assert.true(
+            dots.length > 1,
+            'carousel dots render for a multi-image listing',
+          );
 
-          if (dots.length > 1) {
-            await click(dots[1]);
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${personListingId}"] .carousel-item-1.is-active`,
-              )
-              .exists('After clicking dot 1, slide 1 is active');
-          }
+          await click(dots[1]);
+          assert
+            .dom(
+              `[data-test-cards-grid-item="${personListingId}"] .carousel-item-1.is-active`,
+            )
+            .exists('After clicking dot 1, slide 1 is active');
         });
 
         test('preview button appears only when examples exist', async function (assert) {
@@ -478,23 +480,27 @@ export function runTests() {
           await hoverToHydrateCard(
             `[data-test-cards-grid-item="${authorListingId}"]`,
           );
-          const previewButton = document.querySelector(
-            `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
-          );
+          assert
+            .dom(
+              `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
+            )
+            .exists('preview button renders when the listing has examples');
 
-          if (previewButton) {
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
-              )
-              .exists();
-          } else {
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
-              )
-              .doesNotExist();
-          }
+          await waitForCardOnGrid(emptyListingId);
+          await triggerEvent(
+            `[data-test-cards-grid-item="${emptyListingId}"]`,
+            'mouseenter',
+          );
+          await waitFor(
+            `[data-test-cards-grid-item="${emptyListingId}"][data-test-hydrated-card]`,
+          );
+          assert
+            .dom(
+              `[data-test-cards-grid-item="${emptyListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
+            )
+            .doesNotExist(
+              'preview button is omitted when the listing has no examples',
+            );
         });
       });
 
@@ -511,7 +517,7 @@ export function runTests() {
           });
         });
 
-        skip('filters', async function () {
+        module.skip('filters', function () {
           test('list view is shown if filters are applied', async function (assert) {
             await waitFor('[data-test-filter-search-input]');
             await click('[data-test-filter-search-input]');
@@ -538,7 +544,7 @@ export function runTests() {
               );
           });
 
-          // TOOD: restore in CS-9083
+          // TODO: restore in CS-9083
           skip('should be reset when clicking "Catalog Home" button', async function (assert) {
             await waitFor('[data-test-filter-search-input]');
             await click('[data-test-filter-search-input]');
