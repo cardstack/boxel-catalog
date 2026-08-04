@@ -1,5 +1,5 @@
 import { getService } from '@universal-ember/test-support';
-import { module, skip } from 'qunit';
+import { module, test } from 'qunit';
 
 import ListingUseCommand from '../../../commands/listing-use';
 
@@ -34,121 +34,116 @@ const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const testDestinationRealmURL = `http://test-realm/test2/`;
 
 export function runTests() {
-  module.skip(
-    'Acceptance | Catalog | catalog app - listing use',
-    function (hooks) {
-      setupApplicationTest(hooks);
-      setupLocalIndexing(hooks);
-      setupOnSave(hooks);
+  module('Acceptance | Catalog | catalog app - listing use', function (hooks) {
+    setupApplicationTest(hooks);
+    setupLocalIndexing(hooks);
+    setupOnSave(hooks);
 
-      let mockMatrixUtils = setupMockMatrix(hooks, {
-        loggedInAs: '@testuser:localhost',
-        activeRealms: [mockCatalogURL, testDestinationRealmURL],
+    let mockMatrixUtils = setupMockMatrix(hooks, {
+      loggedInAs: '@testuser:localhost',
+      activeRealms: [mockCatalogURL, testDestinationRealmURL],
+    });
+
+    let { createAndJoinRoom } = mockMatrixUtils;
+
+    hooks.beforeEach(async function () {
+      createAndJoinRoom({
+        sender: '@testuser:localhost',
+        name: 'room-test',
       });
+      setupUserSubscription();
+      setupAuthEndpoints();
+      setCatalogRealmURL(mockCatalogURL, catalogRealmURL);
+      // this setup test realm is pretending to be a mock catalog
+      await setupAcceptanceTestRealm({
+        realmURL: mockCatalogURL,
+        mockMatrixUtils,
+        contents: {
+          ...SYSTEM_CARD_FIXTURE_CONTENTS,
+          ...makeMockCatalogContents(mockCatalogURL, catalogRealmURL),
+        },
+      });
+      await setupAcceptanceTestRealm({
+        mockMatrixUtils,
+        realmURL: testDestinationRealmURL,
+        contents: {
+          ...SYSTEM_CARD_FIXTURE_CONTENTS,
+          ...makeDestinationRealmContents(),
+        },
+      });
+    });
 
-      let { createAndJoinRoom } = mockMatrixUtils;
+    async function executeCommand(
+      commandClass: typeof ListingUseCommand,
+      listingUrl: string,
+      realm: string,
+    ) {
+      const commandService = getService('tool-service');
+      const store = getService('store');
 
+      const command = new commandClass(commandService.commandContext);
+      const listing = (await store.get(listingUrl)) as CardDef;
+
+      return command.execute({
+        realm,
+        listing,
+      });
+    }
+
+    module('listing commands', function (hooks) {
       hooks.beforeEach(async function () {
-        createAndJoinRoom({
-          sender: '@testuser:localhost',
-          name: 'room-test',
-        });
-        setupUserSubscription();
-        setupAuthEndpoints();
-        setCatalogRealmURL(mockCatalogURL, catalogRealmURL);
-        // this setup test realm is pretending to be a mock catalog
-        await setupAcceptanceTestRealm({
-          realmURL: mockCatalogURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            ...makeMockCatalogContents(mockCatalogURL, catalogRealmURL),
-          },
-        });
-        await setupAcceptanceTestRealm({
-          mockMatrixUtils,
-          realmURL: testDestinationRealmURL,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            ...makeDestinationRealmContents(),
-          },
+        // we always run a command inside interact mode
+        await visitOperatorMode({
+          stacks: [[]],
         });
       });
-
-      async function executeCommand(
-        commandClass: typeof ListingUseCommand,
-        listingUrl: string,
-        realm: string,
-      ) {
-        const commandService = getService('tool-service');
-        const store = getService('store');
-
-        const command = new commandClass(commandService.commandContext);
-        const listing = (await store.get(listingUrl)) as CardDef;
-
-        return command.execute({
-          realm,
-          listing,
+      test('"use": card listing', async function (assert) {
+        const listingName = 'author';
+        const listingId = mockCatalogURL + 'Listing/author.json';
+        await executeCommand(
+          ListingUseCommand,
+          listingId,
+          testDestinationRealmURL,
+        );
+        await visitOperatorMode({
+          submode: 'code',
+          fileView: 'browser',
+          codePath: `${testDestinationRealmURL}index`,
         });
-      }
+        let outerFolder = await verifyFolderWithUUIDInFileTree(
+          assert,
+          listingName,
+        );
 
-      module('listing commands', function (hooks) {
-        hooks.beforeEach(async function () {
-          // we always run a command inside interact mode
-          await visitOperatorMode({
-            stacks: [[]],
-          });
-        });
-        skip('"use"', async function () {
-          skip('card listing', async function (assert) {
-            const listingName = 'author';
-            const listingId = mockCatalogURL + 'Listing/author.json';
-            await executeCommand(
-              ListingUseCommand,
-              listingId,
-              testDestinationRealmURL,
-            );
-            await visitOperatorMode({
-              submode: 'code',
-              fileView: 'browser',
-              codePath: `${testDestinationRealmURL}index`,
-            });
-            let outerFolder = await verifyFolderWithUUIDInFileTree(
-              assert,
-              listingName,
-            );
-
-            let instanceFolder = `${outerFolder}Author/`;
-            await openDir(assert, instanceFolder);
-            await verifyJSONWithUUIDInFolder(assert, instanceFolder);
-          });
-        });
-
-        skip('"use" is successful even if target realm does not have a trailing slash', async function (assert) {
-          const listingName = 'author';
-          const listingId = mockCatalogURL + 'Listing/author.json';
-          await executeCommand(
-            ListingUseCommand,
-            listingId,
-            removeTrailingSlash(testDestinationRealmURL),
-          );
-          await visitOperatorMode({
-            submode: 'code',
-            fileView: 'browser',
-            codePath: `${testDestinationRealmURL}index`,
-          });
-          let outerFolder = await verifyFolderWithUUIDInFileTree(
-            assert,
-            listingName,
-          );
-
-          let instanceFolder = `${outerFolder}Author`;
-          await openDir(assert, instanceFolder);
-          await verifyJSONWithUUIDInFolder(assert, instanceFolder);
-        });
+        let instanceFolder = `${outerFolder}Author/`;
+        await openDir(assert, instanceFolder);
+        await verifyJSONWithUUIDInFolder(assert, instanceFolder);
       });
-    },
-  );
+
+      test('"use" is successful even if target realm does not have a trailing slash', async function (assert) {
+        const listingName = 'author';
+        const listingId = mockCatalogURL + 'Listing/author.json';
+        await executeCommand(
+          ListingUseCommand,
+          listingId,
+          removeTrailingSlash(testDestinationRealmURL),
+        );
+        await visitOperatorMode({
+          submode: 'code',
+          fileView: 'browser',
+          codePath: `${testDestinationRealmURL}index`,
+        });
+        let outerFolder = await verifyFolderWithUUIDInFileTree(
+          assert,
+          listingName,
+        );
+
+        let instanceFolder = `${outerFolder}Author/`;
+        await openDir(assert, instanceFolder);
+        await verifyJSONWithUUIDInFolder(assert, instanceFolder);
+      });
+    });
+  });
 }
 
 function removeTrailingSlash(url: string): string {
