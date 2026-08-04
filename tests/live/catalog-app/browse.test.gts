@@ -100,37 +100,30 @@ export function runTests() {
     });
 
     /**
-     * Selects a tab by name within the catalog app
+     * Selects a storefront nav tab by its tabId (card, field, skill, …)
      */
-    async function selectTab(tabName: string) {
+    async function selectTab(tabId: string) {
       await waitFor(
-        `[data-test-catalog-app] [data-test-tab-label="${tabName}"]`,
+        `[data-test-catalog-app] [data-test-storefront-tab="${tabId}"]`,
       );
-      await click(`[data-test-catalog-app] [data-test-tab-label="${tabName}"]`);
+      await click(
+        `[data-test-catalog-app] [data-test-storefront-tab="${tabId}"]`,
+      );
     }
 
     /**
      * Waits for grid to load in the catalog app
      */
     async function waitForGrid() {
-      await waitFor('[data-test-catalog-list-view]');
       await waitFor('[data-test-cards-grid-cards]');
       await settled();
     }
 
     /**
-     * Waits for showcase view to load
+     * Waits for the storefront hero (the showcase landing view) to load
      */
     async function waitForShowcase() {
-      await waitFor('[data-test-showcase-view]');
-      await settled();
-    }
-
-    /**
-     * Waits for room operations to complete
-     */
-    async function waitForRoom() {
-      await waitFor('[data-room-settled]');
+      await waitFor('[data-test-storefront-hero]');
       await settled();
     }
 
@@ -168,10 +161,12 @@ export function runTests() {
       await click(selector);
     }
 
-    async function hoverToHydrateCard(buttonSelector: string) {
-      await waitFor(buttonSelector);
-      await triggerEvent(buttonSelector, 'mouseenter');
-      await waitFor('[data-test-hydrated-card]');
+    // The hydrated live component replaces the prerendered tile on the same
+    // element, so the hydration marker can be awaited on the card itself.
+    async function hoverToHydrateCard(cardSelector: string) {
+      await waitFor(cardSelector);
+      await triggerEvent(cardSelector, 'mouseenter');
+      await waitFor(`${cardSelector}[data-test-hydrated-card]`);
     }
 
     async function openMenu(buttonSelector: string, checkHydration = true) {
@@ -238,22 +233,30 @@ export function runTests() {
         await waitForShowcase();
       });
 
-      module.skip('listing fitted', function () {
-        test('remix button is hidden in fitted view when listing is not under catalog realm', async function (assert) {
-          await selectTab('Cards');
+      module('listing fitted', function () {
+        test('after clicking "Remix", the listing details open with the remix panel', async function (assert) {
+          await selectTab('card');
           await waitForGrid();
           await waitForCardOnGrid(authorListingId, 'Author');
+          await hoverToHydrateCard(
+            `[data-test-cards-grid-item="${authorListingId}"]`,
+          );
+          // The Remix click bails out until the tile's listing actions are
+          // ready; the Preview button only renders once they are, so its
+          // presence is the readiness signal.
+          await waitFor(
+            `[data-test-cards-grid-item="${authorListingId}"] [data-test-listing-fitted-preview]`,
+          );
+          await click(
+            `[data-test-cards-grid-item="${authorListingId}"] [data-test-listing-fitted-remix]`,
+          );
+          await waitForCardOnStack(authorListingId);
           assert
             .dom(
-              `[data-test-cards-grid-item="${authorListingId}"] [data-test-card-title="Author"]`,
+              `[data-test-stack-card="${authorListingId}"] [data-remix-panel].is-focused`,
             )
-            .containsText('Author', '"Author" exist in listing');
-          assert
-            .dom(
-              `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-action="Remix"]`,
-            )
-            .doesNotExist(
-              'Remix button should be hidden when listing is not under catalog realm',
+            .exists(
+              'the detail view opens with its remix panel focused by the remix intent',
             );
         });
 
@@ -269,7 +272,7 @@ export function runTests() {
             ],
           });
           await waitForShowcase();
-          await selectTab('Cards');
+          await selectTab('card');
           await waitForGrid();
           await waitForCardOnGrid(catalogRealmAuthorListingId, 'Author');
           await verifyListingAction(
@@ -283,14 +286,14 @@ export function runTests() {
         });
 
         test('after clicking "Preview" button, the first example card opens up onto the stack', async function (assert) {
+          await selectTab('card');
+          await waitForGrid();
           await waitForCardOnGrid(authorListingId, 'Author');
-          assert
-            .dom(
-              `[data-test-card="${authorListingId}"] [data-test-card-title="Author"]`,
-            )
-            .containsText('Author', '"Author" button exist in listing');
+          await hoverToHydrateCard(
+            `[data-test-cards-grid-item="${authorListingId}"]`,
+          );
           await click(
-            `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
+            `[data-test-cards-grid-item="${authorListingId}"] [data-test-listing-fitted-preview]`,
           );
           await waitForCardOnStack(
             `${nonCatalogRealmURL}author/Author/example`,
@@ -302,48 +305,15 @@ export function runTests() {
             .hasText('Author - Mike Dane');
         });
 
-        test('after clicking "Use Skills" button, the skills is attached to the skill menu', async function (assert) {
-          await selectTab('Skills');
+        test('after clicking "View details", the listing details card opens up onto the stack', async function (assert) {
+          await selectTab('card');
           await waitForGrid();
-          await waitFor(
-            `[data-test-cards-grid-item="${pirateSkillListingId}"]`,
-          );
-          await openMenu(
-            `[data-test-cards-grid-item="${pirateSkillListingId}"] [data-test-catalog-listing-fitted-add-skills-to-room-button]`,
-          );
-          await waitForRoom();
-          await click('[data-test-skill-menu][data-test-pill-menu-button]');
-          await waitFor('[data-test-skill-menu]');
-          assert.dom('[data-test-skill-menu]').exists('Skill menu is visible');
-          assert
-            .dom('[data-test-pill-menu-item]')
-            .containsText('Talk Like a Pirate')
-            .exists('Skill is attached to the skill menu');
-        });
-
-        test('after clicking "carousel" area, the first example card opens up onto the stack', async function (assert) {
           await waitForCardOnGrid(authorListingId, 'Author');
-          assert
-            .dom(
-              `[data-test-card="${authorListingId}"] [data-test-card-title="Author"]`,
-            )
-            .containsText('Author', '"Author" button exist in listing');
-          await click(
-            `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
+          await hoverToHydrateCard(
+            `[data-test-cards-grid-item="${authorListingId}"]`,
           );
-          await waitForCardOnStack(
-            `${nonCatalogRealmURL}author/Author/example`,
-          );
-          assert
-            .dom(
-              `[data-test-stack-card="${nonCatalogRealmURL}author/Author/example"] [data-test-boxel-card-header-title]`,
-            )
-            .hasText('Author - Mike Dane');
-        });
-
-        test('after clicking "Details" button, the listing details card opens up onto the stack', async function (assert) {
           await click(
-            `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-details-button]`,
+            `[data-test-cards-grid-item="${authorListingId}"] [data-test-listing-fitted-details]`,
           );
           await waitForCardOnStack(authorListingId);
           assert
@@ -353,128 +323,29 @@ export function runTests() {
             .hasText('CardListing - Author');
         });
 
-        test('after clicking "info-section" area, the listing details card opens up onto the stack', async function (assert) {
-          await click(
-            `[data-test-card="${authorListingId}"] [data-test-catalog-listing-fitted-details]`,
-          );
-          await waitForCardOnStack(authorListingId);
-          assert
-            .dom(
-              `[data-test-stack-card="${authorListingId}"] [data-test-boxel-card-header-title]`,
-            )
-            .hasText('CardListing - Author');
-        });
-
-        test('no arrows and dots appear when one or less image exist', async function (assert) {
-          await selectTab('Cards');
+        test('fitted card shows a screenshot when present and a monogram cover when not', async function (assert) {
+          await selectTab('card');
           await waitForGrid();
-          await waitForCardOnGrid(emptyListingId);
-          await hoverToHydrateCard(
-            `[data-test-cards-grid-item="${emptyListingId}"]`,
-          );
-
-          const carouselNav = document.querySelector(
-            `[data-test-cards-grid-item="${emptyListingId}"] .carousel-nav`,
-          );
-          const carouselDots = document.querySelector(
-            `[data-test-cards-grid-item="${emptyListingId}"] .carousel-dots`,
-          );
-
-          if (carouselNav && carouselDots) {
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${emptyListingId}"] .carousel-arrow-prev`,
-              )
-              .exists();
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${emptyListingId}"] .carousel-arrow-next`,
-              )
-              .exists();
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${emptyListingId}"] .carousel-item-0.is-active`,
-              )
-              .exists();
-          } else {
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${emptyListingId}"] .carousel-nav`,
-              )
-              .doesNotExist();
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${emptyListingId}"] .carousel-dots`,
-              )
-              .doesNotExist();
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${emptyListingId}"] .carousel-arrow-prev`,
-              )
-              .doesNotExist();
-            assert
-              .dom(
-                `[data-test-cards-grid-item="${emptyListingId}"] .carousel-arrow-next`,
-              )
-              .doesNotExist();
-          }
-        });
-
-        test('carousel arrows only when multiple images exist and works when triggered', async function (assert) {
-          await selectTab('Cards');
-          await waitForGrid();
-          await waitForCardOnGrid(personListingId);
-          await hoverToHydrateCard(
-            `[data-test-cards-grid-item="${personListingId}"]`,
-          );
-
-          await click(
-            `[data-test-cards-grid-item="${personListingId}"] .carousel-arrow-prev`,
-          );
+          await waitForCardOnGrid(personListingId, 'Person');
           assert
             .dom(
-              `[data-test-cards-grid-item="${personListingId}"] .carousel-item-2.is-active`,
+              `[data-test-cards-grid-item="${personListingId}"] [data-test-listing-fitted][data-no-image="false"] .media-img`,
             )
-            .exists('After clicking prev, last slide (index 2) is active');
+            .exists('a listing with screenshots renders the first one');
 
-          await click(
-            `[data-test-cards-grid-item="${personListingId}"] .carousel-arrow-next`,
-          );
+          await waitForCardOnGrid(emptyListingId, 'Empty');
           assert
             .dom(
-              `[data-test-cards-grid-item="${personListingId}"] .carousel-item-0.is-active`,
+              `[data-test-cards-grid-item="${emptyListingId}"] [data-test-listing-fitted][data-no-image="true"] .monogram`,
             )
-            .exists('After clicking next, first slide (index 0) is active');
-        });
-
-        test('carousel dots appear only when multiple images exist and works when triggered', async function (assert) {
-          await selectTab('Cards');
-          await waitForGrid();
-          await waitForCardOnGrid(personListingId);
-
-          // Hover over the carousel to make controls visible
-          await hoverToHydrateCard(
-            `[data-test-cards-grid-item="${personListingId}"]`,
-          );
-
-          const dots = document.querySelectorAll(
-            `[data-test-cards-grid-item="${personListingId}"] .carousel-dot`,
-          );
-          assert.true(
-            dots.length > 1,
-            'carousel dots render for a multi-image listing',
-          );
-
-          await click(dots[1]);
-          assert
-            .dom(
-              `[data-test-cards-grid-item="${personListingId}"] .carousel-item-1.is-active`,
-            )
-            .exists('After clicking dot 1, slide 1 is active');
+            .hasText(
+              'E',
+              'a listing with no screenshot falls back to its monogram',
+            );
         });
 
         test('preview button appears only when examples exist', async function (assert) {
-          await selectTab('Cards');
+          await selectTab('card');
           await waitForGrid();
           await waitForCardOnGrid(authorListingId);
           await hoverToHydrateCard(
@@ -482,21 +353,17 @@ export function runTests() {
           );
           assert
             .dom(
-              `[data-test-cards-grid-item="${authorListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
+              `[data-test-cards-grid-item="${authorListingId}"] [data-test-listing-fitted-preview]`,
             )
             .exists('preview button renders when the listing has examples');
 
           await waitForCardOnGrid(emptyListingId);
-          await triggerEvent(
+          await hoverToHydrateCard(
             `[data-test-cards-grid-item="${emptyListingId}"]`,
-            'mouseenter',
-          );
-          await waitFor(
-            `[data-test-cards-grid-item="${emptyListingId}"][data-test-hydrated-card]`,
           );
           assert
             .dom(
-              `[data-test-cards-grid-item="${emptyListingId}"] [data-test-catalog-listing-fitted-preview-button]`,
+              `[data-test-cards-grid-item="${emptyListingId}"] [data-test-listing-fitted-preview]`,
             )
             .doesNotExist(
               'preview button is omitted when the listing has no examples',
@@ -506,14 +373,18 @@ export function runTests() {
 
       module('navigation', function () {
         module('show results as per catalog tab selected', function () {
-          skip('switch to cards tab', async function (assert) {
-            await selectTab('Cards');
+          test('switch to cards tab', async function (assert) {
+            await selectTab('card');
             await waitForGrid();
             assert
-              .dom('[data-test-navigation-reset-button="card"]')
-              .exists(`"All Cards" button should exist`)
-              .hasClass('is-selected');
-            assert.dom('[data-test-boxel-radio-option-id="grid"]').exists();
+              .dom('[data-test-storefront-tab="card"]')
+              .hasClass('is-active', 'the Cards tab is selected');
+            assert
+              .dom('[data-test-storefront-hero]')
+              .doesNotExist('the hero is hidden outside the showcase view');
+            assert
+              .dom('[data-test-catalog-gallery] .gallery-title')
+              .hasText('Cards');
           });
         });
 
