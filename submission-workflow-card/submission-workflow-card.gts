@@ -46,7 +46,7 @@ type StepStatus =
   | 'blocked'
   | 'in-progress';
 
-interface ResolvedStep {
+export interface ResolvedStep {
   key: string;
   label: string;
   description: string;
@@ -54,7 +54,7 @@ interface ResolvedStep {
   statusDetail?: string;
 }
 
-interface WorkflowState {
+export interface WorkflowState {
   steps: ResolvedStep[];
   currentStepIndex: number;
   progressPercent: number;
@@ -93,7 +93,7 @@ const STEP_DEFINITIONS = [
 
 // ── Helper: resolve live workflow state ──
 
-function resolveSubmissionWorkflowState(
+export function resolveSubmissionWorkflowState(
   hasListing: boolean,
   hasPr: boolean,
   _prActionLabel: string | null,
@@ -123,15 +123,21 @@ function resolveSubmissionWorkflowState(
       case 'choose-listing':
         completed = hasListing;
         break;
-      case 'create-pr':
-        completed = hasPr;
-        if (!hasPr && lintStatus === 'in-progress') {
+      case 'create-pr': {
+        // A retry re-runs lint with the prior attempt's PrCard still linked,
+        // and a github-pr failure records its error after the PrCard exists —
+        // active and failed signals must outrank the link.
+        let lintActive = lintStatus === 'in-progress';
+        let lintFailed = lintStatus === 'failed';
+        let prFailed = !!(prCreationError || failedStep);
+        completed = hasPr && !lintActive && !lintFailed && !prFailed;
+        if (lintActive) {
           inProgress = true;
-          statusDetail = 'Linting files...';
-        } else if (!hasPr && lintStatus === 'failed') {
+          statusDetail = hasPr ? 'Re-running lint…' : 'Linting files...';
+        } else if (lintFailed) {
           blocked = true;
           statusDetail = `${lintErrors.length} unfixable lint error${lintErrors.length === 1 ? '' : 's'}`;
-        } else if (!hasPr && (prCreationError || failedStep)) {
+        } else if (prFailed) {
           blocked = true;
           if (failedStep === 'collect-files') {
             statusDetail = 'Collecting files failed';
@@ -147,6 +153,7 @@ function resolveSubmissionWorkflowState(
           statusDetail = 'Creating PR...';
         }
         break;
+      }
       case 'ci-checks':
         completed = hasPr && ciAllPassed;
         blocked = hasPr && ciHasFailure;
