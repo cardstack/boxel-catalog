@@ -9,7 +9,7 @@
     "type": "card",
     "attributes": {
       "name": "Travel Itinerary Planner",
-      "summary": "The Travel Itinerary Planner defines a card structure for planning and organizing travel trips. It allows users to specify trip details such as the title, destination, date range, and a sequence of planned stops with locations, timings, categories, and notes. The card supports sharing via a manually entered QR code and emphasizes an easy-to-use interface for creating comprehensive travel itineraries.",
+      "summary": "Planning a trip usually means notes in one app, maps in another, and no idea what it all costs. Travel Itinerary Planner puts the whole trip on one card: set a destination and dates, then build each day as a timeline of stops — every stop gets a time, a category, notes, and an estimated cost, and appears instantly as a routed pin on the live map. Costs roll up into a trip budget bar at the top, switchable between currencies.\n\nOpen the demo to see it shine: browse 2 Days in Bali, flip between the All days and Day 1/Day 2 tabs to watch the route redraw, then hit the pencil on any stop to edit its timing and cost — the map answers with nearby food and things-to-do suggestions. Press Plan with AI and the assistant drafts a full day-by-day itinerary for you, or link a Theme card like Midnight Voyager and the whole planner re-skins in dark navy and gold.",
       "cardInfo": {
         "name": "Travel Itinerary Planner",
         "notes": null,
@@ -35,7 +35,7 @@
       },
       "images.3": {
         "links": {
-          "self": "../Screenshots/04-plan-with-ai.png"
+          "self": "../Screenshots/04-theme-midnight-voyager.png"
         }
       },
       "examples.0": {
