@@ -161,10 +161,12 @@ export function runTests() {
       await click(selector);
     }
 
-    async function hoverToHydrateCard(buttonSelector: string) {
-      await waitFor(buttonSelector);
-      await triggerEvent(buttonSelector, 'mouseenter');
-      await waitFor('[data-test-hydrated-card]');
+    // The hydrated live component replaces the prerendered tile on the same
+    // element, so the hydration marker can be awaited on the card itself.
+    async function hoverToHydrateCard(cardSelector: string) {
+      await waitFor(cardSelector);
+      await triggerEvent(cardSelector, 'mouseenter');
+      await waitFor(`${cardSelector}[data-test-hydrated-card]`);
     }
 
     async function openMenu(buttonSelector: string, checkHydration = true) {
@@ -239,15 +241,23 @@ export function runTests() {
           await hoverToHydrateCard(
             `[data-test-cards-grid-item="${authorListingId}"]`,
           );
+          // The Remix click bails out until the tile's listing actions are
+          // ready; the Preview button only renders once they are, so its
+          // presence is the readiness signal.
+          await waitFor(
+            `[data-test-cards-grid-item="${authorListingId}"] [data-test-listing-fitted-preview]`,
+          );
           await click(
             `[data-test-cards-grid-item="${authorListingId}"] [data-test-listing-fitted-remix]`,
           );
           await waitForCardOnStack(authorListingId);
           assert
             .dom(
-              `[data-test-stack-card="${authorListingId}"] [data-remix-panel]`,
+              `[data-test-stack-card="${authorListingId}"] [data-remix-panel].is-focused`,
             )
-            .exists('the detail view opens showing the remix panel');
+            .exists(
+              'the detail view opens with its remix panel focused by the remix intent',
+            );
         });
 
         skip('after clicking "Remix" button on catalog realm listing, the ai room is initiated and prompt is given correctly', async function (assert) {
@@ -348,12 +358,8 @@ export function runTests() {
             .exists('preview button renders when the listing has examples');
 
           await waitForCardOnGrid(emptyListingId);
-          await triggerEvent(
+          await hoverToHydrateCard(
             `[data-test-cards-grid-item="${emptyListingId}"]`,
-            'mouseenter',
-          );
-          await waitFor(
-            `[data-test-cards-grid-item="${emptyListingId}"][data-test-hydrated-card]`,
           );
           assert
             .dom(
