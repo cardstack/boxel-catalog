@@ -43,9 +43,6 @@ const personListingId = `${nonCatalogRealmURL}Listing/person`;
 const emptyListingId = `${nonCatalogRealmURL}Listing/empty`;
 const pirateSkillListingId = `${nonCatalogRealmURL}SkillListing/pirate-skill`;
 const incompleteSkillListingId = `${nonCatalogRealmURL}Listing/incomplete-skill`;
-//tags
-const calculatorTagId = `${nonCatalogRealmURL}Tag/calculator`;
-const gameTagId = `${nonCatalogRealmURL}Tag/game`;
 
 export function runTests() {
   module('Acceptance | Catalog | catalog app - browse tests', function (hooks) {
@@ -388,196 +385,73 @@ export function runTests() {
           });
         });
 
-        module.skip('filters', function () {
-          test('list view is shown if filters are applied', async function (assert) {
-            await waitFor('[data-test-filter-search-input]');
-            await click('[data-test-filter-search-input]');
-            await fillIn('[data-test-filter-search-input]', 'Mortgage');
-            // filter by category
-            await click('[data-test-filter-list-item="All"]');
-            // filter by tag
-            let tagPill = document.querySelector('[data-test-tag-list-pill]');
-            if (tagPill) {
-              await click(tagPill);
-            }
-
-            await waitUntil(() => {
-              const cards = document.querySelectorAll(
-                '[data-test-catalog-list-view]',
-              );
-              return cards.length === 1;
-            });
-
-            assert
-              .dom('[data-test-catalog-list-view]')
-              .exists(
-                'Catalog list view should be visible when filters are applied',
-              );
-          });
-
-          // TODO: restore in CS-9083
-          skip('should be reset when clicking "Catalog Home" button', async function (assert) {
-            await waitFor('[data-test-filter-search-input]');
-            await click('[data-test-filter-search-input]');
-            await fillIn('[data-test-filter-search-input]', 'Mortgage');
-            // filter by category
-            await click('[data-test-filter-list-item="All"]');
-            // filter by tag
-            let tagPill = document.querySelector('[data-test-tag-list-pill]');
-            if (tagPill) {
-              await click(tagPill);
-            }
-
-            assert
-              .dom('[data-test-showcase-view]')
-              .doesNotExist('Should be in list view after applying filter');
-
-            await click('[data-test-navigation-reset-button="showcase"]');
-
-            assert
-              .dom('[data-test-showcase-view]')
-              .exists(
-                'Should return to showcase view after clicking Catalog Home',
-              );
-
-            assert
-              .dom('[data-test-filter-search-input]')
-              .hasValue('', 'Search input should be cleared');
-            assert
-              .dom('[data-test-filter-list-item].is-selected')
-              .doesNotExist('No category should be selected after reset');
-            assert
-              .dom('[data-test-tag-list-pill].selected')
-              .doesNotExist('No tag should be selected after reset');
-          });
-
-          skip('updates the card count correctly when filtering by a sphere group', async function (assert) {
-            await click('[data-test-boxel-filter-list-button="LIFE"]');
-            assert
-              .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
-              .exists({ count: 2 });
-          });
-
-          skip('updates the card count correctly when filtering by a category', async function (assert) {
-            await click('[data-test-filter-list-item="LIFE"] .dropdown-toggle');
-            await click(
-              '[data-test-boxel-filter-list-button="Health & Wellness"]',
+        module('filters', function () {
+          test('search filters the gallery and hides the hero', async function (assert) {
+            await fillIn('[data-test-storefront-search]', 'Person');
+            await waitUntil(
+              () =>
+                document.querySelectorAll(
+                  '[data-test-cards-grid-cards] [data-test-cards-grid-item]',
+                ).length === 1,
+              { timeout: 10_000 },
             );
             assert
-              .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
-              .exists({ count: 1 });
+              .dom(`[data-test-cards-grid-item="${personListingId}"]`)
+              .exists('only the matching listing remains');
+            assert
+              .dom('[data-test-storefront-hero]')
+              .doesNotExist('the hero is hidden while a search is active');
           });
 
-          skip('updates the card count correctly when filtering by a search input', async function (assert) {
-            await click('[data-test-filter-search-input]');
-            await fillIn('[data-test-filter-search-input]', 'Mortgage');
-            await waitUntil(() => {
-              const cards = document.querySelectorAll(
-                '[data-test-cards-grid-cards] [data-test-cards-grid-item]',
-              );
-              return cards.length === 1;
-            });
+          test('type pill filters the gallery to that listing type', async function (assert) {
+            await click('[data-test-type-pill="skill"]');
+            await waitUntil(
+              () =>
+                document.querySelectorAll(
+                  '[data-test-cards-grid-cards] [data-test-cards-grid-item]',
+                ).length === 2,
+              { timeout: 10_000 },
+            );
             assert
-              .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
-              .exists({ count: 1 });
+              .dom(`[data-test-cards-grid-item="${pirateSkillListingId}"]`)
+              .exists();
+            assert
+              .dom(`[data-test-cards-grid-item="${incompleteSkillListingId}"]`)
+              .exists();
+            assert
+              .dom('[data-test-storefront-tab="skill"]')
+              .hasClass('is-active', 'the type pills mirror the nav tabs');
           });
 
-          test('updates the card count correctly when filtering by a single tag', async function (assert) {
-            await click(`[data-test-tag-list-pill="${gameTagId}"]`);
+          test('a type pill and a search combine', async function (assert) {
+            await click('[data-test-type-pill="skill"]');
+            await fillIn('[data-test-storefront-search]', 'Pirate');
+            await waitUntil(
+              () =>
+                document.querySelectorAll(
+                  '[data-test-cards-grid-cards] [data-test-cards-grid-item]',
+                ).length === 1,
+              { timeout: 10_000 },
+            );
             assert
-              .dom(`[data-test-tag-list-pill="${gameTagId}"]`)
-              .hasClass('selected');
-            assert
-              .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
-              .exists({ count: 1 });
+              .dom(`[data-test-cards-grid-item="${pirateSkillListingId}"]`)
+              .exists('only the skill matching the search remains');
           });
 
-          test('updates the card count correctly when filtering by multiple tags', async function (assert) {
-            await click(`[data-test-tag-list-pill="${calculatorTagId}"]`);
-            await click(`[data-test-tag-list-pill="${gameTagId}"]`);
-            assert
-              .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
-              .exists({ count: 2 });
-          });
-
-          test('updates the card count correctly when multiple filters are applied together', async function (assert) {
-            await click('[data-test-boxel-filter-list-button="All"]');
-            await click(`[data-test-tag-list-pill="${gameTagId}"]`);
-            await click('[data-test-filter-search-input]');
-            await fillIn('[data-test-filter-search-input]', 'Blackjack');
-
-            await waitUntil(() => {
-              const cards = document.querySelectorAll(
-                '[data-test-cards-grid-cards] [data-test-cards-grid-item]',
-              );
-              return cards.length === 1;
-            });
-
-            assert
-              .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
-              .exists({ count: 1 });
-          });
-
-          test('shows zero results when filtering with a non-matching or invalid search input', async function (assert) {
-            await click('[data-test-filter-search-input]');
-            await fillIn('[data-test-filter-search-input]', 'asdfasdf');
-            await waitUntil(() => {
-              const cards = document.querySelectorAll('[data-test-no-results]');
-              return cards.length === 1;
-            });
-
+          test('a non-matching search shows no results and "Show everything" resets', async function (assert) {
+            await fillIn('[data-test-storefront-search]', 'asdfasdf');
+            await waitFor('[data-test-no-results]', { timeout: 10_000 });
             assert.dom('[data-test-no-results]').exists();
-          });
 
-          test('categories with null sphere fields are excluded from filter list', async function (assert) {
-            // Setup: Create a category with null sphere field
-            await setupAcceptanceTestRealm({
-              realmURL: nonCatalogRealmURL,
-              mockMatrixUtils,
-              contents: {
-                ...SYSTEM_CARD_FIXTURE_CONTENTS,
-                'Category/category-with-null-sphere.json': {
-                  data: {
-                    type: 'card',
-                    attributes: {
-                      name: 'CategoryWithNullSphere',
-                    },
-                    relationships: {
-                      sphere: {
-                        links: {
-                          self: null,
-                        },
-                      },
-                    },
-                    meta: {
-                      adoptsFrom: {
-                        module: `${nonCatalogRealmURL}catalog-app/listing/category`,
-                        name: 'Category',
-                      },
-                    },
-                  },
-                },
-              },
-            });
-
-            await visitOperatorMode({
-              stacks: [
-                [
-                  {
-                    id: `${nonCatalogRealmURL}`,
-                    format: 'isolated',
-                  },
-                ],
-              ],
-            });
-
+            await click('[data-test-no-results] .clear-link');
+            await waitForShowcase();
             assert
-              .dom(
-                '[data-test-boxel-filter-list-button="CategoryWithNullSphere"]',
-              )
-              .doesNotExist(
-                'Category with null sphere should not appear in filter list',
-              );
+              .dom('[data-test-storefront-search]')
+              .hasValue('', 'the search input is cleared');
+            await waitForGrid();
+            assert
+              .dom('[data-test-cards-grid-cards] [data-test-cards-grid-item]')
+              .exists({ count: 11 }, 'the full gallery returns');
           });
         });
       });
