@@ -3,7 +3,7 @@
     "type": "card",
     "attributes": {
       "name": "Color Tree",
-      "summary": "The ColorTree defines a configurable color visualization component used within app/card/field/skill/theme contexts. It allows selection of a color and a Munsell notation, and dynamically generates a title based on the selected Munsell value. The component supports multiple presentation modes, including isolated, embedded, and fitted variations, to suit different layout needs. Its primary purpose is to enable intuitive display and interaction with color information within a structured card-based interface.",
+      "summary": "Pick colors the way a colorist does. Color Tree renders the Munsell color system — the century-old standard that describes any color by hue, value (lightness), and chroma (intensity), written like 5G 5/8 — as a living 3D solid you can tumble, slice, and read page by page. Because Albert Munsell measured real human perception, the solid is not a neat sphere: every hue reaches its peak intensity at its own lightness, so the model grows into a lopsided tree. Press TO ITTEN to morph it into the perfect sphere that Bauhaus color theorist Johannes Itten imagined instead, and see exactly where the idealized model bends the truth.\n\nReach for it whenever a flat color wheel is not enough: compare two brand accents at equal lightness, find the most saturated teal that still reads on a dark background, or teach why yellow feels lighter than purple. Open the demo, drag to tumble the tree, slice it by hue or value, open the atlas to leaf through the color pages, and hold any chip to copy its hex — your pick is saved on the card together with its Munsell notation.",
       "cardInfo": {
         "name": null,
         "summary": null,
