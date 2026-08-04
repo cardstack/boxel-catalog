@@ -7,7 +7,7 @@ import {
   triggerEvent,
 } from '@ember/test-helpers';
 
-import { module, skip, test } from 'qunit';
+import { module, test } from 'qunit';
 
 import {
   setupLocalIndexing,
@@ -166,55 +166,6 @@ export function runTests() {
       await waitFor(`${cardSelector}[data-test-hydrated-card]`);
     }
 
-    async function openMenu(buttonSelector: string, checkHydration = true) {
-      await waitFor(buttonSelector);
-      await triggerEvent(buttonSelector, 'mouseenter');
-      if (checkHydration) {
-        await waitFor('[data-test-hydrated-card]');
-      }
-      await click(buttonSelector);
-    }
-
-    async function executeListingAction(
-      buttonSelector: string,
-      menuItemText: string,
-      checkHydration = true,
-    ) {
-      await openMenu(buttonSelector, checkHydration);
-      await clickDropdownItem(menuItemText);
-    }
-
-    async function verifyListingAction(
-      assert: Assert,
-      listingSelector: string,
-      actionSelector: string,
-      expectedText: string,
-      expectedMessage: string,
-      menuItemName = 'Test Workspace B',
-      checkHydration = true,
-    ) {
-      let buttonSelector = `${listingSelector} ${actionSelector}`;
-      await waitFor(buttonSelector);
-      assert.dom(buttonSelector).containsText(expectedText);
-      await executeListingAction(buttonSelector, menuItemName, checkHydration);
-      await waitUntil(() => getRoomIds().length > 0);
-
-      const roomId = getRoomIds().pop()!;
-      await waitFor(`[data-test-room="${roomId}"][data-test-room-settled]`);
-      await waitFor(
-        `[data-test-room="${roomId}"] [data-test-ai-assistant-message]`,
-      );
-
-      await waitFor(
-        `[data-test-room="${roomId}"] [data-test-ai-message-content]`,
-      );
-      await settled();
-
-      assert
-        .dom(`[data-test-room="${roomId}"] [data-test-ai-message-content]`)
-        .containsText(expectedMessage);
-    }
-
     module('catalog index', function (hooks) {
       hooks.beforeEach(async function () {
         await visitOperatorMode({
@@ -255,31 +206,6 @@ export function runTests() {
             .exists(
               'the detail view opens with its remix panel focused by the remix intent',
             );
-        });
-
-        skip('after clicking "Remix" button on catalog realm listing, the ai room is initiated and prompt is given correctly', async function (assert) {
-          await visitOperatorMode({
-            stacks: [
-              [
-                {
-                  id: `${catalogRealmMockURL}index`,
-                  format: 'isolated',
-                },
-              ],
-            ],
-          });
-          await waitForShowcase();
-          await selectTab('card');
-          await waitForGrid();
-          await waitForCardOnGrid(catalogRealmAuthorListingId, 'Author');
-          await verifyListingAction(
-            assert,
-            `[data-test-cards-grid-item="${catalogRealmAuthorListingId}"]`,
-            '[data-test-catalog-listing-action="Remix"]',
-            'Remix',
-            'Remix done! Please suggest two example prompts on how to edit this card.',
-            'Test Workspace B',
-          );
         });
 
         test('after clicking "Preview" button, the first example card opens up onto the stack', async function (assert) {
@@ -502,7 +428,7 @@ export function runTests() {
           );
       });
 
-      skip('after clicking "Remix" button on catalog realm listing, the ai room is initiated and prompt is given correctly', async function (assert) {
+      test('remixing a catalog realm listing initiates an ai room with the remix prompt', async function (assert) {
         await visitOperatorMode({
           stacks: [
             [
@@ -513,15 +439,28 @@ export function runTests() {
             ],
           ],
         });
-        await verifyListingAction(
-          assert,
-          `[data-test-card="${catalogRealmAuthorListingId}"]`,
-          '[data-test-catalog-listing-action="Remix"]',
-          'Remix',
-          'Remix done! Please suggest two example prompts on how to edit this card.',
-          'Test Workspace B',
-          false,
+        let roomsBefore = getRoomIds().length;
+        let remixButton = `[data-test-card="${catalogRealmAuthorListingId}"] [data-test-catalog-listing-action="Remix into my realm"]`;
+        await waitFor(remixButton);
+        await click(remixButton);
+        await clickDropdownItem('Test Workspace B');
+
+        await waitUntil(() => getRoomIds().length > roomsBefore, {
+          timeout: 30_000,
+        });
+        const roomId = getRoomIds().pop()!;
+        await waitFor(`[data-test-room="${roomId}"][data-test-room-settled]`, {
+          timeout: 30_000,
+        });
+        await waitFor(
+          `[data-test-room="${roomId}"] [data-test-ai-message-content]`,
         );
+        await settled();
+        assert
+          .dom(`[data-test-room="${roomId}"] [data-test-ai-message-content]`)
+          .containsText(
+            'Remix done! Please suggest two example prompts on how to edit this card.',
+          );
       });
 
       test('after clicking "Use Skills" button, the skills is attached to the skill menu', async function (assert) {
