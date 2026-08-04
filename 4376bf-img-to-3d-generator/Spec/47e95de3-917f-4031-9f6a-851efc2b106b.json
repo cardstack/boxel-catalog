@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# RefineSculptCommand\n\n## Summary\n\nApplies one precise, user-approved edit to a SculptedModel round (recolor a part, resize, move, add or remove geometry) and saves the result as a new round in the studio's history, regenerating the model's exported Three.js code. This is the command the Refine Sculpt skill calls for every accepted instruction.\n\n## Import\n\n```ts\nimport RefineSculptCommand from '../commands/refine-sculpt-command';\n```\n\n## Usage\n\nInvoked by the AI assistant through the refine-sculpt skill: pass `sculptedModelId` (the round to refine) and `instruction` (one self-contained edit in plain words, e.g. \"recolor the shorts to bright red #d81f2a\"). The command rewrites the model code, renders it, and links the new round to its parent so History shows the full refine chain.\n",
+      "ref": {
+        "module": "../commands/refine-sculpt-command",
+        "name": "default"
+      },
+      "specType": "command",
+      "containedExamples": null,
+      "cardTitle": "RefineSculptCommand",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

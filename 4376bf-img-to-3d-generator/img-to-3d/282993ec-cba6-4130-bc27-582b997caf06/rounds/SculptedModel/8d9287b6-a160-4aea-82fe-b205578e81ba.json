@@ -51,7 +51,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/catalog/4376bf-img-to-3d-generator/sculpted-model",
+        "module": "../../../../sculpted-model",
         "name": "SculptedModel"
       }
     }

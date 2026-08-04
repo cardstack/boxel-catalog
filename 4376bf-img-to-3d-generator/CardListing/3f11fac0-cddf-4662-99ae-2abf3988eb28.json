@@ -3,7 +3,7 @@
     "type": "card",
     "attributes": {
       "name": "Img-to-3D Generator",
-      "summary": "Turn a product photo into an editable 3D model. Drop in a reference image and the studio analyzes the object, plans its parts, and rebuilds it as a procedural Three.js sculpture you can spin, export, and refine — no modeling skills needed. It works best on simple, regular geometry and hard-surface objects — bottles, cans, mugs, furniture, boxes, cylinders and revolved shapes — where a handful of primitives capture the form cleanly. It reproduces real labels and printed graphics from the photo (and tells a stuck-on sticker apart from a print applied straight onto the surface), saves every generation as an editable code file with full version history, and lets you fine-tune the result conversationally through the built-in AI assistant or export it as a .glb. Highly organic or precision-mechanical subjects (faces, figures, firearms) are harder and may only approximate.",
+      "summary": "Turn a product photo into an editable 3D model. Drop in a reference image and the studio analyzes the object, plans its parts, and rebuilds it as a procedural Three.js sculpture you can spin, export, and refine — no modeling skills needed. It works best on hard-surface objects — bottles, cans, mugs, furniture — where a handful of primitives capture the form cleanly. It reproduces real labels and printed graphics from the photo, saves every generation as an editable code file with full version history, and lets you fine-tune the result conversationally through the built-in AI assistant or export it as a .glb. Highly organic or precision-mechanical subjects (faces, figures, firearms) are harder and may only approximate.\n\nOpen the demo to see it shine: the hero studio holds a cab-over delivery truck rebuilt from a single photo — open History to step between round 1 and round 2 and watch the model improve, then press Refine with AI and ask for one change at a time (\"recolor the cab to red\") to grow the chain yourself. Start from the fresh studio to run your own photo: paste an image URL, hit Generate Model, and spin the result as it lands.",
       "cardInfo": {
         "name": null,
         "summary": null,
@@ -419,27 +419,37 @@
       },
       "images.0": {
         "links": {
-          "self": "../Screenshots/01-empty-generator-card.png"
+          "self": "../Screenshots/01-hero-final-result.png"
         }
       },
       "images.1": {
         "links": {
-          "self": "../Screenshots/02-generating.png"
+          "self": "../Screenshots/02-empty-generator.png"
         }
       },
       "images.2": {
         "links": {
-          "self": "../Screenshots/03-refine-with-ai.png"
+          "self": "../Screenshots/03-generating.png"
         }
       },
       "images.3": {
         "links": {
-          "self": "../Screenshots/04-final-result-card.png"
+          "self": "../Screenshots/04-refine-with-ai.png"
         }
       },
       "skills.0": {
         "links": {
           "self": "../Skill/refine-sculpt-skill"
+        }
+      },
+      "specs.75": {
+        "links": {
+          "self": "../Spec/47e95de3-917f-4031-9f6a-851efc2b106b"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/imgto3d-generator-90545c5f.png"
         }
       }
     },
