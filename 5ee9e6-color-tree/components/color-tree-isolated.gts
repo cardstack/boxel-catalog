@@ -42,7 +42,15 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
     'ontouchstart' in window &&
     !!window.DeviceOrientationEvent;
   audioCtx?: AudioContext;
-  lastToneAt = 0;
+  masterGain?: GainNode;
+  padLP?: BiquadFilterNode;
+  padOsc2?: OscillatorNode;
+  glisOsc?: OscillatorNode;
+  glisGain?: GainNode;
+  sliceOsc?: OscillatorNode;
+  sliceLP?: BiquadFilterNode;
+  sliceGain?: GainNode;
+  padTimer = 0;
   morphTimer = 0;
   ptrs = new Map<number, { x: number; y: number }>();
   lastPinch: number | null = null;
@@ -59,48 +67,227 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
     this.args.model.selectedMunsell = notation;
   }, 300);
 
+  /* ---------------------------- audio ----------------------------------
+     The signature texture: a gallery at night. A low room tone of filtered
+     noise and three quiet sines in an open fifth — the pad of a place where
+     color is kept — playing the moment sound is on, in any view. The chroma
+     dial and the camera's approach open the pad's filter the way a skylight
+     opens a room; the contrast dial detunes the middle voice so complements
+     beat gently; the morph plays a slow glissando on the voxels' own clock;
+     the atlas carries a tenor voice that tracks the open page. */
   toggleSound = () => {
-    this.soundOn = !this.soundOn;
-    if (this.soundOn && !this.audioCtx) {
+    if (!this.audioCtx) {
       try {
-        this.audioCtx = new AudioContext();
+        this.buildAudioGraph();
       } catch {
-        this.soundOn = false;
+        return;
       }
     }
-    this.audioCtx?.resume?.();
+    this.soundOn = !this.soundOn;
+    let ctx = this.audioCtx!;
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+    this.masterGain!.gain.setTargetAtTime(
+      this.soundOn ? 0.5 : 0,
+      ctx.currentTime,
+      0.6,
+    );
+    this.updateSliceSound();
   };
 
-  /* a small sine voice: the atlas hums when scrubbed, chimes when copied */
-  playTone(freq: number, dur = 0.09, gain = 0.05) {
-    if (!this.soundOn || !this.audioCtx) {
+  buildAudioGraph() {
+    let Ctor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    let ctx = new Ctor();
+    this.audioCtx = ctx;
+    let master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+    this.masterGain = master;
+
+    // room tone: a 2s loop of integrated noise, kept below 160 Hz
+    let len = ctx.sampleRate * 2;
+    let nbuf = ctx.createBuffer(1, len, ctx.sampleRate);
+    let data = nbuf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < len; i++) {
+      let w = Math.random() * 2 - 1;
+      last = (last + 0.02 * w) / 1.02;
+      data[i] = last * 3.2;
+    }
+    let nsrc = ctx.createBufferSource();
+    nsrc.buffer = nbuf;
+    nsrc.loop = true;
+    let nlp = ctx.createBiquadFilter();
+    nlp.type = 'lowpass';
+    nlp.frequency.value = 160;
+    nlp.Q.value = 0.4;
+    let ngain = ctx.createGain();
+    ngain.gain.value = 0.1;
+    nsrc.connect(nlp);
+    nlp.connect(ngain);
+    ngain.connect(master);
+    nsrc.start();
+
+    // pad: three sines in an open fifth behind a slowly breathing filter
+    let padLP = ctx.createBiquadFilter();
+    padLP.type = 'lowpass';
+    padLP.frequency.value = 520;
+    padLP.Q.value = 0.6;
+    let padGain = ctx.createGain();
+    padGain.gain.value = 0.11;
+    padLP.connect(padGain);
+    padGain.connect(master);
+    [110, 164.81, 220].forEach((f, i) => {
+      let o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = f;
+      let g = ctx.createGain();
+      g.gain.value = i === 2 ? 0.5 : 0.85;
+      o.connect(g);
+      g.connect(padLP);
+      o.start();
+      if (i === 1) {
+        this.padOsc2 = o;
+      }
+    });
+    this.padLP = padLP;
+    let lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.07;
+    let lfoGain = ctx.createGain();
+    lfoGain.gain.value = 110;
+    lfo.connect(lfoGain);
+    lfoGain.connect(padLP.frequency);
+    lfo.start();
+
+    // glissando voice for the morph
+    let glisOsc = ctx.createOscillator();
+    glisOsc.type = 'sine';
+    glisOsc.frequency.value = 329.63;
+    let glisGain = ctx.createGain();
+    glisGain.gain.value = 0;
+    let glp = ctx.createBiquadFilter();
+    glp.type = 'lowpass';
+    glp.frequency.value = 900;
+    glisOsc.connect(glisGain);
+    glisGain.connect(glp);
+    glp.connect(master);
+    glisOsc.start();
+    this.glisOsc = glisOsc;
+    this.glisGain = glisGain;
+
+    // slice voice: a steady tenor that tracks the open atlas page —
+    // pitch climbs with the value disc, filter warms with the hue leaf
+    let sliceOsc = ctx.createOscillator();
+    sliceOsc.type = 'sawtooth';
+    sliceOsc.frequency.value = 220;
+    let sliceLP = ctx.createBiquadFilter();
+    sliceLP.type = 'lowpass';
+    sliceLP.frequency.value = 700;
+    sliceLP.Q.value = 3.2;
+    let sliceGain = ctx.createGain();
+    sliceGain.gain.value = 0;
+    sliceOsc.connect(sliceLP);
+    sliceLP.connect(sliceGain);
+    sliceGain.connect(master);
+    sliceOsc.start();
+    this.sliceOsc = sliceOsc;
+    this.sliceLP = sliceLP;
+    this.sliceGain = sliceGain;
+
+    this.padTimer = window.setInterval(() => this.modulatePad(), 400);
+  }
+
+  /* chroma opens the filter the way a skylight opens a room; approaching
+     the specimen brightens it further */
+  modulatePad() {
+    if (!this.audioCtx || !this.soundOn || !this.padLP) {
+      return;
+    }
+    let near = this.engine
+      ? Math.max(0, Math.min(1, (70 - this.engine.dist) / 52))
+      : 0;
+    let cut = 300 + (this.chromaPos / 100) * 700 + near * 500;
+    this.padLP.frequency.setTargetAtTime(cut, this.audioCtx.currentTime, 0.5);
+  }
+
+  /* a slow E4↔B4 glide on the same clock the voxels travel by */
+  playGliss(up: boolean) {
+    if (!this.audioCtx || !this.soundOn || !this.glisOsc || !this.glisGain) {
+      return;
+    }
+    let t = this.audioCtx.currentTime;
+    this.glisOsc.frequency.setValueAtTime(up ? 329.63 : 493.88, t);
+    this.glisOsc.frequency.setTargetAtTime(up ? 493.88 : 329.63, t, 0.5);
+    this.glisGain.gain.setTargetAtTime(0.06, t, 0.4);
+    this.glisGain.gain.setTargetAtTime(0, t + 1.0, 0.8);
+  }
+
+  /* value mode: v 1..9 → ~2.3 octaves of pitch. Hue mode: warmth =
+     cos(angle around the wheel), warm leaves open the filter, cool ones
+     close it, with a slight pitch drift so each leaf has its own centre.
+     Silent whenever the atlas is closed or sound is off. */
+  updateSliceSound() {
+    if (!this.audioCtx || !this.sliceOsc || !this.sliceLP || !this.sliceGain) {
+      return;
+    }
+    let t = this.audioCtx.currentTime;
+    if (!this.soundOn || this.sliceMode === 0) {
+      this.sliceGain.gain.setTargetAtTime(0, t, 0.35);
+      return;
+    }
+    if (this.sliceMode === 2) {
+      let v = 1 + Math.min(8, Math.floor((this.slicePos / 100) * 9));
+      let f = 130 * Math.pow(2, ((v - 1) / 8) * 2.3);
+      this.sliceOsc.frequency.setTargetAtTime(f, t, 0.08);
+      this.sliceLP.frequency.setTargetAtTime(1100, t, 0.2);
+      this.sliceLP.Q.setTargetAtTime(2.4, t, 0.2);
+      this.sliceGain.gain.setTargetAtTime(0.055, t, 0.15);
+    } else {
+      let leaves = HUE_TIERS[this.densityIdx] / 2;
+      let p = this.slicePos / 100;
+      let j = Math.floor((((p % 1) + 1) % 1) * leaves) % leaves;
+      let angle = (j / leaves) * Math.PI * 2;
+      let warmth = Math.cos(angle);
+      let cutoff = 380 * Math.pow(2, (warmth + 1) * 1.6);
+      let pitch = 196 * Math.pow(2, warmth * 0.12);
+      this.sliceOsc.frequency.setTargetAtTime(pitch, t, 0.18);
+      this.sliceLP.frequency.setTargetAtTime(cutoff, t, 0.25);
+      this.sliceLP.Q.setTargetAtTime(warmth > 0 ? 4.0 : 6.5, t, 0.25);
+      this.sliceGain.gain.setTargetAtTime(0.048, t, 0.25);
+    }
+  }
+
+  /* a small acknowledgment when a color is taken: two quick sine notes a
+     fifth apart, soft attack, fast decay — a glass tap */
+  copyChime() {
+    if (!this.audioCtx || !this.soundOn || !this.masterGain) {
       return;
     }
     let ctx = this.audioCtx;
-    let osc = ctx.createOscillator();
-    let g = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    g.gain.setValueAtTime(gain, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-    osc.connect(g).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + dur);
-  }
-
-  scrubTone(pos: number) {
-    let now = performance.now();
-    if (now - this.lastToneAt < 60) {
-      return;
+    let master = this.masterGain;
+    let t = ctx.currentTime;
+    for (let [f, d] of [
+      [1318.51, 0],
+      [1975.53, 0.07],
+    ]) {
+      let o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = f;
+      let og = ctx.createGain();
+      og.gain.value = 0;
+      o.connect(og);
+      og.connect(master);
+      og.gain.setValueAtTime(0, t + d);
+      og.gain.linearRampToValueAtTime(0.09, t + d + 0.012);
+      og.gain.setTargetAtTime(0, t + d + 0.04, 0.09);
+      o.start(t + d);
+      o.stop(t + d + 0.7);
     }
-    this.lastToneAt = now;
-    this.playTone(220 + pos * 6.6);
-  }
-
-  copyChime() {
-    // two quick sine notes a fifth apart — a glass tap
-    this.playTone(1318.51, 0.1, 0.06);
-    setTimeout(() => this.playTone(1975.53, 0.14, 0.05), 90);
   }
 
   dragging = false;
@@ -129,8 +316,18 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
       clearTimeout(this.pickFxTimer);
       clearTimeout(this.toastTimer);
       this.saveSelection.flush();
+      clearInterval(this.padTimer);
       this.audioCtx?.close?.();
       this.audioCtx = undefined;
+      this.masterGain = undefined;
+      this.padLP = undefined;
+      this.padOsc2 = undefined;
+      this.glisOsc = undefined;
+      this.glisGain = undefined;
+      this.sliceOsc = undefined;
+      this.sliceLP = undefined;
+      this.sliceGain = undefined;
+      this.soundOn = false;
       ro.disconnect();
       engine.dispose();
       this.engine = undefined;
@@ -285,6 +482,7 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
     if (this.engine) {
       this.chipCount = this.engine.arrays.cfr.length;
     }
+    this.updateSliceSound();
   };
 
   togglePanel = () => {
@@ -337,6 +535,7 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
     if (this.engine) {
       this.engine.morphTarget = this.morphed ? 1 : 0;
     }
+    this.playGliss(this.morphed);
     this.morphState = this.morphed ? 'dreaming…' : 'waking…';
     clearTimeout(this.morphTimer);
     this.morphTimer = window.setTimeout(() => {
@@ -412,8 +611,8 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
     }
     let layerChanged = key !== this.layerKey;
     this.layerKey = key;
-    if (layerChanged && this.sliceMode !== 0) {
-      this.scrubTone(this.slicePos);
+    if (layerChanged) {
+      this.updateSliceSound();
     }
   }
 
@@ -441,6 +640,14 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
     if (this.engine) {
       this.engine.uniforms.uContrast.value = this.contrastPos / 100;
     }
+    // contrast detunes the pad's middle voice so complements beat, gently
+    if (this.audioCtx && this.padOsc2) {
+      this.padOsc2.detune.setTargetAtTime(
+        (this.contrastPos / 100) * 9,
+        this.audioCtx.currentTime,
+        0.3,
+      );
+    }
   };
 
   /* what the panel reports: the page's cut when it's open, otherwise the
@@ -464,6 +671,15 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
 
   get atlasIsOpen() {
     return this.sliceMode !== 0;
+  }
+
+  /* the hint speaks to the view that's actually on stage: gestures for
+     the 3D solid, page-reading for the open atlas */
+  get hintText(): string {
+    if (this.atlasIsOpen) {
+      return 'swipe the atlas layer by layer · hold a spot on the open page to copy its hex';
+    }
+    return 'drag to tumble · scroll to approach · double-click to refit';
   }
 
   get hasLinkedTheme() {
@@ -499,10 +715,10 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
 
       <button
         type='button'
-        class='hamburger'
+        class='hamburger {{if this.panelOpen "panel-open"}}'
         aria-label='Toggle control panel'
         {{on 'click' this.togglePanel}}
-      >☰</button>
+      >{{if this.panelOpen '✕' '☰'}}</button>
 
       {{#if this.toast}}
         <div class='toast'>{{this.toast}}</div>
@@ -532,9 +748,7 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
           {{this.scanLabel}}
         </Button>
       </div>
-      <p class='hint'>drag to tumble · scroll to approach · double-click to
-        refit · swipe the atlas layer by layer · hold a spot on the open page to
-        copy its hex</p>
+      <p class='hint'>{{this.hintText}}</p>
 
       {{#if this.panelOpen}}
         <aside class='panel'>
@@ -651,7 +865,7 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
               class='chip'
               {{on 'click' this.toggleSound}}
             >
-              {{if this.soundOn 'SOUND ON' 'SOUND OFF'}}
+              {{if this.soundOn 'SOUND OFF' 'SOUND ON'}}
             </Button>
             {{#if this.gyroAvailable}}
               <Button
@@ -683,6 +897,7 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
 
     <style scoped>
       .room {
+        --panel-w: min(21rem, 85%);
         position: relative;
         width: 100%;
         height: 100vh;
@@ -762,6 +977,7 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
         top: 1.2rem;
         right: 1.2rem;
         z-index: 30;
+        transition: right 0.25s ease;
         width: 2.3rem;
         height: 2.3rem;
         border: 1px solid
@@ -775,6 +991,11 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
         color: var(--foreground, #e8f1f4);
         font-size: 0.95rem;
         cursor: pointer;
+      }
+      /* while the panel is open the button reads as its handle, sitting
+         just outside the panel's left edge */
+      .hamburger.panel-open {
+        right: calc(var(--panel-w) + 0.9rem);
       }
       .picked {
         display: flex;
@@ -915,9 +1136,8 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
         right: 0;
         bottom: 0;
         z-index: 20;
-        width: 21rem;
-        max-width: 85%;
-        padding: 4.4rem 1.4rem 1.4rem;
+        width: var(--panel-w);
+        padding: 1.4rem;
         border-left: 1px solid
           color-mix(in srgb, var(--border, #e8f1f4) 14%, transparent);
         background: color-mix(

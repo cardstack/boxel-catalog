@@ -1,3 +1,4 @@
+import { click } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
@@ -74,6 +75,44 @@ export function runTests() {
 
       assert.dom('.ct-fit').containsText('Munsell solid');
       assert.dom('.ct-fit').containsText('no chip picked yet');
+    });
+
+    test('color-tree card hint speaks to the view on stage', async function (assert) {
+      await renderCard(getLoader(), new ColorTree({}), 'isolated');
+
+      assert.dom('.hint').containsText('drag to tumble');
+      assert
+        .dom('.hint')
+        .doesNotContainText(
+          'copy its hex',
+          'no pick hint while the atlas is closed',
+        );
+
+      let [, scanButton] = [
+        ...document.querySelectorAll('.stage-actions button'),
+      ];
+      await click(scanButton as Element);
+
+      assert.dom('.hint').containsText('copy its hex');
+      assert
+        .dom('.hint')
+        .doesNotContainText(
+          'drag to tumble',
+          'no tumble hint on the open atlas',
+        );
+    });
+
+    test('color-tree card hamburger docks at the panel edge while it is open', async function (assert) {
+      await renderCard(getLoader(), new ColorTree({}), 'isolated');
+
+      assert.dom('.hamburger').hasClass('panel-open');
+      assert.dom('.hamburger').hasText('✕');
+
+      await click('.hamburger');
+
+      assert.dom('.panel').doesNotExist('the panel closes');
+      assert.dom('.hamburger').doesNotHaveClass('panel-open');
+      assert.dom('.hamburger').hasText('☰');
     });
 
     test('color-tree card munsellNotation formats chromatic and neutral chips', function (assert) {
