@@ -54,6 +54,9 @@ export default class CreatePrCardCommand extends Command<
           new FileContentField({
             filename: file.filename ?? file.path ?? '',
             contents: file.contents ?? file.content ?? '',
+            ...(typeof file.isBinary === 'boolean'
+              ? { isBinary: file.isBinary }
+              : {}),
           }),
       );
     }
