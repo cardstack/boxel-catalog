@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# shaders (utils)\n\n## Summary\nPure GLSL source strings for the four render passes — no imports, no runtime dependencies. `VOXEL_VSH`/`VOXEL_FSH` morph every instanced cube between its three addresses (measured tree, Itten sphere, flattened atlas page) and light it; `HALO_VSH`/`HALO_FSH` add a soft additive glow behind each voxel in 3D; `GRID_VSH`/`GRID_FSH` draw the LINEAR-scale page's complete synthetic grid; `RING_VSH`/`RING_FSH` mark where the measured chips actually sit inside that ideal field.\n\n## Import\n```js\nimport { VOXEL_VSH, VOXEL_FSH } from '../utils/shaders';\n```",
+      "ref": {
+        "module": "../utils/shaders",
+        "name": "VOXEL_VSH"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "shaders utils",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

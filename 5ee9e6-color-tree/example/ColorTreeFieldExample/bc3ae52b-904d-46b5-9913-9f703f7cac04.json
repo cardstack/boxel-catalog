@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "pick": {
+        "hex": null,
+        "munsell": null
+      },
+      "title": "Color Tree Field — fresh",
+      "description": "A fresh instance: open the atlas in the studio below and hold a spot on the page to make your first pick.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../color-tree-field-playground-example",
+        "name": "ColorTreeFieldExample"
+      }
+    }
+  }
+}

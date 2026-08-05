@@ -1,0 +1,168 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Color Tree",
+      "summary": "Pick colors the way a colorist does — and see why real color refuses to be a sphere. Color Tree is a field after John Maeda's exploratory study that renders the Munsell color system — the century-old standard describing any color by hue, value (lightness), and chroma (intensity), written like 5G 5/8 — as a living 3D solid, and makes that solid your color picker: one `contains(ColorTreeField)` gives any card the studio as its edit format, and the field stores the picked hex with its Munsell notation. Because Albert Munsell measured human perception, every hue reaches its peak intensity at its own lightness, so the solid grows into a lopsided tree; press TO ITTEN to morph it into the perfect sphere Bauhaus color theorist Johannes Itten imagined, and watch exactly where the idealized model bends the truth. Use it to compare two brand accents at equal lightness, find the most saturated teal that still reads on a dark background, or teach why yellow feels lighter than purple.\n\nOpen the demo: the picker sits on the example card as its edit format — drag to tumble the tree, turn on SOUND for the ambient room tone that breathes with your controls, then open the atlas and leaf through the color pages; hold any chip to copy its hex, and the pick lands in the field with its Munsell notation, shown by the compact embedded and atom formats beside it.\n\nFor AI agents and card authors, the implementation is documented per-export in the specs for reuse: the pure Munsell math (`maxChroma`, `chipHex`, `buildArrays`), the `TreeEngine` three.js patterns (shared uniforms, analytic picking without a raycaster), the GLSL morph shaders, and the WebAudio ambient layer. Findable as: color picker, color field, Munsell, Itten, color theory, color wheel, 3D color space, hue value chroma, perceptual color.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/color-tree-field"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/color-tree-studio"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/color-tree-field-example"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/9d5f8ff4-db84-4f9c-a67b-efd0ad20f56a"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/919d5f8f-f4db-444f-9c66-7befd0ad20f5"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/util-shaders"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/db844f9c-667b-4fd0-ad20-f56a876b907a"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/efd0ad20-f56a-476b-907a-80841bbc2d5a"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/9c667bef-d0ad-40f5-aa87-6b907a80841b"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/d0ad20f5-6a87-4b90-ba80-841bbc2d5ac4"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/f56a876b-907a-4084-9bbc-2d5ac497cb20"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/ad20f56a-876b-407a-8084-1bbc2d5ac497"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/6a876b90-7a80-441b-bc2d-5ac497cb204d"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/f4db844f-9c66-4bef-90ad-20f56a876b90"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../Spec/844f9c66-7bef-40ad-a0f5-6a876b907a80"
+        }
+      },
+      "specs.15": {
+        "links": {
+          "self": "../Spec/7befd0ad-20f5-4a87-ab90-7a80841bbc2d"
+        }
+      },
+      "specs.16": {
+        "links": {
+          "self": "../Spec/667befd0-ad20-456a-876b-907a80841bbc"
+        }
+      },
+      "specs.17": {
+        "links": {
+          "self": "../Spec/4f9c667b-efd0-4d20-b56a-876b907a8084"
+        }
+      },
+      "specs.18": {
+        "links": {
+          "self": "../../Spec/code-snippet"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../example/ColorTreeFieldExample/dc3c493e-5883-4f74-b6e4-63d2b75795c6"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../example/ColorTreeFieldExample/bc3ae52b-904d-46b5-9913-9f703f7cac04"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/field"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/design-creative"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/color-tree-62294a09.png"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/01-munsell-tree.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/02-itten-sphere.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/03-studio-controls.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/04-atlas-hue-leaf.png"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "FieldListing"
+      }
+    }
+  }
+}

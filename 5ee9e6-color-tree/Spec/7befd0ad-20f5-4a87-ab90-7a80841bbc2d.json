@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# lerpWrapDeg\n\n## Summary\n\nSmoothstep-interpolates the display hue angle (`HUE_DEG`, in HSL degrees) at a fractional hue position `h` in `[0, 1)`, taking the short way around the 360\u00b0 circle so interpolation never sweeps through the wrong hues. Returns a degree value normalized to `[0, 360)`.\n\n## Import\n\n```javascript\nimport { lerpWrapDeg } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nlet deg = lerpWrapDeg(0.05); // display angle between 5R and 5YR\n```",
+      "ref": {
+        "module": "../utils/munsell",
+        "name": "lerpWrapDeg"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "lerpWrapDeg",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
