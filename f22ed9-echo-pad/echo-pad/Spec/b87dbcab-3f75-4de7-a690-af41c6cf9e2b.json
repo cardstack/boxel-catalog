@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "Fitted views for all 16 preview sizes via container queries: badge (mark only), strips, tiles and cards, each with the ink glance and echo badge where space allows.",
+      "ref": {
+        "module": "../components/formats",
+        "name": "EchoPadFitted"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "EchoPadFitted",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
