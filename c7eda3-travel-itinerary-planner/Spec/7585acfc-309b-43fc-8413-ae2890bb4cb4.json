@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# parsePlanJson\n\nParses the AI planner's JSON reply into a `PlannedTrip` (days of stops with categories and times); returns null on malformed input so the caller can re-prompt instead of crashing.\n\n```ts\nconst plan = parsePlanJson(response);\n```\n",
       "ref": {
         "module": "../utils/index",
         "name": "parsePlanJson"

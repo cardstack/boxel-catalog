@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# LetterGradeField\n\n## Summary\n\nLetterGradeField is the letter-grade enum the grading skill is allowed to award — a `StringField` enum over A, B, C, D, E, and F. It backs `GradeField.overallGrade`, so the edit UI renders a picker rather than free text and the grading skill can only patch in a value from the scale it was given.\n\n## Import\n\n```js\nimport { LetterGradeField } from '../homework-grader';\n```\n\n## Usage as a Field\n\n```ts\n@field overallGrade = contains(LetterGradeField);\n```\n\n## Template Usage\n\n```handlebars\n{{@model.overallGrade}}\n```\n",
+      "ref": {
+        "name": "LetterGradeField",
+        "module": "../homework-grader"
+      },
+      "specType": "field",
+      "containedExamples": null,
+      "cardTitle": "LetterGradeField",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    }
+  }
+}

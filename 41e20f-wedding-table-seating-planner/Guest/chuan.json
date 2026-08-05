@@ -20,7 +20,8 @@
       "photo": {
         "url": "https://pngimg.com/uploads/minions/minions_PNG27.png",
         "sourceMode": "url"
-      }
+      },
+      "dietary": []
     },
     "relationships": {
       "parentGuest": {

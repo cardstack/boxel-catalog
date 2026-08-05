@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Wordle\n\n## Summary\n\nA self-contained Wordle clone (5-letter word list, typed guesses, per-letter scoring) extending `Game` so it can sit in the BlogApp games rail. Fitted tiers render a compact playable teaser.\n\n## Import\n\n```js\nimport { Wordle } from '../games/wordle';\n```\n",
+      "ref": {
+        "module": "../games/wordle",
+        "name": "Wordle"
+      },
+      "specType": "card",
+      "containedExamples": null,
+      "cardTitle": "Wordle",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

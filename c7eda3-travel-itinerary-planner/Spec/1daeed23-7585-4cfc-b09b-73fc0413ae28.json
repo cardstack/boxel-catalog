@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# categoryOption\n\nLooks up the `CategoryOption` record (label + color) for a category value from `TRIP_CATEGORIES`; returns undefined for unknown values.\n\n```ts\nimport { categoryOption } from '../utils/index';\n```\n",
       "ref": {
         "module": "../utils/index",
         "name": "categoryOption"

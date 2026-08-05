@@ -1,11 +1,15 @@
-import { getOwner } from '@ember/owner';
-import Service from '@ember/service';
 import { visit, waitFor, waitUntil } from '@ember/test-helpers';
 
 import { getService } from '@universal-ember/test-support';
-import { module, skip } from 'qunit';
+import { module, test } from 'qunit';
 
-import { setupLocalIndexing } from '@cardstack/host/tests/helpers';
+import {
+  setupLocalIndexing,
+  setupAuthEndpoints,
+  setupUserSubscription,
+  setCatalogRealmURL,
+} from '@cardstack/host/tests/helpers';
+import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 // The test file is served from the catalog realm, so its own URL tells us
@@ -15,14 +19,19 @@ import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const CATALOG_READINESS_URL = `${catalogRealmURL}_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson`;
 
-class StubHostModeService extends Service {
-  get isActive() {
-    return true;
-  }
-
-  get hostModeOrigin() {
-    return 'http://localhost:4201';
-  }
+// Force host mode on the real service instance rather than registering a
+// stub class: the index route leans on the rest of its interface (routing
+// map, head template, …), which must keep working.
+function forceHostMode() {
+  let hostModeService = getService('host-mode-service');
+  Object.defineProperty(hostModeService, 'isActive', {
+    get: () => true,
+    configurable: true,
+  });
+  Object.defineProperty(hostModeService, 'hostModeOrigin', {
+    get: () => new URL(catalogRealmURL).origin,
+    configurable: true,
+  });
 }
 
 export function runTests() {
@@ -30,16 +39,24 @@ export function runTests() {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
 
-    hooks.beforeEach(function () {
-      getOwner(this)!.register(
-        'service:host-mode-service',
-        StubHostModeService,
-      );
+    // Unlike the other suites this one renders the REAL catalog realm the
+    // live-test run serves, not a mock — the login is mocked, the content
+    // is not. That makes it the smoke test for the shipped catalog: a
+    // broken index card or module in real content fails here and nowhere
+    // else.
+    setupMockMatrix(hooks, {
+      loggedInAs: '@testuser:localhost',
+      activeRealms: [],
     });
 
-    // CS-9919 - Skipping this test for now as the catalog realm is now setup only in
-    // part for speed in host tests.
-    skip('visiting /catalog/ renders the catalog index card', async function (assert) {
+    hooks.beforeEach(function () {
+      setupUserSubscription();
+      setupAuthEndpoints();
+      setCatalogRealmURL(catalogRealmURL);
+      forceHostMode();
+    });
+
+    test('visiting /catalog/ renders the catalog index card', async function (assert) {
       let realmServer = getService('realm-server');
       await realmServer.ready;
       await ensureCatalogRealmReady();

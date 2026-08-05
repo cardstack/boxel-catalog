@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# CategoryField\n\n## Summary\n\nCategoryField is the guest-relationship enum used across the planner — a `StringField` enum whose options come from `GUEST_CATEGORIES` in `../utils/index`: Bride's Family, Groom's Family, Close Friend, Friends, College, Colleagues, and Others. Each option carries a swatch color (via `categoryColor`) that drives the colored dots on the guest rail, seat markers, and fitted views, and a display label (via `categoryLabel`). The AI seat-arranger skill also reads this category to keep related parties together.\n\n## Import\n\n```js\nimport { CategoryField } from '../guest';\n```\n\n## Usage as a Field\n\n```ts\n@field category = contains(CategoryField);\n```\n\n## Template Usage\n\n```handlebars\n{{categoryLabel @model.category}}\n```\n\nPair with `categoryColor` from `../utils/index` for the category's swatch color.\n",
+      "ref": {
+        "module": "../guest",
+        "name": "CategoryField"
+      },
+      "specType": "field",
+      "containedExamples": null,
+      "cardTitle": "CategoryField",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

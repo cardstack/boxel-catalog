@@ -15,7 +15,11 @@
         "summary": null,
         "cardThumbnailURL": null
       },
-      "fullName": "Amy"
+      "fullName": "Amy",
+      "photo": {
+        "url": null,
+        "sourceMode": null
+      }
     },
     "relationships": {
       "cardInfo.theme": {

@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# DietaryField\n\n## Summary\n\nDietaryField is the dietary-restriction enum used on Guest — a `StringField` enum whose options come from `DIETARY_OPTIONS` in `../utils/index`: Vegetarian, Vegan, Halal, Kosher, Gluten-free, Dairy-free, Nut Allergy, and Shellfish Allergy. Guests hold it in a `containsMany`, since one guest can carry several restrictions at once; `dietaryLabel` maps a value back to its display label.\n\n## Import\n\n```js\nimport { DietaryField } from '../guest';\n```\n\n## Usage as a Field\n\n```ts\n@field dietary = containsMany(DietaryField);\n```\n\n## Template Usage\n\n```handlebars\n{{#each @model.dietary as |d|}}{{dietaryLabel d}}{{/each}}\n```\n",
+      "ref": {
+        "module": "../guest",
+        "name": "DietaryField"
+      },
+      "specType": "field",
+      "containedExamples": null,
+      "cardTitle": "DietaryField",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

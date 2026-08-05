@@ -1,4 +1,7 @@
-import { makeMinimalPng } from '@cardstack/host/tests/helpers';
+import {
+  makeMinimalPng,
+  realmConfigCardJSON,
+} from '@cardstack/host/tests/helpers';
 
 export const authorCardSource = `
   import { field, contains, linksTo, CardDef } from 'https://cardstack.com/base/card-api';
@@ -783,11 +786,11 @@ export function makeDestinationRealmContents(): Record<
         },
       },
     },
-    '.realm.json': {
+    'realm.json': realmConfigCardJSON({
       name: 'Test Workspace B',
       backgroundURL:
         'https://i.postimg.cc/VNvHH93M/pawel-czerwinski-Ly-ZLa-A5jti-Y-unsplash.jpg',
       iconURL: 'https://i.postimg.cc/L8yXRvws/icon.png',
-    },
+    }),
   };
 }
