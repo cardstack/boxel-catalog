@@ -64,6 +64,33 @@ jobs:
         run: pnpm register-realm-users
         working-directory: packages/matrix
 
+      # Content-only PRs (listing folders, taxonomy instances, screenshots)
+      # cannot change the outcome of the mock-realm acceptance suites or the
+      # field rendering tests — catalog-app never imports listing content —
+      # so they run only the real-catalog-app smoke test, which renders the
+      # actual realm and is the test that guards shipped content. Any file
+      # under an app-code path or at the repo root selects the full suite,
+      # as does a push to main, so misclassified paths are caught right
+      # after merge at the latest.
+      - name: Decide test scope
+        id: scope
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # case patterns are fnmatch, not pathname globs: * crosses /,
+          # so catalog-app/* matches catalog-app/components/x.gts too.
+          content_only=true
+          while IFS= read -r changed; do
+            case "$changed" in
+              catalog-app/*|commands/*|fields/*|tests/*|.github/*) content_only=false ;;
+              */*) ;;
+              *) content_only=false ;;
+            esac
+          done < <(gh api "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}/files" --paginate --jq '.[].filename')
+          echo "content_only=$content_only" >> "$GITHUB_OUTPUT"
+          echo "Test scope: $([ "$content_only" = true ] && echo 'content-only — smoke test' || echo 'full suite')"
+
       - name: Live test suite
         run: dbus-run-session -- pnpm test:live
         working-directory: packages/host
@@ -72,6 +99,7 @@ jobs:
           # Pass the realm URL via env — live-test-wait-for-servers.sh /
           # testem-live.js read $REALM_URL and ignore positional args.
           REALM_URL: https://localhost:4201/catalog/
+          LIVE_TEST_FILTER: ${{ steps.scope.outputs.content_only == 'true' && '/real catalog app|base field specs/' || '' }}
 
       - name: Upload junit report
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # 4.6.1
