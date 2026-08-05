@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# layout module (shared)\n\n## Summary\n\nCross-listing reference to the catalog's shared layout module (`Layout`, `TitleGroup`, `setBackgroundImage`, `LayoutFilter`) that drives the BlogApp admin view. Documented so the listing's dependency graph is explicit; the module's own listing carries the full README.\n",
+      "ref": {
+        "module": "../../components/layout",
+        "name": "default"
+      },
+      "specType": "component",
+      "containedExamples": null,
+      "cardTitle": "layout (shared)",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

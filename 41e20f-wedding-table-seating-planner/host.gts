@@ -9,6 +9,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import CrownIcon from '@cardstack/boxel-icons/crown';
+import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 
 import { Person } from './person';
 import { initialsOf } from './utils/index';
@@ -30,7 +31,21 @@ export class Host extends Person {
   static displayName = 'Host';
   static icon = CrownIcon;
 
+  // The edit form renders subclass fields before inherited ones, so
+  // fullName/photo are re-declared here to hoist identity to the top; role is
+  // the only host-specific input; computed title stays last.
+
+  @field fullName = contains(StringField);
+
+  @field photo = contains(ImageSourceField);
+
   @field role = contains(RoleField);
+
+  @field title = contains(StringField, {
+    computeVia: function (this: Host) {
+      return this.fullName?.trim() || 'Unnamed Host';
+    },
+  });
 
   static embedded = class Embedded extends Component<typeof this> {
     get initials() {

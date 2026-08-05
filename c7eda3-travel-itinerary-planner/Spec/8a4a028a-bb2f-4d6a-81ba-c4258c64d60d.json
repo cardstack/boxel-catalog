@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# ItineraryStop\n\n## Summary\n\nOne stop on the trip: a geo-searchable `location`, `day` number, `startTime`/`endTime`, a trip `category` enum, an `estimatedCost` number (the stop's expected spend, summed into the card's `estimatedTotalCost`), and free-form `notes`. Held by the planner in a `containsMany`, so stops serialize with the trip.\n\n## Usage as a Field\n\n```ts\n@field stops = containsMany(ItineraryStop);\n```\n",
       "ref": {
         "module": "../travel-itinerary",
         "name": "ItineraryStop"

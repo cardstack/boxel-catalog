@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Game\n\n## Summary\n\nMinimal base card for the blog's games rail — concrete games (Wordle, TicTacToe) extend it so `BlogApp.games = linksToMany(Game)` can hold any of them.\n\n## Import\n\n```js\nimport { Game } from '../games/game';\n```\n",
+      "ref": {
+        "module": "../games/game",
+        "name": "Game"
+      },
+      "specType": "card",
+      "containedExamples": null,
+      "cardTitle": "Game",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

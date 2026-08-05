@@ -16,7 +16,14 @@
         "cardThumbnailURL": null
       },
       "fullName": "Yvonne",
-      "category": "grooms-family"
+      "category": "grooms-family",
+      "dietary": [
+        "halal"
+      ],
+      "photo": {
+        "url": null,
+        "sourceMode": null
+      }
     },
     "relationships": {
       "parentGuest": {

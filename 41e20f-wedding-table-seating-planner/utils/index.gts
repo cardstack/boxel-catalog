@@ -68,6 +68,25 @@ export function categoryLabel(value: string | null | undefined): string {
   return (value && GUEST_CATEGORY_MAP[value]?.label) || '';
 }
 
+export const DIETARY_OPTIONS: Option[] = [
+  { value: 'vegetarian', label: 'Vegetarian' },
+  { value: 'vegan', label: 'Vegan' },
+  { value: 'halal', label: 'Halal' },
+  { value: 'kosher', label: 'Kosher' },
+  { value: 'gluten-free', label: 'Gluten-free' },
+  { value: 'dairy-free', label: 'Dairy-free' },
+  { value: 'nut-allergy', label: 'Nut Allergy' },
+  { value: 'shellfish-allergy', label: 'Shellfish Allergy' },
+];
+
+const DIETARY_LABELS: Record<string, string> = Object.fromEntries(
+  DIETARY_OPTIONS.map((o) => [o.value, o.label]),
+);
+
+export function dietaryLabel(value: string | null | undefined): string {
+  return (value && DIETARY_LABELS[value]) || '';
+}
+
 export function categoryColor(value: string | null | undefined): string {
   return (value && GUEST_CATEGORY_MAP[value]?.color) || '#c5a35c';
 }

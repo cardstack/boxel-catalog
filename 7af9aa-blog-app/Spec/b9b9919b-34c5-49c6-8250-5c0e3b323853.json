@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# categoryStyle\n\n## Summary\n\nReturns the inline style for a category pill: the category's color as background and a contrast-derived text color via `getContrastColor` — the pill stays readable whatever color an editor picks.\n\n```js\nimport { categoryStyle } from '../blog-category';\n```\n",
+      "ref": {
+        "module": "../blog-category",
+        "name": "categoryStyle"
+      },
+      "specType": null,
+      "containedExamples": null,
+      "cardTitle": "categoryStyle",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

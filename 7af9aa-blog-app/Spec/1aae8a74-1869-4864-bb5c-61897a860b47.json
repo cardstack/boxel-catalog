@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# formatDatetime\n\n## Summary\n\n`Intl.DateTimeFormat('en-US', opts).format(datetime)` — the blog's shared date formatter. `toISOString` (same module) feeds `<time datetime>` attributes.\n\n```js\nimport { formatDatetime, toISOString } from '../blog-defaults';\n```\n",
+      "ref": {
+        "module": "../blog-defaults",
+        "name": "formatDatetime"
+      },
+      "specType": null,
+      "containedExamples": null,
+      "cardTitle": "formatDatetime",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

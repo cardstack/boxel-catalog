@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# matchCategory\n\nFuzzy-matches a raw category string (e.g. from the AI planner) onto one of the canonical `TRIP_CATEGORIES` values; returns undefined when nothing matches.\n\n```ts\nmatchCategory('dining'); // 'Food & Dining'\n```\n",
       "ref": {
         "module": "../utils/index",
         "name": "matchCategory"

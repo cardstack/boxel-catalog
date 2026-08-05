@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "TravelItinerary",
-        "module": "@cardstack/catalog/c7eda3-travel-itinerary-planner/travel-itinerary"
+        "module": "../travel-itinerary"
       }
     },
     "type": "card",
@@ -23,11 +23,12 @@
             "value": "12:30"
           },
           "category": "Museum",
-          "notes": "Book timed entry in advance to skip lines; arrive early for smaller crowds on Tuesday morning."
+          "notes": "Book timed entry in advance to skip lines; arrive early for smaller crowds on Tuesday morning.",
+          "estimatedCost": 25
         },
         {
           "location": {
-            "searchKey": "Caf\u00e9 Marly",
+            "searchKey": "Café Marly",
             "lat": 48.8609,
             "lon": 2.337
           },
@@ -38,8 +39,9 @@
           "endTime": {
             "value": "14:00"
           },
-          "category": "Caf\u00e9 & Coffee",
-          "notes": "Overlooks the Louvre courtyard; reserve a table by the window for views while you eat."
+          "category": "Café & Coffee",
+          "notes": "Overlooks the Louvre courtyard; reserve a table by the window for views while you eat.",
+          "estimatedCost": 42
         },
         {
           "location": {
@@ -55,7 +57,8 @@
             "value": "16:00"
           },
           "category": "Culture & History",
-          "notes": "Famous for stained glass windows; visit in late afternoon when light illuminates the glass best."
+          "notes": "Famous for stained glass windows; visit in late afternoon when light illuminates the glass best.",
+          "estimatedCost": 49
         },
         {
           "location": {
@@ -71,11 +74,12 @@
             "value": "11:00"
           },
           "category": "Sightseeing",
-          "notes": "Climb to the top for panoramic views of Paris; arrive early to avoid crowds on weekday morning."
+          "notes": "Climb to the top for panoramic views of Paris; arrive early to avoid crowds on weekday morning.",
+          "estimatedCost": 0
         },
         {
           "location": {
-            "searchKey": "Mus\u00e9e de l'Orangerie",
+            "searchKey": "Musée de l'Orangerie",
             "lat": 48.8637,
             "lon": 2.3227
           },
@@ -87,7 +91,8 @@
             "value": "12:45"
           },
           "category": "Museum",
-          "notes": "Home to Monet's Water Lilies and Impressionist masterpieces; smaller, quieter museum than Louvre."
+          "notes": "Home to Monet's Water Lilies and Impressionist masterpieces; smaller, quieter museum than Louvre.",
+          "estimatedCost": 33
         }
       ],
       "cardInfo": {
@@ -108,12 +113,15 @@
       },
       "shareTripCode": {
         "data": "https://localhost:4201/catalog/travel-itinerary/TravelItinerary/7e50c44f-7124-4347-b48d-b2433896fb6e.json"
+      },
+      "currency": {
+        "code": "USD"
       }
     },
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": "../Theme/airbnb"
+          "self": "../Theme/tropic-lagoon"
         }
       },
       "cardInfo.cardThumbnail": {

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# ItineraryStopEmbedded\n\n## Summary\n\nThe compact stop row used in the itinerary list: category-colored rail and dot, location name, day/time/category meta chips, and an `~$N` cost chip when the stop has an `estimatedCost`. Category color comes from `categoryStyle` so the rail, dot, and chips stay in one hue.\n\n## Usage\n\n```ts\nItineraryStop.embedded = ItineraryStopEmbedded;\n```\n",
       "ref": {
         "module": "../components/ti-stop",
         "name": "ItineraryStopEmbedded"

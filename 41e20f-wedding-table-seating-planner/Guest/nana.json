@@ -16,7 +16,14 @@
         "cardThumbnailURL": null
       },
       "category": "others",
-      "fullName": "Nana"
+      "fullName": "Nana",
+      "dietary": [
+        "vegetarian"
+      ],
+      "photo": {
+        "url": null,
+        "sourceMode": null
+      }
     },
     "relationships": {
       "parentGuest": {

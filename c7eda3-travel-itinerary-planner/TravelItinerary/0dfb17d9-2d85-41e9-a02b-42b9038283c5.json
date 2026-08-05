@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "TravelItinerary",
-        "module": "@cardstack/catalog/c7eda3-travel-itinerary-planner/travel-itinerary"
+        "module": "../travel-itinerary"
       }
     },
     "type": "card",
@@ -23,6 +23,7 @@
             "value": "09:30"
           },
           "category": "Nature & Outdoors",
+          "estimatedCost": 0,
           "notes": "Arrive early to beat the crowds and catch the best morning light over the terraces."
         },
         {
@@ -39,6 +40,7 @@
             "value": "11:30"
           },
           "category": "Culture & History",
+          "estimatedCost": 42,
           "notes": "Sacred Hindu water temple — dress modestly and rent a sarong at the entrance if needed."
         },
         {
@@ -55,6 +57,7 @@
             "value": "13:30"
           },
           "category": "Culture & History",
+          "estimatedCost": 49,
           "notes": "Stroll the ornate royal palace grounds right in the heart of Ubud town."
         },
         {
@@ -71,6 +74,7 @@
             "value": "14:30"
           },
           "category": "Shopping",
+          "estimatedCost": 81,
           "notes": "Browse local crafts, textiles and souvenirs — bargaining is expected and part of the fun."
         },
         {
@@ -87,6 +91,7 @@
             "value": "16:00"
           },
           "category": "Café & Coffee",
+          "estimatedCost": 43,
           "notes": "A beloved local café for a relaxed afternoon coffee and Indonesian snacks after a full morning."
         },
         {
@@ -103,6 +108,7 @@
             "value": "19:00"
           },
           "category": "Sightseeing",
+          "estimatedCost": 10,
           "notes": "One of Bali's most iconic sea temples — time your visit for the spectacular sunset view."
         },
         {
@@ -119,6 +125,7 @@
             "value": "11:00"
           },
           "category": "Culture & History",
+          "estimatedCost": 37,
           "notes": "Perched on a clifftop 70 m above the ocean — watch out for cheeky monkeys and keep valuables tucked away."
         },
         {
@@ -135,6 +142,7 @@
             "value": "13:30"
           },
           "category": "Food & Dining",
+          "estimatedCost": 54,
           "notes": "Relaxed clifftop restaurant above Uluwatu with great food and sweeping ocean views — perfect for a long lunch."
         },
         {
@@ -151,6 +159,7 @@
             "value": "18:00"
           },
           "category": "Relaxation",
+          "estimatedCost": 51,
           "notes": "Wind down the trip with a leisurely afternoon on one of Bali's most beautiful beaches — catch the sunset from the shore."
         }
       ],
@@ -171,13 +180,21 @@
         "searchKey": "Bali, Indonesia"
       },
       "shareTripCode": {
-        "data": null
+        "data": null,
+        "config": {
+          "foreground": null,
+          "background": null,
+          "margin": null
+        }
+      },
+      "currency": {
+        "code": "USD"
       }
     },
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": "../Theme/airbnb"
+          "self": null
         }
       },
       "cardInfo.cardThumbnail": {

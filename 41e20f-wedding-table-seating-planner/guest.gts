@@ -2,6 +2,7 @@ import {
   Component,
   field,
   contains,
+  containsMany,
   linksTo,
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
@@ -12,6 +13,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import UserIcon from '@cardstack/boxel-icons/user';
+import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 
 import { Person } from './person';
 import {
@@ -19,10 +21,16 @@ import {
   GUEST_CATEGORIES,
   categoryLabel,
   categoryColor,
+  DIETARY_OPTIONS,
+  dietaryLabel,
 } from './utils/index';
 
 export const CategoryField = enumField(StringField, {
   options: GUEST_CATEGORIES.map(({ value, label }) => ({ value, label })),
+});
+
+export const DietaryField = enumField(StringField, {
+  options: DIETARY_OPTIONS.map(({ value, label }) => ({ value, label })),
 });
 
 function swatch(color: string | null | undefined) {
@@ -33,11 +41,23 @@ export class Guest extends Person {
   static displayName = 'Guest';
   static icon = UserIcon;
 
+  // Fields follow the order a planner fills them in. The edit form renders
+  // subclass fields before inherited ones, so fullName/photo are re-declared
+  // here to hoist identity to the top; computed title stays last.
+
+  @field fullName = contains(StringField);
+
+  @field photo = contains(ImageSourceField);
+
   @field category = contains(CategoryField);
 
-  @field parentGuest = linksTo(() => Guest); // set on a +1 → the inviting guest
-
   @field vip = contains(BooleanField);
+
+  // dietary restrictions / meal needs the caterer must know about;
+  // containsMany because one guest can carry several (e.g. vegan + nut allergy)
+  @field dietary = containsMany(DietaryField);
+
+  @field parentGuest = linksTo(() => Guest); // set on a +1 → the inviting guest
 
   @field title = contains(StringField, {
     computeVia: function (this: Guest) {
@@ -73,6 +93,14 @@ export class Guest extends Person {
                 style={{swatch (categoryColor @model.category)}}
               ></span>
               {{categoryLabel @model.category}}
+            </span>
+          {{/if}}
+          {{#if @model.dietary.length}}
+            <span class='g-diet'>
+              {{#each @model.dietary as |d index|}}{{if
+                  index
+                  ' · '
+                }}{{dietaryLabel d}}{{/each}}
             </span>
           {{/if}}
         </span>
@@ -139,7 +167,7 @@ export class Guest extends Person {
         }
         .g-vip {
           flex: none;
-          font: 600 8px
+          font: 600 11px
             var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
           letter-spacing: 0.12em;
           color: var(--tsp-foreground, var(--foreground, #22283f));
@@ -159,6 +187,13 @@ export class Guest extends Person {
           height: 10px;
           border-radius: 50%;
           flex: none;
+        }
+        .g-diet {
+          font-size: 11px;
+          color: var(--tsp-accent-deep, #a5854a);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .g-party {
           flex: none;
@@ -872,6 +907,18 @@ export class Guest extends Person {
       this.args.model.vip = !this.args.model.vip;
     };
 
+    dietaryOptions = DIETARY_OPTIONS;
+
+    isDietary = (value: string) =>
+      (this.args.model.dietary ?? []).includes(value);
+
+    toggleDietary = (value: string) => {
+      let current = this.args.model.dietary ?? [];
+      this.args.model.dietary = current.includes(value)
+        ? current.filter((v: string) => v !== value)
+        : [...current, value];
+    };
+
     <template>
       <article class='iso {{unless this.hasLinkedTheme "tsp-default-theme"}}'>
 
@@ -952,6 +999,24 @@ export class Guest extends Person {
         {{else}}
           <p class='iso-empty-line'>Attending on their own invitation.</p>
         {{/if}}
+
+        <header class='iso-sect' aria-label='Dietary'>
+          <span class='iso-sect-no'>02</span>
+          <span class='iso-sect-title'>Dietary Needs</span>
+          <span class='iso-rule'></span>
+        </header>
+        <div class='iso-cats' aria-label='Dietary restrictions'>
+          {{#each this.dietaryOptions as |opt|}}
+            <button
+              type='button'
+              aria-pressed={{if (this.isDietary opt.value) 'true' 'false'}}
+              class='iso-catchip {{if (this.isDietary opt.value) "is-on"}}'
+              {{on 'click' (fn this.toggleDietary opt.value)}}
+            >
+              {{opt.label}}
+            </button>
+          {{/each}}
+        </div>
 
         <footer class='iso-colophon'>
           <span class='iso-rule'></span>

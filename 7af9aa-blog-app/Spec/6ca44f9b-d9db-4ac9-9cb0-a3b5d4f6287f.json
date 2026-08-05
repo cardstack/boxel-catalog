@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# sort module (shared)\n\n## Summary\n\nCross-listing reference to the catalog's shared sort module (`SortMenu`, `sortByCardTitleAsc`, `SortOption`) used by the BlogApp admin view's list ordering. Documented so the listing's dependency graph is explicit; the module's own listing carries the full README.\n",
+      "ref": {
+        "module": "../../components/sort",
+        "name": "SortMenu"
+      },
+      "specType": "component",
+      "containedExamples": null,
+      "cardTitle": "sort (shared)",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

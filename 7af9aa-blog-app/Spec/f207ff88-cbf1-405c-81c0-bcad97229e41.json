@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# TicTacToe\n\n## Summary\n\nA two-player tic-tac-toe board extending `Game` for the BlogApp games rail — win/draw detection and reset, styled to the blog look.\n\n## Import\n\n```js\nimport { TicTacToe } from '../games/tic-tac-toe';\n```\n",
+      "ref": {
+        "module": "../games/tic-tac-toe",
+        "name": "TicTacToe"
+      },
+      "specType": "card",
+      "containedExamples": null,
+      "cardTitle": "TicTacToe",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

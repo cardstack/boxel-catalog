@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# BlogCategory\n\n## Summary\n\nA content category with a display name, `shortName` for pills, a description, and a pill color. The exported `categoryStyle` helper derives the pill's text color from the background via `getContrastColor`, so any pill color stays readable.\n\n## Import\n\n```js\nimport { BlogCategory, categoryStyle } from '../blog-category';\n```\n\n## Usage\n\n```handlebars\n<div style={{categoryStyle category}}>{{category.shortName}}</div>\n```\n",
+      "ref": {
+        "module": "../blog-category",
+        "name": "BlogCategory"
+      },
+      "specType": "card",
+      "containedExamples": null,
+      "cardTitle": "BlogCategory",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

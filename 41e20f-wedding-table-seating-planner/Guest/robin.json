@@ -16,7 +16,12 @@
         "cardThumbnailURL": null
       },
       "category": "grooms-family",
-      "fullName": "Robin"
+      "fullName": "Robin",
+      "dietary": [],
+      "photo": {
+        "url": null,
+        "sourceMode": null
+      }
     },
     "relationships": {
       "parentGuest": {

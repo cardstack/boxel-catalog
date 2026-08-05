@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "TravelItinerary",
-        "module": "@cardstack/catalog/c7eda3-travel-itinerary-planner/travel-itinerary"
+        "module": "../travel-itinerary"
       }
     },
     "type": "card",
@@ -23,6 +23,7 @@
             "value": "11:00"
           },
           "category": "Culture & History",
+          "estimatedCost": 35,
           "notes": "Arrive early to beat crowds; haggle for local crafts and textiles."
         },
         {
@@ -39,6 +40,7 @@
             "value": "12:30"
           },
           "category": "Culture & History",
+          "estimatedCost": 42,
           "notes": "Remove shoes before entering; colorful Hindu temple in Chinatown's heart."
         },
         {
@@ -55,6 +57,7 @@
             "value": "15:00"
           },
           "category": "Food & Dining",
+          "estimatedCost": 59,
           "notes": "Best visited in late afternoon; try satay, char kway teow, and grilled seafood."
         },
         {
@@ -71,6 +74,7 @@
             "value": "17:00"
           },
           "category": "Culture & History",
+          "estimatedCost": 36,
           "notes": "Largest Chinese temple in Malaysia; stunning architecture and peaceful gardens."
         },
         {
@@ -87,6 +91,7 @@
             "value": "20:00"
           },
           "category": "Food & Dining",
+          "estimatedCost": 53,
           "notes": "Curated Malaysian street food stalls in a modern setting; reserve energy for variety."
         },
         {
@@ -103,6 +108,7 @@
             "value": "11:00"
           },
           "category": "Culture & History",
+          "estimatedCost": 50,
           "notes": "Book tickets online; world-class collection of Islamic artifacts and manuscripts."
         },
         {
@@ -119,6 +125,7 @@
             "value": "14:15"
           },
           "category": "Culture & History",
+          "estimatedCost": 37,
           "notes": "Restored Art Deco building; browse Malaysian handicrafts and local souvenirs."
         },
         {
@@ -135,6 +142,7 @@
             "value": "16:00"
           },
           "category": "Food & Dining",
+          "estimatedCost": 54,
           "notes": "Try nasi lemak, laksa, and rendang; ask locals for hidden gems near Central Market."
         },
         {
@@ -151,7 +159,25 @@
             "value": "18:00"
           },
           "category": "Culture & History",
+          "estimatedCost": 51,
           "notes": "Book tickets ahead; visit the Skybridge at sunset for panoramic city views."
+        },
+        {
+          "location": {
+            "searchKey": null,
+            "lat": null,
+            "lon": null
+          },
+          "day": 3,
+          "startTime": {
+            "value": "09:00"
+          },
+          "endTime": {
+            "value": "11:00"
+          },
+          "category": null,
+          "estimatedCost": null,
+          "notes": null
         }
       ],
       "cardInfo": {
@@ -171,13 +197,21 @@
         "searchKey": "Malaysia"
       },
       "shareTripCode": {
-        "data": null
+        "data": null,
+        "config": {
+          "foreground": null,
+          "background": null,
+          "margin": null
+        }
+      },
+      "currency": {
+        "code": "USD"
       }
     },
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": "../Theme/airbnb"
+          "self": "../Theme/midnight-voyager"
         }
       },
       "cardInfo.cardThumbnail": {

@@ -19,9 +19,14 @@
       }
     },
     "relationships": {
-      "linkedExamples": {
+      "linkedExamples.0": {
         "links": {
-          "self": null
+          "self": "../Guest/andy"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Host/lucas"
         }
       },
       "cardInfo.cardThumbnail": {

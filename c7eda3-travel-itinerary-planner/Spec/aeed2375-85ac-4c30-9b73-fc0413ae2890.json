@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# categoryColor\n\nReturns the hex color for a trip category value, falling back to `DEFAULT_STOP_COLOR` for unknown categories.\n\n```ts\ncategoryColor('Food & Dining');\n```\n",
       "ref": {
         "module": "../utils/index",
         "name": "categoryColor"

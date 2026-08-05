@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# onClickOutside\n\n## Summary\n\nEmber modifier firing a callback on any mousedown outside the element (registration deferred a tick so the opening click doesn't immediately close it). Used by the BlogApp and BlogPost drawers.\n\n```js\nimport { onClickOutside } from '../blog-defaults';\n```\n",
+      "ref": {
+        "module": "../blog-defaults",
+        "name": "onClickOutside"
+      },
+      "specType": null,
+      "containedExamples": null,
+      "cardTitle": "onClickOutside",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
