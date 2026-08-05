@@ -1743,10 +1743,12 @@ export class BlogPost extends CardDef {
   }
 
   get formattedAuthors() {
-    const authors = this.authors ?? [];
-    if (authors.length === 0) return undefined;
-
-    const titles = authors.map((author) => author.cardTitle);
+    // A nested render can hand us author links that haven't resolved yet, so
+    // the array has holes until they load.
+    const titles = (this.authors ?? [])
+      .map((author) => author?.cardTitle)
+      .filter(Boolean);
+    if (titles.length === 0) return undefined;
 
     if (titles.length === 2) {
       return `${titles[0]} and ${titles[1]}`;
