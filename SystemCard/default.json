@@ -10,6 +10,15 @@
       }
     },
     "relationships": {
+      "defaultSkillFiles.0": {
+        "links": {
+          "self": "@cardstack/skills/index.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/skills/index.md"
+        }
+      },
       "defaultModelConfiguration": {
         "links": {
           "self": "../ModelConfiguration/anthropic-claude-sonnet-46"
