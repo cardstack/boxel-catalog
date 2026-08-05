@@ -93,6 +93,24 @@ export function runTests() {
       assert.dom('.hamburger').hasText('✕');
     });
 
+    test('color-tree field scan dial only engages while a cut is open', async function (assert) {
+      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
+      await click('.hamburger');
+
+      assert
+        .dom('input[aria-label="scan"]')
+        .isDisabled('the scan dial is greyed out on the closed solid');
+
+      let [, scanButton] = [
+        ...document.querySelectorAll('.stage-actions button'),
+      ];
+      await click(scanButton as Element);
+
+      assert
+        .dom('input[aria-label="scan"]')
+        .isEnabled('opening the atlas engages the scan dial');
+    });
+
     test('color-tree field scout miniature toggles away over the open atlas', async function (assert) {
       await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
 

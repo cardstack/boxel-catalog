@@ -358,10 +358,15 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
     };
   });
 
-  showToast = (msg: string) => {
+  showToast = (msg: string, ms = 1800) => {
     this.toast = msg;
     clearTimeout(this.toastTimer);
-    this.toastTimer = window.setTimeout(() => (this.toast = ''), 1800);
+    this.toastTimer = window.setTimeout(() => (this.toast = ''), ms);
+  };
+
+  dismissToast = () => {
+    clearTimeout(this.toastTimer);
+    this.toast = '';
   };
 
   onPointerDown = (evt: Event) => {
@@ -532,6 +537,7 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
      page is open (>0) and which cut it shows, so scan segment, the single
      cycling button, and the drag/scrub all just set this one number */
   setSlice = (mode: number) => {
+    let changed = mode !== this.sliceMode;
     this.sliceMode = mode;
     this.layerKey = -1;
     if (this.engine) {
@@ -539,6 +545,18 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       this.engine.chartTarget = mode > 0 ? 1 : 0;
     }
     this.applyScan();
+    // announce every view change — Munsell's axes aren't obvious, and
+    // neither is the scrub gesture (hue pages turn ⟷, value cuts move ↕)
+    if (changed && mode === 1) {
+      this.showToast('HUE · a vertical leaf — drag ⟷ to turn the pages', 3000);
+    } else if (changed && mode === 2) {
+      this.showToast(
+        'VALUE · a horizontal cut — drag ↕ to move through lightness',
+        3000,
+      );
+    } else if (changed && mode === 0) {
+      this.showToast('atlas closed · the whole solid, drag to tumble', 3000);
+    }
   };
 
   get scanLabel(): string {
@@ -694,9 +712,9 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
     let cut = '';
     if (scanOpen && this.sliceMode === 1) {
       let h = this.snapScan().snapped / 2;
-      cut = ` · leaf ${hueLabel(h)} / ${hueLabel((h + 0.5) % 1)}`;
+      cut = ` · vertical leaf ${hueLabel(h)} / ${hueLabel((h + 0.5) % 1)}`;
     } else if (scanOpen && this.sliceMode === 2) {
-      cut = ` · value ${this.snapScan().key - 1000} cut`;
+      cut = ` · horizontal cut at value ${this.snapScan().key - 1000}`;
     }
     return `${state}${cut}`;
   }
@@ -708,8 +726,11 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
   /* the hint speaks to the view that's actually on stage: gestures for
      the 3D solid, page-reading for the open atlas */
   get hintText(): string {
-    if (this.atlasIsOpen) {
-      return 'swipe the atlas layer by layer · hold a spot on the open page to copy its hex';
+    if (this.sliceMode === 1) {
+      return 'drag ⟷ to turn the hue pages · hold a spot on the open page to copy its hex';
+    }
+    if (this.sliceMode === 2) {
+      return 'drag ↕ to move through the value cuts · hold a spot on the open page to copy its hex';
     }
     return 'drag to tumble · scroll to approach · double-click to refit';
   }
@@ -753,7 +774,13 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       >{{if this.panelOpen '✕' '☰'}}</button>
 
       {{#if this.toast}}
-        <div class='toast'>{{this.toast}}</div>
+        <button
+          type='button'
+          class='toast'
+          title='dismiss'
+          data-test-toast
+          {{on 'click' this.dismissToast}}
+        >{{this.toast}}<span class='toast-x'>✕</span></button>
       {{/if}}
 
       {{#if this.atlasIsOpen}}
@@ -832,15 +859,25 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
               <Button
                 @kind='text-only'
                 class='chip sq {{if (eq this.sliceMode 1) "active"}}'
+                title='vertical leaf through the trunk — drag ⟷ to turn the pages'
                 {{on 'click' (fn this.setSlice 1)}}
               >HUE</Button>
               <Button
                 @kind='text-only'
                 class='chip sq {{if (eq this.sliceMode 2) "active"}}'
+                title='horizontal cut across the trunk — drag ↕ to move through values'
                 {{on 'click' (fn this.setSlice 2)}}
               >VALUE</Button>
             </span>
           </div>
+          {{#if (eq this.sliceMode 1)}}
+            <p class='slice-note'>vertical leaf, one hue pair — drag ⟷ to turn
+              the pages</p>
+          {{/if}}
+          {{#if (eq this.sliceMode 2)}}
+            <p class='slice-note'>horizontal cut, one lightness — drag ↕ to move
+              through values</p>
+          {{/if}}
           <div class='prow'>
             <span class='label'>scan</span>
             <input
@@ -850,6 +887,12 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
               max='100'
               value={{this.slicePos}}
               aria-label='scan'
+              disabled={{eq this.sliceMode 0}}
+              title={{if
+                (eq this.sliceMode 0)
+                'open a slice or the atlas first'
+                'turn the pages of the open cut'
+              }}
               {{on 'input' this.onSlicePos}}
             />
           </div>
@@ -1187,8 +1230,37 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
           transparent
         );
         color: var(--primary-foreground, #0a1522);
+        font: inherit;
         font-size: 0.68rem;
         letter-spacing: 0.08em;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        animation: toast-glow 1.8s ease-out;
+      }
+      .toast-x {
+        opacity: 0.55;
+        font-size: 0.6rem;
+      }
+      .toast:hover .toast-x {
+        opacity: 1;
+      }
+      @keyframes toast-glow {
+        0% {
+          box-shadow: 0 0 0 0
+            color-mix(in srgb, var(--primary, #e8f1f4) 70%, transparent);
+        }
+        45% {
+          box-shadow: 0 0 22px 4px
+            color-mix(in srgb, var(--primary, #e8f1f4) 45%, transparent);
+        }
+        100% {
+          box-shadow: 0 0 0 0 transparent;
+        }
       }
       .stage-actions {
         position: absolute;
@@ -1237,6 +1309,34 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       .dial {
         width: 8.2rem;
         accent-color: var(--primary, #e8f1f4);
+      }
+      .dial:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+      .slice-note {
+        margin: -0.15rem 0 0;
+        padding: 0.2rem 0.4rem;
+        border-radius: 2px;
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+        color: var(--muted-foreground, #7e93a8);
+        animation: slice-note-pulse 2.2s ease-out;
+      }
+      @keyframes slice-note-pulse {
+        0%,
+        45% {
+          color: var(--primary-foreground, #0a1522);
+          background: color-mix(
+            in srgb,
+            var(--primary, #e8f1f4) 85%,
+            transparent
+          );
+        }
+        100% {
+          color: var(--muted-foreground, #7e93a8);
+          background: transparent;
+        }
       }
       .panel {
         position: absolute;
