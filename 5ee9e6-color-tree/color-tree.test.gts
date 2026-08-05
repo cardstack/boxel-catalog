@@ -5,7 +5,8 @@ import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { renderCard } from '@cardstack/host/tests/helpers/render-component';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import { ColorTree } from './color-tree';
+import { ColorTreeField } from './color-tree-field';
+import { ColorTreeFieldExample } from './example/color-tree-field-playground-example';
 import {
   buildArrays,
   chipHex,
@@ -18,67 +19,42 @@ import {
 import { getLoader } from '../tests/helpers/field-test-helpers';
 
 export function runTests() {
-  module('Rendering | color-tree card', function (hooks) {
+  module('Rendering | color-tree field', function (hooks) {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
 
-    test('color-tree card renders isolated view with a picked color', async function (assert) {
-      let card = new ColorTree({
-        selectedColor: '#c93a52',
-        selectedMunsell: '5R 5/10',
+    test('color-tree field example renders the studio as the edit format', async function (assert) {
+      let card = new ColorTreeFieldExample({
+        pick: new ColorTreeField({ hex: '#2e8b6a', munsell: '5G 5/8' }),
+        title: 'Color Tree Field',
       });
       await renderCard(getLoader(), card, 'isolated');
 
-      assert.dom('.room canvas.stage').exists('the WebGL stage renders');
-      assert.dom('.masthead .name').hasText('THE COLOR TREE');
-      assert.dom('.panel').exists('the control panel is open');
+      assert
+        .dom('[data-test-color-tree-field-edit] canvas.stage')
+        .exists('the edit format hosts the 3D studio');
+      assert
+        .dom('[data-test-color-tree-field-edit] .room')
+        .hasClass('compact', 'the studio runs bounded in a form');
+      assert
+        .dom('[data-test-color-tree-field-embedded]')
+        .containsText('#2e8b6a');
+      assert.dom('[data-test-color-tree-field-atom]').containsText('5G 5/8');
     });
 
-    test('color-tree card renders isolated view on a fresh instance', async function (assert) {
-      await renderCard(getLoader(), new ColorTree({}), 'isolated');
+    test('color-tree field renders the designed empty state', async function (assert) {
+      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
 
       assert
-        .dom('.room canvas.stage')
-        .exists('the stage renders with no pick saved');
+        .dom('[data-test-color-tree-field-edit] canvas.stage')
+        .exists('the studio renders with no pick saved');
+      assert
+        .dom('[data-test-color-tree-field-embedded]')
+        .containsText('no chip picked yet');
     });
 
-    test('color-tree card renders embedded view with a picked color', async function (assert) {
-      let card = new ColorTree({
-        selectedColor: '#c93a52',
-        selectedMunsell: '5R 5/10',
-      });
-      await renderCard(getLoader(), card, 'embedded');
-
-      assert.dom('.ct-embedded .detail').containsText('#c93a52');
-      assert.dom('.ct-embedded .detail').containsText('5R 5/10');
-    });
-
-    test('color-tree card renders embedded empty state', async function (assert) {
-      await renderCard(getLoader(), new ColorTree({}), 'embedded');
-
-      assert.dom('.ct-embedded .detail').hasText('no chip picked yet');
-    });
-
-    test('color-tree card renders fitted view with a picked color', async function (assert) {
-      let card = new ColorTree({
-        selectedColor: '#c93a52',
-        selectedMunsell: '5R 5/10',
-      });
-      await renderCard(getLoader(), card, 'fitted');
-
-      assert.dom('.ct-fit').containsText('5R 5/10');
-      assert.dom('.ct-fit').containsText('#c93a52');
-    });
-
-    test('color-tree card renders fitted empty state', async function (assert) {
-      await renderCard(getLoader(), new ColorTree({}), 'fitted');
-
-      assert.dom('.ct-fit').containsText('Munsell solid');
-      assert.dom('.ct-fit').containsText('no chip picked yet');
-    });
-
-    test('color-tree card hint speaks to the view on stage', async function (assert) {
-      await renderCard(getLoader(), new ColorTree({}), 'isolated');
+    test('color-tree field hint speaks to the view on stage', async function (assert) {
+      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
 
       assert.dom('.hint').containsText('drag to tumble');
       assert
@@ -102,26 +78,57 @@ export function runTests() {
         );
     });
 
-    test('color-tree card hamburger docks at the panel edge while it is open', async function (assert) {
-      await renderCard(getLoader(), new ColorTree({}), 'isolated');
+    test('color-tree field hamburger docks at the panel edge while it is open', async function (assert) {
+      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
 
-      assert.dom('.hamburger').hasClass('panel-open');
-      assert.dom('.hamburger').hasText('✕');
+      assert
+        .dom('.panel')
+        .doesNotExist('the compact studio starts with the panel closed');
+      assert.dom('.hamburger').hasText('☰');
 
       await click('.hamburger');
 
-      assert.dom('.panel').doesNotExist('the panel closes');
-      assert.dom('.hamburger').doesNotHaveClass('panel-open');
-      assert.dom('.hamburger').hasText('☰');
+      assert.dom('.panel').exists('the panel opens');
+      assert.dom('.hamburger').hasClass('panel-open');
+      assert.dom('.hamburger').hasText('✕');
     });
 
-    test('color-tree card munsellNotation formats chromatic and neutral chips', function (assert) {
+    test('color-tree field scout miniature toggles away over the open atlas', async function (assert) {
+      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
+
+      assert
+        .dom('[data-test-toggle-mini]')
+        .doesNotExist('no scout toggle while the atlas is closed');
+
+      let [, scanButton] = [
+        ...document.querySelectorAll('.stage-actions button'),
+      ];
+      await click(scanButton as Element);
+
+      assert.dom('.mini-frame').exists('the scout shows on the open atlas');
+      assert
+        .dom('[data-test-toggle-mini]')
+        .hasAttribute('aria-pressed', 'true');
+
+      await click('[data-test-toggle-mini]');
+
+      assert.dom('.mini-frame').doesNotExist('the toggle waves the scout away');
+      assert
+        .dom('[data-test-toggle-mini]')
+        .hasAttribute('aria-pressed', 'false');
+
+      await click('[data-test-toggle-mini]');
+
+      assert.dom('.mini-frame').exists('the toggle brings the scout back');
+    });
+
+    test('color-tree field munsellNotation formats chromatic and neutral chips', function (assert) {
       assert.strictEqual(munsellNotation(0, 5, 12), '5R 5/12');
       assert.strictEqual(munsellNotation(0.5, 4, 8), '5BG 4/8');
       assert.strictEqual(munsellNotation(0.3, 4, 0), 'N 4/');
     });
 
-    test('color-tree card maxChroma peaks at each hue peak and never goes negative', function (assert) {
+    test('color-tree field maxChroma peaks at each hue peak and never goes negative', function (assert) {
       assert.strictEqual(maxChroma(0, 5), 14, '5R peaks at chroma 14, value 5');
       assert.true(
         maxChroma(0, 9) < maxChroma(0, 5),
@@ -132,7 +139,7 @@ export function runTests() {
       }
     });
 
-    test('color-tree card chipHex returns a css hex color', function (assert) {
+    test('color-tree field chipHex returns a css hex color', function (assert) {
       assert.true(/^#[0-9a-f]{6}$/.test(chipHex(0, 5, 12)));
       assert.true(
         /^#[0-9a-f]{6}$/.test(chipHex(0, 5, 0)),
@@ -140,7 +147,7 @@ export function runTests() {
       );
     });
 
-    test('color-tree card hue helpers wrap around the hue circle', function (assert) {
+    test('color-tree field hue helpers wrap around the hue circle', function (assert) {
       assert.strictEqual(hueLabel(0), '5R');
       assert.strictEqual(hueLabel(0.5), '5BG');
       // between 5R (357°) and 5YR (32°) the blend crosses 0°, not 180°
@@ -148,7 +155,7 @@ export function runTests() {
       assert.true(deg >= 0 && deg < 32, `deg ${deg} takes the short way`);
     });
 
-    test('color-tree card buildArrays produces a consistent lattice', function (assert) {
+    test('color-tree field buildArrays produces a consistent lattice', function (assert) {
       let arrays = buildArrays(10, 0);
       let n = arrays.val.length;
       assert.true(n > 0, 'the lattice has chips');

@@ -1,11 +1,14 @@
 // =============================================================================
-// IsolatedColorTree — the room the specimen is held in. The isolated format
-// IS the app: tumble the solid, slice it open (HUE leaf / VALUE plane),
-// open the atlas (the same voxels laid flat as a page), morph between
-// Munsell's measured tree and Itten's idealized sphere, and pick colors
-// straight off the canvas. All WebGL work lives in utils/tree-engine.
+// ColorTreeStudio — the room the specimen is held in, as a reusable glimmer
+// component: tumble the solid, slice it open (HUE leaf / VALUE plane), open
+// the atlas (the same voxels laid flat as a page), morph between Munsell's
+// measured tree and Itten's idealized sphere, and pick colors straight off
+// the canvas. ColorTreeField's edit format renders this component — the
+// studio itself owns no field state; picks flow out through @onPick and the
+// current selection flows in through @color / @munsell. All WebGL work
+// lives in utils/tree-engine.
 // =============================================================================
-import { Component } from 'https://cardstack.com/base/card-api';
+import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
@@ -13,15 +16,31 @@ import { modifier } from 'ember-modifier';
 import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/boxel-ui/components';
+import EyeIcon from '@cardstack/boxel-icons/eye';
+import EyeOffIcon from '@cardstack/boxel-icons/eye-off';
 import { debounce } from 'lodash';
 import { HUE_TIERS, hueLabel, swatchStyle } from '../utils/munsell';
 import { TreeEngine } from '../utils/tree-engine';
-import type { ColorTree } from '../color-tree';
+
+export interface ColorTreeStudioSignature {
+  Args: {
+    /* current selection, shown in the panel's picked chip */
+    color?: string | null;
+    munsell?: string | null;
+    /* called (debounced) when the user picks a chip off the open atlas */
+    onPick?: (hex: string, notation: string) => void;
+    /* suppresses the studio's own night-sky palette when a theme is linked */
+    hasLinkedTheme?: boolean;
+    /* bounded height + panel closed by default, for field edit format */
+    compact?: boolean;
+  };
+  Element: HTMLElement;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ISOLATED — the room the specimen is held in
+   STUDIO — the room the specimen is held in
    ═══════════════════════════════════════════════════════════════════════════ */
-export class IsolatedColorTree extends Component<typeof ColorTree> {
+export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
   @tracked densityIdx = 1;
   @tracked sliceMode = 0; // 0 off · 1 hue · 2 value
   @tracked morphed = false; // false = Munsell tree · true = Itten sphere
@@ -31,7 +50,12 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
   @tracked glowPos = 50;
   @tracked contrastPos = 0;
   @tracked toast = '';
-  @tracked panelOpen = true;
+  @tracked panelOpen = !this.args.compact;
+  @tracked miniOpen = true;
+  /* untracked mirror of miniOpen — setupScene must read this one, or the
+     autotracking modifier would tear down and rebuild the engine on every
+     toggle */
+  miniPref = true;
   @tracked turnPos = 15;
   @tracked chipCount = 0;
   @tracked soundOn = false;
@@ -60,11 +84,10 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
   gLast: { a: number; b: number } | null = null;
   engine?: TreeEngine;
 
-  /* rapid picking shouldn't hammer the card with saves — the last
+  /* rapid picking shouldn't hammer the owner with saves — the last
      selection within 300ms is the one that's kept */
   saveSelection = debounce((hex: string, notation: string) => {
-    this.args.model.selectedColor = hex;
-    this.args.model.selectedMunsell = notation;
+    this.args.onPick?.(hex, notation);
   }, 300);
 
   /* ---------------------------- audio ----------------------------------
@@ -302,6 +325,7 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
 
   setupScene = modifier((canvas: HTMLCanvasElement) => {
     let engine = new TreeEngine(canvas);
+    engine.showMini = this.miniPref;
     this.engine = engine;
     this.chipCount = engine.arrays.cfr.length;
     let onResize = () => engine.resize();
@@ -487,6 +511,14 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
 
   togglePanel = () => {
     this.panelOpen = !this.panelOpen;
+  };
+
+  toggleMini = () => {
+    this.miniOpen = !this.miniOpen;
+    this.miniPref = this.miniOpen;
+    if (this.engine) {
+      this.engine.showMini = this.miniOpen;
+    }
   };
 
   onTurn = (e: Event) => {
@@ -682,21 +714,21 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
     return 'drag to tumble · scroll to approach · double-click to refit';
   }
 
-  get hasLinkedTheme() {
-    return Boolean((this.args.model as any)?.cardInfo?.theme);
-  }
-
   get selectedHex() {
-    return this.args.model.selectedColor ?? '';
+    return this.args.color ?? '';
   }
 
   get selectedNotation() {
-    return this.args.model.selectedMunsell ?? '';
+    return this.args.munsell ?? '';
   }
 
   <template>
     {{! template-lint-disable no-pointer-down-event-binding }}
-    <div class='room {{unless this.hasLinkedTheme "ct-default-theme"}}'>
+    <div
+      class='room
+        {{unless @hasLinkedTheme "ct-default-theme"}}
+        {{if @compact "compact"}}'
+    >
       <canvas
         class='stage'
         {{this.setupScene}}
@@ -725,7 +757,24 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
       {{/if}}
 
       {{#if this.atlasIsOpen}}
-        <div class='mini-frame'></div>
+        {{#if this.miniOpen}}
+          <div class='mini-frame'></div>
+        {{/if}}
+        <button
+          type='button'
+          class='mini-toggle {{if this.miniOpen "mini-open"}}'
+          data-test-toggle-mini
+          aria-pressed='{{this.miniOpen}}'
+          aria-label='Toggle 3D preview'
+          title={{if this.miniOpen 'Hide 3D preview' 'Show 3D preview'}}
+          {{on 'click' this.toggleMini}}
+        >
+          {{#if this.miniOpen}}
+            <EyeOffIcon class='mini-toggle-icon' />
+          {{else}}
+            <EyeIcon class='mini-toggle-icon' />
+          {{/if}}
+        </button>
       {{/if}}
 
       {{#each this.pickFxList key='id' as |fx|}}
@@ -925,6 +974,22 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
         --primary: #e8f1f4;
         --primary-foreground: #0a1522;
       }
+      /* field edit format: a bounded studio instead of a full-height room */
+      .room.compact {
+        height: 100%;
+        min-height: 26rem;
+      }
+      .room.compact .masthead .name {
+        font-size: 1rem;
+      }
+      .room.compact .kanji {
+        display: none;
+      }
+      /* in the bounded studio the open panel's docked ✕ would collide with
+         the masthead — the panel takes the stage, the nameplate yields */
+      .room.compact:has(.hamburger.panel-open) .masthead {
+        opacity: 0;
+      }
       .stage {
         position: absolute;
         inset: 0;
@@ -1064,6 +1129,49 @@ export class IsolatedColorTree extends Component<typeof ColorTree> {
           color-mix(in srgb, var(--border, #e8f1f4) 22%, transparent);
         pointer-events: none;
         z-index: 5;
+      }
+      .mini-toggle {
+        /* docked inside the scout frame's bottom-left corner (the frame
+           anchors at 14px/110px), so the scout can be waved away when it
+           covers the atlas page — and invited back from the same spot */
+        position: absolute;
+        left: 20px;
+        bottom: 116px;
+        width: 1.6rem;
+        height: 1.6rem;
+        display: grid;
+        place-items: center;
+        border: 1px solid
+          color-mix(in srgb, var(--border, #e8f1f4) 22%, transparent);
+        border-radius: 2px;
+        background: color-mix(
+          in srgb,
+          var(--background, #03070e) 45%,
+          transparent
+        );
+        color: var(--foreground, #e8f1f4);
+        font: inherit;
+        font-size: 0.7rem;
+        line-height: 1;
+        cursor: pointer;
+        z-index: 6;
+        transition:
+          background 0.2s ease,
+          color 0.2s ease;
+      }
+      .mini-toggle:hover {
+        background: color-mix(
+          in srgb,
+          var(--foreground, #e8f1f4) 12%,
+          transparent
+        );
+      }
+      .mini-toggle.mini-open {
+        color: var(--primary, #e8f1f4);
+      }
+      .mini-toggle-icon {
+        width: 0.95rem;
+        height: 0.95rem;
       }
       .toast {
         position: absolute;

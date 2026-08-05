@@ -83,6 +83,8 @@ export class TreeEngine {
   miniCam = new THREE.PerspectiveCamera(50, 1, 0.2, 600);
   miniFwd = new THREE.Vector3();
   miniSize = 150;
+  /* the scout can be waved away when it sits over the atlas page */
+  showMini = true;
   solid = new THREE.Group();
   uniforms = makeUniforms();
   arrays: ChipArrays;
@@ -516,7 +518,7 @@ export class TreeEngine {
 
     /* the scout: a second small pass from the same bearing, showing the
        whole solid with the current cut lit bright inside it */
-    if ((u.uChart.value as number) > 0.02) {
+    if (this.showMini && (u.uChart.value as number) > 0.02) {
       u.uMini.value = 1;
       this.miniFwd.copy(this.camera.position).normalize();
       this.miniCam.position.copy(this.miniFwd).multiplyScalar(MINI_DIST);
