@@ -148,6 +148,11 @@
           "self": "../Spec/7585acfc-309b-43fc-8413-ae2890bb4cb4"
         }
       },
+      "specs.15": {
+        "links": {
+          "self": "../Spec/2f8b06d5-4c19-4a73-b5e0-91ad3c7f6e82"
+        }
+      },
       "skills.0": {
         "links": {
           "self": "../Skill/travel-planner-skill"
