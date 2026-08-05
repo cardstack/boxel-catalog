@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# ApplyItineraryCommand\n\n## Summary\n\nWrites a planned itinerary onto a Travel Itinerary card. Input is an `ApplyItineraryInput` card carrying `cardId` (the trip to update) and `planJson` (the itinerary as the same JSON the travel-planner skill produces: `{ tripTitle, summary, stops: [{ day, name, lat, lon, startTime, endTime, notes, category }] }`), plus optional `destination`, `startDate`, and `endDate`. Only `cardId` and `planJson` are required.\n\nThe command parses the plan, refines every stop's coordinates through Photon (`geocodePlannedStops` — the LLM's coordinates are treated as a hint, not an answer), coerces each `category` to the enum via `matchCategory`, then patches the card through `PatchCardInstanceCommand`. Stops are replaced wholesale; `tripTitle` is set when the plan carries one; `dateRange` is set only when both dates are valid `YYYY-MM-DD`, so a revision that omits them leaves the card's dates alone; `destination` is geocoded so the map recenters.\n\nThe travel-planner skill exposes this to the AI Assistant as a tool, so the assistant plans conversationally and calls this once the traveller approves.\n\n## Import\n\n```js\nimport ApplyItineraryCommand from '../commands/apply-itinerary-command';\n```\n\n## Usage\n\n```js\nlet ctx = this.args.context?.commandContext;\nawait new ApplyItineraryCommand(ctx).execute({\n  cardId: this.args.model.id,\n  planJson: JSON.stringify({ tripTitle, summary, stops }),\n  destination: 'Tokyo, Japan',\n  startDate: '2026-04-02',\n  endDate: '2026-04-09',\n});\n```\n",
+      "ref": {
+        "name": "default",
+        "module": "../commands/apply-itinerary-command"
+      },
+      "specType": "command",
+      "containedExamples": [],
+      "cardTitle": "ApplyItineraryCommand",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    }
+  }
+}

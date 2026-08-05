@@ -63,6 +63,11 @@
           "self": "../Spec/5455e5c1-1d62-41c9-ae39-f2ff09da9b83"
         }
       },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/6c3d1f4a-8e52-4b07-9a31-0d7f5c8e2b46"
+        }
+      },
       "skills.0": {
         "links": {
           "self": "../Skill/dc116967-432e-4864-93aa-d7ea3f335d24"
