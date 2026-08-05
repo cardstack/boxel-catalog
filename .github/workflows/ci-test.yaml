@@ -78,6 +78,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # case patterns are fnmatch, not pathname globs: * crosses /,
+          # so catalog-app/* matches catalog-app/components/x.gts too.
           content_only=true
           while IFS= read -r changed; do
             case "$changed" in
