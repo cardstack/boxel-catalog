@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "My Analytics",
+      "layoutJson": null,
+      "cardInfo": {
+        "name": "My Analytics",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cards": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../gen-ui-dashboard",
+        "name": "GenUiDashboard"
+      }
+    }
+  }
+}

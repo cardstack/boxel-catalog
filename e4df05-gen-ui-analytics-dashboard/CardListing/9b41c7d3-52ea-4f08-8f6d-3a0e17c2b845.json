@@ -1,0 +1,133 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardListing",
+        "module": "@cardstack/catalog/catalog-app/listing/listing"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Gen UI Analytics Dashboard",
+      "summary": "Getting from a question to a chart usually means exporting data, cleaning it, and fighting a chart library — by the time the graph exists, the meeting is over. Gen UI Analytics Dashboard skips all of that: ask a question and watch the answer build itself as a chart on your wall. Drop a CSV or a screenshot onto the canvas and it becomes a dataset with a suggested chart; ask a live-web question and a search-grounded model fetches current figures with cited sources. Every chart is its own card — long-press to drag it anywhere, resize it from any edge Figma-style, undo any layout change with ⌘Z, and reuse it on other dashboards.\n\nOpen the demo to see it shine: the Tesla 2025 Analytics wall mixes a KPI tile, a revenue donut, regional bars, and a two-company delivery trend line, all built from web data. Click a tile's data button to inspect the dataset behind it, each stamped with a provenance badge — web-sourced, AI-recalled, or extracted from file. Then drop the bundled sales CSV onto the fresh dashboard and watch a chart appear in seconds, tap the sun-and-moon toggle to flip the whole wall between its night and light looks, or ask the AI assistant (the Gen UI Analyst skill ships with the listing) to build you a new view.",
+      "cardInfo": {
+        "name": "Gen UI Analytics Dashboard",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/ai"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/app"
+        }
+      },
+      "tags.2": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/dashboard"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/62a85b71-f9c6-441e-9e00-c58f06152ccc"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/1500dac5-ec73-476d-bd44-66e7a697a8ca"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/c2ae4d7c-88bb-4215-b96c-7eda6bd4901e"
+        }
+      },
+      "skills.0": {
+        "links": {
+          "self": "../Skill/gen-ui-analyst"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/data-analytics"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/ai-automation"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../GenUiDashboard/tesla-2025-analytics"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../GenUiDashboard/imported-csv-dashboard"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../GenUiDashboard/fresh-dashboard"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/01-hero-tesla-wall-23f4db80.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/02-fresh-ask-b253acb6.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/03-csv-import-a583c488.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/04-dataset-provenance-54e5691d.png"
+        }
+      },
+      "images.4": {
+        "links": {
+          "self": "../Screenshots/05-light-mode-ae8247e7.png"
+        }
+      },
+      "supportingCards.0": {
+        "links": {
+          "self": "../Theme/night-wall"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/gen-ui-analytics-e42371ed.png"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
