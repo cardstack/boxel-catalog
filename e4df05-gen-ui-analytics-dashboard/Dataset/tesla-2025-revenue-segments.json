@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla 2025 Revenue by Segment",
+      "columnsJson": "[{\"name\":\"segment\",\"type\":\"string\"},{\"name\":\"revenueBillionUsd\",\"type\":\"number\"}]",
+      "rowsJson": "[{\"segment\":\"Automotive\",\"revenueBillionUsd\":72.4},{\"segment\":\"Energy Generation & Storage\",\"revenueBillionUsd\":12.1},{\"segment\":\"Services & Other\",\"revenueBillionUsd\":10.8}]",
+      "sourceNote": "AI-recalled figures — may be outdated",
+      "sourceFileUrl": null,
+      "cardInfo": {
+        "name": "Tesla 2025 Revenue by Segment",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../dataset",
+        "name": "Dataset"
+      }
+    }
+  }
+}
