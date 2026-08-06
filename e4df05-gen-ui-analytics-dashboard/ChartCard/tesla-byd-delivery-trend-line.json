@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla vs BYD Delivery Trend (2021–2025)",
+      "chartKind": "line",
+      "dimension": {
+        "path": "year",
+        "bucket": "none"
+      },
+      "measure": {
+        "path": "deliveries",
+        "aggregate": "sum"
+      },
+      "seriesBy": "brand",
+      "span": 1,
+      "cardInfo": {
+        "name": "Tesla vs BYD Delivery Trend (2021–2025)",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "rowSpan": 1
+    },
+    "relationships": {
+      "dataset": {
+        "links": {
+          "self": "../Dataset/tesla-byd-deliveries"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../chart-card",
+        "name": "ChartCard"
+      }
+    }
+  }
+}

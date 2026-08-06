@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# GenUiDashboard\n\n## Summary\n\nA generative-UI analytics dashboard: a free-form canvas wall of linked cards where the AI answers questions by CREATING ChartCards and linking them in. Any card can live on the wall (`cards` is `linksToMany(CardDef)`) — ChartCards, Datasets, CRM records — each tile renders the linked card's embedded format, so a broken chart breaks only its own tile. Layout is Figma-style free placement: positions are pixel rects snapped to a 16px grid, persisted per-dashboard in `layoutJson` (keyed by the card id's last path segment so shipped example layouts survive a catalog install), with 8-direction drag-resize handles and one autosave on pointer release rather than per pointermove. Tiles move Figma-style: long-press anywhere on a tile (300ms) lifts it for dragging — quick clicks and presses on inner controls pass through — and every move, resize, or removal is undoable (⌘Z / ⇧⌘Z, or the on-canvas history buttons).\n\nData gets onto the wall three ways: (1) drop CSVs or images (screenshots, whiteboard photos) onto the canvas — CSVs parse locally via `parseCsv`, images go through a vision model; each file becomes its own Dataset card plus a suggested ChartCard, both linked here, with the original file written to the realm via `WriteBinaryFileCommand`; (2) type a live-web question — it goes to a search-grounded model (Perplexity Sonar) through `SendRequestViaProxyCommand`, and the cited answer lands as a Dataset (linked to its first source page) plus a ChartCard; (3) open the AI assistant with the bundled Gen UI Analyst skill via `UseAiAssistantCommand` and ask in natural language. Rows are capped to the 512KB realm card budget — never silently. A sun/moon toggle in the header switches the wall between its default Night Wall dark identity and a light scheme (ai-image-generator pattern: `data-theme` drives the themeless pin's variant; a linked theme takes over instead).\n\n## Import\n\n```js\nimport { GenUiDashboard } from '../gen-ui-dashboard';\n```\n\n## Usage\n\nCreate an instance and open it in interact mode — the isolated view IS the app. Fields:\n\n- `title` — dashboard name\n- `cards` — `linksToMany(CardDef)`: everything shown on the wall\n- `layoutJson` — `{ [cardIdSlug]: { x, y, w, h } }`, managed by the canvas; you normally never edit it by hand\n\nDrop a CSV on the canvas or click the live-web ask box to see a Dataset + ChartCard pair appear. Resize/data controls appear only on ChartCard tiles; other linked cards are just rendered.\n",
+      "ref": {
+        "name": "GenUiDashboard",
+        "module": "../gen-ui-dashboard"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "GenUiDashboard",
+      "cardDescription": "Canvas dashboard of linked cards — the AI answers questions by creating and linking ChartCards",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

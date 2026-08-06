@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla Sales in Malaysia",
+      "cardInfo": {
+        "name": "Tesla Sales in Malaysia"
+      },
+      "columnsJson": "[{\"name\":\"year\",\"type\":\"string\"},{\"name\":\"unitsSold\",\"type\":\"number\"}]",
+      "rowsJson": "[{\"year\":\"2021\",\"unitsSold\":120},{\"year\":\"2022\",\"unitsSold\":1200},{\"year\":\"2023\",\"unitsSold\":4500},{\"year\":\"2024\",\"unitsSold\":7800},{\"year\":\"2025\",\"unitsSold\":6200}]",
+      "sourceNote": "AI-recalled figures — may be outdated"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../dataset",
+        "name": "Dataset"
+      }
+    }
+  }
+}

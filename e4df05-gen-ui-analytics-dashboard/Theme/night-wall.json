@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cssVariables": ":root {\n  --background: #0f1217;\n  --foreground: #e8ecf1;\n  --card: #171c24;\n  --card-foreground: #e8ecf1;\n  --popover: #171c24;\n  --popover-foreground: #e8ecf1;\n  --primary: #5b8ff9;\n  --primary-foreground: #0f1217;\n  --secondary: #7ed9a6;\n  --secondary-foreground: #0f1217;\n  --accent: #f2cf7e;\n  --accent-foreground: #0f1217;\n  --muted: #1c2330;\n  --muted-foreground: #93a0b4;\n  --destructive: #c25668;\n  --destructive-foreground: #0f1217;\n  --border: rgba(255, 255, 255, 0.09);\n  --input: rgba(255, 255, 255, 0.09);\n  --ring: #5b8ff9;\n  --radius: 0.5rem;\n}\n.dark {\n  --background: #0f1217;\n  --foreground: #e8ecf1;\n  --card: #171c24;\n  --card-foreground: #e8ecf1;\n  --popover: #171c24;\n  --popover-foreground: #e8ecf1;\n  --primary: #5b8ff9;\n  --primary-foreground: #0f1217;\n  --secondary: #7ed9a6;\n  --secondary-foreground: #0f1217;\n  --accent: #f2cf7e;\n  --accent-foreground: #0f1217;\n  --muted: #1c2330;\n  --muted-foreground: #93a0b4;\n  --destructive: #c25668;\n  --destructive-foreground: #0f1217;\n  --border: rgba(255, 255, 255, 0.09);\n  --input: rgba(255, 255, 255, 0.09);\n  --ring: #5b8ff9;\n  --radius: 0.5rem;\n}\n",
+      "cssImports": [],
+      "cardInfo": {
+        "name": "Night Wall",
+        "summary": "The Gen UI Analytics default identity — dark analytics canvas, signal-blue primary, green/amber data accents.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "Theme",
+        "module": "@cardstack/base/card-api"
+      }
+    }
+  }
+}
