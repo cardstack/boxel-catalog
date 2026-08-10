@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# BlogApp\n\n## Summary\n\nThe blog's hero card — a full publication in one card. The isolated view is a portal with two modes: **Site** (magazine front page: draggable lead story, featured slots, Writer's Picks carousel, games rail, Latest Posts feed with category filter pills) and **Admin** (searchable card library with per-type filters and one-click create for posts/authors/categories). A left drawer carries a theme picker (any style-reference Theme card) and a drag-source library of all posts. Layout is container-query responsive to the card's own width; the `.blog-scope` token chain maps `--blog-*` design tokens onto the semantic theme vocabulary, so both --blog-* themes and plain semantic themes re-skin the site.\n\n## Import\n\n```js\nimport { BlogApp } from '../blog-app';\n```\n\n## Usage\n\nCreate one BlogApp instance per publication; drag posts from the drawer library onto the lead/featured slots. Fields: `lead` (linksTo BlogPost), `featured` (linksToMany), `games` (linksToMany Game), `filters` (admin filter list), plus `cardInfo.theme` for the site-wide look.\n",
+      "ref": {
+        "module": "../blog-app",
+        "name": "BlogApp"
+      },
+      "specType": "card",
+      "containedExamples": null,
+      "cardTitle": "BlogApp",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

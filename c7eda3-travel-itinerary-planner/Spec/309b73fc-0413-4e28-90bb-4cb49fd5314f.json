@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# normalizeTime\n\nCoerces an arbitrary value into an `HH:MM` time string, falling back to the supplied default when the input can't be parsed. Used when ingesting AI-planned stops.\n\n```ts\nnormalizeTime(raw, '09:00');\n```\n",
       "ref": {
         "module": "../utils/index",
         "name": "normalizeTime"

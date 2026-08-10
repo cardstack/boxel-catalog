@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# MapRender (shared)\n\nCross-listing reference to the shared Leaflet map component (`components/map-render`) that draws the destination map, stop markers, and routes. This Spec documents the dependency; the component's own listing carries the full README.\n",
       "ref": {
         "module": "../../components/map-render",
         "name": "MapRender"

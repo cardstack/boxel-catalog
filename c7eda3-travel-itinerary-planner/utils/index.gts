@@ -144,6 +144,15 @@ export interface PlannedStop {
   category?: string;
 }
 
+// "~$45" display string for an estimated cost; empty when unset
+export function formatCost(
+  amount?: number | null,
+  symbol?: string | null,
+): string {
+  if (!amount) return '';
+  return `~${symbol || '$'}${amount.toLocaleString('en-US')}`;
+}
+
 export function normalizeTime(value: unknown, fallback: string): string {
   if (typeof value !== 'string') return fallback;
   let m = value.trim().match(/^(\d{1,2}):(\d{2})/);

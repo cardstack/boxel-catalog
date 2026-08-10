@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# EditableField\n\n## Summary\n\nInline click-to-edit wrapper used across the blog: renders a `<:display>` block until activated (click / Enter / Space, `role='button'`), then swaps to `<:edit>` and blurs back on outside click. This is what makes the BlogPost isolated view the editor.\n\n## Import\n\n```js\nimport { EditableField } from '../components/editable-field';\n```\n\n## Usage\n\n```handlebars\n<EditableField @isEditing={{eq this.editing 'headline'}} @canEdit={{this.canEdit}} @onEdit={{fn this.set 'headline'}} @onBlur={{this.blur}}>\n  <:display><h1><@fields.cardTitle /></h1></:display>\n  <:edit><@fields.headline @format='edit' /></:edit>\n</EditableField>\n```\n",
+      "ref": {
+        "module": "../components/editable-field",
+        "name": "EditableField"
+      },
+      "specType": "component",
+      "containedExamples": null,
+      "cardTitle": "EditableField",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

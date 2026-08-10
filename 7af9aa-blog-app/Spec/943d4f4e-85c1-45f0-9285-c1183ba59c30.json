@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# LayoutCanvas\n\n## Summary\n\nThe BlogPost article canvas: named slots (featuredImage / headline / cardDescription / categories / byline / body / authorBios) arranged by a persisted `Layout` (rows of slots), with drag-to-reorder in edit contexts. Container-query responsive (`@container layout`) so the article adapts to the card's own width.\n\n## Import\n\n```js\nimport { LayoutCanvas, type Layout } from '../components/layout-canvas';\n```\n",
+      "ref": {
+        "module": "../components/layout-canvas",
+        "name": "LayoutCanvas"
+      },
+      "specType": "component",
+      "containedExamples": null,
+      "cardTitle": "LayoutCanvas",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

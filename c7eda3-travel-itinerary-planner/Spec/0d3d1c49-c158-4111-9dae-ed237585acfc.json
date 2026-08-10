@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# TravelItineraryIsolated\n\n## Summary\n\nThe planner's full app surface: destination + date-range header, a drag-and-drop stop list grouped by day (collapsible day sections, per-day drop targets), the map panel rendered through the shared MapRender component, an AI trip-planning popover, and a share-QR panel. The Itinerary header shows the stop count and, when any stop carries an `estimatedCost`, the computed `~$N est.` trip total. Stops are edited in place via the ItineraryStop field's own edit component — no edit-mode switch needed.\n\n## Usage\n\nWired as the card's isolated format:\n\n```ts\nstatic isolated = TravelItineraryIsolated;\n```\n",
       "ref": {
         "module": "../components/ti",
         "name": "TravelItineraryIsolated"

@@ -20,7 +20,11 @@
       "photo": {
         "url": "https://pngimg.com/uploads/minions/minions_PNG53.png",
         "sourceMode": "url"
-      }
+      },
+      "dietary": [
+        "nut-allergy",
+        "dairy-free"
+      ]
     },
     "relationships": {
       "parentGuest": {

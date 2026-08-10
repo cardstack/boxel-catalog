@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "tripTitle": null,
+      "destination": null,
+      "dateRange": null,
+      "stops": [],
+      "shareTripCode": {
+        "data": null,
+        "config": {
+          "foreground": null,
+          "background": null,
+          "margin": null
+        }
+      },
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "currency": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../travel-itinerary",
+        "name": "TravelItinerary"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# TravelItineraryFitted\n\n## Summary\n\nFitted views for every tier of the 4-size contract: badge (icon + title), strip (title + day/stop meta), tile (map thumbnail + title + meta), and card (hero map + title block). All tiers derive their meta line from the same `dayCount`/`stopCount` source as the isolated header, so counts never drift between formats.\n\n## Usage\n\n```ts\nstatic fitted = TravelItineraryFitted;\n```\n",
       "ref": {
         "module": "../components/ti",
         "name": "TravelItineraryFitted"

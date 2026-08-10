@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# categoryStyle\n\nReturns an inline `--stop-color` style for a category value, so a stop row's rail, dot, and chips share that category's hue.\n\n```ts\n<div style={{categoryStyle stop.category}}>\n```\n",
       "ref": {
         "module": "../utils/index",
         "name": "categoryStyle"

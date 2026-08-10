@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# FeaturedImageField (shared)\n\n## Summary\n\nCross-listing reference to the catalog's featured-image field (image URL + caption + credit) used for post covers and author portraits. See the field's own listing for full usage.\n",
+      "ref": {
+        "module": "../../fields/featured-image/featured-image",
+        "name": "default"
+      },
+      "specType": "field",
+      "containedExamples": null,
+      "cardTitle": "FeaturedImageField (shared)",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

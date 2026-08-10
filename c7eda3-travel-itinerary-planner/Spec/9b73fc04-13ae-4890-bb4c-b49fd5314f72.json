@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "# addHours\n\nAdds N hours to an `HH:MM` time string and returns the shifted `HH:MM`; used to default a stop's end time from its start.\n\n```ts\naddHours('09:30', 2); // '11:30'\n```\n",
       "ref": {
         "module": "../utils/index",
         "name": "addHours"

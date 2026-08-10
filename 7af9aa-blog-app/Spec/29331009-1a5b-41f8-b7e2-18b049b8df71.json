@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# BlogPost\n\n## Summary\n\nA single article. The isolated view is the reading surface AND the editor: headline, subtitle, cover image, body, categories, and byline are all inline-editable (double-click via EditableField) — no edit-mode switch needed. A drawer carries publish/unpublish and a per-post theme picker; reading progress renders as a top bar. `wordCount`/`readMinutes` are computed from the markdown body; `status` derives from `published`. Fitted templates cover all four tiers.\n\n## Import\n\n```js\nimport { BlogPost } from '../blog-post';\n```\n\n## Usage\n\nKey fields: `headline`, `body` (rich markdown), `featuredImage`, `authors` (linksToMany Author), `categories` (linksToMany BlogCategory), `published`, `publishDate`.\n",
+      "ref": {
+        "module": "../blog-post",
+        "name": "BlogPost"
+      },
+      "specType": "card",
+      "containedExamples": null,
+      "cardTitle": "BlogPost",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

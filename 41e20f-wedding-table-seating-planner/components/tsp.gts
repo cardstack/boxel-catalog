@@ -69,6 +69,7 @@ import {
   FOCAL_FIXTURE_KINDS,
   GUEST_CATEGORIES,
   categoryLabel,
+  dietaryLabel,
   categoryColor,
   type SeatOrder,
 } from '../utils/index';
@@ -3885,6 +3886,9 @@ export class TableSeatingPlannerIsolated extends Component<
         members: members.map((m) => m.fullName || 'Guest'),
         category: categoryLabel(g.category) || 'Uncategorized',
         vip: members.some((m) => !!m.vip),
+        dietary: members.flatMap((m) =>
+          (m.dietary ?? []).map((d: string) => dietaryLabel(d)),
+        ),
       });
     }
     let prominence = this.tableRank;
@@ -5541,13 +5545,13 @@ export class TableSeatingPlannerIsolated extends Component<
                     {{this.selectedTable.seatedCount}}
                     of
                     {{this.selectedTable.seatCount}}
-                    seated
+                    assigned
                   </div>
                   {{#if this.selectedTableVM}}
                     <div class='insp-label'>Seat Map</div>
                     <p class='insp-seatmap-hint'>Drag a guest from the roster
-                      onto a seat, drag a seated guest to another seat, or use ✕
-                      to unseat.</p>
+                      onto a seat, drag an assigned guest to another seat, or
+                      use ✕ to unassign.</p>
                     <div class='insp-tablemap'>
                       <div
                         class='insp-tablemap-reserve'
@@ -5586,7 +5590,7 @@ export class TableSeatingPlannerIsolated extends Component<
                               data-seat-index={{s.index}}
                               title={{if
                                 s.filled
-                                'Drag to move · ✕ to unseat'
+                                'Drag to move · ✕ to unassign'
                                 'Drop a guest here'
                               }}
                               style={{htmlSeat s.leftPct s.topPct s.color}}
@@ -5621,8 +5625,8 @@ export class TableSeatingPlannerIsolated extends Component<
                                 <button
                                   type='button'
                                   class='insp-seat-x'
-                                  title='Unseat this guest'
-                                  aria-label='Unseat this guest'
+                                  title='Unassign this guest'
+                                  aria-label='Unassign this guest'
                                   {{on 'pointerdown' this.stopPointer}}
                                   {{on
                                     'click'
@@ -6705,7 +6709,7 @@ export class TableSeatingPlannerIsolated extends Component<
         background: var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
       }
       .tsp-meta-label {
-        font-size: 8.5px;
+        font-size: 11px;
         font-weight: 500;
         letter-spacing: 0.3em;
         text-transform: uppercase;
@@ -7001,7 +7005,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .rail-seated {
         margin-left: auto;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 500;
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -7818,7 +7822,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border-color: rgba(197, 163, 92, 0.3);
       }
       .ct-pop-tile-label {
-        font-size: 10px;
+        font-size: 11px;
         letter-spacing: 0.02em;
         opacity: 0.8;
         text-align: center;
@@ -8137,7 +8141,7 @@ export class TableSeatingPlannerIsolated extends Component<
         top: -22px;
         left: 0;
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 10px;
+        font-size: 11px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--tsp-accent-deep, #a5854a);
@@ -8377,7 +8381,7 @@ export class TableSeatingPlannerIsolated extends Component<
         top: 8px;
         right: 10px;
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 8px;
+        font-size: 11px;
         letter-spacing: 0.12em;
         color: var(--tsp-accent-foreground, var(--accent-foreground, #22283f));
         background: var(--tsp-accent, var(--accent, #c5a35c));
@@ -8612,7 +8616,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .align-cap {
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 9px;
+        font-size: 11px;
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: var(--tsp-accent-deep, #a5854a);
@@ -9115,7 +9119,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .insp-label {
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 10px;
+        font-size: 11px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: #6f6a61;
@@ -9487,7 +9491,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .inv-label {
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 10px;
+        font-size: 11px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: var(--tsp-primary, var(--primary, #7c766c));
@@ -9922,7 +9926,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tpop-label {
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 9.5px;
+        font-size: 11px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: #7c766c;
@@ -10155,7 +10159,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 1px 5px;
         border-radius: 4px;
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 8px;
+        font-size: 11px;
         letter-spacing: 0.1em;
         color: var(--tsp-foreground, var(--foreground, #22283f));
         background: var(--tsp-accent, var(--accent, #c5a35c));
@@ -10322,7 +10326,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .save-field-label {
         font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-        font-size: 10px;
+        font-size: 11px;
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: var(--tsp-accent-deep, #a5854a);
@@ -10544,7 +10548,7 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
   <style scoped>
     .tpop-label {
       font-family: var(--tsp-font-sans, var(--font-sans, 'Jost', sans-serif));
-      font-size: 9.5px;
+      font-size: 11px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: #7c766c;
@@ -10981,7 +10985,7 @@ export class TableSeatingPlannerFitted extends Component<
           </div>
         </div>
         <span class='s-tag'>{{this.seatedCount}}/{{@model.guests.length}}
-          seated</span>
+          assigned</span>
       </div>
 
       {{! TILE (≤399w × ≥170h) — floor-plan hero + title + stats }}
@@ -11004,7 +11008,7 @@ export class TableSeatingPlannerFitted extends Component<
             <span class='t-dot'>·</span>
             <span class='t-stat'><b
               >{{this.seatedCount}}</b>/{{@model.guests.length}}
-              seated</span>
+              assigned</span>
           </div>
         </div>
       </div>
@@ -11026,7 +11030,7 @@ export class TableSeatingPlannerFitted extends Component<
             <span class='c-pill'><b>{{@model.guests.length}}</b>
               guests</span>
             <span class='c-pill c-pill-gold'><b>{{this.seatedCount}}</b>
-              seated</span>
+              assigned</span>
           </div>
         </div>
         <div class='c-panel'>
