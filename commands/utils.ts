@@ -1,8 +1,4 @@
-import {
-  baseRealm,
-  devSkillLocalPath,
-  envSkillLocalPath,
-} from '@cardstack/runtime-common';
+import { baseRealm } from '@cardstack/runtime-common';
 import type { CommandContext, Loader } from '@cardstack/runtime-common';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
@@ -13,8 +9,8 @@ export function skillCardURL(skillId: string): string {
   return `@cardstack/skills/Skill/${skillId}`;
 }
 
-export const devSkillId = `@cardstack/skills/${devSkillLocalPath}`;
-export const envSkillId = `@cardstack/skills/${envSkillLocalPath}`;
+export const devSkillId = skillCardURL('boxel-development');
+export const envSkillId = skillCardURL('boxel-environment');
 
 export function getLoaderService(_commandContext: CommandContext): {
   loader: Loader;
