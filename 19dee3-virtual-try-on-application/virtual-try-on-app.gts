@@ -726,8 +726,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
     this.newItemName = (event.target as HTMLInputElement).value;
   }
 
-  @action setCategory(cat: string): void {
-    this.newItemCategory = cat;
+  @action setCategory(cat: string | null): void {
+    this.newItemCategory = cat ?? '';
   }
 
   @action stopModalPropagation(event: Event): void {

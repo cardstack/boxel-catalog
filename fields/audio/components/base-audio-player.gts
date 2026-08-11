@@ -321,8 +321,8 @@ export class BaseAudioPlayer extends GlimmerComponent<BaseAudioPlayerSignature> 
   }
 
   @action
-  handleSpeedChange(selected: { value: number }): void {
-    if (!this.audioElement) return;
+  handleSpeedChange(selected: { value: number } | null): void {
+    if (!this.audioElement || !selected) return;
     this.playbackRate = selected.value;
     this.audioElement.playbackRate = this.playbackRate;
   }
