@@ -750,6 +750,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         gap: 0.75rem;
       }
       .include-card {
+        min-height: 3.5rem;
         border: 1px solid var(--border, #e7e3d8);
         border-radius: 0.5rem;
       }
