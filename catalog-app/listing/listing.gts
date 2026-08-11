@@ -392,7 +392,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
                             }}
                             data-test-spec-card={{spec.id}}
                           >
-                            <SpecComponent @format='fitted' />
+                            <SpecComponent
+                              @format='fitted'
+                              @displayContainer={{false}}
+                            />
                           </CardContainer>
                         {{/let}}
                       {{/each}}
