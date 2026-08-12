@@ -38,13 +38,13 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
   @tracked modalOn = false;
   @tracked jumpOn = false;
 
-  setModal = (value: string): void => {
+  setModal = (value: string | null): void => {
     this.modalOn = value === 'modal';
     // Re-open the demo when switching into modal so there is something
     // to see behind the knob.
     if (this.modalOn) this.dismissed = false;
   };
-  setJump = (value: string): void => {
+  setJump = (value: string | null): void => {
     this.jumpOn = value === 'on';
   };
 
@@ -67,8 +67,8 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
   setName = (event: Event): void => {
     this.name = (event.target as HTMLInputElement).value;
   };
-  setWorkspace = (value: string): void => {
-    this.workspace = value;
+  setWorkspace = (value: string | null): void => {
+    this.workspace = value ?? undefined;
   };
   invite = (): void => {
     this.invited += 1;

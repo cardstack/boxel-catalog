@@ -36,11 +36,16 @@ import CodeSnippet from '@cardstack/catalog/components/code-snippet';
  * between them.
  */
 class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
-  kindOptions = ['details', 'edit', 'tools'];
-  anchoringOptions = ['beside', 'overlay', 'center'];
-  sizeOptions = ['compact', 'comfortable', 'spacious', 'auto'];
-  backdropOptions = ['none', 'tint', 'blur', 'dim'];
-  elevationOptions = ['flat', 'raised', 'elevated', 'floating'];
+  kindOptions: PopoverKind[] = ['details', 'edit', 'tools'];
+  anchoringOptions: PopoverAnchoring[] = ['beside', 'overlay', 'center'];
+  sizeOptions: PopoverSize[] = ['compact', 'comfortable', 'spacious', 'auto'];
+  backdropOptions: PopoverBackdrop[] = ['none', 'tint', 'blur', 'dim'];
+  elevationOptions: PopoverElevation[] = [
+    'flat',
+    'raised',
+    'elevated',
+    'floating',
+  ];
   keyboardOptions = ['none', 'pick', 'edit'];
   trapFocusOptions = ['off', 'on'];
 
@@ -90,7 +95,8 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     return this.pickOptions[this.pickIndex] ?? '—';
   }
 
-  setPickByLabel = (label: string): void => {
+  setPickByLabel = (label: string | null): void => {
+    if (label === null) return;
     const index = this.pickOptions.indexOf(label);
     if (index >= 0) this.pickIndex = index;
   };
@@ -135,15 +141,15 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     return this.arrowOn ? true : undefined;
   }
 
-  setPlacement = (value: Placement): void => {
-    this.placement = value;
+  setPlacement = (value: Placement | null): void => {
+    if (value) this.placement = value;
   };
 
-  setOffset = (value: string): void => {
-    this.offset = Number(value);
+  setOffset = (value: string | null): void => {
+    if (value !== null) this.offset = Number(value);
   };
 
-  setArrow = (value: string): void => {
+  setArrow = (value: string | null): void => {
     this.arrowOn = value === 'on';
   };
 
@@ -205,29 +211,29 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     return lines.join('\n');
   }
 
-  setKind = (value: PopoverKind): void => {
-    this.kind = value;
+  setKind = (value: PopoverKind | null): void => {
+    if (value) this.kind = value;
   };
 
-  setAnchoring = (value: PopoverAnchoring): void => {
-    this.anchoring = value;
+  setAnchoring = (value: PopoverAnchoring | null): void => {
+    if (value) this.anchoring = value;
   };
 
-  setSize = (value: PopoverSize): void => {
-    this.size = value;
+  setSize = (value: PopoverSize | null): void => {
+    if (value) this.size = value;
   };
 
-  setBackdrop = (value: PopoverBackdrop): void => {
-    this.backdrop = value;
+  setBackdrop = (value: PopoverBackdrop | null): void => {
+    if (value) this.backdrop = value;
   };
 
-  setElevation = (value: PopoverElevation): void => {
-    this.elevation = value;
+  setElevation = (value: PopoverElevation | null): void => {
+    if (value) this.elevation = value;
   };
 
-  setKeyboard = (value: string): void => {
+  setKeyboard = (value: string | null): void => {
     this.keyboard =
-      value === 'none' ? undefined : (value as PopoverKeyboardModel);
+      !value || value === 'none' ? undefined : (value as PopoverKeyboardModel);
   };
 
   get keyboardChoice(): string {
@@ -245,12 +251,12 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     return this.trapFocusOn ? true : undefined;
   }
 
-  setTrapFocus = (value: string): void => {
+  setTrapFocus = (value: string | null): void => {
     this.trapFocusOn = value === 'on';
   };
 
-  setAutoFocus = (value: string): void => {
-    this.autoFocusChoice = value;
+  setAutoFocus = (value: string | null): void => {
+    this.autoFocusChoice = value ?? 'default';
   };
 
   escalationOptions = ['off', 'on'];
@@ -259,7 +265,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     return this.escalationEnabled ? 'on' : 'off';
   }
 
-  setEscalation = (value: string): void => {
+  setEscalation = (value: string | null): void => {
     this.escalationEnabled = value === 'on';
   };
 
