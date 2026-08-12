@@ -18,6 +18,9 @@ function loadECharts(): Promise<void> {
         let response = await fetch(
           'https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js',
         );
+        if (!response.ok) {
+          throw new Error(`could not load ECharts: ${response.status}`);
+        }
         let code = await response.text();
         let echartsModule: { exports: any } = { exports: {} };
         new Function('module', 'exports', code)(
@@ -26,7 +29,13 @@ function loadECharts(): Promise<void> {
         );
         echarts = echartsModule.exports;
       }
-    })();
+    })().catch((err) => {
+      // Don't let a transient CDN failure poison the cache: a rejected promise
+      // left in `echartsLoaded` would be handed to every later render, so no
+      // chart would ever retry the load even once connectivity returned.
+      echartsLoaded = undefined;
+      throw err;
+    });
   }
   return echartsLoaded;
 }
@@ -57,7 +66,12 @@ class RenderChart extends Modifier<RenderChartSignature> {
     if (!globalThis.document || !option) {
       return;
     }
-    await loadECharts();
+    try {
+      await loadECharts();
+    } catch {
+      // the load is retried on the next render; leave the placeholder showing
+      return;
+    }
     if (this.isDestroyed || !this.element?.isConnected) {
       return;
     }

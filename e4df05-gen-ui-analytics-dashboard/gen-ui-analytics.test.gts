@@ -3,6 +3,7 @@ import { module, test } from 'qunit';
 import { parseColumns, parseRows, provenanceKind } from './dataset';
 import {
   aggregate,
+  bucketDate,
   validateChartSpec,
   type ChartSpec,
 } from './utils/chart-spec';
@@ -124,6 +125,66 @@ export function runTests() {
       );
     });
 
+    test('bucketDate reads date-only strings in local time', function (assert) {
+      // `new Date('2025-01-01')` is UTC midnight while getFullYear() reads local
+      // time, so west of UTC an unguarded implementation buckets a period early
+      assert.strictEqual(bucketDate('2025-01-01', 'year'), '2025', 'year');
+      assert.strictEqual(
+        bucketDate('2025-01-01', 'quarter'),
+        '2025 Q1',
+        'quarter',
+      );
+      assert.strictEqual(bucketDate('2025-01-01', 'month'), '2025-01', 'month');
+      assert.strictEqual(
+        bucketDate('2024-12-31', 'quarter'),
+        '2024 Q4',
+        'the other side of the boundary',
+      );
+      assert.strictEqual(
+        bucketDate('not a date', 'month'),
+        'not a date',
+        'unparseable values pass through',
+      );
+    });
+
+    test('aggregate keeps source order for pre-aggregated labels', function (assert) {
+      let rows = [
+        { period: 'Q4 2024', units: 3 },
+        { period: 'Q1 2025', units: 5 },
+      ];
+      let unbucketed = aggregate(rows, {
+        chartKind: 'line',
+        source: { datasetId: 'd1' },
+        x: 'period',
+        xBucket: 'none',
+        y: { field: 'units', aggregate: 'sum' },
+      } as ChartSpec);
+      assert.deepEqual(
+        unbucketed.categories,
+        ['Q4 2024', 'Q1 2025'],
+        'an alphabetical sort would run time backwards here',
+      );
+
+      let bucketed = aggregate(
+        [
+          { day: '2025-03-02', units: 1 },
+          { day: '2025-01-04', units: 2 },
+        ],
+        {
+          chartKind: 'line',
+          source: { datasetId: 'd1' },
+          x: 'day',
+          xBucket: 'month',
+          y: { field: 'units', aggregate: 'sum' },
+        } as ChartSpec,
+      );
+      assert.deepEqual(
+        bucketed.categories,
+        ['2025-01', '2025-03'],
+        'bucketed labels are sortable, so they are sorted chronologically',
+      );
+    });
+
     // ── csv ingestion ──────────────────────────────────────────────────
 
     test('splitCsv handles quoted fields and auto-detects tabs', function (assert) {
@@ -191,6 +252,19 @@ export function runTests() {
         suggestChart(single, 't').chartKind,
         'kpi',
         'a single numeric row suggests a kpi',
+      );
+    });
+
+    test('suggestChart does not chart the year column against itself', function (assert) {
+      // a `year` column matches NUMBER_RE before DATE_RE, so it types as
+      // `number`; the measure has to skip whichever column became the dimension
+      let byYear = parseCsv('year,revenue\n2023,120\n2024,150\n2025,190\n')!;
+      let spec = suggestChart(byYear, 't');
+      assert.strictEqual(spec.x, 'year', 'the year column is the dimension');
+      assert.strictEqual(
+        spec.y?.field,
+        'revenue',
+        'the measure is the numeric column that is not the dimension',
       );
     });
   });

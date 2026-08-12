@@ -358,10 +358,10 @@ class Isolated extends Component<typeof GenUiDashboard> {
   // second click; doing nothing for a beat cancels the request
   @tracked confirmRemoveIndex: number | undefined;
 
-  @action requestRemove(index: number) {
+  @action requestRemove(index: number, card: any) {
     if (this.confirmRemoveIndex === index) {
       this.confirmRemoveIndex = undefined;
-      this.unlinkCard(index);
+      this.unlinkCard(index, card);
       return;
     }
     this.confirmRemoveIndex = index;
@@ -372,29 +372,42 @@ class Isolated extends Component<typeof GenUiDashboard> {
     }, 3500);
   }
 
-  @action unlinkCard(index: number) {
-    let removed = this.args.model?.cards?.[index];
-    let key = removed ? this.layoutKey(removed, index) : undefined;
-    let entry = key ? this.liveLayout?.[key] : undefined;
+  // `index` indexes the FILTERED `this.cards` that the template iterates, so it
+  // only drives the layout key and the confirm state. The splice has to work off
+  // the card's own position in the raw `model.cards`: the two diverge the moment
+  // an unresolved link leaves a null in the list, and indexing the raw array by
+  // a filtered index would silently remove a different tile.
+  @action unlinkCard(index: number, card: any) {
+    let removed = card ?? this.cards[index];
+    if (!removed) {
+      return;
+    }
+    let key = this.layoutKey(removed, index);
+    let entry = this.liveLayout?.[key];
+    let restoreAt = (this.args.model?.cards ?? []).indexOf(removed);
+    if (restoreAt === -1) {
+      return;
+    }
     let doRemove = () => {
       let cards = [...(this.args.model?.cards ?? [])];
-      let at = removed ? cards.indexOf(removed) : index;
-      cards.splice(at === -1 ? index : at, 1);
+      let at = cards.indexOf(removed);
+      if (at === -1) {
+        return;
+      }
+      cards.splice(at, 1);
       (this.args.model as any).cards = cards;
       this.dataPreviewIndex = undefined;
     };
     doRemove();
     this.confirmRemoveIndex = undefined;
-    if (removed) {
-      this.pushUndo(() => {
-        let cards = [...(this.args.model?.cards ?? [])];
-        cards.splice(Math.min(index, cards.length), 0, removed);
-        (this.args.model as any).cards = cards;
-        if (key && entry) {
-          this.restoreEntry(key, entry);
-        }
-      }, doRemove);
-    }
+    this.pushUndo(() => {
+      let cards = [...(this.args.model?.cards ?? [])];
+      cards.splice(Math.min(restoreAt, cards.length), 0, removed);
+      (this.args.model as any).cards = cards;
+      if (entry) {
+        this.restoreEntry(key, entry);
+      }
+    }, doRemove);
   }
 
   // which tile is showing its in-tile dataset preview panel
@@ -754,6 +767,18 @@ class Isolated extends Component<typeof GenUiDashboard> {
     }
   });
 
+  // Dropped originals are kept in this module's own `sources/` directory, so the
+  // write path is derived from `import.meta.url` (the same way the skill lookup
+  // below resolves) rather than hardcoded — the listing directory and the realm
+  // prefix both change on install.
+  sourcePathFor(slug: string, realm: string): string {
+    // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+    let dir = new URL('./sources/', import.meta.url).href;
+    let base = realm.endsWith('/') ? realm : `${realm}/`;
+    let relative = dir.startsWith(base) ? dir.slice(base.length) : 'sources/';
+    return `${relative}${slug}`;
+  }
+
   async extractOneFile(file: File) {
     let commandContext = this.args.context?.commandContext;
     let realm = this.realm;
@@ -819,7 +844,7 @@ class Isolated extends Component<typeof GenUiDashboard> {
             .replace(/[^a-z0-9.]+/g, '-')
             .replace(/^-+|-+$/g, '') || 'dropped-data';
         let res = await new WriteBinaryFileCommand(commandContext).execute({
-          path: `8d24c1-gen-ui-analytics/sources/${slug}`,
+          path: this.sourcePathFor(slug, realm),
           realm,
           base64Content: base64,
           contentType: file.type || 'application/octet-stream',
@@ -910,7 +935,9 @@ class Isolated extends Component<typeof GenUiDashboard> {
       realm,
     });
 
-    (this.args.model as any).cards = [...this.cards, chart];
+    // append to the RAW list, not the filtered `this.cards`: writing the
+    // filtered array back would drop any unresolved links the wall still holds
+    (this.args.model as any).cards = [...(this.args.model?.cards ?? []), chart];
   }
 
   // live-web path: the question goes to a search-grounded model that returns
@@ -1133,7 +1160,7 @@ class Isolated extends Component<typeof GenUiDashboard> {
                         'Click again to remove'
                         'Remove from dashboard'
                       }}
-                      {{on 'click' (fn this.requestRemove index)}}
+                      {{on 'click' (fn this.requestRemove index card)}}
                     >{{if
                         (eq this.confirmRemoveIndex index)
                         'Remove?'

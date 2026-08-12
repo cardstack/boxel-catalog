@@ -79,7 +79,7 @@ const DATE_RE =
   /^\d{4}-\d{2}(-\d{2})?([T ].*)?$|^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/;
 
 function toNumber(value: string): number {
-  return Number(value.replace(/[$,%]/g, '').replace(/,/g, ''));
+  return Number(value.replace(/[$,%]/g, ''));
 }
 
 export function parseCsv(text: string): ParsedCsv | undefined {
@@ -129,9 +129,15 @@ export function parseCsv(text: string): ParsedCsv | undefined {
 // donut, categories → bar, single numeric row → kpi
 export function suggestChart(parsed: ParsedCsv, name: string): SuggestedChart {
   let { columns, rows } = parsed;
-  let numeric = columns.find((c) => c.type === 'number');
   let date = columns.find((c) => c.type === 'date');
   let category = columns.find((c) => c.type === 'string');
+  // The measure is the first numeric column that ISN'T the dimension. A leading
+  // `year` column types as `number` (2020 matches NUMBER_RE before DATE_RE), so
+  // taking the first numeric outright would chart sum(year) by year and never
+  // touch the real measure.
+  let measureFor = (dimension?: string) =>
+    columns.find((c) => c.type === 'number' && c.name !== dimension);
+  let numeric = measureFor();
 
   if (!numeric) {
     // nothing to measure: count rows per first column
@@ -157,7 +163,7 @@ export function suggestChart(parsed: ParsedCsv, name: string): SuggestedChart {
       chartKind: 'line',
       x: date.name,
       xBucket: rows.length > 31 ? 'month' : 'none',
-      y: { field: numeric.name, aggregate: 'sum' },
+      y: { field: (measureFor(date.name) ?? numeric).name, aggregate: 'sum' },
       title: name,
     };
   }
@@ -167,15 +173,24 @@ export function suggestChart(parsed: ParsedCsv, name: string): SuggestedChart {
       chartKind: distinct <= 6 ? 'donut' : 'bar',
       x: category.name,
       xBucket: 'none',
-      y: { field: numeric.name, aggregate: 'sum' },
+      y: {
+        field: (measureFor(category.name) ?? numeric).name,
+        aggregate: 'sum',
+      },
       title: name,
     };
   }
+  // an all-numeric table: the first column is the dimension and the measure is
+  // the next numeric column after it (the `year,value` shape)
+  let dim = columns[0]?.name;
+  let measure = measureFor(dim);
   return {
     chartKind: 'bar',
-    x: columns[0]?.name,
+    x: dim,
     xBucket: 'none',
-    y: { field: numeric.name, aggregate: 'sum' },
+    y: measure
+      ? { field: measure.name, aggregate: 'sum' }
+      : { aggregate: 'count' },
     title: name,
   };
 }

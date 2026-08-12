@@ -116,13 +116,32 @@ export function getPath(obj: any, path: string): any {
   return current;
 }
 
+// Date-only strings ("2025-01-01") are parsed by `new Date` as UTC midnight,
+// while getFullYear()/getMonth() read LOCAL time — so for any viewer west of
+// UTC every period-boundary date would bucket one period early. Read the Y/M/D
+// out of the string and build a local date instead.
+function toLocalDate(value: unknown): Date | undefined {
+  if (value instanceof Date) {
+    return value;
+  }
+  let text = String(value).trim();
+  let ymd = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(text);
+  if (ymd) {
+    return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3] ?? '1'));
+  }
+  // everything else (ISO date-times without an offset, "3/14/2025") is already
+  // interpreted as local time
+  let date = new Date(text);
+  return isNaN(date.getTime()) ? undefined : date;
+}
+
 // "2024-04-30" + quarter -> "2024 Q2"
 export function bucketDate(value: unknown, bucket: Bucket): string {
   if (bucket === 'none' || value == null) {
     return String(value ?? 'unknown');
   }
-  let date = value instanceof Date ? value : new Date(String(value));
-  if (isNaN(date.getTime())) {
+  let date = toLocalDate(value);
+  if (!date) {
     return String(value);
   }
   let year = date.getFullYear();
@@ -184,7 +203,15 @@ export function aggregate(rows: any[], spec: ChartSpec): AggregatedData {
     bytSeries.get(ser)!.push(measureOf(row));
   }
 
-  let categories = [...table.keys()].sort();
+  // bucketDate emits lexicographically sortable labels ("2024", "2024 Q2",
+  // "2024-03"), so bucketed axes can be sorted into chronological order. With
+  // xBucket:'none' the labels are pre-aggregated by the source ("Q2 2025",
+  // "Jan") and an alphabetical sort would run time backwards — keep the order
+  // the rows arrived in.
+  let categories = [...table.keys()];
+  if (bucket !== 'none') {
+    categories.sort();
+  }
   let series = [...seriesNames].map((name) => ({
     name,
     data: categories.map((cat) => {
