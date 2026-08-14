@@ -164,7 +164,7 @@ export default class FormWizard extends GlimmerComponent<FormWizardSignature> {
       .bx-form-wizard__step[data-bx-form-wizard-step-active='true']
         .bx-form-wizard__step-index {
         background: var(--ring, #3b82f6);
-        color: #ffffff;
+        color: var(--primary-foreground, var(--boxel-light));
       }
 
       .bx-form-wizard__step-label {
@@ -199,7 +199,7 @@ export default class FormWizard extends GlimmerComponent<FormWizardSignature> {
 
       .bx-form-wizard__button--primary {
         background: var(--primary, #2563eb);
-        color: var(--primary-foreground, #ffffff);
+        color: var(--primary-foreground, var(--boxel-light));
         border-color: transparent;
       }
 

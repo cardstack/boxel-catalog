@@ -94,7 +94,7 @@ export class SurveyQuestion extends FieldDef {
           color: var(--foreground, #0f172a);
         }
         .sq-req {
-          color: #dc2626;
+          color: var(--destructive, var(--boxel-destructive));
           margin-left: 0.15rem;
         }
         .sq-help {

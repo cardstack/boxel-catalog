@@ -619,10 +619,18 @@ export class WineCellar extends CardDef {
 
       <style scoped>
         .cellar-card-embedded {
+          --cellar-bg: #1a0f0f;
+          --cellar-bg-2: #2a1818;
+          --cellar-cream: #f5efd8;
+
           padding: var(--boxel-sp);
           border-radius: var(--boxel-border-radius);
-          background: radial-gradient(ellipse at top, #2a1818 0%, #1a0f0f 70%);
-          color: #f5efd8;
+          background: radial-gradient(
+            ellipse at top,
+            var(--cellar-bg-2) 0%,
+            var(--cellar-bg) 70%
+          );
+          color: var(--cellar-cream);
           font-family: 'Georgia', serif;
           border: 1px solid rgba(201, 169, 106, 0.3);
           display: flex;
@@ -633,20 +641,20 @@ export class WineCellar extends CardDef {
           font-family: system-ui, sans-serif;
           letter-spacing: 0.3em;
           font-size: 0.65rem;
-          color: #c9a96a;
+          color: var(--cellar-gold);
           text-transform: uppercase;
         }
         .name {
           margin: 0.15rem 0 0;
           font-size: 1.25rem;
           font-weight: 600;
-          color: #f5efd8;
+          color: var(--cellar-cream);
           line-height: 1.1;
         }
         .location {
           margin: 0.15rem 0 0;
           font-style: italic;
-          color: #c9b88a;
+          color: var(--cellar-cream-dim);
           font-size: 0.85rem;
         }
         .stats-row {
@@ -663,14 +671,14 @@ export class WineCellar extends CardDef {
         .value {
           font-size: 1rem;
           font-weight: 700;
-          color: #c9a96a;
+          color: var(--cellar-gold);
         }
         .label {
           font-family: system-ui, sans-serif;
           font-size: 0.6rem;
           letter-spacing: 0.15em;
           text-transform: uppercase;
-          color: #c9b88a;
+          color: var(--cellar-cream-dim);
         }
         .swatch-row {
           display: flex;
@@ -705,11 +713,19 @@ export class WineCellar extends CardDef {
 
       <style scoped>
         .fitted-cellar {
+          --cellar-bg: #1a0f0f;
+          --cellar-bg-2: #2a1818;
+          --cellar-cream: #f5efd8;
+
           width: 100%;
           height: 100%;
           padding: var(--boxel-sp);
-          background: radial-gradient(ellipse at top, #2a1818 0%, #1a0f0f 70%);
-          color: #f5efd8;
+          background: radial-gradient(
+            ellipse at top,
+            var(--cellar-bg-2) 0%,
+            var(--cellar-bg) 70%
+          );
+          color: var(--cellar-cream);
           font-family: 'Georgia', serif;
           display: flex;
           flex-direction: column;
@@ -721,14 +737,14 @@ export class WineCellar extends CardDef {
           font-family: system-ui, sans-serif;
           letter-spacing: 0.25em;
           font-size: clamp(0.55rem, 2.5cqi, 0.7rem);
-          color: #c9a96a;
+          color: var(--cellar-gold);
           text-transform: uppercase;
         }
         .name {
           margin: 0.2rem 0 0;
           font-size: clamp(0.9rem, 5cqi, 1.4rem);
           font-weight: 600;
-          color: #f5efd8;
+          color: var(--cellar-cream);
           line-height: 1.05;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -744,7 +760,7 @@ export class WineCellar extends CardDef {
         .big {
           font-size: clamp(1.4rem, 8cqi, 2.5rem);
           font-weight: 700;
-          color: #c9a96a;
+          color: var(--cellar-gold);
           line-height: 1;
         }
         .small {
@@ -752,12 +768,12 @@ export class WineCellar extends CardDef {
           font-size: clamp(0.6rem, 2.5cqi, 0.8rem);
           letter-spacing: 0.15em;
           text-transform: uppercase;
-          color: #c9b88a;
+          color: var(--cellar-cream-dim);
         }
         .location {
           margin: 0;
           font-style: italic;
-          color: #c9b88a;
+          color: var(--cellar-cream-dim);
           font-size: clamp(0.6rem, 2.5cqi, 0.8rem);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -791,7 +807,7 @@ export class WineCellar extends CardDef {
           white-space: nowrap;
         }
         .icon {
-          color: #5a1a1f;
+          color: var(--cellar-burgundy);
           flex-shrink: 0;
         }
         .name {

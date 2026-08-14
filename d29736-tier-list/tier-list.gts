@@ -1078,7 +1078,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         gap: 0.25rem;
         padding: 0.375rem;
         border-radius: var(--radius, 0.375rem);
-        color: #111;
+        color: var(--foreground, var(--boxel-dark));
       }
       .tier-name {
         width: 100%;
@@ -1087,7 +1087,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font-weight: 800;
         font-size: 1rem;
         text-align: center;
-        color: #111;
+        color: var(--foreground, var(--boxel-dark));
         /* near-opaque so the input reads clearly over any band color */
         background: rgba(255, 255, 255, 0.92);
         border: 1px solid rgba(0, 0, 0, 0.25);
@@ -1097,7 +1097,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font-weight: 800;
         font-size: 1.125rem;
         text-align: center;
-        color: #111;
+        color: var(--foreground, var(--boxel-dark));
       }
       .tier-tools {
         display: flex;
@@ -1129,7 +1129,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         line-height: 1;
         font-size: 1rem;
         cursor: pointer;
-        color: #111;
+        color: var(--foreground, var(--boxel-dark));
         background: rgba(255, 255, 255, 0.92);
         border: 1px solid rgba(0, 0, 0, 0.25);
         border-radius: 0.25rem;
@@ -1223,7 +1223,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        color: #fff;
+        color: var(--background, var(--boxel-light));
         background: rgba(0, 0, 0, 0.6);
         border: none;
         border-radius: 0.25rem;
@@ -1250,7 +1250,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         padding: 0.0625rem 0.125rem;
         font-size: 0.5625rem;
         text-align: center;
-        color: #fff;
+        color: var(--background, var(--boxel-light));
         background: rgba(0, 0, 0, 0.6);
         white-space: nowrap;
         overflow: hidden;
@@ -1425,7 +1425,7 @@ export class TierList extends CardDef {
           font-weight: 800;
           font-size: 0.8125rem;
           text-align: center;
-          color: #111;
+          color: var(--foreground, var(--boxel-dark));
           border-radius: 0.1875rem;
         }
         .emb-count {
@@ -1528,7 +1528,7 @@ export class TierList extends CardDef {
           font-size: var(--fit-meta-size, 9px);
           font-weight: 800;
           text-align: center;
-          color: #111;
+          color: var(--foreground, var(--boxel-dark));
           border-radius: 2px;
         }
         .r-meta {

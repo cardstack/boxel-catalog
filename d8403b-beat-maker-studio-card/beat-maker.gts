@@ -179,7 +179,12 @@ export class BeatPatternField extends FieldDef {
       </div>
 
       <style scoped>
+        /* Dark-hardware pad identity: pinned per §4a, not a theme fallback. */
         .beat-pattern-field {
+          --bp-track-kick: var(--destructive, var(--boxel-destructive));
+          --bp-track-snare: #3b82f6;
+          --bp-track-hihat: var(--success, var(--boxel-success));
+
           padding: 0.5rem 0.625rem;
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.07);
@@ -216,18 +221,18 @@ export class BeatPatternField extends FieldDef {
         }
 
         .track-kick .dot.on {
-          background: #ef4444;
-          box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
+          background: var(--bp-track-kick);
+          box-shadow: 0 0 4px color-mix(in oklch, var(--bp-track-kick) 60%, transparent);
         }
 
         .track-snare .dot.on {
-          background: #3b82f6;
-          box-shadow: 0 0 4px rgba(59, 130, 246, 0.6);
+          background: var(--bp-track-snare);
+          box-shadow: 0 0 4px color-mix(in oklch, var(--bp-track-snare) 60%, transparent);
         }
 
         .track-hihat .dot.on {
-          background: #10b981;
-          box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
+          background: var(--bp-track-hihat);
+          box-shadow: 0 0 4px color-mix(in oklch, var(--bp-track-hihat) 60%, transparent);
         }
       </style>
     </template>
@@ -293,19 +298,32 @@ export class BeatPatternCard extends CardDef {
       </div>
 
       <style scoped>
+        /* Dark-hardware identity: pinned per §4a, not a theme fallback. */
         .beat-pattern-card {
-          background: linear-gradient(135deg, #0a0d14 0%, #111827 100%);
+          --bpc-bg: #0a0d14;
+          --bpc-bg-2: #111827;
+          --bpc-fg: #e2e8f0;
+          --bpc-accent: #3b82f6;
+          --bpc-title-a: #60a5fa;
+          --bpc-title-b: #a78bfa;
+          --bpc-info: #22d3ee;
+
+          background: linear-gradient(
+            135deg,
+            var(--bpc-bg) 0%,
+            var(--bpc-bg-2) 100%
+          );
           border-radius: var(--radius-xl, var(--boxel-border-radius-xl));
           padding: 0.875rem;
-          color: #e2e8f0;
-          border: 1px solid rgba(59, 130, 246, 0.15);
+          color: var(--bpc-fg);
+          border: 1px solid color-mix(in oklch, var(--bpc-accent) 15%, transparent);
           transition: all 0.2s ease;
           font-family: var(--font-mono, monospace);
         }
 
         .beat-pattern-card:hover {
-          border-color: rgba(59, 130, 246, 0.4);
-          box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+          border-color: color-mix(in oklch, var(--bpc-accent) 40%, transparent);
+          box-shadow: 0 0 20px color-mix(in oklch, var(--bpc-accent) 10%, transparent);
         }
 
         .pattern-header {
@@ -319,7 +337,11 @@ export class BeatPatternCard extends CardDef {
           font-size: 0.875rem;
           font-weight: 700;
           margin: 0;
-          background: linear-gradient(135deg, #60a5fa, #a78bfa);
+          background: linear-gradient(
+            135deg,
+            var(--bpc-title-a),
+            var(--bpc-title-b)
+          );
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -344,8 +366,8 @@ export class BeatPatternCard extends CardDef {
         }
 
         .bpm-tag {
-          background: rgba(34, 211, 238, 0.12);
-          color: #22d3ee;
+          background: color-mix(in oklch, var(--bpc-info) 12%, transparent);
+          color: var(--bpc-info);
           padding: 0.125rem 0.375rem;
           border-radius: 99px;
           font-size: 0.5rem;
@@ -1315,10 +1337,31 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
     <style scoped>
       /* ═══ STUDIO SHELL — fills the card container fully ═══ */
       .studio {
-        background: linear-gradient(160deg, #070a10 0%, #0d1220 100%);
+        /* Dark-hardware amber identity: pinned per §4a, not a theme fallback. */
+        --bm-bg: #070a10;
+        --bm-bg-2: #0d1220;
+        --bm-fg: #e2e8f0;
+        --bm-accent: #f59e0b;
+        --bm-accent-2: #f97316;
+        --bm-lcd-bg: #030508;
+        --bm-success: var(--success, var(--boxel-success));
+        --bm-success-2: #059669;
+        --bm-danger: var(--destructive, var(--boxel-destructive));
+        --bm-danger-2: #dc2626;
+        --bm-info: #22d3ee;
+        --bm-seq-bg: #060912;
+        --bm-seq-bg-2: #0b1020;
+        --bm-track-kick: var(--bm-danger);
+        --bm-track-snare: #3b82f6;
+        --bm-track-hihat: var(--bm-success);
+        --bm-track-openhat: var(--bm-accent);
+        --bm-track-clap: #8b5cf6;
+        --bm-track-crash: #ec4899;
+
+        background: linear-gradient(160deg, var(--bm-bg) 0%, var(--bm-bg-2) 100%);
         border-radius: var(--radius-xl, var(--boxel-border-radius-xl));
         padding: 1.125rem;
-        color: #e2e8f0;
+        color: var(--bm-fg);
         font-family: var(--font-mono, 'JetBrains Mono', 'Fira Code', monospace);
         width: 100%;
         height: 100%;
@@ -1379,15 +1422,15 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       .brand-icon {
         width: 32px;
         height: 32px;
-        color: #f59e0b;
-        filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.7));
+        color: var(--bm-accent);
+        filter: drop-shadow(0 0 10px color-mix(in oklch, var(--bm-accent) 70%, transparent));
       }
 
       .brand-name {
         font-size: 0.9375rem;
         font-weight: 800;
         letter-spacing: 0.18em;
-        background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+        background: linear-gradient(90deg, var(--bm-accent) 0%, var(--bm-accent-2) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -1409,12 +1452,12 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         align-items: center;
         gap: 0.875rem;
         padding: 0.5625rem 1rem;
-        background: #030508;
+        background: var(--bm-lcd-bg);
         border-radius: var(--radius-sm, var(--boxel-border-radius-sm));
-        border: 1px solid rgba(16, 185, 129, 0.2);
+        border: 1px solid color-mix(in oklch, var(--bm-success) 20%, transparent);
         box-shadow:
           inset 0 2px 10px rgba(0, 0, 0, 0.9),
-          0 0 16px rgba(16, 185, 129, 0.08);
+          0 0 16px color-mix(in oklch, var(--bm-success) 8%, transparent);
         margin-left: auto;
       }
 
@@ -1428,7 +1471,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       .lcd-label {
         font-size: 0.4375rem;
-        color: rgba(16, 185, 129, 0.45);
+        color: color-mix(in oklch, var(--bm-success) 45%, transparent);
         letter-spacing: 0.14em;
         font-weight: 700;
         text-transform: uppercase;
@@ -1436,12 +1479,12 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       .lcd-val {
         font-size: 1.0625rem;
-        color: #10b981;
+        color: var(--bm-success);
         font-weight: 700;
         letter-spacing: 0.03em;
         text-shadow:
-          0 0 10px rgba(16, 185, 129, 0.9),
-          0 0 24px rgba(16, 185, 129, 0.4);
+          0 0 10px color-mix(in oklch, var(--bm-success) 90%, transparent),
+          0 0 24px color-mix(in oklch, var(--bm-success) 40%, transparent);
         min-width: 2ch;
         text-align: center;
         line-height: 1;
@@ -1450,7 +1493,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       .lcd-divider {
         width: 1px;
         height: 28px;
-        background: rgba(16, 185, 129, 0.15);
+        background: color-mix(in oklch, var(--bm-success) 15%, transparent);
         flex-shrink: 0;
       }
 
@@ -1491,20 +1534,20 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         -webkit-appearance: none;
         width: 15px;
         height: 15px;
-        background: #f59e0b;
+        background: var(--bm-accent);
         border-radius: 50%;
         cursor: pointer;
-        box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+        box-shadow: 0 0 8px color-mix(in oklch, var(--bm-accent) 80%, transparent);
       }
 
       .ctrl-slider::-moz-range-thumb {
         width: 15px;
         height: 15px;
-        background: #f59e0b;
+        background: var(--bm-accent);
         border-radius: 50%;
         cursor: pointer;
         border: none;
-        box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+        box-shadow: 0 0 8px color-mix(in oklch, var(--bm-accent) 80%, transparent);
       }
 
       .ctrl-val {
@@ -1523,7 +1566,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       .kit-select {
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.12);
-        color: #e2e8f0;
+        color: var(--bm-fg);
         padding: 0.4375rem 0.75rem;
         border-radius: var(--radius-sm, var(--boxel-border-radius-sm));
         font-size: 0.75rem;
@@ -1535,7 +1578,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       .kit-select:hover,
       .kit-select:focus {
-        border-color: rgba(245, 158, 11, 0.5);
+        border-color: color-mix(in oklch, var(--bm-accent) 50%, transparent);
       }
 
       .kit-fallback {
@@ -1549,39 +1592,39 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, var(--bm-success) 0%, var(--bm-success-2) 100%);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         transition: all 0.2s ease;
-        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 4px 16px color-mix(in oklch, var(--bm-success) 40%, transparent);
         flex-shrink: 0;
         border: none;
       }
 
       .play-btn:hover {
         transform: scale(1.08);
-        box-shadow: 0 6px 24px rgba(16, 185, 129, 0.6);
+        box-shadow: 0 6px 24px color-mix(in oklch, var(--bm-success) 60%, transparent);
         filter: brightness(1.1);
       }
 
       .play-btn.is-playing {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.5);
+        background: linear-gradient(135deg, var(--bm-danger) 0%, var(--bm-danger-2) 100%);
+        box-shadow: 0 4px 16px color-mix(in oklch, var(--bm-danger) 50%, transparent);
         animation: play-pulse 1.4s ease-in-out infinite;
       }
 
       @keyframes play-pulse {
         0%,
         100% {
-          box-shadow: 0 4px 16px rgba(239, 68, 68, 0.5);
+          box-shadow: 0 4px 16px color-mix(in oklch, var(--bm-danger) 50%, transparent);
         }
         50% {
           box-shadow:
-            0 4px 28px rgba(239, 68, 68, 0.75),
-            0 0 40px rgba(239, 68, 68, 0.3);
+            0 4px 28px color-mix(in oklch, var(--bm-danger) 75%, transparent),
+            0 0 40px color-mix(in oklch, var(--bm-danger) 30%, transparent);
         }
       }
 
@@ -1614,11 +1657,11 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       .library-count {
         font-size: 0.5rem;
-        background: rgba(245, 158, 11, 0.12);
-        color: #f59e0b;
+        background: color-mix(in oklch, var(--bm-accent) 12%, transparent);
+        color: var(--bm-accent);
         padding: 0.125rem 0.375rem;
         border-radius: 99px;
-        border: 1px solid rgba(245, 158, 11, 0.25);
+        border: 1px solid color-mix(in oklch, var(--bm-accent) 25%, transparent);
         font-weight: 700;
       }
 
@@ -1639,7 +1682,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .library-scroll::-webkit-scrollbar-thumb {
-        background: rgba(245, 158, 11, 0.35);
+        background: color-mix(in oklch, var(--bm-accent) 35%, transparent);
         border-radius: 99px;
       }
 
@@ -1659,18 +1702,18 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       .pattern-btn:hover {
         background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(245, 158, 11, 0.35);
+        border-color: color-mix(in oklch, var(--bm-accent) 35%, transparent);
       }
 
       .pattern-btn.active {
         background: linear-gradient(
           135deg,
-          rgba(245, 158, 11, 0.2) 0%,
-          rgba(249, 115, 22, 0.2) 100%
+          color-mix(in oklch, var(--bm-accent) 20%, transparent) 0%,
+          color-mix(in oklch, var(--bm-accent-2) 20%, transparent) 100%
         );
-        border-color: #f59e0b;
-        box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
-        color: #f59e0b;
+        border-color: var(--bm-accent);
+        box-shadow: 0 0 14px color-mix(in oklch, var(--bm-accent) 20%, transparent);
+        color: var(--bm-accent);
       }
 
       .pattern-btn-name {
@@ -1701,8 +1744,8 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       .pattern-bpm {
         font-size: 0.4375rem;
-        color: #22d3ee;
-        background: rgba(34, 211, 238, 0.1);
+        color: var(--bm-info);
+        background: color-mix(in oklch, var(--bm-info) 10%, transparent);
         padding: 0.0625rem 0.25rem;
         border-radius: 99px;
         font-weight: 700;
@@ -1710,7 +1753,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       /* ═══ SEQUENCER GRID — pads fill full width ═══ */
       .sequencer {
-        background: linear-gradient(160deg, #060912, #0b1020);
+        background: linear-gradient(160deg, var(--bm-seq-bg), var(--bm-seq-bg-2));
         border-radius: var(--radius-lg, var(--boxel-border-radius-lg));
         padding: 1rem 1rem 0.875rem;
         border: 1px solid rgba(255, 255, 255, 0.05);
@@ -1758,7 +1801,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .step-num.beat {
-        color: rgba(245, 158, 11, 0.7);
+        color: color-mix(in oklch, var(--bm-accent) 70%, transparent);
       }
 
       /* Visual group separator — must equal .pad.group-start margin-left */
@@ -1772,7 +1815,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         align-items: center;
         gap: 0.375rem;
         padding: 0.3rem 0 0.3rem 0.625rem;
-        border-left: 4px solid var(--inst-color, #4b5563);
+        border-left: 4px solid var(--inst-color, var(--muted-foreground, var(--boxel-500)));
         border-radius: 0 4px 4px 0;
         transition: background 0.1s ease;
         margin-bottom: 0.25rem;
@@ -1787,30 +1830,31 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         background: rgba(255, 255, 255, 0.02);
       }
 
-      /* Per-instrument neon colors */
+      /* Per-instrument neon colors — a fixed hue-as-data mapping (§1c);
+         the glow is a dilution of its own color, not a second stored value. */
       .row-kick {
-        --inst-color: #ef4444;
-        --inst-glow: rgba(239, 68, 68, 0.65);
+        --inst-color: var(--bm-track-kick);
+        --inst-glow: color-mix(in oklch, var(--inst-color) 65%, transparent);
       }
       .row-snare {
-        --inst-color: #3b82f6;
-        --inst-glow: rgba(59, 130, 246, 0.65);
+        --inst-color: var(--bm-track-snare);
+        --inst-glow: color-mix(in oklch, var(--inst-color) 65%, transparent);
       }
       .row-hihat {
-        --inst-color: #10b981;
-        --inst-glow: rgba(16, 185, 129, 0.65);
+        --inst-color: var(--bm-track-hihat);
+        --inst-glow: color-mix(in oklch, var(--inst-color) 65%, transparent);
       }
       .row-openhat {
-        --inst-color: #f59e0b;
-        --inst-glow: rgba(245, 158, 11, 0.65);
+        --inst-color: var(--bm-track-openhat);
+        --inst-glow: color-mix(in oklch, var(--inst-color) 65%, transparent);
       }
       .row-clap {
-        --inst-color: #8b5cf6;
-        --inst-glow: rgba(139, 92, 246, 0.65);
+        --inst-color: var(--bm-track-clap);
+        --inst-glow: color-mix(in oklch, var(--inst-color) 65%, transparent);
       }
       .row-crash {
-        --inst-color: #ec4899;
-        --inst-glow: rgba(236, 72, 153, 0.65);
+        --inst-color: var(--bm-track-crash);
+        --inst-glow: color-mix(in oklch, var(--inst-color) 65%, transparent);
       }
 
       /* Fixed-width controls column — must equal .controls-spacer */
@@ -1842,15 +1886,15 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: var(--inst-color, #4b5563);
-        box-shadow: 0 0 6px var(--inst-glow, rgba(75, 85, 99, 0.5));
+        background: var(--inst-color, var(--muted-foreground, var(--boxel-500)));
+        box-shadow: 0 0 6px var(--inst-glow, color-mix(in oklch, var(--muted-foreground, var(--boxel-500)) 50%, transparent));
         flex-shrink: 0;
       }
 
       .inst-name {
         font-size: 0.6875rem;
         font-weight: 800;
-        color: var(--inst-color, #9ca3af);
+        color: var(--inst-color, var(--muted-foreground, var(--boxel-500)));
         text-transform: uppercase;
         letter-spacing: 0.08em;
         white-space: nowrap;
@@ -1872,16 +1916,16 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         -webkit-appearance: none;
         width: 12px;
         height: 12px;
-        background: var(--inst-color, #9ca3af);
+        background: var(--inst-color, var(--muted-foreground, var(--boxel-500)));
         border-radius: 50%;
         cursor: pointer;
-        box-shadow: 0 0 5px var(--inst-glow, rgba(75, 85, 99, 0.5));
+        box-shadow: 0 0 5px var(--inst-glow, color-mix(in oklch, var(--muted-foreground, var(--boxel-500)) 50%, transparent));
       }
 
       .vol-slider::-moz-range-thumb {
         width: 12px;
         height: 12px;
-        background: var(--inst-color, #9ca3af);
+        background: var(--inst-color, var(--muted-foreground, var(--boxel-500)));
         border-radius: 50%;
         cursor: pointer;
         border: none;
@@ -1912,8 +1956,8 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .act-btn:hover {
-        border-color: var(--inst-color, #9ca3af);
-        color: var(--inst-color, #9ca3af);
+        border-color: var(--inst-color, var(--muted-foreground, var(--boxel-500)));
+        color: var(--inst-color, var(--muted-foreground, var(--boxel-500)));
         background: rgba(255, 255, 255, 0.05);
       }
 
@@ -1950,10 +1994,10 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .pad.on {
-        background: var(--inst-color, #4b5563);
-        outline-color: var(--inst-color, #4b5563);
+        background: var(--inst-color, var(--muted-foreground, var(--boxel-500)));
+        outline-color: var(--inst-color, var(--muted-foreground, var(--boxel-500)));
         box-shadow:
-          0 0 12px var(--inst-glow, rgba(75, 85, 99, 0.5)),
+          0 0 12px var(--inst-glow, color-mix(in oklch, var(--muted-foreground, var(--boxel-500)) 50%, transparent)),
           inset 0 1px 0 rgba(255, 255, 255, 0.35),
           inset 0 0 8px rgba(255, 255, 255, 0.08);
       }
@@ -1966,8 +2010,8 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       .pad.on.now {
         filter: brightness(1.35);
         box-shadow:
-          0 0 20px var(--inst-glow, rgba(75, 85, 99, 0.8)),
-          0 0 8px var(--inst-glow, rgba(75, 85, 99, 0.8)),
+          0 0 20px var(--inst-glow, color-mix(in oklch, var(--muted-foreground, var(--boxel-500)) 80%, transparent)),
+          0 0 8px var(--inst-glow, color-mix(in oklch, var(--muted-foreground, var(--boxel-500)) 80%, transparent)),
           inset 0 0 10px rgba(255, 255, 255, 0.4),
           inset 0 1px 0 rgba(255, 255, 255, 0.5);
         animation: pad-flash 0.5s ease-in-out infinite alternate;
@@ -2017,20 +2061,20 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         display: flex;
         align-items: center;
         gap: 0.4rem;
-        color: #10b981;
+        color: var(--bm-success);
       }
 
       .footer-playing span {
         font-weight: 800;
         letter-spacing: 0.18em;
-        text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        text-shadow: 0 0 8px color-mix(in oklch, var(--bm-success) 60%, transparent);
       }
 
       .wave {
         width: 2px;
-        background: #10b981;
+        background: var(--bm-success);
         border-radius: 99px;
-        box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
+        box-shadow: 0 0 4px color-mix(in oklch, var(--bm-success) 60%, transparent);
         animation: wave-anim 0.7s ease-in-out infinite;
       }
 
@@ -2431,7 +2475,22 @@ export class BeatMakerCard extends CardDef {
       </div>
 
       <style scoped>
+        /* Dark-hardware amber identity: pinned per §4a, not a theme fallback. */
         .fitted-container {
+          --bm-bg: #070a10;
+          --bm-bg-2: #0e1422;
+          --bm-fg: #e2e8f0;
+          --bm-accent: #f59e0b;
+          --bm-accent-2: #f97316;
+          --bm-lcd-bg: #030508;
+          --bm-panel-bg: #1a1f2e;
+          --bm-success: var(--success, var(--boxel-success));
+          --bm-danger: var(--destructive, var(--boxel-destructive));
+          --bm-track-kick: var(--bm-danger);
+          --bm-track-snare: #3b82f6;
+          --bm-track-hihat: var(--bm-success);
+          --bm-seq-bg: #060912;
+
           container-type: size;
           width: 100%;
           height: 100%;
@@ -2453,7 +2512,7 @@ export class BeatMakerCard extends CardDef {
           height: 100%;
           padding: clamp(0.25rem, 3%, 0.75rem);
           box-sizing: border-box;
-          background: linear-gradient(145deg, #070a10 0%, #0e1422 100%);
+          background: linear-gradient(145deg, var(--bm-bg) 0%, var(--bm-bg-2) 100%);
           border-radius: var(--radius-xl, var(--boxel-border-radius-xl));
           overflow: hidden;
         }
@@ -2484,15 +2543,15 @@ export class BeatMakerCard extends CardDef {
         .mini-pad {
           width: 10px;
           height: 10px;
-          background: rgba(245, 158, 11, 0.12);
+          background: color-mix(in oklch, var(--bm-accent) 12%, transparent);
           border-radius: 2px;
-          border: 1px solid rgba(245, 158, 11, 0.2);
+          border: 1px solid color-mix(in oklch, var(--bm-accent) 20%, transparent);
         }
 
         .mini-pad.on {
-          background: #f59e0b;
-          box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
-          border-color: #f59e0b;
+          background: var(--bm-accent);
+          box-shadow: 0 0 6px color-mix(in oklch, var(--bm-accent) 70%, transparent);
+          border-color: var(--bm-accent);
           animation: badge-beat 1.4s ease-in-out infinite;
         }
 
@@ -2514,7 +2573,7 @@ export class BeatMakerCard extends CardDef {
         .badge-title {
           font-size: 0.6875rem;
           font-weight: 800;
-          color: #f59e0b;
+          color: var(--bm-accent);
           line-height: 1.1;
           margin-bottom: 0.125rem;
           overflow: hidden;
@@ -2555,14 +2614,14 @@ export class BeatMakerCard extends CardDef {
 
         .eq-bar {
           width: 4px;
-          background: rgba(245, 158, 11, 0.3);
+          background: color-mix(in oklch, var(--bm-accent) 30%, transparent);
           border-radius: 1px;
           animation: eq-pulse 1s ease-in-out infinite;
         }
 
         .eq-bar.active {
-          background: #f59e0b;
-          box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+          background: var(--bm-accent);
+          box-shadow: 0 0 6px color-mix(in oklch, var(--bm-accent) 60%, transparent);
         }
 
         .eq-bar:nth-child(1) {
@@ -2630,7 +2689,7 @@ export class BeatMakerCard extends CardDef {
         .strip-title {
           font-size: 0.8125rem;
           font-weight: 800;
-          color: #f59e0b;
+          color: var(--bm-accent);
           line-height: 1.1;
           margin-bottom: 0.1875rem;
           overflow: hidden;
@@ -2654,9 +2713,9 @@ export class BeatMakerCard extends CardDef {
         .strip-tag {
           font-size: 0.5rem;
           padding: 0.125rem 0.375rem;
-          background: rgba(245, 158, 11, 0.12);
-          color: #f59e0b;
-          border: 1px solid rgba(245, 158, 11, 0.25);
+          background: color-mix(in oklch, var(--bm-accent) 12%, transparent);
+          color: var(--bm-accent);
+          border: 1px solid color-mix(in oklch, var(--bm-accent) 25%, transparent);
           border-radius: 99px;
           font-weight: 700;
           letter-spacing: 0.06em;
@@ -2672,7 +2731,7 @@ export class BeatMakerCard extends CardDef {
         }
 
         .tile-hero {
-          background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+          background: linear-gradient(135deg, var(--bm-accent) 0%, var(--bm-accent-2) 100%);
           border-radius: var(--radius-lg, var(--boxel-border-radius-lg));
           padding: 0.875rem;
           display: flex;
@@ -2714,7 +2773,7 @@ export class BeatMakerCard extends CardDef {
         .tile-title {
           font-size: 1rem;
           font-weight: 800;
-          color: #f59e0b;
+          color: var(--bm-accent);
           margin: 0;
           letter-spacing: 0.05em;
         }
@@ -2741,7 +2800,7 @@ export class BeatMakerCard extends CardDef {
 
         .spec-v {
           font-size: 0.75rem;
-          color: #f59e0b;
+          color: var(--bm-accent);
           font-weight: 700;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -2759,9 +2818,9 @@ export class BeatMakerCard extends CardDef {
 
         .pill {
           padding: 0.1875rem 0.4375rem;
-          background: rgba(245, 158, 11, 0.12);
-          border: 1px solid rgba(245, 158, 11, 0.25);
-          color: #f59e0b;
+          background: color-mix(in oklch, var(--bm-accent) 12%, transparent);
+          border: 1px solid color-mix(in oklch, var(--bm-accent) 25%, transparent);
+          color: var(--bm-accent);
           font-size: 0.5rem;
           font-weight: 700;
           border-radius: 99px;
@@ -2781,7 +2840,7 @@ export class BeatMakerCard extends CardDef {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+          background: linear-gradient(135deg, var(--bm-accent) 0%, var(--bm-accent-2) 100%);
           padding: 0.875rem 1rem;
           border-radius: var(--radius-lg, var(--boxel-border-radius-lg));
           gap: 1rem;
@@ -2811,18 +2870,18 @@ export class BeatMakerCard extends CardDef {
         .card-machine {
           flex-shrink: 0;
           padding: 0.625rem;
-          background: rgba(7, 10, 16, 0.75);
+          background: color-mix(in oklch, var(--bm-bg) 75%, transparent);
           border-radius: var(--radius, var(--boxel-border-radius));
           min-width: 100px;
-          border: 1px solid rgba(245, 158, 11, 0.3);
+          border: 1px solid color-mix(in oklch, var(--bm-accent) 30%, transparent);
         }
 
         .machine-lcd {
-          background: #030508;
+          background: var(--bm-lcd-bg);
           padding: 0.375rem 0.5rem;
           border-radius: 3px;
           margin-bottom: 0.5rem;
-          border: 1px solid rgba(16, 185, 129, 0.2);
+          border: 1px solid color-mix(in oklch, var(--bm-success) 20%, transparent);
         }
 
         .m-row {
@@ -2838,16 +2897,16 @@ export class BeatMakerCard extends CardDef {
 
         .m-label {
           font-size: 0.4375rem;
-          color: rgba(16, 185, 129, 0.5);
+          color: color-mix(in oklch, var(--bm-success) 50%, transparent);
           font-weight: 700;
           letter-spacing: 0.1em;
         }
 
         .m-val {
           font-size: 0.625rem;
-          color: #10b981;
+          color: var(--bm-success);
           font-weight: 700;
-          text-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+          text-shadow: 0 0 6px color-mix(in oklch, var(--bm-success) 70%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -2864,8 +2923,8 @@ export class BeatMakerCard extends CardDef {
         .knob {
           flex: 1;
           height: 14px;
-          background: #1a1f2e;
-          border: 2px solid #f59e0b;
+          background: var(--bm-panel-bg);
+          border: 2px solid var(--bm-accent);
           border-radius: 50%;
           position: relative;
         }
@@ -2878,7 +2937,7 @@ export class BeatMakerCard extends CardDef {
           transform: translateX(-50%);
           width: 2px;
           height: 4px;
-          background: #f59e0b;
+          background: var(--bm-accent);
           border-radius: 1px;
         }
 
@@ -2888,7 +2947,7 @@ export class BeatMakerCard extends CardDef {
           flex-direction: column;
           gap: 3px;
           padding: 0.625rem 0.75rem;
-          background: rgba(6, 9, 18, 0.8);
+          background: color-mix(in oklch, var(--bm-seq-bg) 80%, transparent);
           border-radius: var(--radius, var(--boxel-border-radius));
           border: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -2907,21 +2966,21 @@ export class BeatMakerCard extends CardDef {
         }
 
         .track-kick .s-pad.on {
-          background: #ef4444;
-          box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
-          border-color: #ef4444;
+          background: var(--bm-track-kick);
+          box-shadow: 0 0 5px color-mix(in oklch, var(--bm-track-kick) 50%, transparent);
+          border-color: var(--bm-track-kick);
         }
 
         .track-snare .s-pad.on {
-          background: #3b82f6;
-          box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
-          border-color: #3b82f6;
+          background: var(--bm-track-snare);
+          box-shadow: 0 0 5px color-mix(in oklch, var(--bm-track-snare) 50%, transparent);
+          border-color: var(--bm-track-snare);
         }
 
         .track-hihat .s-pad.on {
-          background: #10b981;
-          box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
-          border-color: #10b981;
+          background: var(--bm-track-hihat);
+          box-shadow: 0 0 5px color-mix(in oklch, var(--bm-success) 50%, transparent);
+          border-color: var(--bm-success);
         }
 
         /* Stats */
@@ -2942,10 +3001,10 @@ export class BeatMakerCard extends CardDef {
         .stat-val {
           font-size: 1.125rem;
           font-weight: 800;
-          color: #f59e0b;
+          color: var(--bm-accent);
           line-height: 1;
           margin-bottom: 0.25rem;
-          text-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+          text-shadow: 0 0 12px color-mix(in oklch, var(--bm-accent) 40%, transparent);
         }
 
         .stat-label {
@@ -2968,11 +3027,11 @@ export class BeatMakerCard extends CardDef {
           padding: 0.3125rem 0.625rem;
           background: linear-gradient(
             135deg,
-            rgba(245, 158, 11, 0.18) 0%,
-            rgba(249, 115, 22, 0.18) 100%
+            color-mix(in oklch, var(--bm-accent) 18%, transparent) 0%,
+            color-mix(in oklch, var(--bm-accent-2) 18%, transparent) 100%
           );
-          border: 1px solid rgba(245, 158, 11, 0.3);
-          color: #f59e0b;
+          border: 1px solid color-mix(in oklch, var(--bm-accent) 30%, transparent);
+          color: var(--bm-accent);
           font-size: 0.5625rem;
           font-weight: 700;
           border-radius: 99px;

@@ -263,6 +263,12 @@ export class MusicSheet extends CardDef {
           --c-text-2: rgba(240, 240, 255, 0.65);
           --c-muted: rgba(240, 240, 255, 0.32);
           --c-border: rgba(255, 255, 255, 0.07);
+          --c-hero-bg: #1a1a2e;
+          --c-key: #f5f0e8;
+          --c-diff-super-easy: #69f0ae;
+          --c-diff-easy: #82b1ff;
+          --c-diff-intermediate: #ffcc80;
+          --c-diff-expert: #ff8a80;
 
           background: var(--c-bg);
           color: var(--c-text);
@@ -277,7 +283,7 @@ export class MusicSheet extends CardDef {
         .ms-hero {
           position: relative;
           min-height: clamp(220px, 30vw, 320px);
-          background-color: #1a1a2e;
+          background-color: var(--c-hero-bg);
           background-size: cover;
           background-position: center;
           overflow: hidden;
@@ -318,7 +324,7 @@ export class MusicSheet extends CardDef {
         .ms-wk {
           flex: 1;
           height: 52px;
-          background: #f5f0e8;
+          background: var(--c-key);
           border-radius: 0 0 4px 4px;
         }
 
@@ -384,22 +390,22 @@ export class MusicSheet extends CardDef {
 
         .diff-super-easy {
           background: rgba(105, 240, 174, 0.15);
-          color: #69f0ae;
+          color: var(--c-diff-super-easy);
           border: 1px solid rgba(105, 240, 174, 0.3);
         }
         .diff-easy {
           background: rgba(130, 177, 255, 0.15);
-          color: #82b1ff;
+          color: var(--c-diff-easy);
           border: 1px solid rgba(130, 177, 255, 0.3);
         }
         .diff-intermediate {
           background: rgba(255, 204, 128, 0.15);
-          color: #ffcc80;
+          color: var(--c-diff-intermediate);
           border: 1px solid rgba(255, 204, 128, 0.3);
         }
         .diff-expert {
           background: rgba(255, 138, 128, 0.15);
-          color: #ff8a80;
+          color: var(--c-diff-expert);
           border: 1px solid rgba(255, 138, 128, 0.3);
         }
         .diff-unknown {
@@ -631,18 +637,34 @@ export class MusicSheet extends CardDef {
       </div>
 
       <style scoped>
+        /* Light-context embedded variant: own pinned identity (§4a), distinct
+           from the dark .ms-app isolated view. */
         .song-embedded {
+          --se-accent: #ff8c42;
+          --se-text: #1a1a2e;
+          --se-muted: #888;
+          --se-diff-super-easy-bg: #e8f5e9;
+          --se-diff-super-easy-fg: #2e7d32;
+          --se-diff-easy-bg: #e3f2fd;
+          --se-diff-easy-fg: #1565c0;
+          --se-diff-intermediate-bg: #fff3e0;
+          --se-diff-intermediate-fg: #e65100;
+          --se-diff-expert-bg: #fce4ec;
+          --se-diff-expert-fg: #c62828;
+          --se-diff-unknown-bg: #f5f5f5;
+          --se-diff-unknown-fg: #757575;
+
           display: flex;
           align-items: center;
           gap: 0.625rem;
           padding: 0.5rem 0.75rem;
           border-radius: 6px;
-          background: rgba(255, 140, 66, 0.04);
-          border: 1px solid rgba(255, 140, 66, 0.1);
+          background: color-mix(in oklch, var(--se-accent) 4%, transparent);
+          border: 1px solid color-mix(in oklch, var(--se-accent) 10%, transparent);
         }
 
         .music-icon {
-          color: #ff8c42;
+          color: var(--se-accent);
           flex-shrink: 0;
         }
 
@@ -657,7 +679,7 @@ export class MusicSheet extends CardDef {
         .song-name {
           font-weight: 600;
           font-size: 13px;
-          color: #1a1a2e;
+          color: var(--se-text);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -665,7 +687,7 @@ export class MusicSheet extends CardDef {
 
         .song-artist {
           font-size: 11px;
-          color: #888;
+          color: var(--se-muted);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -683,24 +705,24 @@ export class MusicSheet extends CardDef {
         }
 
         .diff-super-easy {
-          background: #e8f5e9;
-          color: #2e7d32;
+          background: var(--se-diff-super-easy-bg);
+          color: var(--se-diff-super-easy-fg);
         }
         .diff-easy {
-          background: #e3f2fd;
-          color: #1565c0;
+          background: var(--se-diff-easy-bg);
+          color: var(--se-diff-easy-fg);
         }
         .diff-intermediate {
-          background: #fff3e0;
-          color: #e65100;
+          background: var(--se-diff-intermediate-bg);
+          color: var(--se-diff-intermediate-fg);
         }
         .diff-expert {
-          background: #fce4ec;
-          color: #c62828;
+          background: var(--se-diff-expert-bg);
+          color: var(--se-diff-expert-fg);
         }
         .diff-unknown {
-          background: #f5f5f5;
-          color: #757575;
+          background: var(--se-diff-unknown-bg);
+          color: var(--se-diff-unknown-fg);
         }
 
         .tempo-chip {
@@ -708,9 +730,9 @@ export class MusicSheet extends CardDef {
           border-radius: 10px;
           font-size: 9px;
           font-weight: 700;
-          background: rgba(255, 140, 66, 0.12);
-          color: #ff8c42;
-          border: 1px solid rgba(255, 140, 66, 0.25);
+          background: color-mix(in oklch, var(--se-accent) 12%, transparent);
+          color: var(--se-accent);
+          border: 1px solid color-mix(in oklch, var(--se-accent) 25%, transparent);
           white-space: nowrap;
           flex-shrink: 0;
         }
@@ -966,6 +988,7 @@ export class MusicSheet extends CardDef {
         .ms-fitted {
           /* ── Design tokens ── */
           --c-accent: #d97706;
+          --c-accent-2: #b45309;
           --c-accent-bg: #fffbeb;
           --c-accent-border: #fde68a;
           --c-bg: #f8fafc;
@@ -978,8 +1001,19 @@ export class MusicSheet extends CardDef {
             0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
           /* difficulty colours */
           --c-easy: #10b981;
+          --c-easy-2: #059669;
           --c-mid: #f59e0b;
+          --c-mid-2: #d97706;
           --c-hard: #ef4444;
+          --c-hard-2: #b91c1c;
+          --c-badge-easy-bg: #d1fae5;
+          --c-badge-easy-fg: #065f46;
+          --c-badge-mid-bg: #fef3c7;
+          --c-badge-mid-fg: #92400e;
+          --c-badge-hard-bg: #fee2e2;
+          --c-badge-hard-fg: #991b1b;
+          --c-badge-unknown-bg: #f1f5f9;
+          --c-badge-unknown-fg: #64748b;
 
           width: 100%;
           height: 100%;
@@ -1016,7 +1050,7 @@ export class MusicSheet extends CardDef {
           width: 44px;
           height: 44px;
           border-radius: 50%;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-2) 100%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1053,7 +1087,7 @@ export class MusicSheet extends CardDef {
           width: 26px;
           height: 26px;
           border-radius: 50%;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-2) 100%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1103,7 +1137,7 @@ export class MusicSheet extends CardDef {
           width: 20px;
           height: 20px;
           border-radius: 5px;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-2) 100%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1134,7 +1168,7 @@ export class MusicSheet extends CardDef {
           width: clamp(40px, 10cqh, 56px);
           height: clamp(40px, 10cqh, 56px);
           border-radius: 50%;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-2) 100%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1145,13 +1179,13 @@ export class MusicSheet extends CardDef {
 
         .tile-diff-ring.diff-super-easy,
         .tile-diff-ring.diff-easy {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: linear-gradient(135deg, var(--c-easy) 0%, var(--c-easy-2) 100%);
         }
         .tile-diff-ring.diff-intermediate {
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          background: linear-gradient(135deg, var(--c-mid) 0%, var(--c-mid-2) 100%);
         }
         .tile-diff-ring.diff-expert {
-          background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+          background: linear-gradient(135deg, var(--c-hard) 0%, var(--c-hard-2) 100%);
         }
 
         .tile-title {
@@ -1213,7 +1247,7 @@ export class MusicSheet extends CardDef {
         }
 
         .tile-title--over {
-          color: #fff !important;
+          color: var(--c-white, #fff) !important;
           text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
         }
 
@@ -1257,7 +1291,7 @@ export class MusicSheet extends CardDef {
           width: clamp(40px, 8cqh, 56px);
           height: clamp(40px, 8cqh, 56px);
           border-radius: 50%;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-2) 100%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1268,13 +1302,13 @@ export class MusicSheet extends CardDef {
 
         .card-diff-ring.diff-super-easy,
         .card-diff-ring.diff-easy {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: linear-gradient(135deg, var(--c-easy) 0%, var(--c-easy-2) 100%);
         }
         .card-diff-ring.diff-intermediate {
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          background: linear-gradient(135deg, var(--c-mid) 0%, var(--c-mid-2) 100%);
         }
         .card-diff-ring.diff-expert {
-          background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+          background: linear-gradient(135deg, var(--c-hard) 0%, var(--c-hard-2) 100%);
         }
 
         .card-diff-pill {
@@ -1339,7 +1373,7 @@ export class MusicSheet extends CardDef {
           width: 18px;
           height: 18px;
           border-radius: 4px;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-2) 100%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1396,25 +1430,22 @@ export class MusicSheet extends CardDef {
           text-transform: uppercase;
         }
 
-        .diff-super-easy {
-          background: #d1fae5;
-          color: #065f46;
-        }
+        .diff-super-easy,
         .diff-easy {
-          background: #d1fae5;
-          color: #065f46;
+          background: var(--c-badge-easy-bg);
+          color: var(--c-badge-easy-fg);
         }
         .diff-intermediate {
-          background: #fef3c7;
-          color: #92400e;
+          background: var(--c-badge-mid-bg);
+          color: var(--c-badge-mid-fg);
         }
         .diff-expert {
-          background: #fee2e2;
-          color: #991b1b;
+          background: var(--c-badge-hard-bg);
+          color: var(--c-badge-hard-fg);
         }
         .diff-unknown {
-          background: #f1f5f9;
-          color: #64748b;
+          background: var(--c-badge-unknown-bg);
+          color: var(--c-badge-unknown-fg);
         }
 
         .tempo-chip {

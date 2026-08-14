@@ -1319,7 +1319,7 @@ export class AiImageGeneratorIsolated extends Component<
            dark; fixed 22px cell keeps it pixel-consistent as the thread
            scrolls. */
         background-image: radial-gradient(
-          color-mix(in srgb, var(--c-fg) 7%, transparent) 1px,
+          color-mix(in oklch, var(--c-fg) 7%, transparent) 1px,
           transparent 1px
         );
         background-size: 22px 22px;
@@ -1370,7 +1370,7 @@ export class AiImageGeneratorIsolated extends Component<
         padding: 0.375rem;
         border-radius: 50%;
         color: var(--c-accent);
-        background: color-mix(in srgb, var(--c-accent) 12%, transparent);
+        background: color-mix(in oklch, var(--c-accent) 12%, transparent);
       }
       .thread {
         flex: 1;
@@ -1456,16 +1456,16 @@ export class AiImageGeneratorIsolated extends Component<
         font-weight: 600;
         border-radius: var(--boxel-border-radius-sm);
         padding: 2px var(--boxel-sp-xxs);
-        background: color-mix(in srgb, var(--c-fg) 10%, transparent);
+        background: color-mix(in oklch, var(--c-fg) 10%, transparent);
         color: var(--c-fg);
       }
       .badge-inpaint {
-        background: color-mix(in srgb, var(--c-inpaint) 16%, transparent);
-        color: color-mix(in srgb, var(--c-inpaint), var(--c-fg) 40%);
+        background: color-mix(in oklch, var(--c-inpaint) 16%, transparent);
+        color: color-mix(in oklch, var(--c-inpaint), var(--c-fg) 40%);
       }
       .badge-edit {
-        background: color-mix(in srgb, var(--c-edit) 14%, transparent);
-        color: color-mix(in srgb, var(--c-edit), var(--c-fg) 40%);
+        background: color-mix(in oklch, var(--c-edit) 14%, transparent);
+        color: color-mix(in oklch, var(--c-edit), var(--c-fg) 40%);
       }
       /* Every turn renders at the SAME width so the transcript is a clean
          column; height follows each image's aspect ratio (ChatGPT-style),
@@ -1502,7 +1502,7 @@ export class AiImageGeneratorIsolated extends Component<
         height: 3rem;
         border-radius: 50%;
         color: var(--c-accent);
-        background: color-mix(in srgb, var(--c-accent) 14%, transparent);
+        background: color-mix(in oklch, var(--c-accent) 14%, transparent);
         animation: gen-pulse 1.8s ease-in-out infinite;
       }
       .gen-badge > :deep(svg) {
@@ -1607,7 +1607,7 @@ export class AiImageGeneratorIsolated extends Component<
         padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
         border-radius: var(--boxel-border-radius-sm, 6px);
         border: 1px solid var(--c-border);
-        background: color-mix(in srgb, var(--c-surface) 82%, transparent);
+        background: color-mix(in oklch, var(--c-surface) 82%, transparent);
         backdrop-filter: blur(8px);
         color: var(--c-fg);
         font-size: var(--boxel-font-size-sm);
@@ -1643,7 +1643,7 @@ export class AiImageGeneratorIsolated extends Component<
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        background: color-mix(in srgb, var(--c-accent) 18%, transparent);
+        background: color-mix(in oklch, var(--c-accent) 18%, transparent);
         color: var(--c-accent);
         margin-bottom: var(--boxel-sp-xs);
       }
@@ -1735,7 +1735,7 @@ export class AiImageGeneratorIsolated extends Component<
       .mode-chip.active {
         border-color: var(--c-accent);
         color: var(--c-fg);
-        background: color-mix(in srgb, var(--c-accent) 12%, transparent);
+        background: color-mix(in oklch, var(--c-accent) 12%, transparent);
       }
       .composer-main {
         display: flex;
@@ -1778,7 +1778,7 @@ export class AiImageGeneratorIsolated extends Component<
       .edit-controls .prompt-input {
         border: 1px solid var(--c-border);
         border-radius: var(--boxel-border-radius-sm);
-        background: color-mix(in srgb, var(--c-fg) 4%, transparent);
+        background: color-mix(in oklch, var(--c-fg) 4%, transparent);
       }
       .edit-controls .prompt-input:focus,
       .edit-controls .prompt-input:focus-visible {
@@ -1795,17 +1795,17 @@ export class AiImageGeneratorIsolated extends Component<
         --dropdown-background-color: var(--c-surface);
         --dropdown-text-color: var(--c-fg);
         --dropdown-hover-color: color-mix(
-          in srgb,
+          in oklch,
           var(--c-accent) 18%,
           transparent
         );
         --dropdown-highlight-color: color-mix(
-          in srgb,
+          in oklch,
           var(--c-accent) 24%,
           transparent
         );
         --dropdown-highlight-hover-color: color-mix(
-          in srgb,
+          in oklch,
           var(--c-accent) 32%,
           transparent
         );
@@ -1818,7 +1818,7 @@ export class AiImageGeneratorIsolated extends Component<
       .setting :deep(.ember-power-select-option--selected),
       .setting :deep(.ember-power-select-option--highlighted) {
         background-color: color-mix(
-          in srgb,
+          in oklch,
           var(--c-accent) 22%,
           transparent
         ) !important;
@@ -1838,7 +1838,7 @@ export class AiImageGeneratorIsolated extends Component<
         padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
         border: 1px solid var(--c-border);
         border-radius: var(--boxel-border-radius-sm);
-        background: color-mix(in srgb, var(--c-fg) 5%, transparent);
+        background: color-mix(in oklch, var(--c-fg) 5%, transparent);
         color: var(--c-muted);
         cursor: not-allowed;
       }
@@ -1937,7 +1937,7 @@ export class AiImageGeneratorIsolated extends Component<
       }
       .pop-icon:hover {
         color: var(--c-fg);
-        background: color-mix(in srgb, var(--c-fg) 8%, transparent);
+        background: color-mix(in oklch, var(--c-fg) 8%, transparent);
       }
       .pop-icon > :deep(svg) {
         width: 0.9rem;
@@ -1969,7 +1969,7 @@ export class AiImageGeneratorIsolated extends Component<
         stroke-width: 1.5;
       }
       .rail-branch {
-        stroke: color-mix(in srgb, var(--c-accent) 55%, var(--c-border));
+        stroke: color-mix(in oklch, var(--c-accent) 55%, var(--c-border));
       }
       .version-btn {
         position: absolute;
@@ -1993,11 +1993,11 @@ export class AiImageGeneratorIsolated extends Component<
       }
       .version-btn:hover {
         border-color: var(--c-border);
-        background: color-mix(in srgb, var(--c-fg) 6%, transparent);
+        background: color-mix(in oklch, var(--c-fg) 6%, transparent);
       }
       .version-btn.current {
         border-color: var(--c-accent);
-        background: color-mix(in srgb, var(--c-accent) 12%, transparent);
+        background: color-mix(in oklch, var(--c-accent) 12%, transparent);
       }
       /* Node dot, positioned over its lane on the SVG grid. */
       .version-dot {
@@ -2026,7 +2026,7 @@ export class AiImageGeneratorIsolated extends Component<
       }
       .version-btn.branch .version-dot {
         box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--c-accent) 30%, transparent);
+          color-mix(in oklch, var(--c-accent) 30%, transparent);
       }
       .version-thumb {
         flex-shrink: 0;
@@ -2086,7 +2086,7 @@ export class AiImageGeneratorIsolated extends Component<
         transition: background 0.15s ease;
       }
       .stop-btn:hover {
-        background: color-mix(in srgb, var(--c-accent) 88%, #000000);
+        background: color-mix(in oklch, var(--c-accent) 88%, #000000);
       }
       .stop-glyph {
         width: 0.7rem;
@@ -2156,7 +2156,7 @@ export class AiImageGeneratorIsolated extends Component<
         display: inline-flex;
         gap: 2px;
         padding: 2px;
-        background: color-mix(in srgb, var(--c-fg) 10%, transparent);
+        background: color-mix(in oklch, var(--c-fg) 10%, transparent);
         border-radius: var(--boxel-border-radius);
         align-self: flex-start;
       }
@@ -2240,7 +2240,7 @@ export class AiImageGeneratorIsolated extends Component<
         padding: var(--boxel-sp-xs);
         border: 1px solid var(--c-border);
         border-radius: var(--boxel-border-radius-sm);
-        background: color-mix(in srgb, var(--c-fg) 4%, transparent);
+        background: color-mix(in oklch, var(--c-fg) 4%, transparent);
       }
       .edit-record .rec {
         min-width: 0;

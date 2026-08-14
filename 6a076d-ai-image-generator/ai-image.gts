@@ -167,16 +167,16 @@ class AiImageEmbedded extends Component<typeof AiImage> {
         font-weight: 600;
         border-radius: var(--boxel-border-radius-sm);
         padding: 2px var(--boxel-sp-xxs);
-        background: color-mix(in srgb, var(--c-fg) 10%, transparent);
+        background: color-mix(in oklch, var(--c-fg) 10%, transparent);
         color: var(--c-fg);
       }
       .badge-inpaint {
-        background: color-mix(in srgb, var(--c-inpaint) 16%, transparent);
-        color: color-mix(in srgb, var(--c-inpaint), var(--c-fg) 40%);
+        background: color-mix(in oklch, var(--c-inpaint) 16%, transparent);
+        color: color-mix(in oklch, var(--c-inpaint), var(--c-fg) 40%);
       }
       .badge-edit {
-        background: color-mix(in srgb, var(--c-edit) 14%, transparent);
-        color: color-mix(in srgb, var(--c-edit), var(--c-fg) 40%);
+        background: color-mix(in oklch, var(--c-edit) 14%, transparent);
+        color: color-mix(in oklch, var(--c-edit), var(--c-fg) 40%);
       }
       .piece-prompt {
         flex: 1 1 auto;
@@ -290,16 +290,16 @@ class AiImageIsolated extends Component<typeof AiImage> {
         font-weight: 600;
         border-radius: var(--boxel-border-radius-sm);
         padding: 2px var(--boxel-sp-xxs);
-        background: color-mix(in srgb, var(--c-fg) 10%, transparent);
+        background: color-mix(in oklch, var(--c-fg) 10%, transparent);
         color: var(--c-fg);
       }
       .badge-inpaint {
-        background: color-mix(in srgb, var(--c-inpaint) 16%, transparent);
-        color: color-mix(in srgb, var(--c-inpaint), var(--c-fg) 40%);
+        background: color-mix(in oklch, var(--c-inpaint) 16%, transparent);
+        color: color-mix(in oklch, var(--c-inpaint), var(--c-fg) 40%);
       }
       .badge-edit {
-        background: color-mix(in srgb, var(--c-edit) 14%, transparent);
-        color: color-mix(in srgb, var(--c-edit), var(--c-fg) 40%);
+        background: color-mix(in oklch, var(--c-edit) 14%, transparent);
+        color: color-mix(in oklch, var(--c-edit), var(--c-fg) 40%);
       }
       .detail-when {
         font-size: var(--boxel-font-size-xs);

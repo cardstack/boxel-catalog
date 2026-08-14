@@ -255,7 +255,7 @@ export default class SetupWizard extends Component<Signature> {
         );
         --stepper-kicker-color: var(--tsp-accent-deep, #a5854a);
         --stepper-scrim-bg: color-mix(
-          in srgb,
+          in oklch,
           var(--tsp-primary, var(--primary, #141b33)) 28%,
           transparent
         );
@@ -355,7 +355,7 @@ export default class SetupWizard extends Component<Signature> {
         border: 1px solid transparent;
         border-radius: 12px;
         background: color-mix(
-          in srgb,
+          in oklch,
           var(--tsp-accent, var(--accent, #a5854a)) 9%,
           transparent
         );
@@ -410,7 +410,7 @@ export default class SetupWizard extends Component<Signature> {
       .wz-secondary {
         --boxel-button-secondary-background: transparent;
         --boxel-button-secondary-border: color-mix(
-          in srgb,
+          in oklch,
           var(--tsp-accent, var(--accent, #a5854a)) 55%,
           transparent
         );

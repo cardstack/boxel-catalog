@@ -90,7 +90,7 @@ export class SurveyFitted extends Component<typeof Survey> {
         width: 2rem;
         height: 2rem;
         border-radius: 0.5rem;
-        background: color-mix(in srgb, var(--sf-accent) 14%, transparent);
+        background: color-mix(in oklch, var(--sf-accent) 14%, transparent);
         color: var(--sf-accent);
         font-weight: 800;
         font-size: 1.1rem;

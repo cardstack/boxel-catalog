@@ -233,10 +233,12 @@ class FittedTemplate extends Component<typeof Player> {
         --chip-felt: #123f24;
         --chip-cream: #fff5d6;
         --chip-red: #a91d2f;
+        --player-text: #f6eed1;
+        --player-text-2: #f8f3df;
 
         width: 100%;
         height: 100%;
-        color: #f6eed1;
+        color: var(--player-text);
       }
 
       .badge,
@@ -338,7 +340,7 @@ class FittedTemplate extends Component<typeof Player> {
             var(--chip-cream) 0 11deg,
             var(--chip-red) 11deg 22deg
           );
-        color: #f8f3df;
+        color: var(--player-text-2);
         box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
       }
 
@@ -394,7 +396,7 @@ class FittedTemplate extends Component<typeof Player> {
         margin: 0;
         min-width: 0;
         overflow: hidden;
-        color: #f6eed1;
+        color: var(--player-text);
         text-overflow: ellipsis;
         white-space: nowrap;
         font-size: 0.875rem;
@@ -487,6 +489,8 @@ class IsolatedTemplate extends Component<typeof Player> {
         --chip-felt: #123f24;
         --chip-cream: #fff5d6;
         --chip-red: #a91d2f;
+        --player-text: #f6eed1;
+        --player-text-2: #f8f3df;
 
         position: relative;
         display: flex;
@@ -506,7 +510,7 @@ class IsolatedTemplate extends Component<typeof Player> {
           rgba(19, 28, 36, 0.98),
           rgba(9, 14, 19, 0.98)
         );
-        color: #f6eed1;
+        color: var(--player-text);
       }
 
       .player-isolated__pattern {
@@ -548,7 +552,7 @@ class IsolatedTemplate extends Component<typeof Player> {
             var(--chip-cream) 0 11deg,
             var(--chip-red) 11deg 22deg
           );
-        color: #f8f3df;
+        color: var(--player-text-2);
         box-shadow:
           0 0 0 3px rgba(212, 175, 55, 0.65),
           0 0 20px rgba(212, 175, 55, 0.25),
@@ -589,7 +593,7 @@ class IsolatedTemplate extends Component<typeof Player> {
 
       .player-isolated__name {
         margin: 0;
-        color: #f6eed1;
+        color: var(--player-text);
         font-size: 1.75rem;
         font-weight: 800;
         line-height: 1.15;

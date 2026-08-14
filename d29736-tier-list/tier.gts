@@ -36,7 +36,7 @@ export class Tier extends FieldDef {
           padding: 0.125rem 0.5rem;
           border-radius: 0.25rem;
           font-weight: 700;
-          color: #111;
+          color: var(--foreground, var(--boxel-dark));
         }
       </style>
     </template>

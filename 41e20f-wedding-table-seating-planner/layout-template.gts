@@ -69,6 +69,7 @@ export class LayoutTemplate extends CardDef {
           --lt-accent: var(--tsp-accent, var(--accent, #c5a35c));
           --lt-accent-deep: var(--tsp-accent-deep, #a8894f);
           --lt-paper: var(--tsp-muted, var(--muted, #f0eee7));
+          --lt-bg: var(--tsp-background, var(--background, var(--boxel-light)));
           box-sizing: border-box;
           display: flex;
           flex-direction: column;
@@ -77,7 +78,7 @@ export class LayoutTemplate extends CardDef {
           height: 100%;
           min-height: 0;
           padding: 24px;
-          background: #f7f5f0;
+          background: var(--lt-bg);
           color: var(--tsp-foreground, var(--foreground, #22283f));
           font-family: var(
             --tsp-font-sans,
@@ -111,7 +112,7 @@ export class LayoutTemplate extends CardDef {
           );
           font-size: 12px;
           color: color-mix(
-            in srgb,
+            in oklch,
             var(--tsp-foreground, var(--foreground, #22283f)) 55%,
             transparent
           );
@@ -207,7 +208,7 @@ export class LayoutTemplate extends CardDef {
             var(--font-sans, 'Jost', sans-serif)
           );
           font-size: 11px;
-          color: color-mix(in srgb, currentColor 55%, transparent);
+          color: color-mix(in oklch, currentColor 55%, transparent);
         }
       </style>
     </template>
@@ -388,7 +389,7 @@ export class LayoutTemplate extends CardDef {
             var(--font-sans, 'Jost', sans-serif)
           );
           font-size: 11px;
-          color: color-mix(in srgb, currentColor 55%, transparent);
+          color: color-mix(in oklch, currentColor 55%, transparent);
         }
         .lt-stats {
           display: flex;
@@ -400,7 +401,7 @@ export class LayoutTemplate extends CardDef {
             var(--font-sans, 'Jost', sans-serif)
           );
           font-size: 11px;
-          color: color-mix(in srgb, currentColor 55%, transparent);
+          color: color-mix(in oklch, currentColor 55%, transparent);
         }
         .lt-stat b {
           font-family: var(

@@ -126,7 +126,7 @@ export default class AspectRatioField extends StringField {
           stroke-width: 1.5;
         }
         .ar-tile.selected .ar-svg rect {
-          fill: color-mix(in srgb, var(--boxel-highlight) 25%, transparent);
+          fill: color-mix(in oklch, var(--boxel-highlight) 25%, transparent);
         }
         .ar-label {
           font-size: var(--boxel-font-size-xs);

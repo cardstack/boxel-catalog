@@ -246,7 +246,7 @@ export default class LayoutPreview extends Component<Signature> {
       }
       .lp-seat {
         fill: none;
-        stroke: color-mix(in srgb, currentColor 75%, transparent);
+        stroke: color-mix(in oklch, currentColor 75%, transparent);
         stroke-width: 1.25;
       }
     </style>

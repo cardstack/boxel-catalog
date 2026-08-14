@@ -95,11 +95,26 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
     </div>
     <style scoped>
       .ttt {
+        --ttt-bg: #fafafa;
+        --ttt-text: #121212;
+        --ttt-muted: #555;
+        --ttt-cell-bg: #f0f0f0;
+        --ttt-cell-border: #aaa;
+        --ttt-x: #2563eb;
+        --ttt-o: #dc2626;
+        --ttt-key-bg: #2c2c2c;
+        --ttt-key-bg-hover: #1a1a1a;
+        --ttt-on-dark: #ffffff;
+        --ttt-win-gold: #fde68a;
+        --ttt-win-cyan: #a5f3fc;
+        --ttt-muted-2: #6b7280;
+        --ttt-accent: #6366f1;
+
         width: 100%;
         max-width: 360px;
         margin: 0 auto;
         padding: var(--boxel-sp-lg) var(--boxel-sp);
-        background: #fafafa;
+        background: var(--ttt-bg);
         border: 1px solid #ececec;
         border-radius: 16px;
         text-align: center;
@@ -112,19 +127,19 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
           sans-serif;
         letter-spacing: -0.02em;
         margin: 0 0 8px;
-        color: #121212;
+        color: var(--ttt-text);
       }
       .ttt-status {
         font:
           500 0.9rem/1 'Inter',
           sans-serif;
-        color: #555;
+        color: var(--ttt-muted);
         margin-bottom: 18px;
         height: 18px;
       }
       .ttt-status strong {
         font-weight: 800;
-        color: #121212;
+        color: var(--ttt-text);
       }
       .ttt-board {
         display: grid;
@@ -145,11 +160,11 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
           background-color 0.12s,
           border-color 0.12s,
           transform 0.1s;
-        color: #121212;
+        color: var(--ttt-text);
       }
       .ttt-cell:hover:not(.is-filled):not([disabled]) {
-        background: #f0f0f0;
-        border-color: #aaa;
+        background: var(--ttt-cell-bg);
+        border-color: var(--ttt-cell-border);
       }
       .ttt-cell:active:not(.is-filled):not([disabled]) {
         transform: scale(0.96);
@@ -158,14 +173,14 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
         cursor: default;
       }
       .ttt-cell.is-x {
-        color: #2563eb;
+        color: var(--ttt-x);
       }
       .ttt-cell.is-o {
-        color: #dc2626;
+        color: var(--ttt-o);
       }
       .ttt-reset {
         padding: 9px 22px;
-        background: #2c2c2c;
+        background: var(--ttt-key-bg);
         color: white;
         border: none;
         border-radius: 999px;
@@ -180,7 +195,7 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
           transform 0.1s;
       }
       .ttt-reset:hover {
-        background: #1a1a1a;
+        background: var(--ttt-key-bg-hover);
       }
       .ttt-reset:active {
         transform: scale(0.96);
@@ -263,14 +278,14 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
           800 0.78rem/1 'Inter',
           system-ui,
           sans-serif;
-        color: #ffffff;
+        color: var(--ttt-on-dark);
         border-radius: 2px;
       }
       .ttt-x {
-        color: #fde68a;
+        color: var(--ttt-win-gold);
       }
       .ttt-o {
-        color: #a5f3fc;
+        color: var(--ttt-win-cyan);
       }
       .ttt-strike {
         position: absolute;
@@ -278,7 +293,7 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
         left: -4px;
         right: -4px;
         height: 2px;
-        background: #ffffff;
+        background: var(--ttt-on-dark);
         transform: rotate(-45deg);
         transform-origin: center;
         border-radius: 2px;
@@ -298,7 +313,7 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
           sans-serif;
         letter-spacing: -0.01em;
         margin: 0;
-        color: #121212;
+        color: var(--ttt-text);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -308,7 +323,7 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
           500 0.78rem/1.3 'Inter',
           system-ui,
           sans-serif;
-        color: #6b7280;
+        color: var(--ttt-muted-2);
         margin: 2px 0 0;
         white-space: nowrap;
         overflow: hidden;
@@ -323,7 +338,7 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
           sans-serif;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #6366f1;
+        color: var(--ttt-accent);
         padding: 4px 8px;
         background: rgba(99, 102, 241, 0.1);
         border-radius: 999px;

@@ -217,7 +217,7 @@ export default class SeatingPlanPopover extends Component<Signature> {
           168deg,
           var(--tsp-primary, var(--primary, #141b33)),
           color-mix(
-            in srgb,
+            in oklch,
             var(--tsp-primary, var(--primary, #141b33)) 90%,
             #ffffff
           )

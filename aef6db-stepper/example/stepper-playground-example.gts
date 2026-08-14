@@ -385,6 +385,14 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
 
     <style scoped>
       .sp {
+        --sp-muted: #6b7280;
+        --sp-muted-2: #4b5563;
+        --sp-text: #374151;
+        --sp-indigo: #4338ca;
+        --sp-indigo-bg: #eef2ff;
+        --sp-chip: #e5e7eb;
+        --sp-on-dark: #ffffff;
+
         display: grid;
         gap: 16px;
         padding: 24px;
@@ -401,7 +409,7 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #6b7280;
+        color: var(--sp-muted);
       }
       .sp-event {
         font-weight: 500;
@@ -409,7 +417,7 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
         letter-spacing: normal;
         font-family: ui-monospace, monospace;
         font-size: 11px;
-        color: #4338ca;
+        color: var(--sp-indigo);
       }
       .sp-axes {
         display: grid;
@@ -424,19 +432,19 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
       .sp-label {
         font-size: 11px;
         font-weight: 600;
-        color: #4338ca;
+        color: var(--sp-indigo);
       }
       .sp-desc {
         font-size: 11px;
         line-height: 1.5;
-        color: #6b7280;
+        color: var(--sp-muted);
       }
       .sp-desc code,
       .sp-arg code {
         font-family: ui-monospace, monospace;
         font-size: 10px;
-        color: #4338ca;
-        background: #eef2ff;
+        color: var(--sp-indigo);
+        background: var(--sp-indigo-bg);
         padding: 1px 4px;
         border-radius: 3px;
       }
@@ -444,7 +452,7 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
         position: relative;
         height: 480px;
         width: 100%;
-        background: #e5e7eb;
+        background: var(--sp-chip);
         border-radius: 10px;
         overflow: hidden;
         contain: layout size;
@@ -456,11 +464,11 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
         padding: 10px 20px;
         border: 1.5px dashed #9ca3af;
         border-radius: 8px;
-        background: #fff;
+        background: var(--sp-on-dark);
         cursor: pointer;
         font: inherit;
         font-size: 13px;
-        color: #374151;
+        color: var(--sp-text);
       }
       /* demo step content */
       .sp-field {
@@ -523,7 +531,7 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
         font-size: 12px;
       }
       .sp-arg span {
-        color: #4b5563;
+        color: var(--sp-muted-2);
       }
       @media (max-width: 520px) {
         .sp-arg {

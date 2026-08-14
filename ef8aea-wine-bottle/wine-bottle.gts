@@ -33,23 +33,6 @@ const WineTypeField = enumField(StringField, {
   ],
 });
 
-// 'rosé' is a valid enum value but not a valid CSS class suffix.
-const TYPE_SLUGS: Record<string, string> = {
-  red: 'red',
-  white: 'white',
-  rosé: 'rose',
-  orange: 'orange',
-  sparkling: 'sparkling',
-};
-
-const TYPE_TINTS: Record<string, string> = {
-  red: 'rgba(122, 30, 42, 0.4)',
-  white: 'rgba(232, 226, 168, 0.18)',
-  rosé: 'rgba(244, 199, 194, 0.25)',
-  orange: 'rgba(216, 154, 79, 0.3)',
-  sparkling: 'rgba(232, 197, 71, 0.25)',
-};
-
 interface GlassGeometry {
   rimHalfWidth: number;
   bowlBottom: number;
@@ -208,12 +191,13 @@ class WineGlass extends GlimmerComponent<WineGlassSignature> {
     </svg>
 
     <style scoped>
-      /* --_cream-dim / --wb-liquid inherit from the card that renders this. */
+      /* The glass itself is drawn in the theme's own ink; only the wine is a
+         model colour, and it arrives as --wb-liquid from the rendering card. */
       .bowl,
       .rim,
       .stem {
         fill: none;
-        stroke: var(--_cream-dim, #c9b88a);
+        stroke: var(--muted-foreground, var(--boxel-500));
         stroke-width: 1.2;
         stroke-linecap: round;
       }
@@ -223,15 +207,17 @@ class WineGlass extends GlimmerComponent<WineGlassSignature> {
       .liquid {
         fill: var(--wb-liquid, transparent);
       }
+      /* `white` here is light, not palette: the lit surface and the specular
+         highlight of a glass read the same in every theme. */
       .surface {
-        fill: color-mix(in oklab, var(--wb-liquid, transparent), white 28%);
+        fill: color-mix(in oklch, var(--wb-liquid, transparent), white 28%);
       }
       .shine {
-        fill: #fff;
+        fill: white;
         opacity: 0.11;
       }
       .foot {
-        fill: var(--_cream-dim, #c9b88a);
+        fill: var(--muted-foreground, var(--boxel-500));
         opacity: 0.6;
       }
     </style>
@@ -261,14 +247,6 @@ function amountLabel(
 // Every getter guards `model` — a linksTo card renders before its model resolves,
 // and an unguarded read crashes the whole card.
 class WineBottleComponent extends Component<typeof WineBottle> {
-  get typeSlug() {
-    let type = this.args.model?.wineType;
-    return type ? (TYPE_SLUGS[type] ?? '') : '';
-  }
-  get typeTint() {
-    let type = this.args.model?.wineType;
-    return type ? TYPE_TINTS[type] : undefined;
-  }
   get vintageLabel() {
     return this.args.model?.vintage?.value ?? '—';
   }
@@ -405,12 +383,9 @@ export class WineBottle extends CardDef {
               ·
               {{@model.region}}{{/if}}</p>
           {{#if @model.wineType}}
-            <Pill
-              class='type-pill'
-              @pillBackgroundColor={{this.typeTint}}
-              @pillFontColor='var(--_cream)'
-              @pillBorderColor='var(--_rule)'
-            >
+            {{! variant, not explicit colours: the variant is a guaranteed
+                fill/foreground pair from the theme. }}
+            <Pill class='type-pill' @variant='muted'>
               <@fields.wineType />
             </Pill>
           {{/if}}
@@ -471,7 +446,7 @@ export class WineBottle extends CardDef {
               <div class='timeline-track'></div>
               <div
                 class='timeline-cursor cursor-{{this.windowState}}'
-                style={{cssVar _cursor-left=(concat this.cursorPct '%')}}
+                style={{cssVar wb-cursor-left=(concat this.cursorPct '%')}}
               ></div>
             </div>
             <div class='timeline-ends'>
@@ -514,12 +489,7 @@ export class WineBottle extends CardDef {
           <footer class='meta-row'>
             <div class='meta-left'>
               {{#if @model.bottlesRemaining}}
-                <Pill
-                  class='bottles-pill'
-                  @pillBackgroundColor='var(--_burgundy)'
-                  @pillFontColor='var(--_cream)'
-                  @pillBorderColor='var(--_rule)'
-                >
+                <Pill class='bottles-pill' @variant='primary'>
                   {{this.bottlesLabel}}
                 </Pill>
               {{/if}}
@@ -540,34 +510,28 @@ export class WineBottle extends CardDef {
       </article>
 
       <style scoped>
-        /* Art-directed cellar palette: --wb-* are the public knobs; the literals
-           are the card's committed identity, not a theme fallback. */
+        /* Adapter block (§1a): the only place the semantic set is read into this
+           card's vocabulary, and only for shades no semantic token expresses.
+           Nothing here invents a colour, so the sheet is whatever the linked
+           theme says it is — dark cellar or bright tasting room. */
         .cellar-sheet {
-          --_bg: var(--wb-bg, #1a0f0f);
-          --_bg-2: var(--wb-bg-2, #2a1818);
-          --_cream: var(--wb-cream, #f5efd8);
-          --_cream-dim: var(--wb-cream-dim, #c9b88a);
-          --_gold: var(--wb-gold, #c9a96a);
-          --_burgundy: var(--wb-burgundy, #5a1a1f);
-          --_rule: var(--wb-rule, rgba(201, 169, 106, 0.25));
-          --_gain: var(--wb-gain, var(--success, #7bc88a));
-          --_loss: var(--wb-loss, var(--destructive, #d97a7a));
-          --_radius: var(--wb-radius, var(--radius, 4px));
-          --_font-display: var(
-            --wb-font-display,
-            var(--font-serif, 'Georgia', 'Times New Roman', serif)
+          --wb-sheet-raised: color-mix(
+            in oklch,
+            var(--foreground, var(--boxel-dark)) 5%,
+            var(--background, var(--boxel-light))
           );
-          --_font-ui: var(
-            --wb-font-ui,
-            var(--font-sans, system-ui, sans-serif)
+          --wb-mark-soft: color-mix(
+            in oklch,
+            var(--accent, var(--boxel-300)) 30%,
+            transparent
           );
 
-          font-family: var(--_font-display);
-          color: var(--_cream);
+          font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+          color: var(--foreground, var(--boxel-dark));
           background: radial-gradient(
             ellipse at top,
-            var(--_bg-2) 0%,
-            var(--_bg) 70%
+            var(--wb-sheet-raised) 0%,
+            var(--background, var(--boxel-light)) 70%
           );
           padding: var(--boxel-sp-xl);
           min-height: 100%;
@@ -584,23 +548,25 @@ export class WineBottle extends CardDef {
           justify-content: space-between;
           gap: var(--boxel-sp);
           padding-bottom: var(--boxel-sp-sm);
-          border-bottom: 1px solid var(--_rule);
+          border-bottom: 1px solid var(--border, var(--boxel-border-color));
           margin: 0;
         }
 
+        /* Hierarchy is carried by size, weight and tracking — not by a hue the
+           theme never contrast-checked against the sheet (§2). */
         .eyebrow {
           margin: 0;
-          color: var(--_gold);
+          color: var(--muted-foreground, var(--boxel-500));
           letter-spacing: 0.3em;
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
         }
 
         .type-pill {
           letter-spacing: 0.15em;
           text-transform: uppercase;
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
           font-size: var(--boxel-font-size-xs);
         }
 
@@ -637,23 +603,21 @@ export class WineBottle extends CardDef {
         .label-panel {
           aspect-ratio: 3 / 4;
           max-height: 22rem;
-          background: linear-gradient(180deg, var(--_bg-2), var(--_bg));
-          border: 1px solid var(--_rule);
-          border-radius: var(--_radius);
+          background: var(--wb-sheet-raised);
+          border: 1px solid var(--border, var(--boxel-border-color));
+          border-radius: var(--radius, var(--boxel-border-radius));
           padding: var(--boxel-sp-sm);
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow:
-            0 12px 32px rgb(0 0 0 / 0.6),
-            inset 0 0 0 1px rgb(255 255 255 / 0.03);
+          box-shadow: var(--shadow-lg, var(--boxel-deep-box-shadow));
           overflow: hidden;
         }
 
         .label-panel > :deep(*) {
           width: 100%;
           height: 100%;
-          border-radius: calc(var(--_radius) - 1px);
+          border-radius: calc(var(--radius, var(--boxel-border-radius)) - 1px);
           overflow: hidden;
         }
 
@@ -665,7 +629,7 @@ export class WineBottle extends CardDef {
         .wine-glass {
           width: 80px;
           height: 160px;
-          filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.5));
+          filter: drop-shadow(0 8px 12px var(--boxel-dark-40));
         }
         .typography-panel {
           display: flex;
@@ -676,7 +640,7 @@ export class WineBottle extends CardDef {
         .vintage {
           font-size: var(--boxel-font-size-2xl);
           font-weight: 700;
-          color: var(--_gold);
+          color: var(--foreground, var(--boxel-dark));
           letter-spacing: 0.05em;
           margin: 0;
           line-height: 1;
@@ -685,12 +649,12 @@ export class WineBottle extends CardDef {
           font-size: var(--boxel-font-size-lg);
           font-weight: 600;
           margin: 0;
-          color: var(--_cream);
+          color: var(--foreground, var(--boxel-dark));
           line-height: 1.1;
         }
         .varietal {
           font-style: italic;
-          color: var(--_cream-dim);
+          color: var(--muted-foreground, var(--boxel-500));
           margin: 0;
           font-size: var(--boxel-font-size);
         }
@@ -701,21 +665,24 @@ export class WineBottle extends CardDef {
           width: 5.5rem;
           height: 5.5rem;
           border-radius: 50%;
+          /* A wax seal is a --primary fill, so its text is --primary-foreground:
+             the one pair the theme guarantees against each other. white/black in
+             the mix are lighting on that fill, not colours of their own. */
           background: radial-gradient(
             circle at 35% 30%,
-            color-mix(in oklab, var(--_burgundy), white 18%),
-            var(--_burgundy) 60%,
-            color-mix(in oklab, var(--_burgundy), black 35%)
+            color-mix(in oklch, var(--primary, var(--boxel-700)), white 18%),
+            var(--primary, var(--boxel-700)) 60%,
+            color-mix(in oklch, var(--primary, var(--boxel-700)), black 35%)
           );
-          color: var(--_cream);
+          color: var(--primary-foreground, var(--boxel-light));
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           box-shadow:
-            0 0 0 2px var(--_burgundy),
-            0 0 0 3px var(--_gold),
-            0 6px 16px rgb(0 0 0 / 0.55);
+            0 0 0 2px var(--primary, var(--boxel-700)),
+            0 0 0 3px var(--wb-mark-soft),
+            0 6px 16px var(--boxel-dark-50);
           transform: rotate(-6deg);
         }
         .wax-score {
@@ -726,14 +693,18 @@ export class WineBottle extends CardDef {
         .wax-label {
           font-size: 0.55rem;
           letter-spacing: 0.25em;
-          font-family: var(--_font-ui);
-          color: var(--_gold);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          color: color-mix(
+            in oklch,
+            var(--primary-foreground, var(--boxel-light)) 78%,
+            transparent
+          );
           margin-top: 0.15rem;
         }
 
         .timeline-row {
           padding-top: var(--boxel-sp-sm);
-          border-top: 1px solid var(--_rule);
+          border-top: 1px solid var(--border, var(--boxel-border-color));
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-xs);
@@ -746,27 +717,35 @@ export class WineBottle extends CardDef {
         }
         .timeline-title {
           margin: 0;
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
           letter-spacing: 0.25em;
           font-size: var(--boxel-font-size-xs);
-          color: var(--_gold);
+          color: var(--muted-foreground, var(--boxel-500));
           text-transform: uppercase;
         }
         .timeline-status {
           margin: 0;
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.15em;
           text-transform: uppercase;
         }
+        /* Three states, three levels of emphasis on the theme's own ink — a
+           status hue would be a colour this card invented. The cursor dot picks
+           the same value up through currentColor. */
         .status-peak-window {
-          color: var(--_gold);
+          color: var(--foreground, var(--boxel-dark));
+          font-weight: 700;
         }
         .status-before-window {
-          color: color-mix(in oklab, var(--_gold), #ff8a00 40%);
+          color: var(--muted-foreground, var(--boxel-500));
         }
         .status-past-window {
-          color: color-mix(in oklab, var(--_gold), transparent 45%);
+          color: color-mix(
+            in oklch,
+            var(--muted-foreground, var(--boxel-500)) 55%,
+            transparent
+          );
         }
         .timeline {
           position: relative;
@@ -781,9 +760,9 @@ export class WineBottle extends CardDef {
           height: 2px;
           background: linear-gradient(
             90deg,
-            color-mix(in oklab, var(--_gold), transparent 70%),
-            var(--_gold) 50%,
-            color-mix(in oklab, var(--_gold), transparent 70%)
+            var(--wb-mark-soft),
+            var(--accent, var(--boxel-300)) 50%,
+            var(--wb-mark-soft)
           );
           transform: translateY(-50%);
         }
@@ -791,7 +770,7 @@ export class WineBottle extends CardDef {
           position: absolute;
           top: 0;
           bottom: 0;
-          left: var(--_cursor-left, 0%);
+          left: var(--wb-cursor-left, 0%);
           width: 2px;
           transform: translateX(-50%);
           display: flex;
@@ -807,24 +786,28 @@ export class WineBottle extends CardDef {
           height: 0.875rem;
           border-radius: 50%;
           background: currentColor;
-          box-shadow: 0 0 0 2px var(--_bg);
+          box-shadow: 0 0 0 2px var(--background, var(--boxel-light));
           transform: translate(-50%, -50%);
         }
         .cursor-peak-window {
-          color: var(--_gold);
+          color: var(--foreground, var(--boxel-dark));
         }
         .cursor-before-window {
-          color: color-mix(in oklab, var(--_gold), #ff8a00 40%);
+          color: var(--muted-foreground, var(--boxel-500));
         }
         .cursor-past-window {
-          color: color-mix(in oklab, var(--_gold), transparent 60%);
+          color: color-mix(
+            in oklch,
+            var(--muted-foreground, var(--boxel-500)) 55%,
+            transparent
+          );
         }
 
         .timeline-ends {
           display: flex;
           justify-content: space-between;
-          font-family: var(--_font-ui);
-          color: var(--_cream-dim);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          color: var(--muted-foreground, var(--boxel-500));
           font-size: var(--boxel-font-size-sm);
         }
 
@@ -834,7 +817,7 @@ export class WineBottle extends CardDef {
           align-items: baseline;
           gap: var(--boxel-sp);
           padding-top: var(--boxel-sp-sm);
-          border-top: 1px solid var(--_rule);
+          border-top: 1px solid var(--border, var(--boxel-border-color));
         }
         .price-cell {
           display: flex;
@@ -842,36 +825,53 @@ export class WineBottle extends CardDef {
           gap: var(--boxel-sp-5xs);
         }
         .price-label {
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
           letter-spacing: 0.2em;
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
-          color: var(--_cream-dim);
+          color: var(--muted-foreground, var(--boxel-500));
         }
         .price-value {
           font-size: var(--boxel-font-size-md);
           font-weight: 600;
-          color: var(--_cream);
+          color: var(--foreground, var(--boxel-dark));
         }
         .price-arrow {
-          color: var(--_gold);
+          color: var(--muted-foreground, var(--boxel-500));
           font-size: var(--boxel-font-size-md);
           padding: 0 var(--boxel-sp-xxs);
         }
+        /* Self-diluting chips (§1b): each fill is a 12% dilution of its own text
+           colour, so a theme change moves both and they can never fight. */
         .price-delta {
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
           font-weight: 600;
           font-size: var(--boxel-font-size-sm);
           margin-left: auto;
+          padding: var(--boxel-sp-6xs) var(--boxel-sp-xxs);
+          border-radius: var(--radius, var(--boxel-border-radius-sm));
         }
         .delta-up {
-          color: var(--_gain);
+          color: var(--foreground, var(--boxel-dark));
+          background: color-mix(
+            in oklch,
+            var(--foreground, var(--boxel-dark)) 12%,
+            transparent
+          );
         }
+        /* A loss is the one signal the theme does name, and it names it as a
+           fill — so the label rides its paired foreground. */
         .delta-down {
-          color: var(--_loss);
+          color: var(--destructive-foreground, var(--boxel-light));
+          background: var(--destructive, var(--boxel-red));
         }
         .delta-flat {
-          color: var(--_cream-dim);
+          color: var(--muted-foreground, var(--boxel-500));
+          background: color-mix(
+            in oklch,
+            var(--muted-foreground, var(--boxel-500)) 12%,
+            transparent
+          );
         }
 
         .meta-row {
@@ -880,8 +880,8 @@ export class WineBottle extends CardDef {
           justify-content: space-between;
           gap: var(--boxel-sp);
           padding-top: var(--boxel-sp-sm);
-          border-top: 1px solid var(--_rule);
-          font-family: var(--_font-ui);
+          border-top: 1px solid var(--border, var(--boxel-border-color));
+          font-family: var(--font-sans, system-ui, sans-serif);
         }
         .meta-left {
           display: flex;
@@ -890,25 +890,24 @@ export class WineBottle extends CardDef {
           min-width: 0;
         }
         .bottles-pill {
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
           font-size: var(--boxel-font-size-sm);
         }
         .purchased-on {
           font-size: var(--boxel-font-size-sm);
-          color: var(--_cream-dim);
+          color: var(--muted-foreground, var(--boxel-500));
         }
         .producer-link {
           font-size: var(--boxel-font-size-sm);
-          color: var(--_gold);
         }
         .producer-link :deep(a) {
-          color: var(--_gold);
+          color: var(--foreground, var(--boxel-dark));
           text-decoration: none;
-          border-bottom: 1px solid var(--_rule);
+          border-bottom: 1px solid var(--border, var(--boxel-border-color));
           padding-bottom: 1px;
         }
         .producer-link :deep(a:hover) {
-          border-bottom-color: var(--_gold);
+          border-bottom-color: var(--accent, var(--boxel-300));
         }
       </style>
     </template>
@@ -916,7 +915,8 @@ export class WineBottle extends CardDef {
 
   static embedded = class Embedded extends WineBottleComponent {
     <template>
-      <article class='wine-card type-{{this.typeSlug}}'>
+      {{! the wine's own colour is the row's left edge — a mark, never text }}
+      <article class='wine-card' style={{cssVar wb-liquid=@model.liquidColor}}>
         <Swatch
           class='liquid-swatch'
           @color={{@model.liquidColor}}
@@ -956,26 +956,24 @@ export class WineBottle extends CardDef {
 
       <style scoped>
         .wine-card {
-          --_type-accent: var(--border);
-          --_burgundy: var(--wb-burgundy, #5a1a1f);
-          --_cream: var(--wb-cream, #f5efd8);
           display: grid;
           grid-template-columns: auto 1fr auto;
           gap: var(--boxel-sp-sm);
           align-items: center;
           padding: var(--boxel-sp-sm) var(--boxel-sp);
-          border-radius: var(--boxel-border-radius);
-          background-color: var(--card);
-          color: var(--card-foreground);
-          border: 1px solid var(--border);
-          border-left: 4px solid var(--_type-accent);
-          font-family: var(--font-serif, 'Georgia', serif);
+          border-radius: var(--radius, var(--boxel-border-radius));
+          background-color: var(--card, var(--boxel-light));
+          color: var(--card-foreground, var(--boxel-dark));
+          border: 1px solid var(--border, var(--boxel-border-color));
+          border-left: 4px solid
+            var(--wb-liquid, var(--border, var(--boxel-border-color)));
+          font-family: var(--font-serif, Georgia, serif);
           container-type: inline-size;
           container-name: wine-row;
         }
 
-        /* Narrow rows: the left border already encodes wine type, so drop the
-           pill rather than ellipsis the producer down to one letter. */
+        /* Narrow rows: the left border and the swatch already encode the wine,
+           so drop the pill rather than ellipsis the producer to one letter. */
         @container wine-row (inline-size <= 420px) {
           .type-pill {
             display: none;
@@ -983,21 +981,6 @@ export class WineBottle extends CardDef {
           .sub .region {
             display: none;
           }
-        }
-        .type-red {
-          --_type-accent: var(--wb-type-red, #5a1a1f);
-        }
-        .type-white {
-          --_type-accent: var(--wb-type-white, #c9b54a);
-        }
-        .type-rose {
-          --_type-accent: var(--wb-type-rose, #e89aa0);
-        }
-        .type-orange {
-          --_type-accent: var(--wb-type-orange, #b8732a);
-        }
-        .type-sparkling {
-          --_type-accent: var(--wb-type-sparkling, #d4a83a);
         }
 
         .liquid-swatch {
@@ -1038,7 +1021,7 @@ export class WineBottle extends CardDef {
         .sub {
           margin: var(--boxel-sp-5xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
+          color: var(--muted-foreground, var(--boxel-500));
           font-style: italic;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1056,20 +1039,20 @@ export class WineBottle extends CardDef {
         }
         .score-badge {
           font-weight: 700;
-          color: var(--_cream);
-          background: var(--_burgundy);
+          color: var(--primary-foreground, var(--boxel-light));
+          background: var(--primary, var(--boxel-700));
           padding: var(--boxel-sp-5xs) var(--boxel-sp-xxs);
-          border-radius: var(--radius, 4px);
+          border-radius: var(--radius, var(--boxel-border-radius-sm));
           font-size: var(--boxel-font-size-sm);
-          font-family: var(--font-serif, 'Georgia', serif);
+          font-family: var(--font-serif, Georgia, serif);
         }
         .value {
           font-weight: 600;
-          color: var(--card-foreground);
+          color: var(--card-foreground, var(--boxel-dark));
           font-size: var(--boxel-font-size-sm);
         }
         .bottles {
-          color: var(--muted-foreground);
+          color: var(--muted-foreground, var(--boxel-500));
           font-size: var(--boxel-font-size-sm);
         }
       </style>
@@ -1143,28 +1126,25 @@ export class WineBottle extends CardDef {
       </article>
 
       <style scoped>
+        /* A tile is a card surface, so it forwards the --card pair; the caption
+           reads on that surface in either theme instead of assuming a dark one. */
         .fitted-bottle {
-          --_bg: var(--wb-bg, #1a0f0f);
-          --_bg-2: var(--wb-bg-2, #2a1818);
-          --_cream: var(--wb-cream, #f5efd8);
-          --_cream-dim: var(--wb-cream-dim, #c9b88a);
-          --_gold: var(--wb-gold, #c9a96a);
-          --_burgundy: var(--wb-burgundy, #5a1a1f);
-          --_font-display: var(
-            --wb-font-display,
-            var(--font-serif, 'Georgia', 'Times New Roman', serif)
-          );
-          --_font-ui: var(
-            --wb-font-ui,
-            var(--font-sans, system-ui, sans-serif)
+          --wb-tile-raised: color-mix(
+            in oklch,
+            var(--card-foreground, var(--boxel-dark)) 5%,
+            var(--card, var(--boxel-light))
           );
 
           width: 100%;
           height: 100%;
           overflow: hidden;
-          background: linear-gradient(180deg, var(--_bg-2), var(--_bg));
-          color: var(--_cream);
-          font-family: var(--_font-display);
+          background: linear-gradient(
+            180deg,
+            var(--wb-tile-raised),
+            var(--card, var(--boxel-light))
+          );
+          color: var(--card-foreground, var(--boxel-dark));
+          font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
         }
 
         .badge,
@@ -1194,7 +1174,12 @@ export class WineBottle extends CardDef {
           pointer-events: none;
           background: radial-gradient(
             ellipse at center,
-            color-mix(in oklab, var(--_gold), transparent 85%) 0%,
+            color-mix(
+                in oklch,
+                var(--accent, var(--boxel-300)) 15%,
+                transparent
+              )
+              0%,
             transparent 70%
           );
         }
@@ -1208,14 +1193,22 @@ export class WineBottle extends CardDef {
           height: auto;
           opacity: 0.85;
         }
+        /* The art can be any image, so the caption gets a ground made of the
+           tile's own surface rather than a black wash that only works in a dark
+           theme — the caption then keeps --card-foreground and stays legible. */
         .scrim {
           position: absolute;
           inset: 0;
           background: linear-gradient(
             180deg,
-            rgb(0 0 0 / 0.35) 0%,
-            transparent 30%,
-            rgb(0 0 0 / 0.82) 100%
+            transparent 35%,
+            color-mix(
+                in oklch,
+                var(--card, var(--boxel-light)) 75%,
+                transparent
+              )
+              65%,
+            var(--card, var(--boxel-light)) 100%
           );
           pointer-events: none;
         }
@@ -1226,19 +1219,19 @@ export class WineBottle extends CardDef {
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.15em;
           text-transform: uppercase;
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
         }
         .frame-score {
           display: none;
           position: absolute;
           top: var(--boxel-sp-xxs);
           right: var(--boxel-sp-xxs);
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
           font-weight: 700;
           font-size: var(--boxel-font-size-sm);
-          color: var(--_cream);
-          background: var(--_burgundy);
-          border: 1px solid var(--_gold);
+          color: var(--primary-foreground, var(--boxel-light));
+          background: var(--primary, var(--boxel-700));
+          border: 1px solid var(--border, var(--boxel-border-color));
           border-radius: 999px;
           padding: var(--boxel-sp-6xs) var(--boxel-sp-xs);
         }
@@ -1254,7 +1247,7 @@ export class WineBottle extends CardDef {
         }
         .caption-vintage {
           font-weight: 700;
-          color: var(--_gold);
+          color: var(--card-foreground, var(--boxel-dark));
           letter-spacing: 0.05em;
         }
         .caption-producer,
@@ -1269,14 +1262,14 @@ export class WineBottle extends CardDef {
           display: none;
         }
         .caption-meta {
-          color: var(--_cream-dim);
+          color: var(--muted-foreground, var(--boxel-500));
           font-size: var(--boxel-font-size-xs);
           font-style: italic;
         }
         .caption-value {
-          font-family: var(--_font-ui);
+          font-family: var(--font-sans, system-ui, sans-serif);
           font-size: var(--boxel-font-size-xs);
-          color: var(--_cream);
+          color: var(--card-foreground, var(--boxel-dark));
           margin-top: var(--boxel-sp-6xs);
         }
 
@@ -1293,7 +1286,7 @@ export class WineBottle extends CardDef {
           .badge-vintage {
             font-size: var(--boxel-font-size-md);
             font-weight: 700;
-            color: var(--_gold);
+            color: var(--card-foreground, var(--boxel-dark));
             letter-spacing: 0.05em;
           }
         }
@@ -1308,7 +1301,7 @@ export class WineBottle extends CardDef {
           }
           .strip-vintage {
             font-weight: 700;
-            color: var(--_gold);
+            color: var(--card-foreground, var(--boxel-dark));
             flex-shrink: 0;
           }
           .strip-producer {
@@ -1320,11 +1313,11 @@ export class WineBottle extends CardDef {
           .strip-score {
             margin-left: auto;
             flex-shrink: 0;
-            font-family: var(--_font-ui);
+            font-family: var(--font-sans, system-ui, sans-serif);
             font-size: var(--boxel-font-size-xs);
             font-weight: 700;
-            color: var(--_cream);
-            background: var(--_burgundy);
+            color: var(--primary-foreground, var(--boxel-light));
+            background: var(--primary, var(--boxel-700));
             border-radius: 999px;
             padding: var(--boxel-sp-6xs) var(--boxel-sp-xxs);
           }
@@ -1389,11 +1382,11 @@ export class WineBottle extends CardDef {
           gap: var(--boxel-sp-5xs);
           padding: var(--boxel-sp-6xs) var(--boxel-sp-xxs);
           border-radius: 999px;
-          background: var(--muted);
-          border: 1px solid var(--border);
-          font-family: var(--font-serif, 'Georgia', serif);
+          background: var(--muted, var(--boxel-100));
+          border: 1px solid var(--border, var(--boxel-border-color));
+          font-family: var(--font-serif, Georgia, serif);
           font-size: var(--boxel-font-size-sm);
-          color: var(--card-foreground);
+          color: var(--muted-foreground, var(--boxel-500));
           line-height: 1.4;
           white-space: nowrap;
         }
@@ -1408,7 +1401,11 @@ export class WineBottle extends CardDef {
           font-weight: 500;
         }
         .score {
-          color: var(--muted-foreground);
+          color: color-mix(
+            in oklch,
+            var(--muted-foreground, var(--boxel-500)) 75%,
+            transparent
+          );
           font-family: var(--font-sans, system-ui, sans-serif);
           font-size: var(--boxel-font-size-xs);
         }

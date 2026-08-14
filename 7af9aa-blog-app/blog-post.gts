@@ -304,7 +304,7 @@ class FittedTemplate extends Component<typeof BlogPost> {
           sans-serif;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: #999;
+        color: var(--blog-color-faint, #999);
       }
 
       .categories {
@@ -1204,7 +1204,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         height: 40px;
         display: grid;
         place-items: center;
-        background: #2c2c2c;
+        background: var(--blog-color-ink, #2c2c2c);
         color: white;
         border: none;
         border-radius: 50%;
@@ -1216,7 +1216,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
           transform 0.1s;
       }
       .drawer-toggle:hover {
-        background: #1a1a1a;
+        background: var(--blog-color-body, #1a1a1a);
       }
       .drawer-toggle:active {
         transform: scale(0.94);
@@ -1246,7 +1246,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
           sans-serif;
         letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: #121212;
+        color: var(--blog-color-text, #121212);
         margin: 0 0 4px;
       }
       /* Publish/draft controls (inside drawer) */
@@ -1271,11 +1271,11 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       }
       .status-badge.is-published {
         background: rgba(34, 197, 94, 0.12);
-        color: #15803d;
+        color: var(--blog-color-published, #15803d);
       }
       .status-badge.is-draft {
         background: rgba(234, 179, 8, 0.15);
-        color: #a16207;
+        color: var(--blog-color-draft, #a16207);
       }
       .status-dot {
         width: 6px;
@@ -1285,7 +1285,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       }
       .publish-btn {
         padding: 6px 14px;
-        background: #2c2c2c;
+        background: var(--blog-color-ink, #2c2c2c);
         color: white;
         border: 1px solid #2c2c2c;
         border-radius: 999px;
@@ -1302,19 +1302,19 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
           transform 0.1s;
       }
       .publish-btn:hover {
-        background: #1a1a1a;
-        border-color: #1a1a1a;
+        background: var(--blog-color-body, #1a1a1a);
+        border-color: var(--blog-color-body, #1a1a1a);
       }
       .publish-btn:active {
         transform: scale(0.96);
       }
       .publish-btn--unpublish {
         background: transparent;
-        color: #2c2c2c;
+        color: var(--blog-color-ink, #2c2c2c);
       }
       .publish-btn--unpublish:hover {
         background: rgba(0, 0, 0, 0.05);
-        color: #1a1a1a;
+        color: var(--blog-color-body, #1a1a1a);
       }
       .theme-list {
         display: flex;
@@ -1356,7 +1356,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         height: 110px;
         border-radius: 6px;
         overflow: hidden;
-        background: #f5f5f5;
+        background: var(--blog-color-panel, #f5f5f5);
         /* The fitted card is just a visual — kill all interactivity so
            clicks fall through to the surrounding <label>. */
         pointer-events: none;
@@ -1377,7 +1377,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         font:
           700 12px/1.2 'Inter',
           sans-serif;
-        color: #2c2c2c;
+        color: var(--blog-color-ink, #2c2c2c);
       }
       .theme-row__desc {
         font:

@@ -412,6 +412,10 @@ export class SurveyIsolated extends Component<typeof Survey> {
     <style scoped>
       .survey {
         --survey-accent: var(--primary, #2563eb);
+        --survey-danger: var(--destructive, var(--boxel-destructive));
+        --survey-warn: #b45309;
+        --survey-success: #16a34a;
+        --survey-on-success: #ffffff;
         container-type: inline-size;
         max-width: 52rem;
         margin: 0 auto;
@@ -534,7 +538,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-weight: 600;
       }
       .survey-q-req {
-        color: #dc2626;
+        color: var(--survey-danger);
         margin-left: 0.15rem;
       }
       .survey-q-help {
@@ -546,7 +550,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         margin: 0;
         font-size: 0.75rem;
         font-weight: 600;
-        color: #dc2626;
+        color: var(--survey-danger);
       }
 
       .survey-review {
@@ -563,7 +567,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         margin: 0 0 0.25rem;
         font-size: 0.8125rem;
         font-weight: 600;
-        color: #b45309;
+        color: var(--survey-warn);
       }
       .survey-review-row {
         display: grid;
@@ -584,10 +588,10 @@ export class SurveyIsolated extends Component<typeof Survey> {
       }
       .survey-review-row:hover {
         border-color: var(--survey-accent);
-        background: color-mix(in srgb, var(--survey-accent) 6%, transparent);
+        background: color-mix(in oklch, var(--survey-accent) 6%, transparent);
       }
       .survey-review-row.is-invalid {
-        border-color: #dc2626;
+        border-color: var(--survey-danger);
       }
       .survey-review-q {
         font-weight: 600;
@@ -623,8 +627,8 @@ export class SurveyIsolated extends Component<typeof Survey> {
         justify-content: center;
         font-size: 1.75rem;
         font-weight: 800;
-        color: #ffffff;
-        background: #16a34a;
+        color: var(--survey-on-success);
+        background: var(--survey-success);
         margin-bottom: 0.5rem;
       }
       .survey-done h2 {
@@ -637,7 +641,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .survey-done-note {
         margin: 0;
         font-size: 0.8125rem;
-        color: #b45309;
+        color: var(--survey-warn);
       }
       .survey-done-list {
         margin: 0.75rem 0 0;

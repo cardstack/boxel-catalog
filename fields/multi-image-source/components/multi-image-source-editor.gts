@@ -280,7 +280,7 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
           )
         );
 
-        --img-accent-bg: color-mix(in srgb, var(--img-accent) 8%, transparent);
+        --img-accent-bg: color-mix(in oklch, var(--img-accent) 8%, transparent);
         /* the input group's focus ring reads var(--ring, --boxel-highlight);
            re-point both locally so focus matches the accent instead of the
            app's global highlight green */

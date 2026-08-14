@@ -99,7 +99,7 @@ export class PlaceCardView extends Component<PlaceCardSignature> {
         content: '';
         position: absolute;
         inset: 5px;
-        border: 1px solid color-mix(in srgb, var(--pc-gold) 45%, transparent);
+        border: 1px solid color-mix(in oklch, var(--pc-gold) 45%, transparent);
         border-radius: 4px;
         pointer-events: none;
       }
@@ -111,7 +111,7 @@ export class PlaceCardView extends Component<PlaceCardSignature> {
         font-family: var(--pc-serif);
         font-size: 13px;
         line-height: 1;
-        color: color-mix(in srgb, var(--pc-gold) 70%, transparent);
+        color: color-mix(in oklch, var(--pc-gold) 70%, transparent);
         pointer-events: none;
       }
       /* Event-logo watermark: faint, centered, behind the content. */
@@ -162,7 +162,7 @@ export class PlaceCardView extends Component<PlaceCardSignature> {
       @media print {
         .pcv-event,
         .pcv-table {
-          color: color-mix(in srgb, var(--pc-gold) 50%, var(--pc-ink));
+          color: color-mix(in oklch, var(--pc-gold) 50%, var(--pc-ink));
         }
       }
     </style>
@@ -238,7 +238,7 @@ export class TableCardView extends Component<TableCardSignature> {
         content: '';
         position: absolute;
         inset: 6px;
-        border: 1px solid color-mix(in srgb, var(--tc-gold) 45%, transparent);
+        border: 1px solid color-mix(in oklch, var(--tc-gold) 45%, transparent);
         border-radius: 5px;
         pointer-events: none;
       }
@@ -250,7 +250,7 @@ export class TableCardView extends Component<TableCardSignature> {
         transform: translateX(-50%);
         font-size: 10px;
         line-height: 1;
-        color: color-mix(in srgb, var(--tc-primary) 70%, transparent);
+        color: color-mix(in oklch, var(--tc-primary) 70%, transparent);
         pointer-events: none;
       }
       /* Event-logo watermark: faint, centered, behind the content. */
@@ -290,7 +290,7 @@ export class TableCardView extends Component<TableCardSignature> {
         flex: none;
         width: 1.1em;
         height: 1px;
-        background: color-mix(in srgb, var(--tc-primary) 45%, transparent);
+        background: color-mix(in oklch, var(--tc-primary) 45%, transparent);
       }
       .tcv-accent {
         font-family: var(--tc-serif);
@@ -300,7 +300,7 @@ export class TableCardView extends Component<TableCardSignature> {
       }
       @media print {
         .tcv-event {
-          color: color-mix(in srgb, var(--tc-gold) 50%, var(--tc-ink));
+          color: color-mix(in oklch, var(--tc-gold) 50%, var(--tc-ink));
         }
       }
     </style>

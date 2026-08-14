@@ -82,7 +82,7 @@ export class ItineraryStopEmbedded extends Component<typeof ItineraryStop> {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         color: color-mix(
-          in srgb,
+          in oklch,
           var(--stop-color) 62%,
           var(--c-text, #222222) 38%
         );

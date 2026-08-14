@@ -110,7 +110,7 @@ export class Host extends Person {
           background: linear-gradient(
             135deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 45%,
               #ffffff
             ),
@@ -338,7 +338,7 @@ export class Host extends Person {
               120deg,
               var(--tsp-primary, var(--primary, #141b33)) 0%,
               color-mix(
-                  in srgb,
+                  in oklch,
                   var(--tsp-primary, var(--primary, #141b33)) 88%,
                   #ffffff
                 )
@@ -360,13 +360,13 @@ export class Host extends Person {
           background: conic-gradient(
             from 140deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             ),
             var(--tsp-accent, var(--accent, #c5a35c)),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             )
@@ -448,7 +448,7 @@ export class Host extends Person {
               radial-gradient(
                 120% 80% at 50% -10%,
                 color-mix(
-                  in srgb,
+                  in oklch,
                   var(--tsp-accent, var(--accent, #c5a35c)) 22%,
                   transparent
                 ),
@@ -467,7 +467,7 @@ export class Host extends Person {
           box-sizing: border-box;
           border: 1px solid
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 45%,
               transparent
             );
@@ -496,13 +496,13 @@ export class Host extends Person {
           background: conic-gradient(
             from 140deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             ),
             var(--tsp-accent, var(--accent, #c5a35c)),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             )
@@ -558,7 +558,7 @@ export class Host extends Person {
           letter-spacing: 0.2em;
           text-transform: uppercase;
           color: color-mix(
-            in srgb,
+            in oklch,
             var(--tsp-primary-foreground, var(--primary-foreground, #f3ead6))
               78%,
             transparent
@@ -610,7 +610,7 @@ export class Host extends Person {
             radial-gradient(
               120% 80% at 50% -10%,
               color-mix(
-                in srgb,
+                in oklch,
                 var(--tsp-accent, var(--accent, #c5a35c)) 24%,
                 transparent
               ),
@@ -635,13 +635,13 @@ export class Host extends Person {
           background: conic-gradient(
             from 140deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             ),
             var(--tsp-accent, var(--accent, #c5a35c)),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             )
@@ -861,7 +861,7 @@ export class Host extends Person {
             radial-gradient(
               120% 60% at 50% -8%,
               color-mix(
-                in srgb,
+                in oklch,
                 var(--tsp-accent, var(--accent, #c5a35c)) 16%,
                 transparent
               ),
@@ -928,17 +928,17 @@ export class Host extends Person {
           background: conic-gradient(
             from 140deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             ),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 70%,
               #000000
             ),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             )
@@ -968,7 +968,7 @@ export class Host extends Person {
           background: linear-gradient(
             135deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 45%,
               #ffffff
             ),

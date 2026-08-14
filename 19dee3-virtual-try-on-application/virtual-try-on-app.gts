@@ -2100,14 +2100,19 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         /* ── Gold = the PRIMARY / hero action color ── */
         --gold: #c19a4b;
         --gold-deep: #a9762b;
-        --gold-soft: color-mix(in srgb, var(--gold) 14%, #fff);
-        --primary-grad: linear-gradient(135deg, #cba85a, var(--gold-deep));
+        --gold-light: #cba85a;
+        --gold-soft: color-mix(in oklch, var(--gold) 14%, var(--surface));
+        --primary-grad: linear-gradient(135deg, var(--gold-light), var(--gold-deep));
 
         /* ── Near-black = neutral/secondary contrast (e.g. "All" pill) ── */
         --accent: #1a1a1c;
         --accent-2: #3a3a40;
         --accent-dim: rgba(20, 20, 22, 0.06);
         --danger: #d4452f;
+        --success: #2d7455;
+        --on-accent: #ffffff;
+        --text-3: #555555;
+        --text-4: #444444;
 
         /* ── Type scale (matches mockup: bold display, letter-spaced labels) ── */
         --t-display: 700 22px/1.15
@@ -2209,7 +2214,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         border-radius: 50%;
         background: var(--surface);
         border: 1px solid var(--border);
-        color: #555;
+        color: var(--text-3);
         font-size: 9px;
         line-height: 1;
         cursor: pointer;
@@ -2226,7 +2231,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .model-unlink:hover {
         background: var(--danger);
-        color: #fff;
+        color: var(--on-accent);
         border-color: var(--danger);
         transform: scale(1.1);
       }
@@ -2401,7 +2406,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .add-btn:hover {
         background: var(--accent);
         border-color: var(--accent);
-        color: #fff;
+        color: var(--on-accent);
         transform: translateY(-1px);
       }
       .add-btn-ico {
@@ -2458,7 +2463,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         border-radius: 999px;
         border: 1px solid var(--border);
         background: none;
-        color: #6b675e;
+        color: var(--text-2);
         cursor: pointer;
         transition: all 0.15s;
       }
@@ -2469,14 +2474,14 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .filter-pill--on {
         background: linear-gradient(135deg, var(--accent), var(--accent-2));
         border-color: transparent;
-        color: #fff;
+        color: var(--on-accent);
         box-shadow: 0 2px 10px rgba(20, 20, 22, 0.2);
       }
       /* Keep the active pill's gradient + white text on hover — the base
          :hover rule would otherwise out-specify and recolor it. */
       .filter-pill--on:hover {
         background: linear-gradient(135deg, var(--accent), var(--accent-2));
-        color: #fff;
+        color: var(--on-accent);
       }
       /* Categorised garment sections */
       .garment-sections {
@@ -2576,7 +2581,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         transform: translateY(-2px);
         border-color: var(--gold);
         color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 6%, var(--surface2));
+        background: color-mix(in oklch, var(--gold) 6%, var(--surface2));
       }
       .garment-add:disabled {
         opacity: 0.4;
@@ -2695,7 +2700,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         cursor: default;
       }
       .view-seg-btn--on {
-        background: color-mix(in srgb, var(--gold) 22%, #fff);
+        background: color-mix(in oklch, var(--gold) 22%, var(--surface));
         color: var(--gold);
         box-shadow: 0 1px 4px rgba(184, 137, 59, 0.25);
       }
@@ -2707,7 +2712,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         margin: 0;
         font-size: 12px;
         line-height: 1.5;
-        color: #6b675e;
+        color: var(--text-2);
       }
 
       /* View angle overlay (right side of preview) */
@@ -2745,8 +2750,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         cursor: not-allowed;
       }
       .vo-btn--on {
-        background: color-mix(in srgb, var(--gold) 16%, #fff);
-        border-color: color-mix(in srgb, var(--gold) 40%, transparent);
+        background: color-mix(in oklch, var(--gold) 16%, var(--surface));
+        border-color: color-mix(in oklch, var(--gold) 40%, transparent);
         color: var(--gold);
         box-shadow: 0 2px 12px rgba(184, 137, 59, 0.2);
       }
@@ -2793,7 +2798,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .sq-slot--model:not(.sq-slot--off):hover .sq-body {
         border-color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 6%, #fff);
+        background: color-mix(in oklch, var(--gold) 6%, var(--surface));
       }
       .sq-model-menu {
         position: absolute;
@@ -2866,7 +2871,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .act-btn--primary {
         background: var(--primary-grad);
-        color: #fff;
+        color: var(--on-accent);
         border: none;
         box-shadow:
           0 8px 22px rgba(184, 137, 59, 0.34),
@@ -2928,7 +2933,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .tool-btn:hover {
         transform: translateY(-1px);
-        background: #fff;
+        background: var(--on-accent);
       }
 
       /* ── Slots bar (horizontal card of garment tiles with icons) ── */
@@ -2952,9 +2957,9 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         max-width: min(360px, calc(100% - 32px));
         padding: 8px 14px;
         border-radius: 12px;
-        background: color-mix(in srgb, var(--gold-soft) 92%, transparent);
+        background: color-mix(in oklch, var(--gold-soft) 92%, transparent);
         backdrop-filter: blur(8px);
-        border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+        border: 1px solid color-mix(in oklch, var(--gold) 30%, transparent);
         box-shadow: 0 6px 20px rgba(30, 27, 20, 0.12);
         color: var(--gold-deep);
         font-size: 12px;
@@ -3079,21 +3084,21 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .sq-slot:not(.sq-slot--filled):not(.sq-slot--off):hover .sq-body {
         border-color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 5%, #fff);
+        background: color-mix(in oklch, var(--gold) 5%, var(--surface));
       }
       .sq-slot--filled .sq-body {
         border-color: var(--gold);
         border-width: 2px;
-        background: #fff;
+        background: var(--on-accent);
         box-shadow:
           0 3px 10px rgba(30, 27, 20, 0.14),
-          0 0 0 3px color-mix(in srgb, var(--gold) 14%, transparent);
+          0 0 0 3px color-mix(in oklch, var(--gold) 14%, transparent);
       }
       /* Active slot: gold border (last tapped to open chooser) */
       .sq-slot--active .sq-body {
         border-color: var(--gold);
         border-width: 2px;
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 16%, transparent);
+        box-shadow: 0 0 0 3px color-mix(in oklch, var(--gold) 16%, transparent);
       }
       .sq-slot--over .sq-body {
         border-color: var(--accent);
@@ -3117,7 +3122,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         height: 100%;
         object-fit: cover;
         padding: 0;
-        background: #fff;
+        background: var(--on-accent);
         display: block;
       }
       .sq-remove {
@@ -3127,9 +3132,9 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: #fff;
+        background: var(--on-accent);
         border: 1px solid var(--border-soft);
-        color: #444;
+        color: var(--text-4);
         font-size: 10px;
         cursor: pointer;
         display: flex;
@@ -3144,7 +3149,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .sq-remove:hover {
         background: var(--danger);
-        color: #fff;
+        color: var(--on-accent);
         border-color: var(--danger);
       }
       .sq-lbl {
@@ -3152,7 +3157,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.12em;
-        color: #6b675e;
+        color: var(--text-2);
         max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -3176,7 +3181,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         min-width: 180px;
         padding: 13px 28px;
         background: var(--primary-grad);
-        color: #fff;
+        color: var(--on-accent);
         border: none;
         border-radius: 999px;
         font-size: 11px;
@@ -3212,14 +3217,14 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         cursor: wait;
       }
       .gen-btn--done {
-        background: #2d7455;
-        color: #fff;
+        background: var(--success);
+        color: var(--on-accent);
       }
       .gen-spin {
         width: 12px;
         height: 12px;
         border: 2px solid rgba(255, 255, 255, 0.35);
-        border-top-color: #fff;
+        border-top-color: var(--on-accent);
         border-radius: 50%;
         animation: spin 0.65s linear infinite;
       }
@@ -3267,7 +3272,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         gap: 8px;
         padding: 7px 12px;
         background: rgba(20, 20, 22, 0.82);
-        color: #fff;
+        color: var(--on-accent);
         border-radius: 999px;
         font-size: 10px;
         font-weight: 700;
@@ -3328,7 +3333,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         padding: 14px 14px 12px;
         text-align: center;
         font-size: 11px;
-        color: #fff;
+        color: var(--on-accent);
         background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
         display: flex;
         flex-direction: column;
@@ -3466,7 +3471,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         transform: translateY(-50%);
         background: rgba(0, 0, 0, 0.5);
         border: none;
-        color: #fff;
+        color: var(--on-accent);
         font-size: 22px;
         width: 34px;
         height: 34px;
@@ -3513,7 +3518,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           transform 0.2s;
       }
       .c-dot--on {
-        background: #fff;
+        background: var(--on-accent);
         transform: scale(1.35);
       }
 
@@ -3704,6 +3709,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         --accent: #1a1a1c;
         --accent-2: #3a3a40;
         --danger: #d4452f;
+        --on-accent: #ffffff;
         --r: 14px;
         --rs: 10px;
         width: min(440px, 92vw);
@@ -3827,7 +3833,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .img-drop:hover {
         border-color: var(--gold);
         color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 5%, var(--surface2));
+        background: color-mix(in oklch, var(--gold) 5%, var(--surface2));
       }
       .img-drop--filled {
         border-style: solid;
@@ -3853,7 +3859,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #fff;
+        color: var(--on-accent);
         background: rgba(20, 20, 22, 0.7);
         padding: 4px 8px;
         border-radius: 999px;
@@ -3871,7 +3877,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         width: 100%;
         padding: 13px;
         background: linear-gradient(135deg, var(--accent), var(--accent-2));
-        color: #fff;
+        color: var(--on-accent);
         border: none;
         border-radius: var(--r);
         font-size: 12px;
@@ -3908,6 +3914,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         --accent: #1a1a1c;
         --accent-2: #3a3a40;
         --danger: #d4452f;
+        --on-accent: #ffffff;
         --r: 14px;
         --rs: 10px;
         container: chooser-pop / inline-size;
@@ -3972,7 +3979,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .chooser-upload:hover {
         background: var(--accent);
         border-color: var(--accent);
-        color: #fff;
+        color: var(--on-accent);
       }
       .chooser-close {
         background: var(--surface2);
@@ -4062,7 +4069,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         transform: translateY(-3px);
         border-color: var(--gold);
         color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 6%, var(--surface2));
+        background: color-mix(in oklch, var(--gold) 6%, var(--surface2));
       }
       .chooser-add-ico {
         font-size: 26px;
@@ -4109,6 +4116,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         --accent: #1a1a1c;
         --accent-2: #3a3a40;
         --danger: #d4452f;
+        --on-accent: #ffffff;
         --r: 14px;
         container: mpm-pop / inline-size;
         width: min(720px, 92vw);
@@ -4270,11 +4278,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .mpm-card--upload:hover .mpm-card-cta {
         background: var(--gold);
-        color: #fff;
+        color: var(--on-accent);
       }
       .mpm-card--link:hover .mpm-card-cta {
         background: var(--accent);
-        color: #fff;
+        color: var(--on-accent);
       }
 
       /* Phone: stack the two model cards and let the picker scroll. Keyed to
@@ -4683,9 +4691,11 @@ export class VirtualTryOnApp extends CardDef {
           --text-2: #6b675e;
           --gold: #c19a4b;
           --gold-deep: #a9762b;
-          --gold-soft: color-mix(in srgb, var(--gold) 14%, #fff);
-          --primary-grad: linear-gradient(135deg, #cba85a, var(--gold-deep));
+          --gold-light: #cba85a;
+          --gold-soft: color-mix(in oklch, var(--gold) 14%, var(--surface));
+          --primary-grad: linear-gradient(135deg, var(--gold-light), var(--gold-deep));
           --shadow: 0 10px 34px rgba(30, 27, 20, 0.12);
+          --on-accent: #ffffff;
 
           position: relative;
           width: 100%;
@@ -4765,7 +4775,7 @@ export class VirtualTryOnApp extends CardDef {
           border-radius: 50%;
           background: radial-gradient(
             circle at center,
-            color-mix(in srgb, var(--gold) 22%, transparent),
+            color-mix(in oklch, var(--gold) 22%, transparent),
             transparent 70%
           );
         }
@@ -4778,7 +4788,7 @@ export class VirtualTryOnApp extends CardDef {
           height: 22px;
           color: var(--gold-deep);
           filter: drop-shadow(
-            0 1px 4px color-mix(in srgb, var(--gold) 45%, transparent)
+            0 1px 4px color-mix(in oklch, var(--gold) 45%, transparent)
           );
         }
         .mark--lg {
@@ -4799,7 +4809,7 @@ export class VirtualTryOnApp extends CardDef {
           text-transform: uppercase;
           color: var(--gold-deep);
           background: var(--gold-soft);
-          border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
+          border: 1px solid color-mix(in oklch, var(--gold) 32%, transparent);
           border-radius: 999px;
         }
         .eyebrow--mini {
@@ -4827,7 +4837,7 @@ export class VirtualTryOnApp extends CardDef {
           font-size: 10px;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: #fff;
+          color: var(--on-accent);
           background: var(--primary-grad);
           border-radius: 999px;
           box-shadow: 0 2px 8px rgba(169, 118, 43, 0.35);

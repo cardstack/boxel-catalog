@@ -448,13 +448,13 @@ export class Guest extends Person {
           background: conic-gradient(
             from 140deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             ),
             var(--tsp-accent, var(--accent, #c5a35c)),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             )
@@ -542,7 +542,7 @@ export class Guest extends Person {
           font-size: clamp(14px, 34cqmin, 22px);
           line-height: 1;
           color: color-mix(
-            in srgb,
+            in oklch,
             var(--tsp-accent, var(--accent, #c5a35c)) 45%,
             transparent
           );
@@ -599,13 +599,13 @@ export class Guest extends Person {
           background: conic-gradient(
             from 140deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             ),
             var(--tsp-accent, var(--accent, #c5a35c)),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             )
@@ -812,7 +812,7 @@ export class Guest extends Person {
             radial-gradient(
               130% 90% at 50% -12%,
               color-mix(
-                in srgb,
+                in oklch,
                 var(--tsp-accent, var(--accent, #c5a35c)) 18%,
                 transparent
               ),
@@ -835,13 +835,13 @@ export class Guest extends Person {
           background: conic-gradient(
             from 140deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             ),
             var(--tsp-accent, var(--accent, #c5a35c)),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             )
@@ -1125,17 +1125,17 @@ export class Guest extends Person {
           background: conic-gradient(
             from 140deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             ),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 70%,
               #000000
             ),
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 60%,
               #ffffff
             )
@@ -1165,7 +1165,7 @@ export class Guest extends Person {
           background: linear-gradient(
             135deg,
             color-mix(
-              in srgb,
+              in oklch,
               var(--tsp-accent, var(--accent, #c5a35c)) 45%,
               #ffffff
             ),

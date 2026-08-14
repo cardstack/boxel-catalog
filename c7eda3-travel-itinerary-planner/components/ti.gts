@@ -728,7 +728,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
            the literal Airbnb value regardless of theme.) */
         --c-accent: var(--primary, #ff385c);
         --c-accent-dark: #bd1e59;
-        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
+        --c-accent-bg: color-mix(in oklch, var(--c-accent) 10%, var(--card, var(--boxel-light)));
         --c-text: var(--foreground, #222222);
         --c-text-light: var(--primary-foreground, #ffffff);
         --c-muted: var(--muted-foreground, #717171);
@@ -957,7 +957,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-ai-stop-pop {
         --c-accent: var(--primary, #ff385c);
         --c-accent-dark: #bd1e59;
-        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
+        --c-accent-bg: color-mix(in oklch, var(--c-accent) 10%, var(--card, var(--boxel-light)));
         --c-text: var(--foreground, #222222);
         --c-muted: var(--muted-foreground, #717171);
         --c-border: var(--border, #dddddd);
@@ -1152,7 +1152,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       .ti-ai-generate:hover:not(:disabled) {
         box-shadow: 0 4px 14px
-          color-mix(in srgb, var(--c-accent) 45%, transparent);
+          color-mix(in oklch, var(--c-accent) 45%, transparent);
         transform: translateY(-1px);
       }
       .ti-ai-generate:disabled {
@@ -1285,7 +1285,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-share-pop {
         --c-accent: var(--primary, #ff385c);
         --c-accent-dark: #bd1e59;
-        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
+        --c-accent-bg: color-mix(in oklch, var(--c-accent) 10%, var(--card, var(--boxel-light)));
         --c-text: var(--foreground, #222222);
         --c-text-light: var(--primary-foreground, #ffffff);
         --c-muted: var(--muted-foreground, #717171);
@@ -1330,7 +1330,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         cursor: pointer;
       }
       .ti-share-copy:hover {
-        background: #000;
+        background: var(--foreground, var(--boxel-dark));
       }
 
       .ti-list-head {
@@ -1521,7 +1521,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-stop.is-sel {
         border-color: var(--stop-color);
         box-shadow: 0 0 0 2px
-          color-mix(in srgb, var(--stop-color) 30%, transparent);
+          color-mix(in oklch, var(--stop-color) 30%, transparent);
       }
       .ti-stop.is-dragging {
         opacity: 0.45;
@@ -1565,7 +1565,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         font-size: 12px;
         font-weight: 700;
         color: color-mix(
-          in srgb,
+          in oklch,
           var(--stop-color) 62%,
           var(--c-text, #222222) 38%
         );
@@ -1620,8 +1620,8 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         background: var(--c-accent-bg);
       }
       .ti-icon-btn.ti-danger:hover {
-        color: #ef4444;
-        background: #fee2e2;
+        color: var(--destructive, var(--boxel-destructive));
+        background: color-mix(in oklch, var(--destructive, var(--boxel-destructive)) 15%, var(--card, var(--boxel-light)));
       }
       .ti-add-stop {
         align-self: flex-start;
@@ -2008,7 +2008,7 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
         /* See TravelItineraryIsolated above for the design-system-token / literal palette. */
         --c-accent: var(--primary, #ff385c);
         --c-accent-dark: #bd1e59;
-        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
+        --c-accent-bg: color-mix(in oklch, var(--c-accent) 10%, var(--card, var(--boxel-light)));
         --c-text: var(--foreground, #222222);
         --c-text-light: var(--primary-foreground, #ffffff);
         --c-muted: var(--muted-foreground, #717171);

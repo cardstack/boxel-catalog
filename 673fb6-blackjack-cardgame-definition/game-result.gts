@@ -241,16 +241,18 @@ export class PlayerOutcomeField extends FieldDef {
   };
 }
 
-// Casino-themed status background — drives the felt colour per outcome
+// Outcome hue as data (§1c): sets custom properties only — the CSS rule
+// on .gr-isolated/.gr-fitted owns the actual background/border-color
+// declarations and their unthemed fallbacks.
 function getStatusStyle(status?: string): string {
   const s = status?.toLowerCase();
   if (s === 'win')
-    return 'background: radial-gradient(ellipse at 50% 30%, #1a5c0e 0%, #073d10 60%, #030f05 100%); border-color: #d4af37;';
+    return '--gr-bg-1: #1a5c0e; --gr-bg-2: #073d10; --gr-bg-3: #030f05; --gr-border: #d4af37;';
   if (s === 'lose')
-    return 'background: radial-gradient(ellipse at 50% 30%, #5c0e0e 0%, #3d0707 60%, #0f0303 100%); border-color: #b41414;';
+    return '--gr-bg-1: #5c0e0e; --gr-bg-2: #3d0707; --gr-bg-3: #0f0303; --gr-border: #b41414;';
   if (s === 'draw')
-    return 'background: radial-gradient(ellipse at 50% 30%, #2a2a2a 0%, #1a1a1a 60%, #0a0a0a 100%); border-color: #6b7280;';
-  return 'background: radial-gradient(ellipse at 50% 30%, #0e5c1e 0%, #073d10 55%, #030f05 100%); border-color: rgba(212,175,55,0.3);';
+    return '--gr-bg-1: #2a2a2a; --gr-bg-2: #1a1a1a; --gr-bg-3: #0a0a0a; --gr-border: #6b7280;';
+  return '--gr-bg-1: #0e5c1e; --gr-bg-2: #073d10; --gr-bg-3: #030f05; --gr-border: rgba(212,175,55,0.3);';
 }
 
 // Status icon — mirrors blackjack.gts outcome icons
@@ -409,7 +411,13 @@ export class GameResult extends CardDef {
           position: relative;
           overflow: hidden;
           font-family: var(--casino-font);
-          border: 2px solid;
+          background: radial-gradient(
+            ellipse at 50% 30%,
+            var(--gr-bg-1, #0e5c1e) 0%,
+            var(--gr-bg-2, #073d10) 55%,
+            var(--gr-bg-3, #030f05) 100%
+          );
+          border: 2px solid var(--gr-border, rgba(212, 175, 55, 0.3));
           box-shadow:
             inset 0 0 0 3px var(--casino-ring-inner),
             inset 0 0 0 5px var(--casino-ring-outer);
@@ -500,7 +508,7 @@ export class GameResult extends CardDef {
           text-shadow: 0 0 20px rgba(255, 50, 50, 0.5);
         }
         .badge--draw .gr-status-text {
-          color: #aaa;
+          color: var(--casino-text-muted, #aaa);
           text-shadow: none;
         }
 
@@ -759,7 +767,13 @@ export class GameResult extends CardDef {
           font-family: var(--casino-font);
           position: relative;
           overflow: hidden;
-          border: 1px solid var(--casino-gold-border);
+          background: radial-gradient(
+            ellipse at 50% 30%,
+            var(--gr-bg-1, #0e5c1e) 0%,
+            var(--gr-bg-2, #073d10) 55%,
+            var(--gr-bg-3, #030f05) 100%
+          );
+          border: 1px solid var(--gr-border, var(--casino-gold-border));
           box-shadow: inset 0 0 0 2px var(--casino-ring-inner);
           container-type: inline-size;
         }
@@ -842,7 +856,7 @@ export class GameResult extends CardDef {
           color: var(--casino-lose-text);
         }
         .badge--draw .gr-status-text {
-          color: #aaa;
+          color: var(--casino-text-muted, #aaa);
         }
 
         /* Info section */
@@ -986,7 +1000,7 @@ export class GameResult extends CardDef {
           min-height: max-content;
           padding: var(--boxel-sp);
           background-color: var(--casino-bg);
-          color: #fff;
+          color: var(--casino-text, #fff);
           font-family: var(--casino-font);
         }
         .section {

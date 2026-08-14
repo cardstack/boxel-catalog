@@ -933,6 +933,11 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         --btn-hit: linear-gradient(145deg, #388e3c, #1b5e20);
         --btn-stand: linear-gradient(145deg, #e65100, #bf360c);
         --btn-double: linear-gradient(145deg, #c62828, #891717);
+        --casino-input-bg: #0d0f12;
+        --casino-input-fg: #c9a84c;
+        --casino-input-bg-hover: #141618;
+        --casino-input-fg-hover: #e8c96a;
+        --casino-error: #e53935;
 
         background: var(--casino-felt-bg);
         height: 100%;
@@ -1011,8 +1016,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         border-radius: 3px;
         border: 1px solid rgba(201, 168, 76, 0.5);
         border-top: 2px solid rgba(201, 168, 76, 0.7);
-        background: #0d0f12;
-        color: #c9a84c;
+        background: var(--casino-input-bg);
+        color: var(--casino-input-fg);
         box-shadow: none;
         text-transform: uppercase;
         letter-spacing: 0.12em;
@@ -1024,9 +1029,9 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       }
       .bj-link-editor :deep(.add-new:hover),
       .bj-link-editor :deep(.add-new:focus-visible) {
-        background: #141618;
+        background: var(--casino-input-bg-hover);
         border-color: rgba(201, 168, 76, 0.75);
-        color: #e8c96a;
+        color: var(--casino-input-fg-hover);
       }
       .bj-link-editor :deep(.boxel-card-container.fitted-format) {
         border-radius: var(--boxel-border-radius);
@@ -2186,7 +2191,7 @@ class FittedTemplate extends Component<typeof Blackjack> {
 
       .suit--heart,
       .suit--diamond {
-        color: #e53935;
+        color: var(--casino-error);
       }
 
       .suit--spade,
@@ -2419,7 +2424,7 @@ class FittedTemplate extends Component<typeof Blackjack> {
 
       .play-card--black {
         background: var(--cream);
-        color: #111;
+        color: var(--casino-suit-black, #111111);
         right: 0;
         top: 4%;
         rotate: 9deg;

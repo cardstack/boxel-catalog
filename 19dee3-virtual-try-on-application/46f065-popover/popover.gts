@@ -1626,24 +1626,24 @@ export default class Popover extends Component<PopoverSignature> {
        *   dim  opaque + page dim   — the separate .bx-popover-dim
        *          element dims the page behind it */
       .bx-popover--backdrop-none {
-        --bx-popover-bg: var(--popover, #fff);
+        --bx-popover-bg: var(--popover, var(--boxel-light));
       }
       .bx-popover--backdrop-tint {
         --bx-popover-bg: var(
           --bx-popover-bg-tint,
-          color-mix(in srgb, var(--popover, #fff) 80%, transparent)
+          color-mix(in oklch, var(--popover, var(--boxel-light)) 80%, transparent)
         );
       }
       .bx-popover--backdrop-blur {
         --bx-popover-bg: var(
           --bx-popover-bg-blur,
-          color-mix(in srgb, var(--popover, #fff) 55%, transparent)
+          color-mix(in oklch, var(--popover, var(--boxel-light)) 55%, transparent)
         );
         backdrop-filter: blur(12px) saturate(1.4);
         -webkit-backdrop-filter: blur(12px) saturate(1.4);
       }
       .bx-popover--backdrop-dim {
-        --bx-popover-bg: var(--popover, #fff);
+        --bx-popover-bg: var(--popover, var(--boxel-light));
       }
 
       /* Dim — full-viewport dim layer mounted as a sibling.
@@ -1654,7 +1654,7 @@ export default class Popover extends Component<PopoverSignature> {
         inset: 0;
         background: var(
           --bx-popover-dim-bg,
-          color-mix(in srgb, var(--foreground, #0f172a) 40%, transparent)
+          color-mix(in oklch, var(--foreground, var(--boxel-dark)) 40%, transparent)
         );
         backdrop-filter: blur(2px);
         /* The dim allocates its own layer from the same (modal) tier,
@@ -1765,7 +1765,7 @@ export default class Popover extends Component<PopoverSignature> {
        * foreground/background swapped, so it stays "the dark one" in a
        * light theme and "the light one" in a dark theme. */
       .bx-popover--tools {
-        --bx-popover-bg: var(--bx-popover-tools-bg, var(--foreground, #1f2937));
+        --bx-popover-bg: var(--bx-popover-tools-bg, var(--foreground, var(--boxel-dark)));
         color: var(--bx-popover-tools-fg, var(--background, #f9fafb));
       }
       /* edit's sticky-note yellow is a semantic "unsaved" signal, not a
@@ -1782,14 +1782,14 @@ export default class Popover extends Component<PopoverSignature> {
       }
       .bx-popover--edit.bx-popover--backdrop-tint {
         --bx-popover-bg: color-mix(
-          in srgb,
+          in oklch,
           var(--bx-popover-edit-bg-resolved) 80%,
           transparent
         );
       }
       .bx-popover--edit.bx-popover--backdrop-blur {
         --bx-popover-bg: color-mix(
-          in srgb,
+          in oklch,
           var(--bx-popover-edit-bg-resolved) 55%,
           transparent
         );
@@ -1807,7 +1807,7 @@ export default class Popover extends Component<PopoverSignature> {
         box-shadow:
           inset 0 0 0 1px
             color-mix(
-              in srgb,
+              in oklch,
               var(--bx-popover-edit-border-resolved) 56%,
               transparent
             ),
@@ -1815,7 +1815,7 @@ export default class Popover extends Component<PopoverSignature> {
       }
       .bx-popover--tools[class*='bx-popover--elevation-'] {
         --bx-popover-border: color-mix(
-          in srgb,
+          in oklch,
           var(--bx-popover-tools-fg, var(--background, #fff)) 12%,
           transparent
         );
@@ -1857,7 +1857,7 @@ export default class Popover extends Component<PopoverSignature> {
       .bx-popover__escalate:focus-visible {
         opacity: 1;
         background: color-mix(
-          in srgb,
+          in oklch,
           var(--bx-popover-accent, var(--primary, #4f46e5)) 10%,
           transparent
         );
@@ -1865,14 +1865,14 @@ export default class Popover extends Component<PopoverSignature> {
       }
       .bx-popover--tools .bx-popover__escalate {
         color: color-mix(
-          in srgb,
+          in oklch,
           var(--bx-popover-tools-fg, var(--background, #fff)) 60%,
           transparent
         );
       }
       .bx-popover--tools .bx-popover__escalate:hover {
         background: color-mix(
-          in srgb,
+          in oklch,
           var(--bx-popover-tools-fg, var(--background, #fff)) 12%,
           transparent
         );

@@ -2619,6 +2619,17 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         --c-diff-expert-bg: rgba(180, 50, 30, 0.14);
         --c-diff-expert: #ff8a80;
 
+        /* ── Transport danger / record / replay accents ── */
+        --c-on-accent: #ffffff;
+        --c-stop: #f97060;
+        --c-record: #f07070;
+        --c-record-hi: #ff6060;
+        --c-record-dot: #e04040;
+        --c-record-dot-on: #ff4040;
+        --c-replay: #f08040;
+        --c-replay-hi: #ffaa60;
+        --c-on-accent-dark: #040810;
+
         --radius: 6px;
         --radius-sm: 3px;
 
@@ -2727,7 +2738,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         background: var(--c-accent, #6366f1);
         border: 1px solid var(--c-accent, #6366f1);
         border-radius: 999px;
-        color: #fff;
+        color: var(--c-on-accent);
         cursor: pointer;
         font-size: 12px;
         font-weight: 600;
@@ -2942,7 +2953,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       }
       .vp-hbtn--stop {
         background: rgba(180, 50, 30, 0.14);
-        color: #f97060;
+        color: var(--c-stop);
         border-color: rgba(180, 50, 30, 0.28);
       }
       .vp-hbtn--stop:hover {
@@ -3180,7 +3191,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       }
       .vp-sb-btn--stop {
         background: rgba(180, 50, 30, 0.14);
-        color: #f97060;
+        color: var(--c-stop);
         border-color: rgba(180, 50, 30, 0.28);
       }
       .vp-sb-btn--stop:hover {
@@ -3190,7 +3201,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       /* ══ Record button (header) ═════════════════════════════════════════ */
       .vp-hbtn--rec {
         border-color: rgba(220, 60, 60, 0.35);
-        color: #f07070;
+        color: var(--c-record);
         background: rgba(220, 60, 60, 0.08);
         font-variant-numeric: tabular-nums;
         gap: 6px;
@@ -3202,7 +3213,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       .vp-hbtn--rec--active {
         background: rgba(220, 40, 40, 0.18);
         border-color: rgba(220, 40, 40, 0.6);
-        color: #ff6060;
+        color: var(--c-record-hi);
         box-shadow: 0 0 10px rgba(220, 40, 40, 0.25);
       }
       .vp-rec-dot {
@@ -3210,12 +3221,12 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #e04040;
+        background: var(--c-record-dot);
         flex-shrink: 0;
       }
       .vp-rec-dot--on {
-        background: #ff4040;
-        box-shadow: 0 0 6px #ff4040;
+        background: var(--c-record-dot-on);
+        box-shadow: 0 0 6px var(--c-record-dot-on);
         animation: vp-rec-pulse 1s ease-in-out infinite;
       }
       @keyframes vp-rec-pulse {
@@ -3269,7 +3280,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         gap: 7px;
         font-size: 12px;
         font-weight: 700;
-        color: #f07070;
+        color: var(--c-record);
         letter-spacing: 0.5px;
         text-transform: uppercase;
       }
@@ -3301,7 +3312,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         font-family: 'SF Mono', 'Fira Code', monospace;
         background: rgba(220, 60, 60, 0.12);
         border: 1px solid rgba(220, 60, 60, 0.28);
-        color: #f07070;
+        color: var(--c-record);
         animation: vp-note-pop 0.15s cubic-bezier(0.22, 0.68, 0.36, 1);
       }
       @keyframes vp-note-pop {
@@ -3342,7 +3353,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         cursor: pointer;
         border: 1.5px solid rgba(220, 60, 60, 0.4);
         background: rgba(220, 60, 60, 0.08);
-        color: #f07070;
+        color: var(--c-record);
         transition: all 0.13s;
         text-transform: uppercase;
         letter-spacing: 0.3px;
@@ -3356,8 +3367,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #e04040;
-        box-shadow: 0 0 5px #e04040;
+        background: var(--c-record-dot);
+        box-shadow: 0 0 5px var(--c-record-dot);
         flex-shrink: 0;
       }
 
@@ -3377,7 +3388,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         cursor: pointer;
         border: 1.5px solid rgba(220, 100, 40, 0.65);
         background: transparent;
-        color: #f08040;
+        color: var(--c-replay);
         text-transform: uppercase;
         transition: all 0.15s;
         box-shadow: 0 0 12px rgba(220, 100, 40, 0.15);
@@ -3386,7 +3397,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         background: rgba(220, 100, 40, 0.1);
         border-color: rgba(220, 100, 40, 0.9);
         box-shadow: 0 0 20px rgba(220, 100, 40, 0.25);
-        color: #ffaa60;
+        color: var(--c-replay-hi);
       }
 
       /* Progress row */
@@ -3486,7 +3497,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       }
       .vp-rec-again-btn:hover {
         background: rgba(220, 60, 60, 0.1);
-        color: #f07070;
+        color: var(--c-record);
         border-color: rgba(220, 60, 60, 0.55);
       }
 
@@ -3520,15 +3531,15 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #ff4040;
-        box-shadow: 0 0 8px #ff4040;
+        background: var(--c-record-dot-on);
+        box-shadow: 0 0 8px var(--c-record-dot-on);
         flex-shrink: 0;
         animation: vp-rec-pulse 1s ease-in-out infinite;
       }
       .vp-rec-ticker-label {
         font-size: 10px;
         font-weight: 800;
-        color: #f07070;
+        color: var(--c-record);
         letter-spacing: 1px;
         text-transform: uppercase;
         font-variant-numeric: tabular-nums;
@@ -3557,7 +3568,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         font-family: 'SF Mono', 'Fira Code', monospace;
         background: rgba(220, 60, 60, 0.14);
         border: 1px solid rgba(220, 60, 60, 0.3);
-        color: #f08080;
+        color: var(--c-record);
         flex-shrink: 0;
         animation: vp-note-pop 0.12s cubic-bezier(0.22, 0.68, 0.36, 1);
       }
@@ -3836,7 +3847,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           inset 0 1px 0 rgba(255, 255, 255, 0.28),
           0 0 12px rgba(176, 176, 220, 0.18),
           0 4px 18px rgba(0, 0, 0, 0.65);
-        color: #ffffff;
+        color: var(--c-on-accent);
       }
       .vp-reset-btn:active {
         transform: scale(0.96);
@@ -3918,7 +3929,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       }
       .vp-token--current {
         background: var(--c-accent) !important;
-        color: #040810 !important;
+        color: var(--c-on-accent-dark) !important;
         font-weight: 900;
         border-radius: 3px;
         box-shadow: 0 1px 8px rgba(0, 212, 255, 0.55);
@@ -4238,7 +4249,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         font-size: 10px;
         font-weight: 800;
         letter-spacing: 0.6px;
-        color: #69f0ae;
+        color: var(--c-diff-super-easy);
         background: rgba(105, 240, 174, 0.12);
         border: 1px solid rgba(105, 240, 174, 0.35);
         border-radius: 10px;
@@ -4772,6 +4783,7 @@ export class VirtualPiano extends CardDef {
           --c-border-hi: rgba(184, 184, 204, 0.22);
           --c-key-white: #d8d8ea;
           --c-key-black: #0a0a12;
+          --c-keybed-bg: #050508;
           /* chrome bezel shadow */
           --c-bezel:
             0 1px 0 rgba(224, 224, 240, 0.25) inset,
@@ -5077,7 +5089,7 @@ export class VirtualPiano extends CardDef {
         }
 
         .tile-keys-bezel {
-          background: #050508;
+          background: var(--c-keybed-bg);
           border-radius: 3px;
           padding: 4px 4px 0;
           box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
@@ -5206,7 +5218,7 @@ export class VirtualPiano extends CardDef {
         }
 
         .card-keys-bezel {
-          background: #050508;
+          background: var(--c-keybed-bg);
           border-radius: 2px;
           padding: 3px 3px 0;
           box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
@@ -5390,24 +5402,27 @@ export class VirtualPiano extends CardDef {
 
       <style scoped>
         .vpe-row {
+          --vpe-accent: #ff8c42;
+          --vpe-text: #1a1a2e;
+
           display: flex;
           align-items: center;
           gap: 0.5rem;
           padding: 0.5rem 0.75rem;
           border-radius: 6px;
-          background: rgba(255, 140, 66, 0.04);
-          border: 1px solid rgba(255, 140, 66, 0.12);
+          background: color-mix(in oklch, var(--vpe-accent) 4%, transparent);
+          border: 1px solid color-mix(in oklch, var(--vpe-accent) 12%, transparent);
         }
 
         .vpe-icon {
-          color: #ff8c42;
+          color: var(--vpe-accent);
           flex-shrink: 0;
         }
 
         .vpe-label {
           font-weight: 600;
           font-size: 13px;
-          color: #1a1a2e;
+          color: var(--vpe-text);
           flex: 1;
         }
 
@@ -5416,9 +5431,9 @@ export class VirtualPiano extends CardDef {
           border-radius: 8px;
           font-size: 9px;
           font-weight: 700;
-          background: rgba(255, 140, 66, 0.1);
-          color: #ff8c42;
-          border: 1px solid rgba(255, 140, 66, 0.2);
+          background: color-mix(in oklch, var(--vpe-accent) 10%, transparent);
+          color: var(--vpe-accent);
+          border: 1px solid color-mix(in oklch, var(--vpe-accent) 20%, transparent);
           white-space: nowrap;
         }
       </style>

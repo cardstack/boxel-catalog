@@ -138,6 +138,8 @@ export class MortgageCalculatorFitted extends Component<
         --mc-text-2: #1e293b;
         --mc-muted: #64748b;
         --mc-surface: #ffffff;
+        --mc-on-accent: #ffffff;
+        --mc-on-photo: #ffffff;
         --mc-shadow:
           0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
         --mc-shadow-md:
@@ -299,7 +301,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-s-cc {
         font-size: 0.5rem;
         font-weight: 700;
-        color: #fff;
+        color: var(--mc-on-accent);
         background: var(--mc-teal);
         border-radius: 999px;
         padding: 0.1rem 0.3rem;
@@ -355,7 +357,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-t-cc {
         font-size: 0.5625rem;
         font-weight: 700;
-        color: #fff;
+        color: var(--mc-on-accent);
         background: rgba(255, 255, 255, 0.18);
         border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 999px;
@@ -498,7 +500,7 @@ export class MortgageCalculatorFitted extends Component<
         margin: 0;
         font-size: clamp(0.75rem, 3cqi, 1rem);
         font-weight: 800;
-        color: #ffffff;
+        color: var(--mc-on-photo);
         text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
         white-space: nowrap;
         overflow: hidden;
@@ -509,7 +511,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-c-pill {
         font-size: 0.5rem;
         font-weight: 700;
-        color: #fff;
+        color: var(--mc-on-accent);
         background: rgba(255, 255, 255, 0.16);
         border: 1px solid rgba(255, 255, 255, 0.28);
         border-radius: 999px;

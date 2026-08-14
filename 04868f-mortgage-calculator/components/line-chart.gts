@@ -321,7 +321,7 @@ export class LineChart extends GlimmerComponent<LineChartSignature> {
               cy={{dot.cy}}
               r='4'
               fill={{dot.color}}
-              stroke='#ffffff'
+              stroke='var(--mc-surface, #ffffff)'
               stroke-width='2'
             />
           {{/each}}

@@ -178,8 +178,8 @@ class BlogAdminData extends GlimmerComponent<CardAdminViewSignature> {
           sans-serif;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        background: #e5e7eb;
-        color: #4b5563;
+        background: var(--blog-color-chip, #e5e7eb);
+        color: var(--blog-color-muted-2, #4b5563);
       }
       .status-dot {
         width: 6px;
@@ -189,15 +189,15 @@ class BlogAdminData extends GlimmerComponent<CardAdminViewSignature> {
       }
       .status-pill.is-published {
         background: rgba(34, 197, 94, 0.15);
-        color: #15803d;
+        color: var(--blog-color-published, #15803d);
       }
       .status-pill.is-draft {
-        background: #e5e7eb;
-        color: #4b5563;
+        background: var(--blog-color-chip, #e5e7eb);
+        color: var(--blog-color-muted-2, #4b5563);
       }
       .publish-toggle {
         padding: 5px 12px;
-        background: #2c2c2c;
+        background: var(--blog-color-ink, #2c2c2c);
         color: white;
         border: 1px solid #2c2c2c;
         border-radius: 999px;
@@ -214,19 +214,19 @@ class BlogAdminData extends GlimmerComponent<CardAdminViewSignature> {
           transform 0.1s;
       }
       .publish-toggle:hover {
-        background: #1a1a1a;
-        border-color: #1a1a1a;
+        background: var(--blog-color-body, #1a1a1a);
+        border-color: var(--blog-color-body, #1a1a1a);
       }
       .publish-toggle:active {
         transform: scale(0.96);
       }
       .publish-toggle--unpublish {
         background: transparent;
-        color: #2c2c2c;
+        color: var(--blog-color-ink, #2c2c2c);
       }
       .publish-toggle--unpublish:hover {
         background: rgba(0, 0, 0, 0.05);
-        color: #1a1a1a;
+        color: var(--blog-color-body, #1a1a1a);
       }
     </style>
   </template>
@@ -1196,7 +1196,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
         min-height: 600px;
         border-radius: 18px;
         overflow: hidden !important;
-        background: #1a1a1a;
+        background: var(--blog-color-body, #1a1a1a);
         isolation: isolate;
       }
       .lead-list :deep(.thumbnail) {
@@ -1205,7 +1205,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
         width: 100% !important;
         height: 100% !important;
         margin: 0 !important;
-        background-color: #1a1a1a;
+        background-color: var(--blog-color-body, #1a1a1a);
         transition: transform 0.35s ease;
         z-index: 0;
       }
@@ -1237,7 +1237,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
       .lead-list :deep(.category) {
         /* Fixed white-on-photo pill: text must stay dark in every theme */
         background: rgba(255, 255, 255, 0.95) !important;
-        color: #121212 !important;
+        color: var(--blog-color-text, #121212) !important;
         padding: 5px 14px !important;
         border-radius: 999px !important;
         font: 600 11px/1 var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
@@ -1254,7 +1254,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
         font: 700 2rem/1.15
           var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
         letter-spacing: -0.015em !important;
-        color: #ffffff !important;
+        color: var(--blog-color-bg, #ffffff) !important;
         margin: 0 !important;
         display: -webkit-box;
         -webkit-line-clamp: 3;
@@ -1451,7 +1451,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
         border-radius: 3px;
       }
       .games-list::-webkit-scrollbar-thumb:hover {
-        background: #999;
+        background: var(--blog-color-faint, #999);
       }
       .games-card {
         flex: 0 0 200px;
@@ -1541,7 +1541,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
         padding: 6px var(--boxel-sp-lg) 28px;
         margin: 0 calc(-1 * var(--boxel-sp-lg));
         scrollbar-width: thin;
-        scrollbar-color: #c5c5c5 transparent;
+        scrollbar-color: var(--blog-color-scrollbar, #c5c5c5) transparent;
       }
       .picks-carousel::-webkit-scrollbar {
         height: 10px;
@@ -1554,7 +1554,7 @@ class BlogSiteView extends Component<typeof BlogApp> {
         border-radius: 5px;
       }
       .picks-carousel::-webkit-scrollbar-thumb:hover {
-        background: #999;
+        background: var(--blog-color-faint, #999);
       }
       .picks-card {
         flex: 0 0 360px;
@@ -1681,18 +1681,18 @@ class BlogSiteView extends Component<typeof BlogApp> {
           transform 0.1s;
       }
       .filter-pills .pill:hover {
-        background: #f5f5f5;
+        background: var(--blog-color-panel, #f5f5f5);
       }
       .filter-pills .pill:active {
         transform: scale(0.97);
       }
       .filter-pills .pill.is-active {
-        background: #121212;
+        background: var(--blog-color-text, #121212);
         color: white;
         border-color: var(--blog-color-text, #121212);
       }
       .filter-pills .pill.is-active:hover {
-        background: #000;
+        background: var(--blog-color-black, #000);
       }
       /* Recent grid — 2 rows × 3 columns of fitted cards.
          Hides hero items 1-6 and overflow items 13+, leaving 7-12. */
@@ -2102,7 +2102,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
         height: 40px;
         display: grid;
         place-items: center;
-        background: #2c2c2c;
+        background: var(--blog-color-ink, #2c2c2c);
         color: white;
         border: none;
         border-radius: 50%;
@@ -2114,7 +2114,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
           transform 0.1s;
       }
       .drawer-toggle:hover {
-        background: #1a1a1a;
+        background: var(--blog-color-body, #1a1a1a);
       }
       .drawer-toggle:active {
         transform: scale(0.94);
@@ -2146,7 +2146,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
         justify-content: center;
         gap: 6px;
         padding: 9px 16px;
-        background: #2c2c2c;
+        background: var(--blog-color-ink, #2c2c2c);
         color: white;
         border: none;
         border-radius: 999px;
@@ -2163,7 +2163,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
           transform 0.1s;
       }
       .view-toggle:hover {
-        background: #1a1a1a;
+        background: var(--blog-color-body, #1a1a1a);
       }
       .view-toggle:active {
         transform: scale(0.97);
@@ -2181,7 +2181,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
           sans-serif;
         letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: #121212;
+        color: var(--blog-color-text, #121212);
         margin: 0;
       }
       .lib-section-hint {
@@ -2190,7 +2190,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
           400 0.75rem 'Inter',
           system-ui,
           sans-serif;
-        color: #999;
+        color: var(--blog-color-faint, #999);
       }
 
       .theme-section {
@@ -2239,7 +2239,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
         height: 110px;
         border-radius: 6px;
         overflow: hidden;
-        background: #f5f5f5;
+        background: var(--blog-color-panel, #f5f5f5);
         pointer-events: none;
         user-select: none;
       }
@@ -2258,7 +2258,7 @@ class IsolatedPortal extends Component<typeof BlogApp> {
         font:
           700 12px/1.2 'Inter',
           sans-serif;
-        color: #2c2c2c;
+        color: var(--blog-color-ink, #2c2c2c);
       }
       .theme-row__desc {
         font:
@@ -2293,13 +2293,13 @@ class IsolatedPortal extends Component<typeof BlogApp> {
         transition: border-color 0.15s;
         box-sizing: border-box;
         background: white;
-        color: #121212;
+        color: var(--blog-color-text, #121212);
       }
       .lib-search:focus {
         border-color: var(--boxel-highlight, #7b61ff);
       }
       .lib-search::placeholder {
-        color: #999;
+        color: var(--blog-color-faint, #999);
       }
       .lib-list {
         display: flex;

@@ -631,7 +631,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         border-radius: var(--boxel-border-radius-lg, 0.75rem);
         overflow: hidden;
         /* background applied via inline headerStyle getter */
-        color: #ffffff;
+        color: var(--mc-on-photo);
         box-shadow:
           0 8px 32px rgba(0, 0, 0, 0.22),
           0 2px 8px rgba(0, 0, 0, 0.12);
@@ -707,7 +707,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       }
       .mc-quickfill-msg.success {
         background: rgba(48, 239, 157, 0.2);
-        color: #d4ffe8;
+        color: var(--mc-success-text);
         display: inline-flex;
         align-self: flex-start;
         align-items: flex-start;
@@ -720,7 +720,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       }
       .mc-quickfill-msg.error {
         background: rgba(255, 80, 80, 0.25);
-        color: #ffefef;
+        color: var(--mc-error-text);
       }
       .mc-debug {
         margin-top: 0.5rem;
@@ -734,7 +734,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         margin: 0.375rem 0 0;
         padding: 0.5rem 0.625rem;
         background: rgba(0, 0, 0, 0.35);
-        color: #fff;
+        color: var(--mc-on-dark);
         border-radius: 0.375rem;
         white-space: pre-wrap;
         word-break: break-word;
@@ -807,6 +807,10 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         --mc-muted: #64748b;
         --mc-border: #e2e8f0;
         --mc-border-2: #cbd5e1;
+        --mc-on-photo: #ffffff;
+        --mc-on-dark: #ffffff;
+        --mc-success-text: #d4ffe8;
+        --mc-error-text: #ffefef;
         --mc-shadow:
           0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
         --mc-shadow-md:
@@ -828,7 +832,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         align-self: flex-start;
       }
       .mc-currency-notice strong {
-        color: #ffffff;
+        color: var(--mc-on-photo);
         font-weight: 700;
       }
 
@@ -933,7 +937,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
           box-shadow 0.18s ease;
       }
       .mc-form :deep(input):focus {
-        background: #ffffff;
+        background: var(--mc-surface);
         border-color: var(--mc-green);
         outline: none;
         box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
@@ -972,7 +976,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         background: rgba(255, 255, 255, 0.15);
         border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 0.5rem;
-        color: #ffffff;
+        color: var(--mc-on-photo);
         font-size: 0.8125rem;
         font-weight: 600;
         min-width: 100px;
@@ -1040,14 +1044,14 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         background: var(--mc-green);
         border-color: transparent;
         border-left-color: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
+        color: var(--mc-on-photo);
         box-shadow: 0 4px 20px rgba(0, 114, 114, 0.35);
       }
       .mc-stat.highlight .mc-stat-label {
         color: rgba(255, 255, 255, 0.75);
       }
       .mc-stat.highlight .mc-stat-value {
-        color: #ffffff;
+        color: var(--mc-on-photo);
       }
 
       /* TABLE */
@@ -1128,7 +1132,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       }
       .mc-tab.active {
         background: var(--mc-green);
-        color: #ffffff;
+        color: var(--mc-on-photo);
         box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
       }
       .mc-chart-panel {
@@ -1158,7 +1162,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         align-items: center;
         gap: 0.75rem;
         padding: 0.625rem 0.875rem;
-        background: #ffffff;
+        background: var(--mc-surface);
         border: 1px solid var(--mc-border);
         border-radius: 0.75rem;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
@@ -1191,7 +1195,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         gap: 0.5rem;
         padding: 0.5rem 0.625rem;
         border-radius: 0.625rem;
-        background: #ffffff;
+        background: var(--mc-surface);
         border: 1px solid var(--mc-border);
         transition:
           transform 0.15s ease,

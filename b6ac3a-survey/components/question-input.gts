@@ -156,15 +156,19 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
     <style scoped>
       .qi {
         --qi-accent: var(--primary, #2563eb);
+        --qi-danger: var(--destructive, var(--boxel-destructive));
+        --qi-danger-light: #fca5a5;
+        --qi-warn: #f59e0b;
+        --qi-on-accent: #ffffff;
       }
       .qi.is-invalid .qi-input,
       .qi.is-invalid .qi-mark,
       .qi.is-invalid .qi-choice,
       .qi.is-invalid .qi-toggle {
-        border-color: #dc2626;
+        border-color: var(--qi-danger);
       }
       .qi.is-invalid .qi-star {
-        color: #fca5a5;
+        color: var(--qi-danger-light);
       }
       .qi-input {
         width: 100%;
@@ -184,7 +188,7 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
         outline: 0;
         border-color: var(--qi-accent);
         box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--qi-accent) 22%, transparent);
+          color-mix(in oklch, var(--qi-accent) 22%, transparent);
       }
       .qi-textarea {
         resize: vertical;
@@ -218,7 +222,7 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
       }
       .qi-choice.is-selected {
         border-color: var(--qi-accent);
-        background: color-mix(in srgb, var(--qi-accent) 10%, transparent);
+        background: color-mix(in oklch, var(--qi-accent) 10%, transparent);
       }
       .qi-mark {
         flex-shrink: 0;
@@ -248,12 +252,12 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
         width: 0.45rem;
         height: 0.45rem;
         border-radius: 50%;
-        background: #ffffff;
+        background: var(--qi-on-accent);
       }
       .qi-choice.is-selected .qi-mark--check::after {
         width: 0.28rem;
         height: 0.55rem;
-        border: solid #ffffff;
+        border: solid var(--qi-on-accent);
         border-width: 0 2px 2px 0;
         transform: translateY(-1px) rotate(45deg);
       }
@@ -273,7 +277,7 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
         transition: color 0.12s ease;
       }
       .qi-star.is-on {
-        color: #f59e0b;
+        color: var(--qi-warn);
       }
 
       .qi-yesno {

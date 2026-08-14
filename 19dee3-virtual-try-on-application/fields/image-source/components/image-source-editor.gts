@@ -218,7 +218,7 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
       .image-source-root {
         --accent: var(--boxel-purple, #6638ff);
         --accent-bg: color-mix(
-          in srgb,
+          in oklch,
           var(--boxel-purple, #6638ff) 8%,
           transparent
         );
@@ -270,7 +270,7 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
 
       .default-pill {
         --boxel-pill-background-color: color-mix(
-          in srgb,
+          in oklch,
           var(--boxel-purple, #6638ff) 12%,
           transparent
         );
@@ -325,7 +325,7 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
       .tab--active {
         background: var(
           --accent-bg,
-          color-mix(in srgb, #6638ff 8%, transparent)
+          color-mix(in oklch, #6638ff 8%, transparent)
         );
         border-color: var(--accent, #6638ff);
         color: var(--accent, #6638ff);
@@ -472,7 +472,7 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
       .file-link-btn :deep(.add-new.boxel-button:hover) {
         --boxel-button-color: var(
           --accent-bg,
-          color-mix(in srgb, #6638ff 8%, transparent)
+          color-mix(in oklch, #6638ff 8%, transparent)
         );
       }
     </style>

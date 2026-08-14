@@ -185,7 +185,7 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
           --img-source-font,
           var(--font-sans, var(--boxel-font-family, sans-serif))
         );
-        --img-accent-bg: color-mix(in srgb, var(--img-accent) 8%, transparent);
+        --img-accent-bg: color-mix(in oklch, var(--img-accent) 8%, transparent);
         /* the input group's focus ring reads var(--ring, --boxel-highlight);
            re-point both locally so focus matches the accent */
         --ring: var(--img-source-ring, var(--img-accent));
@@ -213,7 +213,7 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
         overflow: hidden;
         /* letterbox surface derives from the themed bg/text pair instead of
            a raw boxel gray, so dark-themed hosts stay dark */
-        background: color-mix(in srgb, var(--img-bg) 94%, var(--img-text));
+        background: color-mix(in oklch, var(--img-bg) 94%, var(--img-text));
       }
       .hero img {
         display: block;

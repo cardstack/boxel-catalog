@@ -445,7 +445,7 @@ export default class Stepper extends Component<StepperSignature> {
         inset: -8px -10px;
         border-radius: 12px;
         background: color-mix(
-          in srgb,
+          in oklch,
           var(--stepper-accent, var(--primary, var(--boxel-highlight, #00ac3d)))
             10%,
           transparent
@@ -520,7 +520,7 @@ export default class Stepper extends Component<StepperSignature> {
         );
         box-shadow: 0 0 0 4px
           color-mix(
-            in srgb,
+            in oklch,
             var(
                 --stepper-accent,
                 var(--primary, var(--boxel-highlight, #00ac3d))

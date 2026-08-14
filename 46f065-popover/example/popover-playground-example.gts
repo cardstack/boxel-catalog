@@ -841,6 +841,18 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
 
     <style scoped>
       .pp {
+        --pp-muted: #6b7280;
+        --pp-muted-2: #9ca3af;
+        --pp-muted-3: #4b5563;
+        --pp-text: #374151;
+        --pp-indigo: #4338ca;
+        --pp-indigo-ring: #6366f1;
+        --pp-indigo-bg: #eef2ff;
+        --pp-amber: #92710c;
+        --pp-surface: #f9fafb;
+        --pp-on-dark: #ffffff;
+        --pp-dark: #333333;
+
         display: grid;
         gap: 16px;
         padding: 24px;
@@ -854,7 +866,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #6b7280;
+        color: var(--pp-muted);
       }
       .pp-axes {
         display: grid;
@@ -869,25 +881,25 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
       .pp-label {
         font-size: 11px;
         font-weight: 600;
-        color: #4338ca;
+        color: var(--pp-indigo);
       }
       .pp-typeline {
         font-family: ui-monospace, monospace;
         font-size: 10px;
-        color: #9ca3af;
+        color: var(--pp-muted-2);
         white-space: normal;
         word-break: break-word;
       }
       .pp-desc {
         font-size: 11px;
         line-height: 1.5;
-        color: #6b7280;
+        color: var(--pp-muted);
       }
       .pp-desc code {
         font-family: ui-monospace, monospace;
         font-size: 10px;
-        color: #4338ca;
-        background: #eef2ff;
+        color: var(--pp-indigo);
+        background: var(--pp-indigo-bg);
         padding: 1px 4px;
         border-radius: 3px;
       }
@@ -895,7 +907,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         position: relative;
         height: 250px;
         width: 100%;
-        background: #333333;
+        background: var(--pp-dark);
         border-radius: 10px;
         display: flex;
         align-items: center;
@@ -915,19 +927,19 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.02em;
-        background: color-mix(in srgb, var(--primary, #fff) 22%, transparent);
-        color: #fff;
+        background: color-mix(in oklch, var(--primary, var(--boxel-purple)) 22%, transparent);
+        color: var(--pp-on-dark);
       }
       .pp-open {
         padding: 8px 18px;
         border: 1.5px solid #d1d5db;
         border-radius: 8px;
-        background: #fff;
+        background: var(--pp-on-dark);
         cursor: pointer;
         font: inherit;
         font-size: 13px;
         font-weight: 500;
-        color: #374151;
+        color: var(--pp-text);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         transition:
           background 80ms,
@@ -935,14 +947,14 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
           box-shadow 80ms;
       }
       .pp-open:hover {
-        background: #f9fafb;
-        border-color: #9ca3af;
+        background: var(--pp-surface);
+        border-color: var(--pp-muted-2);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.09);
       }
       .pp-open--active {
-        background: #eef2ff;
-        border-color: #6366f1;
-        color: #4338ca;
+        background: var(--pp-indigo-bg);
+        border-color: var(--pp-indigo-ring);
+        color: var(--pp-indigo);
       }
       .pp-body {
         padding: 10px 12px;
@@ -1004,7 +1016,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
       .pp-field-label {
         font-size: 11px;
         font-weight: 600;
-        color: #92710c;
+        color: var(--pp-amber);
       }
       /* TOOLS view — light controls for the popover's dark tools surface. */
       .pp-tools-menu {
@@ -1060,15 +1072,15 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
       .pp-arg code {
         font-family: ui-monospace, monospace;
         font-size: 11px;
-        color: #4338ca;
+        color: var(--pp-indigo);
       }
       .pp-arg span {
-        color: #4b5563;
+        color: var(--pp-muted-3);
       }
       .pp-arg em {
         font-style: normal;
         font-family: ui-monospace, monospace;
-        color: #6b7280;
+        color: var(--pp-muted);
       }
       @media (max-width: 520px) {
         .pp-arg {

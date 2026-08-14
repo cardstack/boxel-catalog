@@ -155,6 +155,21 @@ export class GradeField extends FieldDef {
 
       <style scoped>
         .grade-layout {
+          /* Self-contained tokens (§4a): this FieldDef embeds standalone in
+             other cards, so it can't rely on an ancestor's adapter. */
+          --gf-blue: var(--c-blue, #2563eb);
+          --gf-green: var(--c-green, #10b981);
+          --gf-amber: var(--c-amber, #f59e0b);
+          --gf-red: var(--c-red, #ef4444);
+          --gf-label: var(--muted-foreground, var(--boxel-500));
+          --gf-text: var(--foreground, var(--boxel-dark));
+          --gf-text-2: var(--foreground, var(--boxel-dark));
+          --gf-heading: var(--foreground, var(--boxel-dark));
+          --gf-em: var(--muted-foreground, var(--boxel-500));
+          --gf-border: var(--border, var(--boxel-border-color));
+          --gf-quote-bg: #eff6ff;
+          --gf-quote-text: #1e40af;
+
           display: flex;
           flex-direction: column;
           gap: 20px;
@@ -173,25 +188,25 @@ export class GradeField extends FieldDef {
           font-size: 20px;
           font-weight: 800;
           color: var(--c-on-blue, #ffffff);
-          background: #2563eb;
+          background: var(--gf-blue);
         }
 
         .grade-circle.grade-A {
-          background: #10b981;
+          background: var(--gf-green);
         }
 
         .grade-circle.grade-B {
-          background: #2563eb;
+          background: var(--gf-blue);
         }
 
         .grade-circle.grade-C {
-          background: #f59e0b;
+          background: var(--gf-amber);
         }
 
         .grade-circle.grade-D,
         .grade-circle.grade-E,
         .grade-circle.grade-F {
-          background: #ef4444;
+          background: var(--gf-red);
         }
 
         .details-column {
@@ -210,7 +225,7 @@ export class GradeField extends FieldDef {
         .detail-label {
           font-size: 11px;
           font-weight: 600;
-          color: #64748b;
+          color: var(--gf-label);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           white-space: nowrap;
@@ -220,7 +235,7 @@ export class GradeField extends FieldDef {
           flex: 1;
           font-size: 14px;
           line-height: 1.75;
-          color: #1e293b;
+          color: var(--gf-text);
         }
 
         .feedback-content :deep(.markdown-content) {
@@ -234,16 +249,16 @@ export class GradeField extends FieldDef {
         .feedback-content :deep(.markdown-content h3) {
           font-size: 15px;
           font-weight: 700;
-          color: #0f172a;
+          color: var(--gf-heading);
           margin: 0;
           padding-bottom: 8px;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid var(--gf-border);
         }
 
         .feedback-content :deep(.markdown-content h4) {
           font-size: 13px;
           font-weight: 600;
-          color: #334155;
+          color: var(--gf-text-2);
           margin: 0;
         }
 
@@ -251,16 +266,16 @@ export class GradeField extends FieldDef {
           margin: 0;
           font-size: 14px;
           line-height: 1.75;
-          color: #334155;
+          color: var(--gf-text-2);
         }
 
         .feedback-content :deep(.markdown-content strong) {
-          color: #0f172a;
+          color: var(--gf-heading);
           font-weight: 700;
         }
 
         .feedback-content :deep(.markdown-content em) {
-          color: #475569;
+          color: var(--gf-em);
         }
 
         .feedback-content :deep(.markdown-content ul),
@@ -275,16 +290,16 @@ export class GradeField extends FieldDef {
         .feedback-content :deep(.markdown-content li) {
           font-size: 14px;
           line-height: 1.65;
-          color: #334155;
+          color: var(--gf-text-2);
         }
 
         .feedback-content :deep(.markdown-content blockquote) {
-          border-left: 3px solid #2563eb;
+          border-left: 3px solid var(--gf-blue);
           padding: 8px 14px;
-          background: #eff6ff;
+          background: var(--gf-quote-bg);
           border-radius: 0 6px 6px 0;
           margin: 0;
-          color: #1e40af;
+          color: var(--gf-quote-text);
           font-style: italic;
         }
       </style>
@@ -1277,10 +1292,10 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
            literal fallback. Derived shades come from color-mix so a theme
            only has to supply the semantic set. */
         --c-blue: var(--primary, #2563eb);
-        --c-blue-hover: color-mix(in srgb, var(--c-blue) 85%, #000000);
-        --c-blue-bg: color-mix(in srgb, var(--c-blue) 8%, var(--c-white));
-        --c-blue-border: color-mix(in srgb, var(--c-blue) 28%, var(--c-white));
-        --c-blue-muted: color-mix(in srgb, var(--c-blue) 45%, var(--c-white));
+        --c-blue-hover: color-mix(in oklch, var(--c-blue) 85%, #000000);
+        --c-blue-bg: color-mix(in oklch, var(--c-blue) 8%, var(--c-white));
+        --c-blue-border: color-mix(in oklch, var(--c-blue) 28%, var(--c-white));
+        --c-blue-muted: color-mix(in oklch, var(--c-blue) 45%, var(--c-white));
         --c-on-blue: var(--primary-foreground, #ffffff);
         --c-bg: var(--background, #f1f5f9);
         --c-white: var(--card, #ffffff);
@@ -1292,6 +1307,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         --c-success: #10b981;
         --c-danger: var(--destructive, #ef4444);
         --c-warn: #f59e0b;
+        --c-warn-text: #78350f;
         --c-shadow:
           0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
         --c-shadow-md:
@@ -1556,11 +1572,11 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         display: flex;
         align-items: center;
         gap: 8px;
-        background: color-mix(in srgb, var(--c-warn) 10%, var(--c-white));
-        border-bottom: 1px solid #fde68a;
+        background: color-mix(in oklch, var(--c-warn) 10%, var(--c-white));
+        border-bottom: 1px solid color-mix(in oklch, var(--c-warn) 35%, transparent);
         padding: 8px 24px;
         font-size: 13px;
-        color: #78350f;
+        color: var(--c-warn-text);
         flex-shrink: 0;
       }
 
@@ -1664,7 +1680,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
 
       .hw-ring-track {
         fill: none;
-        stroke: #e2e8f0;
+        stroke: var(--border, var(--boxel-border-color));
         stroke-width: 8;
       }
 
@@ -2075,7 +2091,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-instructions {
-        background: color-mix(in srgb, var(--c-warn) 10%, var(--c-white));
+        background: color-mix(in oklch, var(--c-warn) 10%, var(--c-white));
         border: 1px solid #fde68a;
         border-radius: 10px;
         padding: 14px 16px;
@@ -2084,7 +2100,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-instr-label {
         font-size: 11px;
         font-weight: 600;
-        color: #92400e;
+        color: var(--c-warn-text);
         text-transform: uppercase;
         letter-spacing: 0.06em;
         margin: 0 0 4px;
@@ -2092,7 +2108,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
 
       .hw-instr-body {
         font-size: 13px;
-        color: #78350f;
+        color: var(--c-warn-text);
         line-height: 1.6;
         margin: 0;
       }
@@ -2133,7 +2149,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
 
       .hw-question-pts.full {
         color: var(--c-success);
-        background: #ecfdf5;
+        background: color-mix(in oklch, var(--c-success) 10%, var(--c-white));
       }
 
       .hw-question-pts.partial {
@@ -2192,7 +2208,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         border-radius: 12px;
         background: var(--c-danger);
         border-color: var(--c-danger);
-        color: #ffffff;
+        color: var(--c-on-blue, #ffffff);
         font-weight: 700;
         white-space: nowrap;
       }
@@ -2227,7 +2243,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         padding: 10px 14px;
         border: 1px solid var(--c-danger);
         border-radius: 8px;
-        background: color-mix(in srgb, var(--c-danger) 8%, var(--c-white));
+        background: color-mix(in oklch, var(--c-danger) 8%, var(--c-white));
         color: var(--c-text);
         font-size: 13px;
       }
@@ -2620,8 +2636,8 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
 
       .hw-fitted {
         --c-blue: var(--primary, #2563eb);
-        --c-blue-bg: color-mix(in srgb, var(--c-blue) 8%, var(--c-white));
-        --c-blue-border: color-mix(in srgb, var(--c-blue) 28%, var(--c-white));
+        --c-blue-bg: color-mix(in oklch, var(--c-blue) 8%, var(--c-white));
+        --c-blue-border: color-mix(in oklch, var(--c-blue) 28%, var(--c-white));
         --c-on-blue: var(--primary-foreground, #ffffff);
         --c-bg: var(--background, #f1f5f9);
         --c-white: var(--card, #ffffff);
@@ -2631,6 +2647,7 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         --c-border: var(--border, #e2e8f0);
         --c-success: #10b981;
         --c-warn: #f59e0b;
+        --c-warn-text: #78350f;
         --c-danger: var(--destructive, #ef4444);
         --c-grade: var(--c-blue);
         --c-shadow:
