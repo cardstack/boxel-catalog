@@ -20,6 +20,7 @@ import { EchoScenePlayer } from './scene-player';
 import { mapStrokesToManim } from '../utils/scene';
 import { EchoNoteField } from '../fields/echo-note';
 import {
+  asEchoMode,
   clamp,
   ECHO_MODES,
   INK_COLOR,
@@ -869,7 +870,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
   });
 
   startEcho = (mode: string) => {
-    this.echoTask.perform(mode as EchoModeKey);
+    this.echoTask.perform(asEchoMode(mode));
   };
 
   cancelEcho = () => {

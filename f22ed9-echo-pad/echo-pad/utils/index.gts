@@ -57,6 +57,14 @@ export const ECHO_MODES: { key: EchoModeKey; label: string; ask: string }[] = [
   },
 ];
 
+// 'auto' has no ECHO_MODES picker entry — the board runs it ambiently.
+export function asEchoMode(v: unknown): EchoModeKey {
+  return typeof v === 'string' &&
+    (v === 'auto' || ECHO_MODES.some((m) => m.key === v))
+    ? (v as EchoModeKey)
+    : 'solve';
+}
+
 export const INK_COLOR = '#2b3f8c';
 export const ECHO_COLOR = '#c33d2e';
 export const ZOOM_MIN = 0.25;

@@ -283,7 +283,10 @@ function asPoint(v: unknown): [number, number] | null {
 }
 
 function asColor(v: unknown): string | null {
-  if (typeof v === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(v)) {
+  if (
+    typeof v === 'string' &&
+    /^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v)
+  ) {
     return v;
   }
   if (v === 'accent') {
@@ -508,7 +511,7 @@ export const SCENE_GRAMMAR = [
   'If motion would explain the idea better than words, append ONE fenced block exactly like ```scene {"title":"...","steps":[...]}``` after your text.',
   ' Each step is one JSON object. Object steps: {"add":TYPE,"id":"unique",...props}. TYPE choices:',
   ' Prefer composing your own clean, precise graphs and diagrams — that is what makes the animation valuable. ink{} — the user\'s circled strokes as one object — should ONLY be used as the starting shape of a transform into the ideal form you draw (rough sketch morphs into the true curve); never animate the raw ink for its own sake · axes{xRange:[a,b],yRange:[a,b]} · plane{xRange,yRange} · graph{fn:"expr in x",axes:"axesId",xRange:[a,b]} · circle{radius} · square{side} · rect{w,h} · line{from:[x,y],to:[x,y]} · arrow{from,to} · vector{to:[x,y]} · dot{at:[x,y]} · text{value,at} · mathtex{value:"LaTeX",at}.',
-  ' Optional props: color (hex), at:[x,y]. Coordinates are manim world units, roughly x -6..6, y -3.5..3.5, origin center.',
+  ' Optional props: color (a #RGB / #RGBA / #RRGGBB / #RRGGBBAA hex value, or the string "accent" to inherit the board\'s own marker color), at:[x,y]. Coordinates are manim world units, roughly x -6..6, y -3.5..3.5, origin center.',
   ' Animation steps: {"play":KIND,"target":"id",...}: create · write · fadeIn · fadeOut · transform{to:"otherId"} · rotate{angle:radians} · scale{factor} · wave{amplitude} · orbit{path:"idOfCircleOrLine"} · indicate · shear{matrix:[[a,b],[c,d]]} · wait{duration}.',
   ' Every play may set duration in seconds (max 4). Max 16 steps. fn expressions may use x, sin, cos, tan, exp, log, sqrt, abs, pi — nothing else.',
   ' Example: ```scene {"title":"sine forms","steps":[{"add":"axes","id":"ax","xRange":[-5,5],"yRange":[-2,2]},{"add":"graph","id":"g","fn":"sin(x)","axes":"ax"},{"play":"create","target":"g","duration":2},{"play":"wave","target":"g","amplitude":0.4,"duration":2}]}```',

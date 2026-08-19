@@ -4,10 +4,10 @@ import { Command } from '@cardstack/runtime-common';
 import SendRequestViaProxyCommand from '@cardstack/boxel-host/commands/send-request-via-proxy';
 
 import {
+  asEchoMode,
   buildEchoPrompt,
   echoCacheKey,
   splitEchoResponse,
-  type EchoModeKey,
 } from '../utils/index';
 
 export class RecognizeInkInput extends CardDef {
@@ -51,7 +51,7 @@ export class RecognizeInkCommand extends Command<
     if (!imageDataUrl?.startsWith('data:image/')) {
       throw new Error('No ink image was captured.');
     }
-    let modeKey = (mode ?? 'solve') as EchoModeKey;
+    let modeKey = asEchoMode(mode);
 
     let cacheKey = echoCacheKey(imageDataUrl, modeKey, instructions ?? '');
     let hit = echoCache.get(cacheKey);
