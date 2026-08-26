@@ -70,7 +70,7 @@
         "primary": "#4f46e5",
         "primaryForeground": "#ffffff",
         "secondary": "#14b8a6",
-        "secondaryForeground": "#ffffff",
+        "secondaryForeground": "#000000",
         "muted": "#f0f0f0",
         "mutedForeground": "#333333",
         "accent": "#f59e0b",

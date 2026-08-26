@@ -111,7 +111,7 @@
         "secondary": "var(--cardstack-purple, #6638FF)",
         "shadow2xl": "0 25px 50px -12px rgb(0 0 0 / 0.25)",
         "shadow2xs": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        "background": "var(--boxel-dove, #F7F8FA)",
+        "background": "var(--boxel-dove, #F8F7FA)",
         "foreground": "var(--boxel-slate, #272330)",
         "destructive": "var(--cardstack-red, #FF5050)",
         "success": "var(--boxel-success, #00AC3D)",
@@ -234,7 +234,7 @@
       },
       "functionalPalette": {
         "dark": "var(--boxel-slate, #272330)",
-        "light": "var(--boxel-dove, #F7F8FA)",
+        "light": "var(--boxel-dove, #F8F7FA)",
         "accent": "var(--cardstack-lime)",
         "primary": "var(--boxel-teal)",
         "secondary": "var(--cardstack-purple)"

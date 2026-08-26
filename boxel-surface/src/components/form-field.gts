@@ -327,7 +327,7 @@ export default class FormField extends Component<FormFieldSignature> {
       }
 
       [data-bx-form-field-state='valid'] .bx-form-field__state {
-        color: var(--success);
+        color: var(--success, var(--primary));
         --icon-color: currentColor;
       }
 

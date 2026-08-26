@@ -177,7 +177,7 @@ export default class SwitchCell extends Component<SwitchCellSignature> {
       }
 
       .bx-switch-cell__track[data-checked='true'] {
-        background: var(--success);
+        background: var(--success, var(--primary));
       }
 
       .bx-switch-cell__thumb {

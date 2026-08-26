@@ -16,9 +16,7 @@
       },
       "styleName": "Botanical",
       "visualDNA": "A natural, organic design language inspired by botanical gardens and plant life. Features earthy greens, warm neutrals, and soft, flowing forms that evoke the tranquility of nature.",
-      "cssImports": [
-        "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap"
-      ],
+      "customCssImports": [],
       "typography": {
         "body": {
           "fontSize": "1rem",
@@ -84,6 +82,8 @@
         "primary": "#2d5016",
         "sidebar": "#f4f2eb",
         "spacing": "0.25rem",
+        "themeFontSize": null,
+        "themeScale": null,
         "fontMono": "'JetBrains Mono', 'Consolas', monospace",
         "fontSans": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         "shadowLg": "0 10px 20px -3px rgba(45, 51, 25, 0.15), 0 4px 10px -4px rgba(45, 51, 25, 0.1)",
@@ -111,6 +111,7 @@
         "sidebarForeground": "#2d3319",
         "secondaryForeground": "#1a1f13",
         "destructiveForeground": "#fef7f5",
+        "success": null,
         "sidebarAccentForeground": "#1a1f13",
         "sidebarPrimaryForeground": "#f7f9f5"
       },
@@ -138,6 +139,8 @@
         "primary": "#87a96b",
         "sidebar": "#1f2417",
         "spacing": "0.25rem",
+        "themeFontSize": null,
+        "themeScale": null,
         "fontMono": "'JetBrains Mono', 'Consolas', monospace",
         "fontSans": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         "shadowLg": "0 10px 20px -3px rgba(0, 0, 0, 0.5), 0 4px 10px -4px rgba(0, 0, 0, 0.4)",
@@ -165,6 +168,7 @@
         "sidebarForeground": "#e8ebe3",
         "secondaryForeground": "#e8ebe3",
         "destructiveForeground": "#fef7f5",
+        "success": null,
         "sidebarAccentForeground": "#e8ebe3",
         "sidebarPrimaryForeground": "#1a1f13"
       },
