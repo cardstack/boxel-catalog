@@ -16,7 +16,6 @@ interface CardsIntancesGridArgs {
     context?: CardContext;
     selectedView?: SelectedView;
   };
-  Blocks: {};
   Element: HTMLElement;
 }
 

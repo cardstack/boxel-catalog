@@ -32,9 +32,8 @@ interface LeafletMarker {
   on: (event: string, handler: (event: any) => void) => LeafletMarker;
 }
 
-interface LeafletPolyline {
-  // Leaflet polyline methods, we add this when we need more control over the polyline
-}
+// Leaflet polyline methods, we add these when we need more control over the polyline
+type LeafletPolyline = object;
 
 type LeafletLayers = LeafletMarker | LeafletPolyline;
 
@@ -922,7 +921,7 @@ async function fetchRoute(
     let route = data?.routes?.[0];
     if (route?.geometry?.type !== 'LineString') return null;
     return { geometry: route.geometry };
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -1254,7 +1253,7 @@ async function wikiThumbs(params: string): Promise<WikiCandidate[]> {
       }
     }
     return out.sort((a, b) => a.order - b.order);
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -1380,7 +1379,7 @@ async function fetchNearbyPlaces(
       if (places.length >= 12) break;
     }
     return places;
-  } catch (e) {
+  } catch {
     return [];
   }
 }

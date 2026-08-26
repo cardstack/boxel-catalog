@@ -62,7 +62,7 @@ export class MusicSheet extends CardDef {
     computeVia: function (this: MusicSheet) {
       try {
         return this.songTitle || 'Untitled Song';
-      } catch (e) {
+      } catch {
         return 'Untitled Song';
       }
     },

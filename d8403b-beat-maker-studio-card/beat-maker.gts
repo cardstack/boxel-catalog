@@ -690,7 +690,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       this.audioContext = new (
         window.AudioContext || (window as any).webkitAudioContext
       )();
-    } catch (e) {
+    } catch {
       console.warn('Web Audio API not supported');
     }
   }
