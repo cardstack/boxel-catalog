@@ -672,7 +672,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           s.title.toLowerCase().includes(q) ||
           s.artist.toLowerCase().includes(q),
       );
-    } catch (_e) {
+    } catch {
       return [];
     }
   }
@@ -685,7 +685,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
   get parsedBeats(): Beat[] {
     try {
       return parseNotationBeats(this.selectedSong?.notation ?? '');
-    } catch (_e) {
+    } catch {
       return [];
     }
   }
@@ -921,7 +921,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       const id = `${note}${octave}`;
       this.sustainedNodes.set(id, oscillators);
       return oscillators;
-    } catch (_e) {
+    } catch {
       return [];
     }
   }
@@ -935,7 +935,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       oscillators.forEach((oscillator) => {
         try {
           oscillator.stop(now + 0.55);
-        } catch (_e) {
+        } catch {
           /* already stopped */
         }
       });
@@ -949,7 +949,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       oscillators.forEach((oscillator) => {
         try {
           oscillator.stop(0);
-        } catch (_e) {
+        } catch {
           /**/
         }
       });
@@ -1082,7 +1082,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
     if (this.masterGain && this.recordDestination) {
       try {
         this.masterGain.disconnect(this.recordDestination);
-      } catch (_) {
+      } catch {
         /* ignore */
       }
     }
@@ -1423,7 +1423,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         g.connect(this.masterGain!);
         osc.start(t);
         osc.stop(t + 0.06);
-      } catch (_e) {
+      } catch {
         /**/
       }
     };

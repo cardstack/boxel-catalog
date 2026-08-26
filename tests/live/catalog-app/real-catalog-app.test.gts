@@ -77,7 +77,7 @@ async function ensureCatalogRealmReady() {
       try {
         let response = await network.fetch(CATALOG_READINESS_URL);
         return response.ok;
-      } catch (e) {
+      } catch {
         return false;
       }
     },

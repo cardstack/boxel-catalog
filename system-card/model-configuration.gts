@@ -36,7 +36,7 @@ export class ModelConfiguration extends BaseModelConfiguration {
     computeVia: function (this: ModelConfiguration) {
       try {
         return this.openRouterModel?.contextLength ?? null;
-      } catch (e) {
+      } catch {
         return null;
       }
     },
@@ -46,7 +46,7 @@ export class ModelConfiguration extends BaseModelConfiguration {
     computeVia: function (this: ModelConfiguration) {
       try {
         return this.openRouterModel?.canonicalSlug ?? null;
-      } catch (e) {
+      } catch {
         return null;
       }
     },
@@ -56,7 +56,7 @@ export class ModelConfiguration extends BaseModelConfiguration {
     computeVia: function (this: ModelConfiguration) {
       try {
         return this.openRouterModel?.name ?? null;
-      } catch (e) {
+      } catch {
         return null;
       }
     },
@@ -66,7 +66,7 @@ export class ModelConfiguration extends BaseModelConfiguration {
     computeVia: function (this: ModelConfiguration) {
       try {
         return this.openRouterModel?.modelId ?? null;
-      } catch (e) {
+      } catch {
         return null;
       }
     },
@@ -76,7 +76,7 @@ export class ModelConfiguration extends BaseModelConfiguration {
     computeVia: function (this: ModelConfiguration) {
       try {
         return this.openRouterModel?.toolsSupported ?? false;
-      } catch (e) {
+      } catch {
         return false;
       }
     },
@@ -86,7 +86,7 @@ export class ModelConfiguration extends BaseModelConfiguration {
     computeVia: function (this: ModelConfiguration) {
       try {
         return this.openRouterModel?.inputModalities ?? [];
-      } catch (e) {
+      } catch {
         return [];
       }
     },
@@ -107,7 +107,7 @@ export class ModelConfiguration extends BaseModelConfiguration {
             modelName = fullModelName.trim();
           }
         }
-      } catch (e) {
+      } catch {
         fullModelName = '';
       }
 

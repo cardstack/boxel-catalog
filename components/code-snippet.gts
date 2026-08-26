@@ -6,7 +6,6 @@ export interface CodeSnippetSignature {
     code: string;
   };
   Element: HTMLElement;
-  Blocks: {};
 }
 
 export default class CodeSnippet extends GlimmerComponent<CodeSnippetSignature> {

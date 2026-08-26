@@ -54,7 +54,11 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
 
   @action toggleSphere(sphereId: string) {
     const next = new Set(this.expandedSpheres);
-    next.has(sphereId) ? next.delete(sphereId) : next.add(sphereId);
+    if (next.has(sphereId)) {
+      next.delete(sphereId);
+    } else {
+      next.add(sphereId);
+    }
     this.expandedSpheres = next;
   }
 
