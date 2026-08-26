@@ -8,9 +8,6 @@
     },
     "type": "card",
     "attributes": {
-      "spacing": "0.25rem",
-      "themeFontSize": null,
-      "themeScale": null,
       "cardInfo": {
         "notes": null,
         "name": "Cardstack",
@@ -38,7 +35,7 @@
       "typography": {
         "body": {
           "fontSize": null,
-          "fontFamily": "IBM Plex sans",
+          "fontFamily": "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
           "fontWeight": null,
           "lineHeight": null,
           "sampleText": null
@@ -51,14 +48,14 @@
           "sampleText": null
         },
         "heading": {
-          "fontSize": "22px",
-          "fontFamily": "IBM Plex sans",
+          "fontSize": "1.375rem",
+          "fontFamily": "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
           "fontWeight": "700",
           "lineHeight": null,
           "sampleText": null
         },
         "subheading": {
-          "fontSize": "",
+          "fontSize": null,
           "fontFamily": null,
           "fontWeight": null,
           "lineHeight": null,
@@ -72,7 +69,6 @@
           "sampleText": null
         }
       },
-      "cornerRadius": "0.625rem",
       "inspirations": [],
       "rootVariables": {
         "card": "var(--boxel-light, #FFFFFF)",
@@ -129,7 +125,7 @@
       "brandColorPalette": [
         {
           "name": null,
-          "value": "#37EB77"
+          "value": "#00FFBA"
         },
         {
           "name": null,
@@ -149,6 +145,14 @@
         },
         {
           "name": null,
+          "value": "#000000"
+        },
+        {
+          "name": null,
+          "value": "#37EB77"
+        },
+        {
+          "name": null,
           "value": "#FF5050"
         },
         {
@@ -157,7 +161,7 @@
         },
         {
           "name": null,
-          "value": "#ac00ff"
+          "value": "#AC00FF"
         },
         {
           "name": null,
