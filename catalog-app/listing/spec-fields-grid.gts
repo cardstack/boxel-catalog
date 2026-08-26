@@ -92,19 +92,21 @@ export default class SpecFieldsGrid extends GlimmerComponent<Signature> {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
+        flex-wrap: wrap;
         gap: 0.5rem;
         padding: 0.5rem 0.75rem;
-        border: 1px solid var(--border, #e7e3d8);
+        border: 1px solid var(--border);
         border-radius: 0.5rem;
-        background: var(--card, #fff);
+        background: var(--card);
+        color: var(--card-foreground);
       }
       .field-name {
-        font: 600 0.8125rem/1.3 var(--font-mono, 'IBM Plex Mono', monospace);
-        color: var(--foreground, #16161c);
+        font: 600 0.8125rem/1.3 var(--font-mono);
       }
       .field-type {
-        font: 500 0.75rem/1.3 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: var(--muted-foreground, #8a8578);
+        font-weight: 500;
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
     </style>

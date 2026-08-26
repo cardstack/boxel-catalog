@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Neo Brutalism",
+      "summary": "tweakcn's loud neobrutalist preset — primary red, yellow, and blue at full volume on white, hard black borders, zero radius, and offset block shadows. Link it to any card for raw, high-contrast energy.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../Theme/neo-brutalism"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/theme"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../Tag/theme"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../Category/ui-components-design"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "ThemeListing"
+      }
+    }
+  }
+}

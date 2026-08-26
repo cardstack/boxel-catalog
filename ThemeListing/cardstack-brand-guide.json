@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Cardstack Brand Guide",
+      "summary": "The official Cardstack brand identity as a linkable theme: logo marks and usage rules, the signal-green palette, IBM Plex type stack, and light/dark surfaces. Link it to a card to give it the Cardstack look, or open it as a reference for brand elements and visual style.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": "https://boxel-assets-store.s3.us-east-1.amazonaws.com/cardstack-brand-guide/cardstack-profile-icon.png"
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../Theme/cardstack-brand-guide"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/brand-guide"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../Tag/theme"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../Category/ui-components-design"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "ThemeListing"
+      }
+    }
+  }
+}

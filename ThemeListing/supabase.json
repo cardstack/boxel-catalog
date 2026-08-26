@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Supabase",
+      "summary": "A tweakcn theme modeled on the Supabase dashboard — the signature mint green signal on near-white and near-black neutrals, set in Outfit. Link it to any card for a clean developer-tool aesthetic.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../Theme/supabase"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/theme"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../Tag/theme"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../Category/ui-components-design"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "ThemeListing"
+      }
+    }
+  }
+}
