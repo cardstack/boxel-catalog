@@ -99,11 +99,11 @@ export default class FormAlert extends Component<FormAlertSignature> {
       }
 
       .bx-form-alert--warning {
-        --bx-form-alert-color: var(--warning);
+        --bx-form-alert-color: var(--warning, var(--destructive));
       }
 
       .bx-form-alert--success {
-        --bx-form-alert-color: var(--success);
+        --bx-form-alert-color: var(--success, var(--primary));
       }
 
       .bx-form-alert__icon {
