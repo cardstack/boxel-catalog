@@ -12,8 +12,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import GeoPointField from '../geo-point';
 import CodeSnippet from '../../../components/code-snippet';
-import SpecContainer from '../../../components/spec-container';
-import SpecExampleCard from '../../../components/spec-example-card';
+import FieldUsageExampleContainer from '../../../components/field-usage-example-container';
+import FieldExample from '../../../components/field-example';
 
 // 1. Basic standard (no config needed)
 const basicFieldCode = `@field basic = contains(GeoPointField);`;
@@ -90,7 +90,7 @@ const mapPickerWithAddonsFieldCode = `@field mapPickerWithAddons = contains(GeoP
 
 class GeoPointFieldSpecIsolated extends Component<typeof GeoPointFieldSpec> {
   <template>
-    <SpecContainer>
+    <FieldUsageExampleContainer>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -102,55 +102,55 @@ class GeoPointFieldSpecIsolated extends Component<typeof GeoPointFieldSpec> {
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 2. With current location tracker }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{withCurrentLocationFieldCode}} />
           <@fields.withCurrentLocation />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 3. With quick locations }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{withQuickLocationsFieldCode}} />
           <@fields.withQuickLocations />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 4. Combined }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{combinedFieldCode}} />
           <@fields.combined />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 5. Map picker variant }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{mapPickerFieldCode}} />
           <@fields.mapPicker />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 6. Map picker with showCurrentLocation (using MapPickerOptions) }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{mapPickerWithCurrentLocationFieldCode}} />
           <@fields.mapPickerWithCurrentLocation />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 7. Map picker with quickLocations (using MapPickerOptions) }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{mapPickerWithQuickLocationsFieldCode}} />
           <@fields.mapPickerWithQuickLocations />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 8. Map picker with both addons (using MapPickerOptions) }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{mapPickerWithAddonsFieldCode}} />
           <@fields.mapPickerWithAddons />
-        </SpecExampleCard>
+        </FieldExample>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </SpecContainer>
+    </FieldUsageExampleContainer>
   </template>
 }
 
 class GeoPointFieldSpecEdit extends Component<typeof GeoPointFieldSpec> {
   <template>
-    <SpecContainer>
+    <FieldUsageExampleContainer>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -166,49 +166,49 @@ class GeoPointFieldSpecEdit extends Component<typeof GeoPointFieldSpec> {
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 2. With current location tracker }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{withCurrentLocationFieldCode}} />
           <@fields.withCurrentLocation @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 3. With quick locations }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{withQuickLocationsFieldCode}} />
           <@fields.withQuickLocations @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 4. Combined }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{combinedFieldCode}} />
           <@fields.combined @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 5. Map picker variant }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{mapPickerFieldCode}} />
           <@fields.mapPicker @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 6. Map picker with showCurrentLocation (using MapPickerOptions) }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{mapPickerWithCurrentLocationFieldCode}} />
           <@fields.mapPickerWithCurrentLocation @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 7. Map picker with quickLocations (using MapPickerOptions) }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{mapPickerWithQuickLocationsFieldCode}} />
           <@fields.mapPickerWithQuickLocations @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 8. Map picker with both addons (using MapPickerOptions) }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{mapPickerWithAddonsFieldCode}} />
           <@fields.mapPickerWithAddons @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </SpecContainer>
+    </FieldUsageExampleContainer>
   </template>
 }
 

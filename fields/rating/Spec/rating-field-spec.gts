@@ -12,14 +12,14 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import RatingField from '../rating';
 import CodeSnippet from '../../../components/code-snippet';
-import SpecContainer from '../../../components/spec-container';
-import SpecExampleCard from '../../../components/spec-example-card';
+import FieldUsageExampleContainer from '../../../components/field-usage-example-container';
+import FieldExample from '../../../components/field-example';
 
 const standardFieldCode = `@field standard = contains(RatingField);`;
 
 class RatingFieldSpecIsolated extends Component<typeof RatingFieldSpec> {
   <template>
-    <SpecContainer>
+    <FieldUsageExampleContainer>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -30,20 +30,20 @@ class RatingFieldSpecIsolated extends Component<typeof RatingFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard />
-        </SpecExampleCard>
+        </FieldExample>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </SpecContainer>
+    </FieldUsageExampleContainer>
   </template>
 }
 
 class RatingFieldSpecEdit extends Component<typeof RatingFieldSpec> {
   <template>
-    <SpecContainer>
+    <FieldUsageExampleContainer>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -58,14 +58,14 @@ class RatingFieldSpecEdit extends Component<typeof RatingFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </SpecContainer>
+    </FieldUsageExampleContainer>
   </template>
 }
 

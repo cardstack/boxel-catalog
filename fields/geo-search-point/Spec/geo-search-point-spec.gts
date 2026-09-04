@@ -12,8 +12,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import GeoSearchPointField from '../geo-search-point';
 import CodeSnippet from '../../../components/code-snippet';
-import SpecContainer from '../../../components/spec-container';
-import SpecExampleCard from '../../../components/spec-example-card';
+import FieldUsageExampleContainer from '../../../components/field-usage-example-container';
+import FieldExample from '../../../components/field-example';
 
 // 1. Basic (no config)
 const basicFieldCode = `@field basic = contains(GeoSearchPointField);`;
@@ -55,7 +55,7 @@ class GeoSearchPointFieldSpecIsolated extends Component<
   typeof GeoSearchPointFieldSpec
 > {
   <template>
-    <SpecContainer>
+    <FieldUsageExampleContainer>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -67,29 +67,29 @@ class GeoSearchPointFieldSpecIsolated extends Component<
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 2. With top search results }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{withTopResultsCode}} />
           <@fields.withTopResults />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 3. Top results without recent searches }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{withoutRecentSearchesCode}} />
           <@fields.withoutRecentSearches />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 4. Combined }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{combinedCode}} />
           <@fields.combined />
-        </SpecExampleCard>
+        </FieldExample>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </SpecContainer>
+    </FieldUsageExampleContainer>
   </template>
 }
 
@@ -97,7 +97,7 @@ class GeoSearchPointFieldSpecEdit extends Component<
   typeof GeoSearchPointFieldSpec
 > {
   <template>
-    <SpecContainer>
+    <FieldUsageExampleContainer>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -113,29 +113,29 @@ class GeoSearchPointFieldSpecEdit extends Component<
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 2. With top search results }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{withTopResultsCode}} />
           <@fields.withTopResults @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 3. Top results without recent searches }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{withoutRecentSearchesCode}} />
           <@fields.withoutRecentSearches @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
         {{! 4. Combined }}
-        <SpecExampleCard>
+        <FieldExample>
           <CodeSnippet @code={{combinedCode}} />
           <@fields.combined @format='edit' />
-        </SpecExampleCard>
+        </FieldExample>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </SpecContainer>
+    </FieldUsageExampleContainer>
   </template>
 }
 
