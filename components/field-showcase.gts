@@ -20,8 +20,6 @@ export default class FieldShowcase extends GlimmerComponent<FieldShowcaseSignatu
     <style scoped>
       .field-showcase {
         --field-showcase-background-color: var(--boxel-200);
-        --field-showcase-code-ref-background-color: var(--boxel-100);
-        --field-showcase-code-ref-text-color: var(--boxel-dark);
 
         height: 100%;
         min-height: max-content;
