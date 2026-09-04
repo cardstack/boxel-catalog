@@ -23,6 +23,7 @@ import {
   POSTER_ASPECTS,
 } from '../commands/invitation-poster-command';
 import { debounce } from 'lodash-es';
+import { arrayBufferToBase64 } from '../utils/encoding';
 import type { TableSeatingPlanner } from '../table-seating-planner';
 import { Guest } from '../guest';
 import { Host } from '../host';
@@ -10750,18 +10751,6 @@ function clampNum(v: unknown, min: number, max: number, def: number): number {
   let n = Number(v);
   if (!isFinite(n)) return def;
   return Math.max(min, Math.min(max, Math.round(n)));
-}
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  let binary = '';
-  let bytes = new Uint8Array(buffer);
-  let chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode.apply(
-      null,
-      Array.from(bytes.subarray(i, i + chunk)) as unknown as number[],
-    );
-  }
-  return btoa(binary);
 }
 function imageDims(src: string): Promise<{ w: number; h: number }> {
   return new Promise((resolve) => {

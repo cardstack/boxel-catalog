@@ -12,6 +12,7 @@ import MusicIcon from '@cardstack/boxel-icons/music-2';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { htmlSafe } from '@ember/template';
 import { Genre, GENRE_EMOJI } from './genre';
+import { diffLabel, diffClass } from './utils/diff-helpers';
 
 /* ── Difficulty helpers (VP.net scale 1–10) ──────────────────────────────
    1        → SUPER EASY
@@ -19,21 +20,6 @@ import { Genre, GENRE_EMOJI } from './genre';
    5, 6, 7  → INTERMEDIATE
    8, 9, 10 → EXPERT
    ───────────────────────────────────────────────────────────────────────── */
-function diffLabel(level: number | null | undefined): string {
-  if (!level) return 'UNKNOWN';
-  if (level === 1) return 'SUPER EASY';
-  if (level <= 4) return 'EASY';
-  if (level <= 7) return 'INTERMEDIATE';
-  return 'EXPERT';
-}
-
-function diffClass(level: number | null | undefined): string {
-  if (!level) return 'diff-unknown';
-  if (level === 1) return 'diff-super-easy';
-  if (level <= 4) return 'diff-easy';
-  if (level <= 7) return 'diff-intermediate';
-  return 'diff-expert';
-}
 
 export class MusicSheet extends CardDef {
   static displayName = 'Music Sheet';
