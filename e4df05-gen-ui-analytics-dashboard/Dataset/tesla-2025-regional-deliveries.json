@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla 2025 Deliveries by Region",
+      "columnsJson": "[{\"name\":\"region\",\"type\":\"string\"},{\"name\":\"deliveries\",\"type\":\"number\"}]",
+      "rowsJson": "[{\"region\":\"China\",\"deliveries\":602000},{\"region\":\"United States\",\"deliveries\":581000},{\"region\":\"Europe\",\"deliveries\":286000},{\"region\":\"Rest of World\",\"deliveries\":143000}]",
+      "sourceNote": "AI-recalled figures — may be outdated",
+      "sourceFileUrl": null,
+      "cardInfo": {
+        "name": "Tesla 2025 Deliveries by Region",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../dataset",
+        "name": "Dataset"
+      }
+    }
+  }
+}

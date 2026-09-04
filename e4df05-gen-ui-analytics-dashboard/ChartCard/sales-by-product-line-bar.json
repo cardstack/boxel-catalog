@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sales by Product Line",
+      "chartKind": "bar",
+      "dimension": {
+        "path": "productLine",
+        "bucket": "none"
+      },
+      "measure": {
+        "path": "totalSales",
+        "aggregate": "sum"
+      },
+      "seriesBy": null,
+      "span": 2,
+      "rowSpan": 1,
+      "cardInfo": {
+        "name": "Sales by Product Line",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "dataset": {
+        "links": {
+          "self": "../Dataset/sales-by-product-line"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../chart-card",
+        "name": "ChartCard"
+      }
+    }
+  }
+}

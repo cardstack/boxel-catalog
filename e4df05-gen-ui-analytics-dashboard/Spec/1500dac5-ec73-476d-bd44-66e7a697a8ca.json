@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# ChartCard\n\n## Summary\n\nA chart as a first-class card: the AI (or a person) fills in a handful of flat, LLM-friendly fields and the card renders itself as an ECharts visualization — bar, line, stacked, donut, or a big-number KPI. Every chart reads one linked `Dataset` card (`dataset` is `linksTo(Dataset)`); the spec is validated by `validateChartSpec` before render, and problems show as a readable fix-list instead of a broken canvas. Constrained values are enum-style StringField subclasses surfaced as pill-button pickers in edit mode: `ChartKindField` (the chart type), `BucketField` (how dates group), `AggregateField` (how values combine). The x axis is the compound `DimensionField` (`path` + `bucket`), the y axis the compound `MeasureField` (`path` + `aggregate`), and an optional `seriesBy` column splits the measure into series. `span` / `rowSpan` are layout hints a dashboard may read. The same card stands alone (isolated, tall), embeds in any dashboard tile, and can sit on several dashboards at once since position lives on each dashboard, not on the chart.\n\nThe module also exports `ChartView`, the shared Glimmer component both formats use — it builds the spec from the model, aggregates the linked Dataset's rows, and renders either the ECharts option, the formatted KPI value, a spec-error list, or the designed empty state.\n\n## Import\n\n```js\nimport { ChartCard } from '../chart-card';\n// also exported: ChartView, ChartKindField, BucketField, AggregateField,\n// DimensionField, MeasureField\n```\n\n## Usage\n\n```js\nnew ChartCard({\n  title: 'Deliveries by quarter',\n  chartKind: 'bar',\n  dataset: someDataset, // a linked Dataset card\n  dimension: new DimensionField({ path: 'quarter', bucket: 'none' }),\n  measure: new MeasureField({ path: 'deliveries', aggregate: 'sum' }),\n});\n```\n\nValid `chartKind`, `bucket`, and `aggregate` values come from `CHART_KINDS`, `BUCKETS`, and `AGGREGATES` in `../utils/chart-spec` — the edit-mode pickers offer exactly those options, so hand-typed invalid values can't happen through the UI.\n",
+      "ref": {
+        "name": "ChartCard",
+        "module": "../chart-card"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "ChartCard",
+      "cardDescription": "A chart as a first-class card — flat AI-fillable fields, one linked Dataset, ECharts render",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

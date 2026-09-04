@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla 2025 Total Deliveries",
+      "chartKind": "kpi",
+      "dimension": {
+        "path": null,
+        "bucket": "none"
+      },
+      "measure": {
+        "path": "deliveries",
+        "aggregate": "sum"
+      },
+      "seriesBy": null,
+      "span": 1,
+      "cardInfo": {
+        "name": "Tesla 2025 Total Deliveries",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "rowSpan": 1
+    },
+    "relationships": {
+      "dataset": {
+        "links": {
+          "self": "../Dataset/tesla-2025-quarterly-deliveries"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../chart-card",
+        "name": "ChartCard"
+      }
+    }
+  }
+}
