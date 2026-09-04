@@ -12,12 +12,14 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import QuantityField from '../quantity';
 import CodeSnippet from '../../../components/code-snippet';
+import FieldShowcase from '../../../components/field-showcase';
+import FieldShowcaseCard from '../../../components/field-showcase-card';
 
 const standardFieldCode = `@field standard = contains(QuantityField);`;
 
 class QuantityFieldSpecIsolated extends Component<typeof QuantityFieldSpec> {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -28,41 +30,20 @@ class QuantityFieldSpecIsolated extends Component<typeof QuantityFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .fields-configuration-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 
 class QuantityFieldSpecEdit extends Component<typeof QuantityFieldSpec> {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -77,35 +58,14 @@ class QuantityFieldSpecEdit extends Component<typeof QuantityFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard @format='edit' />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .fields-configuration-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 

@@ -12,6 +12,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import AudioField from '../audio';
 import CodeSnippet from '../../../components/code-snippet';
+import FieldShowcase from '../../../components/field-showcase';
+import FieldShowcaseCard from '../../../components/field-showcase-card';
 
 const standardFieldCode = `@field standard = contains(AudioField);`;
 const waveformPlayerFieldCode = `@field waveformPlayer = contains(AudioField, {
@@ -58,7 +60,7 @@ const advancedControlsFieldCode = `@field advancedControls = contains(AudioField
 
 class AudioFieldSpecIsolated extends Component<typeof AudioFieldSpec> {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -69,69 +71,48 @@ class AudioFieldSpecIsolated extends Component<typeof AudioFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{waveformPlayerFieldCode}} />
           <@fields.waveformPlayer />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{playlistRowFieldCode}} />
           <@fields.playlistRow />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{miniPlayerFieldCode}} />
           <@fields.miniPlayer />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{albumCoverFieldCode}} />
           <@fields.albumCover />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withVolumeFieldCode}} />
           <@fields.withVolume />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{trimEditorFieldCode}} />
           <@fields.trimEditor />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{advancedControlsFieldCode}} />
           <@fields.advancedControls />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .fields-configuration-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 
 class AudioFieldSpecEdit extends Component<typeof AudioFieldSpec> {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -146,63 +127,42 @@ class AudioFieldSpecEdit extends Component<typeof AudioFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard @format='edit' />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{waveformPlayerFieldCode}} />
           <@fields.waveformPlayer @format='edit' />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{playlistRowFieldCode}} />
           <@fields.playlistRow @format='edit' />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{miniPlayerFieldCode}} />
           <@fields.miniPlayer @format='edit' />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{albumCoverFieldCode}} />
           <@fields.albumCover @format='edit' />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withVolumeFieldCode}} />
           <@fields.withVolume @format='edit' />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{trimEditorFieldCode}} />
           <@fields.trimEditor @format='edit' />
-        </article>
-        <article class='fields-configuration-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{advancedControlsFieldCode}} />
           <@fields.advancedControls @format='edit' />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .fields-configuration-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 

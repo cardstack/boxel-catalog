@@ -12,6 +12,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import GeoSearchPointField from '../geo-search-point';
 import CodeSnippet from '../../../components/code-snippet';
+import FieldShowcase from '../../../components/field-showcase';
+import FieldShowcaseCard from '../../../components/field-showcase-card';
 
 // 1. Basic (no config)
 const basicFieldCode = `@field basic = contains(GeoSearchPointField);`;
@@ -53,7 +55,7 @@ class GeoSearchPointFieldSpecIsolated extends Component<
   typeof GeoSearchPointFieldSpec
 > {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -65,50 +67,29 @@ class GeoSearchPointFieldSpecIsolated extends Component<
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic />
-        </article>
+        </FieldShowcaseCard>
         {{! 2. With top search results }}
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withTopResultsCode}} />
           <@fields.withTopResults />
-        </article>
+        </FieldShowcaseCard>
         {{! 3. Top results without recent searches }}
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withoutRecentSearchesCode}} />
           <@fields.withoutRecentSearches />
-        </article>
+        </FieldShowcaseCard>
         {{! 4. Combined }}
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{combinedCode}} />
           <@fields.combined />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .fields-configuration-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 
@@ -116,7 +97,7 @@ class GeoSearchPointFieldSpecEdit extends Component<
   typeof GeoSearchPointFieldSpec
 > {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -132,50 +113,29 @@ class GeoSearchPointFieldSpecEdit extends Component<
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic @format='edit' />
-        </article>
+        </FieldShowcaseCard>
         {{! 2. With top search results }}
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withTopResultsCode}} />
           <@fields.withTopResults @format='edit' />
-        </article>
+        </FieldShowcaseCard>
         {{! 3. Top results without recent searches }}
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withoutRecentSearchesCode}} />
           <@fields.withoutRecentSearches @format='edit' />
-        </article>
+        </FieldShowcaseCard>
         {{! 4. Combined }}
-        <article class='fields-configuration-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{combinedCode}} />
           <@fields.combined @format='edit' />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .fields-configuration-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 
