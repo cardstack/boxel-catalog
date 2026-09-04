@@ -743,7 +743,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
   }
 
   get difficultyLabel(): string {
-    return diffLabel(this.selectedSong?.difficulty ?? 0);
+    if (!this.selectedSong?.difficulty) return '';
+    return diffLabel(this.selectedSong.difficulty);
   }
 
   get difficultyClass(): string {
