@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# buildArrays\n\n## Summary\n\nBuilds the instanced-attribute arrays for the whole voxel lattice at a given hue count and density tier \u2014 every chip the solid can show, plus the gray trunk. Each voxel gets two baked positions (its Munsell-tree address and its Itten-sphere address, which the shaders morph between), its display color, chroma fraction, hue angle, per-chip random seed, value, chroma, and a solved edge size that keeps neighboring cubes from touching. Returns a `ChipArrays` record of plain number arrays ready to upload as buffer attributes.\n\n## Import\n\n```javascript\nimport { buildArrays, type ChipArrays } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nlet arrays = buildArrays(20, 1); // 20 hue leaves at medium density\ngeometry.setAttribute(\n  'aTree',\n  new THREE.InstancedBufferAttribute(new Float32Array(arrays.tree), 3),\n);\n```",
+      "ref": {
+        "module": "../utils/munsell",
+        "name": "buildArrays"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "buildArrays",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
