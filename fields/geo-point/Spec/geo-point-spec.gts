@@ -145,9 +145,9 @@ class GeoPointFieldSpecIsolated extends Component<typeof GeoPointFieldSpec> {
     </article>
     <style scoped>
       .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
+        --boxel-spec-background-color: var(--boxel-200);
+        --boxel-spec-code-ref-background-color: var(--boxel-100);
+        --boxel-spec-code-ref-text-color: var(--boxel-dark);
 
         height: 100%;
         min-height: max-content;
@@ -230,9 +230,9 @@ class GeoPointFieldSpecEdit extends Component<typeof GeoPointFieldSpec> {
     </article>
     <style scoped>
       .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
+        --boxel-spec-background-color: var(--boxel-200);
+        --boxel-spec-code-ref-background-color: var(--boxel-100);
+        --boxel-spec-code-ref-text-color: var(--boxel-dark);
 
         height: 100%;
         min-height: max-content;
