@@ -32,6 +32,7 @@ import {
 } from '@cardstack/runtime-common';
 import PianoIcon from '@cardstack/boxel-icons/piano';
 import type { Genre } from './genre';
+import { diffLabel, diffClass } from './utils/diff-helpers';
 
 /* @ts-expect-error import.meta is valid ESM */
 const here: string = import.meta.url;
@@ -173,21 +174,6 @@ interface SongData {
 }
 
 /* ── Difficulty helpers (mirrors piano-song.gts) ─────────────────────── */
-function diffLabel(level: number): string {
-  if (!level) return '';
-  if (level === 1) return 'SUPER EASY';
-  if (level <= 4) return 'EASY';
-  if (level <= 7) return 'INTERMEDIATE';
-  return 'EXPERT';
-}
-
-function diffClass(level: number): string {
-  if (!level) return 'diff-unknown';
-  if (level === 1) return 'diff-super-easy';
-  if (level <= 4) return 'diff-easy';
-  if (level <= 7) return 'diff-intermediate';
-  return 'diff-expert';
-}
 
 /* ── Piano key layout data ───────────────────────────────────────────── */
 interface KeyData {
@@ -757,7 +743,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
   }
 
   get difficultyLabel(): string {
-    return diffLabel(this.selectedSong?.difficulty ?? 0);
+    if (!this.selectedSong?.difficulty) return '';
+    return diffLabel(this.selectedSong.difficulty);
   }
 
   get difficultyClass(): string {

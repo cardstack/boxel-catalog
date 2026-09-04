@@ -2,15 +2,7 @@ import { CardDef, field, contains } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import { Command } from '@cardstack/runtime-common';
 import SendRequestViaProxyCommand from '@cardstack/boxel-host/commands/send-request-via-proxy';
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  let binary = '';
-  let bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
+import { arrayBufferToBase64 } from '../utils/encoding';
 
 async function toDataUrl(url: string): Promise<string> {
   if (url.startsWith('data:image/')) return url;
