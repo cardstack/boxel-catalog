@@ -12,8 +12,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import AudioField from '../audio';
 import CodeSnippet from '../../../components/code-snippet';
-import FieldUsageExampleContainer from '../../../components/field-usage-example-container';
-import FieldExample from '../../../components/field-example';
+import FieldShowcase from '../../../components/field-showcase';
+import FieldShowcaseCard from '../../../components/field-showcase-card';
 
 const standardFieldCode = `@field standard = contains(AudioField);`;
 const waveformPlayerFieldCode = `@field waveformPlayer = contains(AudioField, {
@@ -60,7 +60,7 @@ const advancedControlsFieldCode = `@field advancedControls = contains(AudioField
 
 class AudioFieldSpecIsolated extends Component<typeof AudioFieldSpec> {
   <template>
-    <FieldUsageExampleContainer>
+    <FieldShowcase>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -71,48 +71,48 @@ class AudioFieldSpecIsolated extends Component<typeof AudioFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{waveformPlayerFieldCode}} />
           <@fields.waveformPlayer />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{playlistRowFieldCode}} />
           <@fields.playlistRow />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{miniPlayerFieldCode}} />
           <@fields.miniPlayer />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{albumCoverFieldCode}} />
           <@fields.albumCover />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withVolumeFieldCode}} />
           <@fields.withVolume />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{trimEditorFieldCode}} />
           <@fields.trimEditor />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{advancedControlsFieldCode}} />
           <@fields.advancedControls />
-        </FieldExample>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </FieldUsageExampleContainer>
+    </FieldShowcase>
   </template>
 }
 
 class AudioFieldSpecEdit extends Component<typeof AudioFieldSpec> {
   <template>
-    <FieldUsageExampleContainer>
+    <FieldShowcase>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -127,42 +127,42 @@ class AudioFieldSpecEdit extends Component<typeof AudioFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard @format='edit' />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{waveformPlayerFieldCode}} />
           <@fields.waveformPlayer @format='edit' />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{playlistRowFieldCode}} />
           <@fields.playlistRow @format='edit' />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{miniPlayerFieldCode}} />
           <@fields.miniPlayer @format='edit' />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{albumCoverFieldCode}} />
           <@fields.albumCover @format='edit' />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withVolumeFieldCode}} />
           <@fields.withVolume @format='edit' />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{trimEditorFieldCode}} />
           <@fields.trimEditor @format='edit' />
-        </FieldExample>
-        <FieldExample>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{advancedControlsFieldCode}} />
           <@fields.advancedControls @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </FieldUsageExampleContainer>
+    </FieldShowcase>
   </template>
 }
 

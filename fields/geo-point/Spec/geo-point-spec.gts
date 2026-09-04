@@ -12,8 +12,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import GeoPointField from '../geo-point';
 import CodeSnippet from '../../../components/code-snippet';
-import FieldUsageExampleContainer from '../../../components/field-usage-example-container';
-import FieldExample from '../../../components/field-example';
+import FieldShowcase from '../../../components/field-showcase';
+import FieldShowcaseCard from '../../../components/field-showcase-card';
 
 // 1. Basic standard (no config needed)
 const basicFieldCode = `@field basic = contains(GeoPointField);`;
@@ -90,7 +90,7 @@ const mapPickerWithAddonsFieldCode = `@field mapPickerWithAddons = contains(GeoP
 
 class GeoPointFieldSpecIsolated extends Component<typeof GeoPointFieldSpec> {
   <template>
-    <FieldUsageExampleContainer>
+    <FieldShowcase>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -102,55 +102,55 @@ class GeoPointFieldSpecIsolated extends Component<typeof GeoPointFieldSpec> {
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 2. With current location tracker }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withCurrentLocationFieldCode}} />
           <@fields.withCurrentLocation />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 3. With quick locations }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withQuickLocationsFieldCode}} />
           <@fields.withQuickLocations />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 4. Combined }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{combinedFieldCode}} />
           <@fields.combined />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 5. Map picker variant }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{mapPickerFieldCode}} />
           <@fields.mapPicker />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 6. Map picker with showCurrentLocation (using MapPickerOptions) }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{mapPickerWithCurrentLocationFieldCode}} />
           <@fields.mapPickerWithCurrentLocation />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 7. Map picker with quickLocations (using MapPickerOptions) }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{mapPickerWithQuickLocationsFieldCode}} />
           <@fields.mapPickerWithQuickLocations />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 8. Map picker with both addons (using MapPickerOptions) }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{mapPickerWithAddonsFieldCode}} />
           <@fields.mapPickerWithAddons />
-        </FieldExample>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </FieldUsageExampleContainer>
+    </FieldShowcase>
   </template>
 }
 
 class GeoPointFieldSpecEdit extends Component<typeof GeoPointFieldSpec> {
   <template>
-    <FieldUsageExampleContainer>
+    <FieldShowcase>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -166,49 +166,49 @@ class GeoPointFieldSpecEdit extends Component<typeof GeoPointFieldSpec> {
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 2. With current location tracker }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withCurrentLocationFieldCode}} />
           <@fields.withCurrentLocation @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 3. With quick locations }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{withQuickLocationsFieldCode}} />
           <@fields.withQuickLocations @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 4. Combined }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{combinedFieldCode}} />
           <@fields.combined @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 5. Map picker variant }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{mapPickerFieldCode}} />
           <@fields.mapPicker @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 6. Map picker with showCurrentLocation (using MapPickerOptions) }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{mapPickerWithCurrentLocationFieldCode}} />
           <@fields.mapPickerWithCurrentLocation @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 7. Map picker with quickLocations (using MapPickerOptions) }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{mapPickerWithQuickLocationsFieldCode}} />
           <@fields.mapPickerWithQuickLocations @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
         {{! 8. Map picker with both addons (using MapPickerOptions) }}
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{mapPickerWithAddonsFieldCode}} />
           <@fields.mapPickerWithAddons @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </FieldUsageExampleContainer>
+    </FieldShowcase>
   </template>
 }
 

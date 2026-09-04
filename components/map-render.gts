@@ -210,6 +210,12 @@ function injectPopupStyles() {
   popupStylesInjected = true;
   let style = document.createElement('style');
   style.setAttribute('data-bx-map-popup', '');
+  // The ~20 hex colors below (popup text grays, status green/red, link blue,
+  // marker category colors) are special-use: they're data-driven distinct
+  // hues (e.g. food/hotel/attraction marker colors, open/closed status) with
+  // no matching semantic token in the current theme, not UI chrome. Our
+  // theming tokens/variables don't yet cover this case, so they stay as
+  // literal hex until a token exists for it.
   style.textContent = `
     .leaflet-popup-content-wrapper {
       border-radius: 0.75rem;
@@ -268,7 +274,7 @@ function injectPopupStyles() {
     /* skeleton shimmer */
     .bx-sk-img, .bx-sk-line {
       border-radius: 0.375rem;
-      background: linear-gradient(100deg, #eceff3 30%, #f6f8fa 50%, #eceff3 70%);
+      background-image: linear-gradient(100deg, #eceff3 30%, #f6f8fa 50%, #eceff3 70%);
       background-size: 200% 100%;
       animation: bx-sk-shimmer 1.2s ease-in-out infinite;
     }
@@ -287,12 +293,12 @@ function injectPopupStyles() {
       box-sizing: border-box;
       width: 2.125rem; height: 2.125rem; padding: 0;
       display: flex; align-items: center; justify-content: center;
-      background-color: #fff; color: #374151;
+      background-color: var(--boxel-light); color: #374151;
       border: 0.125rem solid rgba(0,0,0,0.2); border-radius: 0.25rem;
       cursor: pointer;
       transition: color 0.12s ease, background 0.12s ease;
     }
-    .bx-fit-btn:hover { background-color: #f4f4f4; color: #111827; }
+    .bx-fit-btn:hover { background-color: var(--boxel-50); color: #111827; }
   `;
   document.head.appendChild(style);
 }
@@ -320,7 +326,7 @@ export class MapRender extends GlimmerComponent<MapRenderSignature> {
         align-items: center;
         justify-content: center;
         background-color: var(--boxel-50);
-        color: #666;
+        color: var(--boxel-500);
         font-size: 0.875rem;
         text-align: center;
         flex: 1;
@@ -941,8 +947,8 @@ function createNearbyMarker(place: NearbyPlace): LeafletMarker {
   const meta = NEARBY_META[place.kind];
   const html = `<div style="
       width:1.5rem;height:1.5rem;border-radius:50%;
-      background-color:${meta.color};color:#fff;
-      border:0.15625rem solid #fff;
+      background-color:${meta.color};color:var(--boxel-light);
+      border:0.15625rem solid var(--boxel-light);
       box-shadow:0 0.0625rem 0.25rem rgba(0,0,0,0.4);
       display:flex;align-items:center;justify-content:center;
       line-height:0;">${NEARBY_ICON[place.kind]}</div>`;

@@ -5,28 +5,28 @@ import GlimmerComponent from '@glimmer/component';
 // once in its Isolated component, once in Edit). Centralizing it here
 // makes future theming/token updates a single-file change instead of a
 // 6+ file find-and-replace.
-export interface FieldUsageExampleContainerSignature {
+export interface FieldShowcaseSignature {
   Blocks: {
     default: [];
   };
   Element: HTMLElement;
 }
 
-export default class FieldUsageExampleContainer extends GlimmerComponent<FieldUsageExampleContainerSignature> {
+export default class FieldShowcase extends GlimmerComponent<FieldShowcaseSignature> {
   <template>
-    <article class='field-usage-example-container' ...attributes>
+    <article class='field-showcase' ...attributes>
       {{yield}}
     </article>
     <style scoped>
-      .field-usage-example-container {
-        --boxel-spec-background-color: var(--boxel-200);
-        --boxel-spec-code-ref-background-color: var(--boxel-100);
-        --boxel-spec-code-ref-text-color: var(--boxel-dark);
+      .field-showcase {
+        --field-showcase-background-color: var(--boxel-200);
+        --field-showcase-code-ref-background-color: var(--boxel-100);
+        --field-showcase-code-ref-text-color: var(--boxel-dark);
 
         height: 100%;
         min-height: max-content;
         padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
+        background-color: var(--field-showcase-background-color);
       }
     </style>
   </template>

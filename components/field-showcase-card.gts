@@ -6,24 +6,24 @@ import { CardContainer } from '@cardstack/boxel-ui/components';
 // Isolated, once in Edit -- with its own border/background/radius). Reuses
 // CardContainer for those (per pret-ui-theming Rule 4: don't restate
 // CardContainer's defaults) and only adds the layout this card needs.
-export interface FieldExampleSignature {
+export interface FieldShowcaseCardSignature {
   Blocks: {
     default: [];
   };
   Element: HTMLElement;
 }
 
-export default class FieldExample extends GlimmerComponent<FieldExampleSignature> {
+export default class FieldShowcaseCard extends GlimmerComponent<FieldShowcaseCardSignature> {
   <template>
     <CardContainer
       @displayBoundaries={{true}}
-      class='field-example'
+      class='field-showcase-card'
       ...attributes
     >
       {{yield}}
     </CardContainer>
     <style scoped>
-      .field-example {
+      .field-showcase-card {
         padding: var(--boxel-sp-xs);
         display: flex;
         flex-direction: column;

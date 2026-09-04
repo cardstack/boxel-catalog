@@ -12,14 +12,14 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import QuantityField from '../quantity';
 import CodeSnippet from '../../../components/code-snippet';
-import FieldUsageExampleContainer from '../../../components/field-usage-example-container';
-import FieldExample from '../../../components/field-example';
+import FieldShowcase from '../../../components/field-showcase';
+import FieldShowcaseCard from '../../../components/field-showcase-card';
 
 const standardFieldCode = `@field standard = contains(QuantityField);`;
 
 class QuantityFieldSpecIsolated extends Component<typeof QuantityFieldSpec> {
   <template>
-    <FieldUsageExampleContainer>
+    <FieldShowcase>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -30,20 +30,20 @@ class QuantityFieldSpecIsolated extends Component<typeof QuantityFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard />
-        </FieldExample>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </FieldUsageExampleContainer>
+    </FieldShowcase>
   </template>
 }
 
 class QuantityFieldSpecEdit extends Component<typeof QuantityFieldSpec> {
   <template>
-    <FieldUsageExampleContainer>
+    <FieldShowcase>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -58,14 +58,14 @@ class QuantityFieldSpecEdit extends Component<typeof QuantityFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <FieldExample>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardFieldCode}} />
           <@fields.standard @format='edit' />
-        </FieldExample>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </FieldUsageExampleContainer>
+    </FieldShowcase>
   </template>
 }
 
