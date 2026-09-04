@@ -12,6 +12,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import GeoPointField from '../geo-point';
 import CodeSnippet from '../../../components/code-snippet';
+import SpecContainer from '../../../components/spec-container';
+import SpecExampleCard from '../../../components/spec-example-card';
 
 // 1. Basic standard (no config needed)
 const basicFieldCode = `@field basic = contains(GeoPointField);`;
@@ -88,7 +90,7 @@ const mapPickerWithAddonsFieldCode = `@field mapPickerWithAddons = contains(GeoP
 
 class GeoPointFieldSpecIsolated extends Component<typeof GeoPointFieldSpec> {
   <template>
-    <article class='container'>
+    <SpecContainer>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -100,76 +102,55 @@ class GeoPointFieldSpecIsolated extends Component<typeof GeoPointFieldSpec> {
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic />
-        </article>
+        </SpecExampleCard>
         {{! 2. With current location tracker }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{withCurrentLocationFieldCode}} />
           <@fields.withCurrentLocation />
-        </article>
+        </SpecExampleCard>
         {{! 3. With quick locations }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{withQuickLocationsFieldCode}} />
           <@fields.withQuickLocations />
-        </article>
+        </SpecExampleCard>
         {{! 4. Combined }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{combinedFieldCode}} />
           <@fields.combined />
-        </article>
+        </SpecExampleCard>
         {{! 5. Map picker variant }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{mapPickerFieldCode}} />
           <@fields.mapPicker />
-        </article>
+        </SpecExampleCard>
         {{! 6. Map picker with showCurrentLocation (using MapPickerOptions) }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{mapPickerWithCurrentLocationFieldCode}} />
           <@fields.mapPickerWithCurrentLocation />
-        </article>
+        </SpecExampleCard>
         {{! 7. Map picker with quickLocations (using MapPickerOptions) }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{mapPickerWithQuickLocationsFieldCode}} />
           <@fields.mapPickerWithQuickLocations />
-        </article>
+        </SpecExampleCard>
         {{! 8. Map picker with both addons (using MapPickerOptions) }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{mapPickerWithAddonsFieldCode}} />
           <@fields.mapPickerWithAddons />
-        </article>
+        </SpecExampleCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: var(--boxel-200);
-        --boxel-spec-code-ref-background-color: var(--boxel-100);
-        --boxel-spec-code-ref-text-color: var(--boxel-dark);
-
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .fields-configuration-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </SpecContainer>
   </template>
 }
 
 class GeoPointFieldSpecEdit extends Component<typeof GeoPointFieldSpec> {
   <template>
-    <article class='container'>
+    <SpecContainer>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -185,70 +166,49 @@ class GeoPointFieldSpecEdit extends Component<typeof GeoPointFieldSpec> {
 
       <ExamplesWithInteractive>
         {{! 1. Basic }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{basicFieldCode}} />
           <@fields.basic @format='edit' />
-        </article>
+        </SpecExampleCard>
         {{! 2. With current location tracker }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{withCurrentLocationFieldCode}} />
           <@fields.withCurrentLocation @format='edit' />
-        </article>
+        </SpecExampleCard>
         {{! 3. With quick locations }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{withQuickLocationsFieldCode}} />
           <@fields.withQuickLocations @format='edit' />
-        </article>
+        </SpecExampleCard>
         {{! 4. Combined }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{combinedFieldCode}} />
           <@fields.combined @format='edit' />
-        </article>
+        </SpecExampleCard>
         {{! 5. Map picker variant }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{mapPickerFieldCode}} />
           <@fields.mapPicker @format='edit' />
-        </article>
+        </SpecExampleCard>
         {{! 6. Map picker with showCurrentLocation (using MapPickerOptions) }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{mapPickerWithCurrentLocationFieldCode}} />
           <@fields.mapPickerWithCurrentLocation @format='edit' />
-        </article>
+        </SpecExampleCard>
         {{! 7. Map picker with quickLocations (using MapPickerOptions) }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{mapPickerWithQuickLocationsFieldCode}} />
           <@fields.mapPickerWithQuickLocations @format='edit' />
-        </article>
+        </SpecExampleCard>
         {{! 8. Map picker with both addons (using MapPickerOptions) }}
-        <article class='fields-configuration-card'>
+        <SpecExampleCard>
           <CodeSnippet @code={{mapPickerWithAddonsFieldCode}} />
           <@fields.mapPickerWithAddons @format='edit' />
-        </article>
+        </SpecExampleCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: var(--boxel-200);
-        --boxel-spec-code-ref-background-color: var(--boxel-100);
-        --boxel-spec-code-ref-text-color: var(--boxel-dark);
-
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .fields-configuration-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </SpecContainer>
   </template>
 }
 
