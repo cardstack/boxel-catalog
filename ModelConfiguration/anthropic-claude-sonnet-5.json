@@ -2,6 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
+      "reasoningEffort": "low",
       "cardInfo": {
         "name": "Anthropic: Claude Sonnet 5",
         "summary": null,
