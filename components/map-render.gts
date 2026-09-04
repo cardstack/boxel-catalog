@@ -212,68 +212,68 @@ function injectPopupStyles() {
   style.setAttribute('data-bx-map-popup', '');
   style.textContent = `
     .leaflet-popup-content-wrapper {
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.16);
-      padding: 2px;
+      border-radius: 0.75rem;
+      box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.16);
+      padding: 0.125rem;
     }
-    .leaflet-popup-content { margin: 12px 14px; }
+    .leaflet-popup-content { margin: 0.75rem 0.875rem; }
     .bx-rich-popup {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       color: #1f2937;
       line-height: 1.4;
     }
-    .bx-rich-popup strong { font-size: 14px; font-weight: 700; color: #111827; }
+    .bx-rich-popup strong { font-size: 0.875rem; font-weight: 700; color: #111827; }
     .bx-rp-img {
-      display: block; width: 100%; height: 124px; object-fit: cover;
-      border-radius: 8px; margin: 8px 0; background: #f1f5f9;
+      display: block; width: 100%; height: 7.75rem; object-fit: cover;
+      border-radius: 0.5rem; margin: 0.5rem 0; background-color: #f1f5f9;
     }
-    .bx-rp-group { margin-top: 8px; }
+    .bx-rp-group { margin-top: 0.5rem; }
     .bx-rp-group-label {
-      display: flex; align-items: center; gap: 5px;
-      font-weight: 700; font-size: 11px; letter-spacing: 0.02em;
-      text-transform: uppercase; color: #6b7280; margin-bottom: 2px;
+      display: flex; align-items: center; gap: 0.3125rem;
+      font-weight: 700; font-size: 0.6875rem; letter-spacing: 0.02em;
+      text-transform: uppercase; color: #6b7280; margin-bottom: 0.125rem;
     }
     .bx-rp-item {
-      font-size: 12.5px; line-height: 1.6; color: #374151;
-      padding-left: 14px; position: relative;
+      font-size: 0.78125rem; line-height: 1.6; color: #374151;
+      padding-left: 0.875rem; position: relative;
     }
     .bx-rp-item::before {
-      content: ''; position: absolute; left: 4px; top: 8px;
-      width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.5;
+      content: ''; position: absolute; left: 0.25rem; top: 0.5rem;
+      width: 0.25rem; height: 0.25rem; border-radius: 50%; background-color: currentColor; opacity: 0.5;
     }
-    .bx-rp-empty { margin-top: 8px; font-size: 12px; color: #9ca3af; }
-    .bx-rp-kind { margin-top: 2px; font-size: 11px; color: #6b7280; }
+    .bx-rp-empty { margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af; }
+    .bx-rp-kind { margin-top: 0.125rem; font-size: 0.6875rem; color: #6b7280; }
     .bx-rp-hours {
-      display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
-      margin-top: 8px; font-size: 12px; color: #374151;
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.375rem;
+      margin-top: 0.5rem; font-size: 0.75rem; color: #374151;
     }
     .bx-rp-hours-text { color: #6b7280; }
-    .bx-rp-badge { font-size: 11px; font-weight: 700; }
+    .bx-rp-badge { font-size: 0.6875rem; font-weight: 700; }
     .bx-rp-open { color: #15803d; }
     .bx-rp-closed { color: #b91c1c; }
     .bx-rp-meta {
-      display: block; margin-top: 6px; font-size: 12px;
+      display: block; margin-top: 0.375rem; font-size: 0.75rem;
       color: #374151; text-decoration: none;
     }
     a.bx-rp-meta { color: #1a73e8; }
     a.bx-rp-meta:hover { text-decoration: underline; }
     .bx-rp-link {
-      display: inline-flex; align-items: center; gap: 5px;
-      margin-top: 10px; padding: 5px 10px; border-radius: 7px;
-      font-size: 12px; font-weight: 600; color: #1a73e8;
-      background: #eef4fe; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.3125rem;
+      margin-top: 0.625rem; padding: 0.3125rem 0.625rem; border-radius: 0.4375rem;
+      font-size: 0.75rem; font-weight: 600; color: #1a73e8;
+      background-color: #eef4fe; text-decoration: none;
       transition: background 0.12s ease;
     }
-    .bx-rp-link:hover { background: #dbe8fd; }
+    .bx-rp-link:hover { background-color: #dbe8fd; }
     /* skeleton shimmer */
     .bx-sk-img, .bx-sk-line {
-      border-radius: 6px;
+      border-radius: 0.375rem;
       background: linear-gradient(100deg, #eceff3 30%, #f6f8fa 50%, #eceff3 70%);
       background-size: 200% 100%;
       animation: bx-sk-shimmer 1.2s ease-in-out infinite;
     }
-    .bx-sk-img { width: 100%; height: 124px; margin: 8px 0; }
-    .bx-sk-line { height: 11px; margin-top: 8px; }
+    .bx-sk-img { width: 100%; height: 7.75rem; margin: 0.5rem 0; }
+    .bx-sk-line { height: 0.6875rem; margin-top: 0.5rem; }
     .bx-sk-line.w-40 { width: 40%; }
     .bx-sk-line.w-70 { width: 70%; }
     .bx-sk-line.w-90 { width: 90%; }
@@ -285,14 +285,14 @@ function injectPopupStyles() {
        stacks beneath (same 30px square, white, bordered "leaflet-bar" look). */
     .bx-fit-btn {
       box-sizing: border-box;
-      width: 34px; height: 34px; padding: 0;
+      width: 2.125rem; height: 2.125rem; padding: 0;
       display: flex; align-items: center; justify-content: center;
-      background: #fff; color: #374151;
-      border: 2px solid rgba(0,0,0,0.2); border-radius: 4px;
+      background-color: #fff; color: #374151;
+      border: 0.125rem solid rgba(0,0,0,0.2); border-radius: 0.25rem;
       cursor: pointer;
       transition: color 0.12s ease, background 0.12s ease;
     }
-    .bx-fit-btn:hover { background: #f4f4f4; color: #111827; }
+    .bx-fit-btn:hover { background-color: #f4f4f4; color: #111827; }
   `;
   document.head.appendChild(style);
 }
@@ -319,9 +319,9 @@ export class MapRender extends GlimmerComponent<MapRenderSignature> {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--boxel-50);
+        background-color: var(--boxel-50);
         color: #666;
-        font-size: 14px;
+        font-size: 0.875rem;
         text-align: center;
         flex: 1;
         overflow: hidden; /* Prevent scrollbars from affecting tile calculations */
@@ -330,7 +330,7 @@ export class MapRender extends GlimmerComponent<MapRenderSignature> {
       figure.map :deep(.leaflet-container) {
         width: 100% !important;
         height: 100% !important;
-        min-height: 300px;
+        min-height: 18.75rem;
       }
     </style>
     <link
@@ -739,10 +739,10 @@ export default class LeafletModifier extends Modifier<LeafletModifierSignature> 
     // footprint until the real layout kicks in.
     if (element && (element.clientWidth === 0 || element.clientHeight === 0)) {
       if (!element.style.minWidth) {
-        element.style.minWidth = '320px';
+        element.style.minWidth = '20rem';
       }
       if (!element.style.minHeight) {
-        element.style.minHeight = '320px';
+        element.style.minHeight = '20rem';
       }
     }
 
@@ -940,10 +940,10 @@ function escapeHtml(s: string): string {
 function createNearbyMarker(place: NearbyPlace): LeafletMarker {
   const meta = NEARBY_META[place.kind];
   const html = `<div style="
-      width:24px;height:24px;border-radius:50%;
-      background:${meta.color};color:#fff;
-      border:2.5px solid #fff;
-      box-shadow:0 1px 4px rgba(0,0,0,0.4);
+      width:1.5rem;height:1.5rem;border-radius:50%;
+      background-color:${meta.color};color:#fff;
+      border:0.15625rem solid #fff;
+      box-shadow:0 0.0625rem 0.25rem rgba(0,0,0,0.4);
       display:flex;align-items:center;justify-content:center;
       line-height:0;">${NEARBY_ICON[place.kind]}</div>`;
   return L.marker([place.lat, place.lng], {
