@@ -19,7 +19,7 @@ type ScreenshotFormat = 'isolated' | 'embedded';
 interface ScreenshotResult {
   id: string;
   title: string;
-  imageDefUrl?: string;
+  imageUrl?: string;
   error?: string;
 }
 
@@ -95,7 +95,7 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
         });
         collected = [
           ...collected,
-          { id: card.id, title, imageDefUrl: result.imageDefUrl },
+          { id: card.id, title, imageUrl: result.captures[0]?.url },
         ];
       } catch (error) {
         collected = [
@@ -150,9 +150,9 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
           {{#each this.results as |result|}}
             <div class='result'>
               <p class='result-title'>{{result.title}}</p>
-              {{#if result.imageDefUrl}}
-                <code class='url'>{{result.imageDefUrl}}</code>
-                <img src={{result.imageDefUrl}} alt='Card screenshot' />
+              {{#if result.imageUrl}}
+                <code class='url'>{{result.imageUrl}}</code>
+                <img src={{result.imageUrl}} alt='Card screenshot' />
               {{else}}
                 <p class='status status--error'>{{result.error}}</p>
               {{/if}}
