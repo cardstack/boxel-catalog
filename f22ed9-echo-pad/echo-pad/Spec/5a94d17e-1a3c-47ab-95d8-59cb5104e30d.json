@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "Input for RecognizeInkCommand: the ephemeral image crop, mode, board name, and the marker instructions resolved from the bundled Skill card by the board (plain realm commands cannot reach the store).",
+      "ref": {
+        "module": "../commands/recognize-ink-command",
+        "name": "RecognizeInkInput"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "RecognizeInkInput",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Echo Pad\n\n## Summary\n\nAn infinite drafting-vellum whiteboard where an AI marker answers in red pen, directly on the paper. Write or sketch in blue ink; circle a region with Select and ask for one of five things — Solve, Check, Complete, Explain, or Animate — or leave Auto on and the marker quietly follows along, proposing help when your ink pauses. Every response arrives as a draft you accept or dismiss: a margin note in red handwriting, an answer written back onto the page, a sketch drawn onto your diagram, or a short manim animation that plays inside a projection slip on the board.\n\n## How it works\n\n- **Ink model** — strokes are flat point arrays in a single `inkJson` field with velocity-based width and midpoint smoothing; saves are debounced, never per-point.\n- **The marker** — the circled region is cropped to a PNG and sent through the realm's request-forward proxy to a vision model. Prompt substance lives in the bundled `Skill/echo-marker` card, so the marker's voice can be read and remixed as data; a code fallback covers realms without the Skill. Identical asks are served from an in-session cache.\n- **Response channels** — plain text (margin note), `write` entries (text the board renders in its red hand at model-chosen coordinates), `draw` polylines (shapes anchored to your ink), and a `scene` block in a whitelisted grammar that a deterministic interpreter plays through the vendored manim-web runtime. The model never supplies executable code; every channel is validated data.\n- **Ambient mode** — pen-idle detection plus guards (minimum new strokes and area, suppression after silence) surfaces a pulsing dot; it auto-runs after a grace window and costs nothing until it fires.\n- **Theming** — the board's tokens chain through the Boxel theme system only when a Theme card is linked; unthemed boards keep their committed vellum-and-ballpoint identity.\n\n## Limitation\n\nOne open session per board: saves are whole-document last-writer-wins, so two simultaneous editors overwrite each other. Duplicate the board for parallel work.\n\n## Credits\n\nInspired by the open-source PenEcho whiteboard (independent reimplementation — no code reuse). Animation runtime: manim-web (MIT), vendored under `lib/` with license and manifest.",
+      "ref": {
+        "module": "../echo-pad",
+        "name": "EchoPad"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Echo Pad",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
