@@ -1,5 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
+import { BoxelButton } from '@cardstack/boxel-ui/components';
 import { type CardContext } from 'https://cardstack.com/base/card-api';
 
 import { type Listing } from '../listing/listing';
@@ -59,27 +60,30 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
 
       <div class='hover-layer'>
         <div class='hover-actions'>
-          <button
-            type='button'
+          <BoxelButton
+            @kind='text-only'
+            @size='auto'
             class='hover-btn hover-btn-primary'
             data-test-listing-fitted-remix
             {{on 'click' this.openRemix}}
-          >↺ Remix</button>
+          >↺ Remix</BoxelButton>
           {{#if this.actions.preview}}
-            <button
-              type='button'
+            <BoxelButton
+              @kind='text-only'
+              @size='auto'
               class='hover-btn'
               data-test-listing-fitted-preview
               {{on 'click' this.preview}}
-            >▷ Preview</button>
+            >▷ Preview</BoxelButton>
           {{/if}}
         </div>
-        <button
-          type='button'
+        <BoxelButton
+          @kind='text-only'
+          @size='auto'
           class='hover-details'
           data-test-listing-fitted-details
           {{on 'click' this.viewDetails}}
-        >View details →</button>
+        >View details →</BoxelButton>
       </div>
     </div>
 

@@ -9,7 +9,7 @@ import {
 
 import { on } from '@ember/modifier';
 
-import { CardContainer } from '@cardstack/boxel-ui/components';
+import { BoxelButton, CardContainer } from '@cardstack/boxel-ui/components';
 import ListingFittedSkeleton from './listing-fitted-skeleton';
 import { CardWithHydration } from './card-with-hydration';
 
@@ -74,9 +74,14 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
         <div class='no-results' data-test-no-results>
           Nothing matches that.
           {{#if @onClear}}
-            <button type='button' class='clear-link' {{on 'click' @onClear}}>
+            <BoxelButton
+              @kind='text-only'
+              @size='auto'
+              class='clear-link'
+              {{on 'click' @onClear}}
+            >
               Show everything
-            </button>
+            </BoxelButton>
           {{/if}}
         </div>
       {{/if}}

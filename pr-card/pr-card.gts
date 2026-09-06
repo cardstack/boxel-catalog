@@ -16,7 +16,7 @@ import {
 import GitPullRequestIcon from '@cardstack/boxel-icons/git-pull-request';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import CopyIcon from '@cardstack/boxel-icons/copy';
-import { Pill } from '@cardstack/boxel-ui/components';
+import { Button, Pill } from '@cardstack/boxel-ui/components';
 import { on } from '@ember/modifier';
 import type { GithubEventCard } from '../github-event/github-event';
 import { HeaderSection } from './components/isolated/header-section';
@@ -470,15 +470,16 @@ class FittedTemplate extends Component<typeof PrCard> {
             <span class='pr-meta-sep'>·</span>
             <span class='pr-branch'>
               <span class='pr-branch-label'>{{this.prBranchName}}</span>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='pr-branch-copy-button'
                 {{on 'click' this.copyBranchName}}
                 aria-label='Copy branch name'
                 title='Copy branch name'
               >
                 <CopyIcon class='pr-branch-copy-icon' />
-              </button>
+              </Button>
             </span>
           {{/if}}
         </div>

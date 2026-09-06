@@ -118,7 +118,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
         >
           <Button
             @kind='text-only'
-            @size='small'
+            @size='auto'
             class='filter-list__button'
             {{on 'click' this.selectAll}}
           >
@@ -149,7 +149,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
               >
                 <Button
                   @kind='text-only'
-                  @size='small'
+                  @size='auto'
                   class='filter-list__button'
                   {{on 'click' (fn this.selectSphere sphere)}}
                 >
@@ -158,13 +158,15 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
                     class='filter-name boxel-ellipsize'
                   >{{sphere.name}}</span>
                 </Button>
-                <button
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='dropdown-toggle'
                   aria-label='Toggle {{sphere.name}} group'
                   {{on 'click' (fn this.toggleSphere sphere.id)}}
                 >
                   <ChevronDown class='caret-icon' />
-                </button>
+                </Button>
               </span>
               {{#if (this.isSphereExpanded sphere.id)}}
                 <div class='category-pill-list'>

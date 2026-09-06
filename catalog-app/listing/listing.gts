@@ -28,7 +28,7 @@ import { modifier } from 'ember-modifier';
 import { task } from 'ember-concurrency';
 import { eq, not, type MenuItemOptions } from '@cardstack/boxel-ui/helpers';
 
-import { CardContainer } from '@cardstack/boxel-ui/components';
+import { BoxelButton, CardContainer } from '@cardstack/boxel-ui/components';
 import Refresh from '@cardstack/boxel-icons/refresh';
 import Wand from '@cardstack/boxel-icons/wand';
 import Package from '@cardstack/boxel-icons/package';
@@ -317,28 +317,30 @@ class EmbeddedTemplate extends Component<typeof Listing> {
           {{#if this.hasMultipleImages}}
             <div class='thumbs'>
               {{#each this.images as |shot index|}}
-                <button
-                  type='button'
+                <BoxelButton
+                  @kind='text-only'
+                  @size='auto'
                   class='thumb {{if (eq index this.selectedShot) "is-active"}}'
                   {{on 'click' (fn this.selectShot index)}}
                 >
                   <img src={{shot}} alt='Screenshot' />
-                </button>
+                </BoxelButton>
               {{/each}}
             </div>
           {{/if}}
 
           <div class='tabs' role='tablist'>
             {{#each DETAIL_TABS as |tab|}}
-              <button
-                type='button'
+              <BoxelButton
+                @kind='text-only'
+                @size='auto'
                 role='tab'
                 aria-selected='{{if (eq this.selectedTab tab) "true" "false"}}'
                 tabindex='{{if (eq this.selectedTab tab) "0" "-1"}}'
                 class='tab {{if (eq this.selectedTab tab) "is-active"}}'
                 data-test-listing-tab={{tab}}
                 {{on 'click' (fn this.setTab tab)}}
-              >{{tab}}</button>
+              >{{tab}}</BoxelButton>
             {{/each}}
           </div>
 
@@ -456,20 +458,22 @@ class EmbeddedTemplate extends Component<typeof Listing> {
               />
             {{/if}}
             {{#if this.actions.preview}}
-              <button
-                type='button'
+              <BoxelButton
+                @kind='text-only'
+                @size='auto'
                 class='remix-secondary'
                 data-test-listing-preview-button
                 {{on 'click' this.preview}}
-              >▷ Try live preview</button>
+              >▷ Try live preview</BoxelButton>
             {{/if}}
             {{#if this.skillActions.addSkillsToRoom}}
-              <button
-                type='button'
+              <BoxelButton
+                @kind='text-only'
+                @size='auto'
                 class='remix-secondary'
                 data-test-listing-use-skills-button
                 {{on 'click' this.skillActions.addSkillsToRoom}}
-              >Use Skills</button>
+              >Use Skills</BoxelButton>
             {{/if}}
           </div>
 
