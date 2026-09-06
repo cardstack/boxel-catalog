@@ -18,6 +18,7 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
+import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { restartableTask } from 'ember-concurrency';
 
@@ -227,8 +228,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
     return [0, 1, 2, 3, 4, 5];
   }
 
-  setGenPrompt = (event: Event): void => {
-    this.genPrompt = (event.target as HTMLInputElement).value;
+  setGenPrompt = (value: string): void => {
+    this.genPrompt = value;
   };
   runGenerate = (): void => {
     this.generateTask.perform();
@@ -557,8 +558,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
   get titleValue(): string {
     return this.args.model.title ?? '';
   }
-  setTitle = (event: Event): void => {
-    this.args.model.title = (event.target as HTMLInputElement).value;
+  setTitle = (value: string): void => {
+    this.args.model.title = value;
   };
 
   // The name filter only earns its place once the pool is big enough to scan.
@@ -566,8 +567,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
     return this.pool.length > 20;
   }
 
-  setFilter = (event: Event): void => {
-    this.filter = (event.target as HTMLInputElement).value;
+  setFilter = (value: string): void => {
+    this.filter = value;
   };
 
   resetAll = (): void => {
@@ -603,9 +604,9 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
     );
   };
 
-  renameTier = (tier: Tier, event: Event): void => {
+  renameTier = (tier: Tier, value: string): void => {
     this.ensureOwnTiers();
-    tier.label = (event.target as HTMLInputElement).value;
+    tier.label = value;
     this.args.model.tiers = [...(this.args.model.tiers ?? [])];
   };
 
@@ -628,12 +629,12 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         {{#if this.editing}}
           <div class='title-edit'>
             <label class='title-label'>Name</label>
-            <input
+            <BoxelInput
               class='title-input'
               aria-label='Tier list name'
               placeholder='Name this tier list…'
-              value={{this.titleValue}}
-              {{on 'input' this.setTitle}}
+              @value={{this.titleValue}}
+              @onInput={{this.setTitle}}
             />
           </div>
         {{else}}
@@ -641,55 +642,63 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         {{/if}}
         <div class='controls'>
           {{#if this.showFilter}}
-            <input
+            <BoxelInput
               class='ctl-input'
               aria-label='Filter unranked items'
               placeholder='Filter…'
-              value={{this.filter}}
-              {{on 'input' this.setFilter}}
+              @value={{this.filter}}
+              @onInput={{this.setFilter}}
             />
           {{/if}}
           {{#if this.editing}}
-            <button type='button' class='btn' {{on 'click' this.addTier}}>
+            <Button
+              @kind='text-only'
+              @size='auto'
+              class='btn'
+              {{on 'click' this.addTier}}
+            >
               Add tier
-            </button>
+            </Button>
           {{/if}}
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='btn ghost-btn'
             {{on 'click' this.resetAll}}
           >
             Reset
-          </button>
+          </Button>
         </div>
       </header>
 
       {{#if this.editing}}
         <div class='gen'>
-          <input
+          <BoxelInput
             class='gen-input'
             aria-label='Describe the pool to generate with AI'
             placeholder='Describe a pool — e.g. “Studio Ghibli films”'
-            value={{this.genPrompt}}
-            disabled={{this.genBusy}}
-            {{on 'input' this.setGenPrompt}}
+            @value={{this.genPrompt}}
+            @disabled={{this.genBusy}}
+            @onInput={{this.setGenPrompt}}
           />
           {{#if this.genBusy}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='gen-btn gen-cancel'
               {{on 'click' this.cancelGenerate}}
             >
               Cancel
-            </button>
+            </Button>
           {{else}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='gen-btn'
               {{on 'click' this.runGenerate}}
             >
               Generate with AI
-            </button>
+            </Button>
           {{/if}}
           {{! The linksToMany editor's "Add" button opens the card chooser (any
               card type). We hide its re-rendered list of links via CSS since the
@@ -745,11 +754,11 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
             <div class='tier-row'>
               <div class='tier-label' style={{styleColor tier.color}}>
                 {{#if this.editing}}
-                  <input
+                  <BoxelInput
                     class='tier-name'
                     aria-label='Tier label'
-                    value={{tier.label}}
-                    {{on 'input' (fn this.renameTier tier)}}
+                    @value={{tier.label}}
+                    @onInput={{fn this.renameTier tier}}
                   />
                   <div class='tier-tools'>
                     <input
@@ -759,11 +768,12 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
                       value={{tier.color}}
                       {{on 'input' (fn this.recolorTier tier)}}
                     />
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='tier-del'
                       {{on 'click' (fn this.removeTier tier)}}
-                    >×</button>
+                    >×</Button>
                   </div>
                 {{else}}
                   <span class='tier-name-ro'>{{tier.label}}</span>
@@ -787,13 +797,14 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
                       {{/let}}
                     </div>
                     {{#if this.editing}}
-                      <button
-                        type='button'
+                      <Button
+                        @kind='text-only'
+                        @size='auto'
                         class='tile-remove'
                         aria-label='Remove from pool'
                         {{on 'pointerdown' this.stopEvent}}
                         {{on 'click' (fn this.removeItem item)}}
-                      >×</button>
+                      >×</Button>
                     {{/if}}
                   </div>
                 {{/each}}
@@ -822,13 +833,14 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
                   {{/let}}
                 </div>
                 {{#if this.editing}}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='tile-remove'
                     aria-label='Remove from pool'
                     {{on 'pointerdown' this.stopEvent}}
                     {{on 'click' (fn this.removeItem item)}}
-                  >×</button>
+                  >×</Button>
                 {{/if}}
               </div>
             {{else}}
