@@ -23,6 +23,7 @@ import type Owner from '@ember/owner';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { eq, not } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/boxel-ui/components';
 import ValidationSteps, { type ValidationStep } from './validation-steps';
 import { codeRef, realmURL } from '@cardstack/runtime-common';
 import { PlayingCardField, StatsField, normalizeStatistics } from './fields';
@@ -609,8 +610,12 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
           <div class='bj-outcome-icon'>{{this.outcomeIcon}}</div>
           <div class='bj-outcome-title'>{{this.outcomeTitle}}</div>
           <div class='bj-outcome-sub'>{{this.gameMessage}}</div>
-          <button class='bj-play-again-btn' {{on 'click' this.newGame}}>Play
-            Again</button>
+          <Button
+            @kind='text-only'
+            @size='auto'
+            class='bj-play-again-btn'
+            {{on 'click' this.newGame}}
+          >Play Again</Button>
         </div>
       {{/if}}
 
@@ -782,56 +787,77 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
 
             {{#if (eq this.gameState 'betting')}}
               <div class='bj-chip-row'>
-                <button
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='bj-chip bj-chip--red'
-                  disabled={{not this.gameCanStart}}
+                  @disabled={{not this.gameCanStart}}
                   {{on 'click' (fn this.placeBet 5)}}
-                >5</button>
-                <button
+                >5</Button>
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='bj-chip bj-chip--blue'
-                  disabled={{not this.gameCanStart}}
+                  @disabled={{not this.gameCanStart}}
                   {{on 'click' (fn this.placeBet 20)}}
-                >20</button>
-                <button
+                >20</Button>
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='bj-chip bj-chip--green'
-                  disabled={{not this.gameCanStart}}
+                  @disabled={{not this.gameCanStart}}
                   {{on 'click' (fn this.placeBet 50)}}
-                >50</button>
-                <button
+                >50</Button>
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='bj-chip bj-chip--black'
-                  disabled={{not this.gameCanStart}}
+                  @disabled={{not this.gameCanStart}}
                   {{on 'click' (fn this.placeBet 100)}}
-                >100</button>
-                <button
+                >100</Button>
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='bj-chip bj-chip--purple'
-                  disabled={{not this.gameCanStart}}
+                  @disabled={{not this.gameCanStart}}
                   {{on 'click' (fn this.placeBet 500)}}
-                >500</button>
+                >500</Button>
               </div>
-              <button
+              <Button
+                @kind='primary'
+                @size='auto'
                 class='bj-deal-btn'
-                disabled={{not this.gameCanStart}}
+                @disabled={{not this.gameCanStart}}
                 {{on 'click' this.deal}}
-              >Deal Cards</button>
+              >Deal Cards</Button>
             {{/if}}
 
             {{#if (eq this.gameState 'playerTurn')}}
               <div class='bj-action-row'>
-                <button class='bj-act-btn bj-act--hit' {{on 'click' this.hit}}>
+                <Button
+                  @kind='text-only'
+                  @size='auto'
+                  class='bj-act-btn bj-act--hit'
+                  {{on 'click' this.hit}}
+                >
                   <span class='bj-act-icon'>👆</span>Hit
-                </button>
-                <button
+                </Button>
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='bj-act-btn bj-act--stand'
                   {{on 'click' this.stand}}
                 >
                   <span class='bj-act-icon'>✋</span>Stand
-                </button>
-                <button
+                </Button>
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='bj-act-btn bj-act--double'
                   {{on 'click' this.doubleDown}}
                 >
                   <span class='bj-act-icon'>⚡</span>Double
-                </button>
+                </Button>
               </div>
             {{/if}}
 
