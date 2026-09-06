@@ -4,6 +4,7 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
+import { Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import type { Survey } from '../survey';
@@ -256,20 +257,22 @@ export class SurveyIsolated extends Component<typeof Survey> {
         <div class='survey-head-top'>
           <p class='survey-eyebrow'>Survey</p>
           <div class='survey-modes' role='tablist'>
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               role='tab'
               class='survey-mode {{if (eq this.mode "fill") "is-active"}}'
               aria-selected={{if (eq this.mode 'fill') 'true' 'false'}}
               {{on 'click' (fn this.setMode 'fill')}}
-            >Fill</button>
-            <button
-              type='button'
+            >Fill</Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               role='tab'
               class='survey-mode {{if (eq this.mode "results") "is-active"}}'
               aria-selected={{if (eq this.mode 'results') 'true' 'false'}}
               {{on 'click' (fn this.setMode 'results')}}
-            >Results</button>
+            >Results</Button>
           </div>
         </div>
         <h1 class='survey-title'>
@@ -327,13 +330,14 @@ export class SurveyIsolated extends Component<typeof Survey> {
               </div>
             {{/each}}
           </dl>
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='survey-restart'
             {{on 'click' this.restart}}
           >
             Start over
-          </button>
+          </Button>
         </div>
       {{else}}
         <FormWizard
@@ -352,8 +356,9 @@ export class SurveyIsolated extends Component<typeof Survey> {
                   an answer.</p>
               {{/unless}}
               {{#each this.questions as |question index|}}
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='survey-review-row
                     {{if (this.isInvalid question index) "is-invalid"}}'
                   {{on 'click' (fn this.editAnswer index)}}
@@ -368,7 +373,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
                       index
                     }}</span>
                   <span class='survey-review-edit'>Edit</span>
-                </button>
+                </Button>
               {{/each}}
             </div>
           {{else}}
