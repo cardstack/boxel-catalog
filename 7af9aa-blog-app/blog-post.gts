@@ -24,6 +24,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { bool, eq, or } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/boxel-ui/components';
 
 import {
   buildBlogThemeCss,
@@ -885,15 +886,16 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
           class='post-drawer {{if this.drawerOpen "is-open"}}'
           {{onClickOutside this.maybeCloseDrawer}}
         >
-          <button
-            type='button'
+          <Button
+            @size='auto'
+            @kind='text-only'
             class='drawer-toggle'
             {{on 'click' this.toggleDrawer}}
             aria-label={{if this.drawerOpen 'Close panel' 'Open panel'}}
             aria-expanded='{{if this.drawerOpen "true" "false"}}'
           >
             {{#if this.drawerOpen}}✕{{else}}☰{{/if}}
-          </button>
+          </Button>
           <div class='drawer-content'>
             <h3 class='drawer-section-label'>Status</h3>
             <div class='post-controls'>
@@ -904,14 +906,15 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
                 <span class='status-dot' aria-hidden='true'></span>
                 {{if @model.published 'Published' 'Draft'}}
               </span>
-              <button
-                type='button'
+              <Button
+                @size='auto'
+                @kind='text-only'
                 class='publish-btn
                   {{if @model.published "publish-btn--unpublish"}}'
                 {{on 'click' this.togglePublished}}
               >
                 {{if @model.published 'Unpublish' 'Publish'}}
-              </button>
+              </Button>
             </div>
 
             <h3 class='drawer-section-label'>Theme</h3>

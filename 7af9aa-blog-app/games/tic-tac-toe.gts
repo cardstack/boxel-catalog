@@ -9,6 +9,7 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
 type Cell = 'X' | 'O' | null;
@@ -59,7 +60,7 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
   }
 
   <template>
-    <div class='ttt'>
+    <section class='ttt' aria-label='Tic Tac Toe'>
       <h2 class='ttt-title'>Tic Tac Toe</h2>
       <div class='ttt-status'>
         {{#if this.winner}}
@@ -75,24 +76,30 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
       </div>
       <div class='ttt-board'>
         {{#each this.board as |cell index|}}
-          <button
-            type='button'
+          <Button
+            @size='auto'
+            @kind='text-only'
             class='ttt-cell
               {{if cell "is-filled"}}
               {{if (eq cell "X") "is-x"}}
               {{if (eq cell "O") "is-o"}}'
-            disabled={{if (eq this.winner null) false true}}
+            @disabled={{if (eq this.winner null) false true}}
             aria-label='Cell {{index}}'
             {{on 'click' (fn this.placeMark index)}}
           >
             {{cell}}
-          </button>
+          </Button>
         {{/each}}
       </div>
-      <button type='button' class='ttt-reset' {{on 'click' this.reset}}>
+      <Button
+        @kind='text-only'
+        @size='auto'
+        class='ttt-reset'
+        {{on 'click' this.reset}}
+      >
         New Game
-      </button>
-    </div>
+      </Button>
+    </section>
     <style scoped>
       .ttt {
         width: 100%;
