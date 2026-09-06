@@ -5,6 +5,7 @@ import { on } from '@ember/modifier';
 import { fn, concat } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { formatCurrency, formatCurrencyShort } from './utils';
+import { Button } from '@cardstack/boxel-ui/components';
 
 /* ---------- LINE CHART (amortization over time) ---------- */
 
@@ -243,8 +244,9 @@ export class LineChart extends GlimmerComponent<LineChartSignature> {
     <div class='line-chart'>
       <div class='lc-toggles'>
         {{#each this.seriesDefs as |item|}}
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class={{this.toggleClass item.key}}
             {{on 'click' (fn this.toggleSeries item.key)}}
           >
@@ -253,7 +255,7 @@ export class LineChart extends GlimmerComponent<LineChartSignature> {
               style={{htmlSafe (concat 'background:' item.color)}}
             ></span>
             {{item.label}}
-          </button>
+          </Button>
         {{/each}}
       </div>
       <svg
