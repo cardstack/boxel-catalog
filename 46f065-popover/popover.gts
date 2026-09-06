@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
+import { Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { modifier } from 'ember-modifier';
 import {
@@ -1394,13 +1395,14 @@ export default class Popover extends Component<PopoverSignature> {
             ...attributes
           >
             {{#if this.hasEscalation}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='bx-popover__escalate'
                 aria-label={{this.escalationLabel}}
                 title={{this.escalationLabel}}
                 {{on 'click' this.fireEscalateNext}}
-              >{{this.escalationGlyph}}</button>
+              >{{this.escalationGlyph}}</Button>
             {{/if}}
             <div class='bx-popover__body'>
               {{! Per-kind named-block dispatch. yield-to only accepts a
@@ -1456,13 +1458,14 @@ export default class Popover extends Component<PopoverSignature> {
             ...attributes
           >
             {{#if this.hasEscalation}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='bx-popover__escalate'
                 aria-label={{this.escalationLabel}}
                 title={{this.escalationLabel}}
                 {{on 'click' this.fireEscalateNext}}
-              >{{this.escalationGlyph}}</button>
+              >{{this.escalationGlyph}}</Button>
             {{/if}}
             <div class='bx-popover__body'>
               {{! Per-kind named-block dispatch. yield-to only accepts a
@@ -1526,13 +1529,14 @@ export default class Popover extends Component<PopoverSignature> {
               <div class='bx-popover__arrow' data-bx-popover-arrow></div>
             {{/if}}
             {{#if this.hasEscalation}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='bx-popover__escalate'
                 aria-label={{this.escalationLabel}}
                 title={{this.escalationLabel}}
                 {{on 'click' this.fireEscalateNext}}
-              >{{this.escalationGlyph}}</button>
+              >{{this.escalationGlyph}}</Button>
             {{/if}}
             <div class='bx-popover__body'>
               {{! Per-kind named-block dispatch. yield-to only accepts a
