@@ -5,8 +5,9 @@ import {
   contains,
   containsMany,
   linksTo,
-  FieldDef,
 } from 'https://cardstack.com/base/card-api';
+import StringField from 'https://cardstack.com/base/string';
+import NumberField from 'https://cardstack.com/base/number';
 import RecordGameResultCommand from './record-game-result';
 import {
   GameResult,
@@ -22,42 +23,12 @@ import type Owner from '@ember/owner';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { eq, not } from '@cardstack/boxel-ui/helpers';
-import StringField from 'https://cardstack.com/base/string';
-import NumberField from 'https://cardstack.com/base/number';
-import BooleanField from 'https://cardstack.com/base/boolean';
 import ValidationSteps, { type ValidationStep } from './validation-steps';
 import { codeRef, realmURL } from '@cardstack/runtime-common';
+import { PlayingCardField, StatsField, normalizeStatistics } from './fields';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
-
-class PlayingCardField extends FieldDef {
-  static displayName = 'Playing Card';
-  @field suit = contains(StringField);
-  @field value = contains(StringField);
-  @field faceUp = contains(BooleanField);
-}
-
-class StatsField extends FieldDef {
-  static displayName = 'Hand Statistics';
-  @field wins = contains(NumberField);
-  @field losses = contains(NumberField);
-  @field earnings = contains(NumberField);
-}
-
-function normalizeStatistics(
-  statistics?: {
-    wins?: number | null;
-    losses?: number | null;
-    earnings?: number | null;
-  } | null,
-) {
-  return {
-    wins: statistics?.wins ?? 0,
-    losses: statistics?.losses ?? 0,
-    earnings: statistics?.earnings ?? 0,
-  };
-}
 
 class IsolatedTemplate extends Component<typeof Blackjack> {
   // Game state

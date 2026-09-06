@@ -24,6 +24,26 @@ import {
 } from '../commands/invitation-poster-command';
 import { debounce } from 'lodash-es';
 import { arrayBufferToBase64 } from '../utils/encoding';
+import {
+  keyOf,
+  htmlBg,
+  htmlBarWidth,
+  htmlWorld,
+  htmlSeat,
+  htmlGhost,
+} from '../utils/html-builders';
+import {
+  clampNum,
+  cloneTableGeometry,
+  cloneTableWithSeating,
+  cloneFixture,
+} from '../utils/geometry';
+import {
+  imageDims,
+  withTimeout,
+  gridOverlay,
+  renderPdfToPng,
+} from '../utils/async-helpers';
 import type { TableSeatingPlanner } from '../table-seating-planner';
 import { Guest } from '../guest';
 import { Host } from '../host';
@@ -10719,195 +10739,8 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
     }
   </style>
 </template>;
-let _keySeq = 0;
-const _keys = new WeakMap<object, string>();
-function keyOf(obj: unknown): string {
-  if (!obj || typeof obj !== 'object') return '';
-  let k = _keys.get(obj);
-  if (!k) {
-    k = `k${++_keySeq}`;
-    _keys.set(obj, k);
-  }
-  return k;
-}
-function htmlBg(color: string | null | undefined) {
-  return htmlSafe(`background:${color || '#c5a35c'}`);
-}
-function htmlBarWidth(pct: string) {
-  return htmlSafe(`width:${pct}`);
-}
-function htmlWorld(style: string) {
-  return htmlSafe(style);
-}
-function htmlSeat(left: string, top: string, color: string) {
-  return htmlSafe(`left:${left};top:${top};--seatcol:${color}`);
-}
-function htmlGhost(x: number, y: number) {
-  return htmlSafe(`left:${x}px;top:${y}px`);
-}
 const SHAPE_VALUES = TABLE_SHAPES.map((s) => s.value);
 const FIXTURE_VALUES = FIXTURE_KINDS.map((k) => k.value);
-function clampNum(v: unknown, min: number, max: number, def: number): number {
-  let n = Number(v);
-  if (!isFinite(n)) return def;
-  return Math.max(min, Math.min(max, Math.round(n)));
-}
-function imageDims(src: string): Promise<{ w: number; h: number }> {
-  return new Promise((resolve) => {
-    let img = new Image();
-    img.onload = () =>
-      resolve({ w: img.naturalWidth || 800, h: img.naturalHeight || 600 });
-    img.onerror = () => resolve({ w: 800, h: 600 });
-    img.src = src;
-  });
-}
-function cloneTableGeometry(t: Table): Table {
-  return new Table({
-    name: t.name,
-    shape: t.shape,
-    seatCount: t.seatCount,
-    seatingStyle: t.seatingStyle,
-    rows: t.rows,
-    cols: t.cols,
-    x: t.x,
-    y: t.y,
-    width: t.width,
-    height: t.height,
-    rotation: t.rotation,
-    z: t.z,
-    themeColor: t.themeColor,
-    vip: t.vip,
-    note: t.note,
-  });
-}
-function cloneTableWithSeating(t: Table): Table {
-  let copy = cloneTableGeometry(t);
-  copy.seatOrder = t.seatOrder;
-  copy.reservedCategories = [...(t.reservedCategories ?? [])];
-  copy.seatedGuests = [...((t.seatedGuests ?? []) as Guest[])];
-  copy.seatSlots = [...(t.seatSlots ?? [])];
-  copy.rank = t.rank;
-  copy.locked = t.locked;
-  return copy;
-}
-function cloneFixture(f: Fixture): Fixture {
-  return new Fixture({
-    label: f.label,
-    kind: f.kind,
-    pattern: f.pattern,
-    x: f.x,
-    y: f.y,
-    width: f.width,
-    height: f.height,
-    rotation: f.rotation,
-    z: f.z,
-    color: f.color,
-  });
-}
-function loadScriptOnce(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src='${src}']`)) return resolve();
-    let s = document.createElement('script');
-    s.src = src;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Could not load PDF renderer'));
-    document.head.appendChild(s);
-  });
-}
-function loadImageEl(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    let img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('image decode failed'));
-    img.src = src;
-  });
-}
-function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    let timer = setTimeout(
-      () =>
-        reject(
-          new Error(
-            `${label} timed out after ${Math.round(
-              ms / 1000,
-            )}s — the AI service didn't respond. Check AI credits / connection and try again.`,
-          ),
-        ),
-      ms,
-    );
-    p.then(
-      (v) => {
-        clearTimeout(timer);
-        resolve(v);
-      },
-      (e) => {
-        clearTimeout(timer);
-        reject(e);
-      },
-    );
-  });
-}
-async function gridOverlay(
-  dataUrl: string,
-  rect: { x: number; y: number; w: number; h: number },
-): Promise<string> {
-  let img: HTMLImageElement;
-  try {
-    img = await loadImageEl(dataUrl);
-  } catch {
-    return dataUrl;
-  }
-  let nw = img.naturalWidth || 800;
-  let nh = img.naturalHeight || 600;
-  let MAX = 1400;
-  let scale = Math.min(1, MAX / Math.max(nw, nh));
-  let w = Math.max(1, Math.round(nw * scale));
-  let h = Math.max(1, Math.round(nh * scale));
-  let canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  let ctx = canvas.getContext('2d');
-  if (!ctx) return dataUrl;
-  ctx.drawImage(img, 0, 0, w, h);
-  let N = 20;
-  ctx.strokeStyle = 'rgba(220,40,40,0.4)';
-  ctx.lineWidth = Math.max(1, w / 1100);
-  ctx.fillStyle = 'rgba(220,40,40,0.95)';
-  let fs = Math.max(10, Math.round(w / 80));
-  ctx.font = `bold ${fs}px sans-serif`;
-  for (let i = 0; i <= N; i++) {
-    let px = (w * i) / N;
-    let py = (h * i) / N;
-    ctx.beginPath();
-    ctx.moveTo(px, 0);
-    ctx.lineTo(px, h);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, py);
-    ctx.lineTo(w, py);
-    ctx.stroke();
-    ctx.fillText(String(Math.round(rect.x + (rect.w * i) / N)), px + 3, fs + 2);
-    ctx.fillText(String(Math.round(rect.y + (rect.h * i) / N)), 3, py + fs + 2);
-  }
-  return canvas.toDataURL('image/png');
-}
-async function renderPdfToPng(file: File): Promise<string> {
-  let base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174';
-  await loadScriptOnce(`${base}/pdf.min.js`);
-  let pdfjs = (window as any).pdfjsLib;
-  if (!pdfjs) throw new Error('PDF renderer unavailable');
-  pdfjs.GlobalWorkerOptions.workerSrc = `${base}/pdf.worker.min.js`;
-  let data = await file.arrayBuffer();
-  let pdf = await pdfjs.getDocument({ data }).promise;
-  let page = await pdf.getPage(1);
-  let viewport = page.getViewport({ scale: 2 });
-  let canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  let context = canvas.getContext('2d');
-  await page.render({ canvasContext: context, viewport }).promise;
-  return canvas.toDataURL('image/png');
-}
 export class TableSeatingPlannerFitted extends Component<
   typeof TableSeatingPlanner
 > {

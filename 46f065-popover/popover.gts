@@ -275,6 +275,36 @@ const PORTAL_FALLBACK_TOKENS = [
   '--font-sans',
   '--font-serif',
   '--font-mono',
+  /* popover-specific knobs a host or theme may set (e.g. via Brand
+   * Guide custom variables) directly on the anchor's own root rather
+   * than through a theme scope — the scope-adoption path above already
+   * covers knobs set inside a linked theme's stylesheet. */
+  '--bx-popover-bg',
+  '--bx-popover-fg',
+  '--bx-popover-fg-muted',
+  '--bx-popover-border',
+  '--bx-popover-accent',
+  '--bx-popover-dim-bg',
+  '--bx-popover-bg-tint',
+  '--bx-popover-bg-blur',
+  '--bx-popover-tools-bg',
+  '--bx-popover-tools-fg',
+  '--bx-popover-edit-bg',
+  '--bx-popover-edit-border',
+  '--bx-popover-radius',
+  '--bx-popover-shadow-raised',
+  '--bx-popover-shadow-elevated',
+  '--bx-popover-shadow-floating',
+  '--bx-popover-font-family',
+  '--bx-popover-size-compact-min-w',
+  '--bx-popover-size-compact-max-w',
+  '--bx-popover-size-compact-max-h',
+  '--bx-popover-size-comfortable-min-w',
+  '--bx-popover-size-comfortable-max-w',
+  '--bx-popover-size-comfortable-max-h',
+  '--bx-popover-size-spacious-min-w',
+  '--bx-popover-size-spacious-max-w',
+  '--bx-popover-size-spacious-max-h',
 ];
 
 /** Carries the theme across the portal.
