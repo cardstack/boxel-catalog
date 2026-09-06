@@ -201,12 +201,13 @@ export default class Stepper extends Component<StepperSignature> {
             </div>
             {{#if this.showClose}}
               {{#if @onClose}}
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='stepper-close'
                   aria-label='Close'
                   {{on 'click' @onClose}}
-                >✕</button>
+                >✕</Button>
               {{/if}}
             {{/if}}
           </div>
@@ -267,6 +268,7 @@ export default class Stepper extends Component<StepperSignature> {
                 {{#unless this.isFirst}}
                   <Button
                     @kind='text-only'
+                    @size='auto'
                     class='stepper-ghost stepper-back'
                     {{on 'click' this.back}}
                   >Back</Button>
@@ -275,6 +277,7 @@ export default class Stepper extends Component<StepperSignature> {
                   {{#if @onFinish}}
                     <Button
                       @kind='primary'
+                      @size='auto'
                       class='stepper-primary'
                       {{on 'click' @onFinish}}
                     >{{this.finishLabel}}</Button>
@@ -283,12 +286,14 @@ export default class Stepper extends Component<StepperSignature> {
                   {{#if this.currentOptional}}
                     <Button
                       @kind='text-only'
+                      @size='auto'
                       class='stepper-ghost'
                       {{on 'click' this.skip}}
                     >Skip</Button>
                   {{/if}}
                   <Button
                     @kind='primary'
+                    @size='auto'
                     @disabled={{not this.canProceed}}
                     class='stepper-primary'
                     {{on 'click' this.next}}

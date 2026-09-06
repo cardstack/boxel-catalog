@@ -9,7 +9,11 @@ import { tracked } from '@glimmer/tracking';
 
 import { on } from '@ember/modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { BoxelSelect } from '@cardstack/boxel-ui/components';
+import {
+  BoxelSelect,
+  BoxelInput,
+  Button,
+} from '@cardstack/boxel-ui/components';
 import UserIcon from '@cardstack/boxel-icons/user';
 import SettingsIcon from '@cardstack/boxel-icons/settings';
 import UsersIcon from '@cardstack/boxel-icons/users';
@@ -64,8 +68,8 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
 
   workspaceOptions = ['Personal', 'Team', 'Enterprise'];
 
-  setName = (event: Event): void => {
-    this.name = (event.target as HTMLInputElement).value;
+  setName = (value: string): void => {
+    this.name = value;
   };
   setWorkspace = (value: string | null): void => {
     this.workspace = value ?? undefined;
@@ -163,11 +167,12 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
         <span class='sp-event'>last event: {{this.lastEvent}}</span></div>
       <div class='sp-stage'>
         {{#if this.dismissed}}
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='sp-reopen'
             {{on 'click' this.reopen}}
-          >Wizard closed — click to reopen</button>
+          >Wizard closed — click to reopen</Button>
         {{else}}
           <Stepper
             @modal={{this.modalOn}}
@@ -183,11 +188,11 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
             <:step as |step|>
               {{#if (eq step.id 'details')}}
                 <label class='sp-field'>Name
-                  <input
-                    type='text'
-                    value={{this.name}}
-                    placeholder='e.g. Ada Lovelace'
-                    {{on 'input' this.setName}}
+                  <BoxelInput
+                    @type='text'
+                    @value={{this.name}}
+                    @placeholder='e.g. Ada Lovelace'
+                    @onInput={{this.setName}}
                   />
                 </label>
               {{else if (eq step.id 'workspace')}}
@@ -205,11 +210,12 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
               {{else if (eq step.id 'team')}}
                 <div class='sp-invite'>
                   <span>{{this.invited}} teammate(s) invited</span>
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='sp-invite-btn'
                     {{on 'click' this.invite}}
-                  >+ Invite</button>
+                  >+ Invite</Button>
                 </div>
               {{else}}
                 <p class='sp-done'>Everything's set{{if this.name ', '}}
