@@ -6,7 +6,7 @@ import { modifier } from 'ember-modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import PhotoPlusIcon from '@cardstack/boxel-icons/photo-plus';
 import type { BoxComponent } from 'https://cardstack.com/base/card-api';
-import { BoxelInputGroup } from '@cardstack/boxel-ui/components';
+import { BoxelInputGroup, Button } from '@cardstack/boxel-ui/components';
 import { IconLink, IconX } from '@cardstack/boxel-ui/icons';
 
 import ImageSourceField from '../../image-source/image-source';
@@ -108,8 +108,9 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
         <ul class='thumbs' aria-label='Images'>
           {{#each this.items as |item index|}}
             <li class='thumb {{if (eq index this.selectedIndex) "is-active"}}'>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='thumb-pick'
                 data-test-multi-image-source-thumb
                 aria-label='Show this image'
@@ -119,16 +120,17 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
                 {{#if item.resolvedUrl}}
                   <img src={{item.resolvedUrl}} alt='' />
                 {{/if}}
-              </button>
-              <button
-                type='button'
+              </Button>
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='remove-btn'
                 aria-label='Remove image'
                 data-test-multi-image-source-remove
                 {{on 'click' (fn this.removeAt index)}}
               >
                 <IconX width='8' height='8' aria-hidden='true' />
-              </button>
+              </Button>
             </li>
           {{/each}}
         </ul>
@@ -156,13 +158,15 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
               </Accessories.Text>
             </:before>
             <:after>
-              <button
+              <Button
+                @kind='text-only'
+                @size='auto'
                 type='submit'
                 class='add-url-btn'
                 data-test-multi-image-source-url-add
               >
                 Add
-              </button>
+              </Button>
             </:after>
           </BoxelInputGroup>
         </form>
@@ -203,13 +207,15 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
                   </Accessories.Text>
                 </:before>
                 <:after>
-                  <button
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     type='submit'
                     class='add-url-btn'
                     data-test-multi-image-source-url-add
                   >
                     Add
-                  </button>
+                  </Button>
                 </:after>
               </BoxelInputGroup>
             </form>

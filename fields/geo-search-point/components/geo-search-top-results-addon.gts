@@ -4,7 +4,7 @@ import { fn } from '@ember/helper';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 import InfoIcon from '@cardstack/boxel-icons/info';
 import SearchIcon from '@cardstack/boxel-icons/search';
-import { SkeletonPlaceholder } from '@cardstack/boxel-ui/components';
+import { Button, SkeletonPlaceholder } from '@cardstack/boxel-ui/components';
 import { not } from '@cardstack/boxel-ui/helpers';
 
 interface GeoSearchTopResultsAddonSignature {
@@ -34,8 +34,9 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
           {{#if @results.length}}
             <div class='results-list'>
               {{#each @results as |result|}}
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='result-card'
                   {{on 'click' (fn @onSelectResult result.display_name)}}
                 >
@@ -55,7 +56,7 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
                       </span>
                     {{/if}}
                   </div>
-                </button>
+                </Button>
               {{/each}}
             </div>
           {{else}}

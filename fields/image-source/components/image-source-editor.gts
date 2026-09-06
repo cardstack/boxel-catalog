@@ -5,7 +5,7 @@ import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
 import PhotoPlusIcon from '@cardstack/boxel-icons/photo-plus';
 import type { BoxComponent } from 'https://cardstack.com/base/card-api';
-import { BoxelInputGroup } from '@cardstack/boxel-ui/components';
+import { BoxelInputGroup, Button } from '@cardstack/boxel-ui/components';
 import { IconLink, IconX } from '@cardstack/boxel-ui/icons';
 
 import type { ImageSourceMode } from '../image-source';
@@ -90,15 +90,16 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
         {{#if this.hasImage}}
           <figure class='hero' data-test-image-source-preview>
             <img src={{this.resolvedUrl}} alt='' />
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='remove-btn'
               aria-label='Remove image'
               data-test-image-source-remove
               {{on 'click' this.removeImage}}
             >
               <IconX width='8' height='8' aria-hidden='true' />
-            </button>
+            </Button>
           </figure>
         {{else}}
           <div class='empty'>
@@ -138,13 +139,15 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
                     </Accessories.Text>
                   </:before>
                   <:after>
-                    <button
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       type='submit'
                       class='add-url-btn'
                       data-test-image-source-url-add
                     >
                       Add
-                    </button>
+                    </Button>
                   </:after>
                 </BoxelInputGroup>
               </form>

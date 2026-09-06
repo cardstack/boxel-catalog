@@ -1,4 +1,5 @@
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/boxel-ui/components';
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn, concat } from '@ember/helper';
@@ -40,15 +41,16 @@ export class WaveformVisualizer extends GlimmerComponent<WaveformVisualizerSigna
     <div class='waveform-visualizer {{@variant}}'>
       <div class='waveform-bars'>
         {{#each @bars as |height index|}}
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='waveform-bar
               {{if (this.isBarPlayed index) "played" "unplayed"}}
               {{if (this.isBarInTrimRange index) "in-range" "out-range"}}'
             style={{htmlSafe (concat 'height: ' height '%')}}
             {{on 'click' (fn @onBarClick index)}}
             aria-label='Seek to position {{index}}'
-          ></button>
+          />
         {{/each}}
       </div>
 

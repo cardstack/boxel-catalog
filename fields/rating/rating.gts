@@ -2,6 +2,7 @@ import { Component } from 'https://cardstack.com/base/card-api';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { lte, not } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/boxel-ui/components';
 
 import NumberField, {
   deserializeForUI,
@@ -57,12 +58,13 @@ export default class RatingField extends NumberField {
     <template>
       <div class='rating-field-edit' data-test-rating-edit>
         {{#each this.stars as |star|}}
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
             disabled={{not @canEdit}}
             {{on 'click' (fn this.setRating star)}}
-          >{{if (lte star this.numericValue) '★' '☆'}}</button>
+          >{{if (lte star this.numericValue) '★' '☆'}}</Button>
         {{/each}}
         <span
           class='rating-value'
@@ -180,10 +182,9 @@ export default class RatingField extends NumberField {
     <template>
       <div class='rating-field-edit' data-test-rating-embedded>
         {{#each this.stars as |star|}}
-          <button
-            type='button'
+          <span
             class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
-          >{{if (lte star this.numericValue) '★' '☆'}}</button>
+          >{{if (lte star this.numericValue) '★' '☆'}}</span>
         {{/each}}
         <span
           class='rating-value'

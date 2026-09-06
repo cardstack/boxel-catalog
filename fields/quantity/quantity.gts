@@ -2,6 +2,7 @@
 import { Component } from 'https://cardstack.com/base/card-api';
 import { on } from '@ember/modifier';
 import { lte, gte, not } from '@cardstack/boxel-ui/helpers';
+import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
 
 import NumberField, {
   deserializeForUI,
@@ -60,9 +61,7 @@ export default class QuantityField extends NumberField {
       this.args.set(clamp(this.numericValue - 1, this.minValue, this.maxValue));
     };
 
-    handleInput = (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      const value = target.value;
+    handleInput = (value: string) => {
       const num = parseFloat(value);
       if (!isNaN(num)) {
         this.args.set(clamp(num, this.minValue, this.maxValue));
@@ -74,8 +73,9 @@ export default class QuantityField extends NumberField {
     <template>
       <div class='quantity-field-edit' data-test-quantity-edit>
         <label for='quantity-input' class='sr-only'>Quantity</label>
-        <button
-          type='button'
+        <Button
+          @kind='text-only'
+          @size='auto'
           class='qty-btn'
           data-test-quantity-decrement
           {{on 'click' this.decrement}}
@@ -84,19 +84,20 @@ export default class QuantityField extends NumberField {
             true
             (if (lte this.numericValue this.minValue) true)
           }}
-        >−</button>
-        <input
+        >−</Button>
+        <BoxelInput
           id='quantity-input'
-          type='number'
+          @type='number'
           class='qty-input'
-          value={{this.numericValue}}
-          min={{this.minValue}}
-          max={{this.maxValue}}
-          disabled={{not @canEdit}}
-          {{on 'input' this.handleInput}}
+          @value={{this.numericValue}}
+          @min={{this.minValue}}
+          @max={{this.maxValue}}
+          @disabled={{not @canEdit}}
+          @onInput={{this.handleInput}}
         />
-        <button
-          type='button'
+        <Button
+          @kind='text-only'
+          @size='auto'
           class='qty-btn'
           data-test-quantity-increment
           {{on 'click' this.increment}}
@@ -105,7 +106,7 @@ export default class QuantityField extends NumberField {
             true
             (if (gte this.numericValue this.maxValue) true)
           }}
-        >+</button>
+        >+</Button>
       </div>
 
       <style scoped>
