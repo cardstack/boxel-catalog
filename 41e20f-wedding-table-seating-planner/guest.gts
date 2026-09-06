@@ -11,6 +11,7 @@ import enumField from 'https://cardstack.com/base/enum';
 import { htmlSafe } from '@ember/template';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import UserIcon from '@cardstack/boxel-icons/user';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
@@ -943,17 +944,18 @@ export class Guest extends Person {
           </div>
           <div class='iso-ident'>
             <span class='iso-kicker'>Guest Profile</span>
-            <input
+            <BoxelInput
               class='iso-name-input'
-              value={{@model.fullName}}
+              @value={{@model.fullName}}
               placeholder='Unnamed Guest'
               aria-label='Guest name'
               {{on 'input' this.setName}}
             />
             <div class='iso-cats' aria-label='Category'>
               {{#each this.categoryOptions as |cat|}}
-                <button
-                  type='button'
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   aria-pressed={{if
                     (eq @model.category cat.value)
                     'true'
@@ -965,17 +967,18 @@ export class Guest extends Person {
                 >
                   <span class='iso-dot' style={{swatch cat.color}}></span>
                   {{cat.label}}
-                </button>
+                </Button>
               {{/each}}
             </div>
             <div class='iso-tags'>
-              <button
-                type='button'
+              <Button
+                @size='auto'
+                @kind='text-only'
                 aria-pressed={{if @model.vip 'true' 'false'}}
                 class='iso-vip-toggle {{if @model.vip "is-on"}}'
                 title='Mark as a VIP guest'
                 {{on 'click' this.toggleVip}}
-              >&#10022; VIP</button>
+              >&#10022; VIP</Button>
               {{#if @model.parentGuest}}
                 <span class='iso-pill'>+1 of
                   {{@model.parentGuest.fullName}}</span>
@@ -1007,14 +1010,15 @@ export class Guest extends Person {
         </header>
         <div class='iso-cats' aria-label='Dietary restrictions'>
           {{#each this.dietaryOptions as |opt|}}
-            <button
-              type='button'
+            <Button
+              @size='auto'
+              @kind='text-only'
               aria-pressed={{if (this.isDietary opt.value) 'true' 'false'}}
               class='iso-catchip {{if (this.isDietary opt.value) "is-on"}}'
               {{on 'click' (fn this.toggleDietary opt.value)}}
             >
               {{opt.label}}
-            </button>
+            </Button>
           {{/each}}
         </div>
 

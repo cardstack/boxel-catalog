@@ -4474,16 +4474,20 @@ export class TableSeatingPlannerIsolated extends Component<
                   {{else}}
                     {{h.initials}}
                   {{/if}}
-                  <button
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='tsp-host-x'
                     title='Remove {{h.name}}'
                     aria-label='Remove {{h.name}}'
                     {{on 'click' (fn this.removeHost h.model)}}
-                  >✕</button>
+                  >✕</Button>
                 </span>
               {{/each}}
-              <button
+              <Button
+                @size='auto'
+                @kind='text-only'
                 type='button'
                 class='tsp-host tsp-host-add'
                 title='Add hosts'
@@ -4491,7 +4495,7 @@ export class TableSeatingPlannerIsolated extends Component<
                 {{on 'click' this.addHosts}}
               >＋{{#unless this.hostChips.length}}<span
                     class='tsp-host-add-hint'
-                  >Add hosts</span>{{/unless}}</button>
+                  >Add hosts</span>{{/unless}}</Button>
             </div>
           </div>
           <div class='tsp-meta-div'></div>
@@ -4523,16 +4527,20 @@ export class TableSeatingPlannerIsolated extends Component<
         </div>
         <div class='tsp-actions'>
           <nav class='tsp-nav'>
-            <button
+            <Button
+              @size='auto'
+              @kind='text-only'
               type='button'
               class='tsp-navbtn {{if this.isPlan "is-on"}}'
               {{on 'click' (fn this.setView 'plan')}}
-            >Seating</button>
-            <button
+            >Seating</Button>
+            <Button
+              @size='auto'
+              @kind='text-only'
               type='button'
               class='tsp-navbtn {{if this.isInvites "is-on"}}'
               {{on 'click' (fn this.setView 'invites')}}
-            >Invitations</button>
+            >Invitations</Button>
           </nav>
         </div>
       </header>
@@ -4559,14 +4567,18 @@ export class TableSeatingPlannerIsolated extends Component<
               />
             </div>
             <div class='rail-cats'>
-              <button
+              <Button
+                @size='auto'
+                @kind='text-only'
                 type='button'
                 class='cat-pill {{unless this.activeCatId "is-on"}}'
                 {{on 'click' (fn this.setCat null)}}
               >All
-                <span class='dim'>{{this.totalGuests}}</span></button>
+                <span class='dim'>{{this.totalGuests}}</span></Button>
               {{#each this.catChips as |c|}}
-                <button
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   type='button'
                   class='cat-pill {{if (eq this.activeCatId c.id) "is-on"}}'
                   {{on 'click' (fn this.setCat c.id)}}
@@ -4574,7 +4586,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   <span class='cat-swatch' style={{htmlBg c.color}}></span>
                   {{c.name}}
                   <span class='dim'>{{c.countSeated}}</span>
-                </button>
+                </Button>
               {{/each}}
             </div>
             <div class='rail-list'>
@@ -4614,22 +4626,26 @@ export class TableSeatingPlannerIsolated extends Component<
                       {{#if (this.railPartyOf g)}}
                         <span class='rg-party'>×{{this.railPartyOf g}}</span>
                       {{/if}}
-                      <button
+                      <Button
+                        @size='auto'
+                        @kind='text-only'
                         type='button'
                         class='rg-edit'
                         aria-label='Edit guest'
                         title='Edit guest'
                         {{on 'pointerdown' this.stopDrag}}
                         {{on 'click' (fn this.openEditGuest g)}}
-                      ><PencilIcon width='13' height='13' /></button>
-                      <button
+                      ><PencilIcon width='13' height='13' /></Button>
+                      <Button
+                        @size='auto'
+                        @kind='text-only'
                         type='button'
                         class='rg-remove'
                         aria-label='Remove guest'
                         title='Remove from guest list'
                         {{on 'pointerdown' this.stopDrag}}
                         {{on 'click' (fn this.confirmRemoveGuest g)}}
-                      ><XIcon width='13' height='13' /></button>
+                      ><XIcon width='13' height='13' /></Button>
                     </div>
                   {{/if}}
                 {{/each}}
@@ -4639,12 +4655,14 @@ export class TableSeatingPlannerIsolated extends Component<
             </div>
             <div class='rail-foot'>
               <Button
+                @size='auto'
                 @kind='primary'
                 class='rail-add'
                 {{on 'click' this.addGuests}}
               >+ Add Guests</Button>
               {{#if this.guests.length}}
                 <Button
+                  @size='auto'
                   @kind='text-only'
                   class='rail-clear {{if this.confirmClearGuests "is-armed"}}'
                   {{on 'click' this.clearAllGuests}}
@@ -4661,32 +4679,39 @@ export class TableSeatingPlannerIsolated extends Component<
               <div class='ct-group ct-group-build'>
                 <div class='ct-menu'>
                   <Button
+                    @size='auto'
                     @kind='secondary'
                     class='ct-btn ct-add {{if this.addMenuOpen "is-open"}}'
                     title='Add tables, seats & decorative elements'
                     {{on 'click' this.toggleAddMenu}}
                   >＋ Add element <span class='ct-caret'>▾</span></Button>
                   {{#if this.addMenuOpen}}
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='ct-backdrop'
                       aria-label='Close menu'
                       {{on 'click' this.closeAddMenu}}
-                    ></button>
+                    />
                     <div class='ct-pop'>
                       <header
                         class='pop-head ct-pop-head'
                         aria-label='Add to canvas'
                       >
                         <span class='pop-title'>Add to canvas</span>
-                        <button
+                        <Button
+                          @size='auto'
+                          @kind='text-only'
                           type='button'
                           class='pop-close'
                           aria-label='Close menu'
                           {{on 'click' this.closeAddMenu}}
-                        >✕</button>
+                        >✕</Button>
                       </header>
-                      <button
+                      <Button
+                        @size='auto'
+                        @kind='text-only'
                         type='button'
                         class='ct-pop-item ct-pop-feature ct-branch
                           {{if (eq this.addBranch "table") "is-open"}}'
@@ -4702,8 +4727,10 @@ export class TableSeatingPlannerIsolated extends Component<
                             guests</span>
                         </span>
                         <span class='ct-branch-caret'>›</span>
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        @size='auto'
+                        @kind='text-only'
                         type='button'
                         class='ct-pop-item ct-pop-feature ct-branch
                           {{if (eq this.addBranch "seat") "is-open"}}'
@@ -4719,11 +4746,13 @@ export class TableSeatingPlannerIsolated extends Component<
                             group</span>
                         </span>
                         <span class='ct-branch-caret'>›</span>
-                      </button>
+                      </Button>
                       <div class='ct-pop-title'>Elements</div>
                       <div class='ct-pop-grid'>
                         {{#each this.fixtureKinds as |k|}}
-                          <button
+                          <Button
+                            @size='auto'
+                            @kind='text-only'
                             type='button'
                             class='ct-pop-tile'
                             title={{k.label}}
@@ -4735,7 +4764,7 @@ export class TableSeatingPlannerIsolated extends Component<
                                 @pattern='outline'
                               /></span>
                             <span class='ct-pop-tile-label'>{{k.label}}</span>
-                          </button>
+                          </Button>
                         {{/each}}
                       </div>
                     </div>
@@ -4747,39 +4776,49 @@ export class TableSeatingPlannerIsolated extends Component<
                       >
                         <div class='ct-flyout-title'>Table shape</div>
                         <div class='ct-flyout-grid'>
-                          <button
+                          <Button
+                            @size='auto'
+                            @kind='text-only'
                             type='button'
                             class='ct-shape'
                             {{on 'click' (fn this.addTableShape 'round')}}
                           ><span
                               class='ct-shape-g sg-round'
-                            ></span>Round</button>
-                          <button
+                            ></span>Round</Button>
+                          <Button
+                            @size='auto'
+                            @kind='text-only'
                             type='button'
                             class='ct-shape'
                             {{on 'click' (fn this.addTableShape 'oval')}}
-                          ><span class='ct-shape-g sg-oval'></span>Oval</button>
-                          <button
+                          ><span class='ct-shape-g sg-oval'></span>Oval</Button>
+                          <Button
+                            @size='auto'
+                            @kind='text-only'
                             type='button'
                             class='ct-shape'
                             {{on 'click' (fn this.addTableShape 'rect')}}
                           ><span
                               class='ct-shape-g sg-rect'
-                            ></span>Rectangle</button>
-                          <button
+                            ></span>Rectangle</Button>
+                          <Button
+                            @size='auto'
+                            @kind='text-only'
                             type='button'
                             class='ct-shape'
                             {{on 'click' (fn this.addTableShape 'square')}}
                           ><span
                               class='ct-shape-g sg-square'
-                            ></span>Square</button>
-                          <button
+                            ></span>Square</Button>
+                          <Button
+                            @size='auto'
+                            @kind='text-only'
                             type='button'
                             class='ct-shape'
                             {{on 'click' (fn this.addTableShape 'curved')}}
                           ><span
                               class='ct-shape-g sg-curved'
-                            ></span>Curved</button>
+                            ></span>Curved</Button>
                         </div>
                       </div>
                     {{/if}}
@@ -4790,7 +4829,9 @@ export class TableSeatingPlannerIsolated extends Component<
                         {{on 'mouseleave' this.scheduleCloseBranch}}
                       >
                         <div class='ct-flyout-title'>Seat</div>
-                        <button
+                        <Button
+                          @size='auto'
+                          @kind='text-only'
                           type='button'
                           class='ct-pop-item ct-pop-feature'
                           {{on 'click' this.addSeat}}
@@ -4800,8 +4841,10 @@ export class TableSeatingPlannerIsolated extends Component<
                             <span class='ct-pop-name'>Single seat</span>
                             <span class='ct-pop-desc'>One chair, no table</span>
                           </span>
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          @size='auto'
+                          @kind='text-only'
                           type='button'
                           class='ct-pop-item ct-pop-feature'
                           {{on 'click' this.addSection}}
@@ -4811,13 +4854,14 @@ export class TableSeatingPlannerIsolated extends Component<
                             <span class='ct-pop-name'>Seating groups</span>
                             <span class='ct-pop-desc'>Rows of chairs (a section)</span>
                           </span>
-                        </button>
+                        </Button>
                       </div>
                     {{/if}}
                   {{/if}}
                 </div>
                 <div class='ct-menu'>
                   <Button
+                    @size='auto'
                     @kind='secondary'
                     class='ct-btn ct-add {{if this.templateMenuOpen "is-open"}}'
                     title='Start from a saved layout template'
@@ -4826,28 +4870,34 @@ export class TableSeatingPlannerIsolated extends Component<
                     Add template
                     <span class='ct-caret'>▾</span></Button>
                   {{#if this.templateMenuOpen}}
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='ct-backdrop'
                       aria-label='Close menu'
                       {{on 'click' this.closeTemplateMenu}}
-                    ></button>
+                    />
                     <div class='ct-pop'>
                       <header
                         class='pop-head ct-pop-head'
                         aria-label='Start from template'
                       >
                         <span class='pop-title'>Start from template</span>
-                        <button
+                        <Button
+                          @size='auto'
+                          @kind='text-only'
                           type='button'
                           class='pop-close'
                           aria-label='Close menu'
                           {{on 'click' this.closeTemplateMenu}}
-                        >✕</button>
+                        >✕</Button>
                       </header>
                       {{#each this.templates as |tpl|}}
                         <div class='ct-tpl'>
-                          <button
+                          <Button
+                            @size='auto'
+                            @kind='text-only'
                             type='button'
                             class='ct-pop-item ct-tpl-apply'
                             {{on 'click' (fn this.applyTemplate tpl)}}
@@ -4870,8 +4920,10 @@ export class TableSeatingPlannerIsolated extends Component<
                                 {{if tpl.seatCount tpl.seatCount 0}}
                                 seats</span>
                             </span>
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            @size='auto'
+                            @kind='text-only'
                             type='button'
                             class='ct-tpl-eye'
                             title='Preview this layout'
@@ -4879,7 +4931,7 @@ export class TableSeatingPlannerIsolated extends Component<
                             data-bx-popover-anchor
                             data-tpl-preview={{this.tplKey tpl}}
                             {{on 'click' (fn this.openTemplatePreview tpl)}}
-                          >◱</button>
+                          >◱</Button>
                         </div>
                       {{else}}
                         <div class='ct-pop-empty'>
@@ -4894,6 +4946,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   {{/if}}
                 </div>
                 <Button
+                  @size='auto'
                   @kind='secondary'
                   class='ct-btn ct-secondary'
                   title='Import a floor plan / venue drawing to trace'
@@ -4903,6 +4956,7 @@ export class TableSeatingPlannerIsolated extends Component<
               <div class='ct-spacer'></div>
               <div class='ct-group ct-group-arrange'>
                 <Button
+                  @size='auto'
                   @kind='primary'
                   @disabled={{eq this.aiStatus 'loading'}}
                   class='ct-primary'
@@ -4916,6 +4970,7 @@ export class TableSeatingPlannerIsolated extends Component<
               </div>
               <div class='ct-divider'></div>
               <Button
+                @size='auto'
                 @kind='text-only'
                 @disabled={{this.savingTemplate}}
                 class='ct-btn ct-ghost'
@@ -4925,6 +4980,7 @@ export class TableSeatingPlannerIsolated extends Component<
                 {{on 'click' this.openSaveTemplate}}
               ><TemplateIcon class='ico' /> Save template</Button>
               <Button
+                @size='auto'
                 @kind='text-only'
                 @disabled={{this.savingSnapshot}}
                 class='ct-btn ct-ghost'
@@ -4933,6 +4989,7 @@ export class TableSeatingPlannerIsolated extends Component<
               ><CameraIcon class='ico' />
                 {{if this.savingSnapshot 'Saving…' 'Save snapshot'}}</Button>
               <Button
+                @size='auto'
                 @kind='text-only'
                 class='ct-btn ct-ghost'
                 title='Print place/table cards or the seating chart'
@@ -4948,7 +5005,9 @@ export class TableSeatingPlannerIsolated extends Component<
                   @width={{300}}
                 >
                   <:body>
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='pr-opt'
                       {{on 'click' this.printCardsFromMenu}}
@@ -4959,8 +5018,10 @@ export class TableSeatingPlannerIsolated extends Component<
                         <span class='pr-opt-desc'>One card per guest and per
                           table — cut out and place</span>
                       </span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='pr-opt'
                       {{on 'click' this.printChartFromMenu}}
@@ -4971,7 +5032,7 @@ export class TableSeatingPlannerIsolated extends Component<
                         <span class='pr-opt-desc'>The whole layout on one
                           overview page</span>
                       </span>
-                    </button>
+                    </Button>
                   </:body>
                 </SeatingPlanPopover>
               {{/if}}
@@ -4983,22 +5044,26 @@ export class TableSeatingPlannerIsolated extends Component<
               {{on 'wheel' this.onWheel}}
             >
               <div class='cv-history' {{on 'pointerdown' this.stopProp}}>
-                <button
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   type='button'
                   class='cv-hist-btn'
                   title='Undo (⌘Z)'
                   aria-label='Undo'
                   disabled={{eq this.undoDepth 0}}
                   {{on 'click' this.undo}}
-                ><ArrowBackUpIcon class='ico' /></button>
-                <button
+                ><ArrowBackUpIcon class='ico' /></Button>
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   type='button'
                   class='cv-hist-btn'
                   title='Redo (⇧⌘Z)'
                   aria-label='Redo'
                   disabled={{eq this.redoDepth 0}}
                   {{on 'click' this.redo}}
-                ><ArrowForwardUpIcon class='ico' /></button>
+                ><ArrowForwardUpIcon class='ico' /></Button>
               </div>
               {{#if @model.floorPlanURL}}
                 <div class='fp-build'>
@@ -5008,6 +5073,7 @@ export class TableSeatingPlannerIsolated extends Component<
                     {{on 'wheel' this.scrollToolbar}}
                   >
                     <Button
+                      @size='auto'
                       @kind='primary'
                       @disabled={{this.buildDisabled}}
                       class='fp-build-btn {{if this.aiPlanBusy "is-busy"}}'
@@ -5035,38 +5101,46 @@ export class TableSeatingPlannerIsolated extends Component<
                       >{{this.floorPlanOpacity}}%</span>
                     </label>
                     <span class='fp-tool-div'></span>
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='fp-tool-btn {{if this.floorSelected "is-on"}}'
                       title='Move &amp; scale on canvas'
                       {{on 'click' this.selectFloorForEdit}}
-                    ><ArrowsMoveIcon class='ico' /></button>
+                    ><ArrowsMoveIcon class='ico' /></Button>
                     {{#if this.floorDeleteArmed}}
                       <Button
+                        @size='auto'
                         @kind='secondary'
                         class='fp-tool-confirm'
                         title='Pick a different floor plan'
                         {{on 'click' this.replaceFloorPlan}}
                       >Replace</Button>
                       <Button
+                        @size='auto'
                         @kind='danger'
                         class='fp-tool-confirm is-danger'
                         title='Remove this floor plan'
                         {{on 'click' this.confirmRemoveFloorPlan}}
                       >Remove</Button>
-                      <button
+                      <Button
+                        @size='auto'
+                        @kind='text-only'
                         type='button'
                         class='fp-tool-btn'
                         title='Keep floor plan'
                         {{on 'click' this.cancelFloorDelete}}
-                      >✕</button>
+                      >✕</Button>
                     {{else}}
-                      <button
+                      <Button
+                        @size='auto'
+                        @kind='text-only'
                         type='button'
                         class='fp-tool-btn is-del'
                         title='Delete or replace floor plan'
                         {{on 'click' this.armFloorDelete}}
-                      ><TrashIcon class='ico' /></button>
+                      ><TrashIcon class='ico' /></Button>
                     {{/if}}
                   </div>
                 </div>
@@ -5074,6 +5148,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   <div class='fp-broken' {{on 'pointerdown' this.stopProp}}>
                     <span class='fp-broken-msg'>Floor plan image failed to load</span>
                     <Button
+                      @size='auto'
                       @kind='secondary'
                       class='fp-broken-btn'
                       {{on 'click' this.refreshFloorImg}}
@@ -5135,14 +5210,16 @@ export class TableSeatingPlannerIsolated extends Component<
                     <span class='fx-tag'>{{fx.label}}</span>
                     {{#if fx.selected}}
                       {{#if fx.model.locked}}
-                        <button
+                        <Button
+                          @size='auto'
+                          @kind='text-only'
                           type='button'
                           class='rz rz-rot rz-locked'
                           title='Locked — click to unlock'
                           aria-label='Unlock element'
                           {{on 'pointerdown' this.stopProp}}
                           {{on 'click' (fn this.unlockElement 'fixture' fx.id)}}
-                        ><LockIcon class='ico' /></button>
+                        ><LockIcon class='ico' /></Button>
                       {{else}}
                         <span
                           class='rz rz-rot'
@@ -5255,7 +5332,9 @@ export class TableSeatingPlannerIsolated extends Component<
                         {{#if tv.vip}}<span class='t-vipdot'>VIP</span>{{/if}}
                       </div>
                     {{/if}}
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='t-edit'
                       data-bx-popover-anchor
@@ -5266,7 +5345,7 @@ export class TableSeatingPlannerIsolated extends Component<
                           class='t-edit-rank'
                         >#{{tv.rank}}</span>{{/if}}<span
                         class='t-edit-ico'
-                      ><PencilIcon class='ico ico-sm' /></span>Edit</button>
+                      ><PencilIcon class='ico ico-sm' /></span>Edit</Button>
                     {{#each tv.seats key='index' as |s|}}
                       <div
                         class='seat
@@ -5295,14 +5374,16 @@ export class TableSeatingPlannerIsolated extends Component<
                     <span class='t-name'>{{tv.name}}</span>
                     {{#if tv.selected}}
                       {{#if tv.model.locked}}
-                        <button
+                        <Button
+                          @size='auto'
+                          @kind='text-only'
                           type='button'
                           class='rz rz-rot rz-locked'
                           title='Locked — click to unlock'
                           aria-label='Unlock table'
                           {{on 'pointerdown' this.stopProp}}
                           {{on 'click' (fn this.unlockElement 'table' tv.id)}}
-                        ><LockIcon class='ico' /></button>
+                        ><LockIcon class='ico' /></Button>
                       {{else}}
                         {{#unless tv.isSection}}
                           <span
@@ -5365,7 +5446,9 @@ export class TableSeatingPlannerIsolated extends Component<
               {{#if this.canAlign}}
                 <div class='align-bar' {{on 'pointerdown' this.stopProp}}>
                   <span class='align-cap'>Align</span>
-                  <button
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='align-btn'
                     title='Align left'
@@ -5379,8 +5462,10 @@ export class TableSeatingPlannerIsolated extends Component<
                         y1='12'
                         x2='9'
                         y2='12'
-                      /><polyline points='13,8 9,12 13,16' /></svg></button>
-                  <button
+                      /><polyline points='13,8 9,12 13,16' /></svg></Button>
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='align-btn'
                     title='Align horizontal centres'
@@ -5391,8 +5476,10 @@ export class TableSeatingPlannerIsolated extends Component<
                       aria-hidden='true'
                     ><line x1='4' y1='12' x2='20' y2='12' /><polyline
                         points='8,8 4,12 8,16'
-                      /><polyline points='16,8 20,12 16,16' /></svg></button>
-                  <button
+                      /><polyline points='16,8 20,12 16,16' /></svg></Button>
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='align-btn'
                     title='Align right'
@@ -5406,9 +5493,11 @@ export class TableSeatingPlannerIsolated extends Component<
                         y1='12'
                         x2='15'
                         y2='12'
-                      /><polyline points='11,8 15,12 11,16' /></svg></button>
+                      /><polyline points='11,8 15,12 11,16' /></svg></Button>
                   <span class='align-div'></span>
-                  <button
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='align-btn'
                     title='Align top'
@@ -5422,8 +5511,10 @@ export class TableSeatingPlannerIsolated extends Component<
                         y1='21'
                         x2='12'
                         y2='9'
-                      /><polyline points='8,13 12,9 16,13' /></svg></button>
-                  <button
+                      /><polyline points='8,13 12,9 16,13' /></svg></Button>
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='align-btn'
                     title='Align vertical centres'
@@ -5434,8 +5525,10 @@ export class TableSeatingPlannerIsolated extends Component<
                       aria-hidden='true'
                     ><line x1='12' y1='4' x2='12' y2='20' /><polyline
                         points='8,8 12,4 16,8'
-                      /><polyline points='8,16 12,20 16,16' /></svg></button>
-                  <button
+                      /><polyline points='8,16 12,20 16,16' /></svg></Button>
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='align-btn'
                     title='Align bottom'
@@ -5449,10 +5542,12 @@ export class TableSeatingPlannerIsolated extends Component<
                         y1='3'
                         x2='12'
                         y2='15'
-                      /><polyline points='8,11 12,15 16,11' /></svg></button>
+                      /><polyline points='8,11 12,15 16,11' /></svg></Button>
                   {{#if this.canDistribute}}
                     <span class='align-div'></span>
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='align-btn'
                       title='Distribute evenly across (equal horizontal gaps)'
@@ -5466,8 +5561,10 @@ export class TableSeatingPlannerIsolated extends Component<
                           y1='5'
                           x2='12'
                           y2='19'
-                        /><line x1='20' y1='5' x2='20' y2='19' /></svg></button>
-                    <button
+                        /><line x1='20' y1='5' x2='20' y2='19' /></svg></Button>
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='align-btn'
                       title='Distribute evenly down (equal vertical gaps)'
@@ -5481,46 +5578,56 @@ export class TableSeatingPlannerIsolated extends Component<
                           y1='12'
                           x2='19'
                           y2='12'
-                        /><line x1='5' y1='20' x2='19' y2='20' /></svg></button>
+                        /><line x1='5' y1='20' x2='19' y2='20' /></svg></Button>
                   {{/if}}
                 </div>
               {{/if}}
               <div class='zoom-ctl' {{on 'pointerdown' this.stopProp}}>
-                <button
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   type='button'
                   class='zoom-step'
                   title='Zoom out'
                   aria-label='Zoom out'
                   disabled={{this.zoomAtMin}}
                   {{on 'click' this.zoomOut}}
-                >−</button>
-                <button
+                >−</Button>
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   type='button'
                   class='zoom-pct'
                   title='Reset to 100%'
                   aria-label='Reset zoom to 100 percent'
                   {{on 'click' this.resetZoom}}
-                >{{this.zoomPct}}</button>
-                <button
+                >{{this.zoomPct}}</Button>
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   type='button'
                   class='zoom-step'
                   title='Zoom in'
                   aria-label='Zoom in'
                   disabled={{this.zoomAtMax}}
                   {{on 'click' this.zoomIn}}
-                >+</button>
+                >+</Button>
                 <span class='zoom-div'></span>
-                <button
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   type='button'
                   class='zoom-fit'
                   title='Zoom to fit everything'
                   {{on 'click' this.fitView}}
                 ><span class='zoom-fit-ico' aria-hidden='true'>⤢</span>
-                  <span class='zoom-fit-lbl'>Fit</span></button>
+                  <span class='zoom-fit-lbl'>Fit</span></Button>
               </div>
             </div>
             {{#if this.hasInspectorSelection}}
-              <button
+              <Button
+                @size='auto'
+                @kind='text-only'
                 type='button'
                 class='insp-handle
                   {{if this.inspectorBeckons "is-beckoning"}}
@@ -5537,7 +5644,7 @@ export class TableSeatingPlannerIsolated extends Component<
                     '‹'
                     '›'
                   }}</span>
-                <span class='insp-handle-lbl'>Details</span></button>
+                <span class='insp-handle-lbl'>Details</span></Button>
             {{/if}}
           </section>
           {{#if this.hasInspectorSelection}}
@@ -5556,11 +5663,13 @@ export class TableSeatingPlannerIsolated extends Component<
                       aria-label='Table name'
                       {{on 'input' this.renameTable}}
                     />
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='insp-x'
                       {{on 'click' this.deselect}}
-                    >✕</button>
+                    >✕</Button>
                   </div>
                   <div class='insp-status'>
                     {{this.selectedTable.seatedCount}}
@@ -5643,7 +5752,9 @@ export class TableSeatingPlannerIsolated extends Component<
                                 {{s.label}}
                               {{/if}}
                               {{#if s.filled}}
-                                <button
+                                <Button
+                                  @size='auto'
+                                  @kind='text-only'
                                   type='button'
                                   class='insp-seat-x'
                                   title='Unassign this guest'
@@ -5657,7 +5768,7 @@ export class TableSeatingPlannerIsolated extends Component<
                                       s.index
                                     )
                                   }}
-                                >✕</button>
+                                >✕</Button>
                               {{/if}}
                             </div>
                           {{/each}}
@@ -5666,26 +5777,32 @@ export class TableSeatingPlannerIsolated extends Component<
                     </div>
                   {{/if}}
                   <TableConfig @c={{this}} />
-                  <button
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='insp-vip {{if this.selectedTable.vip "is-on"}}'
                     {{on 'click' this.toggleVip}}
-                  ><StarIcon class='ico' /> VIP table</button>
+                  ><StarIcon class='ico' /> VIP table</Button>
                   <div class='insp-label'>Layer</div>
                   <div class='insp-layer'>
                     <Button
+                      @size='auto'
                       @kind='secondary'
                       @disabled={{this.selectedTable.locked}}
                       class='insp-opt'
                       {{on 'click' this.sendTableBack}}
                     >↓ Send back</Button>
                     <Button
+                      @size='auto'
                       @kind='secondary'
                       @disabled={{this.selectedTable.locked}}
                       class='insp-opt'
                       {{on 'click' this.bringTableFront}}
                     >↑ Bring front</Button>
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='insp-opt insp-lock
                         {{if this.selectedTable.locked "is-on"}}'
@@ -5694,20 +5811,23 @@ export class TableSeatingPlannerIsolated extends Component<
                         Locked — click to unlock{{else}}<LockOpenIcon
                           class='ico'
                         />
-                        Lock layer{{/if}}</button>
+                        Lock layer{{/if}}</Button>
                   </div>
                   <div class='insp-actionbar'>
                     <Button
+                      @size='auto'
                       @kind='secondary'
                       class='insp-clear'
                       {{on 'click' this.clearSeats}}
                     >Clear all seats</Button>
                     <div class='insp-actions'>
                       <Button
+                        @size='auto'
                         @kind='secondary'
                         {{on 'click' this.duplicateTable}}
                       ><CopyIcon class='ico' /> Duplicate</Button>
                       <Button
+                        @size='auto'
                         @kind='danger'
                         class='danger'
                         {{on 'click' this.confirmDeleteTable}}
@@ -5725,11 +5845,13 @@ export class TableSeatingPlannerIsolated extends Component<
                       aria-label='Fixture label'
                       {{on 'input' this.renameFixture}}
                     />
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='insp-x'
                       {{on 'click' this.deselect}}
-                    >✕</button>
+                    >✕</Button>
                   </div>
                   <div class='insp-status'>{{get
                       FIXTURE_KIND_LABELS
@@ -5754,31 +5876,37 @@ export class TableSeatingPlannerIsolated extends Component<
                       />
                     </label>
                     {{#each this.themeSwatches as |sw|}}
-                      <button
+                      <Button
+                        @size='auto'
+                        @kind='text-only'
                         type='button'
                         class='insp-sw
                           {{if (this.fixtureColorIs sw.value) "is-on"}}'
                         style={{htmlBg sw.value}}
                         title={{sw.label}}
                         {{on 'click' (fn this.setFxColor sw.value)}}
-                      ></button>
+                      />
                     {{/each}}
                   </div>
                   <div class='insp-label'>Layer</div>
                   <div class='insp-layer'>
                     <Button
+                      @size='auto'
                       @kind='secondary'
                       @disabled={{this.selectedFixture.locked}}
                       class='insp-opt'
                       {{on 'click' this.sendFxBack}}
                     >↓ Send back</Button>
                     <Button
+                      @size='auto'
                       @kind='secondary'
                       @disabled={{this.selectedFixture.locked}}
                       class='insp-opt'
                       {{on 'click' this.bringFxFront}}
                     >↑ Bring front</Button>
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='insp-opt insp-lock
                         {{if this.selectedFixture.locked "is-on"}}'
@@ -5787,15 +5915,17 @@ export class TableSeatingPlannerIsolated extends Component<
                         Locked — click to unlock{{else}}<LockOpenIcon
                           class='ico'
                         />
-                        Lock layer{{/if}}</button>
+                        Lock layer{{/if}}</Button>
                   </div>
                   <div class='insp-actionbar'>
                     <div class='insp-actions'>
                       <Button
+                        @size='auto'
                         @kind='secondary'
                         {{on 'click' this.duplicateFixture}}
                       ><CopyIcon class='ico' /> Duplicate</Button>
                       <Button
+                        @size='auto'
                         @kind='danger'
                         class='danger'
                         {{on 'click' this.confirmDeleteFixture}}
@@ -5815,12 +5945,14 @@ export class TableSeatingPlannerIsolated extends Component<
                     <div class='insp-label'>Table Shape</div>
                     <div class='insp-grid4'>
                       {{#each this.tableShapes as |sh|}}
-                        <button
+                        <Button
+                          @size='auto'
+                          @kind='text-only'
                           type='button'
                           class='insp-opt
                             {{if (eq this.selectionShape sh.value) "is-on"}}'
                           {{on 'click' (fn this.setSelectionShape sh.value)}}
-                        >{{sh.label}}</button>
+                        >{{sh.label}}</Button>
                       {{/each}}
                     </div>
                   {{/if}}
@@ -5834,19 +5966,22 @@ export class TableSeatingPlannerIsolated extends Component<
                       />
                     </label>
                     {{#each this.themeSwatches as |sw|}}
-                      <button
+                      <Button
+                        @size='auto'
+                        @kind='text-only'
                         type='button'
                         class='insp-sw'
                         style={{htmlBg sw.value}}
                         title={{sw.label}}
                         {{on 'click' (fn this.setSelectionColor sw.value)}}
-                      ></button>
+                      />
                     {{/each}}
                   </div>
                   {{#if this.selectionHasSeated}}
                     <div class='insp-label'>Seating</div>
                     <div class='insp-layer'>
                       <Button
+                        @size='auto'
                         @kind='secondary'
                         class='insp-opt'
                         {{on 'click' this.clearSelectionSeats}}
@@ -5855,6 +5990,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   {{/if}}
                   <div class='insp-actions'>
                     <Button
+                      @size='auto'
                       @kind='danger'
                       class='danger'
                       {{on 'click' this.confirmDeleteSelected}}
@@ -5913,7 +6049,9 @@ export class TableSeatingPlannerIsolated extends Component<
                   aria-label='Poster size'
                 >
                   {{#each this.posterAspects as |a|}}
-                    <button
+                    <Button
+                      @size='auto'
+                      @kind='text-only'
                       type='button'
                       class='inv-aspect
                         {{if (eq this.posterAspect a.value) "is-on"}}'
@@ -5923,7 +6061,7 @@ export class TableSeatingPlannerIsolated extends Component<
                         'false'
                       }}
                       {{on 'click' (fn this.setPosterAspect a.value)}}
-                    >{{a.label}}</button>
+                    >{{a.label}}</Button>
                   {{/each}}
                 </div>
                 <BoxelInput
@@ -5935,6 +6073,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   {{on 'input' this.onPosterPromptInput}}
                 />
                 <Button
+                  @size='auto'
                   @kind='primary'
                   @disabled={{this.posterBusy}}
                   class='inv-ai-generate'
@@ -5946,11 +6085,13 @@ export class TableSeatingPlannerIsolated extends Component<
                   }}</Button>
                 {{#if this.posterLink}}
                   <Button
+                    @size='auto'
                     @kind='secondary'
                     class='inv-download'
                     {{on 'click' this.downloadPoster}}
                   ><DownloadIcon class='ico' /> Download poster</Button>
                   <Button
+                    @size='auto'
                     @kind='text-only'
                     class='inv-ai-clear'
                     {{on 'click' this.clearPoster}}
@@ -5971,12 +6112,14 @@ export class TableSeatingPlannerIsolated extends Component<
                 {{on 'input' this.onInviteSearch}}
               />
               {{#if this.inviteSearch}}
-                <button
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   type='button'
                   class='inv-search-clear'
                   aria-label='Clear search'
                   {{on 'click' this.clearInviteSearch}}
-                >✕</button>
+                >✕</Button>
               {{/if}}
             </div>
             <div class='inv-list-head'>Invite
@@ -5997,7 +6140,9 @@ export class TableSeatingPlannerIsolated extends Component<
             {{#each this.inviteRows as |row|}}
               <div class='inv-row'>
                 <div class='inv-row-head'>
-                  <button
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='inv-row-toggle'
                     aria-expanded={{if
@@ -6023,19 +6168,22 @@ export class TableSeatingPlannerIsolated extends Component<
                         }}
                       </span>
                     </span>
-                  </button>
+                  </Button>
                   <Button
+                    @size='auto'
                     @kind='secondary'
                     class='inv-btn copy'
                     {{on 'click' (fn this.copyInvite row)}}
                   >Copy</Button>
-                  <button
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='inv-edit'
                     aria-label='Edit guest details'
                     title='Edit details'
                     {{on 'click' (fn this.openEditGuest row.model)}}
-                  ><PencilIcon class='inv-edit-ico' /></button>
+                  ><PencilIcon class='inv-edit-ico' /></Button>
                 </div>
                 {{#if (this.invitePreviewOpen row.key)}}
                   <p class='inv-preview'>{{row.msg}}</p>
@@ -6070,11 +6218,13 @@ export class TableSeatingPlannerIsolated extends Component<
           <:foot>
             <div class='pop-actions'>
               <Button
+                @size='auto'
                 @kind='text-only'
                 class='modal-cancel'
                 {{on 'click' this.cancelDelete}}
               >Cancel</Button>
               <Button
+                @size='auto'
                 @kind='danger'
                 class='confirm-danger'
                 {{on 'click' this.confirmDelete}}
@@ -6088,16 +6238,19 @@ export class TableSeatingPlannerIsolated extends Component<
           {{this.toast}}
           {{#if this.toastAction}}
             <Button
+              @size='auto'
               @kind='text-only'
               class='tsp-toast-action'
               {{on 'click' this.runToastAction}}
             >{{this.toastAction.label}}</Button>
-            <button
+            <Button
+              @size='auto'
+              @kind='text-only'
               type='button'
               class='tsp-toast-close'
               aria-label='Dismiss'
               {{on 'click' this.dismissToast}}
-            >✕</button>
+            >✕</Button>
           {{/if}}
         </div>
       {{/if}}
@@ -6174,18 +6327,21 @@ export class TableSeatingPlannerIsolated extends Component<
                   'Add a new floor plan…'
                 }}</span>
             </label>
-            <button
+            <Button
+              @size='auto'
+              @kind='text-only'
               type='button'
               class='fp-import fp-link'
               {{on 'click' this.linkFloorPlan}}
             >
               <span class='fp-import-glyph'>⛓</span>
               <span class='fp-import-text'>Link an existing floor plan…</span>
-            </button>
+            </Button>
           </:body>
           <:foot>
             <div class='pop-actions'>
               <Button
+                @size='auto'
                 @kind='text-only'
                 class='modal-cancel'
                 {{on 'click' this.closeFloorLibrary}}
@@ -6224,11 +6380,13 @@ export class TableSeatingPlannerIsolated extends Component<
           <:foot>
             <div class='pop-actions'>
               <Button
+                @size='auto'
                 @kind='text-only'
                 class='modal-cancel'
                 {{on 'click' this.closeSaveTemplate}}
               >Cancel</Button>
               <Button
+                @size='auto'
                 @kind='primary'
                 @disabled={{this.savingTemplate}}
                 class='modal-save'
@@ -6276,6 +6434,7 @@ export class TableSeatingPlannerIsolated extends Component<
                 }}
                 seats</span>
               <Button
+                @size='auto'
                 @kind='primary'
                 class='modal-save preview-apply'
                 {{on 'click' (fn this.applyTemplate this.previewTemplate)}}
@@ -6300,18 +6459,22 @@ export class TableSeatingPlannerIsolated extends Component<
                     aria-label='Table name'
                     {{on 'input' this.renameTable}}
                   />
-                  <button
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='tpop-vip {{if this.selectedTable.vip "is-on"}}'
                     title='Toggle VIP'
                     {{on 'click' this.toggleVip}}
-                  ><StarIcon class='ico' /></button>
-                  <button
+                  ><StarIcon class='ico' /></Button>
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     type='button'
                     class='tpop-vip'
                     title='Print this table (table card + its place cards)'
                     {{on 'click' (fn this.printTable this.selectedTable)}}
-                  ><PrinterIcon class='ico' /></button>
+                  ><PrinterIcon class='ico' /></Button>
                 </div>
                 <div class='tpop-status'>{{this.selectedTable.seatedCount}}
                   of
@@ -6326,31 +6489,37 @@ export class TableSeatingPlannerIsolated extends Component<
               <div class='tpop-label'>Layer</div>
               <div class='tpop-layer'>
                 <Button
+                  @size='auto'
                   @kind='secondary'
                   @disabled={{this.selectedTable.locked}}
                   {{on 'click' this.sendTableBack}}
                 >↓ Send back</Button>
                 <Button
+                  @size='auto'
                   @kind='secondary'
                   @disabled={{this.selectedTable.locked}}
                   {{on 'click' this.bringTableFront}}
                 >↑ Bring front</Button>
-                <button
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   type='button'
                   class='tpop-lock {{if this.selectedTable.locked "is-on"}}'
                   {{on 'click' this.toggleTableLock}}
                 >{{#if this.selectedTable.locked}}<LockIcon class='ico' />
                     Locked — click to unlock{{else}}<LockOpenIcon class='ico' />
-                    Lock layer{{/if}}</button>
+                    Lock layer{{/if}}</Button>
               </div>
             </:body>
             <:foot>
               <div class='tpop-actions'>
                 <Button
+                  @size='auto'
                   @kind='secondary'
                   {{on 'click' this.popoverDuplicate}}
                 ><CopyIcon class='ico' /> Duplicate</Button>
                 <Button
+                  @size='auto'
                   @kind='danger'
                   class='danger'
                   {{on 'click' this.popoverDelete}}
@@ -10443,18 +10612,25 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
   <div class='tpop-label'>Shape</div>
   <div class='tpop-shapes'>
     {{#each @c.tableShapes as |sh|}}
-      <button
+      <Button
+        @size='auto'
+        @kind='text-only'
         type='button'
         class='tpop-shape {{if (eq @c.selectedTable.shape sh.value) "is-on"}}'
         {{on 'click' (fn @c.setShape sh.value)}}
-      >{{sh.label}}</button>
+      >{{sh.label}}</Button>
     {{/each}}
   </div>
   {{#if (eq @c.selectedTable.shape 'section')}}
     <div class='tpop-row'>
       <span class='tpop-label'>Rows</span>
       <div class='tpop-step'>
-        <button type='button' {{on 'click' @c.decRows}}>−</button>
+        <Button
+          @size='auto'
+          @kind='text-only'
+          type='button'
+          {{on 'click' @c.decRows}}
+        >−</Button>
         <BoxelInput
           @type='number'
           @min='1'
@@ -10464,13 +10640,23 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
           aria-label='Rows'
           {{on 'change' @c.rowsInput}}
         />
-        <button type='button' {{on 'click' @c.incRows}}>+</button>
+        <Button
+          @size='auto'
+          @kind='text-only'
+          type='button'
+          {{on 'click' @c.incRows}}
+        >+</Button>
       </div>
     </div>
     <div class='tpop-row'>
       <span class='tpop-label'>Seats / row</span>
       <div class='tpop-step'>
-        <button type='button' {{on 'click' @c.decCols}}>−</button>
+        <Button
+          @size='auto'
+          @kind='text-only'
+          type='button'
+          {{on 'click' @c.decCols}}
+        >−</Button>
         <BoxelInput
           @type='number'
           @min='1'
@@ -10480,47 +10666,67 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
           aria-label='Seats per row'
           {{on 'change' @c.colsInput}}
         />
-        <button type='button' {{on 'click' @c.incCols}}>+</button>
+        <Button
+          @size='auto'
+          @kind='text-only'
+          type='button'
+          {{on 'click' @c.incCols}}
+        >+</Button>
       </div>
     </div>
     <div class='tpop-label'>Facing (front row → stage)</div>
     <div class='tpop-shapes'>
-      <button
+      <Button
+        @size='auto'
+        @kind='text-only'
         type='button'
         class='tpop-shape {{if (@c.facingIs 0) "is-on"}}'
         {{on 'click' (fn @c.setFacing 0)}}
-      >▲ Up</button>
-      <button
+      >▲ Up</Button>
+      <Button
+        @size='auto'
+        @kind='text-only'
         type='button'
         class='tpop-shape {{if (@c.facingIs 90) "is-on"}}'
         {{on 'click' (fn @c.setFacing 90)}}
-      >▶ Right</button>
-      <button
+      >▶ Right</Button>
+      <Button
+        @size='auto'
+        @kind='text-only'
         type='button'
         class='tpop-shape {{if (@c.facingIs 180) "is-on"}}'
         {{on 'click' (fn @c.setFacing 180)}}
-      >▼ Down</button>
-      <button
+      >▼ Down</Button>
+      <Button
+        @size='auto'
+        @kind='text-only'
         type='button'
         class='tpop-shape {{if (@c.facingIs 270) "is-on"}}'
         {{on 'click' (fn @c.setFacing 270)}}
-      >◀ Left</button>
+      >◀ Left</Button>
     </div>
     <div class='tpop-label'>Seat numbering</div>
     <div class='tpop-orders'>
       {{#each @c.seatOrders as |o|}}
-        <button
+        <Button
+          @size='auto'
+          @kind='text-only'
           type='button'
           class='tpop-order {{if (@c.seatOrderIs o.value) "is-on"}}'
           {{on 'click' (fn @c.setSeatOrder o.value)}}
-        >{{o.label}}</button>
+        >{{o.label}}</Button>
       {{/each}}
     </div>
   {{else}}
     <div class='tpop-row'>
       <span class='tpop-label'>Seats</span>
       <div class='tpop-step'>
-        <button type='button' {{on 'click' @c.decSeats}}>−</button>
+        <Button
+          @size='auto'
+          @kind='text-only'
+          type='button'
+          {{on 'click' @c.decSeats}}
+        >−</Button>
         <BoxelInput
           @type='number'
           @min='0'
@@ -10530,18 +10736,25 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
           aria-label='Seats'
           {{on 'change' @c.seatsInput}}
         />
-        <button type='button' {{on 'click' @c.incSeats}}>+</button>
+        <Button
+          @size='auto'
+          @kind='text-only'
+          type='button'
+          {{on 'click' @c.incSeats}}
+        >+</Button>
       </div>
     </div>
     {{#if @c.showSeatingStyle}}
       <div class='tpop-label'>Seating sides</div>
       <div class='tpop-shapes'>
         {{#each @c.seatingStyles as |st|}}
-          <button
+          <Button
+            @size='auto'
+            @kind='text-only'
             type='button'
             class='tpop-shape {{if (@c.seatingStyleIs st.value) "is-on"}}'
             {{on 'click' (fn @c.setSeatingStyle st.value)}}
-          >{{st.label}}</button>
+          >{{st.label}}</Button>
         {{/each}}
       </div>
     {{/if}}
@@ -10560,11 +10773,13 @@ const TableConfig: TemplateOnlyComponent<TableConfigSignature> = <template>
       placeholder='Auto'
       {{on 'change' @c.pinTableRankInput}}
     />
-    <button
+    <Button
+      @size='auto'
+      @kind='text-only'
       type='button'
       class='tpop-rank-auto {{unless @c.selectedTablePinned "is-on"}}'
       {{on 'click' @c.clearTableRank}}
-    >Auto</button>
+    >Auto</Button>
   </div>
   <style scoped>
     .tpop-label {

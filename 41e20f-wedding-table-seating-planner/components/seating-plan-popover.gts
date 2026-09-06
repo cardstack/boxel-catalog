@@ -1,6 +1,7 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import type { SafeString } from '@ember/template';
+import { Button } from '@cardstack/boxel-ui/components';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
 import type { Placement } from '@floating-ui/dom';
 
@@ -128,12 +129,13 @@ export default class SeatingPlanPopover extends Component<Signature> {
                 <div class='spp-title'>{{@title}}</div>
               </div>
             {{/if}}
-            <button
-              type='button'
+            <Button
+              @size='auto'
+              @kind='text-only'
               class='spp-close'
               aria-label='Close'
               {{on 'click' @onClose}}
-            >✕</button>
+            >✕</Button>
           </div>
           <div class='spp-body'>
             {{yield to='body'}}
@@ -156,12 +158,13 @@ export default class SeatingPlanPopover extends Component<Signature> {
                 <div class='spp-title'>{{@title}}</div>
               </div>
             {{/if}}
-            <button
-              type='button'
+            <Button
+              @size='auto'
+              @kind='text-only'
               class='spp-close'
               aria-label='Close'
               {{on 'click' @onClose}}
-            >✕</button>
+            >✕</Button>
           </div>
           <div class='spp-body'>
             {{yield to='body'}}
