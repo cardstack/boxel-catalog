@@ -23,6 +23,7 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn, get } from '@ember/helper';
 import { modifier } from 'ember-modifier';
+import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   codeRef,
@@ -950,8 +951,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
 
   /* ── Controls ────────────────────────────────────────────────────── */
   @action
-  handleSearchInput(e: Event) {
-    this.searchQuery = (e.target as HTMLInputElement).value;
+  handleSearchInput(value: string) {
+    this.searchQuery = value;
     this.stopAutoPlay();
   }
 
@@ -1167,29 +1168,34 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
               x2='16.65'
               y2='16.65'
             /></svg>
-          <input
+          <BoxelInput
             class='vp-search-input'
-            type='text'
-            placeholder='Search songs…'
-            value={{this.searchQuery}}
-            {{on 'input' this.handleSearchInput}}
+            @value={{this.searchQuery}}
+            @placeholder='Search songs…'
+            @onInput={{this.handleSearchInput}}
           />
-          <button
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='vp-new-song-btn'
             type='button'
             title='Create a new Music Sheet card'
             {{on 'click' this.createNewSong}}
-          >＋ New Song</button>
-          <button
+          >＋ New Song</Button>
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='vp-btn-icon'
             type='button'
             {{on 'click' this.closeSongPanel}}
-          >✕</button>
+          >✕</Button>
         </div>
         <div class='vp-song-list'>
           {{#if this.hasSongs}}
             {{#each this.filteredSongs as |song|}}
-              <button
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='vp-song-item'
                 type='button'
                 {{on 'click' (fn this.selectSong song)}}
@@ -1207,7 +1213,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                       class='vp-meta-tag'
                     >{{tag}}</span>{{/each}}
                 </div>
-              </button>
+              </Button>
             {{/each}}
             {{#if (eq this.filteredSongs.length 0)}}
               <div class='vp-empty-songs'>No songs match "{{this.searchQuery}}"</div>
@@ -1247,7 +1253,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       </div>
 
       {{! ══ HEADER ROW ══════════════════════════════════════════════════ }}
-      <div class='vp-header'>
+      <header class='vp-header'>
         <div class='vp-header-left'>
           <svg
             class='vp-logo-icon'
@@ -1266,18 +1272,22 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           </svg>
           <span class='vp-brand'>Virtual Piano</span>
         </div>
-        <div class='vp-header-right'>
-          <button
+        <nav class='vp-header-right' aria-label='Piano actions'>
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='vp-hbtn vp-hbtn--ghost'
             type='button'
             {{on 'click' this.toggleShowKeys}}
           >
             {{if this.showKeys 'Hide' 'Show'}}
             Keys
-          </button>
+          </Button>
           {{! When not recording: open panel. When recording: stop directly. Disabled during auto-play. }}
           {{#if this.isRecording}}
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-hbtn vp-hbtn--rec vp-hbtn--rec--active'
               type='button'
               {{on 'click' this.stopRecording}}
@@ -1285,9 +1295,11 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
               <span class='vp-rec-dot vp-rec-dot--on'></span>
               {{this.recordTimeLabel}}
               · STOP
-            </button>
+            </Button>
           {{else}}
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-hbtn vp-hbtn--rec
                 {{if this.isAutoPlaying "vp-hbtn--disabled"}}'
               type='button'
@@ -1296,9 +1308,11 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
             >
               <span class='vp-rec-dot'></span>
               {{if this.isAutoPlaying 'Playing…' 'Record'}}
-            </button>
+            </Button>
           {{/if}}
-          <button
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='vp-hbtn vp-hbtn--gold'
             type='button'
             {{on 'click' this.handleSongSearch}}
@@ -1317,8 +1331,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                 y2='16.65'
               /></svg>
             Search Song
-          </button>
-        </div>
+          </Button>
+        </nav>
 
         {{! ══ RECORD PANEL — anchored inside header ══════════════════════ }}
         {{#if this.showRecordPanel}}
@@ -1333,17 +1347,21 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                 {{#if this.isRecording}}REC ·
                   {{this.recordTimeLabel}}{{else}}Recording{{/if}}
               </span>
-              <button
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='vp-btn-icon'
                 type='button'
                 {{on 'click' this.toggleRecordPanel}}
-              >✕</button>
+              >✕</Button>
             </div>
 
             {{! After stop: playback row }}
             {{#if this.recordedBlob}}
               {{! Full-width replay button (pill style like reference) }}
-              <button
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='vp-rec-replay-pill'
                 type='button'
                 {{on 'click' this.replayRecording}}
@@ -1370,10 +1388,12 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                   ><polygon points='5 3 19 12 5 21 5 3' /></svg>
                   REPLAY AUDIO
                 {{/if}}
-              </button>
+              </Button>
 
               {{! Download }}
-              <button
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='vp-rec-dl-btn'
                 type='button'
                 {{on 'click' this.downloadRecording}}
@@ -1389,27 +1409,29 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                     points='7 10 12 15 17 10'
                   /><line x1='12' y1='15' x2='12' y2='3' /></svg>
                 DOWNLOAD AUDIO
-              </button>
+              </Button>
 
               {{! Record again }}
               <div class='vp-rec-again-row'>
-                <button
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='vp-rec-again-btn'
                   type='button'
                   {{on 'click' this.openRecordPanel}}
                 >
                   <span class='vp-rec-btn-dot'></span>
                   Record Again
-                </button>
+                </Button>
               </div>
             {{/if}}
 
           </div>
         {{/if}}
-      </div>
+      </header>
 
       {{! ══ CONTROLS ROW — always-visible horizontal strip ══════════════ }}
-      <div class='vp-controls'>
+      <nav class='vp-controls' aria-label='Sound and playback controls'>
 
         {{! ── Sound / Instrument ── }}
         <div class='vp-cg'>
@@ -1420,12 +1442,14 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           </span>
           <div class='vp-preset-btns vp-preset-btns--scroll'>
             {{#each this.instrumentOptions as |opt|}}
-              <button
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='vp-preset-btn
                   {{if (eq this.instrument opt.key) "vp-preset-btn--active"}}'
                 type='button'
                 {{on 'click' (fn this.setInstrument opt.key)}}
-              >{{opt.label}}</button>
+              >{{opt.label}}</Button>
             {{/each}}
           </div>
         </div>
@@ -1436,30 +1460,38 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         <div class='vp-cg'>
           <span class='vp-clabel'>Sustain</span>
           <div class='vp-preset-btns'>
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if (eq this.sustainPreset "off") "vp-preset-btn--active"}}'
               type='button'
               {{on 'click' (fn this.setSustainPreset 'off')}}
-            >OFF</button>
-            <button
+            >OFF</Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if (eq this.sustainPreset "low") "vp-preset-btn--active"}}'
               type='button'
               {{on 'click' (fn this.setSustainPreset 'low')}}
-            >Low</button>
-            <button
+            >Low</Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if (eq this.sustainPreset "medium") "vp-preset-btn--active"}}'
               type='button'
               {{on 'click' (fn this.setSustainPreset 'medium')}}
-            >Med</button>
-            <button
+            >Med</Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if (eq this.sustainPreset "high") "vp-preset-btn--active"}}'
               type='button'
               {{on 'click' (fn this.setSustainPreset 'high')}}
-            >High</button>
+            >High</Button>
           </div>
         </div>
 
@@ -1467,24 +1499,30 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         <div class='vp-cg'>
           <span class='vp-clabel'>Reverb</span>
           <div class='vp-preset-btns'>
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if (eq this.reverbPreset "low") "vp-preset-btn--active"}}'
               type='button'
               {{on 'click' (fn this.setReverbPreset 'low')}}
-            >Low</button>
-            <button
+            >Low</Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if (eq this.reverbPreset "medium") "vp-preset-btn--active"}}'
               type='button'
               {{on 'click' (fn this.setReverbPreset 'medium')}}
-            >Med</button>
-            <button
+            >Med</Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if (eq this.reverbPreset "hall") "vp-preset-btn--active"}}'
               type='button'
               {{on 'click' (fn this.setReverbPreset 'hall')}}
-            >Hall</button>
+            >Hall</Button>
           </div>
         </div>
 
@@ -1492,13 +1530,17 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         <div class='vp-cg'>
           <span class='vp-clabel'>Velocity</span>
           <div class='vp-preset-btns'>
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if (eq this.velocityPreset "low") "vp-preset-btn--active"}}'
               type='button'
               {{on 'click' (fn this.setVelocityPreset 'low')}}
-            >Low</button>
-            <button
+            >Low</Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if
                   (eq this.velocityPreset "medium")
@@ -1506,25 +1548,29 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                 }}'
               type='button'
               {{on 'click' (fn this.setVelocityPreset 'medium')}}
-            >Med</button>
-            <button
+            >Med</Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-preset-btn
                 {{if (eq this.velocityPreset "high") "vp-preset-btn--active"}}'
               type='button'
               {{on 'click' (fn this.setVelocityPreset 'high')}}
-            >High</button>
+            >High</Button>
           </div>
         </div>
 
         <div class='vp-vsep'></div>
 
         {{! ── Volume ── }}
+        {{! type='range' kept native: BoxelInput has no range-slider variant }}
         <div class='vp-cg'>
           <span class='vp-clabel'>Vol
             <span class='vp-cval'>{{this.volumeLevel}}%</span></span>
           <input
             class='vp-slider'
             type='range'
+            aria-label='Volume'
             min='0'
             max='100'
             value={{this.volumeLevel}}
@@ -1539,19 +1585,23 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           <span class='vp-clabel'>BPM
             <span class='vp-cval'>{{this.bpmOverride}}</span></span>
           <div class='vp-inline-row'>
+            {{! type='range' kept native: BoxelInput has no range-slider variant }}
             <input
               class='vp-slider vp-slider--bpm'
               type='range'
+              aria-label='BPM'
               min='40'
               max='240'
               value={{this.bpmOverride}}
               {{on 'input' this.handleBpmChange}}
             />
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-metro-btn {{if this.metronomeOn "vp-metro-btn--on"}}'
               type='button'
               {{on 'click' this.toggleMetronome}}
-            >🎵</button>
+            >🎵</Button>
           </div>
         </div>
 
@@ -1562,22 +1612,28 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           <span class='vp-clabel'>Transpose
             <span class='vp-cval'>{{this.transpose}} st</span></span>
           <div class='vp-inline-row'>
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-step-btn'
               type='button'
               {{on 'click' (fn this.adjustTranspose -1)}}
-            >−1</button>
+            >−1</Button>
             <span class='vp-transpose-val'>{{this.transpose}}</span>
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-step-btn'
               type='button'
               {{on 'click' (fn this.adjustTranspose 1)}}
-            >+1</button>
+            >+1</Button>
           </div>
         </div>
 
         <div class='vp-cg vp-cg--reset'>
-          <button
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='vp-reset-btn'
             type='button'
             {{on 'click' this.resetTranspose}}
@@ -1593,10 +1649,10 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                 d='M3.51 15a9 9 0 1 0 .49-4'
               /></svg>
             Reset
-          </button>
+          </Button>
         </div>
 
-      </div>
+      </nav>
 
       {{! ══ LIVE RECORDING TICKER — visible while recording ══════════════ }}
       {{#if this.isRecording}}
@@ -1665,7 +1721,9 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
             </div>
           </div>
           <div class='vp-song-bar-right'>
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-sb-btn vp-sb-btn--ghost vp-sb-btn--sm'
               type='button'
               {{on 'click' this.restartSong}}
@@ -1681,8 +1739,10 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
               ><polyline points='1 4 1 10 7 10' /><path
                   d='M3.51 15a9 9 0 1 0 .49-4'
                 /></svg>
-            </button>
-            <button
+            </Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-sb-btn vp-sb-btn--lg
                 {{if this.isAutoPlaying "vp-sb-btn--stop" "vp-sb-btn--play"}}'
               type='button'
@@ -1710,8 +1770,10 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                 ><polygon points='5 3 19 12 5 21 5 3' /></svg>
                 Play
               {{/if}}
-            </button>
-            <button
+            </Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-sb-btn vp-sb-btn--ghost'
               type='button'
               {{on 'click' this.closeSong}}
@@ -1730,7 +1792,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                   x2='18'
                   y2='18'
                 /></svg>
-            </button>
+            </Button>
           </div>
         </div>
       {{/if}}
@@ -1825,7 +1887,9 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
             Two-Hand Notation
             <span class='vp-fb-twohand-pulse'></span>
           </span>
-          <button
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='vp-fb-faq-btn'
             type='button'
             {{on 'click' this.openFaq}}
@@ -1842,7 +1906,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                 d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'
               /><line x1='12' y1='17' x2='12.01' y2='17' /></svg>
             View FAQ
-          </button>
+          </Button>
           <span class='vp-fallboard-keys'>
             <svg
               width='11'
@@ -1877,13 +1941,15 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
               ><circle cx='12' cy='12' r='10' /><path
                   d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'
                 /><line x1='12' y1='17' x2='12.01' y2='17' /></svg>
-              <span>Virtual Piano · FAQ &amp; Notation Guide</span>
+              <h2>Virtual Piano · FAQ &amp; Notation Guide</h2>
             </div>
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='vp-btn-icon'
               type='button'
               {{on 'click' this.closeFaq}}
-            >✕</button>
+            >✕</Button>
           </div>
 
           <div class='vp-faq-body'>
@@ -2111,13 +2177,20 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       {{/if}}
 
       {{! ══ KEYBOARD ════════════════════════════════════════════════════ }}
-      <div class='vp-keyboard-wrapper'>
+      {{! Kept as native <button> rather than BoxelButton: this is a 61-key
+          grid rendered from a tight absolute-positioning layout
+          (WW/leftPx math in utils/keyboard-helpers.gts) where every extra
+          wrapper element or the boxel-button base class's own padding/border
+          would throw off key width and the black-key overlay offsets.
+          A real <button> is still correct semantic HTML for a key. }}
+      <section class='vp-keyboard-wrapper' aria-label='Piano keyboard'>
         <div class='vp-keyboard'>
           {{#each WHITE_KEYS as |keyData|}}
             <button
               class='vp-key vp-key--white
                 {{if (get this.pressedMap keyData.id) "vp-key--active"}}'
               type='button'
+              aria-label='{{keyData.note}}{{keyData.octave}}'
               {{on 'mousedown' (fn this.handleMouseDown keyData)}}
               {{on 'mouseup' (fn this.handleMouseUp keyData)}}
               {{on 'mouseleave' (fn this.handleMouseUp keyData)}}
@@ -2133,6 +2206,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
                 {{if (get this.pressedMap keyData.id) "vp-key--active"}}'
               style='left: {{keyData.leftPx}}px'
               type='button'
+              aria-label='{{keyData.note}}{{keyData.octave}}'
               {{on 'mousedown' (fn this.handleMouseDown keyData)}}
               {{on 'mouseup' (fn this.handleMouseUp keyData)}}
               {{on 'mouseleave' (fn this.handleMouseUp keyData)}}
@@ -2143,7 +2217,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
             </button>
           {{/each}}
         </div>
-      </div>
+      </section>
 
     </div>
 
