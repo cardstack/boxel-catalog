@@ -718,6 +718,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
           </div>
 
           <Button
+            @size='auto'
             class='play-btn {{if this.isPlaying "is-playing" ""}}'
             {{on 'click' this.togglePlay}}
           >
@@ -810,6 +811,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
           <div class='library-scroll'>
             {{#each this.availablePatterns as |patternCard|}}
               <Button
+                @size='auto'
                 class='pattern-btn
                   {{if
                     (eq patternCard.id @model.currentPattern.id)
@@ -889,28 +891,42 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
                   {{on 'input' (fn this.updateVolume instrument)}}
                 />
                 <div class='inst-actions'>
-                  <button
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='act-btn'
                     title='Clear pattern'
+                    aria-label='Clear {{instrument}} pattern'
                     {{on 'click' (fn this.clearPattern instrument)}}
-                  >×</button>
-                  <button
+                  >×</Button>
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='act-btn'
                     title='Fill pattern'
+                    aria-label='Fill {{instrument}} pattern'
                     {{on 'click' (fn this.fillPattern instrument)}}
-                  >■</button>
-                  <button
+                  >■</Button>
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='act-btn'
                     title='Randomize'
+                    aria-label='Randomize {{instrument}} pattern'
                     {{on 'click' (fn this.randomizePattern instrument)}}
-                  >?</button>
+                  >?</Button>
                 </div>
               </div>
             </div>
 
             <div class='step-pads'>
               {{#each (array 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) as |step|}}
+                {{! Dense 16x6 step grid — kept as a native button (like the
+                    piano keys elsewhere in this catalog) so the tight
+                    absolute-positioned pad layout isn't at risk; given an
+                    aria-label since it has no text content. }}
                 <button
+                  type='button'
                   class='pad
                     {{if
                       (get this.stepStates (concat instrument "-" step))
@@ -923,6 +939,12 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
                       "group-start"
                       ""
                     }}'
+                  aria-label='{{instrument}} step {{step}}'
+                  aria-pressed={{if
+                    (get this.stepStates (concat instrument '-' step))
+                    'true'
+                    'false'
+                  }}
                   {{on 'click' (fn this.toggleStep instrument step)}}
                 ></button>
               {{/each}}
