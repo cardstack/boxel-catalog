@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../components/state-pill",
+        "name": "StatePill"
+      },
+      "specType": "component",
+      "readMe": "# State Pill\n\n## Summary\nA small state label whose colour is derived from a named hue, never stored. Every hue resolves through `stateColor` to a fill/text pair mixed from boxel's design tokens and the card's own `--card` / `--card-foreground`, so a linked theme moves both sides together and no combination can drift out of contrast. The chrome is boxel-ui's `Pill`; only the hue derivation is this component's.\n\n## API\n- `<StatePill @label @hue @dot @emphatic @chrome />` — `hue` is one of `green | red | amber | orange | teal | purple | blue | pink | slate` (default `slate`). `emphatic` gives the solid fill (reserve it for one state, the top priority). `chrome` renders muted text with no fill, for labels that are parsed once rather than scanned for.\n- `stateColor(hue)` → `{ bg, fg, ring }` — the checked pair, exported for consumers that paint their own surface.\n- `Hue` — the type, for consumer option sets.\n\n## Usage\n```gts\nimport { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';\n\n<StatePill @label='Open' @hue='teal' @dot={{true}} />\n```\n\nConsumed by the Status, Priority and Due Date fields, which map each option or state to a hue and hand the rendering to this component.\n\n## Non-goals\nNo stored colours and no per-consumer palettes: a consumer chooses a hue name, not a colour, so every chip in a realm stays inside the design system. Icon pills and interactive (removable) pills are `Pill`'s job directly.",
+      "cardTitle": "State Pill",
+      "cardDescription": "A small state label whose colour is derived from a named hue through boxel's design tokens.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "State Pill",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../fields/status/example/TaskRecordExample/ship-status-block"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
