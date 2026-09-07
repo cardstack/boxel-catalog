@@ -33,71 +33,6 @@
           "self": null
         }
       },
-      "specs.0": {
-        "links": {
-          "self": "../Spec/b9bf0d98-37ce-45e8-ae19-5802f1ba3042"
-        }
-      },
-      "specs.1": {
-        "links": {
-          "self": "../Spec/a466e92c-fdb9-4f0d-9837-ce85e8ae1958"
-        }
-      },
-      "specs.2": {
-        "links": {
-          "self": "../Spec/e92cfdb9-bf0d-4837-8e85-e8ae195802f1"
-        }
-      },
-      "specs.3": {
-        "links": {
-          "self": "../Spec/bf0d9837-ce85-48ae-9958-02f1ba3042b7"
-        }
-      },
-      "specs.4": {
-        "links": {
-          "self": "../Spec/37ce85e8-ae19-4802-b1ba-3042b7a0f5da"
-        }
-      },
-      "specs.5": {
-        "links": {
-          "self": "../Spec/2cfdb9bf-0d98-47ce-85e8-ae195802f1ba"
-        }
-      },
-      "specs.6": {
-        "links": {
-          "self": "../Spec/fdb9bf0d-9837-4e85-a8ae-195802f1ba30"
-        }
-      },
-      "specs.7": {
-        "links": {
-          "self": "../Spec/9837ce85-e8ae-4958-82f1-ba3042b7a0f5"
-        }
-      },
-      "specs.8": {
-        "links": {
-          "self": "../Spec/0d9837ce-85e8-4e19-9802-f1ba3042b7a0"
-        }
-      },
-      "specs.9": {
-        "links": {
-          "self": "../Spec/195802f1-ba30-42b7-a0f5-daa0c595c6ed"
-        }
-      },
-      "specs.10": {
-        "links": {
-          "self": "../Spec/66e92cfd-b9bf-4d98-b7ce-85e8ae195802"
-        }
-      },
-      "specs.11": {
-        "links": {
-          "self": "../Spec/ae195802-f1ba-4042-b7a0-f5daa0c595c6"
-        }
-      },
-      "specs.12": {
-        "links": {
-          "self": "../Spec/e8ae1958-02f1-4a30-82b7-a0f5daa0c595"
-        }
-      },
       "images.0": {
         "links": {
           "self": "../Screenshots/de898381-0fbe-4b54-a845-2fb2df7b6ed1-5401d9e9.png"
@@ -296,6 +231,61 @@
       "cardInfo.cardThumbnail": {
         "links": {
           "self": "../ListingThumbnails/virtual-tryon-eb0ae0d2.png"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../../46f065-popover/Spec/popover"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../../46f065-popover/Spec/layer-manager"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../../46f065-popover/Spec/popover-types"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/2cfdb9bf-0d98-47ce-85e8-ae195802f1ba"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/fdb9bf0d-9837-4e85-a8ae-195802f1ba30"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/9837ce85-e8ae-4958-82f1-ba3042b7a0f5"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/0d9837ce-85e8-4e19-9802-f1ba3042b7a0"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/195802f1-ba30-42b7-a0f5-daa0c595c6ed"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/66e92cfd-b9bf-4d98-b7ce-85e8ae195802"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/ae195802-f1ba-4042-b7a0-f5daa0c595c6"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/e8ae1958-02f1-4a30-82b7-a0f5daa0c595"
         }
       }
     }

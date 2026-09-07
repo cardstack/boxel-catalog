@@ -371,12 +371,13 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       {{#if this.gradeError}}
         <aside class='hw-error-banner' role='alert' aria-label='Grading error'>
           <span class='hw-error-text'>{{this.gradeError}}</span>
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='hw-error-dismiss'
             aria-label='Dismiss error'
             {{on 'click' this.dismissError}}
-          >✕</button>
+          >✕</Button>
         </aside>
       {{/if}}
 
@@ -779,8 +780,9 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                           <span class='hw-question-max'>{{pts.max}} pts</span>
                         {{/if}}
                       {{/let}}
-                      <button
-                        type='button'
+                      <Button
+                        @kind='text-only'
+                        @size='auto'
                         class='hw-q-edit
                           {{if (eq qi this.editingQuestionIndex) "is-on"}}'
                         title={{if
@@ -790,9 +792,10 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                         }}
                         aria-label='Edit question {{add qi 1}}'
                         {{on 'click' (fn this.toggleEditQuestion qi)}}
-                      >✎</button>
-                      <button
-                        type='button'
+                      >✎</Button>
+                      <Button
+                        @kind='text-only'
+                        @size='auto'
                         class='hw-q-remove
                           {{if (eq qi this.armedRemoveIndex) "is-armed"}}'
                         title={{if
@@ -806,7 +809,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
                           (eq qi this.armedRemoveIndex)
                           'Confirm ✕'
                           '✕'
-                        }}</button>
+                        }}</Button>
                     </div>
                     <div class='hw-question-body'>
                       {{#let (this.getQuestionField qi) as |questionField|}}

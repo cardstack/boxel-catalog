@@ -1,6 +1,7 @@
 import { Component } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/boxel-ui/components';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 
@@ -56,8 +57,9 @@ export default class AspectRatioField extends StringField {
     <template>
       <div class='ar-grid' data-test-aspect-ratio>
         {{#each this.options as |opt|}}
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='ar-tile {{if (eq @model opt.value) "selected"}}'
             title='{{opt.orientation}} · {{opt.label}}'
             {{on 'click' (fn @set opt.value)}}
@@ -75,7 +77,7 @@ export default class AspectRatioField extends StringField {
               </svg>
             </span>
             <span class='ar-label'>{{opt.label}}</span>
-          </button>
+          </Button>
         {{/each}}
       </div>
 

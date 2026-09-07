@@ -21,7 +21,12 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { task, timeout } from 'ember-concurrency';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { BoxelSelect } from '@cardstack/boxel-ui/components';
+import {
+  BoxelSelect,
+  BoxelInput,
+  Button,
+  LoadingIndicator,
+} from '@cardstack/boxel-ui/components';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
 import SparklesIcon from '@cardstack/boxel-icons/sparkles';
 import { GenerateTryOnCommand } from './commands/generate-try-on-command';
@@ -721,9 +726,9 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
     this.newItemCategory = '';
   }
 
-  @action onSlugInput(event: Event): void {
+  @action onSlugInput(value: string): void {
     // Keep the raw, human-readable name in the field; the slug is derived.
-    this.newItemName = (event.target as HTMLInputElement).value;
+    this.newItemName = value;
   }
 
   @action setCategory(cat: string | null): void {
@@ -1213,10 +1218,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         {{#if this.hasUsableModel}}
           <div class='model-scroll'>
             <div class='model-thumb-wrap'>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='model-thumb model-thumb--active'
-                disabled={{this.isLocked}}
+                @disabled={{this.isLocked}}
               >
                 {{#if this.activeModel.photo.resolvedUrl}}
                   <img
@@ -1227,43 +1233,50 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 {{else}}
                   <div class='model-thumb-empty'>?</div>
                 {{/if}}
-              </button>
-              <button
-                type='button'
+              </Button>
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='model-unlink'
                 title='Unlink model'
                 aria-label='Unlink model'
-                disabled={{this.isLocked}}
+                @disabled={{this.isLocked}}
                 {{on 'click' this.unlinkModel}}
-              >✕</button>
+              >✕</Button>
             </div>
           </div>
         {{/if}}
 
         {{! Add model button }}
-        <button
-          type='button'
+        <Button
+          @kind='text-only'
+          @size='auto'
           class='add-model-btn'
           data-bx-popover-anchor='vto-model'
-          disabled={{this.isLocked}}
+          @disabled={{this.isLocked}}
           {{on 'click' this.toggleModelMenu}}
-        >+ Add Model</button>
+        >+ Add Model</Button>
 
         {{! Try On / Go back CTA — lives in the strip so it never overlaps }}
         <div class='gen-action'>
           {{#if (eq this.generationStatus 'ready')}}
-            <button type='button' class='gen-btn' {{on 'click' this.restart}}>←
-              Go back</button>
+            <Button
+              @kind='text-only'
+              @size='auto'
+              class='gen-btn'
+              {{on 'click' this.restart}}
+            >← Go back</Button>
           {{else}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
+              @loading={{this.isGenerating}}
               class='gen-btn {{if this.isGenerating "gen-btn--busy" ""}}'
-              disabled={{if this.canGenerate false true}}
+              @disabled={{if this.canGenerate false true}}
               {{on 'click' this.generateOutfit.perform}}
             >
-              {{#if this.isGenerating}}<span class='gen-spin'></span>{{/if}}
               {{#if this.isGenerating}}Generating…{{else}}✦ Try On Outfit{{/if}}
-            </button>
+            </Button>
           {{/if}}
         </div>
 
@@ -1280,12 +1293,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
 
           <div class='filter-row'>
             {{#each this.filterOptions as |cat|}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='filter-pill
                   {{if (eq cat this.filterCategory) "filter-pill--on" ""}}'
                 {{on 'click' (fn this.setFilter cat)}}
-              >{{cat}}</button>
+              >{{cat}}</Button>
             {{/each}}
           </div>
 
@@ -1295,30 +1309,33 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 <div class='gsection-head'>
                   <h3 class='gsection-title'>{{section.label}}</h3>
                   {{#if (eq this.filterCategory 'all')}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='view-all'
                       {{on 'click' (fn this.setFilter section.key)}}
-                    >View all</button>
+                    >View all</Button>
                   {{else}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='view-all'
                       {{on 'click' (fn this.setFilter 'all')}}
-                    >Back</button>
+                    >Back</Button>
                   {{/if}}
                 </div>
                 <div class='gsection-grid'>
                   {{! Add placeholder — opens the popover with this category preset }}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='garment-add'
-                    disabled={{this.isLocked}}
+                    @disabled={{this.isLocked}}
                     {{on 'click' (fn this.openGarmentModal section.key)}}
                   >
                     <span class='garment-add-ico'>+</span>
                     <span class='garment-add-lbl'>Add</span>
-                  </button>
+                  </Button>
                   {{! Prerendered garment entries — no instances held; a real
                       Garment is hydrated only when one is picked / dropped. }}
                   <@context.searchResultsComponent
@@ -1375,13 +1392,14 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 {{on 'click' this.toggleModelMenu}}
               >
                 {{#if this.activeModel.photo.resolvedUrl}}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='sq-badge sq-badge--remove'
                     title='Remove model'
                     aria-label='Remove model'
                     {{on 'click' this.unlinkModel}}
-                  >✕</button>
+                  >✕</Button>
                 {{else}}
                   <span class='sq-badge'>+</span>
                 {{/if}}
@@ -1550,12 +1568,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                     {{/if}}
                   </div>
                   {{#if slot.garment}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='sq-remove'
                       aria-label='Remove garment'
                       {{on 'click' (fn this.removeSlot slot.key)}}
-                    >✕</button>
+                    >✕</Button>
                   {{/if}}
                   <span
                     class='sq-lbl'
@@ -1594,7 +1613,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
 
                 {{#if this.showGeneratingPlaceholder}}
                   <div class='result-placeholder'>
-                    <div class='big-spin'></div>
+                    <LoadingIndicator @size='32px' class='big-spin' />
                     <span>Generating front view…</span>
                   </div>
                 {{else if this.frontImageUrl}}
@@ -1620,7 +1639,10 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                           {{else}}
                             <div class='slide-empty'>
                               {{#if this.generateAngles.isRunning}}
-                                <div class='slide-spin'></div><span>Generating
+                                <LoadingIndicator
+                                  @size='20px'
+                                  class='slide-spin'
+                                /><span>Generating
                                   {{slide.label}}…</span>
                               {{else}}
                                 <span
@@ -1651,11 +1673,12 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 {{! View switcher — right-side overlay on the preview }}
                 <div class='view-overlay'>
                   {{#each this.viewOptions as |v|}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='vo-btn
                         {{if (eq this.carouselIndex v.index) "vo-btn--on" ""}}'
-                      disabled={{if
+                      @disabled={{if
                         (eq v.index 0)
                         false
                         (if this.frontImageUrl false true)
@@ -1710,33 +1733,36 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                         </svg>
                       {{/if}}
                       <span class='vo-lbl'>{{v.label}}</span>
-                    </button>
+                    </Button>
                   {{/each}}
                 </div>
 
                 {{#if (eq this.generationStatus 'ready')}}
                   <div class='stage-tools'>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='tool-btn'
                       title='Start over'
                       aria-label='Start over'
                       {{on 'click' this.regenerate}}
-                    >↻</button>
-                    <button
-                      type='button'
+                    >↻</Button>
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='tool-btn'
                       title='Open full size'
                       aria-label='Open full size'
                       {{on 'click' this.saveLook}}
-                    >⤢</button>
-                    <button
-                      type='button'
+                    >⤢</Button>
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='tool-btn'
                       title='Download image'
                       aria-label='Download image'
                       {{on 'click' this.downloadCurrent.perform}}
-                    >⤓</button>
+                    >⤓</Button>
                   </div>
                 {{/if}}
 
@@ -1757,33 +1783,37 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           {{! Bottom action bar }}
           <div class='action-bar'>
             {{#if (eq this.generationStatus 'ready')}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='act-btn act-btn--primary'
                 {{on 'click' this.restart}}
-              >← Go back</button>
-              <button
-                type='button'
+              >← Go back</Button>
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='act-btn act-btn--ghost'
-                disabled={{if this.canSaveLook false true}}
+                @disabled={{if this.canSaveLook false true}}
                 {{on 'click' this.saveLook}}
-              ><span class='act-ico'>⌑</span> Save Look</button>
+              ><span class='act-ico'>⌑</span> Save Look</Button>
             {{else}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
+                @loading={{this.isGenerating}}
                 class='act-btn act-btn--primary
                   {{if this.isGenerating "act-btn--busy" ""}}'
-                disabled={{if this.canGenerate false true}}
+                @disabled={{if this.canGenerate false true}}
                 {{on 'click' this.generateOutfit.perform}}
               >
-                {{#if this.isGenerating}}<span class='gen-spin'></span>{{/if}}
                 {{#if this.isGenerating}}Generating…{{else}}✦ Try On Outfit{{/if}}
-              </button>
-              <button
-                type='button'
+              </Button>
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='act-btn act-btn--ghost'
                 disabled
-              ><span class='act-ico'>⌑</span> Save Look</button>
+              ><span class='act-ico'>⌑</span> Save Look</Button>
             {{/if}}
           </div>
 
@@ -1808,18 +1838,20 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
             <div class='modal-head'>
               <h2 id='vto-upload-title' class='modal-title'>Add
                 {{if (eq this.uploadMode 'garment') 'Garment' 'Model'}}</h2>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='modal-close'
                 aria-label='Close'
                 {{on 'click' this.closeUpload}}
-              >✕</button>
+              >✕</Button>
             </div>
 
             <div class='details-pane'>
               {{! Image insert — click to pick from the library }}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='img-drop
                   {{if this.capturedDataUrl "img-drop--filled" ""}}'
                 {{on 'click' (fn this.openLibraryUpload this.uploadMode)}}
@@ -1835,16 +1867,15 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                   <span class='img-drop-ico'>↑</span>
                   <span class='img-drop-lbl'>Upload from library</span>
                 {{/if}}
-              </button>
+              </Button>
               <div class='field-group'>
                 <label class='field-lbl'>Name
                   <span class='field-lbl-hint'>(words joined by -)</span></label>
-                <input
-                  type='text'
+                <BoxelInput
                   class='field-input'
-                  value={{this.newItemName}}
-                  placeholder='e.g. Red Silk Blouse'
-                  {{on 'input' this.onSlugInput}}
+                  @value={{this.newItemName}}
+                  @placeholder='e.g. Red Silk Blouse'
+                  @onInput={{this.onSlugInput}}
                 />
                 {{#if this.newItemSlug}}
                   <span class='field-hint'>Saved as:
@@ -1868,15 +1899,16 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
               {{#if this.uploadError}}
                 <p class='upload-err'>{{this.uploadError}}</p>
               {{/if}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='save-btn
                   {{if this.saveUpload.isRunning "save-btn--busy" ""}}'
-                disabled={{if this.canSaveUpload false true}}
+                @disabled={{if this.canSaveUpload false true}}
                 {{on 'click' this.saveUpload.perform}}
               >{{#if
                   this.saveUpload.isRunning
-                }}Saving…{{else}}Save{{/if}}</button>
+                }}Saving…{{else}}Save{{/if}}</Button>
             </div>
           </div>
         </:tools>
@@ -1891,12 +1923,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           aria-label='Full-size try-on result'
           {{on 'click' this.closeLightbox}}
         >
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='lightbox-close'
             aria-label='Close'
             {{on 'click' this.closeLightbox}}
-          >✕</button>
+          >✕</Button>
           <img
             src={{this.lightboxUrl}}
             alt='Full-size try-on result'
@@ -1926,18 +1959,20 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 <span class='mpm-eyebrow'>Virtual Try-On</span>
                 <h2 id='vto-mpm-title' class='mpm-title'>Choose your model</h2>
               </div>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='mpm-close'
                 aria-label='Close'
                 {{on 'click' this.closeModelMenu}}
-              >✕</button>
+              >✕</Button>
             </div>
             <div class='mpm-body'>
 
               {{! Upload card }}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='mpm-card mpm-card--upload'
                 {{on 'click' this.uploadModel}}
               >
@@ -1965,11 +2000,12 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                     detect your body, we'll generate a standard body pose</span>
                   <span class='mpm-card-cta'>↑ Choose file</span>
                 </div>
-              </button>
+              </Button>
 
               {{! Link existing card }}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='mpm-card mpm-card--link'
                 {{on 'click' this.linkExistingModel}}
               >
@@ -1995,7 +2031,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                     already created in this realm</span>
                   <span class='mpm-card-cta'>Browse models →</span>
                 </div>
-              </button>
+              </Button>
 
             </div>
           </div>
@@ -2023,12 +2059,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 <h2 id='vto-chooser-title' class='chooser-title'>Choose
                   {{this.chooserLabel}}</h2>
               </div>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='chooser-close'
                 aria-label='Close'
                 {{on 'click' this.closeChooser}}
-              >✕</button>
+              >✕</Button>
             </div>
             <@context.searchResultsComponent
               @query={{this.chooserQuery}}
@@ -2040,22 +2077,24 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 {{! Upload-new is always present so an empty category can still
                     be filled straight from the chooser. Styled like the sidebar
                     Add tile — a dashed box with the + and label inside. }}
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='chooser-add'
                   {{on 'click' this.uploadForChooser}}
                 >
                   <span class='chooser-add-ico'>+</span>
                   <span class='chooser-add-lbl'>Upload New</span>
-                </button>
+                </Button>
                 {{#each results.entries key='id' as |entry|}}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='chooser-item'
                     {{on 'click' (fn this.chooseGarment entry.id)}}
                   >
                     <span class='chooser-thumb'><entry.component /></span>
-                  </button>
+                  </Button>
                 {{/each}}
               </div>
               {{#unless results.entries.length}}
@@ -3215,14 +3254,6 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         background: #2d7455;
         color: #fff;
       }
-      .gen-spin {
-        width: 12px;
-        height: 12px;
-        border: 2px solid rgba(255, 255, 255, 0.35);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.65s linear infinite;
-      }
       .err-msg {
         font-size: 11px;
         color: var(--danger);
@@ -3376,12 +3407,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         }
       }
       .big-spin {
-        width: 32px;
-        height: 32px;
-        border: 3px solid var(--border);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+        --boxel-loading-indicator-color: var(--accent);
       }
 
       /* ── Carousel ── */
@@ -3439,12 +3465,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         opacity: 0.4;
       }
       .slide-spin {
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--border);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
+        --boxel-loading-indicator-color: var(--accent);
       }
       .slide-badge {
         position: absolute;
@@ -4553,12 +4574,6 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         }
         .act-btn--ghost {
           display: none;
-        }
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
         }
       }
     </style>

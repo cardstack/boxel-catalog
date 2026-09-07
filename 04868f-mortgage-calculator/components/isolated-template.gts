@@ -6,6 +6,7 @@ import { on } from '@ember/modifier';
 import { fn, concat } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/boxel-ui/components';
 import OneShotLlmRequestCommand from '@cardstack/boxel-host/commands/one-shot-llm-request';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { LineChart } from './line-chart';
@@ -291,8 +292,9 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       <header class='mc-header' style={{this.headerStyle}}>
         <div class='mc-title-row'>
           <h1 class='mc-title'>Mortgage Calculator</h1>
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='mc-quickfill-btn'
             {{on 'click' this.toggleQuickFill}}
           >
@@ -313,7 +315,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
               'Hide quick fill'
               'Quick fill from listing'
             }}
-          </button>
+          </Button>
         </div>
         {{#if this.quickFillOpen}}
           <div class='mc-quickfill'>
@@ -325,25 +327,27 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
               rows='2'
             ></textarea>
             <div class='mc-quickfill-actions'>
-              <button
-                type='button'
+              <Button
+                @kind='primary'
+                @size='auto'
                 class='mc-btn mc-btn-primary'
-                disabled={{eq this.quickFillStatus 'loading'}}
+                @loading={{eq this.quickFillStatus 'loading'}}
+                @disabled={{eq this.quickFillStatus 'loading'}}
                 {{on 'click' this.runQuickFill}}
               >
                 {{#if (eq this.quickFillStatus 'loading')}}
-                  <span class='mc-spinner'></span>
                   Extracting…
                 {{else}}
                   Fill from listing
                 {{/if}}
-              </button>
+              </Button>
               {{#if this.lastSnapshot}}
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='mc-btn mc-btn-ghost'
                   {{on 'click' this.undoQuickFill}}
-                >Undo</button>
+                >Undo</Button>
               {{/if}}
             </div>
             {{#if (eq this.quickFillStatus 'success')}}
@@ -534,8 +538,9 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
 
           <div class='mc-charts'>
             <div class='mc-tabs' role='tablist'>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 role='tab'
                 class={{if
                   (eq this.activeTab 'timeline')
@@ -543,9 +548,10 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
                   'mc-tab'
                 }}
                 {{on 'click' (fn this.setTab 'timeline')}}
-              >Pay-off over time</button>
-              <button
-                type='button'
+              >Pay-off over time</Button>
+              <Button
+                @kind='text-only'
+                @size='auto'
                 role='tab'
                 class={{if
                   (eq this.activeTab 'breakdown')
@@ -553,7 +559,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
                   'mc-tab'
                 }}
                 {{on 'click' (fn this.setTab 'breakdown')}}
-              >Monthly breakdown</button>
+              >Monthly breakdown</Button>
             </div>
 
             {{#if (eq this.activeTab 'timeline')}}
@@ -778,20 +784,6 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-btn-ghost:hover {
         background: rgba(255, 255, 255, 0.12);
       }
-      .mc-spinner {
-        width: 12px;
-        height: 12px;
-        border: 2px solid currentColor;
-        border-right-color: transparent;
-        border-radius: 50%;
-        animation: mcSpin 0.7s linear infinite;
-      }
-      @keyframes mcSpin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
       /* ── Design tokens (bottom half) ── */
       .mc-wrapper {
         --mc-green: #059669;

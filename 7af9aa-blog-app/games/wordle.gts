@@ -8,6 +8,7 @@ import { Game } from './game';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
+import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
 const WORDS = [
@@ -181,27 +182,31 @@ class WordleIsolated extends Component<typeof Wordle> {
       </div>
       {{#if (eq this.status 'playing')}}
         <div class='wordle-input-row'>
-          <input
-            type='text'
+          <BoxelInput
             class='wordle-input'
             aria-label='Guess a five-letter word'
             placeholder='Type 5 letters'
             maxlength='5'
             autocomplete='off'
             spellcheck='false'
-            value={{this.currentGuess}}
+            @value={{this.currentGuess}}
             {{on 'input' this.updateGuess}}
             {{on 'keydown' this.handleKeydown}}
           />
-          <button
-            type='button'
+          <Button
+            @size='auto'
+            @kind='text-only'
             class='wordle-submit'
             {{on 'click' this.submitGuess}}
-          >Guess</button>
+          >Guess</Button>
         </div>
       {{else}}
-        <button type='button' class='wordle-reset' {{on 'click' this.reset}}>New
-          Game</button>
+        <Button
+          @size='auto'
+          @kind='text-only'
+          class='wordle-reset'
+          {{on 'click' this.reset}}
+        >New Game</Button>
       {{/if}}
     </div>
     <style scoped>

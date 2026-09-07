@@ -1,7 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import CopyIcon from '@cardstack/boxel-icons/copy';
-import { Pill } from '@cardstack/boxel-ui/components';
+import { Button, Pill } from '@cardstack/boxel-ui/components';
 import { on } from '@ember/modifier';
 import type { CardOrFieldTypeIcon } from 'https://cardstack.com/base/card-api';
 
@@ -55,15 +55,16 @@ export class HeaderSection extends GlimmerComponent<HeaderSectionSignature> {
         {{#if @branchName}}
           <span class='pr-branch'>
             <span class='pr-branch-label'>{{@branchName}}</span>
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='pr-branch-copy-button'
               {{on 'click' this.copyBranchName}}
               aria-label='Copy branch name'
               title='Copy branch name'
             >
               <CopyIcon class='pr-branch-copy-icon' />
-            </button>
+            </Button>
           </span>
         {{/if}}
 

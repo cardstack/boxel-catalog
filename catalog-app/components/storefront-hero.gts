@@ -1,5 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
+import { BoxelButton } from '@cardstack/boxel-ui/components';
 import { htmlSafe } from '@ember/template';
 import { CardDef, CardContext } from 'https://cardstack.com/base/card-api';
 
@@ -158,17 +159,19 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
           </div>
 
           <div class='ctas'>
-            <button
-              type='button'
+            <BoxelButton
+              @kind='text-only'
+              @size='auto'
               class='cta-primary'
               data-test-hero-browse
               {{on 'click' @onBrowse}}
-            >Browse the catalog</button>
-            <button
-              type='button'
+            >Browse the catalog</BoxelButton>
+            <BoxelButton
+              @kind='text-only'
+              @size='auto'
               class='cta-link'
               {{on 'click' @onHowItWorks}}
-            >See how remixing works →</button>
+            >See how remixing works →</BoxelButton>
           </div>
         </div>
 

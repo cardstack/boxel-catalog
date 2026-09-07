@@ -2,6 +2,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { action } from '@ember/object';
 import GlimmerComponent from '@glimmer/component';
+import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import type { SurveyQuestion } from '../survey-question';
 
@@ -46,8 +47,8 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
   };
 
   @action
-  updateText(event: Event) {
-    this.args.onChange((event.target as HTMLInputElement).value);
+  updateText(value: string) {
+    this.args.onChange(value);
   }
 
   @action
@@ -67,29 +68,32 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
   <template>
     <div class='qi {{if @invalid "is-invalid"}}' ...attributes>
       {{#if (eq @question.kind 'short-text')}}
-        <input
+        <BoxelInput
           class='qi-input'
-          type='text'
-          value={{this.textValue}}
+          @type='text'
+          @value={{this.textValue}}
           placeholder='Your answer'
           autofocus={{@autofocus}}
-          {{on 'input' this.updateText}}
+          @onInput={{this.updateText}}
         />
 
       {{else if (eq @question.kind 'long-text')}}
-        <textarea
+        <BoxelInput
           class='qi-input qi-textarea'
+          @type='textarea'
           rows='4'
           placeholder='Your answer'
           autofocus={{@autofocus}}
-          {{on 'input' this.updateText}}
-        >{{this.textValue}}</textarea>
+          @onInput={{this.updateText}}
+          @value={{this.textValue}}
+        />
 
       {{else if (eq @question.kind 'single-choice')}}
         <div class='qi-choices' role='radiogroup'>
           {{#each this.options as |option|}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='qi-choice {{if (eq @value option) "is-selected"}}'
               role='radio'
               aria-checked={{if (eq @value option) 'true' 'false'}}
@@ -97,58 +101,62 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
             >
               <span class='qi-mark qi-mark--radio'></span>
               <span class='qi-choice-label'>{{option}}</span>
-            </button>
+            </Button>
           {{/each}}
         </div>
 
       {{else if (eq @question.kind 'multi-choice')}}
         <div class='qi-choices'>
           {{#each this.options as |option|}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='qi-choice {{if (this.isChecked option) "is-selected"}}'
               aria-pressed={{if (this.isChecked option) 'true' 'false'}}
               {{on 'click' (fn this.toggleMulti option)}}
             >
               <span class='qi-mark qi-mark--check'></span>
               <span class='qi-choice-label'>{{option}}</span>
-            </button>
+            </Button>
           {{/each}}
         </div>
 
       {{else if (eq @question.kind 'rating')}}
         <div class='qi-rating' role='radiogroup'>
           {{#each RATING_SCALE as |star|}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='qi-star {{if (this.isStarOn star) "is-on"}}'
               aria-label='{{star}} of 5'
               {{on 'click' (fn this.setRating star)}}
-            >★</button>
+            >★</Button>
           {{/each}}
         </div>
 
       {{else if (eq @question.kind 'yes-no')}}
         <div class='qi-yesno'>
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='qi-toggle {{if (eq @value true) "is-selected"}}'
             {{on 'click' (fn @onChange true)}}
-          >Yes</button>
-          <button
-            type='button'
+          >Yes</Button>
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='qi-toggle {{if (eq @value false) "is-selected"}}'
             {{on 'click' (fn @onChange false)}}
-          >No</button>
+          >No</Button>
         </div>
 
       {{else}}
-        <input
+        <BoxelInput
           class='qi-input'
-          type='text'
-          value={{this.textValue}}
+          @type='text'
+          @value={{this.textValue}}
           placeholder='Your answer'
-          {{on 'input' this.updateText}}
+          @onInput={{this.updateText}}
         />
       {{/if}}
     </div>

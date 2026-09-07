@@ -422,14 +422,15 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         <div class='ti-top-actions'>
           {{#if this.shareUrl}}
             <div class='ti-share'>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='ti-share-btn {{if this.showShare "is-open"}}'
                 aria-label='Share this trip'
                 data-bx-popover-anchor
                 data-ti-share-anchor
                 {{on 'click' this.toggleShare}}
-              ><ShareIcon width='16' height='16' /></button>
+              ><ShareIcon width='16' height='16' /></Button>
               <Popover
                 @anchor='[data-ti-share-anchor]'
                 @open={{this.showShare}}
@@ -445,14 +446,15 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
                   <div class='ti-share-pop'>
                     <p class='ti-share-title'>Share this trip</p>
                     <div class='ti-share-qr'><@fields.shareTripCode /></div>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='ti-share-copy'
                       {{on 'click' this.copyShareLink}}
                     >
                       <CopyIcon width='14' height='14' />
                       {{if this.copied 'Copied!' 'Copy link'}}
-                    </button>
+                    </Button>
                   </div>
                 </:details>
               </Popover>
@@ -529,8 +531,9 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
             <div class='ti-days'>
               {{#each this.groupedStops as |group|}}
                 <section class='ti-day-group'>
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='ti-day-head'
                     {{on 'click' (fn this.toggleDay group.day)}}
                     {{on 'dragover' (fn this.dragOverDay group.day)}}
@@ -545,7 +548,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
                     <span class='ti-day-label'>Day {{group.day}}</span>
                     <span class='ti-day-count'>{{group.stops.length}}</span>
                     <span class='ti-day-rule'></span>
-                  </button>
+                  </Button>
                   {{#unless (this.isDayCollapsed group.day)}}
                     <ul class='ti-stops'>
                       {{#each group.stops as |entry|}}
@@ -570,8 +573,9 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
                           <span class='ti-grip' aria-hidden='true'>
                             <GripIcon width='14' height='14' />
                           </span>
-                          <button
-                            type='button'
+                          <Button
+                            @kind='text-only'
+                            @size='auto'
                             class='ti-stop-row'
                             {{on 'click' (fn this.selectStop entry.index)}}
                           >
@@ -592,9 +596,10 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
                                   @model.currencySymbol
                                 }}</span>
                             {{/if}}
-                          </button>
-                          <button
-                            type='button'
+                          </Button>
+                          <Button
+                            @kind='text-only'
+                            @size='auto'
                             class='ti-icon-btn
                               {{if
                                 (eq entry.index this.editingIndex)
@@ -602,21 +607,23 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
                               }}'
                             aria-label='Edit stop'
                             {{on 'click' (fn this.editStop entry.index)}}
-                          ><PencilIcon width='13' height='13' /></button>
-                          <button
-                            type='button'
+                          ><PencilIcon width='13' height='13' /></Button>
+                          <Button
+                            @kind='text-only'
+                            @size='auto'
                             class='ti-icon-btn ti-danger'
                             aria-label='Remove stop'
                             {{on 'click' (fn this.removeStop entry.index)}}
-                          ><TrashIcon width='13' height='13' /></button>
+                          ><TrashIcon width='13' height='13' /></Button>
                         </li>
                       {{/each}}
                     </ul>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='ti-add-stop'
                       {{on 'click' (fn this.addStopToDay group.day)}}
-                    >+ Add stop</button>
+                    >+ Add stop</Button>
                   {{/unless}}
                 </section>
               {{/each}}
@@ -641,17 +648,19 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         <div class='ti-map'>
           {{#if this.mapDays.length}}
             <div class='ti-map-filter'>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='ti-chip {{unless this.activeMapDay "is-active"}}'
                 {{on 'click' (fn this.setMapDay null)}}
-              >All days</button>
+              >All days</Button>
               {{#each this.mapDays as |d|}}
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='ti-chip {{if (eq this.activeMapDay d) "is-active"}}'
                   {{on 'click' (fn this.setMapDay d)}}
-                >Day {{d}}</button>
+                >Day {{d}}</Button>
               {{/each}}
             </div>
           {{/if}}
@@ -685,12 +694,13 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
                         {{this.selectedDay}}</span>
                     {{/if}}
                   </div>
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='ti-editor-close'
                     aria-label='Close editor'
                     {{on 'click' this.closeEditor}}
-                  ><XIcon width='18' height='18' /></button>
+                  ><XIcon width='18' height='18' /></Button>
                 </div>
                 <div class='ti-editor-body'>
                   <StopField @format='edit' />

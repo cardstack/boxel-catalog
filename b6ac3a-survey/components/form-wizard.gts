@@ -1,6 +1,7 @@
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import GlimmerComponent from '@glimmer/component';
+import { Button } from '@cardstack/boxel-ui/components';
 import { eq, lt, add } from '@cardstack/boxel-ui/helpers';
 
 // Stepper chrome + CSS ported from boxel-surface FormWizard; driven by args (no surface runtime) so the listing stays self-contained.
@@ -52,9 +53,11 @@ export default class FormWizard extends GlimmerComponent<FormWizardSignature> {
       <ol class='bx-form-wizard__steps'>
         {{#each @steps as |step index|}}
           <li class='bx-form-wizard__step-item'>
-            <button
+            <Button
+              @kind='text-only'
+              @size='auto'
+              @rectangular={{true}}
               class='bx-form-wizard__step'
-              type='button'
               aria-current={{if (eq index @activeIndex) 'step'}}
               data-bx-form-wizard-step-active={{if
                 (eq index @activeIndex)
@@ -70,7 +73,7 @@ export default class FormWizard extends GlimmerComponent<FormWizardSignature> {
             >
               <span class='bx-form-wizard__step-index'>{{add index 1}}</span>
               <span class='bx-form-wizard__step-label'>{{step.label}}</span>
-            </button>
+            </Button>
           </li>
         {{/each}}
       </ol>
@@ -80,22 +83,26 @@ export default class FormWizard extends GlimmerComponent<FormWizardSignature> {
       </div>
 
       <div class='bx-form-wizard__footer'>
-        <button
+        <Button
+          @kind='secondary'
+          @size='auto'
+          @rectangular={{true}}
           class='bx-form-wizard__button bx-form-wizard__button--secondary'
-          type='button'
-          disabled={{this.isFirst}}
+          @disabled={{this.isFirst}}
           {{on 'click' @onPrevious}}
         >
           {{this.previousLabel}}
-        </button>
-        <button
+        </Button>
+        <Button
+          @kind='primary'
+          @size='auto'
+          @rectangular={{true}}
           class='bx-form-wizard__button bx-form-wizard__button--primary'
-          type='button'
-          disabled={{if this.canAdvance false true}}
+          @disabled={{if this.canAdvance false true}}
           {{on 'click' @onNext}}
         >
           {{if this.isLast this.finishLabel this.nextLabel}}
-        </button>
+        </Button>
       </div>
     </div>
 

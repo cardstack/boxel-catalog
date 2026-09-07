@@ -7,6 +7,7 @@ import StringField from 'https://cardstack.com/base/string';
 import enumField from 'https://cardstack.com/base/enum';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import CrownIcon from '@cardstack/boxel-icons/crown';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
@@ -792,23 +793,24 @@ export class Host extends Person {
           </div>
           <div class='iso-ident'>
             <span class='iso-kicker'>Host Profile</span>
-            <input
+            <BoxelInput
               class='iso-name-input'
-              value={{@model.fullName}}
+              @value={{@model.fullName}}
               placeholder='Unnamed Host'
               aria-label='Host name'
               {{on 'input' this.setName}}
             />
             <div class='iso-roles' aria-label='Role'>
               {{#each this.roleOptions as |role|}}
-                <button
-                  type='button'
+                <Button
+                  @size='auto'
+                  @kind='text-only'
                   aria-pressed={{if (eq @model.role role) 'true' 'false'}}
                   class='iso-catchip {{if (eq @model.role role) "is-on"}}'
                   {{on 'click' (fn this.setRole role)}}
                 >
                   {{role}}
-                </button>
+                </Button>
               {{/each}}
             </div>
             <div class='iso-tags'>

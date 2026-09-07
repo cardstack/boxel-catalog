@@ -2,6 +2,7 @@ import GlimmerComponent from '@glimmer/component';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
+import { BoxelButton } from '@cardstack/boxel-ui/components';
 import { add, eq } from '@cardstack/boxel-ui/helpers';
 import { fn } from '@ember/helper';
 
@@ -84,20 +85,24 @@ export default class ImageCarouselComponent extends GlimmerComponent<Signature> 
 
       {{#if this.hasMultipleSlides}}
         <div class='carousel-nav' role='presentation'>
-          <button
+          <BoxelButton
+            @kind='text-only'
+            @size='auto'
             class='carousel-arrow carousel-arrow-prev'
             aria-label='Previous slide'
             {{on 'click' (fn this.updateCurrentIndex this.prevIndex)}}
           >
             &#10094;
-          </button>
-          <button
+          </BoxelButton>
+          <BoxelButton
+            @kind='text-only'
+            @size='auto'
             class='carousel-arrow carousel-arrow-next'
             aria-label='Next slide'
             {{on 'click' (fn this.updateCurrentIndex this.nextIndex)}}
           >
             &#10095;
-          </button>
+          </BoxelButton>
         </div>
       {{/if}}
 

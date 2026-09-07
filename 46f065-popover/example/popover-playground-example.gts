@@ -9,7 +9,11 @@ import { tracked } from '@glimmer/tracking';
 
 import { on } from '@ember/modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { BoxelSelect } from '@cardstack/boxel-ui/components';
+import {
+  Button,
+  BoxelSelect,
+  BoxelInput,
+} from '@cardstack/boxel-ui/components';
 import type { Placement } from '@floating-ui/dom';
 
 import Popover from '../popover';
@@ -101,8 +105,8 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     if (index >= 0) this.pickIndex = index;
   };
 
-  setEditNote = (event: Event): void => {
-    this.editNote = (event.target as HTMLInputElement).value;
+  setEditNote = (value: string): void => {
+    this.editNote = value;
   };
 
   // ── extra knobs beyond the 6 type unions: the beside-positioning
@@ -328,22 +332,25 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
             {{@model.cardTheme.cardTitle}}
           </span>
         {{/if}}
-        <button
-          type='button'
+        <Button
+          @kind='text-only'
+          @size='auto'
+          @rectangular={{true}}
           class='pp-open'
           data-anchor='pp-hover'
           {{on 'mouseenter' this.openHover}}
         >
           Hover to open ▾
-        </button>
-        <button
-          type='button'
+        </Button>
+        <Button
+          @kind='text-only'
+          @size='auto'
           class='pp-open {{if (eq this.openFrom "click") "pp-open--active"}}'
           data-anchor='pp-click'
           {{on 'click' this.openClick}}
         >
           Click to open ▾
-        </button>
+        </Button>
 
         {{#if this.open}}
           <Popover
@@ -384,11 +391,11 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                 </label>
                 <label class='pp-field'>
                   <span class='pp-field-label'>Note</span>
-                  <input
+                  <BoxelInput
                     class='pp-input'
                     placeholder='Add a note…'
-                    value={{this.editNote}}
-                    {{on 'input' this.setEditNote}}
+                    @value={{this.editNote}}
+                    @onInput={{this.setEditNote}}
                   />
                 </label>
               </div>
@@ -404,21 +411,25 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                   aria-label='Popover tools'
                 >
                   <li role='none'>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       role='menuitem'
+                      @rectangular={{true}}
                       class='pp-tool'
                       {{on 'click' this.cyclePlacement}}
                     >
                       <span class='pp-tool-glyph'>⤢</span>
                       <span class='pp-tool-text'>Cycle placement</span>
                       <span class='pp-tool-meta'>{{this.placement}}</span>
-                    </button>
+                    </Button>
                   </li>
                   <li role='none'>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       role='menuitem'
+                      @rectangular={{true}}
                       class='pp-tool'
                       {{on 'click' this.toggleArrow}}
                     >
@@ -429,18 +440,20 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                           'on'
                           'off'
                         }}</span>
-                    </button>
+                    </Button>
                   </li>
                   <li role='none'>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       role='menuitem'
+                      @rectangular={{true}}
                       class='pp-tool'
                       {{on 'click' this.close}}
                     >
                       <span class='pp-tool-glyph'>✕</span>
                       <span class='pp-tool-text'>Dismiss popover</span>
-                    </button>
+                    </Button>
                   </li>
                 </ul>
               </div>

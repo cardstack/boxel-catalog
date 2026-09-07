@@ -12,6 +12,7 @@ import {
   type SearchEntryWireQuery,
 } from '@cardstack/runtime-common';
 import { buildBlogThemeCss, onClickOutside } from '../blog-defaults';
+import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { BlogSiteView } from './site-view';
 import { BlogAppTemplate } from './admin-template';
@@ -58,8 +59,8 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
     if (this.drawerOpen) this.drawerOpen = false;
   }
 
-  @action onSearchInput(event: Event) {
-    this.searchQuery = (event.target as HTMLInputElement).value;
+  @action onSearchInput(value: string) {
+    this.searchQuery = value;
   }
 
   get themeQuery(): Query {
@@ -177,19 +178,21 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
         class='drawer {{if this.drawerOpen "is-open"}}'
         {{onClickOutside this.maybeCloseDrawer}}
       >
-        <button
-          type='button'
+        <Button
+          @size='auto'
+          @kind='text-only'
           class='drawer-toggle'
           {{on 'click' this.toggleDrawer}}
           aria-label={{if this.drawerOpen 'Close library' 'Open library'}}
           aria-expanded='{{if this.drawerOpen "true" "false"}}'
         >
           {{#if this.drawerOpen}}✕{{else}}☰{{/if}}
-        </button>
+        </Button>
 
         <div class='drawer-content'>
-          <button
-            type='button'
+          <Button
+            @size='auto'
+            @kind='text-only'
             class='view-toggle'
             {{on 'click' this.toggleViewMode}}
           >
@@ -198,7 +201,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
             {{else}}
               View site
             {{/if}}
-          </button>
+          </Button>
 
           <section class='lib-section theme-section' aria-label='Theme picker'>
             <h3 class='lib-section-label'>Theme</h3>
@@ -252,13 +255,13 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
           <section class='lib-section' aria-label='Post library'>
             <h3 class='lib-section-label'>All posts</h3>
             <p class='lib-section-hint'>Drag a card to place it</p>
-            <input
-              type='search'
+            <BoxelInput
+              @type='search'
               class='lib-search'
               aria-label='Search posts'
-              placeholder='Search posts…'
-              value={{this.searchQuery}}
-              {{on 'input' this.onSearchInput}}
+              @placeholder='Search posts…'
+              @value={{this.searchQuery}}
+              @onInput={{this.onSearchInput}}
             />
             <@context.searchResultsComponent
               @query={{this.libraryPostsSearchQuery}}

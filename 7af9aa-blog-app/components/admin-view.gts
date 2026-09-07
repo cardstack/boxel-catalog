@@ -3,7 +3,7 @@ import { action } from '@ember/object';
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { type CardContext } from 'https://cardstack.com/base/card-api';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Button, FieldContainer } from '@cardstack/boxel-ui/components';
 import { formatDatetime, toISOString } from '../blog-defaults';
 import type { BlogPost } from '../blog-post';
 
@@ -63,14 +63,15 @@ export class BlogAdminData extends GlimmerComponent<CardAdminViewSignature> {
                 <span class='status-dot' aria-hidden='true'></span>
                 {{card.status}}
               </span>
-              <button
-                type='button'
+              <Button
+                @size='auto'
+                @kind='text-only'
                 class='publish-toggle
                   {{if card.published "publish-toggle--unpublish"}}'
                 {{on 'click' this.togglePublished}}
               >
                 {{if card.published 'Unpublish' 'Publish'}}
-              </button>
+              </Button>
             </div>
           </FieldContainer>
         {{/let}}

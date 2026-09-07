@@ -9,6 +9,7 @@ import {
   searchEntryWireQueryFromQuery,
   type SearchEntryWireQuery,
 } from '@cardstack/runtime-common';
+import { Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { BlogPost } from '../blog-post';
 import { Game } from '../games/game';
@@ -371,11 +372,12 @@ export class BlogSiteView extends Component<typeof BlogApp> {
                 <span class='lead-empty-label'>Lead</span>
                 {{#if @model.lead}}
                   <p>Lead post is unpublished. Publish it to feature it here.</p>
-                  <button
-                    type='button'
+                  <Button
+                    @size='auto'
+                    @kind='text-only'
                     class='lead-publish-btn'
                     {{on 'click' this.publishLead}}
-                  >Publish lead post</button>
+                  >Publish lead post</Button>
                 {{else}}
                   <p>Drag a post here to set the lead story.</p>
                 {{/if}}
@@ -483,31 +485,36 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         <header class='recent-head' aria-label='Latest posts heading'>
           <h2 class='recent-title'>Latest Posts</h2>
           <nav class='filter-pills' aria-label='Filter posts'>
-            <button
-              type='button'
+            <Button
+              @size='auto'
+              @kind='text-only'
               class='pill {{if (eq this.activeFilter "all") "is-active"}}'
               {{on 'click' (fn this.setFilter 'all')}}
-            >All</button>
-            <button
-              type='button'
+            >All</Button>
+            <Button
+              @size='auto'
+              @kind='text-only'
               class='pill {{if (eq this.activeFilter "latest") "is-active"}}'
               {{on 'click' (fn this.setFilter 'latest')}}
-            >Latest</button>
-            <button
-              type='button'
+            >Latest</Button>
+            <Button
+              @size='auto'
+              @kind='text-only'
               class='pill {{if (eq this.activeFilter "news") "is-active"}}'
               {{on 'click' (fn this.setFilter 'news')}}
-            >News</button>
-            <button
-              type='button'
+            >News</Button>
+            <Button
+              @size='auto'
+              @kind='text-only'
               class='pill {{if (eq this.activeFilter "new-york") "is-active"}}'
               {{on 'click' (fn this.setFilter 'new-york')}}
-            >New York</button>
-            <button
-              type='button'
+            >New York</Button>
+            <Button
+              @size='auto'
+              @kind='text-only'
               class='pill {{if (eq this.activeFilter "tech") "is-active"}}'
               {{on 'click' (fn this.setFilter 'tech')}}
-            >Tech</button>
+            >Tech</Button>
           </nav>
         </header>
         <div class='recent-grid filter-{{this.activeFilter}}'>

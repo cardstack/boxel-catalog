@@ -1,5 +1,10 @@
 import { Component, realmURL } from '@cardstack/base/card-api';
-import { BoxelInput, Button, Pill } from '@cardstack/boxel-ui/components';
+import {
+  BoxelInput,
+  Button,
+  IconButton,
+  Pill,
+} from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
@@ -666,8 +671,9 @@ export class AiImageGeneratorIsolated extends Component<
       <header class='header'>
         <SparklesIcon class='header-icon' />
         <h1>{{if @model.cardTitle @model.cardTitle 'AI Image Generator'}}</h1>
-        <button
-          type='button'
+        <Button
+          @kind='text-only'
+          @size='auto'
           class='scheme-toggle'
           {{on 'click' this.toggleColorScheme}}
           aria-label={{if
@@ -686,7 +692,7 @@ export class AiImageGeneratorIsolated extends Component<
           {{else}}
             <MoonIcon />
           {{/if}}
-        </button>
+        </Button>
       </header>
 
       <div class='body'>
@@ -720,8 +726,9 @@ export class AiImageGeneratorIsolated extends Component<
                     {{/each}}
                   </svg>
                   {{#each this.versionGraph.nodes as |node|}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='version-btn
                         {{if node.isLatest "current"}}
                         {{if node.isRoot "root"}}
@@ -750,7 +757,7 @@ export class AiImageGeneratorIsolated extends Component<
                           class='version-prompt'
                         >{{node.entry.prompt}}</span>
                       </span>
-                    </button>
+                    </Button>
                   {{/each}}
                 </div>
               </div>
@@ -783,9 +790,13 @@ export class AiImageGeneratorIsolated extends Component<
                 <div class='turn-prompt-row'>
                   <p class='turn-prompt'>{{entry.prompt}}</p>
                   {{#if entry.prompt}}
-                    <button
-                      type='button'
+                    <IconButton
                       class='pop-icon turn-copy'
+                      @icon={{if
+                        (eq this.copiedVersion (versionLabel index))
+                        CopyCheckIcon
+                        CopyIcon
+                      }}
                       aria-label='Copy prompt'
                       title={{if
                         (eq this.copiedVersion (versionLabel index))
@@ -796,13 +807,7 @@ export class AiImageGeneratorIsolated extends Component<
                         'click'
                         (fn this.copyPrompt (versionLabel index) entry.prompt)
                       }}
-                    >
-                      {{#if (eq this.copiedVersion (versionLabel index))}}
-                        <CopyCheckIcon />
-                      {{else}}
-                        <CopyIcon />
-                      {{/if}}
-                    </button>
+                    />
                   {{/if}}
                 </div>
                 {{#if entry.image.url}}
@@ -890,19 +895,21 @@ export class AiImageGeneratorIsolated extends Component<
             <div class='composer-card'>
               {{#if this.items.length}}
                 <div class='composer-mode'>
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='mode-chip {{if this.continueFromLatest "active"}}'
                     {{on 'click' (fn this.setContinue true)}}
                     data-test-ai-image-mode-continue
-                  >Continue from v{{this.items.length}}</button>
-                  <button
-                    type='button'
+                  >Continue from v{{this.items.length}}</Button>
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='mode-chip
                       {{unless this.continueFromLatest "active"}}'
                     {{on 'click' (fn this.setContinue false)}}
                     data-test-ai-image-mode-new
-                  >New image</button>
+                  >New image</Button>
                 </div>
               {{/if}}
               <div class='composer-main'>
@@ -921,15 +928,16 @@ export class AiImageGeneratorIsolated extends Component<
                   {{on 'keydown' this.onPromptKeydown}}
                 />
                 {{#if this.isBusy}}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='stop-btn'
                     aria-label='Stop generating'
                     {{on 'click' this.stopGenerating}}
                     data-test-ai-image-stop
                   >
                     <span class='stop-glyph' aria-hidden='true'></span>
-                  </button>
+                  </Button>
                 {{else}}
                   <Button
                     @kind='primary'
@@ -958,28 +966,39 @@ export class AiImageGeneratorIsolated extends Component<
                 header (the dialog is already labelled by its h2) }}
             <div class='edit-head'>
               <h2 id='ai-image-refine-title'>Refine image</h2>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='chip-close'
                 aria-label='Close editor'
                 {{on 'click' this.closeEdit}}
-              >×</button>
+              >×</Button>
             </div>
 
             <section class='edit-body'>
               <div class='edit-tabs' role='tablist'>
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='tab {{if (eq this.editMode "reprompt") "active"}}'
+                  role='tab'
+                  aria-selected={{if
+                    (eq this.editMode 'reprompt')
+                    'true'
+                    'false'
+                  }}
                   {{on 'click' (fn this.setEditMode 'reprompt')}}
                   data-test-ai-image-edit-reprompt
-                >Reprompt</button>
-                <button
-                  type='button'
+                >Reprompt</Button>
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='tab {{if (eq this.editMode "paint") "active"}}'
+                  role='tab'
+                  aria-selected='{{eq this.editMode "paint"}}'
                   {{on 'click' (fn this.setEditMode 'paint')}}
                   data-test-ai-image-edit-paint
-                >Paint area</button>
+                >Paint area</Button>
               </div>
 
               {{! Reprompt can reframe (it regenerates); inpaint is locked to the
@@ -1106,15 +1125,16 @@ export class AiImageGeneratorIsolated extends Component<
                     Cancel
                   </Button>
                   {{#if this.isBusy}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='stop-btn'
                       aria-label='Stop generating'
                       {{on 'click' this.stopGenerating}}
                       data-test-ai-image-edit-stop
                     >
                       <span class='stop-glyph' aria-hidden='true'></span>
-                    </button>
+                    </Button>
                   {{else}}
                     <Button
                       @kind='primary'
@@ -1150,23 +1170,25 @@ export class AiImageGeneratorIsolated extends Component<
               <span
                 class='version-popover-tag'
               >v{{this.previewNode.version}}</span>
-              <button
-                type='button'
+              <IconButton
                 class='pop-icon'
+                @icon={{CornerDownRightIcon}}
                 aria-label='Scroll to this version in the thread'
                 title='View in thread'
                 {{on 'click' (fn this.jumpToVersion this.previewNode.version)}}
-              >
-                <CornerDownRightIcon />
-              </button>
+              />
             </div>
             <div class='version-popover-prompt-row'>
               <p
                 class='version-popover-prompt'
               >{{this.previewNode.entry.prompt}}</p>
-              <button
-                type='button'
+              <IconButton
                 class='pop-icon'
+                @icon={{if
+                  (eq this.copiedVersion this.previewNode.version)
+                  CopyCheckIcon
+                  CopyIcon
+                }}
                 aria-label='Copy prompt'
                 title={{if
                   (eq this.copiedVersion this.previewNode.version)
@@ -1181,13 +1203,7 @@ export class AiImageGeneratorIsolated extends Component<
                     this.previewNode.entry.prompt
                   )
                 }}
-              >
-                {{#if (eq this.copiedVersion this.previewNode.version)}}
-                  <CopyCheckIcon />
-                {{else}}
-                  <CopyIcon />
-                {{/if}}
-              </button>
+              />
             </div>
             <Button
               @kind='primary'

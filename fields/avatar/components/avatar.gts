@@ -347,7 +347,9 @@ export default class AvatarComponent extends Component<AvatarCreatorArgs> {
               class='url-input'
               aria-label='Avatar URL'
             />
-            <button
+            <BoxelButton
+              @kind='text-only'
+              @size='auto'
               class='copy-btn {{if this.copySuccess "copied"}}'
               {{on 'click' this.copyAvataaarsUrl}}
               title='Copy Avatar URL'
@@ -357,7 +359,7 @@ export default class AvatarComponent extends Component<AvatarCreatorArgs> {
               {{else}}
                 📋
               {{/if}}
-            </button>
+            </BoxelButton>
           </div>
         </div>
       </div>
@@ -407,8 +409,9 @@ export default class AvatarComponent extends Component<AvatarCreatorArgs> {
 
             <div class='options-grid'>
               {{#each this.presetAvatarOptions as |avatarOption|}}
-                <button
-                  type='button'
+                <BoxelButton
+                  @kind='text-only'
+                  @size='auto'
                   class='option-btn preset-avatar
                     {{if (this.isPresetSelected avatarOption) "selected"}}'
                   {{on 'click' (fn this.selectPresetAvatar avatarOption)}}
@@ -421,7 +424,7 @@ export default class AvatarComponent extends Component<AvatarCreatorArgs> {
                     loading='lazy'
                   />
                   <div class='avatar-name'>{{avatarOption.name}}</div>
-                </button>
+                </BoxelButton>
               {{/each}}
             </div>
           {{else}}
@@ -432,8 +435,9 @@ export default class AvatarComponent extends Component<AvatarCreatorArgs> {
             {{#if (gt this.currentCategoryOptions.length 0)}}
               <div class='options-grid'>
                 {{#each this.currentCategoryOptions as |option|}}
-                  <button
-                    type='button'
+                  <BoxelButton
+                    @kind='text-only'
+                    @size='auto'
                     class='option-btn
                       {{if (this.isOptionSelected option) "selected"}}'
                     {{on 'click' (fn this.selectAvataaarsOption option)}}
@@ -445,7 +449,7 @@ export default class AvatarComponent extends Component<AvatarCreatorArgs> {
                       class='option-image'
                       loading='lazy'
                     />
-                  </button>
+                  </BoxelButton>
                 {{/each}}
               </div>
             {{else}}

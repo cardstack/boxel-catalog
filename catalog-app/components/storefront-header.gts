@@ -1,8 +1,9 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { BoxelButton, BoxelInput } from '@cardstack/boxel-ui/components';
 import { cn } from '@cardstack/boxel-ui/helpers';
-import { IconSearch, BoxelIcon } from '@cardstack/boxel-ui/icons';
+import { BoxelIcon } from '@cardstack/boxel-ui/icons';
 
 interface TabOption {
   tabId: string;
@@ -21,8 +22,8 @@ interface StorefrontHeaderSignature {
 }
 
 export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderSignature> {
-  private onInput = (event: Event) => {
-    this.args.onSearchInput((event.target as HTMLInputElement).value);
+  private onInput = (value: string) => {
+    this.args.onSearchInput(value);
   };
 
   <template>
@@ -36,27 +37,30 @@ export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderS
 
         <nav class='nav' aria-label='Catalog sections'>
           {{#each @tabs as |tab|}}
-            <button
-              type='button'
+            <BoxelButton
+              @kind='text-only'
+              @size='auto'
               class={{cn 'nav-link' is-active=(this.isActive tab.tabId)}}
               data-test-storefront-tab={{tab.tabId}}
               {{on 'click' (fn @onSelectTab tab.tabId)}}
             >
               {{tab.displayName}}
-            </button>
+            </BoxelButton>
           {{/each}}
         </nav>
 
         <div class='search'>
-          <IconSearch class='search-icon' width='16' height='16' />
-          <input
-            type='search'
+          {{! div.search below is tag-qualified so this wrapper's own layout
+              rules don't leak onto BoxelInput's internal element, which also
+              carries a literal 'search' class when @type='search'. }}
+          <BoxelInput
+            @type='search'
             class='search-input'
             placeholder='Search by keyword'
             aria-label='Search by keyword'
-            value={{@searchValue}}
+            @value={{@searchValue}}
             data-test-storefront-search
-            {{on 'input' this.onInput}}
+            @onInput={{this.onInput}}
           />
         </div>
       </div>
@@ -129,22 +133,18 @@ export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderS
         background: var(--card, #fff);
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
       }
-      .search {
+      div.search {
         margin-left: auto;
         position: relative;
         display: flex;
         align-items: center;
       }
-      .search-icon {
-        position: absolute;
-        left: 0.9375rem;
-        color: var(--primary, #00b886);
-        pointer-events: none;
-      }
       .search-input {
+        --boxel-input-search-background-color: var(--card, #fff);
+        --boxel-input-search-color: var(--foreground, #16161c);
+        --boxel-input-search-icon-color: var(--primary, #00b886);
         width: 17rem;
         height: 2.5rem;
-        padding: 0 1.125rem 0 2.75rem;
         background: var(--card, #fff);
         border: 1px solid var(--border, #ddd8cb);
         border-radius: 999px;
