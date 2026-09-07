@@ -25,6 +25,7 @@ import {
   BoxelSelect,
   BoxelInput,
   Button,
+  LoadingIndicator,
 } from '@cardstack/boxel-ui/components';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
 import SparklesIcon from '@cardstack/boxel-icons/sparkles';
@@ -1612,7 +1613,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
 
                 {{#if this.showGeneratingPlaceholder}}
                   <div class='result-placeholder'>
-                    <div class='big-spin'></div>
+                    <LoadingIndicator @size='32px' class='big-spin' />
                     <span>Generating front view…</span>
                   </div>
                 {{else if this.frontImageUrl}}
@@ -1638,7 +1639,10 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                           {{else}}
                             <div class='slide-empty'>
                               {{#if this.generateAngles.isRunning}}
-                                <div class='slide-spin'></div><span>Generating
+                                <LoadingIndicator
+                                  @size='20px'
+                                  class='slide-spin'
+                                /><span>Generating
                                   {{slide.label}}…</span>
                               {{else}}
                                 <span
@@ -3403,12 +3407,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         }
       }
       .big-spin {
-        width: 32px;
-        height: 32px;
-        border: 3px solid var(--border);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+        --boxel-loading-indicator-color: var(--accent);
       }
 
       /* ── Carousel ── */
@@ -3466,12 +3465,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         opacity: 0.4;
       }
       .slide-spin {
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--border);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
+        --boxel-loading-indicator-color: var(--accent);
       }
       .slide-badge {
         position: absolute;
@@ -4580,12 +4574,6 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         }
         .act-btn--ghost {
           display: none;
-        }
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
         }
       }
     </style>
