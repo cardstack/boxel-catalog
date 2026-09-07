@@ -982,7 +982,7 @@ export class AiImageGeneratorIsolated extends Component<
                   @size='auto'
                   class='tab {{if (eq this.editMode "reprompt") "active"}}'
                   role='tab'
-                  aria-selected='{{eq this.editMode "reprompt"}}'
+                  aria-selected={{if (eq this.editMode "reprompt") "true" "false"}}
                   {{on 'click' (fn this.setEditMode 'reprompt')}}
                   data-test-ai-image-edit-reprompt
                 >Reprompt</Button>
