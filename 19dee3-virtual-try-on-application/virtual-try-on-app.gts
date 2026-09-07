@@ -1221,7 +1221,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 @kind='text-only'
                 @size='auto'
                 class='model-thumb model-thumb--active'
-                disabled={{this.isLocked}}
+                @disabled={{this.isLocked}}
               >
                 {{#if this.activeModel.photo.resolvedUrl}}
                   <img
@@ -1239,7 +1239,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 class='model-unlink'
                 title='Unlink model'
                 aria-label='Unlink model'
-                disabled={{this.isLocked}}
+                @disabled={{this.isLocked}}
                 {{on 'click' this.unlinkModel}}
               >✕</Button>
             </div>
@@ -1252,7 +1252,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           @size='auto'
           class='add-model-btn'
           data-bx-popover-anchor='vto-model'
-          disabled={{this.isLocked}}
+          @disabled={{this.isLocked}}
           {{on 'click' this.toggleModelMenu}}
         >+ Add Model</Button>
 
@@ -1271,7 +1271,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
               @size='auto'
               @loading={{this.isGenerating}}
               class='gen-btn {{if this.isGenerating "gen-btn--busy" ""}}'
-              disabled={{if this.canGenerate false true}}
+              @disabled={{if this.canGenerate false true}}
               {{on 'click' this.generateOutfit.perform}}
             >
               {{#if this.isGenerating}}Generating…{{else}}✦ Try On Outfit{{/if}}
@@ -1329,7 +1329,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                     @kind='text-only'
                     @size='auto'
                     class='garment-add'
-                    disabled={{this.isLocked}}
+                    @disabled={{this.isLocked}}
                     {{on 'click' (fn this.openGarmentModal section.key)}}
                   >
                     <span class='garment-add-ico'>+</span>
@@ -1674,7 +1674,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                       @size='auto'
                       class='vo-btn
                         {{if (eq this.carouselIndex v.index) "vo-btn--on" ""}}'
-                      disabled={{if
+                      @disabled={{if
                         (eq v.index 0)
                         false
                         (if this.frontImageUrl false true)
@@ -1789,7 +1789,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 @kind='text-only'
                 @size='auto'
                 class='act-btn act-btn--ghost'
-                disabled={{if this.canSaveLook false true}}
+                @disabled={{if this.canSaveLook false true}}
                 {{on 'click' this.saveLook}}
               ><span class='act-ico'>⌑</span> Save Look</Button>
             {{else}}
@@ -1799,7 +1799,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 @loading={{this.isGenerating}}
                 class='act-btn act-btn--primary
                   {{if this.isGenerating "act-btn--busy" ""}}'
-                disabled={{if this.canGenerate false true}}
+                @disabled={{if this.canGenerate false true}}
                 {{on 'click' this.generateOutfit.perform}}
               >
                 {{#if this.isGenerating}}Generating…{{else}}✦ Try On Outfit{{/if}}
@@ -1900,7 +1900,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 @size='auto'
                 class='save-btn
                   {{if this.saveUpload.isRunning "save-btn--busy" ""}}'
-                disabled={{if this.canSaveUpload false true}}
+                @disabled={{if this.canSaveUpload false true}}
                 {{on 'click' this.saveUpload.perform}}
               >{{#if
                   this.saveUpload.isRunning

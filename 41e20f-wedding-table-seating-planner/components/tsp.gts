@@ -5051,7 +5051,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   class='cv-hist-btn'
                   title='Undo (⌘Z)'
                   aria-label='Undo'
-                  disabled={{eq this.undoDepth 0}}
+                  @disabled={{eq this.undoDepth 0}}
                   {{on 'click' this.undo}}
                 ><ArrowBackUpIcon class='ico' /></Button>
                 <Button
@@ -5061,7 +5061,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   class='cv-hist-btn'
                   title='Redo (⇧⌘Z)'
                   aria-label='Redo'
-                  disabled={{eq this.redoDepth 0}}
+                  @disabled={{eq this.redoDepth 0}}
                   {{on 'click' this.redo}}
                 ><ArrowForwardUpIcon class='ico' /></Button>
               </div>
@@ -5590,7 +5590,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   class='zoom-step'
                   title='Zoom out'
                   aria-label='Zoom out'
-                  disabled={{this.zoomAtMin}}
+                  @disabled={{this.zoomAtMin}}
                   {{on 'click' this.zoomOut}}
                 >−</Button>
                 <Button
@@ -5609,7 +5609,7 @@ export class TableSeatingPlannerIsolated extends Component<
                   class='zoom-step'
                   title='Zoom in'
                   aria-label='Zoom in'
-                  disabled={{this.zoomAtMax}}
+                  @disabled={{this.zoomAtMax}}
                   {{on 'click' this.zoomIn}}
                 >+</Button>
                 <span class='zoom-div'></span>

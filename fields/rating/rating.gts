@@ -62,7 +62,7 @@ export default class RatingField extends NumberField {
             @kind='text-only'
             @size='auto'
             class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
-            disabled={{not @canEdit}}
+            @disabled={{not @canEdit}}
             {{on 'click' (fn this.setRating star)}}
           >{{if (lte star this.numericValue) '★' '☆'}}</Button>
         {{/each}}

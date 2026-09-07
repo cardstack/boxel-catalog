@@ -79,7 +79,7 @@ export default class QuantityField extends NumberField {
           class='qty-btn'
           data-test-quantity-decrement
           {{on 'click' this.decrement}}
-          disabled={{if
+          @disabled={{if
             (not @canEdit)
             true
             (if (lte this.numericValue this.minValue) true)
@@ -101,7 +101,7 @@ export default class QuantityField extends NumberField {
           class='qty-btn'
           data-test-quantity-increment
           {{on 'click' this.increment}}
-          disabled={{if
+          @disabled={{if
             (not @canEdit)
             true
             (if (gte this.numericValue this.maxValue) true)
