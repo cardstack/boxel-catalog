@@ -1269,11 +1269,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
             <Button
               @kind='text-only'
               @size='auto'
+              @loading={{this.isGenerating}}
               class='gen-btn {{if this.isGenerating "gen-btn--busy" ""}}'
               disabled={{if this.canGenerate false true}}
               {{on 'click' this.generateOutfit.perform}}
             >
-              {{#if this.isGenerating}}<span class='gen-spin'></span>{{/if}}
               {{#if this.isGenerating}}Generating…{{else}}✦ Try On Outfit{{/if}}
             </Button>
           {{/if}}
@@ -1796,12 +1796,12 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
               <Button
                 @kind='text-only'
                 @size='auto'
+                @loading={{this.isGenerating}}
                 class='act-btn act-btn--primary
                   {{if this.isGenerating "act-btn--busy" ""}}'
                 disabled={{if this.canGenerate false true}}
                 {{on 'click' this.generateOutfit.perform}}
               >
-                {{#if this.isGenerating}}<span class='gen-spin'></span>{{/if}}
                 {{#if this.isGenerating}}Generating…{{else}}✦ Try On Outfit{{/if}}
               </Button>
               <Button
@@ -3249,14 +3249,6 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .gen-btn--done {
         background: #2d7455;
         color: #fff;
-      }
-      .gen-spin {
-        width: 12px;
-        height: 12px;
-        border: 2px solid rgba(255, 255, 255, 0.35);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.65s linear infinite;
       }
       .err-msg {
         font-size: 11px;

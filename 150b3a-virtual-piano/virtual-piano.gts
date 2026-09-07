@@ -1155,20 +1155,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         aria-hidden={{if this.overlayVisible 'false' 'true'}}
       >
         <div class='vp-song-overlay-hdr'>
-          <svg
-            width='14'
-            height='14'
-            viewBox='0 0 24 24'
-            fill='none'
-            stroke='currentColor'
-            stroke-width='2'
-          ><circle cx='11' cy='11' r='8' /><line
-              x1='21'
-              y1='21'
-              x2='16.65'
-              y2='16.65'
-            /></svg>
           <BoxelInput
+            @type='search'
             class='vp-search-input'
             @value={{this.searchQuery}}
             @placeholder='Search songs…'

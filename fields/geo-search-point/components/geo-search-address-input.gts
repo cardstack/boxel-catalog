@@ -48,7 +48,7 @@ export default class GeoSearchAddressInput extends GlimmerComponent<GeoSearchAdd
   <template>
     <div class='geo-search-address-input'>
       <BoxelInput
-        type='text'
+        @type='search'
         placeholder={{this.placeholder}}
         @value={{this.searchAddressValue}}
         @onInput={{this.updateSearchAddress}}

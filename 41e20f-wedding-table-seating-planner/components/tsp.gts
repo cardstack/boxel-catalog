@@ -64,7 +64,6 @@ import TrashIcon from '@cardstack/boxel-icons/trash';
 import CopyIcon from '@cardstack/boxel-icons/copy';
 import StarIcon from '@cardstack/boxel-icons/star';
 import DownloadIcon from '@cardstack/boxel-icons/download';
-import SearchIcon from '@cardstack/boxel-icons/search';
 import CameraIcon from '@cardstack/boxel-icons/camera';
 import PrinterIcon from '@cardstack/boxel-icons/printer';
 import LayoutIcon from '@cardstack/boxel-icons/layout-dashboard';
@@ -4560,6 +4559,7 @@ export class TableSeatingPlannerIsolated extends Component<
               ></span></div>
             <div class='rail-search'>
               <BoxelInput
+                @type='search'
                 @value={{this.search}}
                 placeholder='Search guests'
                 aria-label='Search guests'
@@ -6102,11 +6102,10 @@ export class TableSeatingPlannerIsolated extends Component<
           </section>
           <aside class='inv-list' aria-label='Invitation guests'>
             <div class='inv-search'>
-              <span class='inv-search-ico'><SearchIcon class='ico' /></span>
               <BoxelInput
+                @type='search'
                 @value={{this.inviteSearch}}
                 class='inv-search-input'
-                type='search'
                 placeholder='Search guests by name'
                 aria-label='Search guests by name'
                 {{on 'input' this.onInviteSearch}}
@@ -7222,9 +7221,13 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 14px 20px 8px;
       }
       .rail-search input {
+        --boxel-input-search-icon-color: var(
+          --tsp-foreground,
+          var(--foreground, #22283f)
+        );
         width: 100%;
         height: 38px;
-        padding: 0 14px;
+        padding: 0 14px 0 38px;
         border-radius: 9px;
         border: 1px solid var(--tsp-primary-edge, rgba(255, 255, 255, 0.1));
         background: rgba(255, 255, 255, 0.06);
@@ -9802,14 +9805,11 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         margin-bottom: 16px;
       }
-      .inv-search-ico {
-        position: absolute;
-        left: 10px;
-        font-size: 15px;
-        color: var(--tsp-primary, var(--primary, #7c766c));
-        pointer-events: none;
-      }
       .inv-search-input {
+        --boxel-input-search-icon-color: var(
+          --tsp-primary,
+          var(--primary, #7c766c)
+        );
         width: 100%;
         padding: 8px 30px 8px 30px;
         border-radius: 8px;

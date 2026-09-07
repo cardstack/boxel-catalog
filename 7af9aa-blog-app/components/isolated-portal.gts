@@ -256,7 +256,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
             <h3 class='lib-section-label'>All posts</h3>
             <p class='lib-section-hint'>Drag a card to place it</p>
             <BoxelInput
-              @type='text'
+              @type='search'
               class='lib-search'
               aria-label='Search posts'
               @placeholder='Search posts…'
