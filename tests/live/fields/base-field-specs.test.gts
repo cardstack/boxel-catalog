@@ -53,7 +53,9 @@ export function runTests() {
       // inside the catalog realm — those have a different shape and are out
       // of scope for this assertion.
       let baseRealmSpecs = specs.filter((spec: any) =>
-        spec.attributes?.ref?.module?.startsWith?.('@cardstack/base/'),
+        spec.attributes?.ref?.module?.startsWith?.(
+          'https://cardstack.com/base/',
+        ),
       );
 
       assert.ok(
