@@ -78,10 +78,10 @@ export default class RatingField extends NumberField {
           gap: calc(var(--spacing, 0.25rem) * 2);
         }
         .star-btn {
+          --boxel-button-ghost-foreground: var(--muted-foreground, #cbd5e1);
           background: none;
           border: none;
           font-size: 1.25rem;
-          color: var(--muted-foreground, #cbd5e1);
           cursor: pointer;
           padding: 0;
           transition:
@@ -89,7 +89,10 @@ export default class RatingField extends NumberField {
             color 0.2s;
         }
         .star-filled {
-          color: var(--accent, #f59e0b);
+          --boxel-button-ghost-foreground: var(
+            --warning,
+            var(--boxel-yellow, #ffd800)
+          );
         }
         .rating-value {
           margin-left: calc(var(--spacing, 0.25rem) * 2);
@@ -147,7 +150,7 @@ export default class RatingField extends NumberField {
           color: var(--muted-foreground, #cbd5e1);
         }
         .atom-star.highlighted {
-          color: var(--accent, #f59e0b);
+          color: var(--warning, var(--boxel-yellow, #ffd800));
         }
         .atom-value {
           font-size: 0.6875rem;
@@ -209,7 +212,7 @@ export default class RatingField extends NumberField {
             color 0.2s;
         }
         .star-filled {
-          color: var(--accent, #f59e0b);
+          color: var(--warning, var(--boxel-yellow, #ffd800));
         }
         .rating-value {
           margin-left: calc(var(--spacing, 0.25rem) * 2);

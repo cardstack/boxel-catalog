@@ -136,7 +136,7 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
         padding-top: var(--boxel-sp-5xs);
       }
 
-      .result-icon :global(svg) {
+      .result-icon :deep(svg) {
         width: 28px;
         height: 28px;
         color: var(--boxel-dark-green);

@@ -461,7 +461,6 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
             </div>
           {{/if}}
           <Button
-            @size='auto'
             class='ti-ai-trigger'
             data-test-plan-with-ai
             {{on 'click' this.planWithAssistant}}

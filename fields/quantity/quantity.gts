@@ -122,8 +122,15 @@ export default class QuantityField extends NumberField {
         }
         .quantity-field-edit {
           display: flex;
+          width: fit-content;
           align-items: center;
           gap: var(--boxel-sp-xs, 0.5rem);
+        }
+        /* No search/validation icon is ever shown here, so collapse
+           BoxelInput's reserved icon columns via its own --boxel-input-icon-size
+           knob rather than leaving dead space on both sides of the input. */
+        .quantity-field-edit :deep(.input-container) {
+          --boxel-input-icon-size: 0px;
         }
         .qty-btn {
           width: 2.5rem;

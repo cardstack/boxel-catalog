@@ -1115,7 +1115,6 @@ export class AiImageGeneratorIsolated extends Component<
                 <div class='edit-actions'>
                   <Button
                     @kind='secondary'
-                    @size='auto'
                     class='ghost-btn'
                     {{on 'click' this.closeEdit}}
                   >
