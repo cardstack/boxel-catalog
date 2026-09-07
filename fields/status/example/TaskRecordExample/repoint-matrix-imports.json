@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Repoint the matrix realm at the catalog modules",
+      "status": "Draft",
+      "priority": "Low",
+      "dueDate": "2026-10-09",
+      "createdAt": "2026-09-07T10:22:00.000Z",
+      "cardInfo": {
+        "name": "Repoint the matrix realm at the catalog modules",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/fields/status/example/task-record-example",
+        "name": "TaskRecordExample"
+      }
+    }
+  }
+}
