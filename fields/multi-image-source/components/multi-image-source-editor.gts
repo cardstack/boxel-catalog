@@ -6,7 +6,7 @@ import { modifier } from 'ember-modifier';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import PhotoPlusIcon from '@cardstack/boxel-icons/photo-plus';
-import type { BoxComponent } from 'https://cardstack.com/base/card-api';
+import type { BoxComponent } from '@cardstack/base/card-api';
 import { BoxelInputGroup, Button } from '@cardstack/boxel-ui/components';
 import { IconLink, IconX } from '@cardstack/boxel-ui/icons';
 

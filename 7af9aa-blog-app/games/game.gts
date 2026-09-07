@@ -1,4 +1,4 @@
-import { CardDef } from 'https://cardstack.com/base/card-api';
+import { CardDef } from '@cardstack/base/card-api';
 
 // Base class for all playable games in this blog. Subclasses define their
 // own isolated/embedded/fitted views; this gives them a common type so a

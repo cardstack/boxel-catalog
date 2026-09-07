@@ -3,10 +3,10 @@ import {
   field,
   contains,
   containsMany,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import MarkdownField from 'https://cardstack.com/base/markdown';
-import NumberField from 'https://cardstack.com/base/number';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import MarkdownField from '@cardstack/base/markdown';
+import NumberField from '@cardstack/base/number';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
 import { SurveyQuestion } from './survey-question';
 import { SurveyIsolated } from './components/isolated-template';

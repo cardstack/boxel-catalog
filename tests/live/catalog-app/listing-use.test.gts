@@ -3,7 +3,7 @@ import { module, test } from 'qunit';
 
 import ListingUseCommand from '../../../commands/listing-use';
 
-import type { CardDef } from 'https://cardstack.com/base/card-api';
+import type { CardDef } from '@cardstack/base/card-api';
 
 import {
   setupLocalIndexing,

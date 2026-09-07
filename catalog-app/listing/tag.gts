@@ -3,8 +3,8 @@ import {
   StringField,
   contains,
   field,
-} from 'https://cardstack.com/base/card-api';
-import ColorField from 'https://cardstack.com/base/color';
+} from '@cardstack/base/card-api';
+import ColorField from '@cardstack/base/color';
 import TagIcon from '@cardstack/boxel-icons/tag';
 
 export class Tag extends CardDef {

@@ -2,7 +2,7 @@ import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-import { type CardContext } from 'https://cardstack.com/base/card-api';
+import { type CardContext } from '@cardstack/base/card-api';
 import { Button, FieldContainer } from '@cardstack/boxel-ui/components';
 import { formatDatetime, toISOString } from '../blog-defaults';
 import type { BlogPost } from '../blog-post';

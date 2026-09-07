@@ -7,7 +7,7 @@ import { on } from '@ember/modifier';
 import { fn, get } from '@ember/helper';
 import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { Component, ImageDef } from 'https://cardstack.com/base/card-api';
+import { Component, ImageDef } from '@cardstack/base/card-api';
 import {
   realmURL,
   identifyCard,

@@ -1,22 +1,22 @@
-import { Component } from 'https://cardstack.com/base/card-api';
+import { Component } from '@cardstack/base/card-api';
 import { BoxelInput } from '@cardstack/boxel-ui/components';
 import { not } from '@cardstack/boxel-ui/helpers';
 
 import NumberField, {
   deserializeForUI,
   serializeForUI,
-} from 'https://cardstack.com/base/number';
-import { TextInputValidator } from 'https://cardstack.com/base/text-input-validator';
+} from '@cardstack/base/number';
+import { TextInputValidator } from '@cardstack/base/text-input-validator';
 import { NumberSerializer } from '@cardstack/runtime-common';
 
 import {
   getNumericValue,
   getFormattedDisplayValue,
-} from 'https://cardstack.com/base/number/util/index';
+} from '@cardstack/base/number/util/index';
 import {
   ProgressBarEmbedded,
   ProgressBarAtom,
-} from 'https://cardstack.com/base/number/components/progress-bar';
+} from '@cardstack/base/number/components/progress-bar';
 
 // Options interface for slider field
 export interface SliderOptions {

@@ -8,8 +8,8 @@ import {
   type BaseDef,
   type BaseDefConstructor,
   type Field,
-} from 'https://cardstack.com/base/card-api';
-import type { Spec } from 'https://cardstack.com/base/spec';
+} from '@cardstack/base/card-api';
+import type { Spec } from '@cardstack/base/spec';
 
 interface FieldRow {
   name: string;

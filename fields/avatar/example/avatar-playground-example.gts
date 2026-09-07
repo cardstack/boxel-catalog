@@ -1,10 +1,5 @@
-import {
-  CardDef,
-  Component,
-  contains,
-  field,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { CardDef, Component, contains, field } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import CodeSnippet from '../../../components/code-snippet';
 import Avatar from '../avatar';
 

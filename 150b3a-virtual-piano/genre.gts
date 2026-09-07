@@ -1,10 +1,5 @@
-import {
-  CardDef,
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { CardDef, Component, field, contains } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import TagIcon from '@cardstack/boxel-icons/tag';
 
 export const GENRE_EMOJI: Record<string, string> = {

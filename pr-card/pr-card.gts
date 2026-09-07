@@ -6,9 +6,9 @@ import {
   contains,
   containsMany,
   realmURL,
-} from 'https://cardstack.com/base/card-api';
-import MarkdownField from 'https://cardstack.com/base/markdown';
-import DatetimeField from 'https://cardstack.com/base/datetime';
+} from '@cardstack/base/card-api';
+import MarkdownField from '@cardstack/base/markdown';
+import DatetimeField from '@cardstack/base/datetime';
 import {
   FileContentField,
   FileManifestEntryField,

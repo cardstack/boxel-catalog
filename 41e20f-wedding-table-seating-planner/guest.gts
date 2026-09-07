@@ -4,10 +4,10 @@ import {
   contains,
   containsMany,
   linksTo,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import BooleanField from 'https://cardstack.com/base/boolean';
-import enumField from 'https://cardstack.com/base/enum';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import BooleanField from '@cardstack/base/boolean';
+import enumField from '@cardstack/base/enum';
 import { htmlSafe } from '@ember/template';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';

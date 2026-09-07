@@ -6,7 +6,7 @@ import {
   linksTo,
   linksToMany,
   StringField,
-} from 'https://cardstack.com/base/card-api';
+} from '@cardstack/base/card-api';
 import { codeRef } from '@cardstack/runtime-common';
 import { type SortOption, sortByCardTitleAsc } from '../components/sort';
 import { type LayoutFilter } from '../components/layout';

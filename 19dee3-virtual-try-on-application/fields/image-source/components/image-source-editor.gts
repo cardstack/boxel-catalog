@@ -4,7 +4,7 @@ import { isDestroyed, isDestroying } from '@ember/destroyable';
 import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
 import PhotoPlusIcon from '@cardstack/boxel-icons/photo-plus';
-import type { BoxComponent } from 'https://cardstack.com/base/card-api';
+import type { BoxComponent } from '@cardstack/base/card-api';
 import { BoxelInputGroup, Button } from '@cardstack/boxel-ui/components';
 import { IconLink, IconX } from '@cardstack/boxel-ui/icons';
 

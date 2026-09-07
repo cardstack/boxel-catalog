@@ -5,16 +5,16 @@ import {
   contains,
   linksTo,
   ImageDef,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import NumberField from 'https://cardstack.com/base/number';
-import DateField from 'https://cardstack.com/base/date';
-import YearField from 'https://cardstack.com/base/date/year';
-import DateRangeField from 'https://cardstack.com/base/date-range-field';
-import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
-import ColorField from 'https://cardstack.com/base/color';
-import UrlField from 'https://cardstack.com/base/url';
-import enumField from 'https://cardstack.com/base/enum';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import NumberField from '@cardstack/base/number';
+import DateField from '@cardstack/base/date';
+import YearField from '@cardstack/base/date/year';
+import DateRangeField from '@cardstack/base/date-range-field';
+import AmountWithCurrency from '@cardstack/base/amount-with-currency';
+import ColorField from '@cardstack/base/color';
+import UrlField from '@cardstack/base/url';
+import enumField from '@cardstack/base/enum';
 import GlassFullIcon from '@cardstack/boxel-icons/glass-full';
 import { Pill, Swatch } from '@cardstack/boxel-ui/components';
 import { bool, cssVar, or } from '@cardstack/boxel-ui/helpers';

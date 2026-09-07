@@ -1,5 +1,5 @@
 import type { MortgageCalculator } from '../mortgage-calculator';
-import { Component } from 'https://cardstack.com/base/card-api';
+import { Component } from '@cardstack/base/card-api';
 import { formatCurrencyShort } from './utils';
 
 export class MortgageCalculatorFitted extends Component<

@@ -4,12 +4,8 @@ import {
   SpecReadmeSection,
   ExamplesWithInteractive,
   SpecModuleSection,
-} from 'https://cardstack.com/base/spec';
-import {
-  field,
-  contains,
-  Component,
-} from 'https://cardstack.com/base/card-api';
+} from '@cardstack/base/spec';
+import { field, contains, Component } from '@cardstack/base/card-api';
 import RatingField from '../rating';
 import CodeSnippet from '../../../components/code-snippet';
 import FieldShowcase from '../../../components/field-showcase';

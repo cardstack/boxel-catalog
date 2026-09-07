@@ -1,6 +1,6 @@
 import { themeStyleFor } from './blog-defaults';
-import MarkdownField from 'https://cardstack.com/base/markdown';
-import TextAreaField from 'https://cardstack.com/base/text-area';
+import MarkdownField from '@cardstack/base/markdown';
+import TextAreaField from '@cardstack/base/text-area';
 import {
   Component,
   CardDef,
@@ -8,8 +8,8 @@ import {
   contains,
   containsMany,
   StringField,
-} from 'https://cardstack.com/base/card-api';
-import EmailField from 'https://cardstack.com/base/email';
+} from '@cardstack/base/card-api';
+import EmailField from '@cardstack/base/email';
 
 import Email from '@cardstack/boxel-icons/mail';
 import Linkedin from '@cardstack/boxel-icons/brand-linkedin';

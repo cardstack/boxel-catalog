@@ -1,5 +1,5 @@
 import type { ItineraryStop } from '../travel-itinerary';
-import { Component } from 'https://cardstack.com/base/card-api';
+import { Component } from '@cardstack/base/card-api';
 import { categoryStyle, formatCost } from '../utils/index';
 
 export class ItineraryStopEmbedded extends Component<typeof ItineraryStop> {

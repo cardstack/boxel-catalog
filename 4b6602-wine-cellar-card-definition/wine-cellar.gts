@@ -4,10 +4,10 @@ import {
   field,
   contains,
   linksToMany,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import NumberField from 'https://cardstack.com/base/number';
-import MarkdownField from 'https://cardstack.com/base/markdown';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import NumberField from '@cardstack/base/number';
+import MarkdownField from '@cardstack/base/markdown';
 import GlassFullIcon from '@cardstack/boxel-icons/glass-full';
 import { htmlSafe, type SafeString } from '@ember/template';
 import { WineBottle } from './wine-bottle';

@@ -4,12 +4,12 @@ import {
   containsMany,
   field,
   FieldDef,
-} from 'https://cardstack.com/base/card-api';
-import BooleanField from 'https://cardstack.com/base/boolean';
-import enumField from 'https://cardstack.com/base/enum';
-import MarkdownField from 'https://cardstack.com/base/markdown';
-import NumberField from 'https://cardstack.com/base/number';
-import StringField from 'https://cardstack.com/base/string';
+} from '@cardstack/base/card-api';
+import BooleanField from '@cardstack/base/boolean';
+import enumField from '@cardstack/base/enum';
+import MarkdownField from '@cardstack/base/markdown';
+import NumberField from '@cardstack/base/number';
+import StringField from '@cardstack/base/string';
 
 // True when a returned grade is structurally consistent with the assignment:
 // a letter grade plus per-question points (and feedbacks, when present)

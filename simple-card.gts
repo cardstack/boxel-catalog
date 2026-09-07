@@ -1,13 +1,8 @@
 // ═══ [EDIT TRACKING: ON] Mark all changes with ⁿ ═══
-import {
-  CardDef,
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api'; // ¹
-import StringField from 'https://cardstack.com/base/string'; // ²
-import TextAreaField from 'https://cardstack.com/base/text-area'; // ³
-import DateField from 'https://cardstack.com/base/date'; // ⁴
+import { CardDef, Component, field, contains } from '@cardstack/base/card-api'; // ¹
+import StringField from '@cardstack/base/string'; // ²
+import TextAreaField from '@cardstack/base/text-area'; // ³
+import DateField from '@cardstack/base/date'; // ⁴
 import NotepadIcon from '@cardstack/boxel-icons/file-text'; // ⁵
 
 export class SimpleCard extends CardDef {

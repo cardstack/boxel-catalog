@@ -4,11 +4,11 @@ import {
   field,
   contains,
   linksTo,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import DateTimeField from 'https://cardstack.com/base/datetime';
-import enumField from 'https://cardstack.com/base/enum';
-import ImageDef from 'https://cardstack.com/base/image-file-def';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import DateTimeField from '@cardstack/base/datetime';
+import enumField from '@cardstack/base/enum';
+import ImageDef from '@cardstack/base/image-file-def';
 import AspectRatioField from '@cardstack/catalog/fields/aspect-ratio/aspect-ratio';
 import SparklesIcon from '@cardstack/boxel-icons/sparkles';
 

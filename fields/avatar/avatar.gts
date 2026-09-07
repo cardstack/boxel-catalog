@@ -1,10 +1,5 @@
-import {
-  FieldDef,
-  field,
-  contains,
-  Component,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { FieldDef, field, contains, Component } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import UserIcon from '@cardstack/boxel-icons/user';
 import { getAvataarsUrl, AvataaarsModel } from './utils/external/avataar';
 import AvatarComponent from './components/avatar';

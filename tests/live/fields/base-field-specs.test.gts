@@ -25,7 +25,7 @@ export function runTests() {
         body: JSON.stringify({
           filter: {
             'item.on': {
-              module: 'https://cardstack.com/base/spec',
+              module: '@cardstack/base/spec',
               name: 'Spec',
             },
             every: [{ eq: { 'item.specType': 'field' } }],
@@ -53,9 +53,7 @@ export function runTests() {
       // inside the catalog realm — those have a different shape and are out
       // of scope for this assertion.
       let baseRealmSpecs = specs.filter((spec: any) =>
-        spec.attributes?.ref?.module?.startsWith?.(
-          'https://cardstack.com/base/',
-        ),
+        spec.attributes?.ref?.module?.startsWith?.('@cardstack/base/'),
       );
 
       assert.ok(

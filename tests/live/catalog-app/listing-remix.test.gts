@@ -5,7 +5,7 @@ import { module, test } from 'qunit';
 
 import ListingRemixCommand from '../../../commands/listing-remix';
 
-import type { CardDef } from 'https://cardstack.com/base/card-api';
+import type { CardDef } from '@cardstack/base/card-api';
 
 import {
   setupLocalIndexing,

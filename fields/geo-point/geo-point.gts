@@ -1,10 +1,5 @@
-import {
-  Component,
-  contains,
-  FieldDef,
-  field,
-} from 'https://cardstack.com/base/card-api';
-import NumberField from 'https://cardstack.com/base/number';
+import { Component, contains, FieldDef, field } from '@cardstack/base/card-api';
+import NumberField from '@cardstack/base/number';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 
 import GeoPointEditField from './components/geo-point-edit-field';

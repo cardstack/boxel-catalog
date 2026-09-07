@@ -1,8 +1,8 @@
-import DateTimeField from 'https://cardstack.com/base/datetime';
-import StringField from 'https://cardstack.com/base/string';
-import RichMarkdownField from 'https://cardstack.com/base/rich-markdown';
-import BooleanField from 'https://cardstack.com/base/boolean';
-import NumberField from 'https://cardstack.com/base/number';
+import DateTimeField from '@cardstack/base/datetime';
+import StringField from '@cardstack/base/string';
+import RichMarkdownField from '@cardstack/base/rich-markdown';
+import BooleanField from '@cardstack/base/boolean';
+import NumberField from '@cardstack/base/number';
 import {
   CardDef,
   field,
@@ -11,7 +11,7 @@ import {
   getCardMeta,
   linksToMany,
   realmURL,
-} from 'https://cardstack.com/base/card-api';
+} from '@cardstack/base/card-api';
 import {
   rri,
   type Query,
@@ -782,7 +782,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
     return {
       filter: {
         type: {
-          module: rri('https://cardstack.com/base/style-reference'),
+          module: rri('@cardstack/base/style-reference'),
           name: 'default',
         },
       },

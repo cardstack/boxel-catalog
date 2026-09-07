@@ -3,7 +3,7 @@ import { fn } from '@ember/helper';
 import { action } from '@ember/object';
 import { htmlSafe } from '@ember/template';
 import { tracked } from '@glimmer/tracking';
-import { Component, realmURL } from 'https://cardstack.com/base/card-api';
+import { Component, realmURL } from '@cardstack/base/card-api';
 import {
   codeRef,
   rri,
@@ -67,7 +67,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
     return {
       filter: {
         type: {
-          module: rri('https://cardstack.com/base/style-reference'),
+          module: rri('@cardstack/base/style-reference'),
           name: 'default',
         },
       },

@@ -1,11 +1,6 @@
-import {
-  CardDef,
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import enumField from 'https://cardstack.com/base/enum';
+import { CardDef, Component, field, contains } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import enumField from '@cardstack/base/enum';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 import ShirtIcon from '@cardstack/boxel-icons/shirt';
 
