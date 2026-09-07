@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Write the 17 helper-module Specs",
+      "status": "Draft",
+      "priority": "Normal",
+      "dueDate": "2026-09-26",
+      "createdAt": "2026-09-07T10:20:00.000Z",
+      "cardInfo": {
+        "name": "Write the 17 helper-module Specs",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/fields/status/example/task-record-example",
+        "name": "TaskRecordExample"
+      }
+    }
+  }
+}

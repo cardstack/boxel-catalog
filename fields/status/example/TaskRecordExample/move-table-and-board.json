@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Move the Table and Board Specs",
+      "status": "Active",
+      "priority": "Urgent",
+      "dueDate": "2026-09-12",
+      "createdAt": "2026-09-07T19:40:00.000Z",
+      "cardInfo": {
+        "name": "Move the Table and Board Specs",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/fields/status/example/task-record-example",
+        "name": "TaskRecordExample"
+      }
+    }
+  }
+}
