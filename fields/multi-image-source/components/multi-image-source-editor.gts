@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import PhotoPlusIcon from '@cardstack/boxel-icons/photo-plus';
 import type { BoxComponent } from 'https://cardstack.com/base/card-api';
@@ -10,6 +11,46 @@ import { BoxelInputGroup, Button } from '@cardstack/boxel-ui/components';
 import { IconLink, IconX } from '@cardstack/boxel-ui/icons';
 
 import ImageSourceField from '../../image-source/image-source';
+
+interface UrlAddFormSignature {
+  Args: {
+    urlDraft: string;
+    onUrlInput: (value: string) => void;
+    onSubmit: (event: Event) => void;
+  };
+}
+
+// the "paste a URL" row — identical in the has-items and empty-state
+// branches below, so it's factored out once instead of copy-pasted twice.
+const UrlAddForm: TemplateOnlyComponent<UrlAddFormSignature> = <template>
+  <form class='url-form' {{on 'submit' @onSubmit}}>
+    <label class='visually-hidden' for='multi-url-input'>Image URL</label>
+    <BoxelInputGroup
+      id='multi-url-input'
+      @placeholder='Paste image URL…'
+      @value={{@urlDraft}}
+      @onInput={{@onUrlInput}}
+      data-test-multi-image-source-url-input
+    >
+      <:before as |Accessories|>
+        <Accessories.Text>
+          <IconLink width='14' height='14' aria-hidden='true' />
+        </Accessories.Text>
+      </:before>
+      <:after>
+        <Button
+          @kind='text-only'
+          @size='auto'
+          type='submit'
+          class='add-url-btn'
+          data-test-multi-image-source-url-add
+        >
+          Add
+        </Button>
+      </:after>
+    </BoxelInputGroup>
+  </form>
+</template>;
 
 interface MultiImageSourceModel {
   images: any[] | null | undefined;
@@ -143,33 +184,11 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
           <@fileField />
         </div>
 
-        <form class='url-form' {{on 'submit' this.addUrl}}>
-          <label class='visually-hidden' for='multi-url-input'>Image URL</label>
-          <BoxelInputGroup
-            id='multi-url-input'
-            @placeholder='Paste image URL…'
-            @value={{this.urlDraft}}
-            @onInput={{this.onUrlInput}}
-            data-test-multi-image-source-url-input
-          >
-            <:before as |Accessories|>
-              <Accessories.Text>
-                <IconLink width='14' height='14' aria-hidden='true' />
-              </Accessories.Text>
-            </:before>
-            <:after>
-              <Button
-                @kind='text-only'
-                @size='auto'
-                type='submit'
-                class='add-url-btn'
-                data-test-multi-image-source-url-add
-              >
-                Add
-              </Button>
-            </:after>
-          </BoxelInputGroup>
-        </form>
+        <UrlAddForm
+          @urlDraft={{this.urlDraft}}
+          @onUrlInput={{this.onUrlInput}}
+          @onSubmit={{this.addUrl}}
+        />
       {{else}}
         <div class='empty'>
           <div class='empty-pick' data-test-multi-image-source-link>
@@ -192,33 +211,11 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
           </div>
           <div class='empty-url'>
             <span class='empty-url-title'>Add image URL</span>
-            <form class='url-form' {{on 'submit' this.addUrl}}>
-              <label class='visually-hidden' for='multi-url-input'>Image URL</label>
-              <BoxelInputGroup
-                id='multi-url-input'
-                @placeholder='Paste image URL…'
-                @value={{this.urlDraft}}
-                @onInput={{this.onUrlInput}}
-                data-test-multi-image-source-url-input
-              >
-                <:before as |Accessories|>
-                  <Accessories.Text>
-                    <IconLink width='14' height='14' aria-hidden='true' />
-                  </Accessories.Text>
-                </:before>
-                <:after>
-                  <Button
-                    @kind='text-only'
-                    @size='auto'
-                    type='submit'
-                    class='add-url-btn'
-                    data-test-multi-image-source-url-add
-                  >
-                    Add
-                  </Button>
-                </:after>
-              </BoxelInputGroup>
-            </form>
+            <UrlAddForm
+              @urlDraft={{this.urlDraft}}
+              @onUrlInput={{this.onUrlInput}}
+              @onSubmit={{this.addUrl}}
+            />
           </div>
         </div>
       {{/if}}
