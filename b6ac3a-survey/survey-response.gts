@@ -6,8 +6,8 @@ import {
   contains,
   containsMany,
   linksTo,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
 import { Survey } from './survey';
 

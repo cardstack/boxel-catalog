@@ -16,8 +16,8 @@ import XIcon from '@cardstack/boxel-icons/x';
 
 import { Button } from '@cardstack/boxel-ui/components';
 import { add, eq } from '@cardstack/boxel-ui/helpers';
-import { Component } from 'https://cardstack.com/base/card-api';
-import TimeField from 'https://cardstack.com/base/time';
+import { Component } from '@cardstack/base/card-api';
+import TimeField from '@cardstack/base/time';
 
 import {
   MapRender,

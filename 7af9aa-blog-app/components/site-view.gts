@@ -2,7 +2,7 @@ import { on } from '@ember/modifier';
 import { fn, get } from '@ember/helper';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
-import { Component, realmURL } from 'https://cardstack.com/base/card-api';
+import { Component, realmURL } from '@cardstack/base/card-api';
 import {
   codeRef,
   type Query,

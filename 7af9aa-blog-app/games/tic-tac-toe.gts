@@ -1,9 +1,5 @@
-import {
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { Component, field, contains } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import { Game } from './game';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';

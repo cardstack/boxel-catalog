@@ -1,11 +1,6 @@
-import {
-  contains,
-  field,
-  Component,
-  CardDef,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import ColorField from 'https://cardstack.com/base/color';
+import { contains, field, Component, CardDef } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import ColorField from '@cardstack/base/color';
 import { htmlSafe } from '@ember/template';
 import { cssVar, getContrastColor } from '@cardstack/boxel-ui/helpers';
 

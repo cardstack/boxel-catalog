@@ -1,10 +1,6 @@
-import {
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import enumField from 'https://cardstack.com/base/enum';
+import { Component, field, contains } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import enumField from '@cardstack/base/enum';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { BoxelInput, Button } from '@cardstack/boxel-ui/components';

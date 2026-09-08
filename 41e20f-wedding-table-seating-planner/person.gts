@@ -4,9 +4,9 @@ import {
   field,
   contains,
   type BaseDefComponent,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import UrlField from 'https://cardstack.com/base/url';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import UrlField from '@cardstack/base/url';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 import UserIcon from '@cardstack/boxel-icons/user';
 

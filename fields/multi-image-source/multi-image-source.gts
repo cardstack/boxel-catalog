@@ -6,8 +6,8 @@ import {
   linksTo,
   Component,
   ImageDef,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import PhotoIcon from '@cardstack/boxel-icons/photo';
 
 import ImageSourceField from '../image-source/image-source';

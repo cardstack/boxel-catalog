@@ -1,4 +1,4 @@
-import { Component } from 'https://cardstack.com/base/card-api';
+import { Component } from '@cardstack/base/card-api';
 import type { Survey } from '../survey';
 
 export class SurveyFitted extends Component<typeof Survey> {

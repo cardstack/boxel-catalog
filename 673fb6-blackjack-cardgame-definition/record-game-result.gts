@@ -1,10 +1,5 @@
-import {
-  CardDef,
-  field,
-  contains,
-  linksTo,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { CardDef, field, contains, linksTo } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import { Command } from '@cardstack/runtime-common';
 import { GameResult } from './game-result';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';

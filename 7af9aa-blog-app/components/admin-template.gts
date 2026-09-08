@@ -7,7 +7,7 @@ import {
   Component,
   realmURL,
   type CardContext,
-} from 'https://cardstack.com/base/card-api';
+} from '@cardstack/base/card-api';
 import {
   type LooseSingleCardDocument,
   type ResolvedCodeRef,

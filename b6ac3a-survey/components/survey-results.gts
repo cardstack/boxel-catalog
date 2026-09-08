@@ -1,6 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { htmlSafe } from '@ember/template';
-import { type CardContext } from 'https://cardstack.com/base/card-api';
+import { type CardContext } from '@cardstack/base/card-api';
 import { codeRef, type Query } from '@cardstack/runtime-common';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import type { SurveyQuestion } from '../survey-question';

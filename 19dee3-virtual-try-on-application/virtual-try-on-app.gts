@@ -1,9 +1,4 @@
-import {
-  CardDef,
-  Component,
-  field,
-  linksTo,
-} from 'https://cardstack.com/base/card-api';
+import { CardDef, Component, field, linksTo } from '@cardstack/base/card-api';
 import {
   codeRef,
   realmURL,

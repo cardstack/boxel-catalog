@@ -2,7 +2,7 @@ import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
-import { type CardContext } from 'https://cardstack.com/base/card-api';
+import { type CardContext } from '@cardstack/base/card-api';
 import {
   type Query,
   type SearchEntryWireQuery,

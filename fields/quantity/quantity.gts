@@ -1,5 +1,5 @@
 // External dependencies
-import { Component } from 'https://cardstack.com/base/card-api';
+import { Component } from '@cardstack/base/card-api';
 import { on } from '@ember/modifier';
 import { lte, gte, not } from '@cardstack/boxel-ui/helpers';
 import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
@@ -7,15 +7,12 @@ import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
 import NumberField, {
   deserializeForUI,
   serializeForUI,
-} from 'https://cardstack.com/base/number';
-import { TextInputValidator } from 'https://cardstack.com/base/text-input-validator';
+} from '@cardstack/base/number';
+import { TextInputValidator } from '@cardstack/base/text-input-validator';
 import { NumberSerializer } from '@cardstack/runtime-common';
 import Grid2x2Icon from '@cardstack/boxel-icons/grid-2x2';
 
-import {
-  getNumericValue,
-  clamp,
-} from 'https://cardstack.com/base/number/util/index';
+import { getNumericValue, clamp } from '@cardstack/base/number/util/index';
 
 // Options interface for quantity field
 export interface QuantityOptions {

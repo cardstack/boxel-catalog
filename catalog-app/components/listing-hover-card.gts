@@ -1,7 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { BoxelButton } from '@cardstack/boxel-ui/components';
-import { type CardContext } from 'https://cardstack.com/base/card-api';
+import { type CardContext } from '@cardstack/base/card-api';
 
 import { type Listing } from '../listing/listing';
 import { listingActions, isReady } from '../resources/listing-actions';

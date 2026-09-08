@@ -5,7 +5,7 @@ import {
   field,
   contains,
   realmURL,
-} from 'https://cardstack.com/base/card-api';
+} from '@cardstack/base/card-api';
 import { Pill } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import type { GithubEventCard } from '../../github-event/github-event';

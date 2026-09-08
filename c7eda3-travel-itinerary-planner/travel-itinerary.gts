@@ -4,14 +4,14 @@ import {
   containsMany,
   field,
   FieldDef,
-} from 'https://cardstack.com/base/card-api';
-import DateRangeField from 'https://cardstack.com/base/date-range-field';
-import enumField from 'https://cardstack.com/base/enum';
-import NumberField from 'https://cardstack.com/base/number';
-import CurrencyField from 'https://cardstack.com/base/currency';
-import StringField from 'https://cardstack.com/base/string';
-import TextAreaField from 'https://cardstack.com/base/text-area';
-import TimeField from 'https://cardstack.com/base/time';
+} from '@cardstack/base/card-api';
+import DateRangeField from '@cardstack/base/date-range-field';
+import enumField from '@cardstack/base/enum';
+import NumberField from '@cardstack/base/number';
+import CurrencyField from '@cardstack/base/currency';
+import StringField from '@cardstack/base/string';
+import TextAreaField from '@cardstack/base/text-area';
+import TimeField from '@cardstack/base/time';
 import PlaneIcon from '@cardstack/boxel-icons/plane';
 
 import GeoSearchPointField from '@cardstack/catalog/fields/geo-search-point/geo-search-point';

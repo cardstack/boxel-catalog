@@ -11,13 +11,8 @@
 //   • ADSR envelope per note for natural piano sound
 //   • Instrument profiles: classical | electric | organ | harpsichord
 // =============================================================================
-import {
-  CardDef,
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { CardDef, Component, field, contains } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';

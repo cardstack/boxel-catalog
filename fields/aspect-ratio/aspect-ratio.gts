@@ -1,5 +1,5 @@
-import { Component } from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { Component } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/boxel-ui/components';
 import { on } from '@ember/modifier';

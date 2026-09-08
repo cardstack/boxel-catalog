@@ -1,10 +1,5 @@
-import {
-  FieldDef,
-  field,
-  contains,
-  Component,
-} from 'https://cardstack.com/base/card-api';
-import NumberField from 'https://cardstack.com/base/number';
+import { FieldDef, field, contains, Component } from '@cardstack/base/card-api';
+import NumberField from '@cardstack/base/number';
 import { StepRangeScroller } from '../../components/step-range-scroller';
 
 export default class DiscreteRangeField extends FieldDef {

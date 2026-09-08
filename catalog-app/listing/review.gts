@@ -1,11 +1,6 @@
-import {
-  CardDef,
-  field,
-  contains,
-  linksTo,
-} from 'https://cardstack.com/base/card-api';
-import NumberField from 'https://cardstack.com/base/number';
-import MarkdownField from 'https://cardstack.com/base/markdown';
+import { CardDef, field, contains, linksTo } from '@cardstack/base/card-api';
+import NumberField from '@cardstack/base/number';
+import MarkdownField from '@cardstack/base/markdown';
 
 import { Listing } from './listing';
 

@@ -4,15 +4,15 @@ import {
   contains,
   containsMany,
   linksToMany,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import TextAreaField from 'https://cardstack.com/base/text-area';
-import MarkdownField from 'https://cardstack.com/base/markdown';
-import UrlField from 'https://cardstack.com/base/url';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import TextAreaField from '@cardstack/base/text-area';
+import MarkdownField from '@cardstack/base/markdown';
+import UrlField from '@cardstack/base/url';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
-import NumberField from 'https://cardstack.com/base/number';
-import BooleanField from 'https://cardstack.com/base/boolean';
-import DatetimeField from 'https://cardstack.com/base/datetime';
+import NumberField from '@cardstack/base/number';
+import BooleanField from '@cardstack/base/boolean';
+import DatetimeField from '@cardstack/base/datetime';
 import LayoutIcon from '@cardstack/boxel-icons/layout-dashboard';
 
 import { Guest } from './guest';

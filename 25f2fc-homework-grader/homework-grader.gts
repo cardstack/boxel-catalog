@@ -23,9 +23,9 @@ import {
   containsMany,
   field,
   linksTo,
-} from 'https://cardstack.com/base/card-api';
-import { Skill } from 'https://cardstack.com/base/skill';
-import TextAreaField from 'https://cardstack.com/base/text-area';
+} from '@cardstack/base/card-api';
+import { Skill } from '@cardstack/base/skill';
+import TextAreaField from '@cardstack/base/text-area';
 import { isGradeConsistent, GradeField, QuestionField } from './fields';
 
 class HomeworkIsolated extends Component<typeof HomeworkGrader> {
