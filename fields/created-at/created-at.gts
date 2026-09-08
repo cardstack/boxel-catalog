@@ -13,7 +13,7 @@ const UNITS: [limitSeconds: number, divisorSeconds: number, suffix: string][] =
     [Infinity, 31557600, 'y'],
   ];
 
-/** "3d ago" / "in 2h" / "just now". Sign-aware so an anomalous future stamp is visible rather than clamped. */
+/** "3d ago" / "in 2h" / "just now". Anything within a minute either way reads "just now" (clock skew, not an anomaly); beyond that a future stamp renders as "in …" so it stays visible rather than clamped. */
 export function relativeStamp(
   value: Date | null | undefined,
 ): string | undefined {

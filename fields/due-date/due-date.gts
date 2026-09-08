@@ -62,6 +62,10 @@ function phrase(days: number): string {
   return `due in ${days} days`;
 }
 
+function validDate(value: Date | null | undefined): Date | undefined {
+  return value && !Number.isNaN(value.getTime()) ? value : undefined;
+}
+
 function shortDate(value: Date): string {
   return new Intl.DateTimeFormat(undefined, {
     day: 'numeric',
@@ -86,7 +90,8 @@ export class DueDateField extends DateField {
       return dueDays(this.args.model);
     }
     get date() {
-      return this.args.model ? longDate(this.args.model) : undefined;
+      let d = validDate(this.args.model);
+      return d ? longDate(d) : undefined;
     }
     get phrase() {
       return this.days === undefined ? undefined : phrase(this.days);
@@ -131,7 +136,8 @@ export class DueDateField extends DateField {
 
   static atom = class Atom extends Component<typeof this> {
     get label() {
-      return this.args.model ? shortDate(this.args.model) : undefined;
+      let d = validDate(this.args.model);
+      return d ? shortDate(d) : undefined;
     }
     get title() {
       let days = dueDays(this.args.model);
