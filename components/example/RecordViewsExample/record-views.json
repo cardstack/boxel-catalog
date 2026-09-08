@@ -58,7 +58,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/catalog/components/example/record-views-example",
+        "module": "../record-views-example",
         "name": "RecordViewsExample"
       }
     }
