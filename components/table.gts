@@ -62,8 +62,14 @@ function alignClass(column: TableColumn): string {
   return a === 'right' || a === 'end' ? 'right' : 'left';
 }
 
+// A column sorts by `sortValue`, falling back to `value`; with neither there is
+// nothing to order on, so no sort control is offered.
+function sortReader(column: TableColumn) {
+  return column.sortValue ?? column.value;
+}
+
 function isSortable(column: TableColumn): boolean {
-  return column.sortable !== false;
+  return column.sortable !== false && typeof sortReader(column) === 'function';
 }
 
 // The row's button lives in the first cell only.
@@ -130,9 +136,9 @@ export class Table extends GlimmerComponent<TableSignature> {
       return items;
     }
     let column = this.args.columns.find((c) => c.key === this.sortKey);
-    if (!column || typeof column.value !== 'function') return items;
+    let read = column ? sortReader(column) : undefined;
+    if (!read) return items;
     let dir = this.sortDir === 'asc' ? 1 : -1;
-    let read = column.sortValue ?? column.value!;
     return [...items].sort((a, b) => {
       let av = read(a);
       let bv = read(b);
@@ -491,16 +497,16 @@ export class Table extends GlimmerComponent<TableSignature> {
          before any text, so a scanner finds the overdue rows without parsing a
          pill mid-line. */
       tr.sev-over td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-danger, #b3261e);
+        box-shadow: inset 3px 0 0 var(--boxel-danger);
       }
       tr.sev-note td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-warning, #b8860b);
+        box-shadow: inset 3px 0 0 var(--boxel-warning);
       }
       tr.sev-ok td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-success, #2e6b3f);
+        box-shadow: inset 3px 0 0 var(--boxel-success);
       }
       tr.sev-cool td:first-child {
-        box-shadow: inset 3px 0 0 #1f5b8f;
+        box-shadow: inset 3px 0 0 var(--boxel-dark-teal);
       }
       tr.clickable {
         cursor: pointer;
