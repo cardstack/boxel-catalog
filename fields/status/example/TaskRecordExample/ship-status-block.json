@@ -28,7 +28,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/catalog/fields/status/example/task-record-example",
+        "module": "../task-record-example",
         "name": "TaskRecordExample"
       }
     }
