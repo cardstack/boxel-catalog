@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "reference": "BK-20260912-00399",
+      "quantity": 1,
+      "rsvp": "Going",
+      "paymentStatus": "Unpaid",
+      "totalPrice": {
+        "amount": 38,
+        "currency": {
+          "code": "GBP"
+        }
+      },
+      "checkedInAt": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "event": {
+        "links": {
+          "self": "../Event/northbridge-v-riverton"
+        }
+      },
+      "holder": {
+        "links": {
+          "self": "../../crm/Contact/marcus-obi"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../booking",
+        "name": "Booking"
+      },
+      "_touched": 1787195038250
+    }
+  }
+}

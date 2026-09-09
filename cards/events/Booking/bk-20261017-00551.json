@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "reference": "BK-20261017-00551",
+      "quantity": 2,
+      "rsvp": "Invited",
+      "paymentStatus": "Unpaid",
+      "totalPrice": {
+        "amount": 110,
+        "currency": {
+          "code": "GBP"
+        }
+      },
+      "checkedInAt": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "event": {
+        "links": {
+          "self": "../Event/northbridge-v-riverton"
+        }
+      },
+      "holder": {
+        "links": {
+          "self": "../../crm/Contact/jason-lim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../booking",
+        "name": "Booking"
+      },
+      "_touched": 1787195043971
+    }
+  }
+}
