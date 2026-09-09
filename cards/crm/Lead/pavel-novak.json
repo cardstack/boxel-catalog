@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Pavel Novak",
+      "company": "Novak Composites",
+      "email": "pavel.novak@novak-composites.example",
+      "phone": "+420601234567",
+      "source": "ad",
+      "status": "new",
+      "score": 34,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "campaign": {
+        "links": {
+          "self": "../Campaign/always-on-search-ads"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lead",
+        "name": "Lead"
+      }
+    }
+  }
+}
