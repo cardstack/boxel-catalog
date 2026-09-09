@@ -116,12 +116,12 @@ export class PrCiStatusField extends FieldDef {
       let success = this.ciSuccessCount;
       let failed = this.ciFailedCount;
       let total = this.ciTotalCount;
-      if (total === 0) return 'background: var(--muted-foreground, #656d76)';
+      if (total === 0) return 'background-color: var(--muted-foreground)';
       let successPct = (success / total) * 100;
       let failedPct = (failed / total) * 100;
       let s1 = successPct;
       let s2 = s1 + failedPct;
-      return `background: conic-gradient(var(--chart-1, #28a745) 0% ${s1}%, var(--destructive, #d73a49) ${s1}% ${s2}%, var(--chart-4, #dbab09) ${s2}% 100%)`;
+      return `background: conic-gradient(var(--chart-1) 0% ${s1}%, var(--destructive) ${s1}% ${s2}%, var(--chart-4) ${s2}% 100%)`;
     }
 
     <template>
@@ -152,13 +152,14 @@ export class PrCiStatusField extends FieldDef {
           align-items: center;
           gap: var(--boxel-sp-sm);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          background: var(--card, #ffffff);
-          border-bottom: 1px solid var(--border, var(--boxel-border-color));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border-bottom: 1px solid var(--border);
           min-width: 0;
         }
         .ci-donut {
-          width: 28px;
-          height: 28px;
+          width: 1.75rem;
+          height: 1.75rem;
           border-radius: 50%;
           flex-shrink: 0;
           display: flex;
@@ -166,10 +167,11 @@ export class PrCiStatusField extends FieldDef {
           justify-content: center;
         }
         .ci-donut-hole {
-          width: 16px;
-          height: 16px;
+          width: 1rem;
+          height: 1rem;
           border-radius: 50%;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .ci-status-text {
           min-width: 0;
@@ -180,24 +182,24 @@ export class PrCiStatusField extends FieldDef {
         .ci-headline {
           font-size: var(--boxel-font-sm);
           font-weight: 600;
-          color: var(--foreground, #1f2328);
+          color: var(--foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .ci-subtitle {
           font-size: var(--boxel-font-xs);
-          color: var(--muted-foreground, #656d76);
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .ci-donut-loading {
-          background: var(--muted-foreground, #656d76);
+          background-color: var(--muted-foreground);
           animation: ci-donut-pulse 1.2s ease-in-out infinite;
         }
         .ci-status-loading .ci-headline {
-          color: var(--muted-foreground, #656d76);
+          color: var(--muted-foreground);
         }
         @keyframes ci-donut-pulse {
           0%,

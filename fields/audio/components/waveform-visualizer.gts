@@ -88,16 +88,17 @@ export class WaveformVisualizer extends GlimmerComponent<WaveformVisualizerSigna
         transition: all 0.1s;
         border: none;
         padding: 0;
-        background: transparent;
+        background-color: transparent;
       }
 
       /* Default variant - waveform player */
       .waveform-visualizer.default .waveform-bar.played {
-        background: white;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
 
       .waveform-visualizer.default .waveform-bar.unplayed {
-        background: rgba(255, 255, 255, 0.3);
+        background-color: color-mix(in oklch, var(--card) 30%, transparent);
       }
 
       .waveform-visualizer.default .waveform-bar:hover {
@@ -106,7 +107,8 @@ export class WaveformVisualizer extends GlimmerComponent<WaveformVisualizerSigna
 
       /* Trim variant - trim editor */
       .waveform-visualizer.trim {
-        background: var(--muted, #f3f4f6);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border-radius: 0.5rem;
         padding: 1rem;
       }
@@ -116,12 +118,13 @@ export class WaveformVisualizer extends GlimmerComponent<WaveformVisualizerSigna
       }
 
       .waveform-visualizer.trim .waveform-bar.in-range {
-        background: var(--primary, #3b82f6);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         opacity: 1;
       }
 
       .waveform-visualizer.trim .waveform-bar.out-range {
-        background: var(--muted-foreground, #9ca3af);
+        background-color: var(--muted-foreground);
         opacity: 0.2;
       }
 
@@ -140,21 +143,22 @@ export class WaveformVisualizer extends GlimmerComponent<WaveformVisualizerSigna
         top: 0;
         bottom: 0;
         width: 2px;
-        background: var(--primary, #3b82f6);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
 
       .start-marker::before,
       .end-marker::before {
         content: '';
         position: absolute;
-        top: -4px;
+        top: -0.25rem;
         left: 50%;
         transform: translateX(-50%);
         width: 0;
         height: 0;
         border-left: 6px solid transparent;
         border-right: 6px solid transparent;
-        border-top: 8px solid var(--primary, #3b82f6);
+        border-top: 8px solid var(--primary);
       }
     </style>
   </template>

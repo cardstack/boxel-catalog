@@ -2,14 +2,37 @@
   "data": {
     "meta": {
       "adoptsFrom": {
-        "name": "Theme",
-        "module": "@cardstack/base/card-api"
+        "module": "@cardstack/base/structured-theme",
+        "name": "default"
       }
     },
     "type": "card",
     "attributes": {
-      "cssVariables": ":root {\n  --background: #faf6ec;\n  --foreground: #22283f;\n  --card: #fffdf8;\n  --card-foreground: #22283f;\n  --popover: #fffdf8;\n  --popover-foreground: #22283f;\n  --primary: #141b33;\n  --primary-foreground: #f3ead6;\n  --secondary: #c5a35c;\n  --secondary-foreground: #22283f;\n  --muted: #f4eddb;\n  --muted-foreground: #7d7460;\n  --accent: #c5a35c;\n  --accent-foreground: #22283f;\n  --destructive: #b3261e;\n  --destructive-foreground: #ffffff;\n  --border: rgba(197, 163, 92, 0.35);\n  --input: #fffdf8;\n  --ring: #c5a35c;\n  --radius: 0.75rem;\n  --font-sans: 'Jost', system-ui, sans-serif;\n  --font-serif: 'Cormorant Garamond', Georgia, serif;\n}",
-      "cssImports": [
+      "rootVariables": {
+        "background": "#faf6ec",
+        "foreground": "#22283f",
+        "card": "#fffdf8",
+        "cardForeground": "#22283f",
+        "popover": "#fffdf8",
+        "popoverForeground": "#22283f",
+        "primary": "#141b33",
+        "primaryForeground": "#f3ead6",
+        "secondary": "#c5a35c",
+        "secondaryForeground": "#22283f",
+        "muted": "#f4eddb",
+        "mutedForeground": "#7d7460",
+        "accent": "#c5a35c",
+        "accentForeground": "#22283f",
+        "destructive": "#b3261e",
+        "destructiveForeground": "#ffffff",
+        "border": "rgba(197, 163, 92, 0.35)",
+        "input": "#fffdf8",
+        "ring": "#c5a35c",
+        "radius": "0.75rem",
+        "fontSans": "'Jost', system-ui, sans-serif",
+        "fontSerif": "'Cormorant Garamond', Georgia, serif"
+      },
+      "customCssImports": [
         "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Jost:ital,wght@0,300..600;1,300..600&display=swap"
       ],
       "cardInfo": {

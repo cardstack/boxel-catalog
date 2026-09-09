@@ -102,7 +102,7 @@ export default class TypeFilterPills extends GlimmerComponent<PillsSignature> {
   }
 
   private dotStyle = (colorVar: string) =>
-    htmlSafe(`background: var(${colorVar}, #16161c);`);
+    htmlSafe(`background-color: var(${colorVar});`);
 
   private isActive = (key: string) => key === this.args.activeKey;
 
@@ -138,18 +138,18 @@ export default class TypeFilterPills extends GlimmerComponent<PillsSignature> {
         align-items: center;
         gap: 0.5rem;
         padding: 0.5625rem 0.9375rem;
-        border-radius: 999px;
+        border-radius: 62.4375rem;
         cursor: pointer;
-        font: 600 0.78rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        font: 600 0.78rem/1 var(--font-sans);
         transition: all 130ms ease;
-        border: 1px solid var(--border, #ddd8cb);
-        background: var(--card, #fff);
-        color: var(--foreground, #46433c);
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--foreground);
       }
       .pill.is-active {
-        border-color: var(--foreground, #16161c);
-        background: var(--foreground, #16161c);
-        color: var(--background, #fff);
+        border-color: var(--foreground);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .pill-dot {
         width: 0.4375rem;

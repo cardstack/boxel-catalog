@@ -38,8 +38,8 @@ class EmbeddedTemplate extends Component<typeof MultiImageSourceField> {
         width: 4rem;
         aspect-ratio: 1;
         object-fit: cover;
-        border-radius: var(--boxel-border-radius-sm, 6px);
-        border: 1px solid var(--boxel-border-color, #d3d3d3);
+        border-radius: var(--boxel-border-radius-sm);
+        border: 1px solid var(--border);
       }
     </style>
   </template>

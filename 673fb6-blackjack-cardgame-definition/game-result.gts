@@ -106,23 +106,34 @@ export class PlayerOutcomeField extends FieldDef {
       <style scoped>
         .player-outcome {
           /* ── Casino tokens ── */
-          --casino-gold: #d4af37;
-          --casino-gold-border: rgba(212, 175, 55, 0.2);
-          --casino-gold-avatar-border: rgba(212, 175, 55, 0.5);
-          --casino-panel: rgba(0, 0, 0, 0.4);
-          --casino-felt-start: #1a5c20;
-          --casino-felt-end: #0a3d10;
+          --casino-gold-border: color-mix(
+            in oklch,
+            var(--accent) 20%,
+            transparent
+          );
+          --casino-gold-avatar-border: color-mix(
+            in oklch,
+            var(--accent) 50%,
+            transparent
+          );
+          --casino-panel: color-mix(in oklch, var(--inset) 40%, transparent);
           --casino-font: 'Georgia', 'Times New Roman', serif;
-          --casino-lose-text: #ff6b6b;
-          --casino-lose-border: rgba(180, 20, 20, 0.5);
-          --casino-draw-text: #aaa;
-          --casino-draw-border: rgba(150, 150, 150, 0.4);
+          --casino-lose-border: color-mix(
+            in oklch,
+            var(--destructive) 50%,
+            transparent
+          );
+          --casino-draw-border: color-mix(
+            in oklch,
+            var(--border) 40%,
+            transparent
+          );
 
           display: flex;
           align-items: center;
           gap: var(--boxel-sp-sm);
           padding: var(--boxel-sp-xs) var(--boxel-sp);
-          background: var(--casino-panel);
+          background-color: var(--casino-panel);
           border-radius: var(--boxel-border-radius);
           border: 1px solid var(--casino-gold-border);
           font-family: var(--casino-font);
@@ -141,8 +152,8 @@ export class PlayerOutcomeField extends FieldDef {
           border-radius: 50%;
           background: radial-gradient(
             circle,
-            var(--casino-felt-start) 0%,
-            var(--casino-felt-end) 100%
+            var(--success) 0%,
+            var(--success) 100%
           );
           border: 1px solid var(--casino-gold-avatar-border);
           display: flex;
@@ -154,7 +165,7 @@ export class PlayerOutcomeField extends FieldDef {
         .player-avatar-placeholder span {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
-          color: var(--casino-gold);
+          color: var(--accent-ink);
           text-transform: uppercase;
           line-height: 1;
           white-space: nowrap;
@@ -164,7 +175,7 @@ export class PlayerOutcomeField extends FieldDef {
         }
         .player-name {
           font-weight: 600;
-          color: var(--casino-gold);
+          color: var(--accent-ink);
           font-size: var(--boxel-font-size-sm);
         }
         .outcome-badge {
@@ -177,18 +188,22 @@ export class PlayerOutcomeField extends FieldDef {
           letter-spacing: var(--boxel-lsp-sm);
         }
         .outcome--win {
-          background: rgba(212, 175, 55, 0.25);
-          color: var(--casino-gold);
-          border: 1px solid rgba(212, 175, 55, 0.5);
+          background-color: color-mix(in oklch, var(--accent) 25%, transparent);
+          color: var(--accent-ink);
+          border: 1px solid color-mix(in oklch, var(--accent) 50%, transparent);
         }
         .outcome--lose {
-          background: rgba(180, 20, 20, 0.3);
-          color: var(--casino-lose-text);
+          background-color: color-mix(
+            in oklch,
+            var(--destructive) 30%,
+            transparent
+          );
+          color: var(--destructive-ink);
           border: 1px solid var(--casino-lose-border);
         }
         .outcome--draw {
-          background: rgba(150, 150, 150, 0.2);
-          color: var(--casino-draw-text);
+          background-color: color-mix(in oklch, var(--muted) 20%, transparent);
+          color: var(--subtle-foreground);
           border: 1px solid var(--casino-draw-border);
         }
       </style>
@@ -210,16 +225,24 @@ export class PlayerOutcomeField extends FieldDef {
       <style scoped>
         .player-outcome-edit {
           /* ── Casino tokens ── */
-          --casino-gold-dim: rgba(212, 175, 55, 0.8);
-          --casino-gold-border: rgba(212, 175, 55, 0.2);
-          --casino-panel: rgba(0, 0, 0, 0.3);
+          --casino-gold-dim: color-mix(
+            in oklch,
+            var(--accent) 80%,
+            transparent
+          );
+          --casino-gold-border: color-mix(
+            in oklch,
+            var(--accent) 20%,
+            transparent
+          );
+          --casino-panel: color-mix(in oklch, var(--inset) 30%, transparent);
           --casino-font: 'Georgia', 'Times New Roman', serif;
 
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp);
-          background: var(--casino-panel);
+          background-color: var(--casino-panel);
           border-radius: var(--boxel-border-radius);
           border: 1px solid var(--casino-gold-border);
           font-family: var(--casino-font);
@@ -245,12 +268,12 @@ export class PlayerOutcomeField extends FieldDef {
 function getStatusStyle(status?: string): string {
   const s = status?.toLowerCase();
   if (s === 'win')
-    return 'background: radial-gradient(ellipse at 50% 30%, #1a5c0e 0%, #073d10 60%, #030f05 100%); border-color: #d4af37;';
+    return 'background: radial-gradient(ellipse at 50% 30%, var(--success) 0%, color-mix(in oklch, var(--success) 55%, var(--foreground)) 60%, color-mix(in oklch, var(--success) 20%, var(--foreground)) 100%); border-color: var(--accent);';
   if (s === 'lose')
-    return 'background: radial-gradient(ellipse at 50% 30%, #5c0e0e 0%, #3d0707 60%, #0f0303 100%); border-color: #b41414;';
+    return 'background: radial-gradient(ellipse at 50% 30%, var(--destructive) 0%, color-mix(in oklch, var(--destructive) 55%, var(--foreground)) 60%, color-mix(in oklch, var(--destructive) 20%, var(--foreground)) 100%); border-color: var(--destructive);';
   if (s === 'draw')
-    return 'background: radial-gradient(ellipse at 50% 30%, #2a2a2a 0%, #1a1a1a 60%, #0a0a0a 100%); border-color: #6b7280;';
-  return 'background: radial-gradient(ellipse at 50% 30%, #0e5c1e 0%, #073d10 55%, #030f05 100%); border-color: rgba(212,175,55,0.3);';
+    return 'background: radial-gradient(ellipse at 50% 30%, var(--muted-foreground) 0%, color-mix(in oklch, var(--muted-foreground) 50%, var(--foreground)) 60%, var(--foreground) 100%); border-color: var(--border);';
+  return 'background: radial-gradient(ellipse at 50% 30%, var(--success) 0%, color-mix(in oklch, var(--success) 55%, var(--foreground)) 55%, color-mix(in oklch, var(--success) 20%, var(--foreground)) 100%); border-color: color-mix(in oklch, var(--accent) 30%, transparent);';
 }
 
 // Status icon — mirrors blackjack.gts outcome icons
@@ -378,25 +401,70 @@ export class GameResult extends CardDef {
       <style scoped>
         /* ── Casino design tokens ──────────────────────────────── */
         .gr-isolated {
-          --casino-gold: #d4af37;
-          --casino-gold-dim: rgba(212, 175, 55, 0.6);
-          --casino-gold-border: rgba(212, 175, 55, 0.22);
-          --casino-gold-glow: rgba(212, 175, 55, 0.6);
-          --casino-panel: rgba(0, 0, 0, 0.42);
-          --casino-panel-border: rgba(212, 175, 55, 0.12);
-          --casino-text: #ffffff;
-          --casino-text-muted: rgba(255, 255, 255, 0.45);
+          --casino-gold-dim: color-mix(
+            in oklch,
+            var(--accent) 60%,
+            transparent
+          );
+          --casino-gold-border: color-mix(
+            in oklch,
+            var(--accent) 22%,
+            transparent
+          );
+          --casino-gold-glow: color-mix(
+            in oklch,
+            var(--accent) 60%,
+            transparent
+          );
+          --casino-panel: color-mix(in oklch, var(--inset) 42%, transparent);
+          --casino-panel-border: color-mix(
+            in oklch,
+            var(--inset) 12%,
+            transparent
+          );
+          --casino-text: var(--card-foreground);
+          --casino-text-muted: color-mix(
+            in oklch,
+            var(--card) 45%,
+            transparent
+          );
           --casino-font: 'Georgia', 'Times New Roman', serif;
           --casino-mono: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
-          --casino-ring-inner: rgba(139, 105, 20, 0.6);
-          --casino-ring-outer: rgba(212, 175, 55, 0.1);
-          --casino-win-border: rgba(212, 175, 55, 0.6);
-          --casino-win-glow: rgba(212, 175, 55, 0.3);
-          --casino-lose: #b41414;
-          --casino-lose-text: #ff6b6b;
-          --casino-lose-border: rgba(180, 20, 20, 0.6);
-          --casino-lose-glow: rgba(180, 20, 20, 0.3);
-          --casino-draw-border: rgba(150, 150, 150, 0.4);
+          --casino-ring-inner: color-mix(
+            in oklch,
+            var(--warning) 60%,
+            transparent
+          );
+          --casino-ring-outer: color-mix(
+            in oklch,
+            var(--accent) 10%,
+            transparent
+          );
+          --casino-win-border: color-mix(
+            in oklch,
+            var(--accent) 60%,
+            transparent
+          );
+          --casino-win-glow: color-mix(
+            in oklch,
+            var(--accent) 30%,
+            transparent
+          );
+          --casino-lose-border: color-mix(
+            in oklch,
+            var(--destructive) 60%,
+            transparent
+          );
+          --casino-lose-glow: color-mix(
+            in oklch,
+            var(--destructive) 30%,
+            transparent
+          );
+          --casino-draw-border: color-mix(
+            in oklch,
+            var(--border) 40%,
+            transparent
+          );
 
           /* ── Layout ── */
           width: 100%;
@@ -424,16 +492,16 @@ export class GameResult extends CardDef {
             repeating-linear-gradient(
               0deg,
               transparent,
-              transparent 3px,
-              rgba(0, 0, 0, 0.04) 3px,
-              rgba(0, 0, 0, 0.04) 4px
+              transparent 0.1875rem,
+              color-mix(in oklch, var(--foreground) 4%, transparent) 0.1875rem,
+              color-mix(in oklch, var(--foreground) 4%, transparent) 0.25rem
             ),
             repeating-linear-gradient(
               90deg,
               transparent,
-              transparent 3px,
-              rgba(0, 0, 0, 0.04) 3px,
-              rgba(0, 0, 0, 0.04) 4px
+              transparent 0.1875rem,
+              color-mix(in oklch, var(--foreground) 4%, transparent) 0.1875rem,
+              color-mix(in oklch, var(--foreground) 4%, transparent) 0.25rem
             );
           pointer-events: none;
           z-index: 0;
@@ -447,7 +515,7 @@ export class GameResult extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-lg);
           width: 100%;
-          max-width: 560px;
+          max-width: 35rem;
           color: var(--casino-text);
           text-align: center;
         }
@@ -460,24 +528,25 @@ export class GameResult extends CardDef {
           padding: var(--boxel-sp-sm) var(--boxel-sp-xl);
           border-radius: var(--boxel-border-radius-xl);
           border: 1px solid;
-          background: var(--casino-panel);
+          background-color: var(--casino-panel);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
           box-shadow:
-            0 4px 20px rgba(0, 0, 0, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            0 4px 20px color-mix(in oklch, var(--foreground) 30%, transparent),
+            inset 0 1px 0 color-mix(in oklch, var(--card) 8%, transparent);
         }
         .badge--win {
           border-color: var(--casino-win-border);
           box-shadow:
             0 0 20px var(--casino-win-glow),
-            inset 0 1px 0 rgba(212, 175, 55, 0.1);
+            inset 0 1px 0 color-mix(in oklch, var(--accent) 10%, transparent);
         }
         .badge--lose {
           border-color: var(--casino-lose-border);
           box-shadow:
             0 0 20px var(--casino-lose-glow),
-            inset 0 1px 0 rgba(255, 100, 100, 0.05);
+            inset 0 1px 0
+              color-mix(in oklch, var(--destructive) 5%, transparent);
         }
         .badge--draw {
           border-color: var(--casino-draw-border);
@@ -485,22 +554,25 @@ export class GameResult extends CardDef {
 
         .gr-status-icon {
           font-size: var(--boxel-font-size-xl);
-          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+          filter: drop-shadow(
+            0 2px 4px color-mix(in oklch, var(--foreground) 50%, transparent)
+          );
         }
         .gr-status-text {
           font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-xl);
-          color: var(--casino-gold);
+          color: var(--accent-ink);
           text-shadow: 0 0 20px var(--casino-gold-glow);
         }
         .badge--lose .gr-status-text {
-          color: var(--casino-lose-text);
-          text-shadow: 0 0 20px rgba(255, 50, 50, 0.5);
+          color: var(--destructive-ink);
+          text-shadow: 0 0 20px
+            color-mix(in oklch, var(--destructive) 50%, transparent);
         }
         .badge--draw .gr-status-text {
-          color: #aaa;
+          color: var(--subtle-foreground);
           text-shadow: none;
         }
 
@@ -519,16 +591,19 @@ export class GameResult extends CardDef {
         .gr-icon {
           width: 3rem;
           height: 3rem;
-          color: var(--casino-gold);
+          color: var(--accent-ink);
           opacity: 0.9;
-          filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+          filter: drop-shadow(
+            0 2px 6px color-mix(in oklch, var(--foreground) 40%, transparent)
+          );
         }
         .gr-title {
           margin: 0;
           font-size: clamp(1.75rem, 4cqi, 3rem);
           font-weight: 800;
           color: var(--casino-text);
-          text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+          text-shadow: 0 4px 8px
+            color-mix(in oklch, var(--foreground) 40%, transparent);
           letter-spacing: -0.02em;
           line-height: 1.1;
         }
@@ -538,7 +613,7 @@ export class GameResult extends CardDef {
           gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-lg) var(--boxel-sp-xs)
             var(--boxel-sp-xs);
-          background: var(--casino-panel);
+          background-color: var(--casino-panel);
           border: 1px solid var(--casino-gold-border);
           border-radius: var(--boxel-border-radius-xl);
         }
@@ -547,15 +622,19 @@ export class GameResult extends CardDef {
           height: 1.75rem;
           border-radius: 50%;
           object-fit: cover;
-          border: 1px solid rgba(212, 175, 55, 0.5);
+          border: 1px solid color-mix(in oklch, var(--accent) 50%, transparent);
           flex-shrink: 0;
         }
         .gr-player-avatar-placeholder {
           width: 1.75rem;
           height: 1.75rem;
           border-radius: 50%;
-          background: radial-gradient(circle, #1a5c20 0%, #0a3d10 100%);
-          border: 1px solid rgba(212, 175, 55, 0.4);
+          background: radial-gradient(
+            circle,
+            var(--success) 0%,
+            var(--success) 100%
+          );
+          border: 1px solid color-mix(in oklch, var(--accent) 40%, transparent);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -565,7 +644,7 @@ export class GameResult extends CardDef {
         .gr-player-avatar-placeholder span {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
-          color: var(--casino-gold);
+          color: var(--accent-ink);
           text-transform: uppercase;
           line-height: 1;
           white-space: nowrap;
@@ -582,7 +661,7 @@ export class GameResult extends CardDef {
         .gr-player-name {
           font-size: var(--boxel-font-size-sm);
           font-weight: 600;
-          color: var(--casino-gold);
+          color: var(--accent-ink);
         }
 
         /* ── Divider — mirrors bj-divider ──────────────────────── */
@@ -616,14 +695,14 @@ export class GameResult extends CardDef {
           flex-direction: column;
           gap: var(--boxel-sp-sm);
           width: 100%;
-          max-width: 420px;
+          max-width: 26.25rem;
         }
         .gr-detail-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: var(--boxel-sp-sm) var(--boxel-sp-lg);
-          background: var(--casino-panel);
+          background-color: var(--casino-panel);
           border: 1px solid var(--casino-panel-border);
           border-radius: var(--boxel-border-radius);
           gap: var(--boxel-sp);
@@ -637,7 +716,7 @@ export class GameResult extends CardDef {
         }
         .gr-detail-value {
           font-size: var(--boxel-font-size-sm);
-          color: rgba(255, 255, 255, 0.85);
+          color: color-mix(in oklch, var(--card-foreground) 85%, transparent);
           text-align: right;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -647,10 +726,10 @@ export class GameResult extends CardDef {
         .gr-mono {
           font-family: var(--casino-mono);
           font-size: var(--boxel-font-size-xs);
-          background: rgba(0, 0, 0, 0.3);
+          background-color: color-mix(in oklch, var(--card) 30%, transparent);
           padding: 0.2rem var(--boxel-sp-xs);
           border-radius: var(--boxel-border-radius-sm);
-          border: 1px solid rgba(212, 175, 55, 0.1);
+          border: 1px solid color-mix(in oklch, var(--accent) 10%, transparent);
           color: var(--casino-gold-dim);
         }
 
@@ -734,21 +813,49 @@ export class GameResult extends CardDef {
       <style scoped>
         /* ── Casino design tokens ──────────────────────────────── */
         .gr-tile {
-          --casino-gold: #d4af37;
-          --casino-gold-border: rgba(212, 175, 55, 0.2);
-          --casino-gold-glow: rgba(212, 175, 55, 0.5);
-          --casino-panel: rgba(0, 0, 0, 0.42);
-          --casino-panel-border: rgba(212, 175, 55, 0.3);
-          --casino-text: #ffffff;
-          --casino-text-muted: rgba(255, 255, 255, 0.4);
+          --casino-gold-border: color-mix(
+            in oklch,
+            var(--accent) 20%,
+            transparent
+          );
+          --casino-gold-glow: color-mix(
+            in oklch,
+            var(--accent) 50%,
+            transparent
+          );
+          --casino-panel: color-mix(in oklch, var(--inset) 42%, transparent);
+          --casino-panel-border: color-mix(
+            in oklch,
+            var(--inset) 30%,
+            transparent
+          );
+          --casino-text: var(--card-foreground);
+          --casino-text-muted: color-mix(
+            in oklch,
+            var(--card) 40%,
+            transparent
+          );
           --casino-font: 'Georgia', 'Times New Roman', serif;
-          --casino-ring-inner: rgba(139, 105, 20, 0.3);
-          --casino-lose: #b41414;
-          --casino-lose-text: #ff6b6b;
-          --casino-lose-border: rgba(180, 20, 20, 0.5);
-          --casino-lose-glow: rgba(180, 20, 20, 0.5);
-          --casino-draw: #6b7280;
-          --casino-draw-border: rgba(150, 150, 150, 0.3);
+          --casino-ring-inner: color-mix(
+            in oklch,
+            var(--warning) 30%,
+            transparent
+          );
+          --casino-lose-border: color-mix(
+            in oklch,
+            var(--destructive) 50%,
+            transparent
+          );
+          --casino-lose-glow: color-mix(
+            in oklch,
+            var(--destructive) 50%,
+            transparent
+          );
+          --casino-draw-border: color-mix(
+            in oklch,
+            var(--border) 30%,
+            transparent
+          );
 
           /* ── Layout ── */
           width: 100%;
@@ -772,16 +879,16 @@ export class GameResult extends CardDef {
             repeating-linear-gradient(
               0deg,
               transparent,
-              transparent 3px,
-              rgba(0, 0, 0, 0.04) 3px,
-              rgba(0, 0, 0, 0.04) 4px
+              transparent 0.1875rem,
+              color-mix(in oklch, var(--foreground) 4%, transparent) 0.1875rem,
+              color-mix(in oklch, var(--foreground) 4%, transparent) 0.25rem
             ),
             repeating-linear-gradient(
               90deg,
               transparent,
-              transparent 3px,
-              rgba(0, 0, 0, 0.04) 3px,
-              rgba(0, 0, 0, 0.04) 4px
+              transparent 0.1875rem,
+              color-mix(in oklch, var(--foreground) 4%, transparent) 0.1875rem,
+              color-mix(in oklch, var(--foreground) 4%, transparent) 0.25rem
             );
           pointer-events: none;
           z-index: 0;
@@ -789,18 +896,20 @@ export class GameResult extends CardDef {
 
         /* Left accent strip */
         .gr-accent-strip {
-          width: 4px;
+          width: 0.25rem;
           flex-shrink: 0;
-          background: var(--casino-gold);
+          background-color: var(--accent);
+          color: var(--accent-foreground);
           box-shadow: 0 0 8px var(--casino-gold-glow);
           z-index: 1;
         }
         .gr-accent-strip.badge--lose {
-          background: var(--casino-lose);
+          background-color: var(--destructive);
+          color: var(--destructive-foreground);
           box-shadow: 0 0 8px var(--casino-lose-glow);
         }
         .gr-accent-strip.badge--draw {
-          background: var(--casino-draw);
+          background-color: var(--muted-foreground);
           box-shadow: none;
         }
 
@@ -818,7 +927,7 @@ export class GameResult extends CardDef {
           gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-radius: var(--boxel-border-radius-xl);
-          background: var(--casino-panel);
+          background-color: var(--casino-panel);
           border: 1px solid var(--casino-panel-border);
         }
         .gr-status-pill.badge--lose {
@@ -829,20 +938,22 @@ export class GameResult extends CardDef {
         }
         .gr-status-icon {
           font-size: var(--boxel-font-size);
-          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+          filter: drop-shadow(
+            0 1px 2px color-mix(in oklch, var(--foreground) 40%, transparent)
+          );
         }
         .gr-status-text {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-sm);
-          color: var(--casino-gold);
+          color: var(--accent-ink);
         }
         .badge--lose .gr-status-text {
-          color: var(--casino-lose-text);
+          color: var(--destructive-ink);
         }
         .badge--draw .gr-status-text {
-          color: #aaa;
+          color: var(--subtle-foreground);
         }
 
         /* Info section */
@@ -865,7 +976,7 @@ export class GameResult extends CardDef {
         .gr-icon {
           width: 1.25rem;
           height: 1.25rem;
-          color: var(--casino-gold);
+          color: var(--accent-ink);
           opacity: 0.85;
           flex-shrink: 0;
         }
@@ -873,7 +984,8 @@ export class GameResult extends CardDef {
           font-size: var(--boxel-font-size);
           font-weight: 700;
           color: var(--casino-text);
-          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+          text-shadow: 0 1px 3px
+            color-mix(in oklch, var(--foreground) 40%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -892,7 +1004,7 @@ export class GameResult extends CardDef {
         }
         .gr-meta-val {
           font-size: var(--boxel-font-size-xs);
-          color: rgba(212, 175, 55, 0.8);
+          color: color-mix(in oklch, var(--accent-ink) 80%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -973,20 +1085,29 @@ export class GameResult extends CardDef {
       <style scoped>
         /* ── Casino design tokens ──────────────────────────────── */
         .container {
-          --casino-gold: #d4af37;
-          --casino-gold-border: rgba(212, 175, 55, 0.2);
-          --casino-gold-dim: rgba(212, 175, 55, 0.15);
+          --casino-gold-border: color-mix(
+            in oklch,
+            var(--accent) 20%,
+            transparent
+          );
+          --casino-gold-dim: color-mix(
+            in oklch,
+            var(--accent) 15%,
+            transparent
+          );
           --casino-font: 'Georgia', 'Times New Roman', serif;
           --casino-mono: 'SF Mono', 'Monaco', monospace;
-          --casino-bg: #0a1a0c;
-          --casino-code-bg: #0d2410;
-          --casino-code-text: rgba(212, 175, 55, 0.7);
+          --casino-code-text: color-mix(
+            in oklch,
+            var(--accent-ink) 70%,
+            transparent
+          );
 
           height: 100%;
           min-height: max-content;
           padding: var(--boxel-sp);
-          background-color: var(--casino-bg);
-          color: #fff;
+          background-color: var(--card);
+          color: var(--card-foreground);
           font-family: var(--casino-font);
         }
         .section {
@@ -1002,14 +1123,14 @@ export class GameResult extends CardDef {
           margin: 0;
           font: 600 var(--boxel-font-sm);
           letter-spacing: var(--boxel-lsp-xs);
-          color: var(--casino-gold);
+          color: var(--accent-ink);
         }
         .row-header {
           display: flex;
           align-items: center;
           gap: var(--boxel-sp-xs);
           padding-bottom: var(--boxel-sp-lg);
-          color: var(--casino-gold);
+          color: var(--accent-ink);
         }
         .code-ref-container {
           display: flex;
@@ -1022,7 +1143,7 @@ export class GameResult extends CardDef {
           gap: var(--boxel-sp-xs);
           min-height: var(--boxel-form-control-height);
           padding: var(--boxel-sp-xs);
-          background-color: var(--casino-code-bg);
+          background-color: var(--muted);
           border: 1px solid var(--casino-gold-border);
           border-radius: var(--boxel-border-radius);
           color: var(--casino-code-text);

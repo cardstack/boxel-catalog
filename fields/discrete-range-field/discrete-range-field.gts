@@ -41,7 +41,7 @@ export default class DiscreteRangeField extends FieldDef {
       <style scoped>
         .discrete-range-display {
           padding: 0.5rem;
-          background: var(--boxel-50);
+          background-color: var(--boxel-50);
           border-radius: 0.25rem;
           text-align: center;
           font-weight: 500;

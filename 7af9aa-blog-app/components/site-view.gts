@@ -544,15 +544,15 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         container-type: inline-size;
         container-name: blog-site;
         min-height: 100%;
-        background: var(--blog-color-bg, #ffffff);
-        color: var(--blog-color-text, #121212);
+        background-color: var(--card);
+        color: var(--foreground);
         font-family: var(--blog-font-family, 'Inter', system-ui, sans-serif);
         padding-bottom: var(--boxel-sp-xxl);
       }
 
       /* ── Site header ────────────────────────────────────── */
       .site-header {
-        max-width: 1240px;
+        max-width: 77.5rem;
         margin: 0 auto;
         padding: var(--boxel-sp-xxl) var(--boxel-sp-lg) var(--boxel-sp-lg);
       }
@@ -562,12 +562,12 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         gap: var(--boxel-sp);
       }
       .brand-logo {
-        width: 64px;
-        height: 64px;
+        width: 4rem;
+        height: 4rem;
         flex-shrink: 0;
-        border-radius: 12px;
+        border-radius: 0.75rem;
         object-fit: cover;
-        background: var(--blog-color-thumb-bg, #e5e7eb);
+        background-color: var(--inset);
       }
       .brand-text {
         min-width: 0;
@@ -576,69 +576,69 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         font: 800 2.25rem/1.05
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
         letter-spacing: -0.02em;
-        margin: 0 0 8px;
-        color: var(--blog-color-text, #121212);
+        margin: 0 0 0.5rem;
+        color: var(--foreground);
       }
       .brand-tag {
         font: 400 1rem/1.45
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
-        color: var(--blog-color-subtle, #6b6b6b);
+        color: var(--muted-foreground);
         margin: 0;
-        max-width: 640px;
+        max-width: 40rem;
       }
 
       /* ── Hero section ───────────────────────────────────── */
       .hero {
-        max-width: 1240px;
+        max-width: 77.5rem;
         margin: 0 auto;
         padding: 0 var(--boxel-sp-lg);
       }
       .hero-grid {
         display: grid;
         grid-template-columns: 1.55fr 1fr;
-        gap: 28px;
+        gap: 1.75rem;
         align-items: stretch;
       }
       .aside-heading {
         font: 700 1.4rem/1.2
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
         letter-spacing: -0.015em;
-        color: var(--blog-color-text, #121212);
-        margin: 0 0 16px;
+        color: var(--foreground);
+        margin: 0 0 1rem;
       }
 
       /* Empty lead placeholder — shown when no lead is pinned */
       .lead-publish-btn {
-        border: 1px solid var(--blog-color-accent, #7b61ff);
-        border-radius: 999px;
-        background: var(--blog-color-accent, #7b61ff);
-        color: var(--blog-color-on-accent, #ffffff);
-        font: 600 13px var(--blog-font-family, sans-serif);
-        padding: 8px 18px;
+        border: 1px solid var(--primary);
+        border-radius: 62.4375rem;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        font: 600 0.8125rem var(--blog-font-family, sans-serif);
+        padding: 0.5rem 1.125rem;
         cursor: pointer;
       }
 
       .section-empty {
         grid-column: 1 / -1;
-        padding: 28px 20px;
-        border: 1.5px dashed var(--blog-color-border, #d3d3d3);
-        border-radius: 12px;
+        padding: 1.75rem 1.25rem;
+        border: 1.5px dashed var(--border);
+        border-radius: 0.75rem;
         text-align: center;
-        font: 500 14px var(--blog-font-family, sans-serif);
-        color: var(--blog-color-text-muted, #6b7280);
+        font: 500 0.875rem var(--blog-font-family, sans-serif);
+        color: var(--muted-foreground);
       }
 
       .lead-empty {
         height: 100%;
-        min-height: 520px;
-        border-radius: 18px;
-        background: var(--blog-color-thumb-bg, #e5e7eb);
-        border: 2px dashed #d3d3d3;
+        min-height: 32.5rem;
+        border-radius: 1.125rem;
+        background-color: var(--inset);
+        border: 2px dashed var(--border);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 12px;
+        gap: 0.75rem;
         padding: var(--boxel-sp-xl);
         text-align: center;
       }
@@ -647,18 +647,18 @@ export class BlogSiteView extends Component<typeof BlogApp> {
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
         text-transform: uppercase;
         letter-spacing: 0.18em;
-        color: var(--blog-color-faint, #999);
+        color: var(--subtle-foreground);
       }
       .lead-empty p {
         margin: 0;
         font: 500 0.95rem/1.5
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
-        color: var(--blog-color-subtle, #6b6b6b);
+        color: var(--muted-foreground);
       }
 
       /* Lead drop zone — highlights when a card is dragged over */
       .hero-lead {
-        border-radius: 18px;
+        border-radius: 1.125rem;
         transition:
           outline-color 0.15s,
           outline-offset 0.15s;
@@ -666,7 +666,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         outline-offset: 0;
       }
       .hero-lead.is-drop-target {
-        outline: 3px dashed var(--boxel-highlight, #7b61ff);
+        outline: 3px dashed var(--primary);
         outline-offset: 8px;
       }
 
@@ -700,9 +700,9 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         display: none;
       }
       .lead-list :deep(.card) {
-        min-height: 600px !important;
+        min-height: 37.5rem !important;
         max-width: 100% !important;
-        border-radius: 18px;
+        border-radius: 1.125rem;
         overflow: hidden;
         box-shadow: none !important;
         cursor: pointer;
@@ -713,10 +713,11 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         padding: 0 !important;
         position: relative;
         height: 100%;
-        min-height: 600px;
-        border-radius: 18px;
+        min-height: 37.5rem;
+        border-radius: 1.125rem;
         overflow: hidden !important;
-        background: #1a1a1a;
+        background-color: var(--card);
+        color: var(--card-foreground);
         isolation: isolate;
       }
       .lead-list :deep(.thumbnail) {
@@ -725,7 +726,8 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         width: 100% !important;
         height: 100% !important;
         margin: 0 !important;
-        background-color: #1a1a1a;
+        background-color: var(--card);
+        color: var(--card-foreground);
         transition: transform 0.35s ease;
         z-index: 0;
       }
@@ -738,8 +740,8 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         inset: 0;
         background: linear-gradient(
           to top,
-          rgba(0, 0, 0, 0.88) 0%,
-          rgba(0, 0, 0, 0.4) 45%,
+          color-mix(in oklch, var(--foreground) 88%, transparent) 0%,
+          color-mix(in oklch, var(--foreground) 40%, transparent) 45%,
           transparent 75%
         );
         z-index: 1;
@@ -747,34 +749,39 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       }
       .lead-list :deep(.categories) {
         position: absolute;
-        left: 28px;
-        bottom: 100px;
+        left: 1.75rem;
+        bottom: 6.25rem;
         z-index: 2;
         margin: 0 !important;
         display: flex !important;
-        gap: 6px !important;
+        gap: 0.375rem !important;
       }
       .lead-list :deep(.category) {
         /* Fixed white-on-photo pill: text must stay dark in every theme */
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #121212 !important;
-        padding: 5px 14px !important;
-        border-radius: 999px !important;
-        font: 600 11px/1 var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
+        background-color: color-mix(
+          in oklch,
+          var(--card) 95%,
+          transparent
+        ) !important;
+        color: var(--foreground) !important;
+        padding: 0.3125rem 0.875rem !important;
+        border-radius: 62.4375rem !important;
+        font: 600 0.6875rem/1
+          var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
         letter-spacing: 0 !important;
         text-transform: capitalize !important;
         border: none;
       }
       .lead-list :deep(.title) {
         position: absolute;
-        left: 28px;
-        right: 28px;
-        bottom: 28px;
+        left: 1.75rem;
+        right: 1.75rem;
+        bottom: 1.75rem;
         z-index: 2;
         font: 700 2rem/1.15
           var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
         letter-spacing: -0.015em !important;
-        color: #ffffff !important;
+        color: var(--tooltip-foreground) !important;
         margin: 0 !important;
         display: -webkit-box;
         -webkit-line-clamp: 3;
@@ -805,9 +812,9 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       }
       .featured-list :deep(li) {
         margin: 0;
-        padding: 14px 0;
+        padding: 0.875rem 0;
         border: none;
-        border-top: 1px solid #ececec;
+        border-top: 1px solid var(--border);
         gap: 0 !important;
       }
       .featured-list :deep(li:first-child) {
@@ -824,33 +831,33 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         min-height: 0 !important;
         max-width: 100% !important;
         width: 100%;
-        height: 220px;
+        height: 13.75rem;
         aspect-ratio: auto;
         cursor: pointer;
         box-shadow: none !important;
-        border-radius: 12px;
+        border-radius: 0.75rem;
         overflow: hidden;
-        background: transparent;
+        background-color: transparent;
       }
       .featured-list :deep(.fitted-blog-post) {
         padding: 0 !important;
-        gap: 16px !important;
+        gap: 1rem !important;
       }
       .featured-list :deep(.fitted-blog-post .thumbnail) {
-        width: 160px !important;
-        height: 220px !important;
-        border-radius: 12px !important;
+        width: 10rem !important;
+        height: 13.75rem !important;
+        border-radius: 0.75rem !important;
         flex-shrink: 0;
       }
       .featured-list :deep(.fitted-blog-post .title) {
         font: 600 0.95rem/1.32
           var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
         letter-spacing: -0.005em !important;
-        color: var(--blog-color-text, #121212) !important;
+        color: var(--foreground) !important;
         -webkit-line-clamp: 3 !important;
       }
       .featured-list :deep(.card):hover .title {
-        color: var(--blog-color-accent, #7b61ff) !important;
+        color: var(--primary-ink) !important;
       }
 
       /* Manual featured: one drop zone, any number of cards */
@@ -858,21 +865,21 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         display: flex;
         flex-direction: column;
         gap: 0;
-        border-radius: 12px;
+        border-radius: 0.75rem;
         transition:
           outline-color 0.15s,
           outline-offset 0.15s,
           background-color 0.15s;
       }
       .featured-list.manual.is-drop-target {
-        outline: 2px dashed var(--boxel-highlight, #7b61ff);
+        outline: 2px dashed var(--primary);
         outline-offset: 4px;
-        background: rgba(123, 97, 255, 0.04);
+        background-color: color-mix(in oklch, var(--card) 4%, transparent);
       }
       .featured-slot {
-        padding: 12px 0;
-        border-top: 1px solid #ececec;
-        height: 220px;
+        padding: 0.75rem 0;
+        border-top: 1px solid var(--border);
+        height: 13.75rem;
         cursor: grab;
         transition:
           opacity 0.15s,
@@ -881,7 +888,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       .featured-slot:first-child {
         border-top: none;
         padding-top: 0;
-        height: 208px;
+        height: 13rem;
       }
       .featured-slot:active {
         cursor: grabbing;
@@ -891,23 +898,23 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         transform: scale(0.98);
       }
       .featured-slot.is-drop-target {
-        outline: 2px dashed var(--blog-color-accent, #7b61ff);
+        outline: 2px dashed var(--primary);
         outline-offset: 2px;
-        border-radius: 6px;
+        border-radius: 0.375rem;
       }
       .featured-slot :deep(.fitted-blog-post) {
         height: 100%;
         width: 100%;
         padding: 0 !important;
-        gap: 16px !important;
+        gap: 1rem !important;
         display: grid !important;
-        grid-template-columns: 160px 1fr !important;
+        grid-template-columns: 10rem 1fr !important;
         align-items: center;
       }
       .featured-slot :deep(.fitted-blog-post .thumbnail) {
-        width: 160px !important;
+        width: 10rem !important;
         height: 100% !important;
-        border-radius: 12px !important;
+        border-radius: 0.75rem !important;
         flex-shrink: 0;
         background-size: cover !important;
         background-position: center !important;
@@ -916,7 +923,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         font: 600 1.05rem/1.3
           var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
         letter-spacing: -0.005em !important;
-        color: var(--blog-color-text, #121212) !important;
+        color: var(--foreground) !important;
         -webkit-line-clamp: 3 !important;
         display: -webkit-box;
         -webkit-box-orient: vertical;
@@ -928,22 +935,22 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         -webkit-box-orient: vertical;
         font: 400 0.85rem/1.4
           var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
-        color: var(--blog-color-subtle, #6b6b6b) !important;
-        margin-top: 4px !important;
+        color: var(--muted-foreground) !important;
+        margin-top: 0.25rem !important;
       }
       .featured-slot :hover :deep(.fitted-blog-post .title) {
-        color: var(--blog-color-accent, #7b61ff) !important;
+        color: var(--primary-ink) !important;
       }
       .featured-empty {
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 84px;
-        padding: 0 14px;
-        background: var(--blog-color-thumb-bg, #e5e7eb);
-        border: 2px dashed #d3d3d3;
-        border-radius: 12px;
-        color: var(--blog-color-faint, #999);
+        height: 5.25rem;
+        padding: 0 0.875rem;
+        background-color: var(--inset);
+        border: 2px dashed var(--border);
+        border-radius: 0.75rem;
+        color: var(--subtle-foreground);
         font: 500 0.85rem/1.3
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
       }
@@ -955,41 +962,44 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       .games-list {
         display: flex;
         flex-direction: row;
-        gap: 12px;
+        gap: 0.75rem;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         scroll-behavior: smooth;
-        padding: 4px 2px 12px;
+        padding: 0.25rem 2px 0.75rem;
         margin: 0 -2px;
         scrollbar-width: thin;
       }
       .games-list::-webkit-scrollbar {
-        height: 6px;
+        height: 0.375rem;
       }
       .games-list::-webkit-scrollbar-thumb {
-        background: var(--blog-color-divider, #d1d5db);
-        border-radius: 3px;
+        background-color: var(--border);
+        border-radius: 0.1875rem;
       }
       .games-list::-webkit-scrollbar-thumb:hover {
-        background: #999;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .games-card {
-        flex: 0 0 200px;
+        flex: 0 0 12.5rem;
         scroll-snap-align: start;
-        height: 84px;
-        border: 1px solid #ececec;
-        border-radius: 12px;
+        height: 5.25rem;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
         overflow: hidden;
         cursor: pointer;
-        background: white;
+        background-color: var(--card);
+        color: var(--card-foreground);
         transition:
           border-color 0.15s,
           box-shadow 0.15s,
           transform 0.1s;
       }
       .games-card:hover {
-        border-color: var(--blog-color-accent, #7b61ff);
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        border-color: var(--primary);
+        box-shadow: 0 3px 10px
+          color-mix(in oklch, var(--foreground) 8%, transparent);
         transform: translateY(-1px);
       }
       .games-card :deep(.card) {
@@ -997,39 +1007,40 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         max-width: 100% !important;
         width: 100%;
         height: 100%;
-        background: transparent;
+        background-color: transparent;
         box-shadow: none !important;
         border: none;
       }
       .games-list.is-drop-target {
-        outline: 2px dashed var(--boxel-highlight, #7b61ff);
+        outline: 2px dashed var(--primary);
         outline-offset: 4px;
-        background: rgba(123, 97, 255, 0.04);
-        border-radius: 12px;
+        background-color: color-mix(in oklch, var(--card) 4%, transparent);
+        border-radius: 0.75rem;
       }
       .games-empty {
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 84px;
+        height: 5.25rem;
         flex: 1;
-        padding: 0 14px;
-        background: var(--blog-color-thumb-bg, #e5e7eb);
-        border: 2px dashed #d3d3d3;
-        border-radius: 12px;
-        color: var(--blog-color-faint, #999);
+        padding: 0 0.875rem;
+        background-color: var(--inset);
+        border: 2px dashed var(--border);
+        border-radius: 0.75rem;
+        color: var(--subtle-foreground);
         font: 500 0.85rem/1.3
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
       }
       .aside-loading {
         color: var(--boxel-500);
-        font: 600 12px/1 var(--blog-font-family, 'Inter', system-ui, sans-serif);
-        padding: 12px 0;
+        font: 600 0.75rem/1
+          var(--blog-font-family, 'Inter', system-ui, sans-serif);
+        padding: 0.75rem 0;
       }
 
       /* Writer's Picks — horizontal scroll carousel */
       .picks {
-        max-width: 1240px;
+        max-width: 77.5rem;
         margin: 0 auto;
         padding: var(--boxel-sp-xxl) var(--boxel-sp-lg) 0;
       }
@@ -1040,56 +1051,59 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         font: 800 2rem/1.1
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
         letter-spacing: -0.02em;
-        margin: 0 0 6px;
-        color: var(--blog-color-text, #121212);
+        margin: 0 0 0.375rem;
+        color: var(--foreground);
       }
       .picks-subtitle {
         font: 400 1rem/1.4
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
-        color: var(--blog-color-subtle, #6b6b6b);
+        color: var(--muted-foreground);
         margin: 0;
       }
       /* Carousel — manual horizontal scroll, both directions */
       .picks-carousel {
         display: flex;
-        gap: 20px;
+        gap: 1.25rem;
         overflow-x: auto;
         overflow-y: hidden;
         scroll-snap-type: x mandatory;
         scroll-behavior: smooth;
         scroll-padding: var(--boxel-sp-lg);
-        padding: 6px var(--boxel-sp-lg) 28px;
+        padding: 0.375rem var(--boxel-sp-lg) 1.75rem;
         margin: 0 calc(-1 * var(--boxel-sp-lg));
         scrollbar-width: thin;
-        scrollbar-color: #c5c5c5 transparent;
+        scrollbar-color: var(--border) transparent;
       }
       .picks-carousel::-webkit-scrollbar {
-        height: 10px;
+        height: 0.625rem;
       }
       .picks-carousel::-webkit-scrollbar-track {
-        background: transparent;
+        background-color: transparent;
       }
       .picks-carousel::-webkit-scrollbar-thumb {
-        background: var(--blog-color-divider, #d1d5db);
-        border-radius: 5px;
+        background-color: var(--border);
+        border-radius: 0.3125rem;
       }
       .picks-carousel::-webkit-scrollbar-thumb:hover {
-        background: #999;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .picks-card {
-        flex: 0 0 360px;
+        flex: 0 0 22.5rem;
         scroll-snap-align: start;
-        height: 200px;
-        border-radius: 14px;
+        height: 12.5rem;
+        border-radius: 0.875rem;
         overflow: hidden;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 6px
+          color-mix(in oklch, var(--foreground) 8%, transparent);
         cursor: pointer;
         transition:
           box-shadow 0.15s,
           transform 0.15s;
       }
       .picks-card:hover {
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+        box-shadow: 0 8px 24px
+          color-mix(in oklch, var(--foreground) 14%, transparent);
         transform: translateY(-2px);
       }
       .picks-card :deep(.card) {
@@ -1113,7 +1127,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         width: 100% !important;
         height: 100% !important;
         margin: 0 !important;
-        background-color: var(--blog-color-thumb-bg, #e5e7eb) !important;
+        background-color: var(--inset) !important;
         background-position: center !important;
         background-size: cover !important;
         background-repeat: no-repeat !important;
@@ -1123,7 +1137,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         padding: var(--boxel-sp-sm) var(--boxel-sp) !important;
         display: flex !important;
         flex-direction: column;
-        gap: 4px;
+        gap: 0.25rem;
         overflow: hidden;
         min-width: 0;
       }
@@ -1134,7 +1148,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         font: 700 1rem/1.25
           var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
         letter-spacing: -0.005em !important;
-        color: var(--blog-color-text, #121212) !important;
+        color: var(--foreground) !important;
         margin: 0 !important;
         display: -webkit-box;
         -webkit-line-clamp: 3;
@@ -1143,7 +1157,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       .picks-card :deep(.fitted-blog-post .description) {
         font: 400 0.82rem/1.4
           var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
-        color: var(--blog-color-subtle, #6b6b6b) !important;
+        color: var(--muted-foreground) !important;
         margin: 0 !important;
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -1154,7 +1168,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       .picks-card :deep(.fitted-blog-post .date) {
         font: 600 0.7rem/1
           var(--blog-font-family, 'Inter', system-ui, sans-serif) !important;
-        color: var(--blog-color-faint, #999) !important;
+        color: var(--subtle-foreground) !important;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin: 0 !important;
@@ -1162,7 +1176,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
 
       /* ── Recent Posts section ──────────────────────────── */
       .recent {
-        max-width: 1240px;
+        max-width: 77.5rem;
         margin: 0 auto;
         padding: var(--boxel-sp-xxl) var(--boxel-sp-lg) var(--boxel-sp-xxl);
       }
@@ -1179,21 +1193,22 @@ export class BlogSiteView extends Component<typeof BlogApp> {
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
         letter-spacing: -0.02em;
         margin: 0;
-        color: var(--blog-color-text, #121212);
+        color: var(--foreground);
       }
       .filter-pills {
         display: inline-flex;
-        gap: 10px;
+        gap: 0.625rem;
         flex-wrap: wrap;
       }
       .filter-pills .pill {
-        padding: 9px 20px;
-        background: white;
-        color: var(--blog-color-text, #121212);
-        border: 1px solid #121212;
-        border-radius: 999px;
+        padding: 0.5625rem 1.25rem;
+        background-color: var(--card);
+        color: var(--foreground);
+        border: 1px solid var(--border-strong);
+        border-radius: 62.4375rem;
         cursor: pointer;
-        font: 600 13px/1 var(--blog-font-family, 'Inter', system-ui, sans-serif);
+        font: 600 0.8125rem/1
+          var(--blog-font-family, 'Inter', system-ui, sans-serif);
         letter-spacing: 0;
         transition:
           background-color 0.15s,
@@ -1201,18 +1216,20 @@ export class BlogSiteView extends Component<typeof BlogApp> {
           transform 0.1s;
       }
       .filter-pills .pill:hover {
-        background: #f5f5f5;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .filter-pills .pill:active {
         transform: scale(0.97);
       }
       .filter-pills .pill.is-active {
-        background: #121212;
-        color: white;
-        border-color: var(--blog-color-text, #121212);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-color: var(--border-strong);
       }
       .filter-pills .pill.is-active:hover {
-        background: #000;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       /* Recent grid — 2 rows × 3 columns of fitted cards.
          Hides hero items 1-6 and overflow items 13+, leaving 7-12. */
@@ -1222,17 +1239,19 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         gap: var(--boxel-sp-lg);
       }
       .recent-card {
-        height: 420px;
-        border-radius: 14px;
+        height: 26.25rem;
+        border-radius: 0.875rem;
         overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 1px 3px
+          color-mix(in oklch, var(--foreground) 8%, transparent);
         cursor: pointer;
         transition:
           box-shadow 0.15s,
           transform 0.15s;
       }
       .recent-card:hover {
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 6px 18px
+          color-mix(in oklch, var(--foreground) 12%, transparent);
         transform: translateY(-2px);
       }
       .recent-card :deep(.card) {
@@ -1252,7 +1271,8 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       .recent-loading {
         grid-column: 1 / -1;
         color: var(--boxel-500);
-        font: 600 13px/1 var(--blog-font-family, 'Inter', system-ui, sans-serif);
+        font: 600 0.8125rem/1
+          var(--blog-font-family, 'Inter', system-ui, sans-serif);
         padding: var(--boxel-sp-lg) 0;
         text-align: center;
       }
@@ -1275,7 +1295,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
           grid-template-columns: 1fr;
         }
         .picks-card {
-          flex-basis: 280px;
+          flex-basis: 17.5rem;
         }
       }
     </style>

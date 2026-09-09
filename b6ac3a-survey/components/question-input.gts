@@ -162,37 +162,34 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
     </div>
 
     <style scoped>
-      .qi {
-        --qi-accent: var(--primary, #2563eb);
-      }
       .qi.is-invalid .qi-input,
       .qi.is-invalid .qi-mark,
       .qi.is-invalid .qi-choice,
       .qi.is-invalid .qi-toggle {
-        border-color: #dc2626;
+        border-color: var(--destructive);
       }
       .qi.is-invalid .qi-star {
-        color: #fca5a5;
+        color: var(--destructive-ink);
       }
       .qi-input {
         width: 100%;
         box-sizing: border-box;
-        min-height: var(--boxel-form-control-height, 2.5rem);
+        min-height: var(--boxel-form-control-height);
         padding: 0.5rem 0.75rem;
         font: inherit;
-        color: var(--foreground, #0f172a);
-        background: var(--card, #ffffff);
-        border: 1px solid var(--border, #cbd5e1);
-        border-radius: var(--boxel-border-radius-sm, 0.5rem);
+        color: var(--foreground);
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
         transition:
           border-color 0.15s ease,
           box-shadow 0.15s ease;
       }
       .qi-input:focus {
         outline: 0;
-        border-color: var(--qi-accent);
+        border-color: var(--primary);
         box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--qi-accent) 22%, transparent);
+          color-mix(in oklch, var(--primary) 22%, transparent);
       }
       .qi-textarea {
         resize: vertical;
@@ -212,28 +209,29 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
         padding: 0.55rem 0.75rem;
         font: inherit;
         text-align: start;
-        color: var(--foreground, #0f172a);
-        background: var(--card, #ffffff);
-        border: 1px solid var(--border, #cbd5e1);
-        border-radius: var(--boxel-border-radius-sm, 0.5rem);
+        color: var(--foreground);
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
         cursor: pointer;
         transition:
           border-color 0.15s ease,
           background 0.15s ease;
       }
       .qi-choice:hover {
-        border-color: var(--qi-accent);
+        border-color: var(--primary);
       }
       .qi-choice.is-selected {
-        border-color: var(--qi-accent);
-        background: color-mix(in srgb, var(--qi-accent) 10%, transparent);
+        border-color: var(--primary);
+        background-color: color-mix(in oklch, var(--primary) 10%, transparent);
       }
       .qi-mark {
         flex-shrink: 0;
         width: 1.1rem;
         height: 1.1rem;
-        border: 2px solid var(--border, #cbd5e1);
-        background: var(--card, #ffffff);
+        border: 2px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
         position: relative;
       }
       .qi-mark--radio {
@@ -243,8 +241,9 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
         border-radius: 0.3rem;
       }
       .qi-choice.is-selected .qi-mark {
-        border-color: var(--qi-accent);
-        background: var(--qi-accent);
+        border-color: var(--primary);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .qi-choice.is-selected .qi-mark::after {
         content: '';
@@ -256,12 +255,13 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
         width: 0.45rem;
         height: 0.45rem;
         border-radius: 50%;
-        background: #ffffff;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .qi-choice.is-selected .qi-mark--check::after {
         width: 0.28rem;
         height: 0.55rem;
-        border: solid #ffffff;
+        border: solid var(--border);
         border-width: 0 2px 2px 0;
         transform: translateY(-1px) rotate(45deg);
       }
@@ -277,11 +277,11 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
         background: none;
         border: none;
         cursor: pointer;
-        color: var(--border, #cbd5e1);
+        color: var(--subtle-foreground);
         transition: color 0.12s ease;
       }
       .qi-star.is-on {
-        color: #f59e0b;
+        color: var(--warning-ink);
       }
 
       .qi-yesno {
@@ -290,23 +290,23 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
       }
       .qi-toggle {
         min-width: 4.5rem;
-        min-height: var(--boxel-form-control-height, 2.5rem);
+        min-height: var(--boxel-form-control-height);
         padding-inline: 1rem;
         font: inherit;
         font-weight: 600;
-        color: var(--foreground, #0f172a);
-        background: var(--card, #ffffff);
-        border: 1px solid var(--border, #cbd5e1);
-        border-radius: var(--boxel-border-radius-sm, 0.5rem);
+        color: var(--foreground);
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
         cursor: pointer;
         transition:
           border-color 0.15s ease,
           background 0.15s ease;
       }
       .qi-toggle.is-selected {
-        border-color: var(--qi-accent);
-        background: var(--qi-accent);
-        color: var(--primary-foreground, #ffffff);
+        border-color: var(--primary);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
     </style>
   </template>

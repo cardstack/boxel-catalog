@@ -71,13 +71,13 @@ export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderS
         position: sticky;
         top: 0;
         z-index: 30;
-        background: color-mix(
-          in srgb,
-          var(--background, #ece9e1) 86%,
+        background-color: color-mix(
+          in oklch,
+          var(--background) 86%,
           transparent
         );
         backdrop-filter: blur(0.625rem);
-        border-bottom: 1px solid var(--border, #ddd8cb);
+        border-bottom: 1px solid var(--border);
       }
       .header-inner {
         max-width: 80rem;
@@ -94,20 +94,19 @@ export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderS
         gap: 0.625rem;
         flex-shrink: 0;
         text-decoration: none;
-        color: var(--foreground, #16161c);
+        color: var(--foreground);
       }
       .brand-mark {
         width: 1.75rem;
         height: 1.75rem;
         flex-shrink: 0;
-        --icon-color: var(--foreground, #16161c);
       }
       .brand-name {
-        font: 600 0.8125rem/1.1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        font: 600 0.8125rem/1.1 var(--font-sans);
         letter-spacing: -0.01em;
       }
       .brand-name-soft {
-        color: var(--muted-foreground, #8a8578);
+        color: var(--muted-foreground);
       }
       .nav {
         display: flex;
@@ -118,20 +117,21 @@ export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderS
       .nav-link {
         padding: 0.5rem 0.8125rem;
         border: none;
-        background: transparent;
-        border-radius: 999px;
-        font: 500 0.8125rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: var(--muted-foreground, #7b766a);
+        background-color: transparent;
+        border-radius: 62.4375rem;
+        font: 500 0.8125rem/1 var(--font-sans);
+        color: var(--muted-foreground);
         cursor: pointer;
         transition: all 120ms ease;
       }
       .nav-link:hover {
-        color: var(--foreground, #16161c);
+        color: var(--foreground);
       }
       .nav-link.is-active {
-        color: var(--foreground, #16161c);
-        background: var(--card, #fff);
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        color: var(--foreground);
+        background-color: var(--card);
+        box-shadow: 0 1px 4px
+          color-mix(in oklch, var(--foreground) 6%, transparent);
       }
       div.search {
         margin-left: auto;
@@ -140,22 +140,22 @@ export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderS
         align-items: center;
       }
       .search-input {
-        --boxel-input-search-background-color: var(--card, #fff);
-        --boxel-input-search-color: var(--foreground, #16161c);
-        --boxel-input-search-icon-color: var(--primary, #00b886);
+        --boxel-input-search-background-color: var(--card);
+        --boxel-input-search-color: var(--foreground);
+        --boxel-input-search-icon-color: var(--primary);
         width: 17rem;
         height: 2.5rem;
-        background: var(--card, #fff);
-        border: 1px solid var(--border, #ddd8cb);
-        border-radius: 999px;
-        color: var(--foreground, #16161c);
-        font: 500 0.8125rem var(--font-sans, 'IBM Plex Sans', sans-serif);
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 62.4375rem;
+        color: var(--foreground);
+        font: 500 0.8125rem var(--font-sans);
         outline: none;
       }
       .search-input:focus {
-        border-color: var(--accent, #16e098);
+        border-color: var(--accent);
         box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--accent, #16e098) 18%, transparent);
+          color-mix(in oklch, var(--accent) 18%, transparent);
       }
 
       @container (max-width: 56rem) {

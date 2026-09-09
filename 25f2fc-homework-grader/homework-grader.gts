@@ -862,17 +862,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
          so app-level defaults can't restyle the card arbitrarily. A linked
          theme omits this class, so its tokens win. */
       .hw-default-theme {
-        --background: #f1f5f9;
-        --foreground: #0f172a;
-        --card: #ffffff;
-        --card-foreground: #0f172a;
-        --muted: #f1f5f9;
-        --muted-foreground: #64748b;
-        --border: #e2e8f0;
-        --primary: #2563eb;
-        --primary-foreground: #ffffff;
-        --destructive: #ef4444;
-        --radius: 10px;
+        color: var(--card-foreground);
       }
 
       .hw-app {
@@ -882,36 +872,29 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
            --foreground, …) with the card's blue-slate default as the
            literal fallback. Derived shades come from color-mix so a theme
            only has to supply the semantic set. */
-        --c-blue: var(--primary, #2563eb);
-        --c-blue-hover: color-mix(in srgb, var(--c-blue) 85%, #000000);
-        --c-blue-bg: color-mix(in srgb, var(--c-blue) 8%, var(--c-white));
-        --c-blue-border: color-mix(in srgb, var(--c-blue) 28%, var(--c-white));
-        --c-blue-muted: color-mix(in srgb, var(--c-blue) 45%, var(--c-white));
-        --c-on-blue: var(--primary-foreground, #ffffff);
-        --c-bg: var(--background, #f1f5f9);
-        --c-white: var(--card, #ffffff);
-        --c-text: var(--foreground, #0f172a);
-        --c-text-2: var(--foreground, #1e293b);
-        --c-muted: var(--muted-foreground, #64748b);
-        --c-border: var(--border, #e2e8f0);
-        --c-border-2: var(--border, #cbd5e1);
-        --c-success: #10b981;
-        --c-danger: var(--destructive, #ef4444);
-        --c-warn: #f59e0b;
+        --c-blue-hover: color-mix(
+          in oklch,
+          var(--primary) 85%,
+          var(--foreground)
+        );
+        --c-blue-bg: color-mix(in oklch, var(--card) 8%, var(--card));
+        --c-blue-border: color-mix(in oklch, var(--primary) 28%, var(--card));
+        --c-blue-muted: color-mix(in oklch, var(--primary) 45%, var(--card));
         --c-shadow:
-          0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+          0 1px 0.1875rem color-mix(in oklch, var(--foreground) 7%, transparent),
+          0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent);
         --c-shadow-md:
-          0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+          0 0.25rem 0.75rem
+            color-mix(in oklch, var(--foreground) 8%, transparent),
+          0 2px 0.25rem color-mix(in oklch, var(--foreground) 4%, transparent);
 
         min-height: 100%;
         display: flex;
         flex-direction: column;
-        background: var(--c-bg);
         font-family:
           -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto,
           sans-serif;
-        color: var(--c-text);
-        font-size: 14px;
+        font-size: 0.875rem;
         line-height: 1.5;
         position: relative;
       }
@@ -924,10 +907,11 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
 
       /* ── Sidebar ── */
       .hw-sidebar {
-        width: 220px;
+        width: 13.75rem;
         flex-shrink: 0;
-        background: var(--c-white);
-        border-right: 1px solid var(--c-border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -943,17 +927,17 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-sidebar-brand {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 18px 16px 14px;
-        border-bottom: 1px solid var(--c-border);
+        gap: 0.625rem;
+        padding: 1.125rem 1rem 0.875rem;
+        border-bottom: 1px solid var(--border);
       }
 
       .hw-brand-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 8px;
-        background: var(--c-blue);
-        color: var(--c-on-blue, #ffffff);
+        width: 2.125rem;
+        height: 2.125rem;
+        border-radius: 0.5rem;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -965,9 +949,9 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-brand-title {
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 700;
-        color: var(--c-text);
+        color: var(--foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -976,38 +960,39 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-brand-sub {
-        font-size: 11px;
-        color: var(--c-muted);
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
         margin: 0;
         line-height: 1.3;
       }
 
       .hw-sidebar-nav {
-        padding: 10px 8px;
+        padding: 0.625rem 0.5rem;
         display: flex;
         flex-direction: column;
         gap: 2px;
       }
 
       .hw-nav-btn {
-        --boxel-button-border-radius: 8px;
-        --boxel-button-font: 500 13px -apple-system, 'Segoe UI', sans-serif;
+        --boxel-button-border-radius: 0.5rem;
+        --boxel-button-font:
+          500 0.8125rem -apple-system, 'Segoe UI', sans-serif;
         --boxel-button-padding: 0;
         --boxel-button-min-height: auto;
         --boxel-button-min-width: auto;
-        --boxel-button-text-color: var(--c-muted);
+        --boxel-button-text-color: var(--muted-foreground);
         --boxel-button-color: transparent;
 
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 0.625rem;
         width: 100%;
-        padding: 9px 10px;
-        border-radius: 8px;
-        font-size: 13px;
+        padding: 0.5625rem 0.625rem;
+        border-radius: 0.5rem;
+        font-size: 0.8125rem;
         font-weight: 500;
-        color: var(--c-muted);
-        background: transparent;
+        color: var(--muted-foreground);
+        background-color: transparent;
         border: none;
         cursor: pointer;
         text-align: left;
@@ -1019,13 +1004,13 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-nav-btn:hover {
-        background: var(--c-bg);
-        color: var(--c-text-2);
+        background-color: var(--background);
+        color: var(--foreground);
       }
 
       .hw-nav-btn.is-active {
-        background: var(--c-blue-bg);
-        color: var(--c-blue);
+        background-color: var(--c-blue-bg);
+        color: var(--primary-ink);
         font-weight: 600;
       }
 
@@ -1039,49 +1024,49 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-sidebar-bottom {
-        border-top: 1px solid var(--c-border);
+        border-top: 1px solid var(--border);
         flex-shrink: 0;
       }
 
       .hw-sidebar-thumb {
         width: 100%;
-        height: 120px;
+        height: 7.5rem;
         object-fit: cover;
         display: block;
       }
 
       .hw-sidebar-cta {
-        padding: 14px 16px;
+        padding: 0.875rem 1rem;
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 0.3125rem;
       }
 
       .hw-cta-title {
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 700;
-        color: var(--c-text);
+        color: var(--foreground);
         margin: 0;
       }
 
       .hw-cta-body {
-        font-size: 11px;
-        color: var(--c-muted);
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
         line-height: 1.5;
         margin: 0;
       }
 
       .hw-cta-btn {
-        --boxel-button-border-radius: 8px;
-        --boxel-button-font: 600 12px -apple-system, sans-serif;
-        --boxel-button-padding: 8px 14px;
+        --boxel-button-border-radius: 0.5rem;
+        --boxel-button-font: 600 0.75rem -apple-system, sans-serif;
+        --boxel-button-padding: 0.5rem 0.875rem;
         --boxel-button-min-height: auto;
         --boxel-button-min-width: auto;
 
-        margin-top: 6px;
+        margin-top: 0.375rem;
         width: 100%;
         justify-content: center;
-        gap: 6px;
+        gap: 0.375rem;
       }
 
       .hw-cta-btn.is-loading .hw-btn-icon {
@@ -1099,13 +1084,14 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-topbar {
-        background: var(--c-white);
-        border-bottom: 1px solid var(--c-border);
-        padding: 16px 24px;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-bottom: 1px solid var(--border);
+        padding: 1rem 1.5rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        gap: 1rem;
         flex-shrink: 0;
       }
 
@@ -1114,28 +1100,28 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-topbar-heading {
-        font-size: 20px;
+        font-size: 1.25rem;
         font-weight: 700;
-        color: var(--c-text);
+        color: var(--foreground);
         margin: 0;
         line-height: 1.2;
       }
 
       .hw-topbar-sub {
-        font-size: 13px;
-        color: var(--c-muted);
+        font-size: 0.8125rem;
+        color: var(--muted-foreground);
         margin: 2px 0 0;
       }
 
       .hw-grade-btn {
-        --boxel-button-border-radius: 8px;
-        --boxel-button-font: 600 13px -apple-system, sans-serif;
-        --boxel-button-padding: 9px 18px;
+        --boxel-button-border-radius: 0.5rem;
+        --boxel-button-font: 600 0.8125rem -apple-system, sans-serif;
+        --boxel-button-padding: 0.5625rem 1.125rem;
         --boxel-button-min-height: auto;
         --boxel-button-min-width: auto;
 
         flex-shrink: 0;
-        gap: 6px;
+        gap: 0.375rem;
         white-space: nowrap;
       }
 
@@ -1154,29 +1140,29 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-btn-icon {
-        font-size: 14px;
+        font-size: 0.875rem;
         line-height: 1;
       }
 
       .hw-stale-banner {
         display: flex;
         align-items: center;
-        gap: 8px;
-        background: color-mix(in srgb, var(--c-warn) 10%, var(--c-white));
-        border-bottom: 1px solid #fde68a;
-        padding: 8px 24px;
-        font-size: 13px;
-        color: #78350f;
+        gap: 0.5rem;
+        background-color: color-mix(in oklch, var(--card) 10%, var(--card));
+        border-bottom: 1px solid var(--border);
+        padding: 0.5rem 1.5rem;
+        font-size: 0.8125rem;
+        color: var(--card-foreground);
         flex-shrink: 0;
       }
 
       .hw-main {
         flex: 1;
-        padding: 20px 24px;
+        padding: 1.25rem 1.5rem;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 1rem;
         min-height: 0;
         /* isolated width varies with the host panels (e.g. AI assistant
            open), so layout shifts key off the card's own width */
@@ -1193,7 +1179,7 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         .hw-sidebar {
           width: 100%;
           border-right: none;
-          border-bottom: 1px solid var(--c-border);
+          border-bottom: 1px solid var(--border);
         }
         .hw-sidebar-bottom {
           display: none;
@@ -1207,14 +1193,14 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
           flex-direction: column;
           align-items: center;
           text-align: center;
-          gap: 14px;
+          gap: 0.875rem;
         }
         .hw-score-divider {
           display: none;
         }
         .hw-score-card .hw-breakdown {
           flex: 1 1 100%;
-          border-top: 1px solid var(--c-border);
+          border-top: 1px solid var(--border);
         }
         .hw-feedback-preview {
           flex-direction: column;
@@ -1237,9 +1223,10 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
 
       /* ── Score card ── */
       .hw-score-card {
-        background: var(--c-white);
-        border: 1px solid var(--c-border);
-        border-radius: 12px;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
         display: flex;
         flex-wrap: wrap;
         overflow: hidden;
@@ -1247,36 +1234,36 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-score-left {
-        padding: 24px 28px;
+        padding: 1.5rem 1.75rem;
         display: flex;
         align-items: center;
-        gap: 24px;
+        gap: 1.5rem;
         flex: 1;
-        min-width: 240px;
+        min-width: 15rem;
       }
 
       .hw-score-ring-wrap {
         position: relative;
-        width: 110px;
-        height: 110px;
+        width: 6.875rem;
+        height: 6.875rem;
         flex-shrink: 0;
       }
 
       .hw-score-ring {
-        width: 110px;
-        height: 110px;
+        width: 6.875rem;
+        height: 6.875rem;
         transform: rotate(-90deg);
       }
 
       .hw-ring-track {
         fill: none;
-        stroke: #e2e8f0;
+        stroke: var(--card-foreground);
         stroke-width: 8;
       }
 
       .hw-ring-fill {
         fill: none;
-        stroke: var(--c-blue);
+        stroke: var(--primary-ink);
         stroke-width: 8;
         stroke-linecap: round;
         stroke-dasharray: 326.73;
@@ -1292,105 +1279,106 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-score-grade-letter {
-        font-size: 30px;
+        font-size: 1.875rem;
         font-weight: 800;
-        color: var(--c-blue);
+        color: var(--primary-ink);
         line-height: 1;
       }
 
       .hw-score-info {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 0.375rem;
       }
 
       .hw-score-num {
-        font-size: 28px;
+        font-size: 1.75rem;
         font-weight: 800;
-        color: var(--c-text);
+        color: var(--foreground);
         line-height: 1;
         margin: 0;
       }
 
       .hw-score-denom {
-        font-size: 16px;
+        font-size: 1rem;
         font-weight: 400;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
 
       .hw-score-verdict {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 600;
-        color: var(--c-blue);
+        color: var(--primary-ink);
         margin: 0;
       }
 
       .hw-score-summary {
-        font-size: 13px;
+        font-size: 0.8125rem;
         line-height: 1.55;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         margin: 0;
         max-width: 30ch;
       }
 
       .hw-score-divider {
         width: 1px;
-        background: var(--c-border);
+        background-color: var(--border);
         flex-shrink: 0;
-        margin: 20px 0;
+        margin: 1.25rem 0;
       }
 
       .hw-breakdown {
-        padding: 20px 24px;
+        padding: 1.25rem 1.5rem;
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        min-width: 200px;
+        gap: 0.625rem;
+        min-width: 12.5rem;
         flex: 1;
         justify-content: center;
       }
 
       .hw-breakdown-heading {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        margin: 0 0 4px;
+        margin: 0 0 0.25rem;
       }
 
       .hw-bd-row {
         display: grid;
-        grid-template-columns: 1fr 80px 52px;
+        grid-template-columns: 1fr 5rem 3.25rem;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
       }
 
       .hw-bd-label {
-        font-size: 12px;
-        color: var(--c-text-2);
+        font-size: 0.75rem;
+        color: var(--foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .hw-bd-track {
-        height: 6px;
-        border-radius: 3px;
-        background: var(--c-border);
+        height: 0.375rem;
+        border-radius: 0.1875rem;
+        background-color: var(--border);
         overflow: hidden;
       }
 
       .hw-bd-fill {
         height: 100%;
-        background: var(--c-blue);
-        border-radius: 3px;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        border-radius: 0.1875rem;
         transition: width 0.4s ease;
       }
 
       .hw-bd-score {
-        font-size: 12px;
-        color: var(--c-muted);
+        font-size: 0.75rem;
+        color: var(--muted-foreground);
         text-align: right;
         white-space: nowrap;
       }
@@ -1399,73 +1387,74 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-top: 1px solid var(--c-border);
-        padding-top: 10px;
+        border-top: 1px solid var(--border);
+        padding-top: 0.625rem;
         margin-top: 2px;
       }
 
       .hw-bd-total-label {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--c-text-2);
+        color: var(--foreground);
       }
 
       .hw-bd-total-score {
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 700;
-        color: var(--c-blue);
+        color: var(--primary-ink);
       }
 
       /* ── Pending state ── */
       .hw-pending {
-        background: var(--c-white);
-        border: 1px solid var(--c-border);
-        border-radius: 12px;
-        padding: 28px 24px;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1.75rem 1.5rem;
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 1.25rem;
         box-shadow: var(--c-shadow);
       }
 
       .hw-pending-icon {
-        font-size: 30px;
-        color: var(--c-border-2);
+        font-size: 1.875rem;
+        color: var(--subtle-foreground);
         line-height: 1;
         flex-shrink: 0;
       }
 
       .hw-pending-title {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 600;
-        color: var(--c-text-2);
+        color: var(--foreground);
         margin: 0;
       }
 
       .hw-pending-hint {
-        font-size: 13px;
-        color: var(--c-muted);
-        margin: 4px 0 0;
+        font-size: 0.8125rem;
+        color: var(--muted-foreground);
+        margin: 0.25rem 0 0;
       }
 
       /* ── Feedback preview card ── */
       .hw-feedback-preview {
-        background: var(--c-blue-bg);
+        background-color: var(--c-blue-bg);
         border: 1px solid var(--c-blue-border);
-        border-radius: 12px;
-        padding: 18px 20px;
+        border-radius: 0.75rem;
+        padding: 1.125rem 1.25rem;
         display: flex;
         align-items: flex-start;
-        gap: 14px;
+        gap: 0.875rem;
         box-shadow: var(--c-shadow);
       }
 
       .hw-feedback-preview-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        background: var(--c-blue);
-        color: var(--c-on-blue, #ffffff);
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.5rem;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1479,16 +1468,16 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-feedback-preview-title {
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 600;
-        color: var(--c-text);
-        margin: 0 0 6px;
+        color: var(--foreground);
+        margin: 0 0 0.375rem;
       }
 
       .hw-feedback-preview-text {
-        font-size: 13px;
+        font-size: 0.8125rem;
         line-height: 1.6;
-        color: var(--c-text-2);
+        color: var(--foreground);
         margin: 0;
         overflow: hidden;
         display: -webkit-box;
@@ -1497,9 +1486,9 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-view-feedback-btn {
-        --boxel-button-border-radius: 8px;
-        --boxel-button-font: 500 12px -apple-system, sans-serif;
-        --boxel-button-padding: 7px 14px;
+        --boxel-button-border-radius: 0.5rem;
+        --boxel-button-font: 500 0.75rem -apple-system, sans-serif;
+        --boxel-button-padding: 0.4375rem 0.875rem;
         --boxel-button-min-height: auto;
         --boxel-button-min-width: auto;
 
@@ -1512,32 +1501,33 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-questions-overview {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0.5rem;
       }
 
       .hw-section-title {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 700;
-        color: var(--c-text);
-        margin: 0 0 4px;
+        color: var(--foreground);
+        margin: 0 0 0.25rem;
       }
 
       .hw-q-item {
-        --boxel-button-border-radius: 10px;
-        --boxel-button-color: var(--c-white);
-        --boxel-button-text-color: var(--c-text);
+        --boxel-button-border-radius: 0.625rem;
+        --boxel-button-color: var(--card);
+        --boxel-button-text-color: var(--foreground);
         --boxel-button-padding: 0;
         --boxel-button-min-height: auto;
         --boxel-button-min-width: auto;
-        --boxel-button-font: 400 14px -apple-system, sans-serif;
+        --boxel-button-font: 400 0.875rem -apple-system, sans-serif;
 
         display: flex;
         align-items: center;
-        gap: 12px;
-        background: var(--c-white);
-        border: 1px solid var(--c-border);
-        border-radius: 10px;
-        padding: 12px 16px;
+        gap: 0.75rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 0.625rem;
+        padding: 0.75rem 1rem;
         cursor: pointer;
         text-align: left;
         width: 100%;
@@ -1555,15 +1545,15 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-q-num {
-        width: 30px;
-        height: 30px;
+        width: 1.875rem;
+        height: 1.875rem;
         border-radius: 50%;
-        background: var(--c-blue);
-        color: var(--c-on-blue, #ffffff);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 700;
         flex-shrink: 0;
       }
@@ -1577,33 +1567,33 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-q-name {
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 600;
-        color: var(--c-text);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
       .hw-q-hint {
-        font-size: 12px;
-        color: var(--c-muted);
+        font-size: 0.75rem;
+        color: var(--muted-foreground);
       }
 
       .hw-q-pts {
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         white-space: nowrap;
         flex-shrink: 0;
       }
 
       .hw-q-pts.full {
-        color: var(--c-success);
+        color: var(--success-ink);
       }
 
       .hw-q-pts.partial {
-        color: var(--c-blue);
+        color: var(--primary-ink);
       }
 
       .hw-q-pts strong {
@@ -1611,8 +1601,8 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-q-arrow {
-        font-size: 18px;
-        color: var(--c-border-2);
+        font-size: 1.125rem;
+        color: var(--subtle-foreground);
         line-height: 1;
         flex-shrink: 0;
       }
@@ -1621,28 +1611,29 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-questions-full {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 0.875rem;
       }
 
       .hw-q-score-strip {
-        background: var(--c-blue);
-        border-radius: 10px;
-        padding: 12px 18px;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        border-radius: 0.625rem;
+        padding: 0.75rem 1.125rem;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 0.875rem;
       }
 
       .hw-q-strip-badge {
-        width: 40px;
-        height: 40px;
+        width: 2.5rem;
+        height: 2.5rem;
         border-radius: 50%;
-        background: var(--c-white);
-        color: var(--c-blue);
+        background-color: var(--card);
+        color: var(--primary-ink);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 17px;
+        font-size: 1.0625rem;
         font-weight: 800;
         flex-shrink: 0;
       }
@@ -1654,188 +1645,189 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-q-strip-pts {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 700;
-        color: var(--c-on-blue, #ffffff);
+        color: var(--card-foreground);
         line-height: 1;
       }
 
       .hw-q-strip-pct {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.75rem;
+        color: color-mix(in oklch, var(--card-foreground) 70%, transparent);
         font-weight: 500;
       }
 
       .hw-q-strip-sep {
         width: 1px;
-        height: 30px;
-        background: rgba(255, 255, 255, 0.25);
+        height: 1.875rem;
+        background-color: color-mix(in oklch, var(--card) 25%, transparent);
         flex-shrink: 0;
       }
 
       .hw-q-strip-verdict {
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.875rem;
+        color: color-mix(in oklch, var(--card-foreground) 85%, transparent);
         font-style: italic;
         margin: 0;
       }
 
       .hw-instructions {
-        background: color-mix(in srgb, var(--c-warn) 10%, var(--c-white));
-        border: 1px solid #fde68a;
-        border-radius: 10px;
-        padding: 14px 16px;
+        background-color: color-mix(in oklch, var(--warning) 10%, var(--card));
+        border: 1px solid var(--warning);
+        border-radius: 0.625rem;
+        padding: 0.875rem 1rem;
       }
 
       .hw-instr-label {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 600;
-        color: #92400e;
+        color: var(--warning-ink);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        margin: 0 0 4px;
+        margin: 0 0 0.25rem;
       }
 
       .hw-instr-body {
-        font-size: 13px;
-        color: #78350f;
+        font-size: 0.8125rem;
+        color: var(--warning-ink);
         line-height: 1.6;
         margin: 0;
       }
 
       .hw-question-card {
-        background: var(--c-white);
-        border: 1px solid var(--c-border);
-        border-radius: 10px;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 0.625rem;
         overflow: hidden;
         box-shadow: var(--c-shadow);
       }
 
       .hw-question-header {
-        background: var(--c-bg);
-        border-bottom: 1px solid var(--c-border);
-        padding: 10px 16px;
+        background-color: var(--background);
+        border-bottom: 1px solid var(--border);
+        padding: 0.625rem 1rem;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 0.625rem;
       }
 
       .hw-question-title {
         flex: 1;
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 600;
-        color: var(--c-text);
+        color: var(--foreground);
         margin: 0;
       }
 
       .hw-question-pts {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 700;
-        color: var(--c-muted);
-        padding: 2px 9px;
-        border-radius: 20px;
-        background: var(--c-border);
+        color: var(--muted-foreground);
+        padding: 2px 0.5625rem;
+        border-radius: 1.25rem;
+        background-color: var(--border);
       }
 
       .hw-question-pts.full {
-        color: var(--c-success);
-        background: #ecfdf5;
+        color: var(--success-ink);
+        background-color: var(--card);
       }
 
       .hw-question-pts.partial {
-        color: var(--c-blue);
-        background: var(--c-blue-bg);
+        color: var(--primary-ink);
+        background-color: var(--c-blue-bg);
       }
 
       .hw-question-max {
-        font-size: 12px;
-        color: var(--c-muted);
+        font-size: 0.75rem;
+        color: var(--muted-foreground);
       }
 
       .hw-question-body {
-        padding: 16px;
-        min-height: 140px;
+        padding: 1rem;
+        min-height: 8.75rem;
       }
 
       .hw-q-edit {
         flex-shrink: 0;
-        width: 24px;
-        height: 24px;
-        border: 1px solid var(--c-border);
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 1px solid var(--border);
         border-radius: 50%;
-        background: var(--c-white);
-        color: var(--c-muted);
-        font-size: 12px;
+        background-color: var(--card);
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
         line-height: 1;
         cursor: pointer;
       }
       .hw-q-edit.is-on,
       .hw-q-edit:hover {
-        color: var(--c-on-blue, #ffffff);
-        background: var(--c-blue);
-        border-color: var(--c-blue);
+        color: var(--primary-foreground);
+        background-color: var(--primary);
+        border-color: var(--primary);
       }
 
       .hw-q-remove {
         flex-shrink: 0;
-        width: 24px;
-        height: 24px;
-        border: 1px solid var(--c-border);
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 1px solid var(--border);
         border-radius: 50%;
-        background: var(--c-white);
-        color: var(--c-muted);
-        font-size: 12px;
+        background-color: var(--card);
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
         line-height: 1;
         cursor: pointer;
       }
       .hw-q-remove:hover {
-        color: var(--c-danger, #dc2626);
+        color: var(--destructive-ink);
         border-color: currentColor;
       }
       .hw-q-remove.is-armed {
         width: auto;
-        padding: 0 10px;
-        border-radius: 12px;
-        background: var(--c-danger);
-        border-color: var(--c-danger);
-        color: #ffffff;
+        padding: 0 0.625rem;
+        border-radius: 0.75rem;
+        background-color: var(--destructive);
+        border-color: var(--destructive);
+        color: var(--destructive-foreground);
         font-weight: 700;
         white-space: nowrap;
       }
 
       .hw-q-feedback {
-        border-top: 1px solid var(--c-border);
-        background: var(--c-bg);
-        padding: 12px 16px;
+        border-top: 1px solid var(--border);
+        background-color: var(--background);
+        padding: 0.75rem 1rem;
       }
       .hw-q-feedback-label {
         display: block;
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--c-muted);
-        margin-bottom: 4px;
+        color: var(--muted-foreground);
+        margin-bottom: 0.25rem;
       }
       .hw-q-feedback-text {
         margin: 0;
-        font-size: 13px;
+        font-size: 0.8125rem;
         line-height: 1.55;
-        color: var(--c-text);
+        color: var(--foreground);
         white-space: pre-line;
       }
 
       .hw-error-banner {
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin: 12px 16px 0;
-        padding: 10px 14px;
-        border: 1px solid var(--c-danger);
-        border-radius: 8px;
-        background: color-mix(in srgb, var(--c-danger) 8%, var(--c-white));
-        color: var(--c-text);
-        font-size: 13px;
+        gap: 0.625rem;
+        margin: 0.75rem 1rem 0;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        background-color: color-mix(in oklch, var(--card) 8%, var(--card));
+        color: var(--foreground);
+        font-size: 0.8125rem;
       }
       .hw-error-text {
         flex: 1;
@@ -1843,28 +1835,28 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-error-dismiss {
         flex-shrink: 0;
         border: none;
-        background: transparent;
-        color: var(--c-muted);
+        background-color: transparent;
+        color: var(--muted-foreground);
         cursor: pointer;
-        font-size: 13px;
+        font-size: 0.8125rem;
       }
 
       .hw-empty-questions {
-        border: 1.5px dashed var(--c-border);
-        border-radius: 10px;
-        padding: 26px 20px;
+        border: 1.5px dashed var(--border);
+        border-radius: 0.625rem;
+        padding: 1.625rem 1.25rem;
         text-align: center;
       }
       .hw-empty-title {
-        margin: 0 0 4px;
-        font-size: 14px;
+        margin: 0 0 0.25rem;
+        font-size: 0.875rem;
         font-weight: 700;
-        color: var(--c-text);
+        color: var(--foreground);
       }
       .hw-empty-hint {
         margin: 0;
-        font-size: 12.5px;
-        color: var(--c-muted);
+        font-size: 0.7812rem;
+        color: var(--muted-foreground);
       }
 
       .hw-add-question {
@@ -1880,11 +1872,12 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         z-index: 50;
         display: flex;
         align-items: center;
-        gap: 14px;
-        background: var(--c-white);
-        border-bottom: 1px solid var(--c-border);
-        border-left: 4px solid var(--c-blue);
-        padding: 12px 20px;
+        gap: 0.875rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-bottom: 1px solid var(--border);
+        border-left: 4px solid var(--primary);
+        padding: 0.75rem 1.25rem;
         box-shadow: var(--c-shadow-md);
         animation: hw-toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
@@ -1901,10 +1894,11 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-toast-badge {
-        width: 40px;
-        height: 40px;
+        width: 2.5rem;
+        height: 2.5rem;
         border-radius: 50%;
-        background: var(--c-blue);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1912,9 +1906,9 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-toast-letter {
-        font-size: 17px;
+        font-size: 1.0625rem;
         font-weight: 800;
-        color: var(--c-on-blue, #ffffff);
+        color: var(--card-foreground);
         line-height: 1;
       }
 
@@ -1926,16 +1920,16 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-toast-eyebrow {
-        font-size: 11px;
-        color: var(--c-muted);
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
         font-weight: 500;
         margin: 0;
       }
 
       .hw-toast-grade {
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 600;
-        color: var(--c-text);
+        color: var(--foreground);
         margin: 0;
       }
 
@@ -1951,24 +1945,25 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         overflow: visible;
         display: flex;
         justify-content: flex-end;
-        padding-right: 16px;
+        padding-right: 1rem;
         z-index: 10;
         pointer-events: none;
       }
 
       .hw-answer-toast {
         pointer-events: all;
-        margin-top: 16px;
-        background: var(--c-white);
-        border: 1px solid var(--c-border);
-        border-radius: 12px;
-        padding: 14px 16px 12px;
+        margin-top: 1rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 0.875rem 1rem 0.75rem;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 0.625rem;
         box-shadow: var(--c-shadow-md);
-        max-width: 256px;
-        min-width: 200px;
+        max-width: 16rem;
+        min-width: 12.5rem;
         height: fit-content;
         animation: hw-answer-toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
@@ -1987,12 +1982,12 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-answer-toast-top {
         display: flex;
         align-items: flex-start;
-        gap: 10px;
+        gap: 0.625rem;
       }
 
       .hw-answer-toast-icon {
-        font-size: 16px;
-        color: var(--c-blue);
+        font-size: 1rem;
+        color: var(--primary-ink);
         line-height: 1.3;
         flex-shrink: 0;
       }
@@ -2006,16 +2001,16 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-answer-toast-title {
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 600;
-        color: var(--c-text);
+        color: var(--foreground);
         line-height: 1.2;
         margin: 0;
       }
 
       .hw-answer-toast-sub {
-        font-size: 11px;
-        color: var(--c-muted);
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
         margin: 0;
       }
 
@@ -2024,14 +2019,14 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-answer-toast-regrade {
-        --boxel-button-border-radius: 8px;
-        --boxel-button-padding: 8px 12px;
+        --boxel-button-border-radius: 0.5rem;
+        --boxel-button-padding: 0.5rem 0.75rem;
         --boxel-button-min-height: auto;
         --boxel-button-min-width: 100%;
-        --boxel-button-font: 600 12px -apple-system, sans-serif;
+        --boxel-button-font: 600 0.75rem -apple-system, sans-serif;
 
         justify-content: center;
-        gap: 6px;
+        gap: 0.375rem;
         width: 100%;
       }
 
@@ -2211,36 +2206,16 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
 
     <style scoped>
       .hw-default-theme {
-        --background: #f1f5f9;
-        --foreground: #0f172a;
-        --card: #ffffff;
-        --card-foreground: #0f172a;
-        --muted: #f1f5f9;
-        --muted-foreground: #64748b;
-        --border: #e2e8f0;
-        --primary: #2563eb;
-        --primary-foreground: #ffffff;
-        --destructive: #ef4444;
-        --radius: 10px;
+        color: var(--card-foreground);
       }
 
       .hw-fitted {
-        --c-blue: var(--primary, #2563eb);
-        --c-blue-bg: color-mix(in srgb, var(--c-blue) 8%, var(--c-white));
-        --c-blue-border: color-mix(in srgb, var(--c-blue) 28%, var(--c-white));
-        --c-on-blue: var(--primary-foreground, #ffffff);
-        --c-bg: var(--background, #f1f5f9);
-        --c-white: var(--card, #ffffff);
-        --c-text: var(--foreground, #0f172a);
-        --c-text-2: var(--foreground, #1e293b);
-        --c-muted: var(--muted-foreground, #64748b);
-        --c-border: var(--border, #e2e8f0);
-        --c-success: #10b981;
-        --c-warn: #f59e0b;
-        --c-danger: var(--destructive, #ef4444);
-        --c-grade: var(--c-blue);
+        --c-blue-bg: color-mix(in oklch, var(--card) 8%, var(--card));
+        --c-blue-border: color-mix(in oklch, var(--primary) 28%, var(--card));
+        --c-grade: var(--primary);
         --c-shadow:
-          0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+          0 1px 0.1875rem color-mix(in oklch, var(--foreground) 7%, transparent),
+          0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent);
 
         width: 100%;
         height: 100%;
@@ -2250,16 +2225,16 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
 
       /* Grade accent colours */
       .hw-fitted.grade-a {
-        --c-grade: #10b981;
+        --c-grade: var(--success);
       }
       .hw-fitted.grade-b {
-        --c-grade: #2563eb;
+        --c-grade: var(--primary);
       }
       .hw-fitted.grade-c {
-        --c-grade: #f59e0b;
+        --c-grade: var(--warning);
       }
       .hw-fitted.grade-f {
-        --c-grade: #ef4444;
+        --c-grade: var(--destructive);
       }
 
       /* ── All sub-formats hidden by default ── */
@@ -2283,17 +2258,17 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 6px;
-          background: var(--c-bg);
-          padding: 10px 8px;
+          gap: 0.375rem;
+          background-color: var(--background);
+          padding: 0.625rem 0.5rem;
         }
       }
 
       .badge-seal {
-        width: 48px;
-        height: 48px;
+        width: 3rem;
+        height: 3rem;
         border-radius: 50%;
-        background: var(--c-grade);
+        background-color: var(--c-grade);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2301,20 +2276,20 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
       }
 
       .badge-letter {
-        font-size: 24px;
+        font-size: 1.5rem;
         font-weight: 800;
-        color: var(--c-on-blue, #ffffff);
+        color: var(--card-foreground);
         line-height: 1;
       }
 
       .badge-book {
-        color: var(--c-on-blue, #ffffff);
+        color: var(--card-foreground);
       }
 
       .badge-title {
-        font-size: 9px;
+        font-size: 0.5625rem;
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         text-align: center;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -2330,39 +2305,40 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         .strip {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 0 14px;
-          background: var(--c-white);
+          gap: 0.625rem;
+          padding: 0 0.875rem;
+          background-color: var(--card);
+          color: var(--card-foreground);
           border-left: 3px solid var(--c-grade);
         }
       }
 
       .strip-seal {
         flex-shrink: 0;
-        width: 32px;
-        height: 32px;
+        width: 2rem;
+        height: 2rem;
         border-radius: 50%;
-        background: var(--c-grade);
+        background-color: var(--c-grade);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 800;
-        color: var(--c-on-blue, #ffffff);
+        color: var(--card-foreground);
         line-height: 1;
       }
 
       .strip-seal.strip-pending {
-        background: var(--c-border);
-        color: var(--c-muted);
-        font-size: 16px;
+        background-color: var(--border);
+        color: var(--muted-foreground);
+        font-size: 1rem;
       }
 
       .strip-title {
         flex: 1;
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 600;
-        color: var(--c-text);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -2370,20 +2346,20 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
 
       .strip-pct {
         flex-shrink: 0;
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 700;
         color: var(--c-grade);
       }
 
       .strip-qs {
         flex-shrink: 0;
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 600;
-        color: var(--c-muted);
-        background: var(--c-bg);
-        border: 1px solid var(--c-border);
-        border-radius: 4px;
-        padding: 2px 6px;
+        color: var(--muted-foreground);
+        background-color: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        padding: 2px 0.375rem;
       }
 
       /* ══════════════════════════════════════
@@ -2393,36 +2369,38 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         .tile {
           display: flex;
           flex-direction: column;
-          background: var(--c-white);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
       }
 
       .tile-hd {
-        background: var(--c-white);
-        border-bottom: 1px solid var(--c-border);
-        padding: 10px 13px;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-bottom: 1px solid var(--border);
+        padding: 0.625rem 0.8125rem;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
         flex-shrink: 0;
       }
 
       .tile-brand-icon {
-        width: 22px;
-        height: 22px;
-        border-radius: 5px;
-        background: var(--c-blue);
+        width: 1.375rem;
+        height: 1.375rem;
+        border-radius: 0.3125rem;
+        background-color: var(--primary);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--c-on-blue, #ffffff);
+        color: var(--primary-foreground);
         flex-shrink: 0;
       }
 
       .tile-title {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--c-text);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -2431,20 +2409,20 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
 
       .tile-body {
         flex: 1;
-        background: var(--c-bg);
+        background-color: var(--background);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 4px;
-        padding: 12px;
+        gap: 0.25rem;
+        padding: 0.75rem;
       }
 
       .tile-grade-circle {
-        width: clamp(44px, 12cqh, 64px);
-        height: clamp(44px, 12cqh, 64px);
+        width: clamp(2.75rem, 12cqh, 4rem);
+        height: clamp(2.75rem, 12cqh, 4rem);
         border-radius: 50%;
-        background: var(--c-grade);
+        background-color: var(--c-grade);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2452,22 +2430,22 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
       }
 
       .tile-grade-letter {
-        font-size: clamp(22px, 6cqh, 32px);
+        font-size: clamp(1.375rem, 6cqh, 2rem);
         font-weight: 800;
-        color: var(--c-on-blue, #ffffff);
+        color: var(--card-foreground);
         line-height: 1;
       }
 
       .tile-score {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--c-text-2);
+        color: var(--foreground);
         margin: 0;
       }
 
       .tile-pct {
-        font-size: 11px;
-        color: var(--c-muted);
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
         margin: 0;
       }
 
@@ -2475,18 +2453,18 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 5px;
-        color: var(--c-muted);
-        font-size: 11px;
+        gap: 0.3125rem;
+        color: var(--muted-foreground);
+        font-size: 0.6875rem;
       }
 
       .tile-ft {
-        background: var(--c-white);
-        border-top: 1px solid var(--c-border);
-        padding: 6px 13px;
-        font-size: 10px;
+        background-color: var(--card);
+        border-top: 1px solid var(--border);
+        padding: 0.375rem 0.8125rem;
+        font-size: 0.625rem;
         font-weight: 500;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         flex-shrink: 0;
         text-align: center;
       }
@@ -2498,72 +2476,73 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         .card {
           display: flex;
           flex-direction: row;
-          background: var(--c-white);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
       }
 
       .card-left {
-        width: 130px;
+        width: 8.125rem;
         flex-shrink: 0;
-        background: var(--c-bg);
+        background-color: var(--background);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 4px;
-        padding: 18px 12px;
+        gap: 0.25rem;
+        padding: 1.125rem 0.75rem;
       }
 
       .card-grade-ring {
-        width: clamp(44px, 10cqh, 64px);
-        height: clamp(44px, 10cqh, 64px);
+        width: clamp(2.75rem, 10cqh, 4rem);
+        height: clamp(2.75rem, 10cqh, 4rem);
         border-radius: 50%;
-        background: var(--c-grade);
+        background-color: var(--c-grade);
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: var(--c-shadow);
-        margin-bottom: 4px;
+        margin-bottom: 0.25rem;
       }
 
       .card-grade-letter {
-        font-size: clamp(22px, 5cqh, 32px);
+        font-size: clamp(1.375rem, 5cqh, 2rem);
         font-weight: 800;
-        color: var(--c-on-blue, #ffffff);
+        color: var(--card-foreground);
         line-height: 1;
       }
 
       .card-pct {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 700;
-        color: var(--c-text);
+        color: var(--foreground);
       }
 
       .card-pts {
-        font-size: 10px;
-        color: var(--c-muted);
+        font-size: 0.625rem;
+        color: var(--muted-foreground);
         letter-spacing: 0.02em;
       }
 
       .card-pending-label {
-        font-size: 11px;
-        color: var(--c-muted);
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
         font-style: italic;
       }
 
       .card-divider {
         width: 1px;
-        background: var(--c-border);
+        background-color: var(--border);
         flex-shrink: 0;
-        margin: 16px 0;
+        margin: 1rem 0;
       }
 
       .card-body {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        padding: 16px 18px;
+        gap: 0.25rem;
+        padding: 1rem 1.125rem;
         min-width: 0;
         justify-content: center;
       }
@@ -2571,34 +2550,34 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
       .card-icon-row {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 0.375rem;
         margin-bottom: 2px;
       }
 
       .card-brand-icon {
-        width: 20px;
-        height: 20px;
-        border-radius: 4px;
-        background: var(--c-blue);
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 0.25rem;
+        background-color: var(--primary);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--c-on-blue, #ffffff);
+        color: var(--primary-foreground);
         flex-shrink: 0;
       }
 
       .card-eyebrow {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         text-transform: uppercase;
         letter-spacing: 0.06em;
       }
 
       .card-title {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 700;
-        color: var(--c-text);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -2607,16 +2586,16 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
       }
 
       .card-meta {
-        font-size: 11px;
-        color: var(--c-muted);
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
         margin: 0;
       }
 
       .card-bar {
-        margin-top: 8px;
+        margin-top: 0.5rem;
         --boxel-progress-bar-fill-color: var(--c-grade);
-        --boxel-progress-bar-background-color: var(--c-border);
-        --boxel-progress-bar-border-radius: 3px;
+        --boxel-progress-bar-background-color: var(--border);
+        --boxel-progress-bar-border-radius: 0.1875rem;
       }
     </style>
   </template>

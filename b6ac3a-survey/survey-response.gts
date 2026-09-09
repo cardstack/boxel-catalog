@@ -56,25 +56,19 @@ export class SurveyResponse extends CardDef {
       </article>
       <style scoped>
         .resp {
-          padding: var(--boxel-sp, 1rem);
+          padding: var(--boxel-sp);
           display: flex;
           flex-direction: column;
           gap: 0.6rem;
-          color: var(--foreground, #0f172a);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            -apple-system,
-            BlinkMacSystemFont,
-            sans-serif
-          );
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .resp-eyebrow {
           font-size: 0.6875rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.1em;
-          color: var(--primary, #2563eb);
+          color: var(--primary-ink);
         }
         .resp-title {
           margin: 0.1rem 0 0;
@@ -90,12 +84,12 @@ export class SurveyResponse extends CardDef {
           display: grid;
           gap: 0.1rem;
           padding-bottom: 0.4rem;
-          border-bottom: 1px solid var(--border, #e2e8f0);
+          border-bottom: 1px solid var(--border);
         }
         .resp-row dt {
           font-size: 0.8125rem;
           font-weight: 600;
-          color: var(--muted-foreground, #64748b);
+          color: var(--muted-foreground);
         }
         .resp-row dd {
           margin: 0;
@@ -130,21 +124,15 @@ export class SurveyResponse extends CardDef {
           justify-content: center;
           gap: 0.2rem;
           overflow: hidden;
-          font-family: var(
-            --font-sans,
-            'Inter',
-            -apple-system,
-            BlinkMacSystemFont,
-            sans-serif
-          );
-          color: var(--foreground, #0f172a);
+          font-family: var(--font-sans);
+          color: var(--foreground);
         }
         .resp-fitted-eyebrow {
           font-size: 0.625rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.1em;
-          color: var(--primary, #2563eb);
+          color: var(--primary-ink);
         }
         .resp-fitted-title {
           font-size: 0.95rem;
@@ -159,7 +147,7 @@ export class SurveyResponse extends CardDef {
         .resp-fitted-count {
           font-size: 0.75rem;
           font-weight: 600;
-          color: var(--muted-foreground, #64748b);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

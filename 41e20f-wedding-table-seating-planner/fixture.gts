@@ -66,34 +66,28 @@ export class Fixture extends FieldDef {
         .fx-row {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 10px 12px;
-          border: 1px solid var(--tsp-border, var(--border, rgba(0, 0, 0, 0.1)));
-          border-radius: 11px;
-          background: var(--tsp-background, var(--background, #fff));
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
+          gap: 0.75rem;
+          padding: 0.625rem 0.75rem;
+          border: 1px solid var(--border);
+          border-radius: 0.6875rem;
         }
         .fx-thumb {
-          width: 40px;
-          height: 40px;
+          width: 2.5rem;
+          height: 2.5rem;
           flex: none;
         }
         .fx-body {
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 0.1875rem;
           min-width: 0;
         }
         .fx-label {
-          font-size: 14px;
+          font-size: 0.875rem;
         }
         .fx-kind {
-          font: 11px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
+          font: 0.6875rem var(--font-sans);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -129,24 +123,18 @@ export class Fixture extends FieldDef {
           width: 100%;
           height: 100%;
           display: grid;
-          gap: 4px 10px;
-          padding: 10px 12px;
+          gap: 0.25rem 0.625rem;
+          padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
           align-content: center;
           grid-template-columns: auto minmax(0, 1fr);
           grid-template-areas: 'thumb head' 'thumb meta';
-          background: var(--tsp-background, var(--background, #fff));
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
         }
         .r-thumb {
           grid-area: thumb;
-          width: 44px;
-          height: 44px;
+          width: 2.75rem;
+          height: 2.75rem;
           overflow: hidden;
           min-height: 0;
           align-self: center;
@@ -163,14 +151,14 @@ export class Fixture extends FieldDef {
         }
         .label {
           font-weight: 600;
-          font-size: 14px;
+          font-size: 0.875rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .kind {
-          font: 11px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
+          font: 0.6875rem var(--font-sans);
+          color: var(--muted-foreground);
         }
         @container fx (width <= 90px) {
           .fit {
@@ -210,34 +198,25 @@ export class Fixture extends FieldDef {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 14px;
-          padding: 28px;
+          gap: 0.875rem;
+          padding: 1.75rem;
           box-sizing: border-box;
-          background: var(--tsp-background, var(--background, #faf5ec));
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
         }
         .fx-iso-art {
-          width: 160px;
-          height: 160px;
+          width: 10rem;
+          height: 10rem;
         }
         h1 {
           margin: 0;
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
-          font-size: 26px;
+          font-family: var(--font-serif);
+          font-size: 1.625rem;
         }
         .fx-iso-kind {
           margin: 0;
-          font: 10px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          font: 0.625rem var(--font-sans);
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

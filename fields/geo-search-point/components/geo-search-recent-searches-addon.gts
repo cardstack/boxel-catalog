@@ -59,9 +59,9 @@ export default class GeoSearchRecentSearchesAddon extends GlimmerComponent<GeoSe
 
       .search-pill {
         --boxel-pill-padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-        --boxel-pill-border-radius: 9999px;
+        --boxel-pill-border-radius: 624.9375rem;
         --boxel-pill-font: 500 var(--boxel-font-xs);
-        max-width: 150px;
+        max-width: 9.375rem;
         cursor: pointer;
       }
 

@@ -89,47 +89,47 @@ export class BlogAdminData extends GlimmerComponent<CardAdminViewSignature> {
       .status-row {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 0.625rem;
         flex-wrap: wrap;
       }
       .status-pill {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 999px;
+        gap: 0.375rem;
+        padding: 0.25rem 0.625rem;
+        border-radius: 62.4375rem;
         font:
-          600 11px/1 system-ui,
+          600 0.6875rem/1 system-ui,
           -apple-system,
           sans-serif;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        background: #e5e7eb;
-        color: #4b5563;
+        background-color: var(--inset);
+        color: var(--muted-foreground);
       }
       .status-dot {
-        width: 6px;
-        height: 6px;
+        width: 0.375rem;
+        height: 0.375rem;
         border-radius: 50%;
-        background: currentColor;
+        background-color: currentColor;
       }
       .status-pill.is-published {
-        background: rgba(34, 197, 94, 0.15);
-        color: #15803d;
+        background-color: color-mix(in oklch, var(--success) 15%, transparent);
+        color: var(--success-ink);
       }
       .status-pill.is-draft {
-        background: #e5e7eb;
-        color: #4b5563;
+        background-color: var(--inset);
+        color: var(--muted-foreground);
       }
       .publish-toggle {
-        padding: 5px 12px;
-        background: #2c2c2c;
-        color: white;
-        border: 1px solid #2c2c2c;
-        border-radius: 999px;
+        padding: 0.3125rem 0.75rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border-strong);
+        border-radius: 62.4375rem;
         cursor: pointer;
         font:
-          600 11px/1 system-ui,
+          600 0.6875rem/1 system-ui,
           -apple-system,
           sans-serif;
         text-transform: uppercase;
@@ -140,19 +140,20 @@ export class BlogAdminData extends GlimmerComponent<CardAdminViewSignature> {
           transform 0.1s;
       }
       .publish-toggle:hover {
-        background: #1a1a1a;
-        border-color: #1a1a1a;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-color: var(--border-strong);
       }
       .publish-toggle:active {
         transform: scale(0.96);
       }
       .publish-toggle--unpublish {
-        background: transparent;
-        color: #2c2c2c;
+        background-color: transparent;
+        color: var(--foreground);
       }
       .publish-toggle--unpublish:hover {
-        background: rgba(0, 0, 0, 0.05);
-        color: #1a1a1a;
+        background-color: color-mix(in oklch, var(--tooltip) 5%, transparent);
+        color: var(--foreground);
       }
     </style>
   </template>

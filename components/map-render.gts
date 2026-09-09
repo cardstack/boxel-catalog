@@ -212,69 +212,69 @@ function injectPopupStyles() {
   style.setAttribute('data-bx-map-popup', '');
   // The ~20 hex colors below (popup text grays, status green/red, link blue,
   // marker category colors) are special-use: they're data-driven distinct
-  // hues (e.g. food/hotel/attraction marker colors, open/closed status) with
-  // no matching semantic token in the current theme, not UI chrome. Our
-  // theming tokens/variables don't yet cover this case, so they stay as
-  // literal hex until a token exists for it.
+  // hues (food/hotel/attraction marker colors) carried as data in POI_KINDS,
+  // not UI chrome. The popup chrome below reads the theme contract tokens
+  // (theme.css declares them on :root, so they resolve in document.head too).
   style.textContent = `
     .leaflet-popup-content-wrapper {
       border-radius: 0.75rem;
-      box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.16);
+      box-shadow: 0 0.5rem 1.5rem color-mix(in oklch, var(--foreground) 16%, transparent);
       padding: 0.125rem;
     }
     .leaflet-popup-content { margin: 0.75rem 0.875rem; }
     .bx-rich-popup {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: #1f2937;
+      color: var(--foreground);
       line-height: 1.4;
     }
-    .bx-rich-popup strong { font-size: 0.875rem; font-weight: 700; color: #111827; }
+    .bx-rich-popup strong { font-size: 0.875rem; font-weight: 700; color: var(--foreground); }
     .bx-rp-img {
       display: block; width: 100%; height: 7.75rem; object-fit: cover;
-      border-radius: 0.5rem; margin: 0.5rem 0; background-color: #f1f5f9;
+      border-radius: 0.5rem; margin: 0.5rem 0; background-color: var(--card);
+ color: var(--card-foreground);
     }
     .bx-rp-group { margin-top: 0.5rem; }
     .bx-rp-group-label {
       display: flex; align-items: center; gap: 0.3125rem;
       font-weight: 700; font-size: 0.6875rem; letter-spacing: 0.02em;
-      text-transform: uppercase; color: #6b7280; margin-bottom: 0.125rem;
+      text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 0.125rem;
     }
     .bx-rp-item {
-      font-size: 0.78125rem; line-height: 1.6; color: #374151;
+      font-size: 0.78125rem; line-height: 1.6; color: var(--foreground);
       padding-left: 0.875rem; position: relative;
     }
     .bx-rp-item::before {
       content: ''; position: absolute; left: 0.25rem; top: 0.5rem;
       width: 0.25rem; height: 0.25rem; border-radius: 50%; background-color: currentColor; opacity: 0.5;
     }
-    .bx-rp-empty { margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af; }
-    .bx-rp-kind { margin-top: 0.125rem; font-size: 0.6875rem; color: #6b7280; }
+    .bx-rp-empty { margin-top: 0.5rem; font-size: 0.75rem; color: var(--subtle-foreground); }
+    .bx-rp-kind { margin-top: 0.125rem; font-size: 0.6875rem; color: var(--muted-foreground); }
     .bx-rp-hours {
       display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.375rem;
-      margin-top: 0.5rem; font-size: 0.75rem; color: #374151;
+      margin-top: 0.5rem; font-size: 0.75rem; color: var(--foreground);
     }
-    .bx-rp-hours-text { color: #6b7280; }
+    .bx-rp-hours-text { color: var(--muted-foreground); }
     .bx-rp-badge { font-size: 0.6875rem; font-weight: 700; }
-    .bx-rp-open { color: #15803d; }
-    .bx-rp-closed { color: #b91c1c; }
+    .bx-rp-open { color: var(--success-ink); }
+    .bx-rp-closed { color: var(--destructive-ink); }
     .bx-rp-meta {
       display: block; margin-top: 0.375rem; font-size: 0.75rem;
-      color: #374151; text-decoration: none;
+      color: var(--foreground); text-decoration: none;
     }
-    a.bx-rp-meta { color: #1a73e8; }
+    a.bx-rp-meta { color: var(--primary-ink); }
     a.bx-rp-meta:hover { text-decoration: underline; }
     .bx-rp-link {
       display: inline-flex; align-items: center; gap: 0.3125rem;
       margin-top: 0.625rem; padding: 0.3125rem 0.625rem; border-radius: 0.4375rem;
-      font-size: 0.75rem; font-weight: 600; color: #1a73e8;
-      background-color: #eef4fe; text-decoration: none;
+      font-size: 0.75rem; font-weight: 600; color: var(--primary-ink);
+      background-color: var(--card); text-decoration: none;
       transition: background 0.12s ease;
     }
-    .bx-rp-link:hover { background-color: #dbe8fd; }
+    .bx-rp-link:hover { background-color: var(--inset); }
     /* skeleton shimmer */
     .bx-sk-img, .bx-sk-line {
       border-radius: 0.375rem;
-      background-image: linear-gradient(100deg, #eceff3 30%, #f6f8fa 50%, #eceff3 70%);
+      background-image: linear-gradient(100deg, var(--card) 30%, var(--card) 50%, var(--card) 70%);
       background-size: 200% 100%;
       animation: bx-sk-shimmer 1.2s ease-in-out infinite;
     }
@@ -293,12 +293,12 @@ function injectPopupStyles() {
       box-sizing: border-box;
       width: 2.125rem; height: 2.125rem; padding: 0;
       display: flex; align-items: center; justify-content: center;
-      background-color: var(--boxel-light); color: #374151;
-      border: 0.125rem solid rgba(0,0,0,0.2); border-radius: 0.25rem;
+      background-color: var(--boxel-light); color: var(--foreground);
+      border: 0.125rem solid color-mix(in oklch, var(--foreground) 20%, transparent); border-radius: 0.25rem;
       cursor: pointer;
       transition: color 0.12s ease, background 0.12s ease;
     }
-    .bx-fit-btn:hover { background-color: var(--boxel-50); color: #111827; }
+    .bx-fit-btn:hover { background-color: var(--boxel-50); color: var(--foreground); }
   `;
   document.head.appendChild(style);
 }

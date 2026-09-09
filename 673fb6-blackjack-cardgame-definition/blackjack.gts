@@ -879,59 +879,99 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       /* ── Root table ────────────────────────────────────────── */
       .bj-table {
         /* ── Casino design tokens ──────────────────────────── */
-        --casino-gold: #d4af37;
-        --casino-gold-dim: rgba(212, 175, 55, 0.35);
-        --casino-gold-border: rgba(212, 175, 55, 0.22);
-        --casino-gold-glow: rgba(212, 175, 55, 0.45);
-        --casino-gold-shine: rgba(212, 175, 55, 0.9);
-        --casino-gold-btn-text: #1a0a00;
+        --casino-gold-dim: color-mix(in oklch, var(--accent) 35%, transparent);
+        --casino-gold-border: color-mix(
+          in oklch,
+          var(--accent) 22%,
+          transparent
+        );
+        --casino-gold-glow: color-mix(in oklch, var(--accent) 45%, transparent);
+        --casino-gold-shine: color-mix(
+          in oklch,
+          var(--accent) 90%,
+          transparent
+        );
         --casino-felt-bg: radial-gradient(
           ellipse at 50% 30%,
-          #0e5c1e 0%,
-          #073d10 55%,
-          #030f05 100%
+          var(--inset) 0%,
+          var(--inset) 55%,
+          var(--inset) 100%
         );
-        --casino-felt-inner: rgba(8, 50, 14, 0.45);
-        --casino-panel: rgba(0, 0, 0, 0.42);
-        --casino-panel-mid: rgba(0, 0, 0, 0.38);
-        --casino-panel-dark: rgba(0, 0, 0, 0.48);
-        --casino-panel-light: rgba(0, 0, 0, 0.3);
-        --casino-panel-border: rgba(255, 255, 255, 0.09);
-        --casino-ring: #8b6914;
-        --casino-ring-glow: rgba(212, 175, 55, 0.15);
+        --casino-felt-inner: color-mix(in oklch, var(--inset) 45%, transparent);
+        --casino-panel: color-mix(in oklch, var(--inset) 42%, transparent);
+        --casino-panel-mid: color-mix(in oklch, var(--inset) 38%, transparent);
+        --casino-panel-dark: color-mix(in oklch, var(--inset) 48%, transparent);
+        --casino-panel-light: color-mix(
+          in oklch,
+          var(--inset) 30%,
+          transparent
+        );
+        --casino-panel-border: color-mix(in oklch, var(--card) 9%, transparent);
+        --casino-ring-glow: color-mix(in oklch, var(--accent) 15%, transparent);
         --casino-font: 'Georgia', 'Times New Roman', serif;
-        --casino-text: #ffffff;
-        --casino-text-muted: rgba(255, 255, 255, 0.45);
-        --casino-text-sub: rgba(255, 255, 255, 0.65);
-        --casino-text-light: rgba(255, 255, 255, 0.85);
-        --casino-win-green: #69f0ae;
-        --casino-win-bg: rgba(0, 90, 0, 0.4);
-        --casino-win-border: rgba(105, 240, 174, 0.35);
-        --casino-lose-red: #ff6b6b;
-        --casino-lose-bright: #ff8a80;
-        --casino-lose-bg: rgba(100, 0, 0, 0.4);
-        --casino-lose-border: rgba(255, 100, 100, 0.35);
-        --casino-draw-color: #bbb;
-        --casino-draw-bg: rgba(55, 55, 55, 0.4);
-        --casino-draw-border: rgba(180, 180, 180, 0.25);
-        --casino-card-white: #ffffff;
-        --casino-card-back: #1a237e;
-        --casino-card-back-border: rgba(255, 255, 255, 0.15);
-        --casino-suit-red: #c62828;
-        --casino-suit-black: #111111;
-        --casino-score-perfect-bg: rgba(212, 175, 55, 0.25);
-        --casino-score-bust-bg: rgba(160, 0, 0, 0.3);
-        --casino-score-bust-color: #ff5252;
-        --chip-red: linear-gradient(145deg, #d32f2f, #b71c1c);
-        --chip-blue: linear-gradient(145deg, #1565c0, #0d47a1);
-        --chip-green: linear-gradient(145deg, #2e7d32, #1b5e20);
-        --chip-black: linear-gradient(145deg, #424242, #212121);
-        --chip-purple: linear-gradient(145deg, #7b1fa2, #4a148c);
-        --btn-hit: linear-gradient(145deg, #388e3c, #1b5e20);
-        --btn-stand: linear-gradient(145deg, #e65100, #bf360c);
-        --btn-double: linear-gradient(145deg, #c62828, #891717);
+        --casino-text: var(--card-foreground);
+        --casino-text-muted: color-mix(in oklch, var(--card) 45%, transparent);
+        --casino-text-sub: color-mix(in oklch, var(--card) 65%, transparent);
+        --casino-text-light: color-mix(in oklch, var(--card) 85%, transparent);
+        --casino-win-bg: color-mix(in oklch, var(--success) 40%, transparent);
+        --casino-win-border: color-mix(
+          in oklch,
+          var(--success) 35%,
+          transparent
+        );
+        --casino-lose-bg: color-mix(
+          in oklch,
+          var(--destructive) 40%,
+          transparent
+        );
+        --casino-lose-border: color-mix(
+          in oklch,
+          var(--destructive) 35%,
+          transparent
+        );
+        --casino-draw-bg: color-mix(in oklch, var(--card) 40%, transparent);
+        --casino-draw-border: color-mix(
+          in oklch,
+          var(--border) 25%,
+          transparent
+        );
+        --casino-card-back-border: color-mix(
+          in oklch,
+          var(--card) 15%,
+          transparent
+        );
+        --casino-score-perfect-bg: color-mix(
+          in oklch,
+          var(--accent) 25%,
+          transparent
+        );
+        --casino-score-bust-bg: color-mix(
+          in oklch,
+          var(--destructive) 30%,
+          transparent
+        );
+        --chip-red: linear-gradient(
+          145deg,
+          var(--destructive),
+          var(--destructive)
+        );
+        --chip-blue: linear-gradient(145deg, var(--primary), var(--primary));
+        --chip-green: linear-gradient(145deg, var(--success), var(--success));
+        --chip-black: linear-gradient(145deg, var(--tooltip), var(--tooltip));
+        --chip-purple: linear-gradient(145deg, var(--primary), var(--primary));
+        --btn-hit: linear-gradient(145deg, var(--success), var(--success));
+        --btn-stand: linear-gradient(
+          145deg,
+          var(--primary),
+          var(--destructive)
+        );
+        --btn-double: linear-gradient(
+          145deg,
+          var(--destructive),
+          var(--destructive)
+        );
 
-        background: var(--casino-felt-bg);
+        background-color: var(--casino-felt-bg);
         height: 100%;
         width: 100%;
         color: var(--casino-text);
@@ -942,7 +982,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         overflow: hidden;
         /* Gold outer border */
         box-shadow:
-          inset 0 0 0 3px var(--casino-ring),
+          inset 0 0 0 3px var(--primary),
           inset 0 0 0 5px var(--casino-ring-glow);
       }
 
@@ -955,16 +995,16 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
           repeating-linear-gradient(
             0deg,
             transparent,
-            transparent 3px,
-            rgba(0, 0, 0, 0.04) 3px,
-            rgba(0, 0, 0, 0.04) 4px
+            transparent 0.1875rem,
+            color-mix(in oklch, var(--foreground) 4%, transparent) 0.1875rem,
+            color-mix(in oklch, var(--foreground) 4%, transparent) 0.25rem
           ),
           repeating-linear-gradient(
             90deg,
             transparent,
-            transparent 3px,
-            rgba(0, 0, 0, 0.04) 3px,
-            rgba(0, 0, 0, 0.04) 4px
+            transparent 0.1875rem,
+            color-mix(in oklch, var(--foreground) 4%, transparent) 0.1875rem,
+            color-mix(in oklch, var(--foreground) 4%, transparent) 0.25rem
           );
         pointer-events: none;
         z-index: 0;
@@ -975,16 +1015,12 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         position: absolute;
         inset: 0;
         z-index: 60;
-        background: rgba(0, 0, 0, 0.5);
+        background-color: color-mix(in oklch, var(--card) 50%, transparent);
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
         display: flex;
         justify-content: center;
         align-items: center;
-      }
-      .bj-validation-steps {
-        --validation-content-background: #08090b;
-        --validation-content-foreground: #c9a84c;
       }
       .bj-validation-step-body {
         display: flex;
@@ -1005,11 +1041,12 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         width: 100%;
         justify-content: center;
         min-height: 3rem;
-        border-radius: 3px;
-        border: 1px solid rgba(201, 168, 76, 0.5);
-        border-top: 2px solid rgba(201, 168, 76, 0.7);
-        background: #0d0f12;
-        color: #c9a84c;
+        border-radius: 0.1875rem;
+        border: 1px solid color-mix(in oklch, var(--accent) 50%, transparent);
+        border-top: 2px solid
+          color-mix(in oklch, var(--accent) 70%, transparent);
+        background-color: var(--card);
+        color: var(--accent-ink);
         box-shadow: none;
         text-transform: uppercase;
         letter-spacing: 0.12em;
@@ -1021,30 +1058,29 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       }
       .bj-link-editor :deep(.add-new:hover),
       .bj-link-editor :deep(.add-new:focus-visible) {
-        background: #141618;
-        border-color: rgba(201, 168, 76, 0.75);
-        color: #e8c96a;
+        background-color: var(--card);
+        border-color: color-mix(in oklch, var(--accent) 75%, transparent);
+        color: var(--accent-ink);
       }
       .bj-link-editor :deep(.boxel-card-container.fitted-format) {
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
         box-shadow:
-          inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-          0 0 0 1px rgba(212, 175, 55, 0.18),
+          inset 0 0 0 1px color-mix(in oklch, var(--card) 4%, transparent),
+          0 0 0 1px color-mix(in oklch, var(--accent) 18%, transparent),
           var(--boxel-box-shadow-sm);
       }
       .bj-link-editor :deep(.field-component-card.fitted-format) {
         min-height: 4.25rem;
       }
       .bj-link-editor :deep(.remove) {
-        --icon-bg: rgba(103, 18, 18, 0.95);
-        --icon-border: rgba(255, 107, 107, 0.55);
-        --icon-color: #ffd1d1;
+        --icon-bg: color-mix(in oklch, var(--destructive) 95%, transparent);
+        --icon-border: color-mix(in oklch, var(--destructive) 55%, transparent);
       }
       .bj-link-editor :deep(.remove:hover),
       .bj-link-editor :deep(.remove:focus-visible) {
-        --icon-bg: rgba(145, 24, 24, 1);
-        --icon-border: rgba(255, 138, 128, 0.75);
+        --icon-bg: color-mix(in oklch, var(--destructive) 100%, transparent);
+        --icon-border: color-mix(in oklch, var(--destructive) 75%, transparent);
       }
 
       /* ── Outcome overlay ───────────────────────────────────── */
@@ -1062,48 +1098,49 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       .bj-outcome--win {
         background: radial-gradient(
           ellipse at center,
-          rgba(212, 175, 55, 0.4) 0%,
-          rgba(0, 0, 0, 0.88) 70%
+          color-mix(in oklch, var(--accent) 40%, transparent) 0%,
+          color-mix(in oklch, var(--foreground) 88%, transparent) 70%
         );
       }
       .bj-outcome--lose {
         background: radial-gradient(
           ellipse at center,
-          rgba(180, 20, 20, 0.4) 0%,
-          rgba(0, 0, 0, 0.88) 70%
+          color-mix(in oklch, var(--destructive) 40%, transparent) 0%,
+          color-mix(in oklch, var(--foreground) 88%, transparent) 70%
         );
       }
       .bj-outcome--push {
         background: radial-gradient(
           ellipse at center,
-          rgba(80, 80, 80, 0.4) 0%,
-          rgba(0, 0, 0, 0.88) 70%
+          color-mix(in oklch, var(--muted) 40%, transparent) 0%,
+          color-mix(in oklch, var(--foreground) 88%, transparent) 70%
         );
       }
       .bj-outcome-icon {
-        font-size: 52px;
+        font-size: 3.25rem;
         animation: iconPop 0.5s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
       .bj-outcome-title {
-        font-size: 32px;
+        font-size: 2rem;
         font-weight: bold;
-        letter-spacing: 4px;
+        letter-spacing: 0.25rem;
         text-transform: uppercase;
         animation: titleSlideUp 0.4s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
       .bj-outcome--win .bj-outcome-title {
-        color: var(--casino-gold);
+        color: var(--accent-ink);
         text-shadow: 0 0 30px var(--casino-gold-shine);
         animation:
           titleSlideUp 0.4s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both,
           goldGlow 1.8s 0.7s ease-in-out infinite alternate;
       }
       .bj-outcome--lose .bj-outcome-title {
-        color: var(--casino-lose-red);
-        text-shadow: 0 0 20px rgba(255, 50, 50, 0.7);
+        color: var(--destructive-ink);
+        text-shadow: 0 0 20px
+          color-mix(in oklch, var(--destructive) 70%, transparent);
       }
       .bj-outcome--push .bj-outcome-title {
-        color: var(--casino-draw-color);
+        color: var(--subtle-foreground);
       }
       .bj-outcome-sub {
         font-size: var(--boxel-font-size-sm);
@@ -1114,15 +1151,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       .bj-play-again-btn {
         margin-top: var(--boxel-sp);
         padding: var(--boxel-sp-sm) var(--boxel-sp-xl);
-        background: linear-gradient(
-          135deg,
-          #b8902a 0%,
-          #f5d278 40%,
-          #d4af37 60%,
-          #a07820 100%
-        );
-        background-size: 300% 300%;
-        color: var(--casino-gold-btn-text);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border: none;
         border-radius: var(--boxel-border-radius-xl);
         font-size: var(--boxel-font-size);
@@ -1139,7 +1169,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       }
       .bj-play-again-btn:hover {
         transform: scale(1.06);
-        box-shadow: 0 6px 28px rgba(212, 175, 55, 0.6);
+        box-shadow: 0 6px 28px
+          color-mix(in oklch, var(--accent) 60%, transparent);
       }
 
       /* ── Content wrapper ───────────────────────────────────── */
@@ -1160,7 +1191,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         justify-content: space-between;
         align-items: center;
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(--casino-panel);
+        background-color: var(--casino-panel);
         border-radius: var(--boxel-border-radius);
         border: 1px solid var(--casino-gold-border);
         flex-shrink: 0;
@@ -1174,10 +1205,10 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         letter-spacing: var(--boxel-lsp-xs);
       }
       .bj-title-text {
-        color: var(--casino-gold);
+        color: var(--accent-ink);
       }
       .bj-suit-accent {
-        color: var(--casino-gold);
+        color: var(--accent-ink);
         font-size: var(--boxel-font-size-sm);
       }
 
@@ -1189,14 +1220,14 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 3px var(--boxel-sp-sm);
+        padding: 0.1875rem var(--boxel-sp-sm);
         border-radius: var(--boxel-border-radius-sm);
-        background: var(--casino-panel-mid);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        min-width: 46px;
+        background-color: var(--casino-panel-mid);
+        border: 1px solid color-mix(in oklch, var(--card) 8%, transparent);
+        min-width: 2.875rem;
       }
       .bj-stat-label {
-        font-size: 9px;
+        font-size: 0.5625rem;
         color: var(--casino-text-muted);
         text-transform: uppercase;
         letter-spacing: var(--boxel-lsp-xs);
@@ -1207,16 +1238,16 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         line-height: 1.2;
       }
       .bj-stat-val--wins {
-        color: var(--casino-win-green);
+        color: var(--success-ink);
       }
       .bj-stat-val--losses {
-        color: var(--casino-lose-red);
+        color: var(--destructive-ink);
       }
       .bj-stat-val--pos {
-        color: var(--casino-win-green);
+        color: var(--success-ink);
       }
       .bj-stat-val--neg {
-        color: var(--casino-lose-red);
+        color: var(--destructive-ink);
       }
 
       /* ── Felt area ─────────────────────────────────────────── */
@@ -1226,10 +1257,11 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         flex-direction: column;
         justify-content: space-between;
         padding: var(--boxel-sp-sm) var(--boxel-sp);
-        background: var(--casino-felt-inner);
+        background-color: var(--casino-felt-inner);
         border-radius: var(--boxel-border-radius-lg);
-        border: 1px solid rgba(212, 175, 55, 0.12);
-        box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.45);
+        border: 1px solid color-mix(in oklch, var(--accent) 12%, transparent);
+        box-shadow: inset 0 0 40px
+          color-mix(in oklch, var(--foreground) 45%, transparent);
         min-height: 0;
         overflow: hidden;
         gap: var(--boxel-sp-xs);
@@ -1257,52 +1289,54 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         border-radius: var(--boxel-border-radius-xl);
         font-size: var(--boxel-font-size);
         font-weight: bold;
-        min-width: 44px;
+        min-width: 2.75rem;
         text-align: center;
-        background: var(--casino-panel-dark);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        background-color: var(--casino-panel-dark);
+        border: 1px solid color-mix(in oklch, var(--card) 18%, transparent);
         transition: all 0.3s;
       }
       .bj-score-badge--hidden {
         color: var(--casino-text-muted);
-        letter-spacing: 4px;
+        letter-spacing: 0.25rem;
       }
       .bj-score--perfect {
-        background: var(--casino-score-perfect-bg);
-        border-color: var(--casino-gold);
-        color: var(--casino-gold);
+        background-color: var(--casino-score-perfect-bg);
+        border-color: var(--accent);
+        color: var(--accent-ink);
         box-shadow: 0 0 14px var(--casino-gold-glow);
         animation: badgePulse 1.2s ease-in-out infinite alternate;
       }
       .bj-score--bust {
-        background: var(--casino-score-bust-bg);
-        border-color: var(--casino-score-bust-color);
-        color: var(--casino-score-bust-color);
-        box-shadow: 0 0 12px rgba(255, 50, 50, 0.4);
+        background-color: var(--casino-score-bust-bg);
+        border-color: var(--destructive);
+        color: var(--destructive-ink);
+        box-shadow: 0 0 12px
+          color-mix(in oklch, var(--destructive) 40%, transparent);
       }
 
       /* ── Cards ─────────────────────────────────────────────── */
       .bj-cards {
         display: flex;
         gap: var(--boxel-sp-sm);
-        min-height: 96px;
+        min-height: 6rem;
         flex-wrap: wrap;
         align-items: flex-start;
       }
 
       .bj-card {
         position: relative;
-        width: 68px;
-        height: 100px;
+        width: 4.25rem;
+        height: 6.25rem;
         border-radius: var(--boxel-border-radius);
-        background: var(--casino-card-white);
+        background-color: var(--card);
+        color: var(--card-foreground);
         box-shadow:
-          2px 5px 14px rgba(0, 0, 0, 0.55),
-          0 0 0 1px rgba(0, 0, 0, 0.08);
+          2px 5px 14px color-mix(in oklch, var(--foreground) 55%, transparent),
+          0 0 0 1px color-mix(in oklch, var(--foreground) 8%, transparent);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        padding: 5px 6px;
+        padding: 0.3125rem 0.375rem;
         flex-shrink: 0;
         animation: cardDeal 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
         transition:
@@ -1311,38 +1345,40 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       }
       .bj-card:hover {
         transform: translateY(-7px) rotate(1.5deg);
-        box-shadow: 4px 12px 22px rgba(0, 0, 0, 0.65);
+        box-shadow: 4px 12px 22px
+          color-mix(in oklch, var(--foreground) 65%, transparent);
       }
 
       /* Inner inset border on face-up cards */
       .bj-card:not(.bj-card--back)::before {
         content: '';
         position: absolute;
-        inset: 3px;
-        border: 1px solid rgba(0, 0, 0, 0.07);
-        border-radius: 5px;
+        inset: 0.1875rem;
+        border: 1px solid color-mix(in oklch, var(--foreground) 7%, transparent);
+        border-radius: 0.3125rem;
         pointer-events: none;
       }
 
       /* Card back — classic crosshatch */
       .bj-card--back {
-        background: var(--casino-card-back);
+        background-color: var(--card);
+        color: var(--card-foreground);
         background-image:
           repeating-linear-gradient(
             45deg,
-            rgba(255, 255, 255, 0.06) 0,
-            rgba(255, 255, 255, 0.06) 2px,
+            color-mix(in oklch, var(--card) 6%, transparent) 0,
+            color-mix(in oklch, var(--card) 6%, transparent) 2px,
             transparent 0,
             transparent 50%
           ),
           repeating-linear-gradient(
             -45deg,
-            rgba(255, 255, 255, 0.06) 0,
-            rgba(255, 255, 255, 0.06) 2px,
+            color-mix(in oklch, var(--card) 6%, transparent) 0,
+            color-mix(in oklch, var(--card) 6%, transparent) 2px,
             transparent 0,
             transparent 50%
           );
-        background-size: 10px 10px;
+        background-size: 0.625rem 0.625rem;
         border: 2px solid var(--casino-card-back-border);
       }
       .bj-card--back::after {
@@ -1352,8 +1388,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 42px;
-        color: rgba(255, 255, 255, 0.08);
+        font-size: 2.625rem;
+        color: color-mix(in oklch, var(--card-foreground) 8%, transparent);
       }
 
       /* Card corners */
@@ -1367,13 +1403,13 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         transform: rotate(180deg);
       }
       .bj-cv {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: bold;
-        color: var(--casino-suit-black);
+        color: var(--foreground);
         line-height: 1;
       }
       .bj-cp {
-        font-size: 12px;
+        font-size: 0.75rem;
         line-height: 1;
       }
 
@@ -1383,7 +1419,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        font-size: 30px;
+        font-size: 1.875rem;
         line-height: 1;
         opacity: 0.88;
         pointer-events: none;
@@ -1392,11 +1428,11 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       /* Suit colours */
       .bj-suit-hearts,
       .bj-suit-diamonds {
-        color: var(--casino-suit-red);
+        color: var(--destructive-ink);
       }
       .bj-suit-clubs,
       .bj-suit-spades {
-        color: var(--casino-suit-black);
+        color: var(--foreground);
       }
 
       /* nth-child deal-delay stagger */
@@ -1434,8 +1470,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         );
       }
       .bj-divider-text {
-        font-size: 9px;
-        color: rgba(212, 175, 55, 0.55);
+        font-size: 0.5625rem;
+        color: color-mix(in oklch, var(--accent-ink) 55%, transparent);
         letter-spacing: var(--boxel-lsp-xl);
         text-transform: uppercase;
         white-space: nowrap;
@@ -1456,7 +1492,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         border-radius: var(--boxel-border-radius);
         font-size: var(--boxel-font-size-sm);
         letter-spacing: var(--boxel-lsp-xs);
-        background: var(--casino-panel-dark);
+        background-color: var(--casino-panel-dark);
         border: 1px solid var(--casino-panel-border);
         transition:
           background 0.35s,
@@ -1464,19 +1500,19 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
           color 0.35s;
       }
       .bj-status--win {
-        background: var(--casino-win-bg);
+        background-color: var(--casino-win-bg);
         border-color: var(--casino-win-border);
-        color: var(--casino-win-green);
+        color: var(--success-ink);
       }
       .bj-status--lose {
-        background: var(--casino-lose-bg);
+        background-color: var(--casino-lose-bg);
         border-color: var(--casino-lose-border);
-        color: var(--casino-lose-bright);
+        color: var(--destructive-ink);
       }
       .bj-status--push {
-        background: var(--casino-draw-bg);
+        background-color: var(--casino-draw-bg);
         border-color: var(--casino-draw-border);
-        color: var(--casino-draw-color);
+        color: var(--subtle-foreground);
       }
 
       /* Bankroll */
@@ -1489,8 +1525,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        background: var(--casino-panel-mid);
-        padding: 4px var(--boxel-sp-sm);
+        background-color: var(--casino-panel-mid);
+        padding: 0.25rem var(--boxel-sp-sm);
         border-radius: var(--boxel-border-radius-xl);
         border: 1px solid var(--casino-gold-border);
       }
@@ -1500,7 +1536,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       .bj-chips-num {
         font-size: var(--boxel-font-size);
         font-weight: bold;
-        color: var(--casino-gold);
+        color: var(--accent-ink);
       }
       .bj-chips-lbl {
         font-size: var(--boxel-font-size-xs);
@@ -1511,29 +1547,29 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        background: rgba(212, 175, 55, 0.12);
-        border: 1px solid rgba(212, 175, 55, 0.38);
-        padding: 4px var(--boxel-sp);
+        background-color: color-mix(in oklch, var(--accent) 12%, transparent);
+        border: 1px solid color-mix(in oklch, var(--accent) 38%, transparent);
+        padding: 0.25rem var(--boxel-sp);
         border-radius: var(--boxel-border-radius-xl);
       }
       .bj-bet-lbl {
-        font-size: 9px;
-        color: rgba(212, 175, 55, 0.65);
+        font-size: 0.5625rem;
+        color: color-mix(in oklch, var(--accent-ink) 65%, transparent);
         letter-spacing: var(--boxel-lsp-sm);
         text-transform: uppercase;
       }
       .bj-bet-num {
         font-size: var(--boxel-font-size);
         font-weight: bold;
-        color: var(--casino-gold);
+        color: var(--accent-ink);
       }
 
       /* Controls shell */
       .bj-controls {
-        background: var(--casino-panel-light);
+        background-color: var(--casino-panel-light);
         border-radius: var(--boxel-border-radius);
         padding: var(--boxel-sp-sm);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
       }
 
       /* ── Betting chips ─────────────────────────────────────── */
@@ -1545,8 +1581,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         margin-bottom: var(--boxel-sp-sm);
       }
       .bj-chip {
-        width: 50px;
-        height: 50px;
+        width: 3.125rem;
+        height: 3.125rem;
         border-radius: 50%;
         font-weight: bold;
         font-size: var(--boxel-font-size-xs);
@@ -1557,9 +1593,9 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         align-items: center;
         justify-content: center;
         box-shadow:
-          0 5px 10px rgba(0, 0, 0, 0.5),
-          inset 0 1px 0 rgba(255, 255, 255, 0.25),
-          0 0 0 4px rgba(255, 255, 255, 0.12);
+          0 5px 10px color-mix(in oklch, var(--foreground) 50%, transparent),
+          inset 0 1px 0 color-mix(in oklch, var(--card) 25%, transparent),
+          0 0 0 4px color-mix(in oklch, var(--card) 12%, transparent);
         transition:
           transform 0.15s,
           box-shadow 0.15s;
@@ -1570,17 +1606,17 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       .bj-chip::before {
         content: '';
         position: absolute;
-        inset: 5px;
+        inset: 0.3125rem;
         border-radius: 50%;
-        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border: 2px dashed color-mix(in oklch, var(--card) 30%, transparent);
         pointer-events: none;
       }
       .bj-chip:hover:not(:disabled) {
         transform: translateY(-4px) scale(1.1);
         box-shadow:
-          0 9px 18px rgba(0, 0, 0, 0.55),
-          inset 0 1px 0 rgba(255, 255, 255, 0.3),
-          0 0 0 4px rgba(255, 255, 255, 0.18);
+          0 9px 18px color-mix(in oklch, var(--foreground) 55%, transparent),
+          inset 0 1px 0 color-mix(in oklch, var(--card) 30%, transparent),
+          0 0 0 4px color-mix(in oklch, var(--card) 18%, transparent);
       }
       .bj-chip:active:not(:disabled) {
         transform: scale(0.95);
@@ -1591,19 +1627,19 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       }
 
       .bj-chip--red {
-        background: var(--chip-red);
+        background-color: var(--chip-red);
       }
       .bj-chip--blue {
-        background: var(--chip-blue);
+        background-color: var(--chip-blue);
       }
       .bj-chip--green {
-        background: var(--chip-green);
+        background-color: var(--chip-green);
       }
       .bj-chip--black {
-        background: var(--chip-black);
+        background-color: var(--chip-black);
       }
       .bj-chip--purple {
-        background: var(--chip-purple);
+        background-color: var(--chip-purple);
       }
 
       /* ── Deal button ───────────────────────────────────────── */
@@ -1617,18 +1653,11 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         font-weight: bold;
         letter-spacing: var(--boxel-lsp-sm);
         cursor: pointer;
-        background: linear-gradient(
-          135deg,
-          #a07820 0%,
-          #f5d278 40%,
-          #d4af37 60%,
-          #7a5810 100%
-        );
-        background-size: 300% 300%;
-        color: var(--casino-gold-btn-text);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         box-shadow:
           0 4px 18px var(--casino-gold-glow),
-          inset 0 1px 0 rgba(255, 255, 255, 0.25);
+          inset 0 1px 0 color-mix(in oklch, var(--card) 25%, transparent);
         animation: goldShimmer 3s linear infinite;
         transition:
           transform 0.18s,
@@ -1636,7 +1665,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       }
       .bj-deal-btn:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: 0 8px 26px rgba(212, 175, 55, 0.5);
+        box-shadow: 0 8px 26px
+          color-mix(in oklch, var(--accent) 50%, transparent);
       }
       .bj-deal-btn:active:not(:disabled) {
         transform: translateY(1px);
@@ -1664,10 +1694,10 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 3px;
+        gap: 0.1875rem;
         box-shadow:
-          0 4px 12px rgba(0, 0, 0, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+          0 4px 12px color-mix(in oklch, var(--foreground) 40%, transparent),
+          inset 0 1px 0 color-mix(in oklch, var(--card) 15%, transparent);
         transition:
           transform 0.15s,
           box-shadow 0.15s;
@@ -1677,21 +1707,22 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       }
       .bj-act-btn:hover {
         transform: translateY(-3px);
-        box-shadow: 0 7px 18px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 7px 18px
+          color-mix(in oklch, var(--foreground) 50%, transparent);
       }
       .bj-act-btn:active {
         transform: translateY(1px);
       }
       .bj-act--hit {
-        background: var(--btn-hit);
+        background-color: var(--btn-hit);
         color: var(--casino-text);
       }
       .bj-act--stand {
-        background: var(--btn-stand);
+        background-color: var(--btn-stand);
         color: var(--casino-text);
       }
       .bj-act--double {
-        background: var(--btn-double);
+        background-color: var(--btn-double);
         color: var(--casino-text);
       }
 
@@ -1707,10 +1738,11 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         letter-spacing: var(--boxel-lsp-xs);
       }
       .bj-dot {
-        width: 8px;
-        height: 8px;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
-        background: var(--casino-gold);
+        background-color: var(--accent);
+        color: var(--accent-foreground);
         animation: dotBounce 1.3s ease-in-out infinite;
       }
       .bj-dot:nth-child(2) {
@@ -1767,12 +1799,13 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
 
       @keyframes goldGlow {
         from {
-          text-shadow: 0 0 16px rgba(212, 175, 55, 0.5);
+          text-shadow: 0 0 16px
+            color-mix(in oklch, var(--accent) 50%, transparent);
         }
         to {
           text-shadow:
-            0 0 40px rgba(212, 175, 55, 1),
-            0 0 80px rgba(212, 175, 55, 0.35);
+            0 0 40px color-mix(in oklch, var(--accent) 100%, transparent),
+            0 0 80px color-mix(in oklch, var(--accent) 35%, transparent);
         }
       }
 
@@ -1790,10 +1823,12 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
 
       @keyframes badgePulse {
         from {
-          box-shadow: 0 0 6px rgba(212, 175, 55, 0.3);
+          box-shadow: 0 0 6px
+            color-mix(in oklch, var(--accent) 30%, transparent);
         }
         to {
-          box-shadow: 0 0 22px rgba(212, 175, 55, 0.85);
+          box-shadow: 0 0 22px
+            color-mix(in oklch, var(--accent) 85%, transparent);
         }
       }
 
@@ -1811,25 +1846,25 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       /* ── Responsive ────────────────────────────────────────── */
       @media (max-height: 720px) {
         .bj-card {
-          width: 58px;
-          height: 86px;
+          width: 3.625rem;
+          height: 5.375rem;
         }
         .bj-cv {
-          font-size: 13px;
+          font-size: 0.8125rem;
         }
         .bj-cp {
-          font-size: 10px;
+          font-size: 0.625rem;
         }
         .bj-card-center {
-          font-size: 24px;
+          font-size: 1.5rem;
         }
         .bj-casino-title {
           font-size: var(--boxel-font-size-sm);
         }
         .bj-chip {
-          width: 42px;
-          height: 42px;
-          font-size: 11px;
+          width: 2.625rem;
+          height: 2.625rem;
+          font-size: 0.6875rem;
         }
         .bj-act-btn {
           padding: var(--boxel-sp-xs);
@@ -1850,22 +1885,22 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
           justify-content: center;
         }
         .bj-card {
-          width: 58px;
-          height: 86px;
+          width: 3.625rem;
+          height: 5.375rem;
         }
         .bj-card-center {
-          font-size: 24px;
+          font-size: 1.5rem;
         }
         .bj-chip {
-          width: 42px;
-          height: 42px;
-          font-size: 11px;
+          width: 2.625rem;
+          height: 2.625rem;
+          font-size: 0.6875rem;
         }
         .bj-action-row {
           flex-wrap: wrap;
         }
         .bj-outcome-title {
-          font-size: 24px;
+          font-size: 1.5rem;
           letter-spacing: 2px;
         }
       }
@@ -1972,35 +2007,37 @@ class FittedTemplate extends Component<typeof Blackjack> {
     <style scoped>
       /* ── Design tokens ─────────────────────────────────── */
       .bj-fitted {
-        --gold: #d4af37;
-        --gold-dim: rgba(212, 175, 55, 0.32);
-        --gold-border: rgba(212, 175, 55, 0.3);
-        --gold-glow: rgba(212, 175, 55, 0.55);
-        --cream: #fff6d8;
-        --cream-dim: rgba(255, 246, 216, 0.65);
-        --casino-red: #b21d2a;
+        --gold: var(--accent);
+        --gold-dim: color-mix(in oklch, var(--accent) 32%, transparent);
+        --gold-border: color-mix(in oklch, var(--accent) 30%, transparent);
+        --gold-glow: color-mix(in oklch, var(--accent) 55%, transparent);
+        --cream-dim: color-mix(in oklch, var(--foreground) 65%, transparent);
         --felt-bg: radial-gradient(
           ellipse at 50% 25%,
-          #126128 0%,
-          #063d12 55%,
-          #020d04 100%
+          var(--inset) 0%,
+          var(--inset) 55%,
+          var(--inset) 100%
         );
         --felt-sheen: radial-gradient(
           circle at 18% 12%,
-          rgba(255, 246, 216, 0.13),
+          color-mix(in oklch, var(--card) 60%, transparent),
           transparent 30%
         );
-        --panel-border: rgba(139, 105, 20, 0.45);
-        --chip-red: linear-gradient(145deg, #d32f2f, #891212);
-        --chip-blue: linear-gradient(145deg, #1565c0, #0a3475);
-        --chip-green: linear-gradient(145deg, #2e7d32, #124a15);
-        --chip-black: linear-gradient(145deg, #3a3a3a, #1a1a1a);
-        --chip-purple: linear-gradient(145deg, #7b1fa2, #3d0a5e);
+        --panel-border: color-mix(in oklch, var(--inset) 45%, transparent);
+        --chip-red: linear-gradient(
+          145deg,
+          var(--destructive),
+          var(--destructive)
+        );
+        --chip-blue: linear-gradient(145deg, var(--primary), var(--primary));
+        --chip-green: linear-gradient(145deg, var(--success), var(--success));
+        --chip-black: linear-gradient(145deg, var(--tooltip), var(--tooltip));
+        --chip-purple: linear-gradient(145deg, var(--primary), var(--primary));
         --casino-font: 'Georgia', 'Times New Roman', serif;
 
         width: 100%;
         height: 100%;
-        color: var(--cream);
+        color: var(--foreground);
         font-family: var(--casino-font);
         container-type: size;
       }
@@ -2020,8 +2057,10 @@ class FittedTemplate extends Component<typeof Blackjack> {
         background: var(--felt-sheen), var(--felt-bg);
         box-shadow:
           inset 0 0 0 2px var(--panel-border),
-          inset 0 -3rem 6rem rgba(0, 0, 0, 0.3),
-          0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
+          inset 0 -3rem 6rem
+            color-mix(in oklch, var(--foreground) 30%, transparent),
+          0 0.5rem 1.5rem
+            color-mix(in oklch, var(--foreground) 25%, transparent);
         position: relative;
       }
 
@@ -2038,16 +2077,16 @@ class FittedTemplate extends Component<typeof Blackjack> {
           repeating-linear-gradient(
             0deg,
             transparent,
-            transparent 3px,
-            rgba(0, 0, 0, 0.025) 3px,
-            rgba(0, 0, 0, 0.025) 4px
+            transparent 0.1875rem,
+            color-mix(in oklch, var(--foreground) 2%, transparent) 0.1875rem,
+            color-mix(in oklch, var(--foreground) 2%, transparent) 0.25rem
           ),
           repeating-linear-gradient(
             90deg,
             transparent,
-            transparent 3px,
-            rgba(0, 0, 0, 0.025) 3px,
-            rgba(0, 0, 0, 0.025) 4px
+            transparent 0.1875rem,
+            color-mix(in oklch, var(--foreground) 2%, transparent) 0.1875rem,
+            color-mix(in oklch, var(--foreground) 2%, transparent) 0.25rem
           );
         pointer-events: none;
         z-index: 0;
@@ -2063,15 +2102,15 @@ class FittedTemplate extends Component<typeof Blackjack> {
         flex-shrink: 0;
         /* Conic casino chip pattern */
         background:
-          radial-gradient(circle, #0e4d1c 0 36%, transparent 37%),
+          radial-gradient(circle, var(--success) 0 36%, transparent 37%),
           repeating-conic-gradient(
             from 0deg,
-            var(--cream) 0deg 9deg,
-            var(--casino-red) 9deg 20deg
+            var(--primary) 0deg 9deg,
+            var(--destructive) 9deg 20deg
           );
         box-shadow:
-          0 0 0 2px rgba(255, 246, 216, 0.18),
-          0 0.3rem 1rem rgba(0, 0, 0, 0.5),
+          0 0 0 2px color-mix(in oklch, var(--primary) 18%, transparent),
+          0 0.3rem 1rem color-mix(in oklch, var(--foreground) 50%, transparent),
           0 0 1.5rem var(--gold-glow);
         z-index: 1;
       }
@@ -2083,7 +2122,7 @@ class FittedTemplate extends Component<typeof Blackjack> {
         letter-spacing: -0.02em;
         text-shadow:
           0 0 8px var(--gold-glow),
-          0 1px 2px rgba(0, 0, 0, 0.6);
+          0 1px 2px color-mix(in oklch, var(--foreground) 60%, transparent);
         z-index: 2;
         line-height: 1;
       }
@@ -2183,12 +2222,12 @@ class FittedTemplate extends Component<typeof Blackjack> {
 
       .suit--heart,
       .suit--diamond {
-        color: #e53935;
+        color: var(--destructive-ink);
       }
 
       .suit--spade,
       .suit--club {
-        color: var(--cream);
+        color: var(--foreground);
       }
 
       /* ── Casino chips ──────────────────────────────────── */
@@ -2208,41 +2247,41 @@ class FittedTemplate extends Component<typeof Blackjack> {
         border-radius: 50%;
         font-size: 0.56rem;
         font-weight: 700;
-        color: var(--cream);
+        color: var(--foreground);
         line-height: 1;
         position: relative;
         overflow: hidden;
         /* Chip ring */
         box-shadow:
-          0 0 0 2px rgba(255, 255, 255, 0.18),
-          0 3px 8px rgba(0, 0, 0, 0.55),
-          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+          0 0 0 2px color-mix(in oklch, var(--card) 18%, transparent),
+          0 3px 8px color-mix(in oklch, var(--foreground) 55%, transparent),
+          inset 0 1px 0 color-mix(in oklch, var(--card) 22%, transparent);
       }
 
       /* Dashed inner ring */
       .casino-chip::before {
         content: '';
         position: absolute;
-        inset: 3px;
+        inset: 0.1875rem;
         border-radius: 50%;
-        border: 1.5px dashed rgba(255, 255, 255, 0.28);
+        border: 1.5px dashed color-mix(in oklch, var(--card) 28%, transparent);
         pointer-events: none;
       }
 
       .casino-chip--red {
-        background: var(--chip-red);
+        background-color: var(--chip-red);
       }
       .casino-chip--blue {
-        background: var(--chip-blue);
+        background-color: var(--chip-blue);
       }
       .casino-chip--green {
-        background: var(--chip-green);
+        background-color: var(--chip-green);
       }
       .casino-chip--black {
-        background: var(--chip-black);
+        background-color: var(--chip-black);
       }
       .casino-chip--purple {
-        background: var(--chip-purple);
+        background-color: var(--chip-purple);
       }
 
       /* ── Pays text ─────────────────────────────────────── */
@@ -2344,7 +2383,7 @@ class FittedTemplate extends Component<typeof Blackjack> {
         z-index: 1;
         /* Subtle inner separator */
         border-right: 1px solid var(--gold-border);
-        background: rgba(0, 0, 0, 0.15);
+        background-color: color-mix(in oklch, var(--card) 15%, transparent);
       }
 
       .showpiece-bg {
@@ -2352,7 +2391,7 @@ class FittedTemplate extends Component<typeof Blackjack> {
         inset: 0;
         background: radial-gradient(
           ellipse at center,
-          rgba(212, 175, 55, 0.07),
+          color-mix(in oklch, var(--accent) 7%, transparent),
           transparent 70%
         );
         pointer-events: none;
@@ -2382,22 +2421,22 @@ class FittedTemplate extends Component<typeof Blackjack> {
         font-size: clamp(0.65rem, 2.5cqw, 1rem);
         font-weight: 800;
         box-shadow:
-          0 4px 14px rgba(0, 0, 0, 0.5),
-          0 0 0 1px rgba(0, 0, 0, 0.1);
+          0 4px 14px color-mix(in oklch, var(--foreground) 50%, transparent),
+          0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
       }
 
       .play-card--back {
         background:
           repeating-linear-gradient(
             45deg,
-            rgba(255, 255, 255, 0.055) 0,
-            rgba(255, 255, 255, 0.055) 2px,
+            color-mix(in oklch, var(--card) 6%, transparent) 0,
+            color-mix(in oklch, var(--card) 6%, transparent) 2px,
             transparent 0,
             transparent 50%
           ),
-          #1a237e;
+          var(--card);
         background-size:
-          8px 8px,
+          0.5rem 0.5rem,
           auto;
         left: 0;
         top: 8%;
@@ -2406,8 +2445,8 @@ class FittedTemplate extends Component<typeof Blackjack> {
       }
 
       .play-card--red {
-        background: var(--cream);
-        color: var(--casino-red);
+        background-color: var(--card);
+        color: var(--card-foreground);
         left: 24%;
         top: 0;
         rotate: -3deg;
@@ -2415,8 +2454,8 @@ class FittedTemplate extends Component<typeof Blackjack> {
       }
 
       .play-card--black {
-        background: var(--cream);
-        color: #111;
+        background-color: var(--card);
+        color: var(--foreground);
         right: 0;
         top: 4%;
         rotate: 9deg;
@@ -2458,26 +2497,29 @@ class FittedTemplate extends Component<typeof Blackjack> {
       @keyframes chipGlow {
         from {
           box-shadow:
-            0 0 0 2px rgba(255, 246, 216, 0.18),
-            0 0.3rem 1rem rgba(0, 0, 0, 0.5),
+            0 0 0 2px color-mix(in oklch, var(--primary) 18%, transparent),
+            0 0.3rem 1rem
+              color-mix(in oklch, var(--foreground) 50%, transparent),
             0 0 0.8rem var(--gold-glow);
         }
         to {
           box-shadow:
-            0 0 0 2px rgba(255, 246, 216, 0.3),
-            0 0.3rem 1rem rgba(0, 0, 0, 0.5),
+            0 0 0 2px color-mix(in oklch, var(--primary) 30%, transparent),
+            0 0.3rem 1rem
+              color-mix(in oklch, var(--foreground) 50%, transparent),
             0 0 2.5rem var(--gold-glow);
         }
       }
 
       @keyframes goldPulse {
         from {
-          text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+          text-shadow: 0 0 10px
+            color-mix(in oklch, var(--accent) 40%, transparent);
         }
         to {
           text-shadow:
-            0 0 28px rgba(212, 175, 55, 0.9),
-            0 0 48px rgba(212, 175, 55, 0.25);
+            0 0 28px color-mix(in oklch, var(--accent) 90%, transparent),
+            0 0 48px color-mix(in oklch, var(--accent) 25%, transparent);
         }
       }
 

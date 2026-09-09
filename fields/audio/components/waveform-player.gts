@@ -64,14 +64,10 @@ export class WaveformPlayer extends GlimmerComponent<WaveformPlayerSignature> {
 
     <style scoped>
       .waveform-player {
-        background: linear-gradient(
-          135deg,
-          var(--primary, #3b82f6),
-          var(--accent, #60a5fa)
-        );
-        border-radius: var(--boxel-border-radius, 0.5rem);
+        background: linear-gradient(135deg, var(--card), var(--card));
+        border-radius: var(--boxel-border-radius);
         padding: var(--boxel-sp-lg);
-        color: var(--boxel-light, #ffffff);
+        color: var(--card-foreground);
       }
 
       .waveform-header {
@@ -91,7 +87,7 @@ export class WaveformPlayer extends GlimmerComponent<WaveformPlayerSignature> {
 
       .waveform-container {
         margin: 1.5rem 0;
-        background: rgba(255, 255, 255, 0.1);
+        background-color: color-mix(in oklch, var(--card) 10%, transparent);
         border-radius: 0.25rem;
         padding: 0.5rem;
       }
@@ -113,12 +109,12 @@ export class WaveformPlayer extends GlimmerComponent<WaveformPlayerSignature> {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: var(--boxel-light, #ffffff) !important;
-        color: var(--boxel-purple-500, #8b5cf6) !important;
+        background-color: var(--card) !important;
+        color: var(--primary-ink) !important;
       }
 
       .waveform-play-btn:hover {
-        background: var(--boxel-200, #e5e7eb) !important;
+        background-color: var(--inset) !important;
       }
 
       .waveform-time {

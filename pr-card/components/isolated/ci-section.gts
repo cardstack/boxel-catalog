@@ -34,8 +34,8 @@ class CiDot extends GlimmerComponent<CiDotSignature> {
 
     <style scoped>
       .ci-dot {
-        width: 13px;
-        height: 13px;
+        width: 0.8125rem;
+        height: 0.8125rem;
         border-radius: 50%;
         flex-shrink: 0;
         display: flex;
@@ -43,56 +43,57 @@ class CiDot extends GlimmerComponent<CiDotSignature> {
         justify-content: center;
       }
       .ci-dot--success {
-        background: var(--chart-1, #28a745);
+        background-color: var(--chart-1);
         position: relative;
       }
       .ci-dot--success::after {
         content: '';
         display: block;
-        width: 5px;
-        height: 3px;
-        border-left: 1.5px solid #fff;
-        border-bottom: 1.5px solid #fff;
+        width: 0.3125rem;
+        height: 0.1875rem;
+        border-left: 1.5px solid var(--border);
+        border-bottom: 1.5px solid var(--border);
         transform: rotate(-45deg) translateY(-1px);
       }
       .ci-dot--failure {
-        background: var(--destructive, #d73a49);
+        background-color: var(--destructive);
+        color: var(--destructive-foreground);
         position: relative;
       }
       .ci-dot--failure::after {
         content: '';
         display: block;
-        width: 5px;
-        height: 6px;
+        width: 0.3125rem;
+        height: 0.375rem;
         background:
           linear-gradient(
               45deg,
               transparent 30%,
-              #fff 30%,
-              #fff 70%,
+              var(--card) 30%,
+              var(--card) 70%,
               transparent 70%
             )
             no-repeat center / 100% 1.5px,
           linear-gradient(
               -45deg,
               transparent 30%,
-              #fff 30%,
-              #fff 70%,
+              var(--card) 30%,
+              var(--card) 70%,
               transparent 70%
             )
             no-repeat center / 100% 1.5px;
       }
       .ci-dot--pending {
-        border: 2px solid var(--chart-4, #dbab09);
-        background: transparent;
+        border: 2px solid var(--chart-4);
+        background-color: transparent;
         animation: ci-spin 1s linear infinite;
       }
       .ci-dot-inner {
         display: block;
-        width: 4px;
-        height: 4px;
+        width: 0.25rem;
+        height: 0.25rem;
         border-radius: 50%;
-        background: var(--chart-4, #dbab09);
+        background-color: var(--chart-4);
       }
       @keyframes ci-spin {
         from {
@@ -125,16 +126,16 @@ class CiStatusLabel extends GlimmerComponent<CiStatusLabelSignature> {
         font-size: var(--boxel-font-2xs);
         font-weight: 400;
         line-height: 1.3;
-        color: var(--card-foreground, #1f2328);
+        color: var(--card-foreground);
       }
       .ci-status-label--failure {
-        color: var(--destructive, #d73a49);
+        color: var(--destructive-ink);
       }
       .ci-status-label--pending {
-        color: var(--chart-4, #dbab09);
+        color: var(--chart-4);
       }
       .ci-status-label--success {
-        color: var(--chart-1, #28a745);
+        color: var(--chart-1);
       }
     </style>
   </template>
@@ -200,11 +201,11 @@ export class CiSection extends GlimmerComponent<CiSectionSignature> {
         overflow-y: auto;
       }
       .section-heading {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--foreground, #1f2328);
+        color: var(--foreground);
         margin: 0;
       }
       .ci-group {
@@ -213,7 +214,7 @@ export class CiSection extends GlimmerComponent<CiSectionSignature> {
         padding: 0;
         display: flex;
         flex-direction: column;
-        border-radius: var(--radius, 6px);
+        border-radius: var(--radius);
         overflow: hidden;
       }
       .ci-item {
@@ -221,8 +222,9 @@ export class CiSection extends GlimmerComponent<CiSectionSignature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        background: var(--muted, #f6f8fa);
-        border: 1px solid var(--border, var(--boxel-border-color));
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border: 1px solid var(--border);
       }
       .ci-group > * + * {
         border-top: none;
@@ -236,7 +238,7 @@ export class CiSection extends GlimmerComponent<CiSectionSignature> {
       .ci-item-name {
         font-size: var(--boxel-font-xl);
         font-weight: 500;
-        color: var(--foreground, #1f2328);
+        color: var(--foreground);
         line-height: 1.2;
       }
       .empty-state {
@@ -244,35 +246,36 @@ export class CiSection extends GlimmerComponent<CiSectionSignature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        background: var(--muted, #f6f8fa);
-        border: 1px solid var(--border, var(--boxel-border-color));
-        border-radius: var(--radius, 6px);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
       }
       .empty-state-icon {
-        width: 13px;
-        height: 13px;
+        width: 0.8125rem;
+        height: 0.8125rem;
         border-radius: 50%;
-        border: 2px solid var(--chart-4, #dbab09);
+        border: 2px solid var(--chart-4);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
       }
       .empty-state-dot {
-        width: 4px;
-        height: 4px;
+        width: 0.25rem;
+        height: 0.25rem;
         border-radius: 50%;
-        background: var(--chart-4, #dbab09);
+        background-color: var(--chart-4);
       }
       .empty-state-text {
         font-size: var(--boxel-font-xs);
-        color: var(--muted-foreground, #656d76);
+        color: var(--muted-foreground);
       }
       .loading-state {
-        border-radius: var(--radius, 6px);
+        border-radius: var(--radius);
       }
       .loading-text {
-        color: var(--muted-foreground, #656d76);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

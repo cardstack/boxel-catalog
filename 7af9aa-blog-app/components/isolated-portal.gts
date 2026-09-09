@@ -320,24 +320,14 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
          the .blog-scope chain reads, so app-level ambient values can't
          restyle the blog. A linked theme omits this class. */
       .blog-default-theme {
-        --background: #ffffff;
-        --foreground: #121212;
-        --card: #ffffff;
-        --card-foreground: #121212;
-        --muted: #f3f4f6;
-        --muted-foreground: #6b7280;
-        --border: #e5e7eb;
-        --primary: #7b61ff;
-        --primary-foreground: #ffffff;
-        --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-        --radius: 12px;
+        color: var(--card-foreground);
       }
 
       .portal {
         position: relative;
         min-height: 100%;
-        background: var(--blog-color-bg, #fafafa);
-        color: var(--blog-color-text, #121212);
+        background-color: var(--card);
+        color: var(--foreground);
       }
       .drawer {
         position: absolute;
@@ -345,36 +335,38 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
         left: 0;
         height: 100%;
         z-index: 200;
-        width: 64px;
+        width: 4rem;
         pointer-events: none;
       }
       .drawer.is-open {
-        width: 320px;
+        width: 20rem;
       }
       .drawer > * {
         pointer-events: auto;
       }
       .drawer-toggle {
         position: sticky;
-        top: 12px;
-        margin: 12px;
-        width: 40px;
-        height: 40px;
+        top: 0.75rem;
+        margin: 0.75rem;
+        width: 2.5rem;
+        height: 2.5rem;
         display: grid;
         place-items: center;
-        background: #2c2c2c;
-        color: white;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: none;
         border-radius: 50%;
         cursor: pointer;
-        font-size: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+        font-size: 1rem;
+        box-shadow: 0 1px 3px
+          color-mix(in oklch, var(--foreground) 18%, transparent);
         transition:
           background-color 0.15s,
           transform 0.1s;
       }
       .drawer-toggle:hover {
-        background: #1a1a1a;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .drawer-toggle:active {
         transform: scale(0.94);
@@ -382,16 +374,18 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
       .drawer-content {
         display: none;
         position: sticky;
-        top: 64px;
-        margin: 0 12px 12px;
+        top: 4rem;
+        margin: 0 0.75rem 0.75rem;
         padding: var(--boxel-sp);
         flex-direction: column;
         gap: var(--boxel-sp);
-        background: white;
-        border: 1px solid #ececec;
-        border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        max-height: calc(100vh - 80px);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 24px
+          color-mix(in oklch, var(--foreground) 8%, transparent);
+        max-height: calc(100vh - 5rem);
         overflow-y: auto;
       }
       .drawer.is-open .drawer-content {
@@ -404,26 +398,28 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        padding: 9px 16px;
-        background: #2c2c2c;
-        color: white;
+        gap: 0.375rem;
+        padding: 0.5625rem 1rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: none;
-        border-radius: 999px;
+        border-radius: 62.4375rem;
         cursor: pointer;
         font:
-          600 12px/1 system-ui,
+          600 0.75rem/1 system-ui,
           -apple-system,
           sans-serif;
         letter-spacing: 0.5px;
         text-transform: uppercase;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 1px 3px
+          color-mix(in oklch, var(--foreground) 15%, transparent);
         transition:
           background-color 0.15s,
           transform 0.1s;
       }
       .view-toggle:hover {
-        background: #1a1a1a;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .view-toggle:active {
         transform: scale(0.97);
@@ -432,7 +428,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
       .lib-section {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .lib-section-label {
         font:
@@ -441,7 +437,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
           sans-serif;
         letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: #121212;
+        color: var(--foreground);
         margin: 0;
       }
       .lib-section-hint {
@@ -450,28 +446,29 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
           400 0.75rem 'Inter',
           system-ui,
           sans-serif;
-        color: #999;
+        color: var(--subtle-foreground);
       }
 
       .theme-section {
-        padding-bottom: 12px;
+        padding-bottom: 0.75rem;
         border-bottom: 1px solid var(--boxel-300);
-        margin-bottom: 4px;
+        margin-bottom: 0.25rem;
       }
       .theme-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        margin-top: 4px;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
       }
       .theme-row {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px;
-        background: white;
+        gap: 0.625rem;
+        padding: 0.5rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: 2px solid var(--boxel-300);
-        border-radius: 10px;
+        border-radius: 0.625rem;
         cursor: pointer;
         transition:
           border-color 0.15s,
@@ -479,27 +476,30 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
       }
       .theme-row:hover {
         border-color: var(--boxel-500);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 2px 8px
+          color-mix(in oklch, var(--foreground) 6%, transparent);
       }
       .theme-row.is-selected {
-        border-color: var(--boxel-highlight, #7b61ff);
-        box-shadow: 0 0 0 2px rgba(123, 97, 255, 0.18);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px
+          color-mix(in oklch, var(--primary) 18%, transparent);
       }
       .theme-radio {
         flex-shrink: 0;
-        width: 18px;
-        height: 18px;
+        width: 1.125rem;
+        height: 1.125rem;
         margin: 0;
-        accent-color: var(--boxel-highlight, #7b61ff);
+        accent-color: var(--primary);
         cursor: pointer;
       }
       .theme-preview {
         flex: 1;
         min-width: 0;
-        height: 110px;
-        border-radius: 6px;
+        height: 6.875rem;
+        border-radius: 0.375rem;
         overflow: hidden;
-        background: #f5f5f5;
+        background-color: var(--card);
+        color: var(--card-foreground);
         pointer-events: none;
         user-select: none;
       }
@@ -507,7 +507,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
         pointer-events: none !important;
       }
       .theme-row--inherit {
-        padding: 12px;
+        padding: 0.75rem;
       }
       .theme-row__text {
         display: flex;
@@ -516,71 +516,73 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
       }
       .theme-row__name {
         font:
-          700 12px/1.2 'Inter',
+          700 0.75rem/1.2 'Inter',
           sans-serif;
-        color: #2c2c2c;
+        color: var(--foreground);
       }
       .theme-row__desc {
         font:
-          400 11px/1.3 'Inter',
+          400 0.6875rem/1.3 'Inter',
           sans-serif;
         color: var(--boxel-500);
       }
       .theme-loading {
-        padding: 12px;
+        padding: 0.75rem;
         font:
-          400 11px 'Inter',
+          400 0.6875rem 'Inter',
           sans-serif;
         color: var(--boxel-500);
         text-align: center;
       }
       .lib-loading {
         font:
-          600 12px/1 'Inter',
+          600 0.75rem/1 'Inter',
           sans-serif;
         color: var(--boxel-500);
-        padding: 8px 0;
+        padding: 0.5rem 0;
       }
       .lib-search {
         width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #d3d6da;
-        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
         font:
           500 0.9rem/1 'Inter',
           sans-serif;
         outline: none;
         transition: border-color 0.15s;
         box-sizing: border-box;
-        background: white;
-        color: #121212;
+        background-color: var(--card);
+        color: var(--foreground);
       }
       .lib-search:focus {
-        border-color: var(--boxel-highlight, #7b61ff);
+        border-color: var(--primary);
       }
       .lib-search::placeholder {
-        color: #999;
+        color: var(--subtle-foreground);
       }
       .lib-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .lib-card {
-        height: 76px;
-        border: 1px solid #ececec;
-        border-radius: 10px;
+        height: 4.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.625rem;
         overflow: hidden;
         cursor: grab;
-        background: white;
+        background-color: var(--card);
+        color: var(--card-foreground);
         transition:
           border-color 0.12s,
           box-shadow 0.15s,
           transform 0.08s;
       }
       .lib-card:hover {
-        border-color: var(--boxel-highlight, #7b61ff);
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        border-color: var(--primary);
+        box-shadow: 0 3px 10px
+          color-mix(in oklch, var(--foreground) 8%, transparent);
       }
       .lib-card:active {
         cursor: grabbing;
@@ -591,7 +593,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
         min-height: 0 !important;
         max-width: 100% !important;
         width: 100%;
-        background: transparent;
+        background-color: transparent;
         box-shadow: none !important;
         border: none;
       }

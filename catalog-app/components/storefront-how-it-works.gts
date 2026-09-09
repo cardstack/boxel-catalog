@@ -85,9 +85,13 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
 
     <style scoped>
       .how {
-        border-top: 1px solid var(--border, #ddd8cb);
-        border-bottom: 1px solid var(--border, #ddd8cb);
-        background: color-mix(in srgb, var(--background, #f0ede4) 94%, #fff);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        background-color: color-mix(
+          in oklch,
+          var(--background) 94%,
+          var(--card)
+        );
       }
       .how-inner {
         max-width: 80rem;
@@ -95,23 +99,23 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
         padding: 3.5rem 2rem;
       }
       .eyebrow {
-        font: 600 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
+        font: 600 0.6875rem/1 var(--font-mono);
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--muted-foreground, #908b7e);
+        color: var(--muted-foreground);
         margin-bottom: 0.75rem;
       }
       .how-title {
         margin: 0 0 2rem;
         max-width: 34rem;
-        font: 700 2rem/1.1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        font: 700 2rem/1.1 var(--font-sans);
         letter-spacing: -0.03em;
-        color: var(--foreground, #16161c);
+        color: var(--foreground);
       }
       .accent {
         /* Text reads better a shade dimmer than the true, neon --primary
            brand color (#00ffba) — that hue is reserved for button fills. */
-        color: #11cf8a;
+        color: var(--success-ink);
       }
       .how-body {
         display: grid;
@@ -120,17 +124,18 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
         align-items: center;
       }
       .how-visual {
-        background: var(--card, #fff);
+        background-color: var(--card);
+        color: var(--card-foreground);
         border-radius: 1rem;
         overflow: hidden;
-        box-shadow: var(--shadow-md, 0 18px 40px -26px rgba(0, 0, 0, 0.4));
+        box-shadow: var(--shadow-md);
       }
       .chrome {
         display: flex;
         align-items: center;
         gap: 0.4375rem;
         padding: 0.75rem 0.875rem;
-        border-bottom: 1px solid var(--border, #f0ece3);
+        border-bottom: 1px solid var(--border);
       }
       .chrome-dot {
         width: 0.625rem;
@@ -138,23 +143,27 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
         border-radius: 50%;
       }
       .chrome-dot.red {
-        background: #ff5f57;
+        background-color: var(--destructive);
+        color: var(--destructive-foreground);
       }
       .chrome-dot.amber {
-        background: #febc2e;
+        background-color: var(--warning);
+        color: var(--warning-foreground);
       }
       .chrome-dot.green {
-        background: #28c840;
+        background-color: var(--success);
+        color: var(--success-foreground);
       }
       .chrome-label {
         margin-left: 0.5rem;
-        font: 500 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
-        color: var(--muted-foreground, #b3aea2);
+        font: 500 0.6875rem/1 var(--font-mono);
+        color: var(--muted-foreground);
       }
       .visual-slot {
         aspect-ratio: 16 / 10;
         overflow: hidden;
-        background: var(--muted, #f0ede4);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .visual-gif {
         width: 100%;
@@ -177,17 +186,17 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
       }
       .step-n {
         flex-shrink: 0;
-        font: 700 0.875rem/1.6 var(--font-mono, 'IBM Plex Mono', monospace);
-        color: #11cf8a;
+        font: 700 0.875rem/1.6 var(--font-mono);
+        color: var(--success-ink);
       }
       .step-title {
-        font: 700 1.0625rem/1.2 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: var(--foreground, #16161c);
+        font: 700 1.0625rem/1.2 var(--font-sans);
+        color: var(--foreground);
       }
       .step-body {
         margin: 0.25rem 0 0;
-        font: 400 0.875rem/1.5 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: var(--muted-foreground, #5f5b52);
+        font: 400 0.875rem/1.5 var(--font-sans);
+        color: var(--muted-foreground);
       }
 
       @container (max-width: 56rem) {

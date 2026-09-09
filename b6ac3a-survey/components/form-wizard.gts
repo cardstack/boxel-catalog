@@ -131,47 +131,47 @@ export default class FormWizard extends GlimmerComponent<FormWizardSignature> {
         width: 100%;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs);
-        border: 1px solid var(--border, #e2e8f0);
-        border-radius: var(--boxel-border-radius-sm, 0.375rem);
-        background: var(--card, #ffffff);
-        color: var(--card-foreground, #0f172a);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+        background-color: var(--card);
+        color: var(--card-foreground);
         font: inherit;
         text-align: start;
         cursor: pointer;
       }
 
       .bx-form-wizard__step[data-bx-form-wizard-step-active='true'] {
-        border-color: var(--ring, #3b82f6);
-        box-shadow: 0 0 0 var(--boxel-sp-5xs, 2px) var(--ring, #3b82f6);
+        border-color: var(--ring);
+        box-shadow: 0 0 0 var(--boxel-sp-5xs) var(--ring);
       }
 
       .bx-form-wizard__step[data-bx-form-wizard-step-complete='true'] {
-        background: var(--secondary, #f1f5f9);
-        color: var(--secondary-foreground, #0f172a);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
 
       .bx-form-wizard__step:focus {
         outline: 0;
-        box-shadow: 0 0 0 var(--boxel-sp-5xs, 2px) var(--ring, #3b82f6);
+        box-shadow: 0 0 0 var(--boxel-sp-5xs) var(--ring);
       }
 
       .bx-form-wizard__step-index {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: calc(var(--boxel-sp, 1rem) + var(--boxel-sp-xs, 0.5rem));
-        height: calc(var(--boxel-sp, 1rem) + var(--boxel-sp-xs, 0.5rem));
-        border-radius: var(--boxel-border-radius-xs, 0.25rem);
-        background: var(--muted, #f1f5f9);
-        color: var(--muted-foreground, #64748b);
-        font-size: var(--boxel-caption-font-size, 0.75rem);
+        min-width: calc(var(--boxel-sp) + var(--boxel-sp-xs));
+        height: calc(var(--boxel-sp) + var(--boxel-sp-xs));
+        border-radius: var(--boxel-border-radius-xs);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        font-size: var(--boxel-caption-font-size);
         font-weight: 600;
       }
 
       .bx-form-wizard__step[data-bx-form-wizard-step-active='true']
         .bx-form-wizard__step-index {
-        background: var(--ring, #3b82f6);
-        color: #ffffff;
+        background-color: var(--ring);
+        color: var(--card-foreground);
       }
 
       .bx-form-wizard__step-label {
@@ -191,37 +191,37 @@ export default class FormWizard extends GlimmerComponent<FormWizardSignature> {
         justify-content: flex-end;
         gap: var(--boxel-sp-xs);
         padding-block-start: var(--boxel-sp-sm);
-        border-block-start: 1px solid var(--hr-color, var(--border, #e2e8f0));
+        border-block-start: 1px solid var(--border);
       }
 
       .bx-form-wizard__button {
-        min-height: var(--boxel-form-control-height, 2.5rem);
-        padding-inline: var(--boxel-sp, 1rem);
-        border: 1px solid var(--border, #e2e8f0);
-        border-radius: var(--boxel-border-radius-sm, 0.375rem);
+        min-height: var(--boxel-form-control-height);
+        padding-inline: var(--boxel-sp);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
         font: inherit;
         font-weight: 600;
         cursor: pointer;
       }
 
       .bx-form-wizard__button--primary {
-        background: var(--primary, #2563eb);
-        color: var(--primary-foreground, #ffffff);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border-color: transparent;
       }
 
       .bx-form-wizard__button--secondary {
-        background: var(--secondary, #f1f5f9);
-        color: var(--secondary-foreground, #0f172a);
+        background-color: var(--secondary);
+        color: var(--secondary-foreground);
       }
 
       .bx-form-wizard__button:focus {
         outline: 0;
-        box-shadow: 0 0 0 var(--boxel-sp-5xs, 2px) var(--ring, #3b82f6);
+        box-shadow: 0 0 0 var(--boxel-sp-5xs) var(--ring);
       }
 
       .bx-form-wizard__button:disabled {
-        color: var(--muted-foreground, #94a3b8);
+        color: var(--muted-foreground);
         cursor: not-allowed;
         opacity: 0.6;
       }

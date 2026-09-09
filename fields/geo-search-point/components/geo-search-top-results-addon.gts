@@ -97,8 +97,8 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
       }
 
       .info-icon {
-        width: 16px;
-        height: 16px;
+        width: 1rem;
+        height: 1rem;
         flex-shrink: 0;
       }
 
@@ -137,8 +137,8 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
       }
 
       .result-icon :deep(svg) {
-        width: 28px;
-        height: 28px;
+        width: 1.75rem;
+        height: 1.75rem;
         color: var(--boxel-dark-green);
       }
 
@@ -175,15 +175,15 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
         justify-content: center;
         gap: var(--boxel-sp-2xs);
         padding: var(--boxel-sp-lg) var(--boxel-sp);
-        background: var(--boxel-surface-secondary);
+        background-color: var(--boxel-surface-secondary);
         border: 2px dashed var(--boxel-border-color);
         border-radius: var(--boxel-border-radius);
         color: var(--boxel-text-muted);
       }
 
       .no-results-icon {
-        width: 24px;
-        height: 24px;
+        width: 1.5rem;
+        height: 1.5rem;
       }
 
       .no-results-text {
@@ -203,13 +203,13 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
 
       .skeleton-name {
         --boxel-skeleton-width: 40%;
-        --boxel-skeleton-height: 14px;
+        --boxel-skeleton-height: 0.875rem;
         --boxel-skeleton-border-radius: 0;
       }
 
       .skeleton-address {
         --boxel-skeleton-width: 80%;
-        --boxel-skeleton-height: 12px;
+        --boxel-skeleton-height: 0.75rem;
         --boxel-skeleton-border-radius: 0;
       }
     </style>

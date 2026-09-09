@@ -47,12 +47,12 @@ export class CardsIntancesGrid extends GlimmerComponent<CardsIntancesGridArgs> {
     </ul>
     <style scoped>
       .cards {
-        --default-grid-view-min-width: 224px;
+        --default-grid-view-min-width: 14rem;
         --default-grid-view-max-width: 1fr;
-        --default-grid-view-height: 400px;
+        --default-grid-view-height: 25rem;
         --default-strip-view-min-width: 49%;
         --default-strip-view-max-width: 1fr;
-        --default-strip-view-height: 180px;
+        --default-strip-view-height: 11.25rem;
 
         display: grid;
         gap: var(--boxel-sp);
@@ -95,7 +95,7 @@ export class CardsIntancesGrid extends GlimmerComponent<CardsIntancesGridArgs> {
 
       .card:hover {
         cursor: pointer;
-        border: 1px solid var(--primary, var(--boxel-purple));
+        border: 1px solid var(--primary);
       }
 
       .cards :deep(.field-component-card.fitted-format) {

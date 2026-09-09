@@ -98,7 +98,7 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
         position: absolute;
         inset: 0;
         z-index: 4;
-        background: rgba(13, 13, 18, 0.62);
+        background-color: color-mix(in oklch, var(--card) 62%, transparent);
         backdrop-filter: blur(0.125rem);
         display: flex;
         flex-direction: column;
@@ -120,25 +120,27 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
       }
       .hover-btn {
         padding: 0.6875rem 1.25rem;
-        background: color-mix(in srgb, var(--card, #fff) 96%, transparent);
-        color: var(--foreground, #16161c);
+        background-color: color-mix(in oklch, var(--card) 96%, transparent);
+        color: var(--foreground);
         border: none;
-        border-radius: 999px;
+        border-radius: 62.4375rem;
         cursor: pointer;
-        font: 600 0.8125rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        font: 600 0.8125rem/1 var(--font-sans);
+        box-shadow: 0 6px 16px
+          color-mix(in oklch, var(--foreground) 30%, transparent);
       }
       .hover-btn-primary {
-        background: var(--accent, #16e098);
-        color: var(--primary-foreground, #04231a);
+        background-color: var(--accent);
+        color: var(--primary-foreground);
         font-weight: 700;
       }
       .hover-details {
-        font: 600 0.75rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: #fff;
-        background: transparent;
+        font: 600 0.75rem/1 var(--font-sans);
+        color: var(--card-foreground);
+        background-color: transparent;
         border: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        border-bottom: 1px solid
+          color-mix(in oklch, var(--card) 50%, transparent);
         padding-bottom: 0.125rem;
         cursor: pointer;
       }

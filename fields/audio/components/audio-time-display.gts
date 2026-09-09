@@ -39,13 +39,13 @@ export class AudioTimeDisplay extends GlimmerComponent<AudioTimeDisplaySignature
         display: flex;
         justify-content: space-between;
         font-size: 0.75rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
 
       .time-display-compact {
         font-size: 0.75rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }

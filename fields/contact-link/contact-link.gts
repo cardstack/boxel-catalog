@@ -160,9 +160,6 @@ export default class ContactLinkField extends FieldDef {
         </Pill>
       {{/if}}
       <style scoped>
-        a {
-          --pill-gap: var(--boxel-sp-xxxs);
-        }
         a:hover {
           border-color: var(--boxel-dark);
         }

@@ -33,10 +33,7 @@ const FilterGroupWrapper: TemplateOnlyComponent<FilterGroupWrapperArgs> =
         .filter-group {
           display: flex;
           flex-direction: column;
-          background-color: var(
-            --filter-group-background-color,
-            var(--boxel-light)
-          );
+          background-color: var(--boxel-light);
           border-radius: var(--boxel-border-radius);
           padding: var(--boxel-sp-xs);
           gap: var(--boxel-sp-sm);

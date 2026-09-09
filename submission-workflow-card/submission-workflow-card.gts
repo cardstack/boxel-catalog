@@ -248,18 +248,18 @@ export class SubmissionParticipantField extends FieldDef {
         .participant {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .participant-avatar {
-          width: 28px;
-          height: 28px;
+          width: 1.75rem;
+          height: 1.75rem;
           border-radius: 50%;
-          background: #1e293b;
-          color: #fff;
+          background-color: var(--card);
+          color: var(--card-foreground);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 10px;
+          font-size: 0.625rem;
           font-weight: 800;
           flex-shrink: 0;
         }
@@ -269,13 +269,13 @@ export class SubmissionParticipantField extends FieldDef {
           min-width: 0;
         }
         .participant-name {
-          font-size: 12px;
+          font-size: 0.75rem;
           font-weight: 600;
-          color: #1e293b;
+          color: var(--foreground);
         }
         .participant-role {
-          font-size: 11px;
-          color: #64748b;
+          font-size: 0.6875rem;
+          color: var(--primary-ink);
         }
       </style>
     </template>
@@ -838,26 +838,16 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
     <style scoped>
       /* ── Layout ── */
       .sw-layout {
-        --c-bg: #ffffff;
-        --c-surface: #f8fafc;
-        --c-border: #e2e8f0;
-        --c-text: #0f172a;
-        --c-muted: #64748b;
-        --c-success: #10b981;
-        --c-danger: #ef4444;
-        --c-active: #6366f1;
-        --c-neutral: #94a3b8;
-        --c-warning: #f5e00b;
-        --c-warning-text: #92400e;
         --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 280px;
+        grid-template-columns: minmax(0, 1fr) 17.5rem;
         height: 100%;
         width: 100%;
         font-family: var(--font);
         overflow: hidden;
-        background: var(--c-bg);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
 
       /* ── Main content ── */
@@ -865,75 +855,79 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        border-right: 1px solid var(--c-border);
+        border-right: 1px solid var(--border);
       }
 
       .sw-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 20px 24px;
-        border-bottom: 1px solid var(--c-border);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
         flex-shrink: 0;
       }
       .sw-header-left {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 0.75rem;
         min-width: 0;
       }
       .sw-title {
         margin: 0;
-        font-size: 16px;
+        font-size: 1rem;
         font-weight: 700;
-        color: var(--c-text);
+        color: var(--foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       .sw-status-pill {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        padding: 3px 10px;
-        border-radius: 999px;
+        padding: 0.1875rem 0.625rem;
+        border-radius: 62.4375rem;
         flex-shrink: 0;
       }
       .sw-status-pill.success {
-        background: rgba(16, 185, 129, 0.12);
-        color: var(--c-success);
+        background-color: color-mix(in oklch, var(--success) 12%, transparent);
+        color: var(--success-ink);
       }
       .sw-status-pill.danger {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--c-danger);
+        background-color: color-mix(
+          in oklch,
+          var(--destructive) 10%,
+          transparent
+        );
+        color: var(--destructive-ink);
       }
       .sw-status-pill.active {
-        background: rgba(99, 102, 241, 0.1);
-        color: var(--c-active);
+        background-color: color-mix(in oklch, var(--primary) 10%, transparent);
+        color: var(--primary-ink);
       }
       .sw-status-pill.neutral {
-        background: var(--c-surface);
-        color: var(--c-muted);
+        background-color: var(--card);
+        color: var(--primary-ink);
       }
 
       .sw-submitted-by {
-        font-size: 12px;
-        color: var(--c-muted);
+        font-size: 0.75rem;
+        color: var(--primary-ink);
         flex-shrink: 0;
       }
 
       /* ── Step tracker ── */
       .sw-steps {
-        padding: 28px 24px;
+        padding: 1.75rem 1.5rem;
         display: flex;
         flex-direction: column;
       }
 
       .sw-step {
         display: flex;
-        gap: 16px;
-        min-height: 80px;
+        gap: 1rem;
+        min-height: 5rem;
       }
       .sw-step:last-child {
         min-height: auto;
@@ -944,12 +938,12 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         flex-direction: column;
         align-items: center;
         flex-shrink: 0;
-        width: 28px;
+        width: 1.75rem;
       }
 
       .sw-step-icon {
-        width: 28px;
-        height: 28px;
+        width: 1.75rem;
+        height: 1.75rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -958,109 +952,100 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         position: relative;
       }
       .sw-step-icon.completed {
-        background: var(--c-success);
-        color: #fff;
+        background-color: var(--success);
+        color: var(--success-foreground);
       }
       .sw-step-icon.current {
-        background: var(--c-active);
-        color: #fff;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .sw-step-icon.blocked {
-        background: var(--c-danger);
-        color: #fff;
+        background-color: var(--destructive);
+        color: var(--destructive-foreground);
       }
       .sw-step-icon.in-progress {
-        background: var(--c-active);
-        color: #fff;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .sw-step-icon.upcoming {
-        background: var(--c-surface);
-        border: 2px solid var(--c-border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 2px solid var(--border);
       }
 
       .sw-step-spinner {
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: #fff;
+        width: 0.875rem;
+        height: 0.875rem;
+        border: 2px solid color-mix(in oklch, var(--card) 30%, transparent);
+        border-top-color: var(--border);
         border-radius: 50%;
         animation: stepSpin 0.8s linear infinite;
       }
 
       .sw-step-pulse {
-        width: 10px;
-        height: 10px;
+        width: 0.625rem;
+        height: 0.625rem;
         border-radius: 50%;
-        background: #fff;
+        background-color: var(--card);
+        color: var(--card-foreground);
         animation: stepPulse 2s ease-in-out infinite;
       }
 
       .sw-step-dot {
-        width: 8px;
-        height: 8px;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
-        background: var(--c-border);
+        background-color: var(--border);
       }
 
       .sw-step-connector {
         flex: 1;
         width: 2px;
-        min-height: 20px;
-        margin: 4px 0;
+        min-height: 1.25rem;
+        margin: 0.25rem 0;
       }
       .sw-step-connector.completed {
-        background: var(--c-success);
+        background-color: var(--success);
+        color: var(--success-foreground);
       }
       .sw-step-connector.current {
-        background: linear-gradient(
-          to bottom,
-          var(--c-active),
-          var(--c-border)
-        );
+        background: linear-gradient(to bottom, var(--primary), var(--border));
       }
       .sw-step-connector.in-progress {
-        background: linear-gradient(
-          to bottom,
-          var(--c-active),
-          var(--c-border)
-        );
+        background: linear-gradient(to bottom, var(--primary), var(--border));
       }
       .sw-step-connector.blocked {
-        background: linear-gradient(
-          to bottom,
-          var(--c-danger),
-          var(--c-border)
-        );
+        background: linear-gradient(to bottom, var(--card), var(--border));
       }
       .sw-step-connector.upcoming {
-        background: var(--c-border);
+        background-color: var(--border);
       }
 
       .sw-step-content {
         flex: 1;
         min-width: 0;
-        padding-bottom: 24px;
+        padding-bottom: 1.5rem;
       }
       .sw-step:last-child .sw-step-content {
         padding-bottom: 0;
       }
 
       .sw-step-label {
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 600;
-        color: var(--c-text);
+        color: var(--foreground);
         margin-bottom: 2px;
       }
       .sw-step.completed .sw-step-label {
-        color: var(--c-muted);
+        color: var(--primary-ink);
       }
       .sw-step.upcoming .sw-step-label {
-        color: var(--c-muted);
+        color: var(--primary-ink);
       }
 
       .sw-step-description {
-        font-size: 12px;
-        color: var(--c-muted);
+        font-size: 0.75rem;
+        color: var(--primary-ink);
         line-height: 1.4;
       }
 
@@ -1068,24 +1053,24 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
       .sw-step-status-detail {
         display: flex;
         align-items: center;
-        gap: 6px;
-        margin-top: 6px;
-        font-size: 12px;
+        gap: 0.375rem;
+        margin-top: 0.375rem;
+        font-size: 0.75rem;
         font-weight: 600;
         line-height: 1.4;
       }
       .sw-step-status-detail.in-progress {
-        color: var(--c-active);
+        color: var(--primary-ink);
       }
       .sw-step-status-detail.blocked {
-        color: var(--c-danger);
+        color: var(--destructive-ink);
       }
 
       .sw-status-spinner-small {
-        width: 12px;
-        height: 12px;
-        border: 2px solid rgba(99, 102, 241, 0.25);
-        border-top-color: var(--c-active);
+        width: 0.75rem;
+        height: 0.75rem;
+        border: 2px solid color-mix(in oklch, var(--primary) 25%, transparent);
+        border-top-color: var(--primary);
         border-radius: 50%;
         animation: stepSpin 0.8s linear infinite;
         flex-shrink: 0;
@@ -1093,17 +1078,18 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
 
       /* ── Step detail cards ── */
       .sw-step-detail {
-        margin-top: 10px;
+        margin-top: 0.625rem;
       }
 
       .sw-fitted-card-container {
         position: relative;
-        max-width: 360px;
-        height: 180px;
-        border-radius: 10px;
-        border: 1px solid var(--c-border);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        margin-top: 15px;
+        max-width: 22.5rem;
+        height: 11.25rem;
+        border-radius: 0.625rem;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 8px
+          color-mix(in oklch, var(--foreground) 6%, transparent);
+        margin-top: 0.9375rem;
         overflow: visible;
       }
 
@@ -1114,65 +1100,72 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
 
       .sw-source-badge {
         position: absolute;
-        top: -10px;
-        right: 10px;
+        top: -0.625rem;
+        right: 0.625rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 3px;
-        background-color: var(--c-warning);
-        color: var(--c-warning-text);
+        gap: 0.1875rem;
+        background-color: var(--warning);
+        color: var(--warning-foreground);
         font: 600 var(--boxel-font-sm);
-        padding: 3px 10px;
-        border-radius: 4px;
+        padding: 0.1875rem 0.625rem;
+        border-radius: 0.25rem;
         z-index: 15;
         white-space: nowrap;
         letter-spacing: 0.1px;
         text-transform: uppercase;
-        font-size: 10px;
-        box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+        font-size: 0.625rem;
+        box-shadow: 0 2px 4px
+          color-mix(in oklch, var(--warning) 20%, transparent);
         border: none;
       }
 
       .sw-source-icon {
-        width: 10px;
-        height: 10px;
+        width: 0.625rem;
+        height: 0.625rem;
         flex-shrink: 0;
       }
 
       .sw-embedded-card-container {
         max-width: 100%;
-        border-radius: 10px;
+        border-radius: 0.625rem;
         overflow: hidden;
-        border: 1px solid var(--c-border);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 8px
+          color-mix(in oklch, var(--foreground) 6%, transparent);
       }
 
       .sw-lint-errors {
-        background: rgba(239, 68, 68, 0.06);
-        border: 1px solid rgba(239, 68, 68, 0.2);
-        border-radius: 8px;
-        padding: 10px 12px;
+        background-color: color-mix(
+          in oklch,
+          var(--destructive) 6%,
+          transparent
+        );
+        border: 1px solid
+          color-mix(in oklch, var(--destructive) 20%, transparent);
+        border-radius: 0.5rem;
+        padding: 0.625rem 0.75rem;
       }
       .sw-lint-header {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--c-danger);
-        margin-bottom: 6px;
+        color: var(--destructive-ink);
+        margin-bottom: 0.375rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
       }
       .sw-lint-error-line {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
-        color: var(--c-text);
+        color: var(--foreground);
         line-height: 1.5;
         padding: 2px 0;
         word-break: break-word;
       }
       .sw-lint-info {
-        font-size: 12px;
-        color: var(--c-success);
+        font-size: 0.75rem;
+        color: var(--success-ink);
         font-weight: 600;
       }
 
@@ -1180,7 +1173,8 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
       .sw-sidebar {
         display: flex;
         flex-direction: column;
-        background: var(--c-surface);
+        background-color: var(--card);
+        color: var(--card-foreground);
         overflow-y: auto;
       }
 
@@ -1188,78 +1182,67 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 24px 16px 20px;
-        border-bottom: 1px solid var(--c-border);
-        background: var(--c-bg);
+        padding: 1.5rem 1rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
 
       .sw-donut {
         --pct: 0;
-        --ring: var(--c-neutral);
-        --track: #e8ecf4;
-        width: 110px;
-        height: 110px;
+        width: 6.875rem;
+        height: 6.875rem;
         border-radius: 50%;
         background:
-          radial-gradient(closest-side, var(--c-bg) 72%, transparent 74%),
-          conic-gradient(var(--ring) calc(var(--pct) * 1%), var(--track) 0);
+          radial-gradient(closest-side, var(--card) 72%, transparent 74%),
+          conic-gradient(var(--ring) calc(var(--pct) * 1%), var(--card) 0);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-      }
-      .sw-donut.success {
-        --ring: var(--c-success);
-      }
-      .sw-donut.danger {
-        --ring: var(--c-danger);
-      }
-      .sw-donut.active {
-        --ring: var(--c-active);
-      }
-      .sw-donut.neutral {
-        --ring: var(--c-neutral);
+        box-shadow: 0 8px 24px
+          color-mix(in oklch, var(--foreground) 6%, transparent);
       }
 
       .sw-donut-pct {
-        font-size: 20px;
+        font-size: 1.25rem;
         font-weight: 800;
-        color: var(--c-text);
+        color: var(--foreground);
         line-height: 1;
       }
       .sw-donut-label {
-        font-size: 10px;
-        color: var(--c-muted);
+        font-size: 0.625rem;
+        color: var(--primary-ink);
         letter-spacing: 0.04em;
       }
 
       /* ── Sidebar sections ── */
       .sw-sidebar-section {
-        padding: 16px;
-        border-bottom: 1px solid var(--c-border);
-        background: var(--c-bg);
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .sw-sidebar-heading {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--c-muted);
-        margin-bottom: 10px;
+        color: var(--primary-ink);
+        margin-bottom: 0.625rem;
       }
 
       /* ── Sidebar steps ── */
       .sw-sidebar-step {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 5px 0;
+        gap: 0.5rem;
+        padding: 0.3125rem 0;
       }
 
       .sw-sidebar-icon {
-        width: 18px;
-        height: 18px;
+        width: 1.125rem;
+        height: 1.125rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -1267,81 +1250,84 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         flex-shrink: 0;
       }
       .sw-sidebar-icon.completed {
-        background: var(--c-success);
-        color: #fff;
+        background-color: var(--success);
+        color: var(--success-foreground);
       }
       .sw-sidebar-icon.in-progress {
-        background: var(--c-active);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .sw-sidebar-icon.current {
-        background: var(--c-active);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .sw-sidebar-icon.blocked {
-        background: var(--c-danger);
-        color: #fff;
+        background-color: var(--destructive);
+        color: var(--destructive-foreground);
       }
 
       .sw-sidebar-spinner-small {
-        width: 8px;
-        height: 8px;
-        border: 1.5px solid rgba(255, 255, 255, 0.3);
-        border-top-color: #fff;
+        width: 0.5rem;
+        height: 0.5rem;
+        border: 1.5px solid color-mix(in oklch, var(--card) 30%, transparent);
+        border-top-color: var(--border);
         border-radius: 50%;
         animation: stepSpin 0.8s linear infinite;
       }
       .sw-sidebar-icon.upcoming {
-        border: 2px solid var(--c-border);
+        border: 2px solid var(--border);
       }
 
       .sw-sidebar-dot {
-        width: 6px;
-        height: 6px;
+        width: 0.375rem;
+        height: 0.375rem;
         border-radius: 50%;
       }
       .sw-sidebar-dot.current {
-        background: #fff;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .sw-sidebar-dot.upcoming {
-        background: var(--c-border);
+        background-color: var(--border);
       }
 
       .sw-sidebar-step-label {
-        font-size: 12px;
-        color: var(--c-text);
+        font-size: 0.75rem;
+        color: var(--foreground);
       }
       .sw-sidebar-step.completed .sw-sidebar-step-label {
-        color: var(--c-muted);
+        color: var(--primary-ink);
         text-decoration: line-through;
         opacity: 0.7;
       }
       .sw-sidebar-step.in-progress .sw-sidebar-step-label {
         font-weight: 700;
-        color: var(--c-active);
+        color: var(--primary-ink);
       }
       .sw-sidebar-step.current .sw-sidebar-step-label {
         font-weight: 700;
       }
       .sw-sidebar-step.upcoming .sw-sidebar-step-label {
-        color: var(--c-muted);
+        color: var(--primary-ink);
       }
 
       /* ── Sidebar participants ── */
       .sw-sidebar-participant {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 5px 0;
+        gap: 0.5rem;
+        padding: 0.3125rem 0;
       }
       .sw-sidebar-avatar {
-        width: 28px;
-        height: 28px;
+        width: 1.75rem;
+        height: 1.75rem;
         border-radius: 50%;
-        background: #1e293b;
-        color: #fff;
+        background-color: var(--card);
+        color: var(--card-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 800;
         flex-shrink: 0;
       }
@@ -1351,22 +1337,22 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         min-width: 0;
       }
       .sw-sidebar-participant-name {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--c-text);
+        color: var(--foreground);
       }
       .sw-sidebar-participant-role {
-        font-size: 11px;
-        color: var(--c-muted);
+        font-size: 0.6875rem;
+        color: var(--primary-ink);
       }
 
       /* ── Sidebar linked cards ── */
       .sw-sidebar-fitted-card {
         position: relative;
-        height: 70px;
-        border-radius: 8px;
-        border: 1px solid var(--c-border);
-        margin-bottom: 6px;
+        height: 4.375rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        margin-bottom: 0.375rem;
         overflow: visible;
       }
 
@@ -1375,8 +1361,8 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         overflow: hidden;
       }
       .sw-sidebar-empty {
-        font-size: 12px;
-        color: var(--c-muted);
+        font-size: 0.75rem;
+        color: var(--primary-ink);
       }
 
       /* ── Animations ── */
@@ -1399,7 +1385,7 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
 
       /* ── Catalog link ── */
       .sw-catalog-link {
-        margin-top: 8px;
+        margin-top: 0.5rem;
       }
 
       /* ── Responsive ── */
@@ -1547,9 +1533,14 @@ export class SubmissionWorkflowCard extends CardDef {
           width: 100%;
           height: 100%;
           box-sizing: border-box;
-          background: linear-gradient(160deg, #0f172a, #1e293b 55%, #312e81);
-          color: #e2e8f0;
-          padding: 14px 16px;
+          background: linear-gradient(
+            160deg,
+            var(--card),
+            var(--card) 55%,
+            var(--card)
+          );
+          color: var(--card-foreground);
+          padding: 0.875rem 1rem;
           display: flex;
           flex-direction: column;
           font-family:
@@ -1564,37 +1555,40 @@ export class SubmissionWorkflowCard extends CardDef {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 8px;
+          margin-bottom: 0.5rem;
         }
         .sw-fitted-status {
-          font-size: 9px;
+          font-size: 0.5625rem;
           font-weight: 700;
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          padding: 2px 7px;
-          border-radius: 4px;
-          background: rgba(99, 102, 241, 0.18);
-          color: #a5b4fc;
+          padding: 2px 0.4375rem;
+          border-radius: 0.25rem;
+          background-color: color-mix(
+            in oklch,
+            var(--primary) 18%,
+            transparent
+          );
+          color: var(--primary-ink);
         }
         .sw-fitted-ring {
           --pct: 0;
-          --ring-c: #6366f1;
-          --track-c: rgba(255, 255, 255, 0.1);
-          width: 28px;
-          height: 28px;
+          --track-c: color-mix(in oklch, var(--card) 10%, transparent);
+          width: 1.75rem;
+          height: 1.75rem;
           border-radius: 50%;
           flex-shrink: 0;
           background:
-            radial-gradient(closest-side, #0f172a 64%, transparent 66%),
+            radial-gradient(closest-side, var(--card) 64%, transparent 66%),
             conic-gradient(
-              var(--ring-c) calc(var(--pct) * 1%),
+              var(--primary) calc(var(--pct) * 1%),
               var(--track-c) 0
             );
         }
         .sw-fitted-title {
-          font-size: 13px;
+          font-size: 0.8125rem;
           font-weight: 700;
-          color: #f1f5f9;
+          color: var(--card-foreground);
           margin-bottom: 2px;
           line-height: 1.35;
           white-space: nowrap;
@@ -1602,9 +1596,9 @@ export class SubmissionWorkflowCard extends CardDef {
           text-overflow: ellipsis;
         }
         .sw-fitted-subtitle {
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.4);
-          margin-bottom: 8px;
+          font-size: 0.6875rem;
+          color: color-mix(in oklch, var(--card-foreground) 40%, transparent);
+          margin-bottom: 0.5rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1612,9 +1606,9 @@ export class SubmissionWorkflowCard extends CardDef {
         .sw-fitted-meta {
           display: flex;
           align-items: center;
-          gap: 5px;
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.35);
+          gap: 0.3125rem;
+          font-size: 0.6875rem;
+          color: color-mix(in oklch, var(--card-foreground) 35%, transparent);
           margin-top: auto;
         }
       </style>
@@ -1662,11 +1656,11 @@ export class SubmissionWorkflowCard extends CardDef {
         .sw-embed {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 10px 14px;
-          background: linear-gradient(135deg, #0f172a, #1e293b);
-          color: #f1f5f9;
-          border-radius: 10px;
+          gap: 0.5rem;
+          padding: 0.625rem 0.875rem;
+          background: linear-gradient(135deg, var(--card), var(--card));
+          color: var(--card-foreground);
+          border-radius: 0.625rem;
           font-family:
             ui-sans-serif,
             system-ui,
@@ -1674,18 +1668,22 @@ export class SubmissionWorkflowCard extends CardDef {
             sans-serif;
         }
         .sw-embed-pill {
-          font-size: 9px;
+          font-size: 0.5625rem;
           font-weight: 700;
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          padding: 2px 6px;
-          border-radius: 4px;
+          padding: 2px 0.375rem;
+          border-radius: 0.25rem;
           flex-shrink: 0;
-          background: rgba(99, 102, 241, 0.18);
-          color: #a5b4fc;
+          background-color: color-mix(
+            in oklch,
+            var(--primary) 18%,
+            transparent
+          );
+          color: var(--primary-ink);
         }
         .sw-embed-title {
-          font-size: 13px;
+          font-size: 0.8125rem;
           font-weight: 700;
           flex: 1;
           min-width: 0;
@@ -1696,26 +1694,25 @@ export class SubmissionWorkflowCard extends CardDef {
         .sw-embed-ring-wrap {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 0.25rem;
           flex-shrink: 0;
         }
         .sw-embed-ring {
           --pct: 0;
-          --ring-c: #6366f1;
-          --track-c: rgba(255, 255, 255, 0.1);
-          width: 20px;
-          height: 20px;
+          --track-c: color-mix(in oklch, var(--card) 10%, transparent);
+          width: 1.25rem;
+          height: 1.25rem;
           border-radius: 50%;
           background:
-            radial-gradient(closest-side, #0f172a 65%, transparent 67%),
+            radial-gradient(closest-side, var(--card) 65%, transparent 67%),
             conic-gradient(
-              var(--ring-c) calc(var(--pct) * 1%),
+              var(--primary) calc(var(--pct) * 1%),
               var(--track-c) 0
             );
         }
         .sw-embed-pct {
-          font-size: 10px;
-          color: rgba(255, 255, 255, 0.5);
+          font-size: 0.625rem;
+          color: color-mix(in oklch, var(--card-foreground) 50%, transparent);
         }
       </style>
     </template>

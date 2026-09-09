@@ -174,19 +174,19 @@ export class BeatPatternField extends FieldDef {
       <style scoped>
         .beat-pattern-field {
           padding: 0.5rem 0.625rem;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.07);
-          border-radius: var(--radius-sm, var(--boxel-border-radius-sm));
+          background-color: color-mix(in oklch, var(--card) 3%, transparent);
+          border: 1px solid color-mix(in oklch, var(--card) 7%, transparent);
+          border-radius: var(--boxel-border-radius-sm);
         }
 
         .pattern-name {
           font-size: 0.5625rem;
           font-weight: 700;
-          color: rgba(255, 255, 255, 0.4);
+          color: color-mix(in oklch, var(--card-foreground) 40%, transparent);
           text-transform: uppercase;
           letter-spacing: 0.1em;
           margin-bottom: 0.375rem;
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
         }
 
         .pattern-tracks {
@@ -201,26 +201,32 @@ export class BeatPatternField extends FieldDef {
         }
 
         .dot {
-          width: 7px;
-          height: 5px;
+          width: 0.4375rem;
+          height: 0.3125rem;
           border-radius: 1px;
-          background: rgba(255, 255, 255, 0.08);
+          background-color: color-mix(in oklch, var(--card) 8%, transparent);
           transition: all 0.1s ease;
         }
 
         .track-kick .dot.on {
-          background: #ef4444;
-          box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
+          background-color: var(--destructive);
+          color: var(--destructive-foreground);
+          box-shadow: 0 0 4px
+            color-mix(in oklch, var(--destructive) 60%, transparent);
         }
 
         .track-snare .dot.on {
-          background: #3b82f6;
-          box-shadow: 0 0 4px rgba(59, 130, 246, 0.6);
+          background-color: var(--primary);
+          color: var(--primary-foreground);
+          box-shadow: 0 0 4px
+            color-mix(in oklch, var(--primary) 60%, transparent);
         }
 
         .track-hihat .dot.on {
-          background: #10b981;
-          box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
+          background-color: var(--success);
+          color: var(--success-foreground);
+          box-shadow: 0 0 4px
+            color-mix(in oklch, var(--success) 60%, transparent);
         }
       </style>
     </template>
@@ -287,18 +293,19 @@ export class BeatPatternCard extends CardDef {
 
       <style scoped>
         .beat-pattern-card {
-          background: linear-gradient(135deg, #0a0d14 0%, #111827 100%);
-          border-radius: var(--radius-xl, var(--boxel-border-radius-xl));
+          background: linear-gradient(135deg, var(--card) 0%, var(--card) 100%);
+          border-radius: var(--boxel-border-radius-xl);
           padding: 0.875rem;
-          color: #e2e8f0;
-          border: 1px solid rgba(59, 130, 246, 0.15);
+          color: var(--card-foreground);
+          border: 1px solid color-mix(in oklch, var(--primary) 15%, transparent);
           transition: all 0.2s ease;
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
         }
 
         .beat-pattern-card:hover {
-          border-color: rgba(59, 130, 246, 0.4);
-          box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+          border-color: color-mix(in oklch, var(--primary) 40%, transparent);
+          box-shadow: 0 0 20px
+            color-mix(in oklch, var(--primary) 10%, transparent);
         }
 
         .pattern-header {
@@ -312,10 +319,7 @@ export class BeatPatternCard extends CardDef {
           font-size: 0.875rem;
           font-weight: 700;
           margin: 0;
-          background: linear-gradient(135deg, #60a5fa, #a78bfa);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: var(--primary-ink);
         }
 
         .pattern-tags {
@@ -326,10 +330,10 @@ export class BeatPatternCard extends CardDef {
         }
 
         .genre-tag {
-          background: rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.5);
+          background-color: color-mix(in oklch, var(--card) 8%, transparent);
+          color: color-mix(in oklch, var(--card-foreground) 50%, transparent);
           padding: 0.125rem 0.375rem;
-          border-radius: 99px;
+          border-radius: 6.1875rem;
           font-size: 0.5rem;
           font-weight: 600;
           text-transform: uppercase;
@@ -337,10 +341,10 @@ export class BeatPatternCard extends CardDef {
         }
 
         .bpm-tag {
-          background: rgba(34, 211, 238, 0.12);
-          color: #22d3ee;
+          background-color: color-mix(in oklch, var(--info) 12%, transparent);
+          color: var(--info-ink);
           padding: 0.125rem 0.375rem;
-          border-radius: 99px;
+          border-radius: 6.1875rem;
           font-size: 0.5rem;
           font-weight: 700;
           letter-spacing: 0.05em;
@@ -348,7 +352,7 @@ export class BeatPatternCard extends CardDef {
 
         .pattern-desc {
           font-size: 0.6875rem;
-          color: rgba(255, 255, 255, 0.4);
+          color: color-mix(in oklch, var(--card-foreground) 40%, transparent);
           margin: 0 0 0.5rem 0;
           line-height: 1.5;
         }
@@ -359,12 +363,12 @@ export class BeatPatternCard extends CardDef {
 
         .pattern-footer {
           padding-top: 0.375rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          border-top: 1px solid color-mix(in oklch, var(--card) 6%, transparent);
         }
 
         .creator {
           font-size: 0.5625rem;
-          color: rgba(255, 255, 255, 0.3);
+          color: color-mix(in oklch, var(--card-foreground) 30%, transparent);
           font-style: italic;
         }
       </style>

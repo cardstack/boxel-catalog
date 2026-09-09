@@ -316,8 +316,8 @@ class IsolatedTemplate extends Component<typeof PrCard> {
         flex: 1;
         display: flex;
         flex-direction: column;
-        background: var(--card, #ffffff);
-        color: var(--card-foreground, #1f2328);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
 
       /* ── Status columns ── */
@@ -328,7 +328,7 @@ class IsolatedTemplate extends Component<typeof PrCard> {
       .status-divider {
         width: 1px;
         border: none;
-        background: var(--border, var(--boxel-border-color));
+        background-color: var(--border);
         flex-shrink: 0;
         margin: var(--boxel-sp-lg) 0;
       }
@@ -512,9 +512,9 @@ class FittedTemplate extends Component<typeof PrCard> {
         flex-direction: column;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        background: #0d1117;
-        color: #e6edf3;
-        border-bottom: 1px solid #30363d;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-bottom: 1px solid var(--border-strong);
       }
       .pr-title-row {
         display: flex;
@@ -526,7 +526,7 @@ class FittedTemplate extends Component<typeof PrCard> {
         margin: 0;
         font-size: var(--boxel-font-sm);
         font-weight: 600;
-        color: #e6edf3;
+        color: var(--card-foreground);
         line-height: 1.3;
         flex: 1;
         min-width: 0;
@@ -538,11 +538,11 @@ class FittedTemplate extends Component<typeof PrCard> {
       .pr-number {
         font-size: 0.85em;
         font-weight: 600;
-        color: #8b949e;
+        color: var(--subtle-foreground);
         white-space: nowrap;
       }
       .pr-github-link {
-        color: #8b949e;
+        color: var(--subtle-foreground);
         text-decoration: none;
         display: inline-flex;
         align-items: center;
@@ -551,11 +551,11 @@ class FittedTemplate extends Component<typeof PrCard> {
         padding-top: 2px;
       }
       .pr-github-link:hover {
-        color: #58a6ff;
+        color: var(--primary-ink);
       }
       .pr-github-link-icon {
-        width: 13px;
-        height: 13px;
+        width: 0.8125rem;
+        height: 0.8125rem;
       }
       .pr-meta {
         display: flex;
@@ -569,37 +569,37 @@ class FittedTemplate extends Component<typeof PrCard> {
         --boxel-pill-border-radius: 2em;
       }
       .pr-state-icon {
-        width: 11px;
-        height: 11px;
-        color: #fff;
+        width: 0.6875rem;
+        height: 0.6875rem;
+        color: var(--card-foreground);
       }
       .pr-state-label {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 600;
-        color: #fff;
+        color: var(--card-foreground);
       }
       .pr-meta-sep {
-        color: #484f58;
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-xs);
       }
       .pr-author {
         font-size: var(--boxel-font-xs);
-        color: #8b949e;
+        color: var(--subtle-foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 140px;
+        max-width: 8.75rem;
       }
       .pr-branch {
         font-size: var(--boxel-font-xs);
-        color: var(--pr-branch-foreground, #9ecbff);
-        border: 1px solid var(--pr-branch-border, #3d444d);
-        border-radius: 999px;
-        padding: 1px 4px 1px 8px;
-        max-width: 180px;
+        color: var(--primary-ink);
+        border: 1px solid var(--border-strong);
+        border-radius: 62.4375rem;
+        padding: 1px 0.25rem 1px 0.5rem;
+        max-width: 11.25rem;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 0.25rem;
       }
       .pr-branch-label {
         min-width: 0;
@@ -609,26 +609,22 @@ class FittedTemplate extends Component<typeof PrCard> {
       }
       .pr-branch-copy-button {
         border: none;
-        background: transparent;
+        background-color: transparent;
         color: inherit;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 2px;
-        border-radius: 999px;
+        border-radius: 62.4375rem;
         cursor: pointer;
         flex-shrink: 0;
       }
       .pr-branch-copy-button:hover {
-        background: color-mix(
-          in srgb,
-          var(--pr-branch-foreground, #9ecbff) 20%,
-          transparent
-        );
+        background-color: color-mix(in oklch, var(--primary) 20%, transparent);
       }
       .pr-branch-copy-icon {
-        width: 11px;
-        height: 11px;
+        width: 0.6875rem;
+        height: 0.6875rem;
       }
 
       /* ── Summary ── */
@@ -719,7 +715,7 @@ class FittedTemplate extends Component<typeof PrCard> {
         }
         .pr-title {
           -webkit-line-clamp: 1;
-          font-size: 10px;
+          font-size: 0.625rem;
         }
       }
 
@@ -769,30 +765,30 @@ class FittedTemplate extends Component<typeof PrCard> {
           -webkit-line-clamp: 3;
         }
         .pr-github-link-icon {
-          width: 18px;
-          height: 18px;
+          width: 1.125rem;
+          height: 1.125rem;
         }
         .pr-state-icon {
-          width: 15px;
-          height: 15px;
+          width: 0.9375rem;
+          height: 0.9375rem;
         }
         .pr-state-label {
           font-size: var(--boxel-font-sm);
         }
         .pr-author {
           font-size: var(--boxel-font-sm);
-          max-width: 200px;
+          max-width: 12.5rem;
         }
         .ci-status-row {
           padding: var(--boxel-sp-sm) var(--boxel-sp-lg);
         }
         .ci-donut {
-          width: 36px;
-          height: 36px;
+          width: 2.25rem;
+          height: 2.25rem;
         }
         .ci-donut-hole {
-          width: 20px;
-          height: 20px;
+          width: 1.25rem;
+          height: 1.25rem;
         }
         .review-status-row {
           padding: var(--boxel-sp-sm) var(--boxel-sp-lg);
@@ -809,11 +805,11 @@ class FittedTemplate extends Component<typeof PrCard> {
           -webkit-line-clamp: 3;
         }
         .pr-github-link-icon {
-          width: 20px;
-          height: 20px;
+          width: 1.25rem;
+          height: 1.25rem;
         }
         .pr-author {
-          max-width: 280px;
+          max-width: 17.5rem;
         }
         .ci-status-row,
         .review-status-row {

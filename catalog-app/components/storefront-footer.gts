@@ -15,8 +15,8 @@ export default class StorefrontFooter extends GlimmerComponent {
 
     <style scoped>
       .footer {
-        background: #14141a;
-        color: #fff;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .footer-inner {
         max-width: 80rem;
@@ -25,17 +25,17 @@ export default class StorefrontFooter extends GlimmerComponent {
       }
       .footer-title {
         margin: 0;
-        font: 700 1.5rem/1.1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        font: 700 1.5rem/1.1 var(--font-sans);
         letter-spacing: -0.02em;
       }
       .accent {
-        color: var(--accent, #16e098);
+        color: var(--accent-ink);
       }
       .footer-sub {
         margin: 0.5625rem 0 0;
         max-width: 34rem;
-        font: 400 0.875rem/1.5 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: #b7b4ab;
+        font: 400 0.875rem/1.5 var(--font-sans);
+        color: var(--subtle-foreground);
       }
     </style>
   </template>

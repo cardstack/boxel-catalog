@@ -85,7 +85,7 @@ export default class CurrentLocationAddon extends GlimmerComponent<CurrentLocati
         border-radius: var(--boxel-border-radius-sm);
         font-size: var(--boxel-font-size-xs);
         line-height: var(--boxel-line-height-xs);
-        background: var(--boxel-error-100);
+        background-color: var(--boxel-error-100);
         border-left: 3px solid var(--boxel-error-300);
         color: var(--boxel-error-300);
       }

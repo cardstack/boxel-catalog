@@ -44,7 +44,7 @@ export class VolumeControl extends GlimmerComponent<VolumeControlSignature> {
         align-items: center;
         gap: 0.5rem;
         padding-top: 0.5rem;
-        border-top: 1px solid var(--border, #e5e7eb);
+        border-top: 1px solid var(--border);
       }
 
       .volume-button {
@@ -57,7 +57,8 @@ export class VolumeControl extends GlimmerComponent<VolumeControlSignature> {
       .volume-slider {
         flex: 1;
         height: 0.25rem;
-        background: var(--muted, #e5e7eb);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border-radius: 0.125rem;
         appearance: none;
         cursor: pointer;
@@ -67,7 +68,8 @@ export class VolumeControl extends GlimmerComponent<VolumeControlSignature> {
         appearance: none;
         width: 0.75rem;
         height: 0.75rem;
-        background: var(--primary, #3b82f6);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border-radius: 50%;
         cursor: pointer;
       }
@@ -75,7 +77,8 @@ export class VolumeControl extends GlimmerComponent<VolumeControlSignature> {
       .volume-slider::-moz-range-thumb {
         width: 0.75rem;
         height: 0.75rem;
-        background: var(--primary, #3b82f6);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border-radius: 50%;
         cursor: pointer;
         border: none;

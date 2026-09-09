@@ -45,18 +45,18 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
   }
 
   get chipDotStyle() {
-    return htmlSafe(`background: var(${this.typeMeta.colorVar}, #ff5b9c);`);
+    return htmlSafe(`background-color: var(${this.typeMeta.colorVar});`);
   }
 
   get coverStyle() {
     let v = this.typeMeta.colorVar;
     return htmlSafe(
-      `background: linear-gradient(135deg, color-mix(in srgb, var(${v}, #ff5b9c) 22%, transparent), color-mix(in srgb, var(${v}, #ff5b9c) 6%, transparent)), #fbfaf5;`,
+      `background: linear-gradient(135deg, color-mix(in oklch, var(${v}) 22%, transparent), color-mix(in oklch, var(${v}) 6%, transparent)), var(--card);`,
     );
   }
 
   get monogramStyle() {
-    return htmlSafe(`color: var(${this.typeMeta.colorVar}, #ff5b9c);`);
+    return htmlSafe(`color: var(${this.typeMeta.colorVar});`);
   }
 
   <template>
@@ -111,7 +111,8 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
           position: relative;
           width: 100%;
           height: 100%;
-          background: #1c1c22;
+          background-color: var(--card);
+          color: var(--card-foreground);
           overflow: hidden;
         }
         .media-img {
@@ -133,7 +134,7 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
           justify-content: center;
         }
         .monogram {
-          font: 600 4rem/1 var(--font-serif, 'IBM Plex Serif', serif);
+          font: 600 4rem/1 var(--font-serif);
         }
         .type-chip {
           position: absolute;
@@ -144,10 +145,11 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
           align-items: center;
           gap: 0.375rem;
           padding: 0.3125rem 0.625rem;
-          background: color-mix(in srgb, var(--card, #fff) 92%, transparent);
+          background-color: color-mix(in oklch, var(--card) 92%, transparent);
           backdrop-filter: blur(0.25rem);
-          border-radius: 999px;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+          border-radius: 62.4375rem;
+          box-shadow: 0 2px 6px
+            color-mix(in oklch, var(--foreground) 12%, transparent);
         }
         .type-dot {
           width: 0.375rem;
@@ -155,10 +157,10 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
           border-radius: 50%;
         }
         .type-label {
-          font: 600 0.59rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
+          font: 600 0.59rem/1 var(--font-mono);
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: var(--foreground, #16161c);
+          color: var(--foreground);
         }
         .caption {
           position: absolute;
@@ -169,11 +171,11 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
           padding: 2.375rem 0.9375rem 0.875rem;
           background: linear-gradient(
             to top,
-            rgba(13, 13, 18, 0.94),
-            rgba(13, 13, 18, 0.74) 42%,
-            rgba(13, 13, 18, 0)
+            color-mix(in oklch, var(--card) 94%, transparent),
+            color-mix(in oklch, var(--card) 74%, transparent) 42%,
+            color-mix(in oklch, var(--card) 0%, transparent)
           );
-          color: #fff;
+          color: var(--card-foreground);
           pointer-events: none;
         }
         .caption-head {
@@ -184,18 +186,18 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
         }
         .caption-title {
           margin: 0;
-          font: 600 1rem/1.15 var(--font-sans, 'IBM Plex Sans', sans-serif);
-          color: #fff;
+          font: 600 1rem/1.15 var(--font-sans);
+          color: var(--card-foreground);
         }
         .caption-author {
-          font: 500 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
-          color: #b8b4ab;
+          font: 500 0.6875rem/1 var(--font-mono);
+          color: var(--subtle-foreground);
           white-space: nowrap;
         }
         .caption-blurb {
           margin: 0.375rem 0 0;
-          font: 400 0.75rem/1.4 var(--font-sans, 'IBM Plex Sans', sans-serif);
-          color: #d8d5cc;
+          font: 400 0.75rem/1.4 var(--font-sans);
+          color: var(--subtle-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -221,10 +223,10 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
           background: none;
           position: static;
           padding: 0.375rem 0.625rem;
-          color: var(--foreground, #16161c);
+          color: var(--foreground);
         }
         .caption-title {
-          color: var(--foreground, #16161c);
+          color: var(--foreground);
           -webkit-line-clamp: 1;
         }
         .type-chip {

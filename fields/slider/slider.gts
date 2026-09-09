@@ -87,7 +87,7 @@ export default class SliderField extends NumberField {
         .slider-value {
           font-weight: 600;
           font-size: var(--boxel-font-sm);
-          color: var(--primary, var(--boxel-purple));
+          color: var(--primary-ink);
           text-align: right;
           flex-shrink: 0;
         }
@@ -149,12 +149,12 @@ export default class SliderField extends NumberField {
         .slider-atom {
           display: inline-flex;
           align-items: center;
-          gap: var(--boxel-sp-5xs, 0.25rem);
+          gap: var(--boxel-sp-5xs);
         }
         .slider-value {
           font-size: 0.6875rem;
           font-weight: 600;
-          color: var(--foreground, #0f172a);
+          color: var(--foreground);
         }
       </style>
     </template>

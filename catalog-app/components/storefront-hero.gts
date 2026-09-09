@@ -54,12 +54,12 @@ class HeroSpotlightSlide extends GlimmerComponent<SlideSignature> {
   get coverStyle() {
     let v = this.typeMeta.colorVar;
     return htmlSafe(
-      `background: linear-gradient(135deg, color-mix(in srgb, var(${v}, #ff5b9c) 22%, transparent), color-mix(in srgb, var(${v}, #ff5b9c) 6%, transparent)), #fbfaf5;`,
+      `background: linear-gradient(135deg, color-mix(in oklch, var(${v}) 22%, transparent), color-mix(in oklch, var(${v}) 6%, transparent)), var(--card);`,
     );
   }
 
   get monogramStyle() {
-    return htmlSafe(`color: var(${this.typeMeta.colorVar}, #ff5b9c);`);
+    return htmlSafe(`color: var(${this.typeMeta.colorVar});`);
   }
 
   <template>
@@ -102,7 +102,7 @@ class HeroSpotlightSlide extends GlimmerComponent<SlideSignature> {
         justify-content: center;
       }
       .monogram {
-        font: 600 4rem/1 var(--font-serif, 'IBM Plex Serif', serif);
+        font: 600 4rem/1 var(--font-serif);
       }
     </style>
   </template>
@@ -234,15 +234,26 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
       .hero {
         position: relative;
         overflow: hidden;
-        background: color-mix(in srgb, var(--background, #f0ede4) 92%, #fff);
-        border-bottom: 1px solid var(--border, #ddd8cb);
+        background-color: color-mix(
+          in oklch,
+          var(--background) 92%,
+          var(--card)
+        );
+        border-bottom: 1px solid var(--border);
       }
       .grid-paper {
         position: absolute;
         inset: 0;
         background-image:
-          linear-gradient(#15151b0a 1px, transparent 1px),
-          linear-gradient(90deg, #15151b0a 1px, transparent 1px);
+          linear-gradient(
+            color-mix(in oklch, var(--card) 4%, transparent) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            color-mix(in oklch, var(--card) 4%, transparent) 1px,
+            transparent 1px
+          );
         background-size: 1.875rem 1.875rem;
         pointer-events: none;
       }
@@ -257,7 +268,7 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
         pointer-events: none;
         background: radial-gradient(
           circle,
-          color-mix(in srgb, var(--primary, #11cf8a) 30%, transparent) 0%,
+          color-mix(in oklch, var(--primary) 30%, transparent) 0%,
           transparent 70%
         );
         animation: hglow 12s infinite;
@@ -274,56 +285,58 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
       }
       .headline {
         margin: 0;
-        font: 700 4.875rem/0.92 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        font: 700 4.875rem/0.92 var(--font-sans);
         letter-spacing: -0.045em;
-        color: var(--foreground, #15151b);
+        color: var(--foreground);
       }
       .headline-accent {
         /* Text reads better a shade dimmer than the true, neon --primary
            brand color (#00ffba) — that hue is reserved for button fills. */
-        color: #11cf8a;
+        color: var(--success-ink);
       }
       .lead {
         margin: 1.625rem 0 0;
-        font: 600 1.375rem/1.25 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        font: 600 1.375rem/1.25 var(--font-sans);
         letter-spacing: -0.01em;
-        color: var(--foreground, #15151b);
+        color: var(--foreground);
       }
       .sub {
         margin: 0.75rem 0 0;
         max-width: 27.5rem;
-        font: 400 0.97rem/1.6 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: var(--muted-foreground, #5f5b52);
+        font: 400 0.97rem/1.6 var(--font-sans);
+        color: var(--muted-foreground);
       }
       .chips {
         display: inline-flex;
         align-items: center;
         margin-top: 1.625rem;
-        border: 1px solid var(--border, #d3cdbf);
+        border: 1px solid var(--border);
         border-radius: 0.625rem;
         overflow: hidden;
-        background: var(--card, #fff);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .chip {
         padding: 0.625rem 0.875rem;
-        font: 600 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
+        font: 600 0.6875rem/1 var(--font-mono);
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--muted-foreground, #6f6c64);
-        border-left: 1px solid var(--border, #e7e3d8);
+        color: var(--muted-foreground);
+        border-left: 1px solid var(--border);
       }
       .chip-live {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        color: var(--foreground, #15151b);
+        color: var(--foreground);
         border-left: none;
       }
       .chip-dot {
         width: 0.4375rem;
         height: 0.4375rem;
         border-radius: 50%;
-        background: #11cf8a;
+        background-color: var(--success);
+        color: var(--success-foreground);
       }
       .ctas {
         display: flex;
@@ -333,12 +346,12 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
       }
       .cta-primary {
         padding: 0.9375rem 1.625rem;
-        background: var(--primary, #00ffba);
-        color: var(--primary-foreground, #04231a);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border: none;
         border-radius: 0.75rem;
         cursor: pointer;
-        font: 700 0.875rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        font: 700 0.875rem/1 var(--font-sans);
       }
       .cta-primary:hover {
         filter: brightness(0.94);
@@ -346,13 +359,13 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
       }
       .cta-link {
         border: none;
-        background: transparent;
+        background-color: transparent;
         cursor: pointer;
-        font: 600 0.875rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: var(--foreground, #15151b);
+        font: 600 0.875rem/1 var(--font-sans);
+        color: var(--foreground);
       }
       .cta-link:hover {
-        color: #11cf8a;
+        color: var(--success-ink);
       }
 
       /* Spotlight carousel: a fixed-ratio stage crossfading between 1-3
@@ -363,7 +376,7 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
         aspect-ratio: 4 / 3;
         border-radius: 1.125rem;
         overflow: hidden;
-        box-shadow: var(--shadow-xl, 0 30px 70px -24px rgba(0, 0, 0, 0.4));
+        box-shadow: var(--shadow-xl);
       }
       .stage.rotating .slide {
         position: absolute;

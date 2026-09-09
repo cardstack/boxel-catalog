@@ -156,11 +156,11 @@ export class StepRangeScroller extends Component<StepRangeScrollerArgs> {
         transform: translateX(-50%);
         width: 2px;
         height: 0.5rem;
-        background: #ccc;
+        background-color: var(--border);
       }
       .step-label {
         font-size: 0.75rem;
-        color: #666;
+        color: var(--muted-foreground);
         display: block;
         transform: rotate(-45deg);
         transform-origin: center center;
@@ -190,9 +190,10 @@ export class StepRangeScroller extends Component<StepRangeScrollerArgs> {
         width: 1.25rem;
         height: 1.25rem;
         border-radius: 50%;
-        background: #fff;
-        border: 2px solid #2d72d2;
-        box-shadow: 0 0 2px #888;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 2px solid var(--primary);
+        box-shadow: 0 0 2px var(--foreground);
         cursor: pointer;
         position: relative;
         z-index: 10;
@@ -201,22 +202,23 @@ export class StepRangeScroller extends Component<StepRangeScrollerArgs> {
         width: 1.25rem;
         height: 1.25rem;
         border-radius: 50%;
-        background: #fff;
-        border: 2px solid #2d72d2;
-        box-shadow: 0 0 2px #888;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 2px solid var(--primary);
+        box-shadow: 0 0 2px var(--foreground);
         cursor: pointer;
         position: relative;
         z-index: 10;
       }
       .slider::-webkit-slider-runnable-track {
         height: 0.5rem;
-        background: transparent;
+        background-color: transparent;
         border-radius: 0.25rem;
       }
       .slider-background {
         position: absolute;
         height: 0.5rem;
-        background: #e0e0e0;
+        background-color: var(--inset);
         border-radius: 0.25rem;
         top: 1rem;
         width: 100%;
@@ -225,7 +227,8 @@ export class StepRangeScroller extends Component<StepRangeScrollerArgs> {
       .slider-range {
         position: absolute;
         height: 0.5rem;
-        background: #2d72d2;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border-radius: 0.25rem;
         top: 1rem;
         z-index: 1;

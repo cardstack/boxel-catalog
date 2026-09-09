@@ -98,8 +98,8 @@ export class GeoSearchPointEmbedded extends Component<
       }
 
       .pin-icon {
-        width: 14px;
-        height: 14px;
+        width: 0.875rem;
+        height: 0.875rem;
         flex-shrink: 0;
         color: var(--boxel-red);
       }
@@ -141,8 +141,8 @@ export class GeoSearchPointAtom extends Component<typeof GeoSearchPointField> {
       }
 
       .pin-icon {
-        width: 14px;
-        height: 14px;
+        width: 0.875rem;
+        height: 0.875rem;
         flex-shrink: 0;
         color: var(--boxel-red);
       }

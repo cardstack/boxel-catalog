@@ -12,7 +12,7 @@ export function keyOf(obj: unknown): string {
   return k;
 }
 export function htmlBg(color: string | null | undefined) {
-  return htmlSafe(`background:${color || '#c5a35c'}`);
+  return htmlSafe(`background-color:${color || 'var(--accent)'}`);
 }
 export function htmlBarWidth(pct: string) {
   return htmlSafe(`width:${pct}`);

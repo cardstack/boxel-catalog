@@ -54,11 +54,14 @@ export class Model extends CardDef {
           bottom: 0;
           left: 0;
           right: 0;
-          background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+          background: linear-gradient(
+            transparent,
+            color-mix(in oklch, var(--foreground) 50%, transparent)
+          );
           padding: var(--boxel-sp-xs);
         }
         .name {
-          color: white;
+          color: var(--card-foreground);
           font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }
@@ -85,8 +88,8 @@ export class Model extends CardDef {
           gap: var(--boxel-sp-sm);
         }
         .avatar {
-          width: 48px;
-          height: 48px;
+          width: 3rem;
+          height: 3rem;
           object-fit: cover;
           object-position: top;
           border-radius: 50%;

@@ -58,27 +58,24 @@ class AtomTemplate extends Component<typeof Player> {
 
     <style scoped>
       .player-chip {
-        --player-chip-red: #a91d2f;
-        --player-chip-cream: #fff5d6;
-        --player-chip-felt: #123f24;
-
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         max-width: 100%;
         min-height: 2rem;
         padding: 0.1875rem 0.7rem 0.1875rem 0.1875rem;
-        border: 1px solid rgba(212, 175, 55, 0.32);
-        border-radius: 999px;
+        border: 1px solid color-mix(in oklch, var(--accent) 32%, transparent);
+        border-radius: 62.4375rem;
         background: linear-gradient(
           90deg,
-          rgba(7, 39, 19, 0.98),
-          rgba(7, 14, 18, 0.96)
+          color-mix(in oklch, var(--card) 98%, transparent),
+          color-mix(in oklch, var(--card) 96%, transparent)
         );
-        color: var(--player-chip-cream);
+        color: var(--warning-ink);
         box-shadow:
-          inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-          0 0.375rem 1rem rgba(0, 0, 0, 0.28);
+          inset 0 0 0 1px color-mix(in oklch, var(--card) 6%, transparent),
+          0 0.375rem 1rem
+            color-mix(in oklch, var(--foreground) 28%, transparent);
       }
 
       .player-chip__avatar {
@@ -91,20 +88,16 @@ class AtomTemplate extends Component<typeof Player> {
         overflow: hidden;
         border-radius: 50%;
         background:
-          radial-gradient(
-            circle,
-            var(--player-chip-felt) 0 42%,
-            transparent 43%
-          ),
+          radial-gradient(circle, var(--success) 0 42%, transparent 43%),
           repeating-conic-gradient(
             from 0deg,
-            var(--player-chip-cream) 0 11deg,
-            var(--player-chip-red) 11deg 22deg
+            var(--warning) 0 11deg,
+            var(--destructive) 11deg 22deg
           );
-        color: var(--player-chip-cream);
+        color: var(--warning-ink);
         box-shadow:
-          inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-          0 0 0 1px rgba(0, 0, 0, 0.2);
+          inset 0 0 0 1px color-mix(in oklch, var(--card) 18%, transparent),
+          0 0 0 1px color-mix(in oklch, var(--foreground) 20%, transparent);
       }
 
       .player-chip__image {
@@ -223,15 +216,12 @@ class FittedTemplate extends Component<typeof Player> {
 
     <style scoped>
       .player-fitted {
-        --vip-gold: #d4af37;
-        --vip-gold-glow: rgba(212, 175, 55, 0.45);
-        --chip-felt: #123f24;
-        --chip-cream: #fff5d6;
-        --chip-red: #a91d2f;
+        --vip-gold-glow: color-mix(in oklch, var(--accent) 45%, transparent);
+        --chip-red: var(--destructive);
 
         width: 100%;
         height: 100%;
-        color: #f6eed1;
+        color: var(--card-foreground);
       }
 
       .badge,
@@ -248,10 +238,11 @@ class FittedTemplate extends Component<typeof Player> {
         border-radius: 0.75rem;
         background: linear-gradient(
           180deg,
-          rgba(19, 28, 36, 0.96),
-          rgba(9, 14, 19, 0.96)
+          color-mix(in oklch, var(--card) 96%, transparent),
+          color-mix(in oklch, var(--card) 96%, transparent)
         );
-        box-shadow: 0 0.625rem 1.5rem rgba(0, 0, 0, 0.24);
+        box-shadow: 0 0.625rem 1.5rem
+          color-mix(in oklch, var(--foreground) 24%, transparent);
       }
 
       .badge::before,
@@ -265,17 +256,17 @@ class FittedTemplate extends Component<typeof Player> {
         background-image:
           repeating-linear-gradient(
             45deg,
-            var(--vip-gold) 0px,
-            var(--vip-gold) 1px,
+            var(--card) 0px,
+            var(--card) 1px,
             transparent 1px,
-            transparent 18px
+            transparent 1.125rem
           ),
           repeating-linear-gradient(
             -45deg,
-            var(--vip-gold) 0px,
-            var(--vip-gold) 1px,
+            var(--accent) 0px,
+            var(--accent) 1px,
             transparent 1px,
-            transparent 18px
+            transparent 1.125rem
           );
         border-radius: inherit;
         pointer-events: none;
@@ -327,23 +318,24 @@ class FittedTemplate extends Component<typeof Player> {
         overflow: hidden;
         border-radius: 50%;
         background:
-          radial-gradient(circle, var(--chip-felt) 0 42%, transparent 43%),
+          radial-gradient(circle, var(--success) 0 42%, transparent 43%),
           repeating-conic-gradient(
             from 0deg,
-            var(--chip-cream) 0 11deg,
+            var(--warning) 0 11deg,
             var(--chip-red) 11deg 22deg
           );
-        color: #f8f3df;
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+        color: var(--card-foreground);
+        box-shadow: inset 0 0 0 1px
+          color-mix(in oklch, var(--card) 18%, transparent);
       }
 
       .player-fitted__avatar--large {
         width: 4rem;
         height: 4rem;
         box-shadow:
-          0 0 0 2px rgba(212, 175, 55, 0.6),
-          0 0 12px rgba(212, 175, 55, 0.3),
-          inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+          0 0 0 2px color-mix(in oklch, var(--accent) 60%, transparent),
+          0 0 12px color-mix(in oklch, var(--accent) 30%, transparent),
+          inset 0 0 0 1px color-mix(in oklch, var(--card) 18%, transparent);
       }
 
       .player-fitted__image {
@@ -377,7 +369,7 @@ class FittedTemplate extends Component<typeof Player> {
 
       .player-fitted__eyebrow {
         margin: 0;
-        color: rgba(245, 231, 181, 0.7);
+        color: color-mix(in oklch, var(--warning-ink) 70%, transparent);
         font-size: 0.6875rem;
         font-weight: 600;
         line-height: 1;
@@ -389,7 +381,7 @@ class FittedTemplate extends Component<typeof Player> {
         margin: 0;
         min-width: 0;
         overflow: hidden;
-        color: #f6eed1;
+        color: var(--card-foreground);
         text-overflow: ellipsis;
         white-space: nowrap;
         font-size: 0.875rem;
@@ -406,7 +398,7 @@ class FittedTemplate extends Component<typeof Player> {
 
       .player-fitted__summary {
         margin: 0;
-        color: rgba(245, 231, 181, 0.72);
+        color: color-mix(in oklch, var(--warning-ink) 72%, transparent);
         font-size: 0.75rem;
         font-weight: 400;
         line-height: 1.35;
@@ -478,10 +470,7 @@ class IsolatedTemplate extends Component<typeof Player> {
 
     <style scoped>
       .player-isolated {
-        --vip-gold: #d4af37;
-        --chip-felt: #123f24;
-        --chip-cream: #fff5d6;
-        --chip-red: #a91d2f;
+        --chip-red: var(--destructive);
 
         position: relative;
         display: flex;
@@ -498,10 +487,10 @@ class IsolatedTemplate extends Component<typeof Player> {
         padding: 2rem 1.5rem;
         background: linear-gradient(
           180deg,
-          rgba(19, 28, 36, 0.98),
-          rgba(9, 14, 19, 0.98)
+          color-mix(in oklch, var(--card) 98%, transparent),
+          color-mix(in oklch, var(--card) 98%, transparent)
         );
-        color: #f6eed1;
+        color: var(--card-foreground);
       }
 
       .player-isolated__pattern {
@@ -511,17 +500,17 @@ class IsolatedTemplate extends Component<typeof Player> {
         background-image:
           repeating-linear-gradient(
             45deg,
-            var(--vip-gold) 0px,
-            var(--vip-gold) 1px,
+            var(--card) 0px,
+            var(--card) 1px,
             transparent 1px,
-            transparent 18px
+            transparent 1.125rem
           ),
           repeating-linear-gradient(
             -45deg,
-            var(--vip-gold) 0px,
-            var(--vip-gold) 1px,
+            var(--accent) 0px,
+            var(--accent) 1px,
             transparent 1px,
-            transparent 18px
+            transparent 1.125rem
           );
         pointer-events: none;
       }
@@ -537,17 +526,17 @@ class IsolatedTemplate extends Component<typeof Player> {
         overflow: hidden;
         border-radius: 50%;
         background:
-          radial-gradient(circle, var(--chip-felt) 0 42%, transparent 43%),
+          radial-gradient(circle, var(--success) 0 42%, transparent 43%),
           repeating-conic-gradient(
             from 0deg,
-            var(--chip-cream) 0 11deg,
+            var(--warning) 0 11deg,
             var(--chip-red) 11deg 22deg
           );
-        color: #f8f3df;
+        color: var(--card-foreground);
         box-shadow:
-          0 0 0 3px rgba(212, 175, 55, 0.65),
-          0 0 20px rgba(212, 175, 55, 0.25),
-          inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+          0 0 0 3px color-mix(in oklch, var(--accent) 65%, transparent),
+          0 0 20px color-mix(in oklch, var(--accent) 25%, transparent),
+          inset 0 0 0 1px color-mix(in oklch, var(--card) 18%, transparent);
       }
 
       .player-isolated__image {
@@ -574,7 +563,7 @@ class IsolatedTemplate extends Component<typeof Player> {
 
       .player-isolated__eyebrow {
         margin: 0;
-        color: rgba(245, 231, 181, 0.65);
+        color: color-mix(in oklch, var(--warning-ink) 65%, transparent);
         font-size: 0.6875rem;
         font-weight: 600;
         line-height: 1;
@@ -584,7 +573,7 @@ class IsolatedTemplate extends Component<typeof Player> {
 
       .player-isolated__name {
         margin: 0;
-        color: #f6eed1;
+        color: var(--card-foreground);
         font-size: 1.75rem;
         font-weight: 800;
         line-height: 1.15;

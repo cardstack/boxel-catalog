@@ -73,7 +73,7 @@ export default class TagFilterGroup extends GlimmerComponent<TagFilterGroupArgs>
       }
       .tag-pill-btn :deep(.atom-format) {
         box-shadow: none;
-        background: transparent;
+        background-color: transparent;
       }
       .tag-pill-btn.is-active {
         --boxel-pill-background-color: var(--boxel-dark);
@@ -84,7 +84,7 @@ export default class TagFilterGroup extends GlimmerComponent<TagFilterGroupArgs>
       }
 
       .tag-skeleton {
-        height: 20px;
+        height: 1.25rem;
         width: 100%;
       }
     </style>

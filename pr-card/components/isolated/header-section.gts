@@ -88,21 +88,21 @@ export class HeaderSection extends GlimmerComponent<HeaderSectionSignature> {
 
     <style scoped>
       .pr-hero {
-        background: #0d1117;
-        color: #e6edf3;
+        background-color: var(--card);
+        color: var(--card-foreground);
         padding: var(--boxel-sp-lg) var(--boxel-sp-xl);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-sm);
         flex-shrink: 0;
-        border-bottom: 1px solid #30363d;
+        border-bottom: 1px solid var(--border-strong);
       }
       .pr-title {
         font-size: 1.4rem;
         font-weight: 600;
         margin: 0;
         line-height: 1.3;
-        color: #e6edf3;
+        color: var(--card-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -111,7 +111,7 @@ export class HeaderSection extends GlimmerComponent<HeaderSectionSignature> {
       .pr-number {
         font-size: 1.2rem;
         font-weight: 600;
-        color: #8b949e;
+        color: var(--subtle-foreground);
       }
       .pr-meta {
         display: flex;
@@ -123,31 +123,31 @@ export class HeaderSection extends GlimmerComponent<HeaderSectionSignature> {
         --boxel-pill-border-radius: 2em;
       }
       .pr-state-icon {
-        width: 14px;
-        height: 14px;
-        color: #fff;
+        width: 0.875rem;
+        height: 0.875rem;
+        color: var(--card-foreground);
         flex-shrink: 0;
       }
       .pr-state-label {
         font-size: var(--boxel-font-xs);
         font-weight: 600;
-        color: #fff;
+        color: var(--card-foreground);
       }
       .pr-author {
         font-size: var(--boxel-font-xs);
-        color: #e6edf3;
+        color: var(--card-foreground);
         font-weight: 600;
       }
       .pr-branch {
         font-size: var(--boxel-font-xs);
-        color: var(--pr-branch-foreground, #9ecbff);
-        border: 1px solid var(--pr-branch-border, #3d444d);
-        border-radius: 999px;
-        padding: 1px 4px 1px 8px;
-        max-width: 280px;
+        color: var(--primary-ink);
+        border: 1px solid var(--border-strong);
+        border-radius: 62.4375rem;
+        padding: 1px 0.25rem 1px 0.5rem;
+        max-width: 17.5rem;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 0.25rem;
       }
       .pr-branch-label {
         min-width: 0;
@@ -157,49 +157,45 @@ export class HeaderSection extends GlimmerComponent<HeaderSectionSignature> {
       }
       .pr-branch-copy-button {
         border: none;
-        background: transparent;
+        background-color: transparent;
         color: inherit;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 2px;
-        border-radius: 999px;
+        border-radius: 62.4375rem;
         cursor: pointer;
         flex-shrink: 0;
       }
       .pr-branch-copy-button:hover {
-        background: color-mix(
-          in srgb,
-          var(--pr-branch-foreground, #9ecbff) 20%,
-          transparent
-        );
+        background-color: color-mix(in oklch, var(--primary) 20%, transparent);
       }
       .pr-branch-copy-icon {
-        width: 11px;
-        height: 11px;
+        width: 0.6875rem;
+        height: 0.6875rem;
       }
       .pr-date {
         font-size: var(--boxel-font-xs);
-        color: #8b949e;
+        color: var(--subtle-foreground);
       }
       .pr-meta-sep {
-        color: #484f58;
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-xs);
       }
       .pr-github-link {
         margin-left: auto;
-        color: #8b949e;
+        color: var(--subtle-foreground);
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         transition: color 0.15s ease;
       }
       .pr-github-link:hover {
-        color: #58a6ff;
+        color: var(--primary-ink);
       }
       .pr-github-link-icon {
-        width: 14px;
-        height: 14px;
+        width: 0.875rem;
+        height: 0.875rem;
       }
     </style>
   </template>

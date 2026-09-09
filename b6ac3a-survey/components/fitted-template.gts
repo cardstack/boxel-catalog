@@ -57,7 +57,6 @@ export class SurveyFitted extends Component<typeof Survey> {
 
     <style scoped>
       .sf-root {
-        --sf-accent: var(--primary, #2563eb);
         container-type: size;
         width: 100%;
         height: 100%;
@@ -66,7 +65,7 @@ export class SurveyFitted extends Component<typeof Survey> {
           -apple-system,
           BlinkMacSystemFont,
           sans-serif;
-        color: var(--foreground, #0f172a);
+        color: var(--foreground);
       }
       .sf-badge,
       .sf-strip,
@@ -77,8 +76,9 @@ export class SurveyFitted extends Component<typeof Survey> {
         height: 100%;
         box-sizing: border-box;
         overflow: hidden;
-        background: var(--card, #ffffff);
-        border: 1px solid var(--border, #e2e8f0);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
         border-radius: 0.75rem;
       }
 
@@ -90,8 +90,8 @@ export class SurveyFitted extends Component<typeof Survey> {
         width: 2rem;
         height: 2rem;
         border-radius: 0.5rem;
-        background: color-mix(in srgb, var(--sf-accent) 14%, transparent);
-        color: var(--sf-accent);
+        background-color: color-mix(in oklch, var(--primary) 14%, transparent);
+        color: var(--primary-ink);
         font-weight: 800;
         font-size: 1.1rem;
       }
@@ -127,7 +127,7 @@ export class SurveyFitted extends Component<typeof Survey> {
       .sf-b-sub {
         font-size: 0.625rem;
         font-weight: 600;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
 
       /* STRIP */
@@ -152,7 +152,7 @@ export class SurveyFitted extends Component<typeof Survey> {
       .sf-s-sub {
         font-size: 0.6875rem;
         font-weight: 600;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
 
       /* TILE */
@@ -174,7 +174,7 @@ export class SurveyFitted extends Component<typeof Survey> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: var(--sf-accent);
+        color: var(--primary-ink);
       }
       .sf-t-title {
         font-size: 1.0625rem;
@@ -185,7 +185,7 @@ export class SurveyFitted extends Component<typeof Survey> {
       .sf-t-count {
         font-size: 0.75rem;
         font-weight: 600;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
 
       /* CARD */
@@ -208,7 +208,7 @@ export class SurveyFitted extends Component<typeof Survey> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: var(--sf-accent);
+        color: var(--primary-ink);
       }
       .sf-c-title {
         font-size: 1.375rem;
@@ -219,7 +219,7 @@ export class SurveyFitted extends Component<typeof Survey> {
       .sf-c-count {
         font-size: 0.875rem;
         font-weight: 600;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

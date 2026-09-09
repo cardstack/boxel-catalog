@@ -35,8 +35,6 @@ export default class ListOfPills extends GlimmerComponent<{ Args: Args }> {
         margin-block: 0;
         padding-inline-start: 0;
       }
-      .pill-item {
-      }
     </style>
   </template>
 }

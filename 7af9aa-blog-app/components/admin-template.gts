@@ -136,7 +136,7 @@ export class BlogAppTemplate extends Component<typeof BlogApp> {
       }
       .sidebar-create-button {
         --icon-color: currentColor;
-        --boxel-loading-indicator-size: 15px;
+        --boxel-loading-indicator-size: 0.9375rem;
         gap: var(--boxel-sp-xs);
         font-weight: 600;
       }
@@ -154,7 +154,7 @@ export class BlogAppTemplate extends Component<typeof BlogApp> {
         letter-spacing: var(--boxel-lsp-xxs);
       }
       .blog-app-card-list {
-        --embedded-card-max-width: 715px;
+        --embedded-card-max-width: 44.6875rem;
       }
       .blog-app-card-list :deep(.card-list-item) {
         gap: var(--boxel-sp-xl);
@@ -162,7 +162,7 @@ export class BlogAppTemplate extends Component<typeof BlogApp> {
         padding: var(--boxel-sp-xs) 0;
       }
       .categories-grid {
-        --embedded-card-min-height: 150px;
+        --embedded-card-min-height: 9.375rem;
       }
     </style>
   </template>

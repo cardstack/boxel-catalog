@@ -44,7 +44,7 @@ export default class GeneratingOverlay extends GlimmerComponent<GeneratingOverla
         inherits: false;
       }
       .generating {
-        --generating-accent: var(--boxel-highlight, #00ebac);
+        --generating-accent: var(--success);
         position: relative;
         overflow: hidden;
         display: flex;
@@ -55,24 +55,25 @@ export default class GeneratingOverlay extends GlimmerComponent<GeneratingOverla
         width: 100%;
         height: 100%;
         min-height: 6rem;
-        border-radius: var(--boxel-border-radius, 0.5rem);
-        background: var(--generating-surface, var(--boxel-100, #f8f7fa));
+        border-radius: var(--boxel-border-radius);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       /* rotating conic-gradient border ring */
       .generating::before {
         content: '';
         position: absolute;
         inset: 0;
-        padding: 3px;
+        padding: 0.1875rem;
         border-radius: inherit;
         background: conic-gradient(
-          from var(--generating-angle, 0deg),
+          from var(--generating-angle),
           transparent 0%,
-          color-mix(in srgb, var(--generating-accent) 35%, transparent) 8%,
+          color-mix(in oklch, var(--generating-accent) 35%, transparent) 8%,
           var(--generating-accent) 16%,
-          color-mix(in srgb, var(--generating-accent) 25%, white) 20%,
+          color-mix(in oklch, var(--generating-accent) 25%, var(--card)) 20%,
           var(--generating-accent) 24%,
-          color-mix(in srgb, var(--generating-accent) 35%, transparent) 30%,
+          color-mix(in oklch, var(--generating-accent) 35%, transparent) 30%,
           transparent 38%
         );
         -webkit-mask:
@@ -80,8 +81,8 @@ export default class GeneratingOverlay extends GlimmerComponent<GeneratingOverla
           linear-gradient(#fff 0 0);
         -webkit-mask-composite: xor;
         mask:
-          linear-gradient(#fff 0 0) content-box,
-          linear-gradient(#fff 0 0);
+          linear-gradient(var(--card) 0 0) content-box,
+          linear-gradient(var(--card) 0 0);
         mask-composite: exclude;
         animation: generating-sweep 2.4s linear infinite;
         pointer-events: none;
@@ -94,7 +95,7 @@ export default class GeneratingOverlay extends GlimmerComponent<GeneratingOverla
         background: linear-gradient(
           100deg,
           transparent 30%,
-          color-mix(in srgb, var(--generating-accent) 14%, transparent) 50%,
+          color-mix(in oklch, var(--generating-accent) 14%, transparent) 50%,
           transparent 70%
         );
         transform: translateX(-100%);
@@ -104,11 +105,11 @@ export default class GeneratingOverlay extends GlimmerComponent<GeneratingOverla
       .generating-label {
         position: relative;
         z-index: 1;
-        font-size: var(--boxel-font-size-xs, 0.75rem);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: var(--generating-label-color, var(--boxel-450, #919191));
+        color: var(--subtle-foreground);
       }
       @keyframes generating-sweep {
         to {

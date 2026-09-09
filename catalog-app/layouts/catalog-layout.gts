@@ -42,7 +42,7 @@ export default class CatalogLayout extends GlimmerComponent<CatalogLayoutSignatu
         flex-direction: column;
         width: 100%;
         height: 100%;
-        background-color: var(--layout-container-background-color);
+        background-color: var(--background);
         max-height: 100vh;
         overflow: hidden;
         container-type: inline-size;
@@ -56,7 +56,7 @@ export default class CatalogLayout extends GlimmerComponent<CatalogLayoutSignatu
       }
 
       .sidebar {
-        width: var(--sidebar-width, 290px);
+        width: var(--sidebar-width, 18.125rem);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-lg);
@@ -70,7 +70,7 @@ export default class CatalogLayout extends GlimmerComponent<CatalogLayoutSignatu
         flex: 1;
         overflow-y: auto;
         min-width: 0; /* Prevents content from expanding beyond available space */
-        padding: var(--layout-content-padding, var(--boxel-sp));
+        padding: var(--boxel-sp);
       }
     </style>
   </template>

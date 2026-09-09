@@ -218,15 +218,9 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
       .results {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp, 1rem);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          -apple-system,
-          BlinkMacSystemFont,
-          sans-serif
-        );
-        color: var(--foreground, #0f172a);
+        gap: var(--boxel-sp);
+        font-family: var(--font-sans);
+        color: var(--foreground);
       }
       .results-summary {
         display: flex;
@@ -237,28 +231,29 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         font-size: 2rem;
         font-weight: 800;
         letter-spacing: -0.02em;
-        color: var(--primary, #2563eb);
+        color: var(--primary-ink);
       }
       .results-count-label {
         font-size: 0.875rem;
         font-weight: 600;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
       .results-loading {
         margin-left: auto;
         font-size: 0.75rem;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
       .results-list {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp, 1rem);
+        gap: var(--boxel-sp);
       }
       .agg {
-        padding: var(--boxel-sp, 1rem);
-        border: 1px solid var(--border, #e2e8f0);
+        padding: var(--boxel-sp);
+        border: 1px solid var(--border);
         border-radius: 0.75rem;
-        background: var(--card, #ffffff);
+        background-color: var(--card);
+        color: var(--card-foreground);
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
@@ -272,7 +267,7 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         margin: 0;
         font-size: 0.75rem;
         font-weight: 600;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
       .agg-bars {
         display: flex;
@@ -294,21 +289,23 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
       }
       .agg-bar-track {
         height: 0.6rem;
-        background: var(--muted, #f1f5f9);
-        border-radius: 999px;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border-radius: 62.4375rem;
         overflow: hidden;
       }
       .agg-bar-fill {
         display: block;
         height: 100%;
-        background: var(--primary, #2563eb);
-        border-radius: 999px;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        border-radius: 62.4375rem;
         transition: width 0.3s ease;
       }
       .agg-bar-val {
         font-variant-numeric: tabular-nums;
         font-weight: 600;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .agg-texts {
@@ -320,18 +317,18 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         font-size: 0.875rem;
       }
       .agg-texts li {
-        color: var(--foreground, #0f172a);
+        color: var(--foreground);
       }
       .agg-empty {
         margin: 0;
         font-size: 0.8125rem;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
         font-style: italic;
       }
       .results-empty {
-        padding: var(--boxel-sp-xl, 2.5rem) var(--boxel-sp, 1rem);
+        padding: var(--boxel-sp-xl) var(--boxel-sp);
         text-align: center;
-        border: 1px dashed var(--border, #cbd5e1);
+        border: 1px dashed var(--border);
         border-radius: 0.75rem;
       }
       .results-empty-title {
@@ -341,7 +338,7 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
       .results-empty-sub {
         margin: 0.25rem 0 0;
         font-size: 0.8125rem;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

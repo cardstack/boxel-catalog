@@ -1582,23 +1582,11 @@ export default class Popover extends Component<PopoverSignature> {
          * below host popups/modals; the real value comes from --bx-popover-z
          * (see SurfaceLayerManager). */
         z-index: var(--bx-popover-z, 740);
-        font: 13px/1.4
-          var(
-            --bx-popover-font-family,
-            var(
-              --font-sans,
-              Inter,
-              ui-sans-serif,
-              system-ui,
-              -apple-system,
-              'Segoe UI',
-              sans-serif
-            )
-          );
-        color: var(--bx-popover-fg, var(--popover-foreground, #111827));
+        font: 0.8125rem/1.4 var(--font-sans);
+        color: var(--popover-foreground);
         /* Single source of truth for the surface fill. backdrop sets
          * this var (opaque / translucent), kind overrides the hue. */
-        background: var(--bx-popover-bg, #fff);
+        background-color: var(--card);
         /* visible (not hidden) so the optional arrow can poke past the
          * edge. Corner-clipping moved to .bx-popover__body, which rounds
          * its own scroll container — same anti-notch effect, but without
@@ -1628,28 +1616,28 @@ export default class Popover extends Component<PopoverSignature> {
        *   spacious    formula builder, color picker grid, year-12-grid
        */
       .bx-popover--size-compact {
-        min-width: var(--bx-popover-size-compact-min-w, 176px);
-        max-width: min(var(--bx-popover-size-compact-max-w, 240px), 92vw);
+        min-width: var(--bx-popover-size-compact-min-w, 11rem);
+        max-width: min(var(--bx-popover-size-compact-max-w, 15rem), 92vw);
         max-height: min(
-          var(--bx-popover-size-compact-max-h, 280px),
+          var(--bx-popover-size-compact-max-h, 17.5rem),
           75vh,
           var(--bx-popover-avail-h, 100vh)
         );
       }
       .bx-popover--size-comfortable {
-        min-width: var(--bx-popover-size-comfortable-min-w, 240px);
-        max-width: min(var(--bx-popover-size-comfortable-max-w, 320px), 92vw);
+        min-width: var(--bx-popover-size-comfortable-min-w, 15rem);
+        max-width: min(var(--bx-popover-size-comfortable-max-w, 20rem), 92vw);
         max-height: min(
-          var(--bx-popover-size-comfortable-max-h, 360px),
+          var(--bx-popover-size-comfortable-max-h, 22.5rem),
           75vh,
           var(--bx-popover-avail-h, 100vh)
         );
       }
       .bx-popover--size-spacious {
-        min-width: var(--bx-popover-size-spacious-min-w, 320px);
-        max-width: min(var(--bx-popover-size-spacious-max-w, 460px), 92vw);
+        min-width: var(--bx-popover-size-spacious-min-w, 20rem);
+        max-width: min(var(--bx-popover-size-spacious-max-w, 28.75rem), 92vw);
         max-height: min(
-          var(--bx-popover-size-spacious-max-h, 500px),
+          var(--bx-popover-size-spacious-max-h, 31.25rem),
           80vh,
           var(--bx-popover-avail-h, 100vh)
         );
@@ -1667,24 +1655,24 @@ export default class Popover extends Component<PopoverSignature> {
        *   dim  opaque + page dim   — the separate .bx-popover-dim
        *          element dims the page behind it */
       .bx-popover--backdrop-none {
-        --bx-popover-bg: var(--popover, #fff);
+        --bx-popover-bg: var(--popover);
       }
       .bx-popover--backdrop-tint {
         --bx-popover-bg: var(
           --bx-popover-bg-tint,
-          color-mix(in srgb, var(--popover, #fff) 80%, transparent)
+          color-mix(in oklch, var(--popover) 80%, transparent)
         );
       }
       .bx-popover--backdrop-blur {
         --bx-popover-bg: var(
           --bx-popover-bg-blur,
-          color-mix(in srgb, var(--popover, #fff) 55%, transparent)
+          color-mix(in oklch, var(--popover) 55%, transparent)
         );
         backdrop-filter: blur(12px) saturate(1.4);
         -webkit-backdrop-filter: blur(12px) saturate(1.4);
       }
       .bx-popover--backdrop-dim {
-        --bx-popover-bg: var(--popover, #fff);
+        --bx-popover-bg: var(--popover);
       }
 
       /* Dim — full-viewport dim layer mounted as a sibling.
@@ -1693,9 +1681,9 @@ export default class Popover extends Component<PopoverSignature> {
       .bx-popover-dim {
         position: fixed;
         inset: 0;
-        background: var(
+        background-color: var(
           --bx-popover-dim-bg,
-          color-mix(in srgb, var(--foreground, #0f172a) 40%, transparent)
+          color-mix(in oklch, var(--foreground) 40%, transparent)
         );
         backdrop-filter: blur(2px);
         /* The dim allocates its own layer from the same (modal) tier,
@@ -1729,44 +1717,23 @@ export default class Popover extends Component<PopoverSignature> {
        *       the theme's global tokens */
       .bx-popover--elevation-flat {
         --bx-popover-border: transparent;
-        border-radius: calc(var(--bx-popover-radius, var(--radius, 6px)) - 2px);
+        border-radius: calc(var(--radius) - 2px);
         box-shadow: none;
       }
       .bx-popover--elevation-raised {
-        --bx-popover-border: var(--border, #e5e7eb);
-        border-radius: var(--bx-popover-radius, var(--radius, 6px));
-        box-shadow: var(
-          --bx-popover-shadow-raised,
-          var(
-            --shadow-sm,
-            0 1px 3px rgba(0, 0, 0, 0.08),
-            0 1px 2px rgba(0, 0, 0, 0.06)
-          )
-        );
+        --bx-popover-border: var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
       }
       .bx-popover--elevation-elevated {
-        --bx-popover-border: var(--border, #e5e7eb);
-        border-radius: calc(var(--bx-popover-radius, var(--radius, 6px)) + 2px);
-        box-shadow: var(
-          --bx-popover-shadow-elevated,
-          var(
-            --shadow-md,
-            0 4px 12px rgba(0, 0, 0, 0.1),
-            0 2px 4px rgba(0, 0, 0, 0.07)
-          )
-        );
+        --bx-popover-border: var(--border);
+        border-radius: calc(var(--radius) + 2px);
+        box-shadow: var(--shadow-md);
       }
       .bx-popover--elevation-floating {
-        --bx-popover-border: var(--border, #e5e7eb);
-        border-radius: calc(var(--bx-popover-radius, var(--radius, 6px)) * 2);
-        box-shadow: var(
-          --bx-popover-shadow-floating,
-          var(
-            --shadow-xl,
-            0 12px 32px rgba(0, 0, 0, 0.14),
-            0 4px 10px rgba(0, 0, 0, 0.09)
-          )
-        );
+        --bx-popover-border: var(--border);
+        border-radius: calc(var(--radius) * 2);
+        box-shadow: var(--shadow-xl);
       }
 
       /* ─── PLACEMENT — POSITION ONLY ───────────────────────────
@@ -1799,65 +1766,49 @@ export default class Popover extends Component<PopoverSignature> {
        * elevation + size; per-kind overrides only differentiate
        * what's left (tools is dark; details has muted body color). */
       .bx-popover--details {
-        color: var(--bx-popover-fg-muted, var(--muted-foreground, #1f2937));
-        font-size: 12px;
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
       }
       /* tools is an INVERTED surface — it defaults to the theme's
        * foreground/background swapped, so it stays "the dark one" in a
        * light theme and "the light one" in a dark theme. */
       .bx-popover--tools {
-        --bx-popover-bg: var(--bx-popover-tools-bg, var(--foreground, #1f2937));
-        color: var(--bx-popover-tools-fg, var(--background, #f9fafb));
+        --bx-popover-bg: var(--card);
+        color: var(--foreground);
       }
       /* edit's sticky-note yellow is a semantic "unsaved" signal, not a
        * brand color — it stays fixed by default; themes override it via
        * --bx-popover-edit-bg / --bx-popover-edit-border (the -resolved
        * vars exist so an outer override isn't shadowed by this rule). */
       .bx-popover--edit {
-        --bx-popover-edit-bg-resolved: var(--bx-popover-edit-bg, #fef7d6);
-        --bx-popover-edit-border-resolved: var(
-          --bx-popover-edit-border,
-          #f5d75e
-        );
-        --bx-popover-bg: var(--bx-popover-edit-bg-resolved);
+        --bx-popover-bg: var(--card);
       }
       .bx-popover--edit.bx-popover--backdrop-tint {
-        --bx-popover-bg: color-mix(
-          in srgb,
-          var(--bx-popover-edit-bg-resolved) 80%,
-          transparent
-        );
+        --bx-popover-bg: color-mix(in oklch, var(--card) 80%, transparent);
       }
       .bx-popover--edit.bx-popover--backdrop-blur {
-        --bx-popover-bg: color-mix(
-          in srgb,
-          var(--bx-popover-edit-bg-resolved) 55%,
-          transparent
-        );
+        --bx-popover-bg: color-mix(in oklch, var(--card) 55%, transparent);
       }
       .bx-popover--edit
         .bx-popover__pane
         > [data-surface-popover-target='edit'] {
-        background: var(--bx-popover-edit-bg-resolved);
+        background-color: var(--inset);
+        color: var(--foreground);
       }
       .bx-popover--edit
         .bx-popover__pane
         > [data-surface-popover-target='edit']
         > * {
-        background-color: var(--bx-popover-edit-bg-resolved);
+        background-color: var(--warning);
+        color: var(--warning-foreground);
         box-shadow:
-          inset 0 0 0 1px
-            color-mix(
-              in srgb,
-              var(--bx-popover-edit-border-resolved) 56%,
-              transparent
-            ),
-          0 16px 42px rgba(120, 85, 0, 0.12);
+          inset 0 0 0 1px color-mix(in oklch, var(--warning) 56%, transparent),
+          0 16px 42px color-mix(in oklch, var(--warning) 12%, transparent);
       }
       .bx-popover--tools[class*='bx-popover--elevation-'] {
         --bx-popover-border: color-mix(
-          in srgb,
-          var(--bx-popover-tools-fg, var(--background, #fff)) 12%,
+          in oklch,
+          var(--background) 12%,
           transparent
         );
       }
@@ -1873,16 +1824,16 @@ export default class Popover extends Component<PopoverSignature> {
          * discoverable without hovering), fills with soft accent on
          * hover. */
         position: absolute;
-        top: 6px;
-        right: 6px;
+        top: 0.375rem;
+        right: 0.375rem;
         z-index: 2;
-        width: 18px;
-        height: 18px;
+        width: 1.125rem;
+        height: 1.125rem;
         border: none;
-        border-radius: 4px;
-        background: transparent;
-        color: var(--bx-popover-fg-muted, var(--muted-foreground, #9ca3af));
-        font-size: 12px;
+        border-radius: 0.25rem;
+        background-color: transparent;
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
         line-height: 1;
         cursor: pointer;
         display: inline-flex;
@@ -1897,27 +1848,19 @@ export default class Popover extends Component<PopoverSignature> {
       .bx-popover__escalate:hover,
       .bx-popover__escalate:focus-visible {
         opacity: 1;
-        background: color-mix(
-          in srgb,
-          var(--bx-popover-accent, var(--primary, #4f46e5)) 10%,
-          transparent
-        );
-        color: var(--bx-popover-accent, var(--primary, #4f46e5));
+        background-color: color-mix(in oklch, var(--primary) 10%, transparent);
+        color: var(--primary-ink);
       }
       .bx-popover--tools .bx-popover__escalate {
-        color: color-mix(
-          in srgb,
-          var(--bx-popover-tools-fg, var(--background, #fff)) 60%,
-          transparent
-        );
+        color: color-mix(in oklch, var(--foreground) 60%, transparent);
       }
       .bx-popover--tools .bx-popover__escalate:hover {
-        background: color-mix(
-          in srgb,
-          var(--bx-popover-tools-fg, var(--background, #fff)) 12%,
+        background-color: color-mix(
+          in oklch,
+          var(--background) 12%,
           transparent
         );
-        color: var(--bx-popover-tools-fg, var(--background, #fff));
+        color: var(--foreground);
       }
 
       /* ─── BODY ──────────────────────────────────────────────────
@@ -1944,7 +1887,7 @@ export default class Popover extends Component<PopoverSignature> {
         border-radius: inherit;
         /* Border lives here, not on the root, so it never intersects
          * the arrow which is positioned on the root element. */
-        border: 1px solid var(--bx-popover-border, transparent);
+        border: 1px solid var(--bx-popover-border);
       }
 
       /* ─── PANE — per-kind wrapper around the active named block ────

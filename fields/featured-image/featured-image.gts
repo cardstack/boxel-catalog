@@ -177,13 +177,14 @@ export default class FeaturedImageField extends FieldDef {
           width: 100%;
           border: 1px solid var(--boxel-form-control-border-color);
           border-radius: var(--boxel-form-control-border-radius);
-          background-color: white;
-          background-size: 24px 24px;
+          background-color: var(--card);
+          color: var(--card-foreground);
+          background-size: 1.5rem 1.5rem;
           background-position:
-            12px 12px,
-            -12px 0,
+            0.75rem 0.75rem,
+            -0.75rem 0,
             0 0,
-            0 12px;
+            0 0.75rem;
           background-image:
             linear-gradient(45deg, var(--boxel-300) 25%, transparent 25%),
             linear-gradient(-45deg, var(--boxel-300) 25%, transparent 25%),
@@ -200,7 +201,7 @@ export default class FeaturedImageField extends FieldDef {
           letter-spacing: var(--boxel-lsp-xs);
         }
         .height-warning svg {
-          min-width: 20px;
+          min-width: 1.25rem;
           margin-right: var(--boxel-sp-xxs);
         }
       </style>
@@ -220,7 +221,7 @@ export default class FeaturedImageField extends FieldDef {
       <style scoped>
         .image {
           width: var(--atom-image-width, auto);
-          height: var(--atom-image-height, 100px);
+          height: var(--atom-image-height, 6.25rem);
           background-size: var(--atom-image-background-size, contain);
           background-repeat: no-repeat;
           background-position: center;

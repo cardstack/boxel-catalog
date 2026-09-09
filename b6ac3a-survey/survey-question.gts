@@ -77,9 +77,9 @@ export class SurveyQuestion extends FieldDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.04em;
-          color: var(--muted-foreground, #64748b);
-          background: var(--muted, #f1f5f9);
-          border-radius: 999px;
+          color: var(--muted-foreground);
+          background-color: var(--muted);
+          border-radius: 62.4375rem;
           padding: 0.1rem 0.5rem;
           white-space: nowrap;
         }
@@ -91,15 +91,15 @@ export class SurveyQuestion extends FieldDef {
         }
         .sq-prompt {
           font-weight: 600;
-          color: var(--foreground, #0f172a);
+          color: var(--foreground);
         }
         .sq-req {
-          color: #dc2626;
+          color: var(--destructive-ink);
           margin-left: 0.15rem;
         }
         .sq-help {
-          font-size: var(--boxel-font-size-sm, 0.8125rem);
-          color: var(--muted-foreground, #64748b);
+          font-size: var(--boxel-font-size-sm);
+          color: var(--muted-foreground);
         }
         .sq-options {
           display: flex;
@@ -109,9 +109,9 @@ export class SurveyQuestion extends FieldDef {
         }
         .sq-opt {
           font-size: 0.75rem;
-          color: var(--foreground, #0f172a);
-          background: var(--secondary, #f8fafc);
-          border: 1px solid var(--border, #e2e8f0);
+          color: var(--secondary-foreground);
+          background-color: var(--secondary);
+          border: 1px solid var(--border);
           border-radius: 0.375rem;
           padding: 0.05rem 0.4rem;
         }

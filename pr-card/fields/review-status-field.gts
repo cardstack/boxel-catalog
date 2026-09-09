@@ -153,7 +153,10 @@ export class PrReviewStatusField extends FieldDef {
         <div class='review-status-row review-status-row--changes'>
           <span class='review-status-label'>Changes Requested</span>
           {{#if this.isMergeBlocked}}
-            <Pill class='merge-blocked-pill' @pillBackgroundColor='#d73a49'>
+            <Pill
+              class='merge-blocked-pill'
+              @pillBackgroundColor='var(--destructive)'
+            >
               <:default><span class='merge-blocked-label'>Merge blocked</span></:default>
             </Pill>
           {{/if}}
@@ -162,7 +165,10 @@ export class PrReviewStatusField extends FieldDef {
         <div class='review-status-row review-status-row--approved'>
           <span class='review-status-label'>Approved</span>
           {{#if this.isMergeBlocked}}
-            <Pill class='merge-blocked-pill' @pillBackgroundColor='#d73a49'>
+            <Pill
+              class='merge-blocked-pill'
+              @pillBackgroundColor='var(--destructive)'
+            >
               <:default><span class='merge-blocked-label'>Merge blocked</span></:default>
             </Pill>
           {{/if}}
@@ -171,7 +177,10 @@ export class PrReviewStatusField extends FieldDef {
         <div class='review-status-row review-status-row--pending'>
           <span class='review-status-label'>Pending Review</span>
           {{#if this.isMergeBlocked}}
-            <Pill class='merge-blocked-pill' @pillBackgroundColor='#d73a49'>
+            <Pill
+              class='merge-blocked-pill'
+              @pillBackgroundColor='var(--destructive)'
+            >
               <:default><span class='merge-blocked-label'>Merge blocked</span></:default>
             </Pill>
           {{/if}}
@@ -184,45 +193,42 @@ export class PrReviewStatusField extends FieldDef {
           align-items: center;
           justify-content: space-between;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border-bottom: 1px solid var(--border, var(--boxel-border-color));
+          border-bottom: 1px solid var(--border);
         }
         .review-status-row--changes {
-          background: color-mix(
-            in srgb,
-            var(--destructive, #d73a49) 5%,
-            var(--card, #ffffff)
+          background-color: color-mix(
+            in oklch,
+            var(--destructive) 5%,
+            var(--card)
           );
         }
         .review-status-row--approved {
-          background: color-mix(
-            in srgb,
-            var(--chart-1, #28a745) 5%,
-            var(--card, #ffffff)
-          );
+          background-color: color-mix(in oklch, var(--chart-1) 5%, var(--card));
         }
         .review-status-row--pending {
-          background: color-mix(in srgb, #9a6700 8%, var(--card, #ffffff));
+          background-color: color-mix(in oklch, var(--warning) 8%, var(--card));
         }
         .review-status-label {
           font-size: var(--boxel-font-sm);
           font-weight: 600;
         }
         .review-status-row--changes .review-status-label {
-          color: var(--destructive, #d73a49);
+          color: var(--destructive-ink);
         }
         .review-status-row--pending .review-status-label {
-          color: #9a6700;
+          color: var(--warning-ink);
         }
         .review-status-row--approved .review-status-label {
-          color: var(--chart-1, #28a745);
+          color: var(--chart-1);
         }
         .merge-blocked-pill {
           --boxel-pill-border-radius: 2em;
+          --boxel-pill-font-color: var(--destructive-foreground);
         }
         .merge-blocked-label {
-          font-size: 10px;
+          font-size: 0.625rem;
           font-weight: 600;
-          color: #fff;
+          color: var(--destructive-foreground);
           text-align: center;
         }
       </style>

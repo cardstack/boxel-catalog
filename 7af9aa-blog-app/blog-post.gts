@@ -204,7 +204,7 @@ class EmbeddedTemplate extends Component<typeof BlogPost> {
 
       .category {
         display: inline-block;
-        padding: 3px var(--boxel-sp-xxxs);
+        padding: 0.1875rem var(--boxel-sp-xxxs);
         border-radius: var(--boxel-border-radius-sm);
         font: 500 var(--boxel-font-xs);
         letter-spacing: var(--boxel-lsp-sm);
@@ -244,8 +244,8 @@ class FittedTemplate extends Component<typeof BlogPost> {
       .fitted-blog-post {
         width: 100%;
         height: 100%;
-        min-width: 100px;
-        min-height: 29px;
+        min-width: 6.25rem;
+        min-height: 1.8125rem;
         display: grid;
         overflow: hidden;
       }
@@ -305,20 +305,20 @@ class FittedTemplate extends Component<typeof BlogPost> {
           sans-serif;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: #999;
+        color: var(--subtle-foreground);
       }
 
       .categories {
-        margin-top: -27px;
-        height: 20px;
-        margin-left: 7px;
+        margin-top: -1.6875rem;
+        height: 1.25rem;
+        margin-left: 0.4375rem;
         display: none;
         overflow: hidden;
       }
 
       .category {
-        height: 20px;
-        padding: 3px 4px;
+        height: 1.25rem;
+        padding: 0.1875rem 0.25rem;
         border-radius: var(--boxel-border-radius-sm);
         display: inline-block;
         font: 500 var(--boxel-font-xs);
@@ -359,7 +359,7 @@ class FittedTemplate extends Component<typeof BlogPost> {
       @container fitted-card (aspect-ratio <= 1.0) and (224px <= height < 226px) {
         .fitted-blog-post {
           grid-template:
-            'img' 92px
+            'img' 5.75rem
             'categories' max-content
             'content' 1fr / 1fr;
         }
@@ -385,7 +385,7 @@ class FittedTemplate extends Component<typeof BlogPost> {
       @container fitted-card (aspect-ratio <= 1.0) and (180px <= height < 224px) {
         .fitted-blog-post {
           grid-template:
-            'img' 92px
+            'img' 5.75rem
             'categories' max-content
             'content' 1fr / 1fr;
         }
@@ -419,7 +419,7 @@ class FittedTemplate extends Component<typeof BlogPost> {
       @container fitted-card (aspect-ratio <= 1.0) and (148px <= height < 180px) {
         .fitted-blog-post {
           grid-template:
-            'img' 80px
+            'img' 5rem
             'content' 1fr / 1fr;
         }
         .content {
@@ -443,7 +443,7 @@ class FittedTemplate extends Component<typeof BlogPost> {
       @container fitted-card (aspect-ratio <= 1.0) and (128px <= height < 148px) {
         .fitted-blog-post {
           grid-template:
-            'img' 68px
+            'img' 4.25rem
             'categories' max-content
             'content' 1fr / 1fr;
         }
@@ -463,7 +463,7 @@ class FittedTemplate extends Component<typeof BlogPost> {
       @container fitted-card (aspect-ratio <= 1.0) and (118px <= height < 128px) {
         .fitted-blog-post {
           grid-template:
-            'img' 57px
+            'img' 3.5625rem
             'content' 1fr / 1fr;
         }
         .title {
@@ -604,9 +604,9 @@ class FittedTemplate extends Component<typeof BlogPost> {
           padding: var(--boxel-sp-xxs);
         }
         .thumbnail {
-          width: 45px;
-          height: 45px;
-          border-radius: 5px;
+          width: 2.8125rem;
+          height: 2.8125rem;
+          border-radius: 0.3125rem;
         }
         .content {
           padding: 0;
@@ -630,9 +630,9 @@ class FittedTemplate extends Component<typeof BlogPost> {
           padding: var(--boxel-sp-xxs);
         }
         .thumbnail {
-          width: 45px;
-          height: 45px;
-          border-radius: 5px;
+          width: 2.8125rem;
+          height: 2.8125rem;
+          border-radius: 0.3125rem;
         }
         .content {
           padding: 0;
@@ -1157,8 +1157,8 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
           sans-serif
         );
         min-height: 100%;
-        background-color: var(--blog-color-bg, #ffffff);
-        color: var(--blog-color-text, #121212);
+        background-color: var(--card);
+        color: var(--foreground);
         font-family: var(--blog-font-family, 'Inter', system-ui, sans-serif);
       }
 
@@ -1167,17 +1167,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
          the .blog-scope chain reads. A linked theme (or the parent BlogApp's
          injected site theme --blog-* overrides) wins when present. */
       .blog-default-theme {
-        --background: #ffffff;
-        --foreground: #121212;
-        --card: #ffffff;
-        --card-foreground: #121212;
-        --muted: #f3f4f6;
-        --muted-foreground: #6b7280;
-        --border: #e5e7eb;
-        --primary: #7b61ff;
-        --primary-foreground: #ffffff;
-        --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-        --radius: 12px;
+        color: var(--card-foreground);
       }
 
       .post-shell {
@@ -1190,36 +1180,38 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         left: 0;
         height: 100%;
         z-index: 200;
-        width: 64px;
+        width: 4rem;
         pointer-events: none;
       }
       .post-drawer.is-open {
-        width: 280px;
+        width: 17.5rem;
       }
       .post-drawer > * {
         pointer-events: auto;
       }
       .drawer-toggle {
         position: sticky;
-        top: 12px;
-        margin: 12px;
-        width: 40px;
-        height: 40px;
+        top: 0.75rem;
+        margin: 0.75rem;
+        width: 2.5rem;
+        height: 2.5rem;
         display: grid;
         place-items: center;
-        background: #2c2c2c;
-        color: white;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: none;
         border-radius: 50%;
         cursor: pointer;
-        font-size: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+        font-size: 1rem;
+        box-shadow: 0 1px 3px
+          color-mix(in oklch, var(--foreground) 18%, transparent);
         transition:
           background-color 0.15s,
           transform 0.1s;
       }
       .drawer-toggle:hover {
-        background: #1a1a1a;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .drawer-toggle:active {
         transform: scale(0.94);
@@ -1227,16 +1219,18 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       .drawer-content {
         display: none;
         position: sticky;
-        top: 64px;
-        margin: 0 12px 12px;
+        top: 4rem;
+        margin: 0 0.75rem 0.75rem;
         padding: var(--boxel-sp);
         flex-direction: column;
-        gap: 8px;
-        background: white;
+        gap: 0.5rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: 1px solid var(--boxel-300);
-        border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        max-height: calc(100vh - 80px);
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 24px
+          color-mix(in oklch, var(--foreground) 8%, transparent);
+        max-height: calc(100vh - 5rem);
         overflow-y: auto;
       }
       .post-drawer.is-open .drawer-content {
@@ -1249,52 +1243,52 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
           sans-serif;
         letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: #121212;
-        margin: 0 0 4px;
+        color: var(--foreground);
+        margin: 0 0 0.25rem;
       }
       /* Publish/draft controls (inside drawer) */
       .post-controls {
         display: flex;
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
+        gap: 0.625rem;
       }
       .status-badge {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 0.375rem;
         font:
-          600 11px/1 system-ui,
+          600 0.6875rem/1 system-ui,
           -apple-system,
           sans-serif;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
+        padding: 0.25rem 0.625rem;
+        border-radius: 0.375rem;
       }
       .status-badge.is-published {
-        background: rgba(34, 197, 94, 0.12);
-        color: #15803d;
+        background-color: color-mix(in oklch, var(--success) 12%, transparent);
+        color: var(--success-ink);
       }
       .status-badge.is-draft {
-        background: rgba(234, 179, 8, 0.15);
-        color: #a16207;
+        background-color: color-mix(in oklch, var(--warning) 15%, transparent);
+        color: var(--warning-ink);
       }
       .status-dot {
-        width: 6px;
-        height: 6px;
+        width: 0.375rem;
+        height: 0.375rem;
         border-radius: 50%;
-        background: currentColor;
+        background-color: currentColor;
       }
       .publish-btn {
-        padding: 6px 14px;
-        background: #2c2c2c;
-        color: white;
-        border: 1px solid #2c2c2c;
-        border-radius: 999px;
+        padding: 0.375rem 0.875rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border-strong);
+        border-radius: 62.4375rem;
         cursor: pointer;
         font:
-          600 11px/1 system-ui,
+          600 0.6875rem/1 system-ui,
           -apple-system,
           sans-serif;
         letter-spacing: 0.04em;
@@ -1305,33 +1299,35 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
           transform 0.1s;
       }
       .publish-btn:hover {
-        background: #1a1a1a;
-        border-color: #1a1a1a;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-color: var(--border-strong);
       }
       .publish-btn:active {
         transform: scale(0.96);
       }
       .publish-btn--unpublish {
-        background: transparent;
-        color: #2c2c2c;
+        background-color: transparent;
+        color: var(--foreground);
       }
       .publish-btn--unpublish:hover {
-        background: rgba(0, 0, 0, 0.05);
-        color: #1a1a1a;
+        background-color: color-mix(in oklch, var(--tooltip) 5%, transparent);
+        color: var(--foreground);
       }
       .theme-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .theme-row {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px;
-        background: white;
+        gap: 0.625rem;
+        padding: 0.5rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: 2px solid var(--boxel-300);
-        border-radius: 10px;
+        border-radius: 0.625rem;
         cursor: pointer;
         transition:
           border-color 0.15s,
@@ -1339,27 +1335,30 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       }
       .theme-row:hover {
         border-color: var(--boxel-500);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 2px 8px
+          color-mix(in oklch, var(--foreground) 6%, transparent);
       }
       .theme-row.is-selected {
-        border-color: var(--boxel-highlight, #7b61ff);
-        box-shadow: 0 0 0 2px rgba(123, 97, 255, 0.18);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px
+          color-mix(in oklch, var(--primary) 18%, transparent);
       }
       .theme-radio {
         flex-shrink: 0;
-        width: 18px;
-        height: 18px;
+        width: 1.125rem;
+        height: 1.125rem;
         margin: 0;
-        accent-color: var(--boxel-highlight, #7b61ff);
+        accent-color: var(--primary);
         cursor: pointer;
       }
       .theme-preview {
         flex: 1;
         min-width: 0;
-        height: 110px;
-        border-radius: 6px;
+        height: 6.875rem;
+        border-radius: 0.375rem;
         overflow: hidden;
-        background: #f5f5f5;
+        background-color: var(--card);
+        color: var(--card-foreground);
         /* The fitted card is just a visual — kill all interactivity so
            clicks fall through to the surrounding <label>. */
         pointer-events: none;
@@ -1369,7 +1368,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         pointer-events: none !important;
       }
       .theme-row--inherit {
-        padding: 12px;
+        padding: 0.75rem;
       }
       .theme-row__text {
         display: flex;
@@ -1378,20 +1377,20 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       }
       .theme-row__name {
         font:
-          700 12px/1.2 'Inter',
+          700 0.75rem/1.2 'Inter',
           sans-serif;
-        color: #2c2c2c;
+        color: var(--foreground);
       }
       .theme-row__desc {
         font:
-          400 11px/1.3 'Inter',
+          400 0.6875rem/1.3 'Inter',
           sans-serif;
         color: var(--boxel-500);
       }
       .theme-loading {
-        padding: 12px;
+        padding: 0.75rem;
         font:
-          400 11px 'Inter',
+          400 0.6875rem 'Inter',
           sans-serif;
         color: var(--boxel-500);
         text-align: center;
@@ -1403,21 +1402,22 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         top: 0;
         left: 0;
         right: 0;
-        height: 3px;
+        height: 0.1875rem;
         z-index: 250;
-        background: transparent;
+        background-color: transparent;
         pointer-events: none;
       }
       .reading-progress-fill {
         height: 100%;
         width: 0%;
-        background: var(--blog-color-accent, #7b61ff);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         transition: width 0.05s linear;
       }
 
       /* Article canvas — wider than reading column so 2D layouts have room */
       .article-canvas {
-        max-width: var(--blog-canvas-max, 1100px);
+        max-width: var(--blog-canvas-max, 68.75rem);
         margin: 0 auto;
         padding: var(--boxel-sp-xl) var(--boxel-sp-lg) var(--boxel-sp-xxl);
       }
@@ -1429,7 +1429,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       .hero-image :deep(.image),
       .hero-image :deep(img) {
         width: 100%;
-        max-height: 520px;
+        max-height: 32.5rem;
         object-fit: cover;
         border-radius: var(--boxel-border-radius);
         display: block;
@@ -1444,7 +1444,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       }
       .category {
         display: inline-block;
-        padding: 4px 10px;
+        padding: 0.25rem 0.625rem;
         border-radius: var(--boxel-border-radius-sm);
         font: var(--blog-font-meta, 600 0.7rem/1 sans-serif);
         letter-spacing: 0.08em;
@@ -1454,7 +1454,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       /* Headline */
       .headline-wrap {
         margin-bottom: var(--boxel-sp-sm);
-        max-width: var(--blog-headline-max, 860px);
+        max-width: var(--blog-headline-max, 53.75rem);
         margin-left: auto;
         margin-right: auto;
         text-align: center;
@@ -1463,7 +1463,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         font: var(--blog-font-headline, 800 4rem/1.05 sans-serif);
         letter-spacing: var(--blog-tracking-tight, -0.02em);
         margin: 0;
-        color: var(--blog-color-text, #121212);
+        color: var(--foreground);
       }
       @media (max-width: 720px) {
         .headline {
@@ -1475,7 +1475,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       .subtitle-wrap {
         display: block;
         width: 100%;
-        max-width: var(--blog-subtitle-max, 720px);
+        max-width: var(--blog-subtitle-max, 45rem);
         margin: 0 auto var(--boxel-sp-md);
         justify-self: center;
         text-align: center;
@@ -1483,7 +1483,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       .subtitle {
         display: block;
         font: var(--blog-font-subtitle, 400 1.25rem/1.45 sans-serif);
-        color: var(--blog-color-muted, #555);
+        color: var(--muted-foreground);
         margin: 0 auto;
         text-align: center;
       }
@@ -1493,7 +1493,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         font: 500 0.75rem var(--blog-font-family, sans-serif);
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--blog-color-placeholder, #9ca3af);
+        color: var(--subtle-foreground);
         opacity: 0;
         transition: opacity 0.15s ease;
         margin: 0;
@@ -1511,7 +1511,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         font-style: normal;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--blog-color-placeholder, #b5b5b5);
+        color: var(--subtle-foreground);
         opacity: 0;
         transition: opacity 0.15s ease;
       }
@@ -1529,39 +1529,38 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         font: 500 0.85rem
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
         letter-spacing: 0.02em;
-        color: var(--blog-color-muted, #555);
+        color: var(--muted-foreground);
         margin: 0 auto var(--boxel-sp-xl);
         padding: var(--boxel-sp-sm) 0 var(--boxel-sp-lg);
-        max-width: var(--blog-subtitle-max, 720px);
-        border-bottom: 1px solid var(--blog-color-divider, #d1d5db);
+        max-width: var(--blog-subtitle-max, 45rem);
+        border-bottom: 1px solid var(--border);
         text-align: center;
       }
       .byline {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 0.375rem;
         flex-wrap: wrap;
       }
       .byline-prefix {
-        color: var(--blog-color-subtle, #6b6b6b);
+        color: var(--muted-foreground);
         font-weight: 400;
       }
       .author {
         display: contents;
       }
       .byline-sep {
-        color: var(--blog-color-placeholder, #b5b5b5);
+        color: var(--subtle-foreground);
       }
       .pub-date,
       .read-time {
-        color: var(--blog-color-muted, #555);
+        color: var(--muted-foreground);
       }
 
       /* Body — narrower reading column for comfort */
       .body-wrap {
-        max-width: var(--blog-reading-max, 680px);
+        max-width: var(--blog-reading-max, 42.5rem);
         margin: 0 auto var(--boxel-sp-xl);
-        --markdown-paragraph-spacing: var(--boxel-sp-lg);
       }
       .body-zoomed {
         min-height: 60vh;
@@ -1571,7 +1570,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       }
       .article-body {
         font: var(--blog-font-body, 400 1.0625rem/1.7 sans-serif);
-        color: var(--blog-color-body, #1a1a1a);
+        color: var(--foreground);
       }
       .article-body :deep(p) {
         margin: 0 0 1.4em;
@@ -1580,18 +1579,18 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         font: var(--blog-font-h2, 800 1.75rem/1.2 sans-serif);
         letter-spacing: var(--blog-tracking-tighter, -0.01em);
         margin: 2em 0 0.6em;
-        color: var(--blog-color-text, #121212);
+        color: var(--foreground);
       }
       .article-body :deep(h3) {
         font: var(--blog-font-h3, 700 1.2rem/1.3 sans-serif);
         letter-spacing: -0.005em;
         margin: 1.6em 0 0.4em;
-        color: var(--blog-color-text, #121212);
+        color: var(--foreground);
       }
       .article-body :deep(a) {
-        color: var(--blog-color-text, #121212);
+        color: var(--foreground);
         text-decoration: underline;
-        text-decoration-color: var(--blog-color-accent, #7b61ff);
+        text-decoration-color: var(--primary-ink);
         text-decoration-thickness: 2px;
         text-underline-offset: 3px;
       }
@@ -1599,18 +1598,18 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         font: 800 4.2rem/0.9
           var(--blog-font-family, 'Inter', system-ui, sans-serif);
         float: left;
-        margin: 6px 12px 0 0;
-        color: var(--blog-color-text, #121212);
+        margin: 0.375rem 0.75rem 0 0;
+        color: var(--foreground);
       }
       .article-body :deep(blockquote) {
         position: relative;
         font: var(--blog-font-pullquote, 600 1.5rem/1.35 sans-serif);
         letter-spacing: var(--blog-tracking-tighter, -0.01em);
-        color: var(--blog-color-text, #121212);
-        max-width: 540px;
+        color: var(--foreground);
+        max-width: 33.75rem;
         margin: var(--boxel-sp-xl) auto;
         padding: 0 0 0 var(--boxel-sp-lg);
-        border-left: 3px solid var(--blog-color-accent, #7b61ff);
+        border-left: 3px solid var(--primary);
         text-align: left;
       }
       .article-body :deep(blockquote p) {
@@ -1619,16 +1618,16 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
 
       /* Author bios */
       .author-bios {
-        max-width: var(--blog-subtitle-max, 720px);
+        max-width: var(--blog-subtitle-max, 45rem);
         margin: var(--boxel-sp-xxl) auto 0;
         padding-top: var(--boxel-sp-lg);
-        border-top: 1px solid var(--blog-color-divider, #d1d5db);
+        border-top: 1px solid var(--border);
       }
       .author-bios-heading {
         font: var(--blog-font-eyebrow, 700 0.7rem/1 sans-serif);
         letter-spacing: var(--blog-tracking-eyebrow, 0.18em);
         text-transform: uppercase;
-        color: var(--blog-color-faint, #999);
+        color: var(--subtle-foreground);
         margin: 0 0 var(--boxel-sp-sm);
       }
 

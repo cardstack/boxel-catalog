@@ -64,31 +64,18 @@ export class PlaceCardView extends Component<PlaceCardSignature> {
       .pcv {
         container-type: inline-size;
         z-index: 0;
-        --pc-paper: var(--tsp-background, var(--background, #fbf6ec));
-        --pc-ink: var(--tsp-foreground, var(--foreground, #5a1a1a));
-        --pc-gold: var(--tsp-accent, var(--accent, #a5854a));
-        --pc-serif: var(
-          --tsp-font-serif,
-          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-        );
-        --pc-sans: var(
-          --tsp-font-sans,
-          var(--font-sans, 'Jost', system-ui, sans-serif)
-        );
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: 0.375rem;
         width: 100%;
         height: 100%;
         padding: 8%;
-        background: var(--pc-paper);
-        color: var(--pc-ink);
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
-        border: 1px solid var(--pc-gold);
-        border-radius: 6px;
+        border: 1px solid var(--accent);
+        border-radius: 0.375rem;
         text-align: center;
         overflow: hidden;
         position: relative;
@@ -98,20 +85,20 @@ export class PlaceCardView extends Component<PlaceCardSignature> {
       .pcv::before {
         content: '';
         position: absolute;
-        inset: 5px;
-        border: 1px solid color-mix(in srgb, var(--pc-gold) 45%, transparent);
-        border-radius: 4px;
+        inset: 0.3125rem;
+        border: 1px solid color-mix(in oklch, var(--accent) 45%, transparent);
+        border-radius: 0.25rem;
         pointer-events: none;
       }
       .pcv::after {
         content: '❧';
         position: absolute;
-        top: 7px;
-        left: 12px;
-        font-family: var(--pc-serif);
-        font-size: 13px;
+        top: 0.4375rem;
+        left: 0.75rem;
+        font-family: var(--font-serif);
+        font-size: 0.8125rem;
         line-height: 1;
-        color: color-mix(in srgb, var(--pc-gold) 70%, transparent);
+        color: color-mix(in oklch, var(--accent-ink) 70%, transparent);
         pointer-events: none;
       }
       /* Event-logo watermark: faint, centered, behind the content. */
@@ -127,33 +114,34 @@ export class PlaceCardView extends Component<PlaceCardSignature> {
         pointer-events: none;
       }
       .pcv-event {
-        font-family: var(--pc-sans);
-        font-size: clamp(8px, 2.6cqw, 12px);
+        font-family: var(--font-sans);
+        font-size: clamp(0.5rem, 2.6cqw, 0.75rem);
         letter-spacing: 0.22em;
         text-transform: uppercase;
-        color: var(--pc-gold);
+        color: var(--accent-ink);
       }
       .pcv-name {
-        font-family: var(--pc-serif);
-        font-size: clamp(20px, 11cqw, 46px);
+        font-family: var(--font-serif);
+        font-size: clamp(1.25rem, 11cqw, 2.875rem);
         font-weight: 600;
         line-height: 1.05;
       }
       .pcv-rule {
-        width: clamp(24px, 9cqw, 44px);
+        width: clamp(1.5rem, 9cqw, 2.75rem);
         height: 1px;
-        background: var(--pc-gold);
+        background-color: var(--accent);
+        color: var(--accent-foreground);
       }
       .pcv-table {
-        font-family: var(--pc-sans);
-        font-size: clamp(9px, 3cqw, 13px);
+        font-family: var(--font-sans);
+        font-size: clamp(0.5625rem, 3cqw, 0.8125rem);
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--pc-gold);
+        color: var(--accent-ink);
       }
       .pcv-msg {
-        font-family: var(--pc-serif);
-        font-size: clamp(11px, 3.6cqw, 16px);
+        font-family: var(--font-serif);
+        font-size: clamp(0.6875rem, 3.6cqw, 1rem);
         font-style: italic;
         opacity: 0.8;
       }
@@ -162,7 +150,7 @@ export class PlaceCardView extends Component<PlaceCardSignature> {
       @media print {
         .pcv-event,
         .pcv-table {
-          color: color-mix(in srgb, var(--pc-gold) 50%, var(--pc-ink));
+          color: color-mix(in oklch, var(--accent-ink) 50%, var(--foreground));
         }
       }
     </style>
@@ -204,32 +192,18 @@ export class TableCardView extends Component<TableCardSignature> {
       .tcv {
         container-type: inline-size;
         z-index: 0;
-        --tc-paper: var(--tsp-background, var(--background, #fbf6ec));
-        --tc-ink: var(--tsp-foreground, var(--foreground, #5a1a1a));
-        --tc-gold: var(--tsp-accent, var(--accent, #a5854a));
-        --tc-primary: var(--tsp-primary, var(--primary, #5a1a1a));
-        --tc-serif: var(
-          --tsp-font-serif,
-          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-        );
-        --tc-sans: var(
-          --tsp-font-sans,
-          var(--font-sans, 'Jost', system-ui, sans-serif)
-        );
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 0.5rem;
         width: 100%;
         height: 100%;
         padding: 7%;
-        background: var(--tc-paper);
-        color: var(--tc-ink);
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
-        border: 2px solid var(--tc-gold);
-        border-radius: 8px;
+        border: 2px solid var(--accent);
+        border-radius: 0.5rem;
         text-align: center;
         overflow: hidden;
         position: relative;
@@ -237,20 +211,20 @@ export class TableCardView extends Component<TableCardSignature> {
       .tcv::before {
         content: '';
         position: absolute;
-        inset: 6px;
-        border: 1px solid color-mix(in srgb, var(--tc-gold) 45%, transparent);
-        border-radius: 5px;
+        inset: 0.375rem;
+        border: 1px solid color-mix(in oklch, var(--accent) 45%, transparent);
+        border-radius: 0.3125rem;
         pointer-events: none;
       }
       .tcv::after {
         content: '✦';
         position: absolute;
-        bottom: 8px;
+        bottom: 0.5rem;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 10px;
+        font-size: 0.625rem;
         line-height: 1;
-        color: color-mix(in srgb, var(--tc-primary) 70%, transparent);
+        color: color-mix(in oklch, var(--primary-ink) 70%, transparent);
         pointer-events: none;
       }
       /* Event-logo watermark: faint, centered, behind the content. */
@@ -266,22 +240,22 @@ export class TableCardView extends Component<TableCardSignature> {
         pointer-events: none;
       }
       .tcv-event {
-        font-family: var(--tc-sans);
-        font-size: clamp(9px, 2.4cqw, 13px);
+        font-family: var(--font-sans);
+        font-size: clamp(0.5625rem, 2.4cqw, 0.8125rem);
         letter-spacing: 0.26em;
         text-transform: uppercase;
-        color: var(--tc-gold);
+        color: var(--accent-ink);
       }
       .tcv-name {
         display: flex;
         align-items: center;
         gap: 0.45em;
         max-width: 100%;
-        font-family: var(--tc-serif);
-        font-size: clamp(24px, 10cqw, 52px);
+        font-family: var(--font-serif);
+        font-size: clamp(1.5rem, 10cqw, 3.25rem);
         font-weight: 700;
         line-height: 1;
-        color: var(--tc-primary);
+        color: var(--primary-ink);
       }
       /* Classic stationery rules flanking the table name. */
       .tcv-name::before,
@@ -290,17 +264,17 @@ export class TableCardView extends Component<TableCardSignature> {
         flex: none;
         width: 1.1em;
         height: 1px;
-        background: color-mix(in srgb, var(--tc-primary) 45%, transparent);
+        background-color: color-mix(in oklch, var(--primary) 45%, transparent);
       }
       .tcv-accent {
-        font-family: var(--tc-serif);
-        font-size: clamp(13px, 4cqw, 22px);
+        font-family: var(--font-serif);
+        font-size: clamp(0.8125rem, 4cqw, 1.375rem);
         font-style: italic;
         opacity: 0.8;
       }
       @media print {
         .tcv-event {
-          color: color-mix(in srgb, var(--tc-gold) 50%, var(--tc-ink));
+          color: color-mix(in oklch, var(--accent-ink) 50%, var(--foreground));
         }
       }
     </style>

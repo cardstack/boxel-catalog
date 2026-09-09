@@ -71,7 +71,7 @@ export class MortgageCalculatorIsolated extends Component<
     return [
       {
         value: model.monthlyMortgagePayment,
-        color: 'var(--mc-green, #059669)',
+        color: 'var(--success)',
         label: 'Principal & Interest',
         percent: Math.round(
           ((model.monthlyMortgagePayment ?? 0) / total) * 100,
@@ -79,19 +79,19 @@ export class MortgageCalculatorIsolated extends Component<
       },
       {
         value: model.taxPerMonth,
-        color: 'var(--chart-2, #589BFF)',
+        color: 'var(--chart-2)',
         label: 'Property Taxes',
         percent: Math.round(((model.taxPerMonth ?? 0) / total) * 100),
       },
       {
         value: model.insurancePerMonth,
-        color: 'var(--chart-5, #ef4444)',
+        color: 'var(--chart-5)',
         label: 'Home Insurance',
         percent: Math.round(((model.insurancePerMonth ?? 0) / total) * 100),
       },
       {
         value: model.hoaFeesPerMonth,
-        color: 'var(--chart-4, #f59e0b)',
+        color: 'var(--chart-4)',
         label: 'HOA Fees',
         percent: Math.round(((model.hoaFeesPerMonth ?? 0) / total) * 100),
       },
@@ -600,27 +600,21 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-wrapper {
         container-type: inline-size;
         margin: 0 auto;
-        padding: var(--boxel-sp-lg, 1.5rem);
+        padding: var(--boxel-sp-lg);
         background: linear-gradient(
           135deg,
-          #f0fdf4 0%,
-          #fafffe 40%,
-          #f0fdf9 70%,
-          #edfaf4 100%
+          var(--card) 0%,
+          var(--card) 40%,
+          var(--card) 70%,
+          var(--card) 100%
         );
         background-size: 300% 300%;
         animation: mcBgDrift 12s ease-in-out infinite;
-        color: var(--foreground, #111827);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          -apple-system,
-          BlinkMacSystemFont,
-          sans-serif
-        );
+        color: var(--foreground);
+        font-family: var(--font-sans);
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp, 1rem);
+        gap: var(--boxel-sp);
         box-sizing: border-box;
         position: relative;
         overflow: hidden;
@@ -632,15 +626,15 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         flex-direction: column;
         gap: 0.75rem;
         padding: 2.5rem 1.5rem 2rem;
-        min-height: 180px;
+        min-height: 11.25rem;
         justify-content: flex-end;
-        border-radius: var(--boxel-border-radius-lg, 0.75rem);
+        border-radius: var(--boxel-border-radius-lg);
         overflow: hidden;
         /* background applied via inline headerStyle getter */
-        color: #ffffff;
+        color: var(--card-foreground);
         box-shadow:
-          0 8px 32px rgba(0, 0, 0, 0.22),
-          0 2px 8px rgba(0, 0, 0, 0.12);
+          0 8px 32px color-mix(in oklch, var(--foreground) 22%, transparent),
+          0 2px 8px color-mix(in oklch, var(--foreground) 12%, transparent);
       }
       .mc-title-row {
         display: flex;
@@ -654,17 +648,18 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         font-size: 1.75rem;
         font-weight: 800;
         letter-spacing: -0.02em;
-        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+        text-shadow: 0 2px 12px
+          color-mix(in oklch, var(--foreground) 35%, transparent);
       }
       .mc-quickfill-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.375rem;
         padding: 0.5rem 0.875rem;
-        background: rgba(255, 255, 255, 0.18);
+        background-color: color-mix(in oklch, var(--card) 18%, transparent);
         color: inherit;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 999px;
+        border: 1px solid color-mix(in oklch, var(--card) 30%, transparent);
+        border-radius: 62.4375rem;
         cursor: pointer;
         font-size: 0.8125rem;
         font-weight: 500;
@@ -675,7 +670,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
           transform 0.18s ease;
       }
       .mc-quickfill-btn:hover {
-        background: rgba(255, 255, 255, 0.28);
+        background-color: color-mix(in oklch, var(--card) 28%, transparent);
         transform: translateY(-1px);
       }
       .mc-quickfill {
@@ -688,8 +683,8 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         padding: 0.625rem 0.875rem;
         font-family: inherit;
         font-size: 0.875rem;
-        background: rgba(255, 255, 255, 0.95);
-        color: var(--foreground, #111111);
+        background-color: color-mix(in oklch, var(--card) 95%, transparent);
+        color: var(--foreground);
         border: none;
         border-radius: 0.5rem;
         resize: vertical;
@@ -698,7 +693,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         outline: none;
       }
       .mc-quickfill-input:focus {
-        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 0 2px color-mix(in oklch, var(--card) 50%, transparent);
       }
       .mc-quickfill-actions {
         display: flex;
@@ -712,8 +707,8 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         border-radius: 0.375rem;
       }
       .mc-quickfill-msg.success {
-        background: rgba(48, 239, 157, 0.2);
-        color: #d4ffe8;
+        background-color: color-mix(in oklch, var(--success) 20%, transparent);
+        color: var(--success-ink);
         display: inline-flex;
         align-self: flex-start;
         align-items: flex-start;
@@ -725,8 +720,12 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         opacity: 0.85;
       }
       .mc-quickfill-msg.error {
-        background: rgba(255, 80, 80, 0.25);
-        color: #ffefef;
+        background-color: color-mix(
+          in oklch,
+          var(--destructive) 25%,
+          transparent
+        );
+        color: var(--card-foreground);
       }
       .mc-debug {
         margin-top: 0.5rem;
@@ -739,12 +738,12 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-debug pre {
         margin: 0.375rem 0 0;
         padding: 0.5rem 0.625rem;
-        background: rgba(0, 0, 0, 0.35);
-        color: #fff;
+        background-color: color-mix(in oklch, var(--card) 35%, transparent);
+        color: var(--card-foreground);
         border-radius: 0.375rem;
         white-space: pre-wrap;
         word-break: break-word;
-        max-height: 200px;
+        max-height: 12.5rem;
         overflow: auto;
       }
 
@@ -769,40 +768,29 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         cursor: not-allowed;
       }
       .mc-btn-primary {
-        background: var(--card, #ffffff);
-        color: var(--primary, #007272);
+        background-color: var(--card);
+        color: var(--primary-ink);
       }
       .mc-btn-primary:hover:not(:disabled) {
         transform: translateY(-1px);
-        box-shadow: var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.15));
+        box-shadow: var(--shadow-sm);
       }
       .mc-btn-ghost {
-        background: transparent;
+        background-color: transparent;
         color: inherit;
-        border: 1px solid rgba(255, 255, 255, 0.4);
+        border: 1px solid color-mix(in oklch, var(--card) 40%, transparent);
       }
       .mc-btn-ghost:hover {
-        background: rgba(255, 255, 255, 0.12);
+        background-color: color-mix(in oklch, var(--card) 12%, transparent);
       }
       /* ── Design tokens (bottom half) ── */
       .mc-wrapper {
-        --mc-green: #059669;
-        --mc-green-dark: #047857;
-        --mc-green-bg: #ecfdf5;
-        --mc-green-border: #6ee7b7;
-        --mc-teal: #007272;
-        --mc-teal-dark: #005858;
-        --mc-surface: #ffffff;
-        --mc-bg: #f8fafb;
-        --mc-text: #0f172a;
-        --mc-text-2: #1e293b;
-        --mc-muted: #64748b;
-        --mc-border: #e2e8f0;
-        --mc-border-2: #cbd5e1;
         --mc-shadow:
-          0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+          0 1px 0.1875rem color-mix(in oklch, var(--foreground) 6%, transparent),
+          0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent);
         --mc-shadow-md:
-          0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+          0 0.25rem 1rem color-mix(in oklch, var(--foreground) 8%, transparent),
+          0 2px 0.25rem color-mix(in oklch, var(--foreground) 4%, transparent);
       }
 
       /* CURRENCY NOTICE */
@@ -811,23 +799,23 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         align-items: center;
         gap: 0.375rem;
         padding: 0.375rem 0.75rem;
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        border-radius: 999px;
+        background-color: color-mix(in oklch, var(--card) 12%, transparent);
+        border: 1px solid color-mix(in oklch, var(--card) 22%, transparent);
+        border-radius: 62.4375rem;
         font-size: 0.75rem;
-        color: rgba(255, 255, 255, 0.82);
+        color: color-mix(in oklch, var(--card-foreground) 82%, transparent);
         backdrop-filter: blur(6px);
         align-self: flex-start;
       }
       .mc-currency-notice strong {
-        color: #ffffff;
+        color: var(--card-foreground);
         font-weight: 700;
       }
 
       /* BODY LAYOUT */
       .mc-body {
         display: grid;
-        grid-template-columns: minmax(220px, 1fr) 3fr;
+        grid-template-columns: minmax(13.75rem, 1fr) 3fr;
         gap: 1.25rem;
         position: relative;
         z-index: 0;
@@ -836,16 +824,16 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-wrapper::before {
         content: '';
         position: absolute;
-        width: 420px;
-        height: 420px;
+        width: 26.25rem;
+        height: 26.25rem;
         border-radius: 50%;
         background: radial-gradient(
           circle,
-          rgba(5, 150, 105, 0.07) 0%,
+          color-mix(in oklch, var(--success) 7%, transparent) 0%,
           transparent 70%
         );
-        top: 160px;
-        right: -80px;
+        top: 10rem;
+        right: -5rem;
         animation: mcBlob1 9s ease-in-out infinite;
         pointer-events: none;
         z-index: 0;
@@ -853,16 +841,16 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-wrapper::after {
         content: '';
         position: absolute;
-        width: 300px;
-        height: 300px;
+        width: 18.75rem;
+        height: 18.75rem;
         border-radius: 50%;
         background: radial-gradient(
           circle,
-          rgba(16, 185, 129, 0.06) 0%,
+          color-mix(in oklch, var(--success) 6%, transparent) 0%,
           transparent 70%
         );
-        bottom: 80px;
-        left: -60px;
+        bottom: 5rem;
+        left: -3.75rem;
         animation: mcBlob2 11s ease-in-out infinite;
         pointer-events: none;
         z-index: 0;
@@ -875,14 +863,16 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
 
       /* FORM */
       .mc-form {
-        background: var(--mc-surface);
-        border: 1px solid var(--mc-border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
         border-radius: 1rem;
         padding: 1.25rem;
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 3px
+          color-mix(in oklch, var(--foreground) 5%, transparent);
         position: relative;
         z-index: 1;
       }
@@ -892,7 +882,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         gap: 0.375rem;
         font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
         text-transform: uppercase;
         letter-spacing: 0.06em;
         margin-top: 0.875rem;
@@ -901,10 +891,11 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-form label::before {
         content: '';
         display: inline-block;
-        width: 6px;
-        height: 6px;
+        width: 0.375rem;
+        height: 0.375rem;
         border-radius: 50%;
-        background: var(--mc-green);
+        background-color: var(--success);
+        color: var(--success-foreground);
         flex-shrink: 0;
       }
       .mc-form label:first-of-type {
@@ -913,9 +904,9 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-form :deep(input) {
         width: 100%;
         padding: 0.5rem 0.75rem;
-        background: var(--mc-green-bg);
-        color: var(--mc-text);
-        border: 1.5px solid var(--mc-green-border);
+        background-color: var(--card);
+        color: var(--foreground);
+        border: 1.5px solid var(--success);
         border-radius: 0.625rem;
         font-size: 0.9375rem;
         font-variant-numeric: tabular-nums;
@@ -925,10 +916,12 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
           box-shadow 0.18s ease;
       }
       .mc-form :deep(input):focus {
-        background: #ffffff;
-        border-color: var(--mc-green);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-color: var(--success);
         outline: none;
-        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+        box-shadow: 0 0 0 3px
+          color-mix(in oklch, var(--success) 15%, transparent);
       }
       /* CURRENCY ROW (central currency picker) */
       .mc-currency-row {
@@ -938,14 +931,10 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         justify-content: space-between;
         gap: 0.5rem;
         padding: 0.5rem 0.75rem 0.5rem 0.875rem;
-        background: linear-gradient(
-          135deg,
-          var(--mc-teal) 0%,
-          var(--mc-teal-dark) 100%
-        );
+        background: linear-gradient(135deg, var(--card) 0%, var(--card) 100%);
         border-radius: 0.75rem;
         margin-bottom: 0.625rem;
-        box-shadow: 0 2px 8px rgba(0, 114, 114, 0.22);
+        box-shadow: 0 2px 8px color-mix(in oklch, var(--info) 22%, transparent);
       }
       .mc-currency-label {
         display: inline-flex;
@@ -955,28 +944,29 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.07em;
-        color: rgba(255, 255, 255, 0.88);
+        color: color-mix(in oklch, var(--card-foreground) 88%, transparent);
         white-space: nowrap;
         flex-shrink: 0;
       }
       /* BoxelSelect trigger inside currency row */
       .mc-currency-row :deep(.currency-field-edit) {
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background-color: color-mix(in oklch, var(--card) 15%, transparent);
+        border: 1px solid color-mix(in oklch, var(--card) 30%, transparent);
         border-radius: 0.5rem;
-        color: #ffffff;
+        color: var(--card-foreground);
         font-size: 0.8125rem;
         font-weight: 600;
-        min-width: 100px;
+        min-width: 6.25rem;
       }
       .mc-currency-row :deep(.currency-field-edit:hover) {
-        background: rgba(255, 255, 255, 0.22);
+        background-color: color-mix(in oklch, var(--card) 22%, transparent);
       }
 
       /* RESULTS */
       .mc-results {
-        background: var(--mc-surface);
-        border: 1px solid var(--mc-border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
         border-radius: 1rem;
         padding: 1.25rem;
         display: flex;
@@ -990,18 +980,19 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       /* STAT CARDS */
       .mc-summary {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
         gap: 0.75rem;
       }
       .mc-stat {
         padding: 1rem 1rem 0.875rem;
-        background: var(--mc-bg);
-        border: 1px solid var(--mc-border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
         border-radius: 0.875rem;
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
-        border-left: 3px solid var(--mc-green-border);
+        border-left: 3px solid var(--success);
         transition:
           transform 0.18s ease,
           box-shadow 0.18s ease;
@@ -1013,7 +1004,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-stat-label {
         font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -1021,7 +1012,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         font-size: 1.25rem;
         font-weight: 800;
         font-variant-numeric: tabular-nums;
-        color: var(--mc-text);
+        color: var(--foreground);
         letter-spacing: -0.02em;
         white-space: nowrap;
         overflow: hidden;
@@ -1029,22 +1020,22 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         min-width: 0;
       }
       .mc-stat.highlight {
-        background: var(--mc-green);
+        background-color: var(--success);
         border-color: transparent;
-        border-left-color: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
-        box-shadow: 0 4px 20px rgba(0, 114, 114, 0.35);
+        border-left-color: color-mix(in oklch, var(--card) 30%, transparent);
+        color: var(--success-foreground);
+        box-shadow: 0 4px 20px color-mix(in oklch, var(--info) 35%, transparent);
       }
       .mc-stat.highlight .mc-stat-label {
-        color: rgba(255, 255, 255, 0.75);
+        color: color-mix(in oklch, var(--card-foreground) 75%, transparent);
       }
       .mc-stat.highlight .mc-stat-value {
-        color: #ffffff;
+        color: var(--card-foreground);
       }
 
       /* TABLE */
       .mc-table {
-        border: 1px solid var(--mc-border);
+        border: 1px solid var(--border);
         border-radius: 0.875rem;
         overflow: hidden;
         display: flex;
@@ -1059,30 +1050,30 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         font-variant-numeric: tabular-nums;
       }
       .mc-table-row + .mc-table-row {
-        border-top: 1px solid var(--mc-border);
+        border-top: 1px solid var(--border);
       }
       .mc-table-row span:not(:first-child) {
         text-align: right;
         font-weight: 500;
       }
       .mc-table-head {
-        background: var(--mc-green-bg);
+        background-color: var(--card);
         font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: var(--mc-green-dark);
+        color: var(--success-ink);
       }
       .mc-table-row.featured {
-        background: rgba(5, 150, 105, 0.06);
+        background-color: color-mix(in oklch, var(--card) 6%, transparent);
         font-weight: 600;
-        color: var(--mc-text-2);
+        color: var(--foreground);
       }
       .mc-table-row.total {
-        background: var(--mc-bg);
+        background-color: var(--card);
         font-weight: 800;
-        border-top: 2px solid var(--mc-border-2);
-        color: var(--mc-text);
+        border-top: 2px solid var(--border);
+        color: var(--foreground);
       }
 
       /* CHARTS */
@@ -1093,19 +1084,20 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       }
       .mc-tabs {
         display: inline-flex;
-        padding: 4px;
-        background: var(--mc-green-bg);
-        border: 1px solid var(--mc-green-border);
-        border-radius: 999px;
+        padding: 0.25rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--success);
+        border-radius: 62.4375rem;
         gap: 2px;
         align-self: flex-start;
       }
       .mc-tab {
         padding: 0.375rem 1rem;
-        background: transparent;
-        color: var(--mc-muted);
+        background-color: transparent;
+        color: var(--primary-ink);
         border: none;
-        border-radius: 999px;
+        border-radius: 62.4375rem;
         cursor: pointer;
         font-size: 0.8125rem;
         font-weight: 600;
@@ -1116,19 +1108,21 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
           box-shadow 0.18s ease;
       }
       .mc-tab:hover {
-        color: var(--mc-text);
+        color: var(--foreground);
       }
       .mc-tab.active {
-        background: var(--mc-green);
-        color: #ffffff;
-        box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
+        background-color: var(--success);
+        color: var(--success-foreground);
+        box-shadow: 0 2px 8px
+          color-mix(in oklch, var(--success) 35%, transparent);
       }
       .mc-chart-panel {
-        background: var(--mc-green-bg);
-        border: 1px solid var(--mc-green-border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--success);
         border-radius: 0.875rem;
         padding: 1rem;
-        min-height: 320px;
+        min-height: 20rem;
         animation: mcFade 0.3s ease;
       }
       .mc-chart-panel.breakdown {
@@ -1150,10 +1144,12 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         align-items: center;
         gap: 0.75rem;
         padding: 0.625rem 0.875rem;
-        background: #ffffff;
-        border: 1px solid var(--mc-border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
         border-radius: 0.75rem;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 4px
+          color-mix(in oklch, var(--foreground) 5%, transparent);
         transition:
           transform 0.15s ease,
           box-shadow 0.15s ease;
@@ -1161,13 +1157,14 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       }
       .mc-legend-card:hover {
         transform: translateX(5px);
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 3px 12px
+          color-mix(in oklch, var(--foreground) 10%, transparent);
       }
       .mc-legend-bar {
         display: inline-block;
-        width: 5px;
-        height: 36px;
-        border-radius: 99px;
+        width: 0.3125rem;
+        height: 2.25rem;
+        border-radius: 6.1875rem;
         flex-shrink: 0;
       }
       .mc-legend-info {
@@ -1178,13 +1175,14 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       }
       .mc-legend-row {
         display: grid;
-        grid-template-columns: 12px 1fr auto;
+        grid-template-columns: 0.75rem 1fr auto;
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem 0.625rem;
         border-radius: 0.625rem;
-        background: #ffffff;
-        border: 1px solid var(--mc-border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
         transition:
           transform 0.15s ease,
           box-shadow 0.15s ease;
@@ -1192,35 +1190,36 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       }
       .mc-legend-row:hover {
         transform: translateX(4px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 8px
+          color-mix(in oklch, var(--foreground) 8%, transparent);
       }
       .mc-legend-swatch {
-        width: 12px;
-        height: 12px;
-        border-radius: 3px;
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 0.1875rem;
         flex-shrink: 0;
       }
       .mc-legend-label {
         font-size: 0.8125rem;
         font-weight: 600;
-        color: var(--mc-text-2);
+        color: var(--foreground);
       }
       .mc-legend-pct {
         font-size: 0.8125rem;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
       }
       .mc-legend-value {
         font-size: 0.75rem;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
         font-variant-numeric: tabular-nums;
       }
       .mc-legend-badge {
         font-size: 1rem;
         font-weight: 800;
         font-variant-numeric: tabular-nums;
-        color: var(--mc-text);
+        color: var(--foreground);
         min-width: 2.75rem;
         text-align: right;
       }
@@ -1273,24 +1272,26 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         0%,
         100% {
           background-position: 0% 50%;
-          box-shadow: 0 4px 20px rgba(0, 114, 114, 0.35);
+          box-shadow: 0 4px 20px
+            color-mix(in oklch, var(--info) 35%, transparent);
         }
         50% {
           background-position: 100% 50%;
-          box-shadow: 0 6px 28px rgba(0, 114, 114, 0.52);
+          box-shadow: 0 6px 28px
+            color-mix(in oklch, var(--info) 52%, transparent);
         }
       }
       @keyframes mcFormGlow {
         0%,
         100% {
           box-shadow:
-            0 1px 3px rgba(0, 0, 0, 0.06),
-            0 0 0 0 rgba(5, 150, 105, 0);
+            0 1px 3px color-mix(in oklch, var(--foreground) 6%, transparent),
+            0 0 0 0 color-mix(in oklch, var(--success) 0%, transparent);
         }
         50% {
           box-shadow:
-            0 1px 3px rgba(0, 0, 0, 0.06),
-            0 0 16px 2px rgba(5, 150, 105, 0.08);
+            0 1px 3px color-mix(in oklch, var(--foreground) 6%, transparent),
+            0 0 16px 2px color-mix(in oklch, var(--success) 8%, transparent);
         }
       }
       @media (prefers-reduced-motion: reduce) {

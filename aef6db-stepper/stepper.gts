@@ -319,8 +319,11 @@ export default class Stepper extends Component<StepperSignature> {
         z-index: 200;
         display: grid;
         place-items: center;
-        padding: var(--boxel-sp, 16px);
-        background: var(--stepper-scrim-bg, rgba(0, 0, 0, 0.3));
+        padding: var(--boxel-sp);
+        background-color: var(
+          --stepper-scrim-bg,
+          color-mix(in oklch, var(--foreground) 30%, transparent)
+        );
         backdrop-filter: blur(2px);
       }
       .stepper-card {
@@ -330,30 +333,20 @@ export default class Stepper extends Component<StepperSignature> {
         flex-direction: column;
         width: 100%;
         height: 100%;
-        padding: 26px 30px;
+        padding: 1.625rem 1.875rem;
         overflow: hidden;
-        background: var(
-          --stepper-card-bg,
-          var(--card, var(--boxel-light, #ffffff))
+        background-color: var(--card);
+        border-radius: var(--radius);
+        box-shadow: var(
+          --stepper-shadow,
+          0 20px 60px color-mix(in oklch, var(--foreground) 25%, transparent)
         );
-        border-radius: var(
-          --stepper-radius,
-          var(--radius, var(--boxel-border-radius-xl, 18px))
-        );
-        box-shadow: var(--stepper-shadow, 0 20px 60px rgba(0, 0, 0, 0.25));
-        font-family: var(
-          --stepper-body-font,
-          var(--font-sans, var(--boxel-font-family, system-ui, sans-serif))
-        );
-        color: var(
-          --stepper-ink,
-          var(--foreground, var(--boxel-dark, #222222))
-        );
+        font-family: var(--font-sans);
+        color: var(--foreground);
       }
       .stepper-inline {
         box-shadow: none;
-        border: 1px solid
-          var(--stepper-border, var(--border, rgba(0, 0, 0, 0.1)));
+        border: 1px solid var(--border);
       }
       .stepper-top {
         display: flex;
@@ -366,17 +359,14 @@ export default class Stepper extends Component<StepperSignature> {
         gap: 2px;
       }
       .stepper-kicker {
-        font-size: 10px;
+        font-size: 0.625rem;
         letter-spacing: 0.24em;
         text-transform: uppercase;
-        color: var(
-          --stepper-kicker-color,
-          var(--stepper-muted, var(--muted-foreground, rgba(0, 0, 0, 0.6)))
-        );
+        color: var(--muted-foreground);
       }
       .stepper-brand-name {
         font-family: var(--stepper-heading-font, inherit);
-        font-size: 21px;
+        font-size: 1.3125rem;
         font-weight: 600;
       }
       /* Outlined circle ✕, no fill — same treatment as the seating
@@ -386,60 +376,47 @@ export default class Stepper extends Component<StepperSignature> {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 30px;
-        height: 30px;
+        width: 1.875rem;
+        height: 1.875rem;
         border-radius: 50%;
-        border: 1px solid
-          var(--stepper-border, var(--border, rgba(0, 0, 0, 0.15)));
-        background: transparent;
-        color: var(
-          --stepper-muted,
-          var(--muted-foreground, rgba(0, 0, 0, 0.55))
-        );
-        font-size: 12px;
+        border: 1px solid var(--border);
+        background-color: transparent;
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
         line-height: 1;
         cursor: pointer;
         transition: 0.15s;
       }
       .stepper-close:hover {
-        border-color: var(
-          --stepper-ink,
-          var(--foreground, var(--boxel-dark, #222222))
-        );
-        color: var(
-          --stepper-ink,
-          var(--foreground, var(--boxel-dark, #222222))
-        );
+        border-color: var(--foreground);
+        color: var(--foreground);
       }
       .stepper-body {
         flex: 1;
         min-height: 0;
         display: flex;
-        gap: 32px;
-        margin-top: 18px;
+        gap: 2rem;
+        margin-top: 1.125rem;
       }
       .stepper-rail {
         flex: none;
-        width: 232px;
+        width: 14.5rem;
         margin: 0;
-        padding: 22px 18px;
+        padding: 1.375rem 1.125rem;
         list-style: none;
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 1.5rem;
         overflow-y: auto;
-        border: 1px solid
-          var(--stepper-border, var(--border, rgba(0, 0, 0, 0.1)));
-        border-radius: 16px;
-        background: var(
-          --stepper-surface,
-          var(--muted, var(--boxel-100, #f8f8f8))
-        );
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .stepper-step {
         position: relative;
         display: flex;
-        gap: 14px;
+        gap: 0.875rem;
       }
       /* Current-step highlight — a soft accent wash behind the whole
          row, so "you are here" stays visible even once the step is
@@ -447,14 +424,9 @@ export default class Stepper extends Component<StepperSignature> {
       .stepper-step.is-active::after {
         content: '';
         position: absolute;
-        inset: -8px -10px;
-        border-radius: 12px;
-        background: color-mix(
-          in srgb,
-          var(--stepper-accent, var(--primary, var(--boxel-highlight, #00ac3d)))
-            10%,
-          transparent
-        );
+        inset: -0.5rem -0.625rem;
+        border-radius: 0.75rem;
+        background-color: color-mix(in oklch, var(--primary) 10%, transparent);
         pointer-events: none;
       }
       .stepper-step.is-jumpable {
@@ -463,37 +435,28 @@ export default class Stepper extends Component<StepperSignature> {
       .stepper-step:not(:last-child)::before {
         content: '';
         position: absolute;
-        left: 15px;
-        top: 34px;
-        bottom: -24px;
+        left: 0.9375rem;
+        top: 2.125rem;
+        bottom: -1.5rem;
         width: 2px;
-        background: var(
-          --stepper-connector,
-          var(--border, rgba(0, 0, 0, 0.12))
-        );
+        background-color: var(--border);
       }
       .stepper-step.is-done:not(:last-child)::before {
-        background: var(
-          --stepper-accent,
-          var(--primary, var(--boxel-highlight, #00ac3d))
-        );
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .stepper-dot {
         flex: none;
-        width: 32px;
-        height: 32px;
+        width: 2rem;
+        height: 2rem;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        border: 2px solid
-          var(--stepper-connector, var(--border, rgba(0, 0, 0, 0.18)));
-        background: var(--stepper-card-bg, var(--card, #ffffff));
-        color: var(
-          --stepper-muted,
-          var(--muted-foreground, rgba(0, 0, 0, 0.5))
-        );
-        font-size: 12px;
+        border: 2px solid var(--border);
+        background-color: var(--card);
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
         font-weight: 600;
         z-index: 1;
       }
@@ -501,47 +464,21 @@ export default class Stepper extends Component<StepperSignature> {
          theme's --primary / --primary-foreground pair; boxel-highlight
          is bright, so the themeless on-accent fallback is dark. */
       .stepper-step.is-done .stepper-dot {
-        background: var(
-          --stepper-accent,
-          var(--primary, var(--boxel-highlight, #00ac3d))
-        );
-        border-color: var(
-          --stepper-accent,
-          var(--primary, var(--boxel-highlight, #00ac3d))
-        );
-        color: var(
-          --stepper-accent-fg,
-          var(--primary-foreground, var(--boxel-dark, #000000))
-        );
+        background-color: var(--primary);
+        border-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .stepper-step.is-active .stepper-dot {
-        border-color: var(
-          --stepper-accent,
-          var(--primary, var(--boxel-highlight, #00ac3d))
-        );
-        color: var(
-          --stepper-ink,
-          var(--foreground, var(--boxel-dark, #222222))
-        );
+        border-color: var(--primary);
+        color: var(--foreground);
         box-shadow: 0 0 0 4px
-          color-mix(
-            in srgb,
-            var(
-                --stepper-accent,
-                var(--primary, var(--boxel-highlight, #00ac3d))
-              )
-              28%,
-            transparent
-          );
+          color-mix(in oklch, var(--primary) 28%, transparent);
       }
       /* Completed AND current: keep the on-accent foreground so the ✓
          stays readable on the accent fill (the active rule above would
          otherwise repaint it in ink). */
       .stepper-step.is-done.is-active .stepper-dot {
-        color: var(
-          --stepper-accent-fg,
-          var(--primary-foreground, var(--boxel-dark, #000000))
-        );
+        color: var(--primary-foreground);
       }
       .stepper-step-txt {
         position: relative;
@@ -552,33 +489,24 @@ export default class Stepper extends Component<StepperSignature> {
         padding-top: 2px;
       }
       .stepper-step-k {
-        font-size: 10px;
+        font-size: 0.625rem;
         letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: var(
-          --stepper-muted,
-          var(--muted-foreground, rgba(0, 0, 0, 0.45))
-        );
+        color: var(--muted-foreground);
       }
       .stepper-step-l {
         font-family: var(--stepper-heading-font, inherit);
-        font-size: 18px;
+        font-size: 1.125rem;
         font-weight: 600;
       }
       /* Active/done rail TEXT stays ink/muted — accent is for fills
          only; accent-colored text on the light rail fails contrast. */
       .stepper-step.is-active .stepper-step-l {
-        color: var(
-          --stepper-ink,
-          var(--foreground, var(--boxel-dark, #222222))
-        );
+        color: var(--foreground);
       }
       .stepper-step-s {
-        font-size: 11px;
-        color: var(
-          --stepper-muted,
-          var(--muted-foreground, rgba(0, 0, 0, 0.45))
-        );
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
       }
       .stepper-main {
         flex: 1;
@@ -601,53 +529,39 @@ export default class Stepper extends Component<StepperSignature> {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 52px;
-        height: 52px;
+        width: 3.25rem;
+        height: 3.25rem;
         border-radius: 50%;
-        background: var(
-          --stepper-accent,
-          var(--primary, var(--boxel-highlight, #00ac3d))
-        );
-        color: var(
-          --stepper-accent-fg,
-          var(--primary-foreground, var(--boxel-dark, #000000))
-        );
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .stepper-title {
-        margin: 12px 0 0;
+        margin: 0.75rem 0 0;
         font-family: var(--stepper-heading-font, inherit);
-        font-size: 32px;
+        font-size: 2rem;
         font-weight: 600;
       }
       .stepper-sub {
-        margin: 6px 0 0;
-        font-size: 14px;
-        color: var(
-          --stepper-muted,
-          var(--muted-foreground, rgba(0, 0, 0, 0.65))
-        );
+        margin: 0.375rem 0 0;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
         max-width: 54ch;
       }
       .stepper-actions {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 10px;
+        gap: 0.625rem;
         margin-top: auto;
-        padding-top: 16px;
-        border-top: 1px solid
-          var(--stepper-border, var(--border, rgba(0, 0, 0, 0.08)));
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
       }
       .stepper-back {
         margin-right: auto;
       }
       /* Boxel <Button> re-skins: route its CSS API through --stepper-* */
       .stepper-ghost {
-        --boxel-button-font: 500 13px
-          var(
-            --stepper-body-font,
-            var(--font-sans, var(--boxel-font-family, sans-serif))
-          );
+        --boxel-button-font: 500 0.8125rem var(--font-sans);
         color: inherit;
         opacity: 0.65;
       }
@@ -661,22 +575,12 @@ export default class Stepper extends Component<StepperSignature> {
       .stepper-primary,
       .stepper-primary:not(:disabled):hover,
       .stepper-primary:not(:disabled):active {
-        --boxel-button-color: var(
-          --stepper-primary-bg,
-          var(--primary, var(--boxel-dark, #222222))
-        );
-        --boxel-button-text-color: var(
-          --stepper-primary-fg,
-          var(--primary-foreground, #ffffff)
-        );
-        --boxel-button-font: 500 13px
-          var(
-            --stepper-body-font,
-            var(--font-sans, var(--boxel-font-family, sans-serif))
-          );
+        --boxel-button-color: var(--primary);
+        --boxel-button-text-color: var(--primary-foreground);
+        --boxel-button-font: 500 0.8125rem var(--font-sans);
         --boxel-button-letter-spacing: 0.04em;
-        --boxel-button-padding: 11px 22px;
-        --boxel-button-border-radius: 999px;
+        --boxel-button-padding: 0.6875rem 1.375rem;
+        --boxel-button-border-radius: 62.4375rem;
       }
       .stepper-primary:not(:disabled):hover {
         filter: brightness(0.92);
@@ -688,18 +592,18 @@ export default class Stepper extends Component<StepperSignature> {
          horizontal scroll strip above the content. */
       @container stepper (max-width: 560px) {
         .stepper-card {
-          padding: 18px;
+          padding: 1.125rem;
         }
         .stepper-body {
           flex-direction: column;
-          gap: 14px;
+          gap: 0.875rem;
         }
         .stepper-rail {
           flex: none;
           width: 100%;
           flex-direction: row;
-          gap: 18px;
-          padding: 12px 14px;
+          gap: 1.125rem;
+          padding: 0.75rem 0.875rem;
           overflow-x: auto;
           overflow-y: hidden;
         }
@@ -713,7 +617,7 @@ export default class Stepper extends Component<StepperSignature> {
           display: none;
         }
         .stepper-title {
-          font-size: 24px;
+          font-size: 1.5rem;
         }
       }
     </style>

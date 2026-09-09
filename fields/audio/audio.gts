@@ -260,26 +260,23 @@ class AudioFieldFitted extends Component<typeof AudioField> {
     <style scoped>
       .audio-card {
         position: relative;
-        background: var(--card, #ffffff);
-        border-radius: var(--radius, 0.5rem);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-radius: var(--radius);
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        box-shadow: var(--shadow-sm, 0 1px 2px 0 rgb(0 0 0 / 0.05));
+        box-shadow: var(--shadow-sm);
         transition: all 0.2s;
       }
 
       .audio-card:hover {
-        box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1));
+        box-shadow: var(--shadow-md);
       }
 
       .card-background {
         flex: 1;
-        background: linear-gradient(
-          135deg,
-          var(--primary, #3b82f6),
-          var(--accent, #60a5fa)
-        );
+        background: linear-gradient(135deg, var(--card), var(--card));
         display: flex;
         align-items: center;
         justify-content: center;
@@ -290,13 +287,13 @@ class AudioFieldFitted extends Component<typeof AudioField> {
       .background-icon {
         width: 4rem;
         height: 4rem;
-        color: rgba(255, 255, 255, 0.3);
+        color: color-mix(in oklch, var(--card-foreground) 30%, transparent);
       }
 
       .play-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.4);
+        background-color: color-mix(in oklch, var(--card) 40%, transparent);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -313,15 +310,19 @@ class AudioFieldFitted extends Component<typeof AudioField> {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: white !important;
-        color: var(--primary, #3b82f6) !important;
+        background-color: var(--card) !important;
+        color: var(--primary-ink) !important;
         box-shadow:
-          0 4px 6px -1px rgb(0 0 0 / 0.1),
-          0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+          0 4px 6px -1px color-mix(in oklch, var(--foreground) 10%, transparent),
+          0 2px 4px -2px color-mix(in oklch, var(--foreground) 10%, transparent) !important;
       }
 
       .play-overlay-button:hover {
-        background: rgba(255, 255, 255, 0.95) !important;
+        background-color: color-mix(
+          in oklch,
+          var(--card) 95%,
+          transparent
+        ) !important;
         transform: scale(1.05);
       }
 
@@ -330,8 +331,8 @@ class AudioFieldFitted extends Component<typeof AudioField> {
         top: 0.5rem;
         right: 0.5rem;
         padding: 0.25rem 0.5rem;
-        background: rgba(0, 0, 0, 0.7);
-        color: white;
+        background-color: color-mix(in oklch, var(--tooltip) 70%, transparent);
+        color: var(--card-foreground);
         font-size: 0.75rem;
         border-radius: 0.25rem;
         backdrop-filter: blur(4px);
@@ -339,13 +340,14 @@ class AudioFieldFitted extends Component<typeof AudioField> {
 
       .card-footer {
         padding: 0.75rem;
-        background: var(--card, #ffffff);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
 
       .card-title {
         font-weight: 600;
         font-size: 0.875rem;
-        color: var(--foreground, #1f2937);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -353,7 +355,7 @@ class AudioFieldFitted extends Component<typeof AudioField> {
 
       .card-artist {
         font-size: 0.75rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         margin-top: 0.125rem;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -362,7 +364,8 @@ class AudioFieldFitted extends Component<typeof AudioField> {
 
       .progress-bar {
         height: 0.25rem;
-        background: var(--muted, #e5e7eb);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border-radius: 0.125rem;
         overflow: hidden;
         margin-top: 0.5rem;
@@ -370,7 +373,8 @@ class AudioFieldFitted extends Component<typeof AudioField> {
 
       .progress-fill {
         height: 100%;
-        background: var(--primary, #3b82f6);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         transition: width 0.1s linear;
       }
 
@@ -380,9 +384,9 @@ class AudioFieldFitted extends Component<typeof AudioField> {
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        background: var(--muted, #f3f4f6);
-        border-radius: var(--radius, 0.5rem);
-        color: var(--muted-foreground, #6b7280);
+        background-color: var(--muted);
+        border-radius: var(--radius);
+        color: var(--muted-foreground);
         font-size: 0.875rem;
         font-style: italic;
       }
@@ -650,9 +654,10 @@ export default class AudioField extends FieldDef {
           flex-direction: column;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp);
-          background: var(--boxel-light, #ffffff);
-          border: 1px solid var(--boxel-border-color, #e5e7eb);
-          border-radius: var(--boxel-border-radius, 0.5rem);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius);
         }
 
         .player-header {
@@ -664,16 +669,12 @@ export default class AudioField extends FieldDef {
         .audio-icon {
           width: 3rem;
           height: 3rem;
-          background: linear-gradient(
-            135deg,
-            var(--primary, #3b82f6),
-            var(--accent, #60a5fa)
-          );
-          border-radius: var(--boxel-border-radius, 0.5rem);
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          border-radius: var(--boxel-border-radius);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
+          color: var(--accent-foreground);
           flex-shrink: 0;
         }
 
@@ -690,7 +691,7 @@ export default class AudioField extends FieldDef {
         .audio-title {
           font-weight: 600;
           font-size: 0.875rem;
-          color: var(--foreground, #1f2937);
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -698,13 +699,13 @@ export default class AudioField extends FieldDef {
 
         .audio-artist {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           margin-top: 0.125rem;
         }
 
         .audio-metadata {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           margin-top: 0.25rem;
         }
 
@@ -719,12 +720,12 @@ export default class AudioField extends FieldDef {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: var(--primary, #3b82f6) !important;
-          color: white !important;
+          background-color: var(--primary) !important;
+          color: var(--primary-foreground) !important;
         }
 
         .play-button:hover {
-          background: var(--accent, #60a5fa) !important;
+          background-color: var(--accent) !important;
         }
 
         .player-controls {
@@ -736,7 +737,8 @@ export default class AudioField extends FieldDef {
         .seek-bar {
           width: 100%;
           height: 0.25rem;
-          background: var(--muted, #e5e7eb);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           border-radius: 0.125rem;
           appearance: none;
           cursor: pointer;
@@ -746,7 +748,8 @@ export default class AudioField extends FieldDef {
           appearance: none;
           width: 0.75rem;
           height: 0.75rem;
-          background: var(--primary, #3b82f6);
+          background-color: var(--primary);
+          color: var(--primary-foreground);
           border-radius: 50%;
           cursor: pointer;
         }
@@ -754,7 +757,8 @@ export default class AudioField extends FieldDef {
         .seek-bar::-moz-range-thumb {
           width: 0.75rem;
           height: 0.75rem;
-          background: var(--primary, #3b82f6);
+          background-color: var(--primary);
+          color: var(--primary-foreground);
           border-radius: 50%;
           cursor: pointer;
           border: none;
@@ -764,7 +768,7 @@ export default class AudioField extends FieldDef {
           display: flex;
           justify-content: space-between;
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
 
         .audio-placeholder {
@@ -772,11 +776,11 @@ export default class AudioField extends FieldDef {
           align-items: center;
           gap: 0.5rem;
           padding: 1rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           font-size: 0.875rem;
           font-style: italic;
-          border: 1px dashed var(--border, #e5e7eb);
-          border-radius: var(--radius, 0.5rem);
+          border: 1px dashed var(--border);
+          border-radius: var(--radius);
         }
 
         .audio-placeholder svg {
@@ -790,7 +794,7 @@ export default class AudioField extends FieldDef {
           align-items: center;
           gap: 1rem;
           padding-top: 0.5rem;
-          border-top: 1px solid var(--border, #e5e7eb);
+          border-top: 1px solid var(--border);
         }
 
         .control-label {
@@ -799,7 +803,7 @@ export default class AudioField extends FieldDef {
           gap: 0.5rem;
           font-size: 0.875rem;
           font-weight: 500;
-          color: var(--foreground, #1f2937);
+          color: var(--foreground);
         }
 
         .checkbox-label {
@@ -811,11 +815,11 @@ export default class AudioField extends FieldDef {
           width: 1rem;
           height: 1rem;
           cursor: pointer;
-          accent-color: var(--primary, #3b82f6);
+          accent-color: var(--primary);
         }
 
         .speed-select {
-          min-width: 128px;
+          min-width: 8rem;
         }
 
         .control-label {
@@ -853,13 +857,13 @@ export default class AudioField extends FieldDef {
           align-items: center;
           gap: 0.375rem;
           font-size: 0.875rem;
-          color: var(--foreground, #1f2937);
+          color: var(--foreground);
         }
 
         .audio-atom svg {
           width: 1rem;
           height: 1rem;
-          color: var(--primary, #3b82f6);
+          color: var(--primary-ink);
         }
       </style>
     </template>
