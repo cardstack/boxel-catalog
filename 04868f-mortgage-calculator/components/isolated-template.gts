@@ -726,7 +726,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
           var(--destructive) 25%,
           transparent
         );
-        color: var(--card-foreground);
+        color: var(--destructive-ink);
       }
       .mc-debug {
         margin-top: 0.5rem;
@@ -808,12 +808,11 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
           color-mix(in oklch, var(--tooltip-foreground) 30%, transparent);
         border-radius: 62.4375rem;
         font-size: 0.75rem;
-        color: color-mix(in oklch, var(--card-foreground) 82%, transparent);
         backdrop-filter: blur(6px);
         align-self: flex-start;
       }
       .mc-currency-notice strong {
-        color: var(--card-foreground);
+        color: var(--tooltip-foreground);
         font-weight: 700;
       }
 

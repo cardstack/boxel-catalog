@@ -1418,7 +1418,11 @@ export class AiImageGeneratorIsolated extends Component<
         font-weight: 600;
         border-radius: var(--boxel-border-radius-sm);
         padding: 2px var(--boxel-sp-xxs);
-        background-color: color-mix(in oklch, var(--foreground) 10%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 10%,
+          transparent
+        );
         color: var(--foreground);
       }
       .badge-inpaint {
@@ -1744,7 +1748,11 @@ export class AiImageGeneratorIsolated extends Component<
       .edit-controls .prompt-input {
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background-color: color-mix(in oklch, var(--foreground) 4%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 4%,
+          transparent
+        );
       }
       .edit-controls .prompt-input:focus,
       .edit-controls .prompt-input:focus-visible {
@@ -1805,7 +1813,11 @@ export class AiImageGeneratorIsolated extends Component<
         padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background-color: color-mix(in oklch, var(--foreground) 5%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 5%,
+          transparent
+        );
         color: var(--muted-foreground);
         cursor: not-allowed;
       }
@@ -1906,7 +1918,11 @@ export class AiImageGeneratorIsolated extends Component<
       }
       .pop-icon:hover {
         color: var(--foreground);
-        background-color: color-mix(in oklch, var(--foreground) 8%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 8%,
+          transparent
+        );
       }
       .pop-icon > :deep(svg) {
         width: 0.9rem;
@@ -1966,7 +1982,11 @@ export class AiImageGeneratorIsolated extends Component<
       }
       .version-btn:hover {
         border-color: var(--border);
-        background-color: color-mix(in oklch, var(--foreground) 6%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 6%,
+          transparent
+        );
       }
       .version-btn.current {
         border-color: var(--primary);
@@ -2133,7 +2153,11 @@ export class AiImageGeneratorIsolated extends Component<
         display: inline-flex;
         gap: 2px;
         padding: 2px;
-        background-color: color-mix(in oklch, var(--foreground) 10%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 10%,
+          transparent
+        );
         border-radius: var(--boxel-border-radius);
         align-self: flex-start;
       }
@@ -2219,7 +2243,11 @@ export class AiImageGeneratorIsolated extends Component<
         padding: var(--boxel-sp-xs);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background-color: color-mix(in oklch, var(--foreground) 4%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 4%,
+          transparent
+        );
       }
       .edit-record .rec {
         min-width: 0;

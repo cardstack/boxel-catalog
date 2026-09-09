@@ -2808,7 +2808,6 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         color: var(--tooltip-foreground);
         backdrop-filter: blur(6px);
         border-radius: 62.4375rem;
-        color: color-mix(in oklch, var(--card-foreground) 90%, transparent);
         font-size: 0.6875rem;
         font-weight: 600;
         white-space: nowrap;
