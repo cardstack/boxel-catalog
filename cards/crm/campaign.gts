@@ -219,11 +219,13 @@ export class Campaign extends CardDef {
             class='meta line-budget {{if @model.isOverBudget "over"}}'
           >{{this.budgetNote}}</span>
         {{/if}}
-        {{#if @model.startDate}}
+        {{#if @model.endDate}}
           <span class='meta line-dates'>Ran
             <@fields.startDate />
             –
             <@fields.endDate /></span>
+        {{else if @model.startDate}}
+          <span class='meta line-dates'>Since <@fields.startDate /></span>
         {{/if}}
       </div>
       <style scoped>

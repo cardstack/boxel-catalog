@@ -32,6 +32,11 @@ const LeadSourceField = enumField(StringField, {
   displayName: 'Lead Source',
 });
 
+// 0 is a real score (the Spec's scale is 0–100); only an unset score hides.
+function hasScore(score: number | null | undefined): boolean {
+  return typeof score === 'number' && Number.isFinite(score);
+}
+
 export class Lead extends CardDef {
   static displayName = 'Lead';
   static icon = TargetIcon;
@@ -101,7 +106,7 @@ export class Lead extends CardDef {
           {{/if}}
         </div>
         <span class='score-block'>
-          {{#if @model.score}}
+          {{#if (hasScore @model.score)}}
             <span class='score'>{{@model.score}}</span>
             <span class='score-caption'>score</span>
           {{else}}
@@ -226,7 +231,7 @@ export class Lead extends CardDef {
         {{#if @model.company}}
           <span class='meta line-company'>{{@model.company}}</span>
         {{/if}}
-        {{#if @model.score}}
+        {{#if (hasScore @model.score)}}
           <span class='meta line-score'>Score {{@model.score}}</span>
         {{/if}}
         {{#if @model.source}}
@@ -346,7 +351,7 @@ export class Lead extends CardDef {
             >{{@model.status}}</span>
           {{/if}}
         </header>
-        {{#if @model.score}}
+        {{#if (hasScore @model.score)}}
           <section class='score-panel'>
             <span class='score-value'>{{@model.score}}</span>
             <span class='score-label'>lead score</span>

@@ -24,12 +24,10 @@
       },
       "cardTitle": "Brightleaf Workspace Rollout",
       "closeDate": "2026-08-28",
-      "daysInStage": 8,
       "probability": 60,
       "cardDescription": null,
       "cardThumbnailURL": null,
-      "lastStageChangedAt": "2026-08-10",
-      "effectiveProbability": 60
+      "lastStageChangedAt": "2026-08-10"
     },
     "relationships": {
       "owner": {
