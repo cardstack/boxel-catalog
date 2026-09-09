@@ -1,0 +1,47 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../due-date",
+        "name": "default"
+      },
+      "specType": "field",
+      "readMe": "# Due Date\n\n## Summary\nA calendar day something is expected by. The block states calendar facts and nothing else: `dueDays` (whole days from today, negative = past) and `dueness` (`overdue / today / soon / later`) are exported for consumers to sort and filter on, and the templates render them. Embedded shows the date plus a phrase pill (\"due tomorrow\", \"3 days overdue\"); atom shows a short-date pill hued by dueness with the phrase as its tooltip. A far-off date renders quiet, with no fill: information, not signal. Unset renders an em-dash, because absent means \"no deadline\", never \"overdue\".\n\n## Usage\n```ts\nimport DueDateField, { dueDays, dueness } from '@cardstack/catalog/fields/due-date/due-date';\n\n@field dueDate = contains(DueDateField);\n\n// sort soonest first; undated last\ntasks.sort((a, b) => (dueDays(a.dueDate) ?? Infinity) - (dueDays(b.dueDate) ?? Infinity));\n```\nSerializes exactly like `DateField` (`YYYY-MM-DD`), so an existing `dueDate: DateField` upgrades in place. That is how the first consumer landed: an Invoice's `dueDate` mounts the pill while the invoice is live and renders the plain date once paid or void. The examples below are two fixed dates, one ahead and one behind; the phrases are computed against today, so they age truthfully. The linked example is a task record that mounts Due Date beside Status, Priority and Created At.\n\n## Non-goals\nThe block cannot know the record completed, was paid, or was cancelled: a consumer whose lifecycle ends renders the raw date itself instead of mounting these templates. Reminders and nagging are a scheduler's job, not a field's. Date-with-time deadlines are `DateTimeField` territory; this is a calendar day.",
+      "cardTitle": "Due Date Field",
+      "cardDescription": "A calendar deadline that renders how far away it is and whether it has passed, and exports the same facts for sorting.",
+      "upcoming": "2027-03-31",
+      "overdue": "2026-08-07",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Due Date",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../../status/example/TaskRecordExample/ship-status-block"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "./due-date-field-spec",
+        "name": "DueDateFieldSpec"
+      }
+    }
+  }
+}
