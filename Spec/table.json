@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../components/table",
+        "name": "Table"
+      },
+      "specType": "component",
+      "readMe": "# Table\n\n## Summary\nA sortable record table over cards the consumer already holds. Columns are declared as `{ key, label, align?, width?, showAbove?, sortable?, value(item), sortValue(item) }`: the value function reads whatever the consumer wants (fields, computed values, linked traversals), so which of a card's forty fields belong in the table is the consumer's design decision, not a flag's guess. Click a header to sort; when the display value is formatted (money, dates) give the column a `sortValue` returning the raw number, because formatted strings do not order correctly. Sorting is applied to the whole set before paging.\n\n## API\n- `@items`, `@columns`, `@emptyMessage`, `@caption`, `@rowKey`.\n- `@onRowClick(item)`: the first cell holds a real button whose hit area is stretched across the row, so a row is one tab stop and a screen reader hears a control, not a row pretending to be one.\n- `@rowClass(item)`: a per-row class for state at the row edge (`sev-over`, `sev-note`, `sev-ok`, `sev-cool` ship as severity stripes).\n- `@pageSize`: opt-in pagination; the pager always states the true total.\n- `showAbove: 480 | 640 | 720 | 900` on a column hides it below that container width, as a real container query.\n- Controlled sort: pass `@sortKey`, `@sortDescending` and `@onSort(key)` and the table reflects the consumer's order instead of sorting again.\n- `<:cell as |item column|>`: a column with no `value` is rendered by this block, which is how a consumer yields pills or atoms into cells. Set `custom: true` on a column to route it through the block while still supplying `value` or `sortValue`, so a custom cell can sort or fall back to text.\n\n## Usage\n```gts\nimport { Table, type TableColumn } from '@cardstack/catalog/components/table';\n\ncolumns: TableColumn[] = [\n  { key: 'title', label: 'Task', value: (t) => (t as Task).title },\n  { key: 'due', label: 'Due', showAbove: 640,\n    value: (t) => (t as Task).dueDate?.toLocaleDateString(),\n    sortValue: (t) => (t as Task).dueDate?.getTime() },\n];\n\n<Table @items={{this.tasks}} @columns={{this.columns}} @pageSize={{25}} @onRowClick={{this.open}} />\n```\nThe linked example mounts this table and the Board over the same task records, with Status and Priority atoms yielded into cells and a severity stripe driven by due date.\n\n## Non-goals\nFiltering (consumers pass a filtered array; filters are app state). Virtual scroll. Bulk selection and bulk actions. Inline editing (the platform edit format's job). Query-driven loading: this table takes resolved instances; pointing at a card type and deriving columns from its schema is a different block.",
+      "cardTitle": "Table",
+      "cardDescription": "A sortable, optionally paged record table over cards you already hold, with consumer-declared columns.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Table",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../components/example/RecordViewsExample/record-views"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

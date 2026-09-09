@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Add a Specs view to the storefront",
+      "status": "Cancelled",
+      "priority": "Low",
+      "dueDate": null,
+      "createdAt": "2026-09-06T16:45:00.000Z",
+      "cardInfo": {
+        "name": "Add a Specs view to the storefront",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../task-record-example",
+        "name": "TaskRecordExample"
+      }
+    }
+  }
+}
