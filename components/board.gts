@@ -20,7 +20,6 @@ function itemAt(items: CardDef[], index: number): CardDef | undefined {
 interface BoardSignature {
   Args: {
     boardLabel?: string;
-    cardSize?: any;
     columnKeyFor: (item: CardDef) => string | undefined;
     columns: BoardColumn[];
     hideEmpty?: boolean;
@@ -61,8 +60,13 @@ export class Board extends GlimmerComponent<BoardSignature> {
   }
 
   get placements(): KanbanPlacement[] {
+    // No columns means nowhere to place a card; an empty board is the truthful
+    // render, not a card under a column id the plane does not know.
+    let fallback = this.args.columns[0]?.key;
+    if (fallback === undefined) {
+      return [];
+    }
     let counters = new Map<string, number>();
-    let fallback = this.args.columns[0]?.key ?? '';
     let result: KanbanPlacement[] = [];
     this.args.items.forEach((item, index) => {
       if (!item) return;
@@ -100,7 +104,6 @@ export class Board extends GlimmerComponent<BoardSignature> {
     <div class='board' ...attributes>
       <KanbanPlane
         @boardLabel={{@boardLabel}}
-        @cardSize={{@cardSize}}
         @columns={{this.kanbanColumns}}
         @hideEmpty={{@hideEmpty}}
         @placements={{this.placements}}
