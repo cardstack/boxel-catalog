@@ -161,4 +161,40 @@ export class TaskRecordExample extends CardDef {
       </style>
     </template>
   };
+
+  static fitted = class Fitted extends Component<typeof this> {
+    <template>
+      <div class='task-fitted'>
+        <span class='title'>{{@model.title}}</span>
+        <div class='atoms'>
+          <@fields.priority @format='atom' />
+          <@fields.dueDate @format='atom' />
+        </div>
+      </div>
+      <style scoped>
+        .task-fitted {
+          display: grid;
+          gap: var(--boxel-sp-4xs);
+          padding: var(--boxel-sp-xs);
+          height: 100%;
+          box-sizing: border-box;
+          font-family: var(--font-sans, var(--boxel-font-family));
+        }
+        .title {
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
+          line-height: 1.3;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+        .atoms {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-4xs);
+        }
+      </style>
+    </template>
+  };
 }
