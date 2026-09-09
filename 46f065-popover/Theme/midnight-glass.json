@@ -124,7 +124,73 @@
         "secondaryForeground": "#e2e8f0",
         "destructiveForeground": "#0f172a",
         "sidebarAccentForeground": "#e2e8f0",
-        "sidebarPrimaryForeground": "#0f172a"
+        "sidebarPrimaryForeground": "#0f172a",
+        "customCssVariables": [
+          {
+            "name": "bx-popover-tools-bg",
+            "value": "#312e81"
+          },
+          {
+            "name": "bx-popover-tools-fg",
+            "value": "#e0e7ff"
+          },
+          {
+            "name": "bx-popover-edit-bg",
+            "value": "#3b3520"
+          },
+          {
+            "name": "bx-popover-edit-border",
+            "value": "#8a7a2e"
+          },
+          {
+            "name": "bx-popover-radius",
+            "value": "1.25rem"
+          },
+          {
+            "name": "bx-popover-shadow-raised",
+            "value": "0 4px 20px 0px hsl(239 84% 67% / 0.25)"
+          },
+          {
+            "name": "bx-popover-shadow-elevated",
+            "value": "0 8px 30px 0px hsl(239 84% 67% / 0.35)"
+          },
+          {
+            "name": "bx-popover-shadow-floating",
+            "value": "0 16px 48px 0px hsl(239 84% 67% / 0.45)"
+          },
+          {
+            "name": "bx-popover-fg",
+            "value": "#e2e8f0"
+          },
+          {
+            "name": "bx-popover-fg-muted",
+            "value": "#94a3b8"
+          },
+          {
+            "name": "bx-popover-border",
+            "value": "#3f4a63"
+          },
+          {
+            "name": "bx-popover-accent",
+            "value": "#22d3ee"
+          },
+          {
+            "name": "bx-popover-dim-bg",
+            "value": "hsl(234 60% 8% / 0.6)"
+          },
+          {
+            "name": "bx-popover-bg-tint",
+            "value": "hsl(217 33% 17% / 0.8)"
+          },
+          {
+            "name": "bx-popover-bg-blur",
+            "value": "hsl(217 33% 17% / 0.55)"
+          },
+          {
+            "name": "bx-popover-font-family",
+            "value": "Space Grotesk, sans-serif"
+          }
+        ]
       },
       "motionLanguage": null,
       "technicalSpecs": null,
@@ -192,72 +258,6 @@
       },
       "geometricLanguage": null,
       "historicalContext": null,
-      "customCssVariables": [
-        {
-          "name": "bx-popover-tools-bg",
-          "value": "#312e81"
-        },
-        {
-          "name": "bx-popover-tools-fg",
-          "value": "#e0e7ff"
-        },
-        {
-          "name": "bx-popover-edit-bg",
-          "value": "#3b3520"
-        },
-        {
-          "name": "bx-popover-edit-border",
-          "value": "#8a7a2e"
-        },
-        {
-          "name": "bx-popover-radius",
-          "value": "1.25rem"
-        },
-        {
-          "name": "bx-popover-shadow-raised",
-          "value": "0 4px 20px 0px hsl(239 84% 67% / 0.25)"
-        },
-        {
-          "name": "bx-popover-shadow-elevated",
-          "value": "0 8px 30px 0px hsl(239 84% 67% / 0.35)"
-        },
-        {
-          "name": "bx-popover-shadow-floating",
-          "value": "0 16px 48px 0px hsl(239 84% 67% / 0.45)"
-        },
-        {
-          "name": "bx-popover-fg",
-          "value": "#e2e8f0"
-        },
-        {
-          "name": "bx-popover-fg-muted",
-          "value": "#94a3b8"
-        },
-        {
-          "name": "bx-popover-border",
-          "value": "#3f4a63"
-        },
-        {
-          "name": "bx-popover-accent",
-          "value": "#22d3ee"
-        },
-        {
-          "name": "bx-popover-dim-bg",
-          "value": "hsl(234 60% 8% / 0.6)"
-        },
-        {
-          "name": "bx-popover-bg-tint",
-          "value": "hsl(217 33% 17% / 0.8)"
-        },
-        {
-          "name": "bx-popover-bg-blur",
-          "value": "hsl(217 33% 17% / 0.55)"
-        },
-        {
-          "name": "bx-popover-font-family",
-          "value": "Space Grotesk, sans-serif"
-        }
-      ],
       "materialVocabulary": null,
       "componentVocabulary": null,
       "applicationScenarios": null,

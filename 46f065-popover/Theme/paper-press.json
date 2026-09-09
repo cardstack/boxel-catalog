@@ -124,7 +124,73 @@
         "secondaryForeground": "#2b2620",
         "destructiveForeground": "#fffdf7",
         "sidebarAccentForeground": "#2b2620",
-        "sidebarPrimaryForeground": "#fffdf7"
+        "sidebarPrimaryForeground": "#fffdf7",
+        "customCssVariables": [
+          {
+            "name": "bx-popover-size-compact-min-w",
+            "value": "240px"
+          },
+          {
+            "name": "bx-popover-size-compact-max-w",
+            "value": "240px"
+          },
+          {
+            "name": "bx-popover-edit-bg",
+            "value": "#fdf3cf"
+          },
+          {
+            "name": "bx-popover-edit-border",
+            "value": "#e3c95e"
+          },
+          {
+            "name": "bx-popover-radius",
+            "value": "0px"
+          },
+          {
+            "name": "bx-popover-shadow-raised",
+            "value": "3px 3px 0px 0px hsl(30 15% 15% / 0.35)"
+          },
+          {
+            "name": "bx-popover-shadow-elevated",
+            "value": "5px 5px 0px 0px hsl(30 15% 15% / 0.35)"
+          },
+          {
+            "name": "bx-popover-shadow-floating",
+            "value": "8px 8px 0px 0px hsl(30 15% 15% / 0.35)"
+          },
+          {
+            "name": "bx-popover-font-family",
+            "value": "IBM Plex Mono, monospace"
+          },
+          {
+            "name": "bx-popover-size-compact-max-h",
+            "value": "300px"
+          },
+          {
+            "name": "bx-popover-size-comfortable-min-w",
+            "value": "320px"
+          },
+          {
+            "name": "bx-popover-size-comfortable-max-w",
+            "value": "320px"
+          },
+          {
+            "name": "bx-popover-size-comfortable-max-h",
+            "value": "420px"
+          },
+          {
+            "name": "bx-popover-size-spacious-min-w",
+            "value": "420px"
+          },
+          {
+            "name": "bx-popover-size-spacious-max-w",
+            "value": "420px"
+          },
+          {
+            "name": "bx-popover-size-spacious-max-h",
+            "value": "540px"
+          }
+        ]
       },
       "motionLanguage": null,
       "technicalSpecs": null,
@@ -192,72 +258,6 @@
       },
       "geometricLanguage": null,
       "historicalContext": null,
-      "customCssVariables": [
-        {
-          "name": "bx-popover-size-compact-min-w",
-          "value": "240px"
-        },
-        {
-          "name": "bx-popover-size-compact-max-w",
-          "value": "240px"
-        },
-        {
-          "name": "bx-popover-edit-bg",
-          "value": "#fdf3cf"
-        },
-        {
-          "name": "bx-popover-edit-border",
-          "value": "#e3c95e"
-        },
-        {
-          "name": "bx-popover-radius",
-          "value": "0px"
-        },
-        {
-          "name": "bx-popover-shadow-raised",
-          "value": "3px 3px 0px 0px hsl(30 15% 15% / 0.35)"
-        },
-        {
-          "name": "bx-popover-shadow-elevated",
-          "value": "5px 5px 0px 0px hsl(30 15% 15% / 0.35)"
-        },
-        {
-          "name": "bx-popover-shadow-floating",
-          "value": "8px 8px 0px 0px hsl(30 15% 15% / 0.35)"
-        },
-        {
-          "name": "bx-popover-font-family",
-          "value": "IBM Plex Mono, monospace"
-        },
-        {
-          "name": "bx-popover-size-compact-max-h",
-          "value": "300px"
-        },
-        {
-          "name": "bx-popover-size-comfortable-min-w",
-          "value": "320px"
-        },
-        {
-          "name": "bx-popover-size-comfortable-max-w",
-          "value": "320px"
-        },
-        {
-          "name": "bx-popover-size-comfortable-max-h",
-          "value": "420px"
-        },
-        {
-          "name": "bx-popover-size-spacious-min-w",
-          "value": "420px"
-        },
-        {
-          "name": "bx-popover-size-spacious-max-w",
-          "value": "420px"
-        },
-        {
-          "name": "bx-popover-size-spacious-max-h",
-          "value": "540px"
-        }
-      ],
       "materialVocabulary": null,
       "componentVocabulary": null,
       "applicationScenarios": null,
