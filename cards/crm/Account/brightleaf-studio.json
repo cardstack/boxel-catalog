@@ -1,0 +1,54 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Account",
+        "module": "../account"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Brightleaf Studio",
+      "email": "hello@brightleaf.example",
+      "phone": null,
+      "domain": "brightleaf.example",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "industry": "Design Agency",
+      "cardTitle": "Brightleaf Studio",
+      "isCustomer": false,
+      "firstPaidAt": null,
+      "billingAddress": {
+        "city": "Kuala Lumpur",
+        "state": "Wilayah Persekutuan",
+        "country": {
+          "code": "MY",
+          "name": "Malaysia"
+        },
+        "postalCode": "50000",
+        "fullAddress": "88 Lorong Panggung, Kuala Lumpur, Wilayah Persekutuan, 50000, Malaysia",
+        "poBoxNumber": null,
+        "addressLine1": "88 Lorong Panggung",
+        "addressLine2": null
+      },
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../User/dana-whitfield"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../utils",
+        "name": "formatMoney"
+      },
+      "specType": null,
+      "readMe": "# Money Format\n\n## Summary\n`formatMoney(amount, code)` renders an `AmountWithCurrency` value for display: `Intl.NumberFormat` in the currency style when the ISO 4217 code is known, a plain number with up to two decimals when it is missing or unrecognised, and an empty string for an absent amount so a template never prints `NaN` or `undefined`.\n\n## Usage\n```ts\nimport { formatMoney } from '@cardstack/catalog/cards/crm/utils';\n\nformatMoney(this.args.model.value?.amount, this.args.model.value?.currency?.code);\n```\nUsed by Opportunity (deal value) and Campaign (budget, spend). The value itself is always stored as the base `AmountWithCurrency` field; this helper only formats it.\n\n## Non-goals\nArithmetic over line items and balances belongs with the Commerce cards, not here. Locale is fixed to `en-US` until a consumer needs otherwise.",
+      "cardTitle": "Money Format",
+      "cardDescription": "Formats an AmountWithCurrency value for display, degrading to a plain number when the currency code is unknown.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Money Format",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Account",
+        "module": "../account"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Nadia Rahman",
+      "email": "nadia.rahman@gmail.example",
+      "phone": "+60322821888",
+      "domain": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "industry": "Private client",
+      "cardTitle": "Nadia Rahman",
+      "isCustomer": false,
+      "firstPaidAt": null,
+      "billingAddress": {
+        "city": "Kuala Lumpur",
+        "state": "Wilayah Persekutuan",
+        "country": {
+          "code": "MY",
+          "name": "Malaysia"
+        },
+        "postalCode": "50200",
+        "fullAddress": "27 Jalan Ceylon, Kuala Lumpur, Wilayah Persekutuan, 50200, Malaysia",
+        "poBoxNumber": null,
+        "addressLine1": "27 Jalan Ceylon",
+        "addressLine2": null
+      },
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../User/dana-whitfield"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
