@@ -631,10 +631,10 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         border-radius: var(--boxel-border-radius-lg);
         overflow: hidden;
         /* background applied via inline headerStyle getter */
-        color: var(--card-foreground);
+        color: var(--tooltip-foreground);
         box-shadow:
-          0 8px 32px color-mix(in oklch, var(--foreground) 22%, transparent),
-          0 2px 8px color-mix(in oklch, var(--foreground) 12%, transparent);
+          0 8px 32px color-mix(in oklch, var(--shadow-color) 22%, transparent),
+          0 2px 8px color-mix(in oklch, var(--shadow-color) 12%, transparent);
       }
       .mc-title-row {
         display: flex;
@@ -649,16 +649,16 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         font-weight: 800;
         letter-spacing: -0.02em;
         text-shadow: 0 2px 12px
-          color-mix(in oklch, var(--foreground) 35%, transparent);
+          color-mix(in oklch, var(--shadow-color) 35%, transparent);
       }
       .mc-quickfill-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.375rem;
         padding: 0.5rem 0.875rem;
-        background-color: color-mix(in oklch, var(--card) 18%, transparent);
-        color: inherit;
-        border: 1px solid color-mix(in oklch, var(--card) 30%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
         border-radius: 62.4375rem;
         cursor: pointer;
         font-size: 0.8125rem;
@@ -670,7 +670,8 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
           transform 0.18s ease;
       }
       .mc-quickfill-btn:hover {
-        background-color: color-mix(in oklch, var(--card) 28%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
         transform: translateY(-1px);
       }
       .mc-quickfill {
@@ -683,7 +684,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         padding: 0.625rem 0.875rem;
         font-family: inherit;
         font-size: 0.875rem;
-        background-color: color-mix(in oklch, var(--card) 95%, transparent);
+        background-color: var(--card);
         color: var(--foreground);
         border: none;
         border-radius: 0.5rem;
@@ -738,8 +739,8 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-debug pre {
         margin: 0.375rem 0 0;
         padding: 0.5rem 0.625rem;
-        background-color: color-mix(in oklch, var(--card) 35%, transparent);
-        color: var(--card-foreground);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border-radius: 0.375rem;
         white-space: pre-wrap;
         word-break: break-word;
@@ -778,19 +779,21 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-btn-ghost {
         background-color: transparent;
         color: inherit;
-        border: 1px solid color-mix(in oklch, var(--card) 40%, transparent);
+        border: 1px solid var(--border);
       }
       .mc-btn-ghost:hover {
-        background-color: color-mix(in oklch, var(--card) 12%, transparent);
+        background-color: var(--hover);
       }
       /* ── Design tokens (bottom half) ── */
       .mc-wrapper {
         --mc-shadow:
-          0 1px 0.1875rem color-mix(in oklch, var(--foreground) 6%, transparent),
-          0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent);
+          0 1px 0.1875rem
+            color-mix(in oklch, var(--shadow-color) 6%, transparent),
+          0 1px 2px color-mix(in oklch, var(--shadow-color) 4%, transparent);
         --mc-shadow-md:
-          0 0.25rem 1rem color-mix(in oklch, var(--foreground) 8%, transparent),
-          0 2px 0.25rem color-mix(in oklch, var(--foreground) 4%, transparent);
+          0 0.25rem 1rem
+            color-mix(in oklch, var(--shadow-color) 8%, transparent),
+          0 2px 0.25rem color-mix(in oklch, var(--shadow-color) 4%, transparent);
       }
 
       /* CURRENCY NOTICE */
@@ -799,8 +802,10 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         align-items: center;
         gap: 0.375rem;
         padding: 0.375rem 0.75rem;
-        background-color: color-mix(in oklch, var(--card) 12%, transparent);
-        border: 1px solid color-mix(in oklch, var(--card) 22%, transparent);
+        background-color: var(--overlay);
+        color: var(--tooltip-foreground);
+        border: 1px solid
+          color-mix(in oklch, var(--tooltip-foreground) 30%, transparent);
         border-radius: 62.4375rem;
         font-size: 0.75rem;
         color: color-mix(in oklch, var(--card-foreground) 82%, transparent);
@@ -872,7 +877,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         flex-direction: column;
         gap: 0.25rem;
         box-shadow: 0 1px 3px
-          color-mix(in oklch, var(--foreground) 5%, transparent);
+          color-mix(in oklch, var(--shadow-color) 5%, transparent);
         position: relative;
         z-index: 1;
       }
@@ -904,7 +909,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-form :deep(input) {
         width: 100%;
         padding: 0.5rem 0.75rem;
-        background-color: var(--card);
+        background-color: var(--field);
         color: var(--foreground);
         border: 1.5px solid var(--success);
         border-radius: 0.625rem;
@@ -950,8 +955,8 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       }
       /* BoxelSelect trigger inside currency row */
       .mc-currency-row :deep(.currency-field-edit) {
-        background-color: color-mix(in oklch, var(--card) 15%, transparent);
-        border: 1px solid color-mix(in oklch, var(--card) 30%, transparent);
+        background-color: var(--hover);
+        border: 1px solid var(--border);
         border-radius: 0.5rem;
         color: var(--card-foreground);
         font-size: 0.8125rem;
@@ -959,7 +964,8 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         min-width: 6.25rem;
       }
       .mc-currency-row :deep(.currency-field-edit:hover) {
-        background-color: color-mix(in oklch, var(--card) 22%, transparent);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
 
       /* RESULTS */
@@ -1022,7 +1028,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-stat.highlight {
         background-color: var(--success);
         border-color: transparent;
-        border-left-color: color-mix(in oklch, var(--card) 30%, transparent);
+        border-left-color: var(--border);
         color: var(--success-foreground);
         box-shadow: 0 4px 20px color-mix(in oklch, var(--info) 35%, transparent);
       }
@@ -1057,7 +1063,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         font-weight: 500;
       }
       .mc-table-head {
-        background-color: var(--card);
+        background-color: var(--inset);
         font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
@@ -1065,7 +1071,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         color: var(--success-ink);
       }
       .mc-table-row.featured {
-        background-color: color-mix(in oklch, var(--card) 6%, transparent);
+        background-color: var(--hover);
         font-weight: 600;
         color: var(--foreground);
       }
@@ -1149,7 +1155,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         border: 1px solid var(--border);
         border-radius: 0.75rem;
         box-shadow: 0 1px 4px
-          color-mix(in oklch, var(--foreground) 5%, transparent);
+          color-mix(in oklch, var(--shadow-color) 5%, transparent);
         transition:
           transform 0.15s ease,
           box-shadow 0.15s ease;
@@ -1158,7 +1164,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-legend-card:hover {
         transform: translateX(5px);
         box-shadow: 0 3px 12px
-          color-mix(in oklch, var(--foreground) 10%, transparent);
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
       }
       .mc-legend-bar {
         display: inline-block;
@@ -1180,8 +1186,8 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         gap: 0.5rem;
         padding: 0.5rem 0.625rem;
         border-radius: 0.625rem;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--stripe);
+        color: var(--foreground);
         border: 1px solid var(--border);
         transition:
           transform 0.15s ease,
@@ -1191,7 +1197,7 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
       .mc-legend-row:hover {
         transform: translateX(4px);
         box-shadow: 0 2px 8px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
       }
       .mc-legend-swatch {
         width: 0.75rem;
@@ -1285,12 +1291,12 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         0%,
         100% {
           box-shadow:
-            0 1px 3px color-mix(in oklch, var(--foreground) 6%, transparent),
+            0 1px 3px color-mix(in oklch, var(--shadow-color) 6%, transparent),
             0 0 0 0 color-mix(in oklch, var(--success) 0%, transparent);
         }
         50% {
           box-shadow:
-            0 1px 3px color-mix(in oklch, var(--foreground) 6%, transparent),
+            0 1px 3px color-mix(in oklch, var(--shadow-color) 6%, transparent),
             0 0 16px 2px color-mix(in oklch, var(--success) 8%, transparent);
         }
       }

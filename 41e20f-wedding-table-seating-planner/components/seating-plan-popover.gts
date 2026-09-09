@@ -251,9 +251,9 @@ export default class SeatingPlanPopover extends Component<Signature> {
         width: 1.875rem;
         height: 1.875rem;
         border-radius: 50%;
-        border: 1px solid color-mix(in oklch, var(--card) 14%, transparent);
-        background-color: color-mix(in oklch, var(--card) 5%, transparent);
-        color: var(--primary-foreground);
+        border: 1px solid var(--border);
+        background-color: var(--hover);
+        color: var(--foreground);
         font-size: 0.75rem;
         line-height: 1;
         cursor: pointer;

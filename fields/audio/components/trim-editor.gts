@@ -252,7 +252,7 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         border-radius: 50%;
         cursor: grab;
         box-shadow: 0 2px 4px
-          color-mix(in oklch, var(--foreground) 10%, transparent);
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
         transition: all 0.2s;
       }
 
@@ -276,7 +276,7 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         cursor: grab;
         border: none;
         box-shadow: 0 2px 4px
-          color-mix(in oklch, var(--foreground) 10%, transparent);
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
         transition: all 0.2s;
       }
 

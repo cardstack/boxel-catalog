@@ -312,6 +312,8 @@ export default class Stepper extends Component<StepperSignature> {
         height: 100%;
         container-type: inline-size;
         container-name: stepper;
+        background-color: var(--canvas);
+        color: var(--foreground);
       }
       .stepper-scrim {
         position: absolute;
@@ -410,8 +412,8 @@ export default class Stepper extends Component<StepperSignature> {
         overflow-y: auto;
         border: 1px solid var(--border);
         border-radius: 1rem;
-        background-color: var(--muted);
-        color: var(--muted-foreground);
+        background-color: var(--sidebar);
+        color: var(--sidebar-foreground);
       }
       .stepper-step {
         position: relative;
@@ -606,6 +608,8 @@ export default class Stepper extends Component<StepperSignature> {
           padding: 0.75rem 0.875rem;
           overflow-x: auto;
           overflow-y: hidden;
+          background-color: var(--sidebar);
+          color: var(--sidebar-foreground);
         }
         .stepper-step {
           flex: none;

@@ -990,7 +990,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         gap: 0.75rem;
         box-shadow:
           0 0 0 1px color-mix(in oklch, var(--card) 6%, transparent),
-          0 24px 64px color-mix(in oklch, var(--foreground) 85%, transparent),
+          0 24px 64px color-mix(in oklch, var(--shadow-color) 85%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 4%, transparent);
         overflow: auto;
       }
@@ -1007,7 +1007,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
           color-mix(in oklch, var(--card) 2%, transparent) 100%
         );
         border-radius: var(--boxel-border-radius-lg);
-        border: 1px solid color-mix(in oklch, var(--card) 7%, transparent);
+        border: 1px solid var(--border);
         flex-shrink: 0;
       }
 
@@ -1025,7 +1025,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         align-items: center;
         gap: 1rem;
         padding-top: 0.5rem;
-        border-top: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
+        border-top: 1px solid var(--border);
         flex-wrap: wrap;
         min-width: 0;
       }
@@ -1082,7 +1082,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         border: 1px solid color-mix(in oklch, var(--success) 20%, transparent);
         box-shadow:
           inset 0 2px 10px
-            color-mix(in oklch, var(--foreground) 90%, transparent),
+            color-mix(in oklch, var(--shadow-color) 90%, transparent),
           0 0 16px color-mix(in oklch, var(--success) 8%, transparent);
         margin-left: auto;
       }
@@ -1150,7 +1150,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         width: 5.625rem;
         height: 0.25rem;
         -webkit-appearance: none;
-        background-color: color-mix(in oklch, var(--card) 10%, transparent);
+        background-color: var(--hover);
         border-radius: 6.1875rem;
         outline: none;
         cursor: pointer;
@@ -1192,8 +1192,8 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .kit-select {
-        background-color: color-mix(in oklch, var(--card) 6%, transparent);
-        border: 1px solid color-mix(in oklch, var(--card) 12%, transparent);
+        background-color: var(--hover);
+        border: 1px solid var(--border);
         color: var(--card-foreground);
         padding: 0.4375rem 0.75rem;
         border-radius: var(--boxel-border-radius-sm);
@@ -1275,9 +1275,9 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       /* ═══ PATTERN LIBRARY ═══ */
       .pattern-library {
-        background-color: color-mix(in oklch, var(--card) 2%, transparent);
+        background-color: var(--hover);
         border-radius: var(--radius);
-        border: 1px solid color-mix(in oklch, var(--card) 6%, transparent);
+        border: 1px solid var(--border);
         padding: 0.625rem 0.875rem;
       }
 
@@ -1317,7 +1317,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .library-scroll::-webkit-scrollbar-track {
-        background-color: color-mix(in oklch, var(--card) 4%, transparent);
+        background-color: var(--hover);
         border-radius: 6.1875rem;
       }
 
@@ -1330,8 +1330,8 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         flex-shrink: 0;
         min-width: 6rem;
         padding: 0.375rem 0.625rem;
-        background-color: color-mix(in oklch, var(--card) 4%, transparent);
-        border: 1px solid color-mix(in oklch, var(--card) 8%, transparent);
+        background-color: var(--hover);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
         color: color-mix(in oklch, var(--card-foreground) 70%, transparent);
         cursor: pointer;
@@ -1341,7 +1341,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .pattern-btn:hover {
-        background-color: color-mix(in oklch, var(--card) 8%, transparent);
+        background-color: var(--hover);
         border-color: color-mix(in oklch, var(--warning) 35%, transparent);
       }
 
@@ -1376,7 +1376,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       .pattern-genre {
         font-size: 0.4375rem;
         color: color-mix(in oklch, var(--card-foreground) 40%, transparent);
-        background-color: color-mix(in oklch, var(--card) 7%, transparent);
+        background-color: var(--hover);
         padding: 0.0625rem 0.25rem;
         border-radius: 6.1875rem;
         text-transform: uppercase;
@@ -1394,18 +1394,20 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       /* ═══ SEQUENCER GRID — pads fill full width ═══ */
       .sequencer {
-        background: linear-gradient(160deg, var(--card), var(--card));
+        background: linear-gradient(160deg, var(--inset), var(--inset));
         border-radius: var(--boxel-border-radius-lg);
         padding: 1rem 1rem 0.875rem;
-        border: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
+        border: 1px solid var(--border);
         box-shadow:
-          inset 0 0 30px color-mix(in oklch, var(--foreground) 60%, transparent),
+          inset 0 0 30px
+            color-mix(in oklch, var(--shadow-color) 60%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 3%, transparent);
         flex: 1;
         min-height: 0;
         /* Scroll horizontally when pads hit their min-width floor */
         overflow-x: auto;
         overflow-y: hidden;
+        color: var(--foreground);
       }
 
       /* Scrollable inner wrapper — keeps header and rows aligned */
@@ -1456,7 +1458,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         align-items: center;
         gap: 0.375rem;
         padding: 0.3rem 0 0.3rem 0.625rem;
-        border-left: 4px solid var(--border-strong);
+        border-left: 4px solid var(--inst-color);
         border-radius: 0 0.25rem 0.25rem 0;
         transition: background 0.1s ease;
         margin-bottom: 0.25rem;
@@ -1468,7 +1470,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .inst-row:hover {
-        background-color: color-mix(in oklch, var(--card) 2%, transparent);
+        background-color: var(--hover);
       }
 
       /* Per-instrument neon colors */
@@ -1526,7 +1528,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         width: 0.5rem;
         height: 0.5rem;
         border-radius: 50%;
-        background-color: var(--muted);
+        background-color: var(--inst-color);
         color: var(--muted-foreground);
         box-shadow: 0 0 6px var(--inst-glow);
         flex-shrink: 0;
@@ -1535,7 +1537,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       .inst-name {
         font-size: 0.6875rem;
         font-weight: 800;
-        color: var(--subtle-foreground);
+        color: color-mix(in oklch, var(--inst-color) 60%, var(--foreground));
         text-transform: uppercase;
         letter-spacing: 0.08em;
         white-space: nowrap;
@@ -1547,7 +1549,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         min-width: 0;
         height: 0.1875rem;
         -webkit-appearance: none;
-        background-color: color-mix(in oklch, var(--card) 8%, transparent);
+        background-color: var(--hover);
         border-radius: 6.1875rem;
         outline: none;
         cursor: pointer;
@@ -1557,7 +1559,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         -webkit-appearance: none;
         width: 0.75rem;
         height: 0.75rem;
-        background-color: var(--muted);
+        background-color: var(--inst-color);
         color: var(--muted-foreground);
         border-radius: 50%;
         cursor: pointer;
@@ -1567,7 +1569,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       .vol-slider::-moz-range-thumb {
         width: 0.75rem;
         height: 0.75rem;
-        background-color: var(--muted);
+        background-color: var(--inst-color);
         color: var(--muted-foreground);
         border-radius: 50%;
         cursor: pointer;
@@ -1584,7 +1586,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         width: 1.25rem;
         height: 1.25rem;
         background-color: transparent;
-        border: 1px solid color-mix(in oklch, var(--card) 9%, transparent);
+        border: 1px solid var(--border);
         color: color-mix(in oklch, var(--card-foreground) 30%, transparent);
         border-radius: 0.25rem;
         cursor: pointer;
@@ -1599,9 +1601,9 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .act-btn:hover {
-        border-color: var(--border);
-        color: var(--subtle-foreground);
-        background-color: color-mix(in oklch, var(--card) 5%, transparent);
+        border-color: var(--inst-color);
+        color: color-mix(in oklch, var(--inst-color) 60%, var(--foreground));
+        background-color: var(--hover);
       }
 
       /* ── Step Pads — stretch to fill remaining width ── */
@@ -1617,12 +1619,12 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         min-width: 1.375rem;
         height: 2rem;
         border: none;
-        background-color: color-mix(in oklch, var(--card) 4%, transparent);
+        background-color: var(--hover);
         border-radius: 0.25rem;
         cursor: pointer;
         transition: all 0.08s ease;
         position: relative;
-        outline: 1px solid color-mix(in oklch, var(--card) 7%, transparent);
+        outline: 1px solid var(--border);
         box-shadow: inset 0 1px 0
           color-mix(in oklch, var(--card) 6%, transparent);
       }
@@ -1633,14 +1635,13 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .pad:hover {
-        background-color: color-mix(in oklch, var(--card) 10%, transparent);
+        background-color: var(--hover);
         outline-color: var(--inst-color);
       }
 
       .pad.on {
-        background-color: var(--muted);
-        color: var(--muted-foreground);
-        outline-color: var(--border-strong);
+        background-color: var(--inst-color);
+        outline-color: var(--inst-color);
         box-shadow:
           0 0 12px var(--inst-glow),
           inset 0 1px 0 color-mix(in oklch, var(--card) 35%, transparent),
@@ -1648,8 +1649,8 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
       }
 
       .pad.now {
-        outline: 1px solid color-mix(in oklch, var(--card) 40%, transparent);
-        background-color: color-mix(in oklch, var(--card) 9%, transparent);
+        outline: 1px solid var(--border);
+        background-color: var(--hover);
       }
 
       .pad.on.now {
@@ -1844,6 +1845,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
         .inst-name {
           font-size: 0.5625rem;
+          color: color-mix(in oklch, var(--inst-color) 60%, var(--foreground));
         }
 
         .pad {
@@ -1868,11 +1870,13 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         .inst-name {
           font-size: 0.4375rem;
           letter-spacing: 0.05em;
+          color: color-mix(in oklch, var(--inst-color) 60%, var(--foreground));
         }
 
         .inst-led {
           width: 0.375rem;
           height: 0.375rem;
+          background-color: var(--inst-color);
         }
 
         .act-btn {
@@ -2397,12 +2401,14 @@ export class BeatMakerCard extends CardDef {
         .tile-pad {
           width: 0.75rem;
           height: 0.625rem;
-          background-color: color-mix(in oklch, var(--card) 20%, transparent);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           border-radius: 2px;
         }
 
         .tile-pad.on {
-          background-color: color-mix(in oklch, var(--card) 90%, transparent);
+          background-color: var(--card);
+          color: var(--card-foreground);
           box-shadow: 0 0 6px color-mix(in oklch, var(--card) 70%, transparent);
         }
 
@@ -2517,7 +2523,8 @@ export class BeatMakerCard extends CardDef {
         .card-machine {
           flex-shrink: 0;
           padding: 0.625rem;
-          background-color: color-mix(in oklch, var(--card) 75%, transparent);
+          background-color: var(--card);
+          color: var(--card-foreground);
           border-radius: var(--radius);
           min-width: 6.25rem;
           border: 1px solid color-mix(in oklch, var(--warning) 30%, transparent);
@@ -2598,9 +2605,10 @@ export class BeatMakerCard extends CardDef {
           flex-direction: column;
           gap: 0.1875rem;
           padding: 0.625rem 0.75rem;
-          background-color: color-mix(in oklch, var(--card) 80%, transparent);
+          background-color: var(--card);
+          color: var(--card-foreground);
           border-radius: var(--radius);
-          border: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
+          border: 1px solid var(--border);
         }
 
         .seq-track {
@@ -2611,9 +2619,9 @@ export class BeatMakerCard extends CardDef {
         .s-pad {
           flex: 1;
           height: 0.625rem;
-          background-color: color-mix(in oklch, var(--card) 5%, transparent);
+          background-color: var(--hover);
           border-radius: 2px;
-          border: 1px solid color-mix(in oklch, var(--card) 6%, transparent);
+          border: 1px solid var(--border);
         }
 
         .track-kick .s-pad.on {
@@ -2650,9 +2658,9 @@ export class BeatMakerCard extends CardDef {
         .stat {
           text-align: center;
           padding: 0.5rem;
-          background-color: color-mix(in oklch, var(--card) 3%, transparent);
+          background-color: var(--hover);
           border-radius: var(--boxel-border-radius-sm);
-          border: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
+          border: 1px solid var(--border);
         }
 
         .stat-val {

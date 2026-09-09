@@ -854,7 +854,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         font: 600 0.8125rem/1 var(--font-sans);
       }
       .remix-secondary:hover {
-        background-color: color-mix(in oklch, var(--card) 5%, transparent);
+        background-color: var(--hover);
       }
 
       .info-card {

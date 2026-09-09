@@ -186,8 +186,9 @@ export default class ImageCarouselComponent extends GlimmerComponent<Signature> 
           display: block;
           border-radius: var(--boxel-border-radius-sm);
           box-shadow:
-            0 15px 20px color-mix(in oklch, var(--foreground) 12%, transparent),
-            0 5px 10px color-mix(in oklch, var(--foreground) 10%, transparent);
+            0 15px 20px
+              color-mix(in oklch, var(--shadow-color) 12%, transparent),
+            0 5px 10px color-mix(in oklch, var(--shadow-color) 10%, transparent);
         }
 
         .carousel-arrow {
@@ -247,8 +248,9 @@ export default class ImageCarouselComponent extends GlimmerComponent<Signature> 
 
         .image-carousel:hover .carousel-item img {
           box-shadow:
-            0 15px 20px color-mix(in oklch, var(--foreground) 20%, transparent),
-            0 7px 10px color-mix(in oklch, var(--foreground) 12%, transparent);
+            0 15px 20px
+              color-mix(in oklch, var(--shadow-color) 20%, transparent),
+            0 7px 10px color-mix(in oklch, var(--shadow-color) 12%, transparent);
         }
 
         @container (max-height: 140px) {

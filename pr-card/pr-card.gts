@@ -316,8 +316,8 @@ class IsolatedTemplate extends Component<typeof PrCard> {
         flex: 1;
         display: flex;
         flex-direction: column;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--canvas);
+        color: var(--foreground);
       }
 
       /* ── Status columns ── */

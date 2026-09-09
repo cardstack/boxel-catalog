@@ -421,7 +421,7 @@ export class WineCellar extends CardDef {
           border-radius: 50%;
           background-color: var(--bg, transparent);
           box-shadow: inset 0 0 0 1px
-            color-mix(in oklch, var(--foreground) 30%, transparent);
+            color-mix(in oklch, var(--shadow-color) 30%, transparent);
         }
         .type-name {
           color: var(--accent-ink);
@@ -503,7 +503,7 @@ export class WineCellar extends CardDef {
           border-radius: 2px;
           overflow: hidden;
           box-shadow: 0 0 0 1px
-            color-mix(in oklch, var(--foreground) 40%, transparent);
+            color-mix(in oklch, var(--shadow-color) 40%, transparent);
         }
         .bar-fill {
           width: 100%;
@@ -689,7 +689,7 @@ export class WineCellar extends CardDef {
           border-radius: 50%;
           background-color: var(--bg, transparent);
           box-shadow:
-            0 0 0 1px color-mix(in oklch, var(--foreground) 40%, transparent),
+            0 0 0 1px color-mix(in oklch, var(--shadow-color) 40%, transparent),
             inset 0 0 0 1px color-mix(in oklch, var(--card) 10%, transparent);
         }
       </style>
@@ -797,7 +797,7 @@ export class WineCellar extends CardDef {
           border: 1px solid var(--border);
           font-family: 'Georgia', serif;
           font-size: var(--boxel-font-size-sm);
-          color: var(--card-foreground);
+          color: var(--muted-foreground);
           line-height: 1.4;
           white-space: nowrap;
         }

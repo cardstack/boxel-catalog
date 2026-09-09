@@ -221,7 +221,7 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
         color: var(--card-foreground);
         --icon-color: var(--card-foreground);
         box-shadow: 0 1px 3px
-          color-mix(in oklch, var(--foreground) 15%, transparent);
+          color-mix(in oklch, var(--shadow-color) 15%, transparent);
         cursor: pointer;
       }
       .remove-btn:hover,

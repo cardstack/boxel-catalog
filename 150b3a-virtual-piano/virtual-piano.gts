@@ -2227,14 +2227,10 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         /* ── Borders ── */
 
         /* ── Difficulty colours ── */
-        --vp-diff-easy-bg: color-mix(in oklch, var(--card) 12%, transparent);
-        --vp-diff-super-easy-bg: color-mix(
-          in oklch,
-          var(--card) 12%,
-          transparent
-        );
-        --vp-diff-inter-bg: color-mix(in oklch, var(--card) 14%, transparent);
-        --vp-diff-expert-bg: color-mix(in oklch, var(--card) 14%, transparent);
+        --vp-diff-easy-bg: var(--hover);
+        --vp-diff-super-easy-bg: var(--hover);
+        --vp-diff-inter-bg: var(--hover);
+        --vp-diff-expert-bg: var(--hover);
 
         --radius-sm: 0.1875rem;
 
@@ -2270,7 +2266,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         box-shadow:
           inset 0 0 0 1px color-mix(in oklch, var(--card) 6%, transparent),
           inset 1px 1px 0 color-mix(in oklch, var(--card) 10%, transparent),
-          0 8px 40px color-mix(in oklch, var(--foreground) 70%, transparent);
+          0 8px 40px color-mix(in oklch, var(--shadow-color) 70%, transparent);
       }
 
       /* ══ Song Search Overlay (full screen) ═══════════════════════════ */
@@ -2278,7 +2274,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         position: absolute;
         inset: 0;
         z-index: 300;
-        background-color: color-mix(in oklch, var(--card) 97%, transparent);
+        background-color: var(--tooltip);
+        color: var(--tooltip-foreground);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         display: flex;
@@ -2306,7 +2303,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           color-mix(in oklch, var(--border) 12%, transparent);
         box-shadow:
           0 1px 0 color-mix(in oklch, var(--info) 8%, transparent),
-          0 4px 20px color-mix(in oklch, var(--foreground) 40%, transparent);
+          0 4px 20px color-mix(in oklch, var(--shadow-color) 40%, transparent);
         flex-shrink: 0;
         background: linear-gradient(180deg, var(--card) 0%, var(--card) 100%);
         color: var(--info-ink);
@@ -2482,7 +2479,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         flex-shrink: 0;
         text-transform: uppercase;
         text-shadow:
-          0 1px 0 color-mix(in oklch, var(--foreground) 50%, transparent),
+          0 1px 0 color-mix(in oklch, var(--shadow-color) 50%, transparent),
           0 0 8px color-mix(in oklch, var(--info) 18%, transparent);
       }
       /* .vp-sep / .vp-song-title / .vp-song-artist removed — now in .vp-song-bar */
@@ -2621,7 +2618,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         border-bottom: 1px solid
           color-mix(in oklch, var(--border) 15%, transparent);
         box-shadow:
-          inset 0 -1px 0 color-mix(in oklch, var(--foreground) 40%, transparent),
+          inset 0 -1px 0
+            color-mix(in oklch, var(--shadow-color) 40%, transparent),
           0 1px 0 color-mix(in oklch, var(--card) 4%, transparent);
         flex-shrink: 0;
         position: relative;
@@ -2896,7 +2894,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           color-mix(in oklch, var(--destructive) 25%, transparent);
         border-radius: 0.75rem;
         box-shadow:
-          0 20px 60px color-mix(in oklch, var(--foreground) 70%, transparent),
+          0 20px 60px color-mix(in oklch, var(--shadow-color) 70%, transparent),
           0 0 0 1px color-mix(in oklch, var(--card) 5%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 7%, transparent);
         overflow: hidden;
@@ -2917,9 +2915,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         align-items: center;
         justify-content: space-between;
         padding: 0.75rem 1rem;
-        border-bottom: 1px solid
-          color-mix(in oklch, var(--card) 7%, transparent);
-        background-color: color-mix(in oklch, var(--card) 3%, transparent);
+        border-bottom: 1px solid var(--border);
+        background-color: var(--hover);
       }
       .vp-rec-panel-title {
         display: flex;
@@ -2940,7 +2937,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         overflow-x: hidden;
         margin: 0.6rem 1rem;
         padding: 0.6rem 0.75rem;
-        background-color: color-mix(in oklch, var(--card) 35%, transparent);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border: 1px solid
           color-mix(in oklch, var(--destructive) 18%, transparent);
         border-radius: 0.5rem;
@@ -3076,11 +3074,11 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       }
       .vp-rec-progress-track {
         height: 0.25rem;
-        background-color: color-mix(in oklch, var(--card) 7%, transparent);
+        background-color: var(--hover);
         border-radius: 0.1875rem;
         overflow: visible;
         position: relative;
-        border: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
+        border: 1px solid var(--border);
       }
       .vp-rec-progress-fill {
         height: 100%;
@@ -3108,7 +3106,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           var(--accent) 100%
         );
         box-shadow:
-          0 1px 4px color-mix(in oklch, var(--foreground) 60%, transparent),
+          0 1px 4px color-mix(in oklch, var(--shadow-color) 60%, transparent),
           0 0 6px color-mix(in oklch, var(--warning) 40%, transparent);
       }
       .vp-rec-time-row {
@@ -3183,6 +3181,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       }
       .vp-hbtn--disabled .vp-rec-dot {
         background-color: var(--muted);
+        color: var(--muted-foreground);
         box-shadow: none;
       }
 
@@ -3274,7 +3273,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           color-mix(in oklch, var(--border) 14%, transparent);
         box-shadow:
           inset 0 2px 8px
-            color-mix(in oklch, var(--foreground) 60%, transparent),
+            color-mix(in oklch, var(--shadow-color) 60%, transparent),
           inset 0 -1px 0 color-mix(in oklch, var(--card) 4%, transparent);
         flex-shrink: 0;
         overflow-x: auto;
@@ -3390,7 +3389,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         border: 1px solid color-mix(in oklch, var(--border) 16%, transparent);
         box-shadow:
           inset 0 1px 4px
-            color-mix(in oklch, var(--foreground) 80%, transparent),
+            color-mix(in oklch, var(--shadow-color) 80%, transparent),
           inset 0 -1px 0 color-mix(in oklch, var(--card) 4%, transparent);
         outline: none;
       }
@@ -3406,19 +3405,19 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           var(--muted) 65%,
           var(--card) 100%
         );
-        border: 1px solid color-mix(in oklch, var(--card) 16%, transparent);
+        border: 1px solid var(--border);
         box-shadow:
-          0 2px 6px color-mix(in oklch, var(--foreground) 75%, transparent),
-          0 0 0 1px color-mix(in oklch, var(--foreground) 40%, transparent),
+          0 2px 6px color-mix(in oklch, var(--shadow-color) 75%, transparent),
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 40%, transparent),
           inset 0 1px 1px color-mix(in oklch, var(--card) 40%, transparent),
           inset 0 -1px 1px
-            color-mix(in oklch, var(--foreground) 30%, transparent);
+            color-mix(in oklch, var(--shadow-color) 30%, transparent);
         cursor: ew-resize;
         transition: box-shadow 0.1s;
       }
       .vp-slider::-webkit-slider-thumb:hover {
         box-shadow:
-          0 2px 8px color-mix(in oklch, var(--foreground) 85%, transparent),
+          0 2px 8px color-mix(in oklch, var(--shadow-color) 85%, transparent),
           0 0 0 2px var(--vp-accent-border),
           inset 0 1px 1px color-mix(in oklch, var(--card) 45%, transparent);
       }
@@ -3433,9 +3432,9 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           var(--muted) 65%,
           var(--card) 100%
         );
-        border: 1px solid color-mix(in oklch, var(--card) 16%, transparent);
+        border: 1px solid var(--border);
         box-shadow:
-          0 2px 6px color-mix(in oklch, var(--foreground) 75%, transparent),
+          0 2px 6px color-mix(in oklch, var(--shadow-color) 75%, transparent),
           inset 0 1px 1px color-mix(in oklch, var(--card) 40%, transparent);
         cursor: ew-resize;
       }
@@ -3521,8 +3520,9 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         box-shadow:
           0 0 0 1px color-mix(in oklch, var(--card) 6%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 20%, transparent),
-          inset 0 -1px 0 color-mix(in oklch, var(--foreground) 40%, transparent),
-          0 4px 14px color-mix(in oklch, var(--foreground) 60%, transparent);
+          inset 0 -1px 0
+            color-mix(in oklch, var(--shadow-color) 40%, transparent),
+          0 4px 14px color-mix(in oklch, var(--shadow-color) 60%, transparent);
         white-space: nowrap;
       }
       .vp-reset-btn:hover {
@@ -3538,26 +3538,26 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           0 0 0 1px color-mix(in oklch, var(--card) 9%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 28%, transparent),
           0 0 12px color-mix(in oklch, var(--primary) 18%, transparent),
-          0 4px 18px color-mix(in oklch, var(--foreground) 65%, transparent);
+          0 4px 18px color-mix(in oklch, var(--shadow-color) 65%, transparent);
         color: var(--card-foreground);
       }
       .vp-reset-btn:active {
         transform: scale(0.96);
         box-shadow:
           inset 0 2px 6px
-            color-mix(in oklch, var(--foreground) 50%, transparent),
-          0 1px 4px color-mix(in oklch, var(--foreground) 40%, transparent);
+            color-mix(in oklch, var(--shadow-color) 50%, transparent),
+          0 1px 4px color-mix(in oklch, var(--shadow-color) 40%, transparent);
       }
 
       /* ══ Sheet Music (parchment, centred, only when song loaded) ═════ */
       .vp-sheet-outer {
         flex-shrink: 0;
         background-color: var(--card);
+        color: var(--card-foreground);
         display: flex;
         justify-content: center;
         padding: 0.6rem 1rem;
-        border-bottom: 1px solid
-          color-mix(in oklch, var(--card) 5%, transparent);
+        border-bottom: 1px solid var(--border);
       }
       .vp-sheet-wrap {
         width: 100%;
@@ -3566,14 +3566,14 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         border-radius: 0.375rem;
         overflow: hidden;
         box-shadow: 0 2px 12px
-          color-mix(in oklch, var(--foreground) 35%, transparent);
+          color-mix(in oklch, var(--shadow-color) 35%, transparent);
         max-height: 10rem;
         display: flex;
         flex-direction: column;
       }
       .vp-progress-track {
         height: 2px;
-        background-color: color-mix(in oklch, var(--card) 8%, transparent);
+        background-color: var(--hover);
         flex-shrink: 0;
       }
       .vp-progress-fill {
@@ -3631,7 +3631,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         transform: scale(1.1);
       }
       .vp-token--played {
-        color: color-mix(in oklch, var(--foreground) 20%, transparent);
+        color: var(--subtle-foreground);
       }
 
       /* ══ Fallboard — chrome status rail ═════════════════════════════════ */
@@ -3645,11 +3645,11 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         );
         border-top: 1px solid
           color-mix(in oklch, var(--border) 20%, transparent);
-        border-bottom: 2px solid
-          color-mix(in oklch, var(--foreground) 80%, transparent);
+        border-bottom: 2px solid var(--border-strong);
         box-shadow:
           inset 0 1px 0 color-mix(in oklch, var(--card) 8%, transparent),
-          inset 0 -1px 0 color-mix(in oklch, var(--foreground) 30%, transparent);
+          inset 0 -1px 0
+            color-mix(in oklch, var(--shadow-color) 30%, transparent);
         padding: 0.5rem 1.25rem;
         display: flex;
         align-items: center;
@@ -3685,7 +3685,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         letter-spacing: 0.25rem;
         text-transform: uppercase;
         text-shadow:
-          0 1px 0 color-mix(in oklch, var(--foreground) 70%, transparent),
+          0 1px 0 color-mix(in oklch, var(--shadow-color) 70%, transparent),
           0 0 12px color-mix(in oklch, var(--info) 20%, transparent);
       }
 
@@ -3705,7 +3705,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         border-radius: 1.25rem;
         font-size: 0.6875rem;
         font-weight: 600;
-        background-color: color-mix(in oklch, var(--card) 4%, transparent);
+        background-color: var(--hover);
         border: 1px solid var(--border);
         color: var(--muted-foreground);
         white-space: nowrap;
@@ -3727,6 +3727,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         height: 0.375rem;
         border-radius: 50%;
         background-color: var(--muted);
+        color: var(--muted-foreground);
         transition: all 0.2s;
       }
       .vp-fb-chip--on .vp-fb-chip-dot {
@@ -3840,7 +3841,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         position: absolute;
         inset: 0;
         z-index: 500;
-        background-color: color-mix(in oklch, var(--card) 97%, transparent);
+        background-color: var(--tooltip);
+        color: var(--tooltip-foreground);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         display: flex;
@@ -3870,7 +3872,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         flex-shrink: 0;
         box-shadow:
           0 1px 0 color-mix(in oklch, var(--info) 8%, transparent),
-          0 4px 20px color-mix(in oklch, var(--foreground) 40%, transparent);
+          0 4px 20px color-mix(in oklch, var(--shadow-color) 40%, transparent);
       }
       .vp-faq-hdr-title {
         display: flex;
@@ -3897,7 +3899,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       .vp-faq-section {
         padding: 1rem 1.1rem;
         margin-bottom: 0.85rem;
-        background-color: color-mix(in oklch, var(--card) 2%, transparent);
+        background-color: var(--hover);
         border: 1px solid var(--border);
         border-radius: 0.5rem;
       }
@@ -4021,7 +4023,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       .vp-faq-handmap {
         margin: 0.65rem 0;
         padding: 0.75rem;
-        background-color: color-mix(in oklch, var(--card) 30%, transparent);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border: 1px solid var(--border);
         border-radius: 0.375rem;
         display: grid;
@@ -4063,7 +4066,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         font-family: 'SF Mono', 'Fira Code', monospace;
         font-size: 0.6875rem;
         color: var(--card-foreground);
-        background-color: color-mix(in oklch, var(--card) 4%, transparent);
+        background-color: var(--hover);
         padding: 1px 0.3125rem;
         border-radius: 0.1875rem;
       }
@@ -4079,12 +4082,12 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         line-height: 1.7;
         white-space: pre-wrap;
         box-shadow: 0 2px 10px
-          color-mix(in oklch, var(--foreground) 40%, transparent);
+          color-mix(in oklch, var(--shadow-color) 40%, transparent);
       }
       .vp-faq-footer {
         padding: 0.85rem 1rem;
         border-top: 1px solid var(--border);
-        background-color: color-mix(in oklch, var(--card) 2%, transparent);
+        background-color: var(--hover);
         text-align: center;
         font-size: 0.7188rem;
         color: var(--muted-foreground);
@@ -4123,7 +4126,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         font-weight: 700;
         color: var(--card-foreground);
         box-shadow:
-          0 2px 0 color-mix(in oklch, var(--foreground) 40%, transparent),
+          0 2px 0 color-mix(in oklch, var(--shadow-color) 40%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 10%, transparent);
         white-space: nowrap;
       }
@@ -4146,7 +4149,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         overflow-x: auto;
         box-shadow:
           inset 0 6px 24px
-            color-mix(in oklch, var(--foreground) 80%, transparent),
+            color-mix(in oklch, var(--shadow-color) 80%, transparent),
           inset 0 2px 0 color-mix(in oklch, var(--card) 4%, transparent);
       }
       .vp-keyboard {
@@ -4163,9 +4166,10 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         height: 100%;
         background: linear-gradient(
           to bottom,
-          var(--card) 0%,
-          var(--card) 65%,
-          var(--inset) 100%
+          var(--tooltip-foreground) 0%,
+          var(--tooltip-foreground) 65%,
+          color-mix(in oklch, var(--tooltip-foreground) 92%, var(--tooltip))
+            100%
         );
         border: 1px solid var(--border);
         border-top: none;
@@ -4178,9 +4182,11 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         padding-bottom: 0.625rem;
         z-index: 1;
         box-shadow:
-          2px 4px 16px color-mix(in oklch, var(--foreground) 55%, transparent),
-          inset 0 1px 0 color-mix(in oklch, var(--card) 95%, transparent),
-          inset -1px 0 0 color-mix(in oklch, var(--foreground) 6%, transparent);
+          2px 4px 16px color-mix(in oklch, var(--shadow-color) 55%, transparent),
+          inset 0 1px 0
+            color-mix(in oklch, var(--tooltip-foreground) 95%, transparent),
+          inset -1px 0 0
+            color-mix(in oklch, var(--shadow-color) 6%, transparent);
         transition:
           background 0.06s,
           box-shadow 0.06s;
@@ -4202,10 +4208,12 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           var(--primary) 100%
         );
         box-shadow:
-          1px 1px 4px color-mix(in oklch, var(--foreground) 45%, transparent),
+          1px 1px 4px color-mix(in oklch, var(--shadow-color) 45%, transparent),
           0 0 14px color-mix(in oklch, var(--info) 28%, transparent),
-          inset 0 -1px 0 color-mix(in oklch, var(--foreground) 18%, transparent),
-          inset 0 1px 0 color-mix(in oklch, var(--card) 40%, transparent);
+          inset 0 -1px 0
+            color-mix(in oklch, var(--shadow-color) 18%, transparent),
+          inset 0 1px 0
+            color-mix(in oklch, var(--tooltip-foreground) 40%, transparent);
       }
       .vp-key--black {
         position: absolute;
@@ -4217,8 +4225,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           var(--tooltip) 0%,
           var(--tooltip) 100%
         );
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 90%, transparent);
+        border: 1px solid var(--border-strong);
         border-top: none;
         border-radius: 0 0 0.375rem 0.375rem;
         cursor: pointer;
@@ -4229,7 +4236,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         padding-bottom: 0.375rem;
         z-index: 2;
         box-shadow:
-          3px 7px 16px color-mix(in oklch, var(--foreground) 85%, transparent),
+          3px 7px 16px color-mix(in oklch, var(--shadow-color) 85%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 8%, transparent),
           inset 1px 0 0 color-mix(in oklch, var(--card) 3%, transparent);
         transition:
@@ -4252,9 +4259,10 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
           var(--tooltip) 100%
         );
         box-shadow:
-          1px 2px 6px color-mix(in oklch, var(--foreground) 80%, transparent),
+          1px 2px 6px color-mix(in oklch, var(--shadow-color) 80%, transparent),
           0 0 12px color-mix(in oklch, var(--info) 30%, transparent),
-          inset 0 -1px 0 color-mix(in oklch, var(--foreground) 50%, transparent),
+          inset 0 -1px 0
+            color-mix(in oklch, var(--shadow-color) 50%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--info) 15%, transparent);
       }
       .vp-key-label {
@@ -4266,10 +4274,10 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         user-select: none;
       }
       .vp-key--white .vp-key-label {
-        color: color-mix(in oklch, var(--primary-ink) 40%, transparent);
+        color: color-mix(in oklch, var(--tooltip) 40%, transparent);
       }
       .vp-key--white.vp-key--active .vp-key-label {
-        color: color-mix(in oklch, var(--primary-ink) 70%, transparent);
+        color: color-mix(in oklch, var(--tooltip) 70%, transparent);
       }
       .vp-key--black .vp-key-label {
         color: color-mix(in oklch, var(--tooltip-foreground) 60%, transparent);
@@ -4467,11 +4475,9 @@ export class VirtualPiano extends CardDef {
           /* chrome bezel shadow */
           --vp-bezel:
             0 1px 0 color-mix(in oklch, var(--inset) 25%, transparent) inset,
-            0 -1px 0 color-mix(in oklch, var(--foreground) 50%, transparent)
-              inset,
+            0 -1px 0 var(--overlay) inset,
             1px 0 0 color-mix(in oklch, var(--inset) 10%, transparent) inset,
-            -1px 0 0 color-mix(in oklch, var(--foreground) 30%, transparent)
-              inset;
+            -1px 0 0 var(--muted) inset;
 
           width: 100%;
           height: 100%;
@@ -4503,6 +4509,7 @@ export class VirtualPiano extends CardDef {
           height: 0.3125rem;
           border-radius: 50%;
           background-color: var(--muted);
+          color: var(--muted-foreground);
           box-shadow: none;
         }
         .led--on {
@@ -4540,6 +4547,7 @@ export class VirtualPiano extends CardDef {
             justify-content: center;
             gap: 0.5rem;
             background-color: var(--card);
+            color: var(--card-foreground);
             padding: 0.625rem 0.5rem;
           }
         }
@@ -4558,7 +4566,7 @@ export class VirtualPiano extends CardDef {
           border-radius: 0.375rem;
           box-shadow:
             var(--vp-bezel),
-            0 2px 8px color-mix(in oklch, var(--foreground) 50%, transparent);
+            0 2px 8px color-mix(in oklch, var(--shadow-color) 50%, transparent);
           border: 1px solid var(--border);
         }
 
@@ -4582,8 +4590,7 @@ export class VirtualPiano extends CardDef {
             var(--inset) 0%,
             var(--border) 100%
           );
-          border: 1px solid
-            color-mix(in oklch, var(--foreground) 25%, transparent);
+          border: 1px solid var(--border);
         }
         .bk-b {
           width: 0.25rem;
@@ -4597,7 +4604,7 @@ export class VirtualPiano extends CardDef {
           z-index: 1;
           position: relative;
           border-radius: 0 0 2px 2px;
-          border: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
+          border: 1px solid var(--border);
         }
 
         .badge-led-row {
@@ -4623,6 +4630,7 @@ export class VirtualPiano extends CardDef {
             gap: 0.625rem;
             padding: 0 0.875rem;
             background-color: var(--card);
+            color: var(--card-foreground);
             border-left: 3px solid var(--info);
             box-shadow: inset 0 0 40px
               color-mix(in oklch, var(--info) 4%, transparent);
@@ -4695,6 +4703,7 @@ export class VirtualPiano extends CardDef {
             flex-direction: column;
             position: relative;
             background-color: var(--card);
+            color: var(--card-foreground);
           }
         }
 
@@ -4713,7 +4722,7 @@ export class VirtualPiano extends CardDef {
             var(--card) 100%
           );
           box-shadow: 0 1px 0
-            color-mix(in oklch, var(--foreground) 40%, transparent);
+            color-mix(in oklch, var(--shadow-color) 40%, transparent);
         }
 
         .tile-hd-left {
@@ -4757,6 +4766,7 @@ export class VirtualPiano extends CardDef {
           justify-content: center;
           padding: 0.75rem;
           background-color: var(--card);
+          color: var(--card-foreground);
         }
 
         .tile-keys-panel {
@@ -4769,7 +4779,7 @@ export class VirtualPiano extends CardDef {
           padding: 0.5rem 0.625rem;
           box-shadow:
             var(--vp-bezel),
-            0 4px 16px color-mix(in oklch, var(--foreground) 60%, transparent),
+            0 4px 16px color-mix(in oklch, var(--shadow-color) 60%, transparent),
             0 0 0 1px var(--border),
             inset 0 0 12px color-mix(in oklch, var(--info) 3%, transparent);
         }
@@ -4780,7 +4790,7 @@ export class VirtualPiano extends CardDef {
           border-radius: 0.1875rem;
           padding: 0.25rem 0.25rem 0;
           box-shadow: inset 0 2px 4px
-            color-mix(in oklch, var(--foreground) 80%, transparent);
+            color-mix(in oklch, var(--shadow-color) 80%, transparent);
         }
 
         .tile-keys {
@@ -4805,8 +4815,7 @@ export class VirtualPiano extends CardDef {
             var(--inset) 0%,
             var(--border) 100%
           );
-          border: 1px solid
-            color-mix(in oklch, var(--foreground) 20%, transparent);
+          border: 1px solid var(--border);
         }
         .tk-b {
           width: 0.4375rem;
@@ -4816,7 +4825,7 @@ export class VirtualPiano extends CardDef {
             var(--tooltip) 0%,
             var(--tooltip) 100%
           );
-          border: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
+          border: 1px solid var(--border);
           margin: 0 -0.25rem;
           z-index: 1;
           position: relative;
@@ -4868,6 +4877,7 @@ export class VirtualPiano extends CardDef {
             display: flex;
             flex-direction: row;
             background-color: var(--card);
+            color: var(--card-foreground);
           }
         }
 
@@ -4887,7 +4897,7 @@ export class VirtualPiano extends CardDef {
           justify-content: center;
           gap: 0.5rem;
           box-shadow: inset -2px 0 8px
-            color-mix(in oklch, var(--foreground) 30%, transparent);
+            color-mix(in oklch, var(--shadow-color) 30%, transparent);
         }
 
         .card-keys-panel {
@@ -4902,7 +4912,7 @@ export class VirtualPiano extends CardDef {
           padding: 0.375rem 0.5rem;
           box-shadow:
             var(--vp-bezel),
-            0 3px 12px color-mix(in oklch, var(--foreground) 50%, transparent),
+            0 3px 12px color-mix(in oklch, var(--shadow-color) 50%, transparent),
             0 0 0 1px var(--border),
             inset 0 0 8px color-mix(in oklch, var(--info) 3%, transparent);
         }
@@ -4913,7 +4923,7 @@ export class VirtualPiano extends CardDef {
           border-radius: 2px;
           padding: 0.1875rem 0.1875rem 0;
           box-shadow: inset 0 2px 4px
-            color-mix(in oklch, var(--foreground) 80%, transparent);
+            color-mix(in oklch, var(--shadow-color) 80%, transparent);
         }
 
         .card-keys {
@@ -4938,8 +4948,7 @@ export class VirtualPiano extends CardDef {
             var(--inset) 0%,
             var(--border) 100%
           );
-          border: 1px solid
-            color-mix(in oklch, var(--foreground) 20%, transparent);
+          border: 1px solid var(--border);
         }
         .ck-b {
           width: 0.3125rem;
@@ -4949,7 +4958,7 @@ export class VirtualPiano extends CardDef {
             var(--tooltip) 0%,
             var(--tooltip) 100%
           );
-          border: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
+          border: 1px solid var(--border);
           margin: 0 -0.1875rem;
           z-index: 1;
           position: relative;
@@ -4976,7 +4985,7 @@ export class VirtualPiano extends CardDef {
           background-color: var(--border);
           flex-shrink: 0;
           box-shadow: 1px 0 0
-            color-mix(in oklch, var(--foreground) 50%, transparent);
+            color-mix(in oklch, var(--shadow-color) 50%, transparent);
         }
 
         .card-body {
@@ -5098,7 +5107,7 @@ export class VirtualPiano extends CardDef {
           gap: 0.5rem;
           padding: 0.5rem 0.75rem;
           border-radius: 0.375rem;
-          background-color: color-mix(in oklch, var(--card) 4%, transparent);
+          background-color: var(--hover);
           border: 1px solid color-mix(in oklch, var(--border) 12%, transparent);
         }
 

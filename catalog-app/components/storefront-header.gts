@@ -131,7 +131,7 @@ export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderS
         color: var(--foreground);
         background-color: var(--card);
         box-shadow: 0 1px 4px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
       }
       div.search {
         margin-left: auto;

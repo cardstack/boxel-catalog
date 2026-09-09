@@ -275,7 +275,7 @@ export class Genre extends CardDef {
           width: clamp(5rem, 18vw, 7.5rem);
           height: clamp(5rem, 18vw, 7.5rem);
           border-radius: 50%;
-          background-color: color-mix(in oklch, var(--card) 8%, transparent);
+          background-color: var(--hover);
           border: 1px solid var(--gi-accent-border);
           backdrop-filter: blur(12px);
           display: flex;
@@ -302,7 +302,7 @@ export class Genre extends CardDef {
           text-transform: uppercase;
           color: var(--card-foreground);
           text-shadow:
-            0 2px 4px color-mix(in oklch, var(--foreground) 60%, transparent),
+            0 2px 4px color-mix(in oklch, var(--shadow-color) 60%, transparent),
             0 0 40px var(--gi-accent-dim);
           margin: 0;
           text-align: center;
@@ -333,8 +333,8 @@ export class Genre extends CardDef {
           gap: 0.3125rem;
           padding: 0.375rem 0.875rem;
           border-radius: 1.25rem;
-          background-color: color-mix(in oklch, var(--card) 8%, transparent);
-          border: 1px solid color-mix(in oklch, var(--card) 14%, transparent);
+          background-color: var(--hover);
+          border: 1px solid var(--border);
           font-size: 0.6875rem;
           font-weight: 600;
           color: color-mix(in oklch, var(--card-foreground) 70%, transparent);
@@ -469,7 +469,7 @@ export class Genre extends CardDef {
 
       <style scoped>
         .gf {
-          --gf-surface: color-mix(in oklch, var(--card) 8%, transparent);
+          --gf-surface: var(--hover);
           width: 100%;
           height: 100%;
           font-family:
@@ -504,7 +504,8 @@ export class Genre extends CardDef {
         .card-scrim {
           position: absolute;
           inset: 0;
-          background-color: color-mix(in oklch, var(--card) 52%, transparent);
+          background-color: var(--overlay);
+          color: var(--tooltip-foreground);
         }
         .tile-tint,
         .card-tint {
@@ -544,7 +545,7 @@ export class Genre extends CardDef {
           width: 2.875rem;
           height: 2.875rem;
           border-radius: 50%;
-          background-color: color-mix(in oklch, var(--card) 10%, transparent);
+          background-color: var(--hover);
           border: 1px solid var(--gf-accent-border);
           backdrop-filter: blur(6px);
           display: flex;
@@ -566,7 +567,7 @@ export class Genre extends CardDef {
           letter-spacing: 0.08em;
           text-align: center;
           text-shadow: 0 1px 3px
-            color-mix(in oklch, var(--foreground) 80%, transparent);
+            color-mix(in oklch, var(--shadow-color) 80%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -610,7 +611,7 @@ export class Genre extends CardDef {
           text-transform: uppercase;
           letter-spacing: 0.06em;
           text-shadow: 0 1px 4px
-            color-mix(in oklch, var(--foreground) 70%, transparent);
+            color-mix(in oklch, var(--shadow-color) 70%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -645,8 +646,7 @@ export class Genre extends CardDef {
           align-items: center;
           gap: 0.4375rem;
           padding: 0.5625rem 0.75rem;
-          border-bottom: 1px solid
-            color-mix(in oklch, var(--card) 12%, transparent);
+          border-bottom: 1px solid var(--border);
           flex-shrink: 0;
           background-color: color-mix(in oklch, var(--inset) 20%, transparent);
           backdrop-filter: blur(8px);
@@ -689,7 +689,7 @@ export class Genre extends CardDef {
           width: clamp(3rem, 12cqh, 4.5rem);
           height: clamp(3rem, 12cqh, 4.5rem);
           border-radius: 50%;
-          background-color: color-mix(in oklch, var(--card) 10%, transparent);
+          background-color: var(--hover);
           border: 1px solid var(--gf-accent-border);
           backdrop-filter: blur(8px);
           display: flex;
@@ -711,7 +711,7 @@ export class Genre extends CardDef {
           letter-spacing: 0.1em;
           text-align: center;
           text-shadow: 0 2px 8px
-            color-mix(in oklch, var(--foreground) 70%, transparent);
+            color-mix(in oklch, var(--shadow-color) 70%, transparent);
           margin: 0;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -756,7 +756,7 @@ export class Genre extends CardDef {
           width: clamp(3.25rem, 9cqh, 4.25rem);
           height: clamp(3.25rem, 9cqh, 4.25rem);
           border-radius: 50%;
-          background-color: color-mix(in oklch, var(--card) 10%, transparent);
+          background-color: var(--hover);
           border: 1px solid var(--gf-accent-border);
           backdrop-filter: blur(8px);
           display: flex;
@@ -772,7 +772,7 @@ export class Genre extends CardDef {
 
         .card-divider {
           width: 1px;
-          background-color: color-mix(in oklch, var(--card) 12%, transparent);
+          background-color: var(--hover);
           flex-shrink: 0;
         }
 
@@ -841,7 +841,7 @@ export class Genre extends CardDef {
           text-transform: uppercase;
           letter-spacing: 0.1em;
           text-shadow: 0 1px 6px
-            color-mix(in oklch, var(--foreground) 50%, transparent);
+            color-mix(in oklch, var(--shadow-color) 50%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -872,8 +872,8 @@ export class Genre extends CardDef {
           font-size: 0.5625rem;
           font-weight: 600;
           color: var(--muted-foreground);
-          background-color: color-mix(in oklch, var(--card) 7%, transparent);
-          border: 1px solid color-mix(in oklch, var(--card) 14%, transparent);
+          background-color: var(--hover);
+          border: 1px solid var(--border);
           border-radius: 0.25rem;
           padding: 2px 0.4375rem;
           white-space: nowrap;

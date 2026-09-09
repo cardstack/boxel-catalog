@@ -425,6 +425,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         gap: var(--boxel-sp-lg);
         color: var(--foreground);
         font-family: var(--font-sans);
+        background-color: var(--canvas);
       }
       .survey-header {
         display: flex;
@@ -460,7 +461,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         background-color: var(--card);
         color: var(--primary-ink);
         box-shadow: 0 1px 2px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
       }
       .survey-eyebrow {
         margin: 0;

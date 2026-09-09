@@ -544,7 +544,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         container-type: inline-size;
         container-name: blog-site;
         min-height: 100%;
-        background-color: var(--card);
+        background-color: var(--canvas);
         color: var(--foreground);
         font-family: var(--blog-font-family, 'Inter', system-ui, sans-serif);
         padding-bottom: var(--boxel-sp-xxl);
@@ -555,6 +555,8 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         max-width: 77.5rem;
         margin: 0 auto;
         padding: var(--boxel-sp-xxl) var(--boxel-sp-lg) var(--boxel-sp-lg);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .brand {
         display: flex;
@@ -758,11 +760,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       }
       .lead-list :deep(.category) {
         /* Fixed white-on-photo pill: text must stay dark in every theme */
-        background-color: color-mix(
-          in oklch,
-          var(--card) 95%,
-          transparent
-        ) !important;
+        background-color: var(--card) !important;
         color: var(--foreground) !important;
         padding: 0.3125rem 0.875rem !important;
         border-radius: 62.4375rem !important;
@@ -874,7 +872,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       .featured-list.manual.is-drop-target {
         outline: 2px dashed var(--primary);
         outline-offset: 4px;
-        background-color: color-mix(in oklch, var(--card) 4%, transparent);
+        background-color: var(--hover);
       }
       .featured-slot {
         padding: 0.75rem 0;
@@ -999,7 +997,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       .games-card:hover {
         border-color: var(--primary);
         box-shadow: 0 3px 10px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
         transform: translateY(-1px);
       }
       .games-card :deep(.card) {
@@ -1014,7 +1012,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       .games-list.is-drop-target {
         outline: 2px dashed var(--primary);
         outline-offset: 4px;
-        background-color: color-mix(in oklch, var(--card) 4%, transparent);
+        background-color: var(--hover);
         border-radius: 0.75rem;
       }
       .games-empty {
@@ -1095,7 +1093,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         border-radius: 0.875rem;
         overflow: hidden;
         box-shadow: 0 2px 6px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
         cursor: pointer;
         transition:
           box-shadow 0.15s,
@@ -1103,7 +1101,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       }
       .picks-card:hover {
         box-shadow: 0 8px 24px
-          color-mix(in oklch, var(--foreground) 14%, transparent);
+          color-mix(in oklch, var(--shadow-color) 14%, transparent);
         transform: translateY(-2px);
       }
       .picks-card :deep(.card) {
@@ -1243,7 +1241,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         border-radius: 0.875rem;
         overflow: hidden;
         box-shadow: 0 1px 3px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
         cursor: pointer;
         transition:
           box-shadow 0.15s,
@@ -1251,7 +1249,7 @@ export class BlogSiteView extends Component<typeof BlogApp> {
       }
       .recent-card:hover {
         box-shadow: 0 6px 18px
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+          color-mix(in oklch, var(--shadow-color) 12%, transparent);
         transform: translateY(-2px);
       }
       .recent-card :deep(.card) {

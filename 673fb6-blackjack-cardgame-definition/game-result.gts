@@ -423,11 +423,7 @@ export class GameResult extends CardDef {
             transparent
           );
           --casino-text: var(--card-foreground);
-          --casino-text-muted: color-mix(
-            in oklch,
-            var(--card) 45%,
-            transparent
-          );
+          --casino-text-muted: var(--muted-foreground);
           --casino-font: 'Georgia', 'Times New Roman', serif;
           --casino-mono: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
           --casino-ring-inner: color-mix(
@@ -532,7 +528,7 @@ export class GameResult extends CardDef {
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
           box-shadow:
-            0 4px 20px color-mix(in oklch, var(--foreground) 30%, transparent),
+            0 4px 20px color-mix(in oklch, var(--shadow-color) 30%, transparent),
             inset 0 1px 0 color-mix(in oklch, var(--card) 8%, transparent);
         }
         .badge--win {
@@ -603,7 +599,7 @@ export class GameResult extends CardDef {
           font-weight: 800;
           color: var(--casino-text);
           text-shadow: 0 4px 8px
-            color-mix(in oklch, var(--foreground) 40%, transparent);
+            color-mix(in oklch, var(--shadow-color) 40%, transparent);
           letter-spacing: -0.02em;
           line-height: 1.1;
         }
@@ -726,7 +722,7 @@ export class GameResult extends CardDef {
         .gr-mono {
           font-family: var(--casino-mono);
           font-size: var(--boxel-font-size-xs);
-          background-color: color-mix(in oklch, var(--card) 30%, transparent);
+          background-color: var(--muted);
           padding: 0.2rem var(--boxel-sp-xs);
           border-radius: var(--boxel-border-radius-sm);
           border: 1px solid color-mix(in oklch, var(--accent) 10%, transparent);
@@ -830,11 +826,7 @@ export class GameResult extends CardDef {
             transparent
           );
           --casino-text: var(--card-foreground);
-          --casino-text-muted: color-mix(
-            in oklch,
-            var(--card) 40%,
-            transparent
-          );
+          --casino-text-muted: var(--muted-foreground);
           --casino-font: 'Georgia', 'Times New Roman', serif;
           --casino-ring-inner: color-mix(
             in oklch,
@@ -985,7 +977,7 @@ export class GameResult extends CardDef {
           font-weight: 700;
           color: var(--casino-text);
           text-shadow: 0 1px 3px
-            color-mix(in oklch, var(--foreground) 40%, transparent);
+            color-mix(in oklch, var(--shadow-color) 40%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

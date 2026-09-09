@@ -1,0 +1,71 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rootVariables": {
+        "background": "#1a100d",
+        "foreground": "#f2e8d8",
+        "card": "#241713",
+        "cardForeground": "#f2e8d8",
+        "popover": "#2c1c17",
+        "popoverForeground": "#f2e8d8",
+        "primary": "#8e1f2a",
+        "primaryForeground": "#fbeee6",
+        "secondary": "#33221c",
+        "secondaryForeground": "#f2e8d8",
+        "muted": "#2a1b16",
+        "mutedForeground": "#c9b8a2",
+        "accent": "#c9a96a",
+        "accentForeground": "#1a100d",
+        "destructive": "#d65b4d",
+        "destructiveForeground": "#1a0705",
+        "border": "#3f2a22",
+        "input": "#3f2a22",
+        "ring": "#c9a96a",
+        "canvas": "#120b09",
+        "inset": "#1f120f",
+        "sidebar": "#1e1310",
+        "sidebarForeground": "#f2e8d8",
+        "tooltip": "#f2e8d8",
+        "tooltipForeground": "#1a100d",
+        "fontSans": "'Inter', system-ui, sans-serif",
+        "fontSerif": "'Cormorant Garamond', Georgia, serif",
+        "radius": "0.5rem",
+        "stripe": "#291c18",
+        "field": "#241713",
+        "hover": "#f2e8d814",
+        "selected": "#331a16",
+        "overlay": "#f2e8d880",
+        "subtleForeground": "#8f8070",
+        "borderStrong": "#827064",
+        "sidebarBorder": "#3f2a22",
+        "sidebarPrimary": "#8e1f2a",
+        "sidebarPrimaryForeground": "#fbeee6",
+        "sidebarAccent": "#c9a96a",
+        "sidebarAccentForeground": "#1a100d",
+        "sidebarRing": "#8e1f2a",
+        "success": "#67b36a",
+        "successForeground": "#111111",
+        "warning": "#c8942d",
+        "warningForeground": "#111111",
+        "info": "#5aa3ec",
+        "infoForeground": "#111111",
+        "attention": "#da7baa",
+        "attentionForeground": "#111111"
+      },
+      "customCssImports": [],
+      "cardInfo": {
+        "name": "Cellar",
+        "summary": "Wine Cellar's default look — oak-dark ground, burgundy emphasis, cream ink and gold labels.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/structured-theme",
+        "name": "default"
+      }
+    }
+  }
+}

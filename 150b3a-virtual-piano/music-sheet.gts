@@ -409,7 +409,7 @@ export class MusicSheet extends CardDef {
             color-mix(in oklch, var(--destructive) 30%, transparent);
         }
         .diff-unknown {
-          background-color: color-mix(in oklch, var(--card) 6%, transparent);
+          background-color: var(--hover);
           color: var(--muted-foreground);
           border: 1px solid var(--border);
         }
@@ -419,9 +419,9 @@ export class MusicSheet extends CardDef {
           border-radius: 1.25rem;
           font-size: 0.6875rem;
           font-weight: 600;
-          background-color: color-mix(in oklch, var(--card) 8%, transparent);
+          background-color: var(--hover);
           color: var(--subtle-foreground);
-          border: 1px solid color-mix(in oklch, var(--card) 12%, transparent);
+          border: 1px solid var(--border);
         }
 
         /* ── Stats bar ── */
@@ -454,7 +454,7 @@ export class MusicSheet extends CardDef {
           border-radius: 0.75rem;
           font-size: 0.6875rem;
           font-weight: 600;
-          background-color: color-mix(in oklch, var(--card) 4%, transparent);
+          background-color: var(--hover);
           color: var(--muted-foreground);
           border: 1px solid var(--border);
         }
@@ -542,9 +542,9 @@ export class MusicSheet extends CardDef {
         }
 
         .ms-note {
-          background-color: color-mix(in oklch, var(--card) 8%, transparent);
+          background-color: var(--hover);
           color: var(--card-foreground);
-          border: 1px solid color-mix(in oklch, var(--card) 14%, transparent);
+          border: 1px solid var(--border);
           box-shadow:
             0 1px 0 color-mix(in oklch, var(--card) 6%, transparent),
             inset 0 1px 0 color-mix(in oklch, var(--card) 6%, transparent);
@@ -561,7 +561,7 @@ export class MusicSheet extends CardDef {
 
         .ms-rest {
           color: var(--muted-foreground);
-          border: 1px dashed color-mix(in oklch, var(--card) 10%, transparent);
+          border: 1px dashed var(--border);
           font-size: 0.5625rem;
           opacity: 0.6;
         }
@@ -643,7 +643,7 @@ export class MusicSheet extends CardDef {
           gap: 0.625rem;
           padding: 0.5rem 0.75rem;
           border-radius: 0.375rem;
-          background-color: color-mix(in oklch, var(--card) 4%, transparent);
+          background-color: var(--hover);
           border: 1px solid color-mix(in oklch, var(--border) 10%, transparent);
         }
 
@@ -977,8 +977,8 @@ export class MusicSheet extends CardDef {
           /* ── Design tokens ── */
           --ms-shadow:
             0 1px 0.1875rem
-              color-mix(in oklch, var(--foreground) 7%, transparent),
-            0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent);
+              color-mix(in oklch, var(--shadow-color) 7%, transparent),
+            0 1px 2px color-mix(in oklch, var(--shadow-color) 4%, transparent);
           /* difficulty colours */
 
           width: 100%;
@@ -1008,6 +1008,7 @@ export class MusicSheet extends CardDef {
             justify-content: center;
             gap: 0.375rem;
             background-color: var(--card);
+            color: var(--card-foreground);
             padding: 0.625rem 0.5rem;
           }
         }
@@ -1137,6 +1138,7 @@ export class MusicSheet extends CardDef {
         .tile-body {
           flex: 1;
           background-color: var(--card);
+          color: var(--card-foreground);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -1246,7 +1248,7 @@ export class MusicSheet extends CardDef {
         .tile-title--over {
           color: var(--card-foreground) !important;
           text-shadow: 0 1px 3px
-            color-mix(in oklch, var(--foreground) 60%, transparent);
+            color-mix(in oklch, var(--shadow-color) 60%, transparent);
         }
 
         .tile-artist--over {
@@ -1283,6 +1285,7 @@ export class MusicSheet extends CardDef {
           width: 6.875rem;
           flex-shrink: 0;
           background-color: var(--card);
+          color: var(--card-foreground);
           display: flex;
           flex-direction: column;
           align-items: center;

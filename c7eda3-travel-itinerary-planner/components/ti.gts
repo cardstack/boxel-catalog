@@ -736,7 +736,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
            container and trap the sticky header against itself. Leaving it
            visible lets the header stick to whichever ancestor actually
            scrolls — the inner .ti-body still owns the internal scroll. */
-        background-color: var(--muted);
+        background-color: var(--canvas);
         font-family:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
           Arial, sans-serif;
@@ -863,9 +863,10 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       .ti-ai-chip.is-cat.is-selected {
         background-color: var(--muted);
+        color: var(--muted-foreground);
         color: inherit;
         border-color: var(--foreground);
-        box-shadow: 0 0 0 1px var(--foreground);
+        box-shadow: 0 0 0 1px var(--shadow-color);
       }
       .ti-ai-preview {
         display: flex;
@@ -878,7 +879,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         background-color: var(--card);
         color: var(--card-foreground);
         box-shadow: 0 1px 3px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
         animation: ti-msg-in 0.18s ease both;
       }
       .ti-ai-preview-day {
@@ -1039,7 +1040,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       .ti-ai-stop-close:hover {
         border-color: var(--foreground);
-        color: var(--foreground);
+        color: var(--muted-foreground);
         background-color: var(--muted);
       }
       .ti-ai-preview-remove {
@@ -1221,7 +1222,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         border: 1px solid var(--border);
         border-radius: 1rem;
         box-shadow: 0 2px 8px
-          color-mix(in oklch, var(--foreground) 5%, transparent);
+          color-mix(in oklch, var(--shadow-color) 5%, transparent);
       }
       .ti-frame-field {
         display: flex;
@@ -1420,8 +1421,8 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         text-align: left;
         position: sticky;
         top: 0;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--inset);
+        color: var(--foreground);
         z-index: 2;
         border-radius: 0.5rem;
       }
@@ -1477,7 +1478,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         border: 1px solid var(--border);
         border-radius: 0.875rem;
         box-shadow: 0 1px 2px
-          color-mix(in oklch, var(--foreground) 4%, transparent);
+          color-mix(in oklch, var(--shadow-color) 4%, transparent);
         animation: ti-stop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
         transition:
           box-shadow 0.15s ease,
@@ -1508,7 +1509,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       .ti-stop:hover {
         box-shadow: 0 4px 12px
-          color-mix(in oklch, var(--foreground) 10%, transparent);
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
         border-color: var(--border);
       }
       .ti-stop.is-sel {
@@ -1673,7 +1674,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         color: var(--card-foreground);
         border-left: 1px solid var(--border);
         box-shadow: -8px 0 24px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
         z-index: 1100;
         animation: ti-slide-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
@@ -1761,7 +1762,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         color: var(--card-foreground);
         border-radius: 62.4375rem;
         box-shadow: 0 2px 12px
-          color-mix(in oklch, var(--foreground) 18%, transparent);
+          color-mix(in oklch, var(--shadow-color) 18%, transparent);
       }
       .ti-chip {
         flex-shrink: 0;
@@ -2105,8 +2106,8 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           width: 2.125rem;
           height: 2.125rem;
           border-radius: 0.625rem;
-          background-color: color-mix(in oklch, var(--card) 22%, transparent);
-          color: var(--primary-foreground);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .t-head-text {
           display: flex;
@@ -2191,8 +2192,8 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           color: var(--card-foreground);
         }
         .c-hero-icon {
-          background-color: color-mix(in oklch, var(--card) 22%, transparent);
-          color: var(--primary-foreground);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .c-head-text {
           flex: 1;
@@ -2240,7 +2241,7 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           background-color: var(--primary-foreground);
           border-radius: 0.625rem;
           box-shadow: 0 4px 12px
-            color-mix(in oklch, var(--foreground) 18%, transparent);
+            color-mix(in oklch, var(--shadow-color) 18%, transparent);
         }
         .c-qr-cap {
           font-size: 0.5625rem;

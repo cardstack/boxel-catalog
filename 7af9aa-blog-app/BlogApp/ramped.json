@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "BlogApp",
-        "module": "../blog-app"
+        "module": "@cardstack/catalog/7af9aa-blog-app/blog-app"
       }
     },
     "type": "card",
@@ -49,7 +49,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": "../Theme/modern-magazine"
+          "self": null
         }
       },
       "cardInfo.cardThumbnail": {

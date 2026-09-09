@@ -1586,7 +1586,7 @@ export default class Popover extends Component<PopoverSignature> {
         color: var(--popover-foreground);
         /* Single source of truth for the surface fill. backdrop sets
          * this var (opaque / translucent), kind overrides the hue. */
-        background-color: var(--card);
+        background-color: var(--bx-popover-bg);
         /* visible (not hidden) so the optional arrow can poke past the
          * edge. Corner-clipping moved to .bx-popover__body, which rounds
          * its own scroll container — same anti-notch effect, but without
@@ -1784,10 +1784,10 @@ export default class Popover extends Component<PopoverSignature> {
         --bx-popover-bg: var(--card);
       }
       .bx-popover--edit.bx-popover--backdrop-tint {
-        --bx-popover-bg: color-mix(in oklch, var(--card) 80%, transparent);
+        --bx-popover-bg: var(--card);
       }
       .bx-popover--edit.bx-popover--backdrop-blur {
-        --bx-popover-bg: color-mix(in oklch, var(--card) 55%, transparent);
+        --bx-popover-bg: var(--card);
       }
       .bx-popover--edit
         .bx-popover__pane
@@ -1852,7 +1852,7 @@ export default class Popover extends Component<PopoverSignature> {
         color: var(--primary-ink);
       }
       .bx-popover--tools .bx-popover__escalate {
-        color: color-mix(in oklch, var(--foreground) 60%, transparent);
+        color: var(--subtle-foreground);
       }
       .bx-popover--tools .bx-popover__escalate:hover {
         background-color: color-mix(

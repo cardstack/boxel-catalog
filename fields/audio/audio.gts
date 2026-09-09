@@ -293,7 +293,8 @@ class AudioFieldFitted extends Component<typeof AudioField> {
       .play-overlay {
         position: absolute;
         inset: 0;
-        background-color: color-mix(in oklch, var(--card) 40%, transparent);
+        background-color: var(--overlay);
+        color: var(--tooltip-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -313,16 +314,14 @@ class AudioFieldFitted extends Component<typeof AudioField> {
         background-color: var(--card) !important;
         color: var(--primary-ink) !important;
         box-shadow:
-          0 4px 6px -1px color-mix(in oklch, var(--foreground) 10%, transparent),
-          0 2px 4px -2px color-mix(in oklch, var(--foreground) 10%, transparent) !important;
+          0 4px 6px -1px
+            color-mix(in oklch, var(--shadow-color) 10%, transparent),
+          0 2px 4px -2px
+            color-mix(in oklch, var(--shadow-color) 10%, transparent) !important;
       }
 
       .play-overlay-button:hover {
-        background-color: color-mix(
-          in oklch,
-          var(--card) 95%,
-          transparent
-        ) !important;
+        background-color: var(--card) !important;
         transform: scale(1.05);
       }
 

@@ -903,8 +903,8 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         position: relative;
         height: 15.625rem;
         width: 100%;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--inset);
+        color: var(--foreground);
         border-radius: 0.625rem;
         display: flex;
         align-items: center;
@@ -938,7 +938,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         font-weight: 500;
         color: var(--foreground);
         box-shadow: 0 1px 3px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
         transition:
           background 80ms,
           border-color 80ms,
@@ -949,7 +949,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
         color: var(--card-foreground);
         border-color: var(--border);
         box-shadow: 0 2px 6px
-          color-mix(in oklch, var(--foreground) 9%, transparent);
+          color-mix(in oklch, var(--shadow-color) 9%, transparent);
       }
       .pp-open--active {
         background-color: var(--card);
@@ -1045,7 +1045,7 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
       }
       .pp-tool:hover,
       .pp-tool:focus-visible {
-        background-color: color-mix(in oklch, var(--card) 12%, transparent);
+        background-color: var(--hover);
         outline: none;
       }
       .pp-tool-glyph {

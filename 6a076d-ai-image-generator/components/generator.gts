@@ -64,15 +64,19 @@ export class AiImageGeneratorIsolated extends Component<
   // once — on the skeleton — not doubled in the composer too.
   @tracked pendingPrompt = '';
 
-  // In-card light/dark control. Stamped as `data-theme` on the card root; since
-  // `--boxel-color-scheme` is an inherited signal and the theme tokens are
-  // scoped, flipping it re-themes ONLY this card (a linked Theme's `.dark`
-  // block responds too via the CardContainer pipeline). Defaults to the
-  // studio-dark brand look.
+  // In-card light/dark control, stamped as `data-theme` on the card root.
+  // theme.css allows an explicit dark scheme on any subtree; this studio opts
+  // its own subtree in by default. Since `--boxel-color-scheme` is an inherited
+  // signal and theme tokens are scoped, the toggle re-themes ONLY this card,
+  // and a linked Theme's dark block responds too via the CardContainer pipeline.
   @tracked colorScheme: 'light' | 'dark' = 'dark';
 
+  get isDark() {
+    return this.colorScheme === 'dark';
+  }
+
   @action toggleColorScheme() {
-    this.colorScheme = this.colorScheme === 'dark' ? 'light' : 'dark';
+    this.colorScheme = this.isDark ? 'light' : 'dark';
   }
 
   // Focused editing session: opened by clicking Refine on a history image. It
@@ -677,17 +681,13 @@ export class AiImageGeneratorIsolated extends Component<
           class='scheme-toggle'
           {{on 'click' this.toggleColorScheme}}
           aria-label={{if
-            (eq this.colorScheme 'dark')
+            this.isDark
             'Switch to light mode'
             'Switch to dark mode'
           }}
-          title={{if
-            (eq this.colorScheme 'dark')
-            'Switch to light mode'
-            'Switch to dark mode'
-          }}
+          title={{if this.isDark 'Switch to light mode' 'Switch to dark mode'}}
         >
-          {{#if (eq this.colorScheme 'dark')}}
+          {{#if this.isDark}}
             <SunIcon />
           {{else}}
             <MoonIcon />
@@ -1223,7 +1223,7 @@ export class AiImageGeneratorIsolated extends Component<
         display: flex;
         flex-direction: column;
         height: 100%;
-        background-color: var(--background);
+        background-color: var(--canvas);
         color: var(--c-fg);
         font: var(--boxel-font-sm);
         font-family: var(--font-sans);
@@ -1250,8 +1250,8 @@ export class AiImageGeneratorIsolated extends Component<
         gap: var(--boxel-sp);
         padding: var(--boxel-sp);
         border-right: 1px solid var(--border);
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--sidebar);
+        color: var(--sidebar-foreground);
         /* Model + Aspect stay put at the top; only the version list scrolls. */
         overflow: hidden;
       }
@@ -1265,6 +1265,8 @@ export class AiImageGeneratorIsolated extends Component<
           overflow-y: auto;
           border-right: none;
           border-bottom: 1px solid var(--border);
+          background-color: var(--sidebar);
+          color: var(--sidebar-foreground);
         }
       }
       .main {
@@ -1438,7 +1440,7 @@ export class AiImageGeneratorIsolated extends Component<
         border-radius: var(--radius);
         border: 1px solid var(--border);
         box-shadow: 0 8px 32px
-          color-mix(in oklch, var(--foreground) 28%, transparent);
+          color-mix(in oklch, var(--shadow-color) 28%, transparent);
       }
       .turn-skeleton {
         width: 100%;
@@ -1570,7 +1572,7 @@ export class AiImageGeneratorIsolated extends Component<
         padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
         border-radius: var(--boxel-border-radius-sm);
         border: 1px solid var(--border);
-        background-color: color-mix(in oklch, var(--card) 82%, transparent);
+        background-color: var(--card);
         backdrop-filter: blur(8px);
         color: var(--c-fg);
         font-size: var(--boxel-font-size-sm);
@@ -1675,7 +1677,7 @@ export class AiImageGeneratorIsolated extends Component<
         background-color: var(--card);
         color: var(--card-foreground);
         box-shadow: 0 12px 40px
-          color-mix(in oklch, var(--foreground) 30%, transparent);
+          color-mix(in oklch, var(--shadow-color) 30%, transparent);
       }
       /* GPT-style memory toggle: follow-up prompts continue the latest image
          unless the person opts into a fresh one. */
@@ -1842,7 +1844,7 @@ export class AiImageGeneratorIsolated extends Component<
         background-color: var(--card);
         color: var(--card-foreground);
         box-shadow: 0 12px 40px
-          color-mix(in oklch, var(--foreground) 30%, transparent);
+          color-mix(in oklch, var(--shadow-color) 30%, transparent);
         animation: turn-in 0.12s ease-out;
       }
       .version-popover-img {
@@ -2079,7 +2081,8 @@ export class AiImageGeneratorIsolated extends Component<
       .edit-overlay {
         position: absolute;
         inset: 0;
-        background-color: color-mix(in oklch, var(--card) 65%, transparent);
+        background-color: var(--overlay);
+        color: var(--tooltip-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2096,7 +2099,7 @@ export class AiImageGeneratorIsolated extends Component<
         flex-direction: column;
         gap: var(--boxel-sp-xs);
         box-shadow: 0 12px 40px
-          color-mix(in oklch, var(--foreground) 35%, transparent);
+          color-mix(in oklch, var(--shadow-color) 35%, transparent);
         overflow: hidden;
       }
       /* Header (title) and footer (prompt + actions) stay fixed; only the
@@ -2150,7 +2153,7 @@ export class AiImageGeneratorIsolated extends Component<
         background-color: var(--background);
         color: var(--c-fg);
         box-shadow: 0 1px 2px
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+          color-mix(in oklch, var(--shadow-color) 12%, transparent);
       }
       .edit-setting {
         display: flex;
@@ -2173,8 +2176,8 @@ export class AiImageGeneratorIsolated extends Component<
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--inset);
+        color: var(--foreground);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
         padding: var(--boxel-sp-xxs);

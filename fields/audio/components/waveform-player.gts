@@ -87,7 +87,7 @@ export class WaveformPlayer extends GlimmerComponent<WaveformPlayerSignature> {
 
       .waveform-container {
         margin: 1.5rem 0;
-        background-color: color-mix(in oklch, var(--card) 10%, transparent);
+        background-color: var(--hover);
         border-radius: 0.25rem;
         padding: 0.5rem;
       }

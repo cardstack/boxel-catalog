@@ -98,7 +98,7 @@ export class LayoutTemplate extends CardDef {
           gap: 1rem;
           font-family: var(--font-sans);
           font-size: 0.75rem;
-          color: color-mix(in oklch, var(--foreground) 55%, transparent);
+          color: var(--subtle-foreground);
           white-space: nowrap;
         }
         .lt-iso-stats b {

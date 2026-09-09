@@ -359,7 +359,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
         cursor: pointer;
         font-size: 1rem;
         box-shadow: 0 1px 3px
-          color-mix(in oklch, var(--foreground) 18%, transparent);
+          color-mix(in oklch, var(--shadow-color) 18%, transparent);
         transition:
           background-color 0.15s,
           transform 0.1s;
@@ -384,7 +384,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
         border: 1px solid var(--border);
         border-radius: 0.75rem;
         box-shadow: 0 8px 24px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
         max-height: calc(100vh - 5rem);
         overflow-y: auto;
       }
@@ -412,7 +412,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
         letter-spacing: 0.5px;
         text-transform: uppercase;
         box-shadow: 0 1px 3px
-          color-mix(in oklch, var(--foreground) 15%, transparent);
+          color-mix(in oklch, var(--shadow-color) 15%, transparent);
         transition:
           background-color 0.15s,
           transform 0.1s;
@@ -477,7 +477,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
       .theme-row:hover {
         border-color: var(--boxel-500);
         box-shadow: 0 2px 8px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
       }
       .theme-row.is-selected {
         border-color: var(--primary);
@@ -582,7 +582,7 @@ export class IsolatedPortal extends Component<typeof BlogApp> {
       .lib-card:hover {
         border-color: var(--primary);
         box-shadow: 0 3px 10px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
       }
       .lib-card:active {
         cursor: grabbing;

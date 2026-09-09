@@ -98,7 +98,8 @@ export class WaveformVisualizer extends GlimmerComponent<WaveformVisualizerSigna
       }
 
       .waveform-visualizer.default .waveform-bar.unplayed {
-        background-color: color-mix(in oklch, var(--card) 30%, transparent);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
 
       .waveform-visualizer.default .waveform-bar:hover {

@@ -193,7 +193,7 @@ export class StepRangeScroller extends Component<StepRangeScrollerArgs> {
         background-color: var(--card);
         color: var(--card-foreground);
         border: 2px solid var(--primary);
-        box-shadow: 0 0 2px var(--foreground);
+        box-shadow: 0 0 2px var(--shadow-color);
         cursor: pointer;
         position: relative;
         z-index: 10;
@@ -205,7 +205,7 @@ export class StepRangeScroller extends Component<StepRangeScrollerArgs> {
         background-color: var(--card);
         color: var(--card-foreground);
         border: 2px solid var(--primary);
-        box-shadow: 0 0 2px var(--foreground);
+        box-shadow: 0 0 2px var(--shadow-color);
         cursor: pointer;
         position: relative;
         z-index: 10;

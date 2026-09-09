@@ -257,12 +257,13 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: repeat(3, 1fr);
         gap: 2px;
-        background-color: color-mix(in oklch, var(--card) 32%, transparent);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         padding: 2px;
         border-radius: 0.375rem;
       }
       .ttt-cell {
-        background-color: color-mix(in oklch, var(--card) 55%, transparent);
+        background-color: var(--card);
         display: grid;
         place-items: center;
         font:

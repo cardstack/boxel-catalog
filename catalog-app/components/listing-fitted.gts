@@ -145,11 +145,12 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
           align-items: center;
           gap: 0.375rem;
           padding: 0.3125rem 0.625rem;
-          background-color: color-mix(in oklch, var(--card) 92%, transparent);
+          background-color: var(--card);
+          color: var(--card-foreground);
           backdrop-filter: blur(0.25rem);
           border-radius: 62.4375rem;
           box-shadow: 0 2px 6px
-            color-mix(in oklch, var(--foreground) 12%, transparent);
+            color-mix(in oklch, var(--shadow-color) 12%, transparent);
         }
         .type-dot {
           width: 0.375rem;
@@ -171,11 +172,11 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
           padding: 2.375rem 0.9375rem 0.875rem;
           background: linear-gradient(
             to top,
-            color-mix(in oklch, var(--card) 94%, transparent),
-            color-mix(in oklch, var(--card) 74%, transparent) 42%,
-            color-mix(in oklch, var(--card) 0%, transparent)
+            color-mix(in oklch, var(--tooltip) 94%, transparent),
+            color-mix(in oklch, var(--tooltip) 74%, transparent) 42%,
+            color-mix(in oklch, var(--tooltip) 0%, transparent)
           );
-          color: var(--card-foreground);
+          color: var(--tooltip-foreground);
           pointer-events: none;
         }
         .caption-head {
@@ -187,17 +188,25 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
         .caption-title {
           margin: 0;
           font: 600 1rem/1.15 var(--font-sans);
-          color: var(--card-foreground);
+          color: var(--tooltip-foreground);
         }
         .caption-author {
           font: 500 0.6875rem/1 var(--font-mono);
-          color: var(--subtle-foreground);
+          color: color-mix(
+            in oklch,
+            var(--tooltip-foreground) 70%,
+            transparent
+          );
           white-space: nowrap;
         }
         .caption-blurb {
           margin: 0.375rem 0 0;
           font: 400 0.75rem/1.4 var(--font-sans);
-          color: var(--subtle-foreground);
+          color: color-mix(
+            in oklch,
+            var(--tooltip-foreground) 80%,
+            transparent
+          );
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

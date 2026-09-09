@@ -1204,7 +1204,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         cursor: pointer;
         font-size: 1rem;
         box-shadow: 0 1px 3px
-          color-mix(in oklch, var(--foreground) 18%, transparent);
+          color-mix(in oklch, var(--shadow-color) 18%, transparent);
         transition:
           background-color 0.15s,
           transform 0.1s;
@@ -1224,12 +1224,12 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
         padding: var(--boxel-sp);
         flex-direction: column;
         gap: 0.5rem;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--sidebar);
+        color: var(--sidebar-foreground);
         border: 1px solid var(--boxel-300);
         border-radius: 0.75rem;
         box-shadow: 0 8px 24px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
         max-height: calc(100vh - 5rem);
         overflow-y: auto;
       }
@@ -1336,7 +1336,7 @@ class IsolatedBlogPost extends Component<typeof BlogPost> {
       .theme-row:hover {
         border-color: var(--boxel-500);
         box-shadow: 0 2px 8px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
       }
       .theme-row.is-selected {
         border-color: var(--primary);

@@ -387,7 +387,7 @@ class RecurringPatternFieldEdit extends Component<
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem 0.75rem;
-        background-color: color-mix(in oklch, var(--card) 10%, transparent);
+        background-color: var(--hover);
         border-left: 3px solid var(--border);
         border-radius: var(--radius);
         font-size: 0.8125rem;

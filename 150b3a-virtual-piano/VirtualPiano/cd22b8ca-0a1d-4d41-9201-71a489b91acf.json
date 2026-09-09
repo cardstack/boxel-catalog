@@ -11,8 +11,15 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../virtual-piano",
+        "module": "@cardstack/catalog/150b3a-virtual-piano/virtual-piano",
         "name": "VirtualPiano"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/chrome-piano"
+        }
       }
     }
   }

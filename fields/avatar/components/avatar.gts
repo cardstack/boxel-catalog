@@ -688,7 +688,7 @@ export default class AvatarComponent extends Component<AvatarCreatorArgs> {
         background-color: var(--boxel-light);
         transform: translateY(-1px);
         box-shadow: 0 4px 12px
-          color-mix(in oklch, var(--foreground) 15%, transparent);
+          color-mix(in oklch, var(--shadow-color) 15%, transparent);
       }
       /* Keep selected state consistent on hover */
       .option-btn.selected:hover {

@@ -471,12 +471,11 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
         margin-top: 1.25rem;
         max-width: 23.75rem;
         font-size: 0.75rem;
-        color: color-mix(in oklch, var(--foreground) 65%, transparent);
+        color: var(--muted-foreground);
       }
       .sp-field input {
         padding: 0.625rem 0.75rem;
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 18%, transparent);
+        border: 1px solid var(--border);
         border-radius: 0.625rem;
         font: inherit;
         font-size: 0.875rem;
@@ -492,16 +491,14 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
         align-items: center;
         justify-content: space-between;
         max-width: 23.75rem;
-        border: 1.5px dashed
-          color-mix(in oklch, var(--foreground) 20%, transparent);
+        border: 1.5px dashed var(--border);
         border-radius: 1rem;
         font-size: 0.875rem;
-        color: color-mix(in oklch, var(--foreground) 70%, transparent);
+        color: var(--muted-foreground);
       }
       .sp-invite-btn {
         padding: 0.5rem 1rem;
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 25%, transparent);
+        border: 1px solid var(--border);
         border-radius: 62.4375rem;
         background-color: transparent;
         cursor: pointer;
@@ -511,7 +508,7 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
       .sp-done {
         margin: 1.25rem 0 0;
         font-size: 0.875rem;
-        color: color-mix(in oklch, var(--foreground) 70%, transparent);
+        color: var(--muted-foreground);
         max-width: 48ch;
       }
       .sp-args {

@@ -879,7 +879,11 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       /* ── Root table ────────────────────────────────────────── */
       .bj-table {
         /* ── Casino design tokens ──────────────────────────── */
-        --casino-gold-dim: color-mix(in oklch, var(--accent) 35%, transparent);
+        --casino-gold-dim: color-mix(
+          in oklch,
+          var(--accent-ink) 55%,
+          transparent
+        );
         --casino-gold-border: color-mix(
           in oklch,
           var(--accent) 22%,
@@ -906,13 +910,13 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
           var(--inset) 30%,
           transparent
         );
-        --casino-panel-border: color-mix(in oklch, var(--card) 9%, transparent);
+        --casino-panel-border: var(--border);
         --casino-ring-glow: color-mix(in oklch, var(--accent) 15%, transparent);
         --casino-font: 'Georgia', 'Times New Roman', serif;
         --casino-text: var(--card-foreground);
-        --casino-text-muted: color-mix(in oklch, var(--card) 45%, transparent);
-        --casino-text-sub: color-mix(in oklch, var(--card) 65%, transparent);
-        --casino-text-light: color-mix(in oklch, var(--card) 85%, transparent);
+        --casino-text-muted: var(--muted-foreground);
+        --casino-text-sub: var(--muted-foreground);
+        --casino-text-light: var(--card-foreground);
         --casino-win-bg: color-mix(in oklch, var(--success) 40%, transparent);
         --casino-win-border: color-mix(
           in oklch,
@@ -929,17 +933,13 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
           var(--destructive) 35%,
           transparent
         );
-        --casino-draw-bg: color-mix(in oklch, var(--card) 40%, transparent);
+        --casino-draw-bg: var(--muted);
         --casino-draw-border: color-mix(
           in oklch,
           var(--border) 25%,
           transparent
         );
-        --casino-card-back-border: color-mix(
-          in oklch,
-          var(--card) 15%,
-          transparent
-        );
+        --casino-card-back-border: var(--border);
         --casino-score-perfect-bg: color-mix(
           in oklch,
           var(--accent) 25%,
@@ -1015,7 +1015,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         position: absolute;
         inset: 0;
         z-index: 60;
-        background-color: color-mix(in oklch, var(--card) 50%, transparent);
+        background-color: var(--overlay);
+        color: var(--tooltip-foreground);
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
         display: flex;
@@ -1223,7 +1224,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         padding: 0.1875rem var(--boxel-sp-sm);
         border-radius: var(--boxel-border-radius-sm);
         background-color: var(--casino-panel-mid);
-        border: 1px solid color-mix(in oklch, var(--card) 8%, transparent);
+        border: 1px solid var(--border);
         min-width: 2.875rem;
       }
       .bj-stat-label {
@@ -1261,7 +1262,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         border-radius: var(--boxel-border-radius-lg);
         border: 1px solid color-mix(in oklch, var(--accent) 12%, transparent);
         box-shadow: inset 0 0 40px
-          color-mix(in oklch, var(--foreground) 45%, transparent);
+          color-mix(in oklch, var(--shadow-color) 45%, transparent);
         min-height: 0;
         overflow: hidden;
         gap: var(--boxel-sp-xs);
@@ -1292,7 +1293,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         min-width: 2.75rem;
         text-align: center;
         background-color: var(--casino-panel-dark);
-        border: 1px solid color-mix(in oklch, var(--card) 18%, transparent);
+        border: 1px solid var(--border);
         transition: all 0.3s;
       }
       .bj-score-badge--hidden {
@@ -1331,8 +1332,8 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         background-color: var(--card);
         color: var(--card-foreground);
         box-shadow:
-          2px 5px 14px color-mix(in oklch, var(--foreground) 55%, transparent),
-          0 0 0 1px color-mix(in oklch, var(--foreground) 8%, transparent);
+          2px 5px 14px color-mix(in oklch, var(--shadow-color) 55%, transparent),
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 8%, transparent);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -1346,7 +1347,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       .bj-card:hover {
         transform: translateY(-7px) rotate(1.5deg);
         box-shadow: 4px 12px 22px
-          color-mix(in oklch, var(--foreground) 65%, transparent);
+          color-mix(in oklch, var(--shadow-color) 65%, transparent);
       }
 
       /* Inner inset border on face-up cards */
@@ -1354,7 +1355,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         content: '';
         position: absolute;
         inset: 0.1875rem;
-        border: 1px solid color-mix(in oklch, var(--foreground) 7%, transparent);
+        border: 1px solid var(--border);
         border-radius: 0.3125rem;
         pointer-events: none;
       }
@@ -1471,7 +1472,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       }
       .bj-divider-text {
         font-size: 0.5625rem;
-        color: color-mix(in oklch, var(--accent-ink) 55%, transparent);
+        color: color-mix(in oklch, var(--accent-ink) 85%, transparent);
         letter-spacing: var(--boxel-lsp-xl);
         text-transform: uppercase;
         white-space: nowrap;
@@ -1569,7 +1570,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         background-color: var(--casino-panel-light);
         border-radius: var(--boxel-border-radius);
         padding: var(--boxel-sp-sm);
-        border: 1px solid color-mix(in oklch, var(--card) 5%, transparent);
+        border: 1px solid var(--border);
       }
 
       /* ── Betting chips ─────────────────────────────────────── */
@@ -1593,7 +1594,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         align-items: center;
         justify-content: center;
         box-shadow:
-          0 5px 10px color-mix(in oklch, var(--foreground) 50%, transparent),
+          0 5px 10px color-mix(in oklch, var(--shadow-color) 50%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 25%, transparent),
           0 0 0 4px color-mix(in oklch, var(--card) 12%, transparent);
         transition:
@@ -1608,13 +1609,13 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         position: absolute;
         inset: 0.3125rem;
         border-radius: 50%;
-        border: 2px dashed color-mix(in oklch, var(--card) 30%, transparent);
+        border: 2px dashed var(--border);
         pointer-events: none;
       }
       .bj-chip:hover:not(:disabled) {
         transform: translateY(-4px) scale(1.1);
         box-shadow:
-          0 9px 18px color-mix(in oklch, var(--foreground) 55%, transparent),
+          0 9px 18px color-mix(in oklch, var(--shadow-color) 55%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 30%, transparent),
           0 0 0 4px color-mix(in oklch, var(--card) 18%, transparent);
       }
@@ -1696,7 +1697,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         align-items: center;
         gap: 0.1875rem;
         box-shadow:
-          0 4px 12px color-mix(in oklch, var(--foreground) 40%, transparent),
+          0 4px 12px color-mix(in oklch, var(--shadow-color) 40%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 15%, transparent);
         transition:
           transform 0.15s,
@@ -1708,7 +1709,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       .bj-act-btn:hover {
         transform: translateY(-3px);
         box-shadow: 0 7px 18px
-          color-mix(in oklch, var(--foreground) 50%, transparent);
+          color-mix(in oklch, var(--shadow-color) 50%, transparent);
       }
       .bj-act-btn:active {
         transform: translateY(1px);
@@ -2008,10 +2009,10 @@ class FittedTemplate extends Component<typeof Blackjack> {
       /* ── Design tokens ─────────────────────────────────── */
       .bj-fitted {
         --gold: var(--accent);
-        --gold-dim: color-mix(in oklch, var(--accent) 32%, transparent);
+        --gold-dim: color-mix(in oklch, var(--accent-ink) 70%, transparent);
         --gold-border: color-mix(in oklch, var(--accent) 30%, transparent);
         --gold-glow: color-mix(in oklch, var(--accent) 55%, transparent);
-        --cream-dim: color-mix(in oklch, var(--foreground) 65%, transparent);
+        --cream-dim: var(--overlay);
         --felt-bg: radial-gradient(
           ellipse at 50% 25%,
           var(--inset) 0%,
@@ -2058,9 +2059,9 @@ class FittedTemplate extends Component<typeof Blackjack> {
         box-shadow:
           inset 0 0 0 2px var(--panel-border),
           inset 0 -3rem 6rem
-            color-mix(in oklch, var(--foreground) 30%, transparent),
+            color-mix(in oklch, var(--shadow-color) 30%, transparent),
           0 0.5rem 1.5rem
-            color-mix(in oklch, var(--foreground) 25%, transparent);
+            color-mix(in oklch, var(--shadow-color) 25%, transparent);
         position: relative;
       }
 
@@ -2110,7 +2111,8 @@ class FittedTemplate extends Component<typeof Blackjack> {
           );
         box-shadow:
           0 0 0 2px color-mix(in oklch, var(--primary) 18%, transparent),
-          0 0.3rem 1rem color-mix(in oklch, var(--foreground) 50%, transparent),
+          0 0.3rem 1rem
+            color-mix(in oklch, var(--shadow-color) 50%, transparent),
           0 0 1.5rem var(--gold-glow);
         z-index: 1;
       }
@@ -2122,7 +2124,7 @@ class FittedTemplate extends Component<typeof Blackjack> {
         letter-spacing: -0.02em;
         text-shadow:
           0 0 8px var(--gold-glow),
-          0 1px 2px color-mix(in oklch, var(--foreground) 60%, transparent);
+          0 1px 2px color-mix(in oklch, var(--shadow-color) 60%, transparent);
         z-index: 2;
         line-height: 1;
       }
@@ -2254,7 +2256,7 @@ class FittedTemplate extends Component<typeof Blackjack> {
         /* Chip ring */
         box-shadow:
           0 0 0 2px color-mix(in oklch, var(--card) 18%, transparent),
-          0 3px 8px color-mix(in oklch, var(--foreground) 55%, transparent),
+          0 3px 8px color-mix(in oklch, var(--shadow-color) 55%, transparent),
           inset 0 1px 0 color-mix(in oklch, var(--card) 22%, transparent);
       }
 
@@ -2264,7 +2266,7 @@ class FittedTemplate extends Component<typeof Blackjack> {
         position: absolute;
         inset: 0.1875rem;
         border-radius: 50%;
-        border: 1.5px dashed color-mix(in oklch, var(--card) 28%, transparent);
+        border: 1.5px dashed var(--border);
         pointer-events: none;
       }
 
@@ -2383,7 +2385,7 @@ class FittedTemplate extends Component<typeof Blackjack> {
         z-index: 1;
         /* Subtle inner separator */
         border-right: 1px solid var(--gold-border);
-        background-color: color-mix(in oklch, var(--card) 15%, transparent);
+        background-color: var(--hover);
       }
 
       .showpiece-bg {
@@ -2421,8 +2423,8 @@ class FittedTemplate extends Component<typeof Blackjack> {
         font-size: clamp(0.65rem, 2.5cqw, 1rem);
         font-weight: 800;
         box-shadow:
-          0 4px 14px color-mix(in oklch, var(--foreground) 50%, transparent),
-          0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
+          0 4px 14px color-mix(in oklch, var(--shadow-color) 50%, transparent),
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 10%, transparent);
       }
 
       .play-card--back {
@@ -2499,14 +2501,14 @@ class FittedTemplate extends Component<typeof Blackjack> {
           box-shadow:
             0 0 0 2px color-mix(in oklch, var(--primary) 18%, transparent),
             0 0.3rem 1rem
-              color-mix(in oklch, var(--foreground) 50%, transparent),
+              color-mix(in oklch, var(--shadow-color) 50%, transparent),
             0 0 0.8rem var(--gold-glow);
         }
         to {
           box-shadow:
             0 0 0 2px color-mix(in oklch, var(--primary) 30%, transparent),
             0 0.3rem 1rem
-              color-mix(in oklch, var(--foreground) 50%, transparent),
+              color-mix(in oklch, var(--shadow-color) 50%, transparent),
             0 0 2.5rem var(--gold-glow);
         }
       }

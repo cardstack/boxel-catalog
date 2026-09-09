@@ -222,7 +222,7 @@ export class RecurringPatternExample extends CardDef {
           letter-spacing: 0.03em;
           font-size: 0.6875rem;
           color: var(--subtle-foreground);
-          background-color: var(--card);
+          background-color: var(--inset);
         }
         .fe-api-name {
           font-family: var(--boxel-monospace-font-family);
@@ -247,6 +247,8 @@ export class RecurringPatternExample extends CardDef {
           }
           .fe-api-row--head {
             display: none;
+            background-color: var(--inset);
+            color: var(--foreground);
           }
         }
       </style>

@@ -441,7 +441,7 @@ export class LayoutCanvas extends Component<Sig> {
       }
       .layout-canvas.is-dragging .row-gap {
         height: 1.125rem;
-        background-color: color-mix(in oklch, var(--card) 4%, transparent);
+        background-color: var(--hover);
         margin: 0.25rem 0;
       }
       .layout-canvas.is-dragging .row-gap.drag-over {

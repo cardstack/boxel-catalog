@@ -2135,7 +2135,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         --primary-grad: linear-gradient(135deg, var(--accent), var(--accent));
 
         /* ── Near-black = neutral/secondary contrast (e.g. "All" pill) ── */
-        --accent-dim: color-mix(in oklch, var(--foreground) 6%, transparent);
+        --accent-dim: var(--hover);
 
         /* ── Type scale (matches mockup: bold display, letter-spaced labels) ── */
         --t-display: 700 1.375rem/1.15 var(--boxel-font-family);
@@ -2157,13 +2157,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
            this base rule is the single source of truth for the app height.) */
         height: 100dvh;
         max-height: 100%;
-        background:
-          radial-gradient(
-            130% 90% at 85% -10%,
-            rgba(184, 137, 59, 0.1),
-            transparent 55%
-          ),
-          linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+        background-color: var(--canvas);
         color: var(--foreground);
         font-family: var(--boxel-font-family);
         font-size: 0.8125rem;
@@ -2181,7 +2175,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         align-items: center;
         gap: 0.625rem;
         padding: 0.75rem 1.125rem;
-        background-color: color-mix(in oklch, var(--card) 70%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
         backdrop-filter: blur(8px);
         border-bottom: 1px solid var(--border-soft);
         flex-shrink: 0;
@@ -2243,7 +2238,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         justify-content: center;
         padding: 0;
         box-shadow: 0 2px 6px
-          color-mix(in oklch, var(--foreground) 22%, transparent);
+          color-mix(in oklch, var(--shadow-color) 22%, transparent);
         transition:
           background 0.12s,
           color 0.12s,
@@ -2420,7 +2415,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         cursor: pointer;
         white-space: nowrap;
         box-shadow: 0 1px 3px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
         transition:
           background 0.18s,
           color 0.18s,
@@ -2455,7 +2450,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex-direction: column;
         overflow: hidden;
         flex-shrink: 0;
-        background-color: color-mix(in oklch, var(--card) 50%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .sidebar-head {
         display: flex;
@@ -2501,7 +2497,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         border-color: transparent;
         color: var(--accent-foreground);
         box-shadow: 0 2px 10px
-          color-mix(in oklch, var(--foreground) 20%, transparent);
+          color-mix(in oklch, var(--shadow-color) 20%, transparent);
       }
       /* Keep the active pill's gradient + white text on hover — the base
          :hover rule would otherwise out-specify and recolor it. */
@@ -2694,7 +2690,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex-direction: column;
         gap: 0.75rem;
         box-shadow: 0 4px 16px
-          color-mix(in oklch, var(--foreground) 5%, transparent);
+          color-mix(in oklch, var(--shadow-color) 5%, transparent);
       }
       .side-card-title {
         font-size: 0.625rem;
@@ -2765,13 +2761,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         padding: 0.625rem 0.625rem 0.5rem;
         border-radius: 0.875rem;
         border: 1px solid var(--border-soft);
-        background-color: color-mix(in oklch, var(--card) 88%, transparent);
+        background-color: var(--card);
         backdrop-filter: blur(6px);
         color: var(--muted-foreground);
         cursor: pointer;
         min-width: 3.25rem;
         box-shadow: 0 2px 10px
-          color-mix(in oklch, var(--foreground) 10%, transparent);
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
         transition:
           background 0.15s,
           color 0.15s,
@@ -2808,7 +2804,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         align-items: center;
         gap: 0.4375rem;
         padding: 0.5625rem 1.125rem;
-        background-color: color-mix(in oklch, var(--card) 72%, transparent);
+        background-color: var(--tooltip);
+        color: var(--tooltip-foreground);
         backdrop-filter: blur(6px);
         border-radius: 62.4375rem;
         color: color-mix(in oklch, var(--card-foreground) 90%, transparent);
@@ -2952,7 +2949,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         width: 2.375rem;
         height: 2.375rem;
         border-radius: 0.75rem;
-        background-color: color-mix(in oklch, var(--card) 92%, transparent);
+        background-color: var(--card);
         border: 1px solid var(--border-soft);
         color: var(--foreground);
         font-size: 1rem;
@@ -2961,7 +2958,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 8px
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+          color-mix(in oklch, var(--shadow-color) 12%, transparent);
         transition:
           background 0.15s,
           transform 0.12s;
@@ -3001,7 +2998,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         backdrop-filter: blur(8px);
         border: 1px solid color-mix(in oklch, var(--gold) 30%, transparent);
         box-shadow: 0 6px 20px
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+          color-mix(in oklch, var(--shadow-color) 12%, transparent);
         color: var(--accent-ink);
         font-size: 0.75rem;
         line-height: 1.45;
@@ -3024,7 +3021,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         border: 1px solid var(--border-soft);
         border-radius: 1.375rem;
         box-shadow: 0 8px 26px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
       }
       .slots-row::-webkit-scrollbar {
         display: none;
@@ -3071,7 +3068,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         z-index: 3;
         pointer-events: none;
         box-shadow: 0 1px 4px
-          color-mix(in oklch, var(--foreground) 10%, transparent);
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
       }
       /* Hide the "+" badge once filled (the ✕ remove button takes its place) */
       .sq-slot--filled .sq-badge {
@@ -3126,7 +3123,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           background 0.15s;
         flex-shrink: 0;
         box-shadow: 0 2px 8px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
       }
       .sq-slot:not(.sq-slot--filled):not(.sq-slot--off):hover .sq-body {
         border-color: var(--gold);
@@ -3138,7 +3135,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         background-color: var(--card);
         color: var(--card-foreground);
         box-shadow:
-          0 3px 10px color-mix(in oklch, var(--foreground) 14%, transparent),
+          0 3px 10px color-mix(in oklch, var(--shadow-color) 14%, transparent),
           0 0 0 3px color-mix(in oklch, var(--gold) 14%, transparent);
       }
       /* Active slot: gold border (last tapped to open chooser) */
@@ -3191,7 +3188,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         line-height: 1;
         z-index: 4;
         box-shadow: 0 2px 6px
-          color-mix(in oklch, var(--foreground) 18%, transparent);
+          color-mix(in oklch, var(--shadow-color) 18%, transparent);
         transition:
           background 0.12s,
           color 0.12s;
@@ -3312,15 +3309,15 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         align-items: center;
         gap: 0.5rem;
         padding: 0.4375rem 0.75rem;
-        background-color: color-mix(in oklch, var(--card) 82%, transparent);
-        color: var(--card-foreground);
+        background-color: var(--tooltip);
+        color: var(--tooltip-foreground);
         border-radius: 62.4375rem;
         font-size: 0.625rem;
         font-weight: 700;
         letter-spacing: 0.04em;
         backdrop-filter: blur(6px);
         box-shadow: 0 4px 14px
-          color-mix(in oklch, var(--foreground) 25%, transparent);
+          color-mix(in oklch, var(--shadow-color) 25%, transparent);
       }
       .gen-pill-dot {
         width: 0.4375rem;
@@ -3504,9 +3501,9 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        background-color: color-mix(in oklch, var(--card) 50%, transparent);
+        background-color: var(--overlay);
         border: none;
-        color: var(--card-foreground);
+        color: var(--tooltip-foreground);
         font-size: 1.375rem;
         width: 2.125rem;
         height: 2.125rem;
@@ -3520,7 +3517,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         transition: background 0.15s;
       }
       .c-arrow:hover:not(:disabled) {
-        background-color: color-mix(in oklch, var(--card) 72%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .c-arrow:disabled {
         opacity: 0.2;
@@ -3544,7 +3542,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         width: 0.375rem;
         height: 0.375rem;
         border-radius: 50%;
-        background-color: color-mix(in oklch, var(--card) 30%, transparent);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border: none;
         cursor: pointer;
         padding: 0;
@@ -3563,7 +3562,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         .sidebar {
           width: 21.25rem;
           flex: 0 0 21.25rem;
-          background-color: color-mix(in oklch, var(--card) 62%, transparent);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .slots-row {
           gap: 1rem;
@@ -3687,7 +3687,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .lightbox-overlay {
         position: absolute;
         inset: 0;
-        background-color: color-mix(in oklch, var(--card) 82%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -3701,7 +3702,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         object-fit: contain;
         border-radius: 0.75rem;
         box-shadow: 0 20px 60px
-          color-mix(in oklch, var(--foreground) 45%, transparent);
+          color-mix(in oklch, var(--shadow-color) 45%, transparent);
       }
       /* Same circular control as the other modals (see .modal-close); only
          the absolute placement over the lightbox image is specific here. */
@@ -3893,7 +3894,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         text-transform: uppercase;
         letter-spacing: 0.06em;
         color: var(--card-foreground);
-        background-color: color-mix(in oklch, var(--card) 70%, transparent);
+        background-color: var(--card);
         padding: 0.25rem 0.5rem;
         border-radius: 62.4375rem;
       }
@@ -4061,7 +4062,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 10px
-          color-mix(in oklch, var(--foreground) 8%, transparent);
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
         transition:
           transform 0.15s,
           box-shadow 0.18s,
@@ -4072,7 +4073,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         border-color: var(--accent);
         box-shadow:
           inset 0 0 0 2px var(--accent),
-          0 12px 26px color-mix(in oklch, var(--foreground) 18%, transparent);
+          0 12px 26px color-mix(in oklch, var(--shadow-color) 18%, transparent);
       }
       /* Upload tile — matches the sidebar Add tile (dashed gray box with the
          + and label centered inside). Sized 3/4 so it lines up with the
@@ -4224,7 +4225,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .mpm-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 20px 52px
-          color-mix(in oklch, var(--foreground) 14%, transparent);
+          color-mix(in oklch, var(--shadow-color) 14%, transparent);
         border-color: var(--border);
       }
       .mpm-visual {
@@ -4257,7 +4258,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .mpm-visual-icon {
         width: 5.25rem;
         height: 5.25rem;
-        color: color-mix(in oklch, var(--foreground) 40%, transparent);
+        color: var(--subtle-foreground);
         flex-shrink: 0;
       }
       .mpm-visual--upload .mpm-visual-icon {
@@ -4433,6 +4434,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         .app {
           height: 100%;
           max-height: none;
+          background-color: var(--canvas);
+          color: var(--foreground);
         }
       }
 
@@ -4445,6 +4448,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
            restyle its own container.) */
         .app {
           font-size: 14px;
+          background-color: var(--canvas);
+          color: var(--foreground);
         }
 
         /* Header is hidden on mobile — the model slot and footer bar cover it */
@@ -4577,11 +4582,12 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           gap: 0.625rem;
           padding: 0.75rem 0.875rem
             calc(0.75rem + env(safe-area-inset-bottom, 0px));
-          background-color: color-mix(in oklch, var(--card) 94%, transparent);
+          background-color: var(--card);
+          color: var(--card-foreground);
           backdrop-filter: blur(10px);
           border-top: 1px solid var(--border-soft);
           box-shadow: 0 -8px 24px
-            color-mix(in oklch, var(--foreground) 12%, transparent);
+            color-mix(in oklch, var(--shadow-color) 12%, transparent);
         }
         .act-btn--primary {
           flex: 1;

@@ -246,7 +246,7 @@ export default class SetupWizard extends Component<Signature> {
         --stepper-accent-fg: var(--primary-foreground);
         --stepper-heading-font: var(--font-serif);
         --stepper-kicker-color: var(--accent);
-        --stepper-scrim-bg: color-mix(in oklch, var(--card) 28%, transparent);
+        --stepper-scrim-bg: var(--muted);
       }
       .wz-corner {
         position: absolute;

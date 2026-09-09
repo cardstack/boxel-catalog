@@ -42,10 +42,11 @@ export default class CatalogLayout extends GlimmerComponent<CatalogLayoutSignatu
         flex-direction: column;
         width: 100%;
         height: 100%;
-        background-color: var(--background);
+        background-color: var(--canvas);
         max-height: 100vh;
         overflow: hidden;
         container-type: inline-size;
+        color: var(--foreground);
       }
 
       .layout-body {

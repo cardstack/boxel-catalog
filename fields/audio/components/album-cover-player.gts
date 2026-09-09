@@ -104,7 +104,8 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
       .cover-overlay {
         position: absolute;
         inset: 0;
-        background-color: color-mix(in oklch, var(--card) 20%, transparent);
+        background-color: var(--overlay);
+        color: var(--tooltip-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -129,16 +130,12 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
         background-color: var(--card) !important;
         color: var(--primary-ink) !important;
         box-shadow: 0 10px 25px -5px
-          color-mix(in oklch, var(--foreground) 30%, transparent) !important;
+          color-mix(in oklch, var(--shadow-color) 30%, transparent) !important;
         transition: all 0.2s;
       }
 
       .album-play-btn:hover {
-        background-color: color-mix(
-          in oklch,
-          var(--card) 95%,
-          transparent
-        ) !important;
+        background-color: var(--card) !important;
         transform: scale(1.05);
       }
 

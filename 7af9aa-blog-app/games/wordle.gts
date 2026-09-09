@@ -283,7 +283,7 @@ class WordleIsolated extends Component<typeof Wordle> {
       .wordle-cell.is-absent {
         background-color: var(--muted);
         border-color: var(--border-strong);
-        color: var(--card-foreground);
+        color: var(--muted-foreground);
       }
       .wordle-input-row {
         display: flex;
@@ -389,7 +389,7 @@ class WordleFitted extends Component<typeof Wordle> {
           var(--card);
         box-shadow:
           inset 0 0 0 1px var(--border),
-          0 4px 10px color-mix(in oklch, var(--foreground) 5%, transparent);
+          0 4px 10px color-mix(in oklch, var(--shadow-color) 5%, transparent);
         flex-shrink: 0;
       }
       .wf-grid {

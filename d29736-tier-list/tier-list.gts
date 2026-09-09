@@ -880,6 +880,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         min-height: 100%;
         display: flex;
         flex-direction: column;
+        background-color: var(--canvas);
+        color: var(--foreground);
       }
       .gen {
         display: flex;
@@ -1100,9 +1102,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         text-align: center;
         color: var(--foreground);
         /* near-opaque so the input reads clearly over any band color */
-        background-color: color-mix(in oklch, var(--card) 92%, transparent);
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 25%, transparent);
+        background-color: var(--card);
+        border: 1px solid var(--border);
         border-radius: 0.25rem;
       }
       .tier-name-ro {
@@ -1122,9 +1123,9 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         flex: 1 1 auto;
         height: 1.5rem;
         padding: 0;
-        background-color: color-mix(in oklch, var(--card) 92%, transparent);
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 35%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
         border-radius: 0.25rem;
         cursor: pointer;
       }
@@ -1143,9 +1144,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font-size: 1rem;
         cursor: pointer;
         color: var(--foreground);
-        background-color: color-mix(in oklch, var(--card) 92%, transparent);
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 25%, transparent);
+        background-color: var(--card);
+        border: 1px solid var(--border);
         border-radius: 0.25rem;
       }
       .strip {
@@ -1172,8 +1172,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         z-index: 2;
         margin-top: auto;
         border-top: 1px solid var(--border);
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--inset);
+        color: var(--foreground);
         padding: 0.5rem;
       }
       .tray-label {
@@ -1213,9 +1213,10 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         touch-action: none;
         user-select: none;
         overflow: hidden;
-        background-color: var(--background);
+        background-color: var(--card);
         border: 1px solid var(--border);
         border-radius: 0.25rem;
+        color: var(--card-foreground);
       }
       .tile.is-dragging {
         opacity: 0.3;
@@ -1240,7 +1241,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         justify-content: center;
         cursor: pointer;
         color: var(--card-foreground);
-        background-color: color-mix(in oklch, var(--card) 60%, transparent);
+        background-color: var(--card);
         border: none;
         border-radius: 0.25rem;
       }
@@ -1267,7 +1268,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font-size: 0.5625rem;
         text-align: center;
         color: var(--card-foreground);
-        background-color: color-mix(in oklch, var(--card) 60%, transparent);
+        background-color: var(--card);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1336,7 +1337,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         border: 1px solid var(--primary);
         border-radius: 0.25rem;
         box-shadow: 0 8px 20px
-          color-mix(in oklch, var(--foreground) 45%, transparent);
+          color-mix(in oklch, var(--shadow-color) 45%, transparent);
       }
     </style>
   </template>

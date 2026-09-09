@@ -635,7 +635,8 @@ export class WineBottle extends CardDef {
           align-items: center;
           justify-content: center;
           box-shadow:
-            0 12px 32px color-mix(in oklch, var(--foreground) 60%, transparent),
+            0 12px 32px
+              color-mix(in oklch, var(--shadow-color) 60%, transparent),
             inset 0 0 0 1px color-mix(in oklch, var(--card) 3%, transparent);
           overflow: hidden;
         }
@@ -707,7 +708,7 @@ export class WineBottle extends CardDef {
           box-shadow:
             0 0 0 2px var(--destructive),
             0 0 0 3px var(--accent),
-            0 6px 16px color-mix(in oklch, var(--foreground) 55%, transparent);
+            0 6px 16px color-mix(in oklch, var(--shadow-color) 55%, transparent);
           transform: rotate(-6deg);
         }
         .wax-score {
@@ -799,7 +800,7 @@ export class WineBottle extends CardDef {
           height: 0.875rem;
           border-radius: 50%;
           background-color: currentColor;
-          box-shadow: 0 0 0 2px var(--foreground);
+          box-shadow: 0 0 0 2px var(--shadow-color);
           transform: translate(-50%, -50%);
         }
         .cursor-peak-window {
@@ -1368,7 +1369,7 @@ export class WineBottle extends CardDef {
           border: 1px solid var(--border);
           font-family: var(--font-serif);
           font-size: var(--boxel-font-size-sm);
-          color: var(--card-foreground);
+          color: var(--muted-foreground);
           line-height: 1.4;
           white-space: nowrap;
         }

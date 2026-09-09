@@ -881,12 +881,13 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         --c-blue-border: color-mix(in oklch, var(--primary) 28%, var(--card));
         --c-blue-muted: color-mix(in oklch, var(--primary) 45%, var(--card));
         --c-shadow:
-          0 1px 0.1875rem color-mix(in oklch, var(--foreground) 7%, transparent),
-          0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent);
+          0 1px 0.1875rem
+            color-mix(in oklch, var(--shadow-color) 7%, transparent),
+          0 1px 2px color-mix(in oklch, var(--shadow-color) 4%, transparent);
         --c-shadow-md:
           0 0.25rem 0.75rem
-            color-mix(in oklch, var(--foreground) 8%, transparent),
-          0 2px 0.25rem color-mix(in oklch, var(--foreground) 4%, transparent);
+            color-mix(in oklch, var(--shadow-color) 8%, transparent),
+          0 2px 0.25rem color-mix(in oklch, var(--shadow-color) 4%, transparent);
 
         min-height: 100%;
         display: flex;
@@ -897,6 +898,8 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         font-size: 0.875rem;
         line-height: 1.5;
         position: relative;
+        background-color: var(--canvas);
+        color: var(--foreground);
       }
 
       .hw-layout {
@@ -909,8 +912,8 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-sidebar {
         width: 13.75rem;
         flex-shrink: 0;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--sidebar);
+        color: var(--sidebar-foreground);
         border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
@@ -1180,6 +1183,8 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
           width: 100%;
           border-right: none;
           border-bottom: 1px solid var(--border);
+          background-color: var(--sidebar);
+          color: var(--sidebar-foreground);
         }
         .hw-sidebar-bottom {
           display: none;
@@ -1218,6 +1223,8 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
         }
         .hw-question-header {
           flex-wrap: wrap;
+          background-color: var(--inset);
+          color: var(--foreground);
         }
       }
 
@@ -1660,7 +1667,8 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       .hw-q-strip-sep {
         width: 1px;
         height: 1.875rem;
-        background-color: color-mix(in oklch, var(--card) 25%, transparent);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         flex-shrink: 0;
       }
 
@@ -1704,12 +1712,13 @@ class HomeworkIsolated extends Component<typeof HomeworkGrader> {
       }
 
       .hw-question-header {
-        background-color: var(--background);
+        background-color: var(--inset);
         border-bottom: 1px solid var(--border);
         padding: 0.625rem 1rem;
         display: flex;
         align-items: center;
         gap: 0.625rem;
+        color: var(--foreground);
       }
 
       .hw-question-title {
@@ -2214,8 +2223,9 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         --c-blue-border: color-mix(in oklch, var(--primary) 28%, var(--card));
         --c-grade: var(--primary);
         --c-shadow:
-          0 1px 0.1875rem color-mix(in oklch, var(--foreground) 7%, transparent),
-          0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent);
+          0 1px 0.1875rem
+            color-mix(in oklch, var(--shadow-color) 7%, transparent),
+          0 1px 2px color-mix(in oklch, var(--shadow-color) 4%, transparent);
 
         width: 100%;
         height: 100%;
@@ -2355,8 +2365,8 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
         flex-shrink: 0;
         font-size: 0.625rem;
         font-weight: 600;
-        color: var(--muted-foreground);
-        background-color: var(--background);
+        color: var(--foreground);
+        background-color: var(--inset);
         border: 1px solid var(--border);
         border-radius: 0.25rem;
         padding: 2px 0.375rem;
@@ -2409,13 +2419,14 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
 
       .tile-body {
         flex: 1;
-        background-color: var(--background);
+        background-color: var(--inset);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: 0.25rem;
         padding: 0.75rem;
+        color: var(--foreground);
       }
 
       .tile-grade-circle {
@@ -2484,13 +2495,14 @@ class HomeworkFitted extends Component<typeof HomeworkGrader> {
       .card-left {
         width: 8.125rem;
         flex-shrink: 0;
-        background-color: var(--background);
+        background-color: var(--inset);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: 0.25rem;
         padding: 1.125rem 0.75rem;
+        color: var(--foreground);
       }
 
       .card-grade-ring {

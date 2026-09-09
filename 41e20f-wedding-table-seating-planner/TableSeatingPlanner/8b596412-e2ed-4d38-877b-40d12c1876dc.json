@@ -152,7 +152,8 @@
       "floorPlanHeight": 551,
       "floorPlanLocked": false,
       "floorPlanOpacity": 10,
-      "invitationMessage": null
+      "invitationMessage": null,
+      "motif": "✝"
     },
     "relationships": {
       "hosts.0": {

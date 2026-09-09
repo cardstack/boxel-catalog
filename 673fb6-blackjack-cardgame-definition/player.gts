@@ -75,7 +75,7 @@ class AtomTemplate extends Component<typeof Player> {
         box-shadow:
           inset 0 0 0 1px color-mix(in oklch, var(--card) 6%, transparent),
           0 0.375rem 1rem
-            color-mix(in oklch, var(--foreground) 28%, transparent);
+            color-mix(in oklch, var(--shadow-color) 28%, transparent);
       }
 
       .player-chip__avatar {
@@ -97,7 +97,7 @@ class AtomTemplate extends Component<typeof Player> {
         color: var(--warning-ink);
         box-shadow:
           inset 0 0 0 1px color-mix(in oklch, var(--card) 18%, transparent),
-          0 0 0 1px color-mix(in oklch, var(--foreground) 20%, transparent);
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 20%, transparent);
       }
 
       .player-chip__image {
@@ -242,7 +242,7 @@ class FittedTemplate extends Component<typeof Player> {
           color-mix(in oklch, var(--card) 96%, transparent)
         );
         box-shadow: 0 0.625rem 1.5rem
-          color-mix(in oklch, var(--foreground) 24%, transparent);
+          color-mix(in oklch, var(--shadow-color) 24%, transparent);
       }
 
       .badge::before,

@@ -98,7 +98,8 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
         position: absolute;
         inset: 0;
         z-index: 4;
-        background-color: color-mix(in oklch, var(--card) 62%, transparent);
+        background-color: var(--overlay);
+        color: var(--tooltip-foreground);
         backdrop-filter: blur(0.125rem);
         display: flex;
         flex-direction: column;
@@ -120,27 +121,29 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
       }
       .hover-btn {
         padding: 0.6875rem 1.25rem;
-        background-color: color-mix(in oklch, var(--card) 96%, transparent);
+        background-color: var(--card);
         color: var(--foreground);
         border: none;
         border-radius: 62.4375rem;
         cursor: pointer;
         font: 600 0.8125rem/1 var(--font-sans);
         box-shadow: 0 6px 16px
-          color-mix(in oklch, var(--foreground) 30%, transparent);
+          color-mix(in oklch, var(--shadow-color) 30%, transparent);
       }
       .hover-btn-primary {
         background-color: var(--accent);
-        color: var(--primary-foreground);
+        color: var(--accent-foreground);
         font-weight: 700;
       }
       .hover-details {
         font: 600 0.75rem/1 var(--font-sans);
-        color: var(--card-foreground);
+        color: var(--tooltip-foreground);
+        --boxel-button-text-color: var(--tooltip-foreground);
+        --boxel-button-background: transparent;
         background-color: transparent;
         border: none;
         border-bottom: 1px solid
-          color-mix(in oklch, var(--card) 50%, transparent);
+          color-mix(in oklch, var(--tooltip-foreground) 50%, transparent);
         padding-bottom: 0.125rem;
         cursor: pointer;
       }

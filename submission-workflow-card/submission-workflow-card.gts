@@ -846,8 +846,8 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         width: 100%;
         font-family: var(--font);
         overflow: hidden;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--canvas);
+        color: var(--foreground);
       }
 
       /* ── Main content ── */
@@ -976,7 +976,7 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
       .sw-step-spinner {
         width: 0.875rem;
         height: 0.875rem;
-        border: 2px solid color-mix(in oklch, var(--card) 30%, transparent);
+        border: 2px solid var(--border);
         border-top-color: var(--border);
         border-radius: 50%;
         animation: stepSpin 0.8s linear infinite;
@@ -1088,7 +1088,7 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         border-radius: 0.625rem;
         border: 1px solid var(--border);
         box-shadow: 0 2px 8px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
         margin-top: 0.9375rem;
         overflow: visible;
       }
@@ -1133,7 +1133,7 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         overflow: hidden;
         border: 1px solid var(--border);
         box-shadow: 0 2px 8px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
       }
 
       .sw-lint-errors {
@@ -1173,8 +1173,8 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
       .sw-sidebar {
         display: flex;
         flex-direction: column;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--sidebar);
+        color: var(--sidebar-foreground);
         overflow-y: auto;
       }
 
@@ -1201,7 +1201,7 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
         align-items: center;
         justify-content: center;
         box-shadow: 0 8px 24px
-          color-mix(in oklch, var(--foreground) 6%, transparent);
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
       }
 
       .sw-donut-pct {
@@ -1269,7 +1269,7 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
       .sw-sidebar-spinner-small {
         width: 0.5rem;
         height: 0.5rem;
-        border: 1.5px solid color-mix(in oklch, var(--card) 30%, transparent);
+        border: 1.5px solid var(--border);
         border-top-color: var(--border);
         border-radius: 50%;
         animation: stepSpin 0.8s linear infinite;
@@ -1392,9 +1392,13 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
       @media (max-width: 800px) {
         .sw-layout {
           grid-template-columns: 1fr;
+          background-color: var(--canvas);
+          color: var(--foreground);
         }
         .sw-sidebar {
           display: none;
+          background-color: var(--sidebar);
+          color: var(--sidebar-foreground);
         }
       }
     </style>
@@ -1573,7 +1577,7 @@ export class SubmissionWorkflowCard extends CardDef {
         }
         .sw-fitted-ring {
           --pct: 0;
-          --track-c: color-mix(in oklch, var(--card) 10%, transparent);
+          --track-c: var(--hover);
           width: 1.75rem;
           height: 1.75rem;
           border-radius: 50%;
@@ -1699,7 +1703,7 @@ export class SubmissionWorkflowCard extends CardDef {
         }
         .sw-embed-ring {
           --pct: 0;
-          --track-c: color-mix(in oklch, var(--card) 10%, transparent);
+          --track-c: var(--hover);
           width: 1.25rem;
           height: 1.25rem;
           border-radius: 50%;

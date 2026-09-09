@@ -174,8 +174,8 @@ export class BeatPatternField extends FieldDef {
       <style scoped>
         .beat-pattern-field {
           padding: 0.5rem 0.625rem;
-          background-color: color-mix(in oklch, var(--card) 3%, transparent);
-          border: 1px solid color-mix(in oklch, var(--card) 7%, transparent);
+          background-color: var(--hover);
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
         }
 
@@ -204,7 +204,7 @@ export class BeatPatternField extends FieldDef {
           width: 0.4375rem;
           height: 0.3125rem;
           border-radius: 1px;
-          background-color: color-mix(in oklch, var(--card) 8%, transparent);
+          background-color: var(--hover);
           transition: all 0.1s ease;
         }
 
@@ -330,7 +330,7 @@ export class BeatPatternCard extends CardDef {
         }
 
         .genre-tag {
-          background-color: color-mix(in oklch, var(--card) 8%, transparent);
+          background-color: var(--hover);
           color: color-mix(in oklch, var(--card-foreground) 50%, transparent);
           padding: 0.125rem 0.375rem;
           border-radius: 6.1875rem;
@@ -363,7 +363,7 @@ export class BeatPatternCard extends CardDef {
 
         .pattern-footer {
           padding-top: 0.375rem;
-          border-top: 1px solid color-mix(in oklch, var(--card) 6%, transparent);
+          border-top: 1px solid var(--border);
         }
 
         .creator {

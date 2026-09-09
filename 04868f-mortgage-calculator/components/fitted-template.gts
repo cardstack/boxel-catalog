@@ -129,11 +129,13 @@ export class MortgageCalculatorFitted extends Component<
       /* ── design tokens ── */
       .mcf-root {
         --mc-shadow:
-          0 1px 0.1875rem color-mix(in oklch, var(--foreground) 8%, transparent),
-          0 1px 2px color-mix(in oklch, var(--foreground) 5%, transparent);
+          0 1px 0.1875rem
+            color-mix(in oklch, var(--shadow-color) 8%, transparent),
+          0 1px 2px color-mix(in oklch, var(--shadow-color) 5%, transparent);
         --mc-shadow-md:
-          0 0.25rem 1rem color-mix(in oklch, var(--foreground) 10%, transparent),
-          0 2px 0.25rem color-mix(in oklch, var(--foreground) 5%, transparent);
+          0 0.25rem 1rem
+            color-mix(in oklch, var(--shadow-color) 10%, transparent),
+          0 2px 0.25rem color-mix(in oklch, var(--shadow-color) 5%, transparent);
         --mc-overlay: linear-gradient(
           135deg,
           color-mix(in oklch, var(--warning) 18%, transparent) 0%,
@@ -350,9 +352,9 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-t-cc {
         font-size: 0.5625rem;
         font-weight: 700;
-        color: var(--card-foreground);
-        background-color: color-mix(in oklch, var(--card) 18%, transparent);
-        border: 1px solid color-mix(in oklch, var(--card) 30%, transparent);
+        color: var(--muted-foreground);
+        background-color: var(--muted);
+        border: 1px solid var(--border);
         border-radius: 62.4375rem;
         padding: 0.1rem 0.4rem;
         backdrop-filter: blur(4px);
@@ -496,7 +498,7 @@ export class MortgageCalculatorFitted extends Component<
         font-weight: 800;
         color: var(--card-foreground);
         text-shadow: 0 1px 6px
-          color-mix(in oklch, var(--foreground) 45%, transparent);
+          color-mix(in oklch, var(--shadow-color) 45%, transparent);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -506,9 +508,9 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-c-pill {
         font-size: 0.5rem;
         font-weight: 700;
-        color: var(--card-foreground);
-        background-color: color-mix(in oklch, var(--card) 16%, transparent);
-        border: 1px solid color-mix(in oklch, var(--card) 28%, transparent);
+        color: var(--muted-foreground);
+        background-color: var(--muted);
+        border: 1px solid var(--border);
         border-radius: 62.4375rem;
         padding: 0.15rem 0.5rem;
         white-space: nowrap;

@@ -195,11 +195,11 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
 
         /* Outer gold frame — two stacked borders */
         box-shadow:
-          0 0 0 1px var(--foreground),
+          0 0 0 1px var(--shadow-color),
           0 0 0 2px var(--casino-gold-border),
-          0 0 0 3px var(--foreground),
+          0 0 0 3px var(--shadow-color),
           0 0 0 4px color-mix(in oklch, var(--accent) 25%, transparent),
-          0 1rem 3rem color-mix(in oklch, var(--foreground) 80%, transparent);
+          0 1rem 3rem color-mix(in oklch, var(--shadow-color) 80%, transparent);
         border: 1px solid var(--casino-gold-border);
       }
 

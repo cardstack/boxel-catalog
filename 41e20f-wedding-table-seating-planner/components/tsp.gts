@@ -6,7 +6,7 @@ import { computePosition, offset, flip, shift } from '@floating-ui/dom';
 import { on } from '@ember/modifier';
 import { fn, get } from '@ember/helper';
 import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { cssVar, eq } from '@cardstack/boxel-ui/helpers';
 import { Component, ImageDef } from '@cardstack/base/card-api';
 import {
   realmURL,
@@ -619,6 +619,17 @@ export class TableSeatingPlannerIsolated extends Component<
 
   get eventLogoURL(): string {
     return (this.args.model as any)?.eventLogo?.resolvedUrl ?? '';
+  }
+
+  // Theme-independent event mark: the model's motif glyph, quoted for CSS
+  // `content`; undefined leaves --tsp-motif unset so CSS falls back to initials.
+  get motifCss(): string | undefined {
+    let glyph = (this.args.model as any)?.motif?.trim();
+    return glyph ? JSON.stringify(glyph) : undefined;
+  }
+
+  get centerOpacity(): string | undefined {
+    return this.motifCss ? '0' : undefined;
   }
 
   get eventInitials(): string {
@@ -4438,6 +4449,10 @@ export class TableSeatingPlannerIsolated extends Component<
       class='tsp {{unless this.hasLinkedTheme "tsp-default-theme"}}'
       {{this.setupPrintHoist}}
       data-tsp-root
+      style={{cssVar
+        tsp-motif=this.motifCss
+        tsp-center-opacity=this.centerOpacity
+      }}
       {{this.keyboard}}
     >
       <header class='tsp-head' aria-label='Event details'>
@@ -6672,7 +6687,7 @@ export class TableSeatingPlannerIsolated extends Component<
           inset: -4mm;
           z-index: 1;
           pointer-events: none;
-          --mk: color-mix(in oklch, var(--foreground) 65%, transparent);
+          --mk: var(--overlay);
           background:
             linear-gradient(var(--mk), var(--mk)) left 0 top 6mm / 3mm 0.2mm,
             linear-gradient(var(--mk), var(--mk)) left 6mm top 0 / 0.2mm 3mm,
@@ -6787,7 +6802,7 @@ export class TableSeatingPlannerIsolated extends Component<
         color: var(--accent-foreground);
         border: 1px solid var(--accent);
         box-shadow: 0 2px 6px
-          color-mix(in oklch, var(--foreground) 25%, transparent);
+          color-mix(in oklch, var(--shadow-color) 25%, transparent);
       }
       .tsp-brand-img {
         width: 100%;
@@ -6849,7 +6864,7 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 1.625rem;
         padding: 0.5rem 1.25rem;
         border-radius: 0.875rem;
-        background-color: color-mix(in oklch, var(--card) 5%, transparent);
+        background-color: var(--hover);
         border: 1px solid
           var(
             --tsp-primary-edge,
@@ -7063,7 +7078,7 @@ export class TableSeatingPlannerIsolated extends Component<
         color: var(--primary-ink);
         font-weight: 600;
         box-shadow: 0 1px 4px
-          color-mix(in oklch, var(--foreground) 25%, transparent);
+          color-mix(in oklch, var(--shadow-color) 25%, transparent);
       }
       .tsp-navbtn.is-on:hover {
         color: var(--primary-ink);
@@ -7173,6 +7188,7 @@ export class TableSeatingPlannerIsolated extends Component<
         display: block;
         height: 100%;
         background-color: var(--accent);
+        color: var(--accent-foreground);
         transition: width 0.4s ease;
       }
       .rail-search {
@@ -7189,7 +7205,7 @@ export class TableSeatingPlannerIsolated extends Component<
             --tsp-primary-edge,
             color-mix(in oklch, var(--card) 10%, transparent)
           );
-        background-color: color-mix(in oklch, var(--card) 6%, transparent);
+        background-color: var(--hover);
         color: var(--foreground);
         font-family: var(--font-sans);
         font-size: 0.875rem;
@@ -7219,7 +7235,7 @@ export class TableSeatingPlannerIsolated extends Component<
             --tsp-primary-edge,
             color-mix(in oklch, var(--card) 10%, transparent)
           );
-        background-color: color-mix(in oklch, var(--card) 4%, transparent);
+        background-color: var(--hover);
         color: var(--foreground);
         font-family: var(--font-sans);
         font-size: 0.75rem;
@@ -7270,7 +7286,7 @@ export class TableSeatingPlannerIsolated extends Component<
         font-family: var(--font-sans);
         color: var(--foreground);
         box-shadow: 0 4px 12px
-          color-mix(in oklch, var(--foreground) 18%, transparent);
+          color-mix(in oklch, var(--shadow-color) 18%, transparent);
       }
       .rail-guest:hover {
         transform: translateY(-1px);
@@ -7350,7 +7366,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1.625rem;
         height: 1.625rem;
         border-radius: 50%;
-        border: 1px solid color-mix(in oklch, var(--card) 16%, transparent);
+        border: 1px solid var(--border);
         background-color: transparent;
         color: color-mix(in oklch, var(--card-foreground) 65%, transparent);
         cursor: pointer;
@@ -7368,7 +7384,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1.625rem;
         height: 1.625rem;
         border-radius: 50%;
-        border: 1px solid color-mix(in oklch, var(--card) 16%, transparent);
+        border: 1px solid var(--border);
         background-color: transparent;
         color: color-mix(in oklch, var(--card-foreground) 65%, transparent);
         cursor: pointer;
@@ -7839,7 +7855,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0.625rem 0.75rem;
         font-family: var(--font-sans);
         font-size: 0.6875rem;
-        color: color-mix(in oklch, var(--foreground) 55%, transparent);
+        color: var(--subtle-foreground);
       }
       .ct-branch {
         position: relative;
@@ -7999,14 +8015,12 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 375rem;
         background-image:
           linear-gradient(
-            var(--tsp-grid, color-mix(in oklch, var(--card) 7%, transparent))
-              1px,
+            color-mix(in oklch, var(--primary) 6%, transparent) 1px,
             transparent 1px
           ),
           linear-gradient(
             90deg,
-            var(--tsp-grid, color-mix(in oklch, var(--card) 7%, transparent))
-              1px,
+            color-mix(in oklch, var(--primary) 6%, transparent) 1px,
             transparent 1px
           );
         background-size: 2.5rem 2.5rem;
@@ -8266,7 +8280,7 @@ export class TableSeatingPlannerIsolated extends Component<
         position: absolute;
         z-index: 9990;
         border: 1.5px dashed var(--border);
-        background-color: color-mix(in oklch, var(--card) 6%, transparent);
+        background-color: var(--hover);
         cursor: grab;
         touch-action: none;
       }
@@ -8741,7 +8755,8 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         gap: 2px;
         padding: 0.25rem 0.5rem;
-        background-color: color-mix(in oklch, var(--card) 92%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
         -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
         border: 1px solid var(--border);
@@ -8880,7 +8895,8 @@ export class TableSeatingPlannerIsolated extends Component<
         display: flex;
         align-items: center;
         gap: 1px;
-        background-color: color-mix(in oklch, var(--card) 88%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
         -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
         border: 1px solid var(--border);
@@ -8963,8 +8979,7 @@ export class TableSeatingPlannerIsolated extends Component<
         contain: size;
         background: linear-gradient(180deg, var(--popover), var(--muted));
         color: var(--foreground);
-        border-left: 1px solid
-          color-mix(in oklch, var(--foreground) 10%, transparent);
+        border-left: 1px solid var(--border);
         transition: width 0.2s ease;
       }
       .tsp-inspector.is-collapsed {
@@ -9014,8 +9029,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1.875rem;
         height: 1.875rem;
         border-radius: 50%;
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+        border: 1px solid var(--border);
         background-color: var(--card);
         cursor: pointer;
         color: var(--muted-foreground);
@@ -9050,7 +9064,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .insp-progress-bar {
         height: 0.375rem;
-        background-color: color-mix(in oklch, var(--card) 8%, transparent);
+        background-color: var(--hover);
         border-radius: 0.1875rem;
         overflow: hidden;
       }
@@ -9073,8 +9087,7 @@ export class TableSeatingPlannerIsolated extends Component<
         margin-bottom: 0.375rem;
         border-radius: 0.875rem;
         background: linear-gradient(168deg, var(--card), var(--inset));
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 10%, transparent);
+        border: 1px solid var(--border);
         overflow: auto;
         max-height: 23.75rem;
       }
@@ -9153,8 +9166,7 @@ export class TableSeatingPlannerIsolated extends Component<
         font-size: 0.75rem;
         color: var(--accent-ink);
         background-color: var(--card);
-        border: 1px dashed
-          color-mix(in oklch, var(--foreground) 25%, transparent);
+        border: 1px dashed var(--border);
         cursor: pointer;
         transition:
           transform 0.12s ease,
@@ -9199,7 +9211,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1.125rem;
         height: 1.125rem;
         padding: 0;
-        border: 1px solid color-mix(in oklch, var(--card) 75%, transparent);
+        border: 1px solid var(--border-strong);
         border-radius: 50%;
         background-color: var(--primary);
         color: var(--primary-foreground);
@@ -9253,8 +9265,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .insp-opt {
         height: 2.5rem;
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+        border: 1px solid var(--border);
         background-color: var(--card);
         border-radius: 0.625rem;
         cursor: pointer;
@@ -9275,7 +9286,7 @@ export class TableSeatingPlannerIsolated extends Component<
         cursor: default;
       }
       .insp-opt:disabled:hover {
-        border-color: color-mix(in oklch, var(--foreground) 12%, transparent);
+        border-color: var(--border);
       }
       .insp-lock {
         grid-column: 1 / -1;
@@ -9289,8 +9300,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1.75rem;
         height: 1.75rem;
         border-radius: 0.5rem;
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+        border: 1px solid var(--border);
         cursor: pointer;
       }
       .insp-fxpick {
@@ -9298,8 +9308,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1.75rem;
         height: 1.75rem;
         border-radius: 0.5rem;
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+        border: 1px solid var(--border);
         overflow: hidden;
         cursor: pointer;
         background: conic-gradient(
@@ -9349,8 +9358,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 1.125rem;
         background-color: var(--card);
         color: var(--card-foreground);
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 10%, transparent);
+        border: 1px solid var(--border);
         border-radius: 0.875rem;
       }
       .insp-fxart-box {
@@ -9361,8 +9369,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 100%;
         height: 2.5rem;
         margin-top: 1rem;
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+        border: 1px solid var(--border);
         background-color: var(--card);
         border-radius: 0.625rem;
         cursor: pointer;
@@ -9401,8 +9408,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .insp-actions button {
         flex: 1;
         height: 2.5rem;
-        border: 1px solid
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+        border: 1px solid var(--border);
         background-color: var(--card);
         border-radius: 0.625rem;
         cursor: pointer;
@@ -9524,7 +9530,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 1.5rem;
         border: 1.5px dashed color-mix(in oklch, var(--accent) 55%, transparent);
         border-radius: 1rem;
-        background-color: color-mix(in oklch, var(--card) 50%, transparent);
+        background-color: var(--card);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -9540,7 +9546,7 @@ export class TableSeatingPlannerIsolated extends Component<
         object-fit: cover;
         border: 1px solid var(--accent);
         box-shadow: 0 2px 8px
-          color-mix(in oklch, var(--foreground) 12%, transparent);
+          color-mix(in oklch, var(--shadow-color) 12%, transparent);
       }
       .poster-empty-mark {
         width: 4rem;
@@ -9811,7 +9817,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0.625rem 0.75rem;
         border-left: 2px solid var(--border);
         border-radius: 0 0.625rem 0.625rem 0;
-        background-color: color-mix(in oklch, var(--card) 8%, transparent);
+        background-color: var(--hover);
         font-size: 0.7812rem;
         line-height: 1.55;
         color: var(--foreground);
@@ -9962,11 +9968,11 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .tpop-name:hover {
-        background-color: color-mix(in oklch, var(--card) 5%, transparent);
+        background-color: var(--hover);
       }
       .tpop-name:focus {
         border-color: color-mix(in oklch, var(--accent) 50%, transparent);
-        background-color: color-mix(in oklch, var(--card) 8%, transparent);
+        background-color: var(--hover);
       }
       .tpop-name::selection {
         background-color: color-mix(in oklch, var(--accent) 35%, transparent);
@@ -9977,8 +9983,8 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1.875rem;
         height: 1.875rem;
         border-radius: 50%;
-        border: 1px solid color-mix(in oklch, var(--card) 16%, transparent);
-        background-color: color-mix(in oklch, var(--card) 6%, transparent);
+        border: 1px solid var(--border);
+        background-color: var(--hover);
         color: color-mix(in oklch, var(--card-foreground) 70%, transparent);
         font-size: 0.875rem;
         line-height: 1;
@@ -10315,9 +10321,9 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 1.75rem;
         height: 1.75rem;
         border-radius: 50%;
-        border: 1px solid color-mix(in oklch, var(--card) 14%, transparent);
-        background-color: color-mix(in oklch, var(--card) 5%, transparent);
-        color: var(--primary-foreground);
+        border: 1px solid var(--border);
+        background-color: var(--hover);
+        color: var(--foreground);
         font-size: 0.8125rem;
         cursor: pointer;
         transition: 0.14s;
@@ -10330,7 +10336,7 @@ export class TableSeatingPlannerIsolated extends Component<
         margin: 0 0 0.75rem;
         font-size: 0.7812rem;
         line-height: 1.5;
-        color: color-mix(in oklch, var(--foreground) 65%, transparent);
+        color: var(--muted-foreground);
       }
       .confirm-detail {
         margin: 0.5rem 0 0.25rem;
@@ -10401,7 +10407,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .preview-body :where(svg) {
         width: 100%;
         height: 12.5rem;
-        background-color: color-mix(in oklch, var(--card) 3%, transparent);
+        background-color: var(--hover);
         border: 1px solid var(--border);
         border-radius: 0.625rem;
       }
