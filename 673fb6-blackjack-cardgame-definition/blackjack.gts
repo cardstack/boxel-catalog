@@ -1628,19 +1628,19 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
       }
 
       .bj-chip--red {
-        background-color: var(--chip-red);
+        background: var(--chip-red);
       }
       .bj-chip--blue {
-        background-color: var(--chip-blue);
+        background: var(--chip-blue);
       }
       .bj-chip--green {
-        background-color: var(--chip-green);
+        background: var(--chip-green);
       }
       .bj-chip--black {
-        background-color: var(--chip-black);
+        background: var(--chip-black);
       }
       .bj-chip--purple {
-        background-color: var(--chip-purple);
+        background: var(--chip-purple);
       }
 
       /* ── Deal button ───────────────────────────────────────── */
@@ -1715,15 +1715,15 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         transform: translateY(1px);
       }
       .bj-act--hit {
-        background-color: var(--btn-hit);
+        background: var(--btn-hit);
         color: var(--casino-text);
       }
       .bj-act--stand {
-        background-color: var(--btn-stand);
+        background: var(--btn-stand);
         color: var(--casino-text);
       }
       .bj-act--double {
-        background-color: var(--btn-double);
+        background: var(--btn-double);
         color: var(--casino-text);
       }
 
@@ -2271,19 +2271,19 @@ class FittedTemplate extends Component<typeof Blackjack> {
       }
 
       .casino-chip--red {
-        background-color: var(--chip-red);
+        background: var(--chip-red);
       }
       .casino-chip--blue {
-        background-color: var(--chip-blue);
+        background: var(--chip-blue);
       }
       .casino-chip--green {
-        background-color: var(--chip-green);
+        background: var(--chip-green);
       }
       .casino-chip--black {
-        background-color: var(--chip-black);
+        background: var(--chip-black);
       }
       .casino-chip--purple {
-        background-color: var(--chip-purple);
+        background: var(--chip-purple);
       }
 
       /* ── Pays text ─────────────────────────────────────── */

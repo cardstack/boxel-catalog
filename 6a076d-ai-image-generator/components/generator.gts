@@ -1218,13 +1218,12 @@ export class AiImageGeneratorIsolated extends Component<
 
     <style scoped>
       .ai-image {
-        --c-fg: var(--foreground);
         position: relative;
         display: flex;
         flex-direction: column;
         height: 100%;
         background-color: var(--canvas);
-        color: var(--c-fg);
+        color: var(--foreground);
         font: var(--boxel-font-sm);
         font-family: var(--font-sans);
         container-type: inline-size;
@@ -1282,7 +1281,7 @@ export class AiImageGeneratorIsolated extends Component<
            dark; fixed 22px cell keeps it pixel-consistent as the thread
            scrolls. */
         background-image: radial-gradient(
-          color-mix(in oklch, var(--c-fg) 7%, transparent) 1px,
+          color-mix(in oklch, var(--foreground) 7%, transparent) 1px,
           transparent 1px
         );
         background-size: 1.375rem 1.375rem;
@@ -1307,7 +1306,7 @@ export class AiImageGeneratorIsolated extends Component<
         border: 1px solid var(--border);
         border-radius: 50%;
         background-color: transparent;
-        color: var(--c-fg);
+        color: var(--foreground);
         cursor: pointer;
         transition:
           border-color 0.15s ease,
@@ -1377,7 +1376,7 @@ export class AiImageGeneratorIsolated extends Component<
       .version {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        color: var(--c-fg);
+        color: var(--foreground);
         background-color: var(--card);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
@@ -1402,7 +1401,7 @@ export class AiImageGeneratorIsolated extends Component<
         flex: 1 1 auto;
         min-width: 0;
         margin: 0;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       /* Copy-prompt button on a thread turn: always visible, brightens on hover. */
       .turn-copy {
@@ -1419,16 +1418,16 @@ export class AiImageGeneratorIsolated extends Component<
         font-weight: 600;
         border-radius: var(--boxel-border-radius-sm);
         padding: 2px var(--boxel-sp-xxs);
-        background-color: color-mix(in oklch, var(--c-fg) 10%, transparent);
-        color: var(--c-fg);
+        background-color: color-mix(in oklch, var(--foreground) 10%, transparent);
+        color: var(--foreground);
       }
       .badge-inpaint {
         background-color: color-mix(in oklch, var(--warning) 16%, transparent);
-        color: color-mix(in oklch, var(--warning-ink), var(--c-fg) 40%);
+        color: color-mix(in oklch, var(--warning-ink), var(--foreground) 40%);
       }
       .badge-edit {
         background-color: color-mix(in oklch, var(--primary) 14%, transparent);
-        color: color-mix(in oklch, var(--primary-ink), var(--c-fg) 40%);
+        color: color-mix(in oklch, var(--primary-ink), var(--foreground) 40%);
       }
       /* Every turn renders at the SAME width so the transcript is a clean
          column; height follows each image's aspect ratio (ChatGPT-style),
@@ -1574,7 +1573,7 @@ export class AiImageGeneratorIsolated extends Component<
         border: 1px solid var(--border);
         background-color: var(--card);
         backdrop-filter: blur(8px);
-        color: var(--c-fg);
+        color: var(--foreground);
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         line-height: 1.6;
@@ -1620,7 +1619,7 @@ export class AiImageGeneratorIsolated extends Component<
         margin: 0;
         font-size: var(--boxel-font-size);
         font-weight: 700;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .empty p {
         margin: 0;
@@ -1638,7 +1637,7 @@ export class AiImageGeneratorIsolated extends Component<
         cursor: pointer;
         background-color: transparent;
         border-color: var(--border);
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .example-chip:hover {
         border-color: var(--primary);
@@ -1701,7 +1700,7 @@ export class AiImageGeneratorIsolated extends Component<
       }
       .mode-chip.active {
         border-color: var(--primary);
-        color: var(--c-fg);
+        color: var(--foreground);
         background-color: color-mix(in oklch, var(--primary) 12%, transparent);
       }
       .composer-main {
@@ -1724,7 +1723,7 @@ export class AiImageGeneratorIsolated extends Component<
         min-height: 3.25rem;
         max-height: 10rem;
         resize: none;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .prompt-input::placeholder {
         color: var(--muted-foreground);
@@ -1745,7 +1744,7 @@ export class AiImageGeneratorIsolated extends Component<
       .edit-controls .prompt-input {
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background-color: color-mix(in oklch, var(--c-fg) 4%, transparent);
+        background-color: color-mix(in oklch, var(--foreground) 4%, transparent);
       }
       .edit-controls .prompt-input:focus,
       .edit-controls .prompt-input:focus-visible {
@@ -1761,7 +1760,7 @@ export class AiImageGeneratorIsolated extends Component<
            light — custom properties inherit into the rendered-in-place menu. */
         --dropdown-background-color: var(--card);
         color: var(--card-foreground);
-        --dropdown-text-color: var(--c-fg);
+        --dropdown-text-color: var(--foreground);
         --dropdown-hover-color: color-mix(
           in oklch,
           var(--primary) 18%,
@@ -1777,7 +1776,7 @@ export class AiImageGeneratorIsolated extends Component<
           var(--primary) 32%,
           transparent
         );
-        --dropdown-selected-text-color: var(--c-fg);
+        --dropdown-selected-text-color: var(--foreground);
       }
       /* ember-power-select marks the current value with
          `--selected`/`--highlighted` (not aria-*). Its default solid-accent fill
@@ -1790,7 +1789,7 @@ export class AiImageGeneratorIsolated extends Component<
           var(--primary) 22%,
           transparent
         ) !important;
-        color: var(--c-fg) !important;
+        color: var(--foreground) !important;
       }
       .setting-label {
         font-size: var(--boxel-font-size-xs);
@@ -1806,14 +1805,14 @@ export class AiImageGeneratorIsolated extends Component<
         padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background-color: color-mix(in oklch, var(--c-fg) 5%, transparent);
+        background-color: color-mix(in oklch, var(--foreground) 5%, transparent);
         color: var(--muted-foreground);
         cursor: not-allowed;
       }
       .aspect-locked-value {
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .aspect-locked-icon {
         width: 0.9rem;
@@ -1868,7 +1867,7 @@ export class AiImageGeneratorIsolated extends Component<
       .version-popover-tag {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .version-popover-prompt-row {
         display: flex;
@@ -1906,8 +1905,8 @@ export class AiImageGeneratorIsolated extends Component<
           background 0.15s ease;
       }
       .pop-icon:hover {
-        color: var(--c-fg);
-        background-color: color-mix(in oklch, var(--c-fg) 8%, transparent);
+        color: var(--foreground);
+        background-color: color-mix(in oklch, var(--foreground) 8%, transparent);
       }
       .pop-icon > :deep(svg) {
         width: 0.9rem;
@@ -1957,7 +1956,7 @@ export class AiImageGeneratorIsolated extends Component<
         border: 1px solid transparent;
         border-radius: var(--boxel-border-radius-sm);
         background-color: transparent;
-        color: var(--c-fg);
+        color: var(--foreground);
         font: inherit;
         text-align: left;
         cursor: pointer;
@@ -1967,7 +1966,7 @@ export class AiImageGeneratorIsolated extends Component<
       }
       .version-btn:hover {
         border-color: var(--border);
-        background-color: color-mix(in oklch, var(--c-fg) 6%, transparent);
+        background-color: color-mix(in oklch, var(--foreground) 6%, transparent);
       }
       .version-btn.current {
         border-color: var(--primary);
@@ -2040,7 +2039,7 @@ export class AiImageGeneratorIsolated extends Component<
       }
       .setting :deep(.ar-tile.selected),
       .edit-setting :deep(.ar-tile.selected) {
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .edit-setting :deep(.ar-grid) {
         width: 100%;
@@ -2134,7 +2133,7 @@ export class AiImageGeneratorIsolated extends Component<
         display: inline-flex;
         gap: 2px;
         padding: 2px;
-        background-color: color-mix(in oklch, var(--c-fg) 10%, transparent);
+        background-color: color-mix(in oklch, var(--foreground) 10%, transparent);
         border-radius: var(--boxel-border-radius);
         align-self: flex-start;
       }
@@ -2151,7 +2150,7 @@ export class AiImageGeneratorIsolated extends Component<
       }
       .tab.active {
         background-color: var(--background);
-        color: var(--c-fg);
+        color: var(--foreground);
         box-shadow: 0 1px 2px
           color-mix(in oklch, var(--shadow-color) 12%, transparent);
       }
@@ -2220,7 +2219,7 @@ export class AiImageGeneratorIsolated extends Component<
         padding: var(--boxel-sp-xs);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background-color: color-mix(in oklch, var(--c-fg) 4%, transparent);
+        background-color: color-mix(in oklch, var(--foreground) 4%, transparent);
       }
       .edit-record .rec {
         min-width: 0;
@@ -2236,7 +2235,7 @@ export class AiImageGeneratorIsolated extends Component<
       .edit-record dd {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--c-fg);
+        color: var(--foreground);
         overflow-wrap: anywhere;
         /* A long prompt must not balloon the record; clamp to a few lines. */
         display: -webkit-box;
@@ -2260,10 +2259,10 @@ export class AiImageGeneratorIsolated extends Component<
       .ghost-btn {
         --boxel-button-color: transparent;
         --boxel-button-border-color: var(--border);
-        --boxel-button-text-color: var(--c-fg);
+        --boxel-button-text-color: var(--foreground);
         background-color: transparent;
         border-color: var(--border);
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .ghost-btn:hover:not(:disabled) {
         border-color: var(--primary);

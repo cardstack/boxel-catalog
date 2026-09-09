@@ -2901,7 +2901,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           opacity 0.15s;
       }
       .act-btn--primary {
-        background-color: var(--primary-grad);
+        background: var(--primary-grad);
         color: var(--card-foreground);
         border: none;
         box-shadow:
@@ -3226,7 +3226,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex-shrink: 0;
         min-width: 11.25rem;
         padding: 0.8125rem 1.75rem;
-        background-color: var(--primary-grad);
+        background: var(--primary-grad);
         color: var(--card-foreground);
         border: none;
         border-radius: 62.4375rem;
@@ -4861,7 +4861,7 @@ export class VirtualTryOnApp extends CardDef {
           letter-spacing: 0.1em;
           text-transform: uppercase;
           color: var(--card-foreground);
-          background-color: var(--primary-grad);
+          background: var(--primary-grad);
           border-radius: 62.4375rem;
           box-shadow: 0 2px 8px
             color-mix(in oklch, var(--accent) 35%, transparent);
@@ -4876,7 +4876,7 @@ export class VirtualTryOnApp extends CardDef {
           width: 2.75rem;
           height: 0.1875rem;
           border-radius: 0.1875rem;
-          background-color: var(--primary-grad);
+          background: var(--primary-grad);
         }
 
         /* Card CTA line. */
