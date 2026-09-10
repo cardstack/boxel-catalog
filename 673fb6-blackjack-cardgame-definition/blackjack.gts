@@ -897,9 +897,9 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         );
         --casino-felt-bg: radial-gradient(
           ellipse at 50% 30%,
-          var(--inset) 0%,
+          color-mix(in oklch, var(--inset) 85%, var(--card)) 0%,
           var(--inset) 55%,
-          var(--inset) 100%
+          color-mix(in oklch, var(--inset) 75%, var(--shadow-color)) 100%
         );
         --casino-felt-inner: color-mix(in oklch, var(--inset) 45%, transparent);
         --casino-panel: color-mix(in oklch, var(--inset) 42%, transparent);
@@ -971,7 +971,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
           var(--destructive)
         );
 
-        background-color: var(--casino-felt-bg);
+        background: var(--casino-felt-bg);
         height: 100%;
         width: 100%;
         color: var(--casino-text);
