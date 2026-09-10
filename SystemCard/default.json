@@ -76,20 +76,30 @@
       },
       "modelConfigurations.10": {
         "links": {
-          "self": "../ModelConfiguration/deepseek-deepseek-v4-pro"
+          "self": "../ModelConfiguration/x-ai-grok-46"
         }
       },
       "modelConfigurations.11": {
         "links": {
-          "self": "../ModelConfiguration/moonshotai-kimi-k2-7-code"
+          "self": "../ModelConfiguration/x-ai-grok-45"
         }
       },
       "modelConfigurations.12": {
         "links": {
-          "self": "../ModelConfiguration/z-ai-glm-52"
+          "self": "../ModelConfiguration/deepseek-deepseek-v4-pro"
         }
       },
       "modelConfigurations.13": {
+        "links": {
+          "self": "../ModelConfiguration/moonshotai-kimi-k2-7-code"
+        }
+      },
+      "modelConfigurations.14": {
+        "links": {
+          "self": "../ModelConfiguration/z-ai-glm-52"
+        }
+      },
+      "modelConfigurations.15": {
         "links": {
           "self": "../ModelConfiguration/qwen-qwen3-7-max"
         }
