@@ -759,9 +759,11 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         gap: 0.375rem !important;
       }
       .lead-list :deep(.category) {
-        /* Fixed white-on-photo pill: text must stay dark in every theme */
-        background-color: var(--card) !important;
-        color: var(--foreground) !important;
+        /* Fixed light-on-photo pill: it must stay light with dark text in
+           every theme, so both colours come from the one inverted pair —
+           --card/--foreground invert together and break exactly that. */
+        background-color: var(--tooltip-foreground) !important;
+        color: var(--tooltip) !important;
         padding: 0.3125rem 0.875rem !important;
         border-radius: 62.4375rem !important;
         font: 600 0.6875rem/1

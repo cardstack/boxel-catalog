@@ -150,10 +150,13 @@ export class PlayerOutcomeField extends FieldDef {
           width: 1.5rem;
           height: 1.5rem;
           border-radius: 50%;
+          /* A felt disc, not a status colour: --success turned it light mint,
+             which the gold initials cannot sit on. Derived from --inset so the
+             shading survives and the gold keeps its ground. */
           background: radial-gradient(
             circle,
-            var(--success) 0%,
-            var(--success) 100%
+            color-mix(in oklch, var(--inset) 92%, var(--card)) 0%,
+            color-mix(in oklch, var(--inset) 80%, var(--shadow-color)) 100%
           );
           border: 1px solid var(--casino-gold-avatar-border);
           display: flex;
@@ -625,10 +628,13 @@ export class GameResult extends CardDef {
           width: 1.75rem;
           height: 1.75rem;
           border-radius: 50%;
+          /* A felt disc, not a status colour: --success turned it light mint,
+             which the gold initials cannot sit on. Derived from --inset so the
+             shading survives and the gold keeps its ground. */
           background: radial-gradient(
             circle,
-            var(--success) 0%,
-            var(--success) 100%
+            color-mix(in oklch, var(--inset) 92%, var(--card)) 0%,
+            color-mix(in oklch, var(--inset) 80%, var(--shadow-color)) 100%
           );
           border: 1px solid color-mix(in oklch, var(--accent) 40%, transparent);
           display: flex;
