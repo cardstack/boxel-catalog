@@ -1709,12 +1709,9 @@ export default class Popover extends Component<PopoverSignature> {
        *   border      none → subtle → subtle → subtle
        * Shadow depth increases with each tier so 'raised', 'elevated',
        * and 'floating' are visually distinct. */
-      /* The whole ladder derives from ONE radius base so a theme moves
-       * every tier consistently. Each value has two override scopes:
-       *   --bx-popover-radius / --bx-popover-shadow-{tier}
-       *       popover-only — no effect on any other UI
-       *   --radius / --shadow-{sm,md,xl}
-       *       the theme's global tokens */
+      /* The whole ladder derives from the theme's own --radius and
+       * --shadow-{sm,md,xl}, so a theme moves every tier consistently.
+       * There are no popover-only radius/shadow knobs. */
       .bx-popover--elevation-flat {
         --bx-popover-border: transparent;
         border-radius: calc(var(--radius) - 2px);
@@ -1776,10 +1773,8 @@ export default class Popover extends Component<PopoverSignature> {
         --bx-popover-bg: var(--card);
         color: var(--foreground);
       }
-      /* edit's sticky-note yellow is a semantic "unsaved" signal, not a
-       * brand color — it stays fixed by default; themes override it via
-       * --bx-popover-edit-bg / --bx-popover-edit-border (the -resolved
-       * vars exist so an outer override isn't shadowed by this rule). */
+      /* edit's pane sits on the theme's --inset well so the "unsaved"
+       * surface reads as a recessed field in every theme. */
       .bx-popover--edit {
         --bx-popover-bg: var(--card);
       }
