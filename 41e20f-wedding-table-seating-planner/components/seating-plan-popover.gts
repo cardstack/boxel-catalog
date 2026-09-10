@@ -183,7 +183,7 @@ export default class SeatingPlanPopover extends Component<Signature> {
         flex-direction: column;
         max-height: min(30rem, calc(100vh - 3rem));
         background-color: var(--popover);
-        color: var(--foreground);
+        color: var(--popover-foreground);
         font-family: var(--font-sans);
         overflow: hidden;
       }

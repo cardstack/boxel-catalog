@@ -56,12 +56,12 @@ export class Model extends CardDef {
           right: 0;
           background: linear-gradient(
             transparent,
-            color-mix(in oklch, var(--foreground) 50%, transparent)
+            color-mix(in oklch, var(--tooltip) 50%, transparent)
           );
           padding: var(--boxel-sp-xs);
         }
         .name {
-          color: var(--card-foreground);
+          color: var(--tooltip-foreground);
           font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }

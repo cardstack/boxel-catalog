@@ -901,7 +901,9 @@ export class GameResult extends CardDef {
           box-shadow: 0 0 8px var(--casino-lose-glow);
         }
         .gr-accent-strip.badge--draw {
-          background-color: var(--muted-foreground);
+          /* A 4px strip is a thick line, so it takes the emphasised line token
+             rather than an ink; --muted would vanish against --card. */
+          background-color: var(--border-strong);
           box-shadow: none;
         }
 

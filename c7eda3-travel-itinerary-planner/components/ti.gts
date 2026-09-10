@@ -2238,7 +2238,9 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           width: 4.125rem;
           height: 4.125rem;
           padding: 0.375rem;
-          background-color: var(--primary-foreground);
+          /* Pad matches the hero surface; the QR field draws its own white margin
+           and black modules, so the pad never needs an ink pairing. */
+          background-color: var(--card);
           border-radius: 0.625rem;
           box-shadow: 0 4px 12px
             color-mix(in oklch, var(--shadow-color) 18%, transparent);

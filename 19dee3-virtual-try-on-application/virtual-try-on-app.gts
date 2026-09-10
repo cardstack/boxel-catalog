@@ -2493,16 +2493,24 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         color: var(--card-foreground);
       }
       .filter-pill--on {
-        background: linear-gradient(135deg, var(--accent), var(--accent-ink));
+        background: linear-gradient(
+            135deg,
+            var(--accent),
+            color-mix(in oklch, var(--accent) 82%, var(--foreground))
+          )
+          padding-box;
         border-color: transparent;
         color: var(--accent-foreground);
-        box-shadow: 0 2px 10px
-          color-mix(in oklch, var(--shadow-color) 20%, transparent);
       }
-      /* Keep the active pill's gradient + white text on hover — the base
-         :hover rule would otherwise out-specify and recolor it. */
+      /* Keep the active pill's gradient + text on hover — the base :hover
+         rule would otherwise out-specify and recolor it. */
       .filter-pill--on:hover {
-        background: linear-gradient(135deg, var(--accent), var(--accent-ink));
+        background: linear-gradient(
+            135deg,
+            var(--accent),
+            color-mix(in oklch, var(--accent) 82%, var(--foreground))
+          )
+          padding-box;
         color: var(--accent-foreground);
       }
       /* Categorised garment sections */
@@ -3029,11 +3037,9 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       /* Square slot tiles */
       .sq-slot {
         /* Garment slots are the chooser Popover's anchor. The Popover bridges
-           these onto its portaled root so the surface stays transparent (the
-           .chooser-pop box paints the card). 'floating' elevation doubles
-           --bx-popover-radius, so 10px → a 20px root matching .chooser-pop. */
+           this onto its portaled root so the surface stays transparent (the
+           .chooser-pop box paints the card). */
         --bx-popover-bg: transparent;
-        --bx-popover-radius: 0.375rem;
         position: relative;
         display: flex;
         flex-direction: column;
@@ -3909,7 +3915,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .save-btn {
         width: 100%;
         padding: 0.8125rem;
-        background: linear-gradient(135deg, var(--accent), var(--accent-ink));
+        background-color: var(--accent);
         color: var(--accent-foreground);
         border: none;
         border-radius: var(--r);
@@ -4381,13 +4387,9 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       /* Add Model button in the header strip */
       .add-model-btn {
         /* This button is the model picker Popover's anchor. The Popover
-           bridges these tokens onto its portaled root, so the root surface
-           stays transparent (the .mpm-pop box paints the visible card) and
-           its shadow follows a matching radius. NB: the 'floating' elevation
-           doubles --bx-popover-radius, so 10px → a 20px root that matches
-           .mpm-pop's 20px (set it to half the panel radius). */
+           bridges this onto its portaled root, so the root surface stays
+           transparent (the .mpm-pop box paints the visible card). */
         --bx-popover-bg: transparent;
-        --bx-popover-radius: 0.375rem;
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;

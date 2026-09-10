@@ -324,7 +324,7 @@ class FittedTemplate extends Component<typeof Player> {
             var(--warning) 0 11deg,
             var(--chip-red) 11deg 22deg
           );
-        color: var(--card-foreground);
+        color: var(--success-foreground);
         box-shadow: inset 0 0 0 1px
           color-mix(in oklch, var(--card) 18%, transparent);
       }
@@ -532,7 +532,7 @@ class IsolatedTemplate extends Component<typeof Player> {
             var(--warning) 0 11deg,
             var(--chip-red) 11deg 22deg
           );
-        color: var(--card-foreground);
+        color: var(--success-foreground);
         box-shadow:
           0 0 0 3px color-mix(in oklch, var(--accent) 65%, transparent),
           0 0 20px color-mix(in oklch, var(--accent) 25%, transparent),

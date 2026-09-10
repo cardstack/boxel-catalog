@@ -88,7 +88,7 @@ export class Garment extends CardDef {
             color: var(--tooltip-foreground);
             background: linear-gradient(
               to top,
-              color-mix(in oklch, var(--foreground) 65%, transparent),
+              color-mix(in oklch, var(--tooltip) 65%, transparent),
               transparent
             );
             overflow: hidden;

@@ -3578,7 +3578,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
       }
       .vp-progress-fill {
         height: 100%;
-        background-color: var(--warning-ink);
+        background-color: var(--warning);
         transition: width 0.15s linear;
       }
       .vp-sheet {
@@ -3623,8 +3623,8 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         font-size: 0.625rem;
       }
       .vp-token--current {
-        background-color: var(--info-ink) !important;
-        color: var(--foreground) !important;
+        background-color: var(--info) !important;
+        color: var(--info-foreground) !important;
         font-weight: 900;
         border-radius: 0.1875rem;
         box-shadow: 0 1px 8px color-mix(in oklch, var(--info) 55%, transparent);
@@ -3731,7 +3731,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         transition: all 0.2s;
       }
       .vp-fb-chip--on .vp-fb-chip-dot {
-        background-color: var(--info-ink);
+        background-color: var(--info);
         box-shadow: 0 0 6px var(--info);
       }
       .vp-fb-divider {
@@ -3787,7 +3787,7 @@ class IsolatedVirtualPiano extends Component<typeof VirtualPiano> {
         width: 0.375rem;
         height: 0.375rem;
         border-radius: 50%;
-        background-color: var(--info-ink);
+        background-color: var(--info);
         box-shadow: 0 0 6px var(--info);
         animation: vp-fb-pulse 1.8s ease-in-out infinite;
       }
@@ -4520,7 +4520,7 @@ export class VirtualPiano extends CardDef {
             0 0 2px var(--success);
         }
         .led--pulse {
-          background-color: var(--info-ink);
+          background-color: var(--info);
           box-shadow:
             0 0 6px var(--vp-accent-glow),
             0 0 2px var(--info);

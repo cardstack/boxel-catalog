@@ -1228,10 +1228,10 @@ export class AiImageGeneratorIsolated extends Component<
         font-family: var(--font-sans);
         container-type: inline-size;
       }
-      /* Default palette, pinned only when no theme is linked. Ships both a
-         light and a studio-dark variant keyed off the card's own data-theme,
-         so the in-card toggle re-themes just this card. A linked theme supplies
-         these semantic tokens itself and this block is absent. */
+      /* The in-card light/dark toggle needs no palette here: theme.css
+         declares the whole contract under [data-theme='dark'], so stamping
+         data-theme on this root re-themes just this card. Do not re-add a
+         card-level palette. */
       .ai-image-default-theme {
         color: var(--card-foreground);
       }
@@ -2000,7 +2000,9 @@ export class AiImageGeneratorIsolated extends Component<
         height: 0.625rem;
         transform: translateY(-50%);
         border-radius: 50%;
-        background-color: var(--muted-foreground);
+        /* Neutral node: the emphasised line token, not an ink — it must read
+           against --card at 10px, which --muted would not. */
+        background-color: var(--border-strong);
         border: 2px solid var(--card);
       }
       .version-btn.current .version-dot {

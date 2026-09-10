@@ -6865,11 +6865,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0.5rem 1.25rem;
         border-radius: 0.875rem;
         background-color: var(--hover);
-        border: 1px solid
-          var(
-            --tsp-primary-edge,
-            color-mix(in oklch, var(--card) 10%, transparent)
-          );
+        border: 1px solid var(--border);
       }
       .tsp-meta-col {
         display: flex;
@@ -6879,10 +6875,7 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-meta-div {
         width: 1px;
-        background-color: var(
-          --tsp-primary-edge,
-          color-mix(in oklch, var(--card) 10%, transparent)
-        );
+        background-color: var(--border);
       }
       .tsp-meta-label {
         font-size: 0.6875rem;
@@ -7177,10 +7170,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .rail-bar {
         height: 2px;
         margin: 0 1.25rem;
-        background-color: var(
-          --tsp-primary-edge,
-          color-mix(in oklch, var(--card) 10%, transparent)
-        );
+        background-color: var(--border);
         border-radius: 2px;
         overflow: hidden;
       }
@@ -7200,11 +7190,7 @@ export class TableSeatingPlannerIsolated extends Component<
         height: 2.375rem;
         padding: 0 0.875rem 0 2.375rem;
         border-radius: 0.5625rem;
-        border: 1px solid
-          var(
-            --tsp-primary-edge,
-            color-mix(in oklch, var(--card) 10%, transparent)
-          );
+        border: 1px solid var(--input);
         background-color: var(--hover);
         color: var(--foreground);
         font-family: var(--font-sans);
@@ -7230,11 +7216,7 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 0.375rem;
         padding: 0.3125rem 0.625rem;
         border-radius: 62.4375rem;
-        border: 1px solid
-          var(
-            --tsp-primary-edge,
-            color-mix(in oklch, var(--card) 10%, transparent)
-          );
+        border: 1px solid var(--border);
         background-color: var(--hover);
         color: var(--foreground);
         font-family: var(--font-sans);
@@ -7276,11 +7258,7 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         gap: 0.75rem;
         padding: 0.5625rem 0.75rem;
-        border: 1px solid
-          var(
-            --tsp-primary-edge,
-            color-mix(in oklch, var(--card) 10%, transparent)
-          );
+        border: 1px solid var(--border);
         border-radius: 0.6875rem;
         background-color: var(--card);
         font-family: var(--font-sans);
@@ -7404,11 +7382,7 @@ export class TableSeatingPlannerIsolated extends Component<
       .rail-foot {
         flex: none;
         padding: 0.875rem 1.25rem;
-        border-top: 1px solid
-          var(
-            --tsp-primary-edge,
-            color-mix(in oklch, var(--card) 10%, transparent)
-          );
+        border-top: 1px solid var(--border);
       }
       .rail-add {
         width: 100%;
@@ -8371,7 +8345,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border: 1.5px solid var(--ring);
         box-shadow: 0 6px 18px
           color-mix(in oklch, var(--primary) 8%, transparent);
-        color: var(--foreground);
+        color: var(--popover-foreground);
       }
       .t-center {
         width: 42%;
@@ -8978,7 +8952,7 @@ export class TableSeatingPlannerIsolated extends Component<
         overflow-y: auto;
         contain: size;
         background: linear-gradient(180deg, var(--popover), var(--muted));
-        color: var(--foreground);
+        color: var(--popover-foreground);
         border-left: 1px solid var(--border);
         transition: width 0.2s ease;
       }

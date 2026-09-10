@@ -742,8 +742,8 @@ export class BlogSiteView extends Component<typeof BlogApp> {
         inset: 0;
         background: linear-gradient(
           to top,
-          color-mix(in oklch, var(--foreground) 88%, transparent) 0%,
-          color-mix(in oklch, var(--foreground) 40%, transparent) 45%,
+          color-mix(in oklch, var(--tooltip) 88%, transparent) 0%,
+          color-mix(in oklch, var(--tooltip) 40%, transparent) 45%,
           transparent 75%
         );
         z-index: 1;

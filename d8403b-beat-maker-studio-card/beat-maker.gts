@@ -1225,7 +1225,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
           var(--success) 0%,
           var(--success) 100%
         );
-        color: var(--card-foreground);
+        color: var(--success-foreground);
         display: flex;
         align-items: center;
         justify-content: center;

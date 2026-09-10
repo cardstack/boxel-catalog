@@ -1025,7 +1025,7 @@ export class MusicSheet extends CardDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--card-foreground);
+          color: var(--warning-foreground);
           box-shadow: var(--ms-shadow);
         }
 
@@ -1067,7 +1067,7 @@ export class MusicSheet extends CardDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--card-foreground);
+          color: var(--warning-foreground);
         }
 
         .strip-title {
@@ -1123,7 +1123,7 @@ export class MusicSheet extends CardDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--card-foreground);
+          color: var(--warning-foreground);
           flex-shrink: 0;
         }
 
@@ -1159,7 +1159,7 @@ export class MusicSheet extends CardDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--card-foreground);
+          color: var(--warning-foreground);
           box-shadow: var(--ms-shadow);
           margin-bottom: 2px;
         }
@@ -1306,7 +1306,7 @@ export class MusicSheet extends CardDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--card-foreground);
+          color: var(--warning-foreground);
           box-shadow: var(--ms-shadow);
           margin-bottom: 2px;
         }
@@ -1404,7 +1404,7 @@ export class MusicSheet extends CardDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--card-foreground);
+          color: var(--warning-foreground);
           flex-shrink: 0;
         }
 
