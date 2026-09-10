@@ -51,7 +51,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": "../../4b6602-wine-cellar-card-definition/Theme/cellar"
+          "self": "../Theme/cellar"
         }
       },
       "cardInfo.cardThumbnail": {
