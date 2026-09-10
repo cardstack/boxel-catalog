@@ -694,19 +694,26 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         display: flex;
         gap: 0.25rem;
       }
+      /* Styled through BoxelButton's own knobs: its default is a 100px pill
+         (.boxel-button:not(.rectangular)), which bent the underline around
+         the corners. The underline rides the box-shadow knob so no button
+         border rule can contest it. */
       .tab {
-        padding: 0.75rem 1rem;
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        cursor: pointer;
-        font: 600 0.84rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: var(--muted-foreground, #8a8578);
+        --boxel-button-border-radius: 0;
+        --boxel-button-border: none;
+        --boxel-button-padding: 0.75rem 1rem;
+        --boxel-button-min-height: 0;
+        --boxel-button-min-width: 0;
+        --boxel-button-font: 600 0.84rem/1
+          var(--font-sans, 'IBM Plex Sans', sans-serif);
+        --boxel-button-letter-spacing: normal;
+        --boxel-button-ghost-foreground: var(--muted-foreground, #8a8578);
+        --boxel-button-box-shadow: inset 0 -2px 0 transparent;
         margin-bottom: -1px;
       }
       .tab.is-active {
-        color: var(--foreground, #16161c);
-        border-bottom-color: var(--foreground, #16161c);
+        --boxel-button-ghost-foreground: var(--foreground, #16161c);
+        --boxel-button-box-shadow: inset 0 -2px 0 var(--foreground, #16161c);
       }
 
       .panel {
