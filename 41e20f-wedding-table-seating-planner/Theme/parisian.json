@@ -41,6 +41,7 @@
         "sidebarForeground": "#22283f",
         "tooltip": "#22283f",
         "tooltipForeground": "#faf6ec",
+        "overlay": "#22283f80",
         "subtleForeground": "#a19988",
         "borderStrong": "#93908c",
         "success": "#4E7A5B",

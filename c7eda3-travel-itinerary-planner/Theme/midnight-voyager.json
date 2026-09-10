@@ -41,7 +41,9 @@
         "warning": "#E0905A",
         "warningForeground": "#0f1418",
         "info": "#8AA6CE",
-        "infoForeground": "#0f1418"
+        "infoForeground": "#0f1418",
+        "attention": "#C97BA6",
+        "attentionForeground": "#0f1418"
       },
       "customCssImports": [],
       "cardInfo": {
