@@ -154,7 +154,7 @@ export default class FeaturedImageField extends FieldDef {
           display: grid;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp);
-          background-color: var(--boxel-100);
+          background-color: var(--muted);
           border-radius: var(--boxel-form-control-border-radius);
         }
         .preview-field :deep(.content) {
@@ -175,7 +175,7 @@ export default class FeaturedImageField extends FieldDef {
           align-items: center;
           justify-content: center;
           width: 100%;
-          border: 1px solid var(--boxel-form-control-border-color);
+          border: 1px solid var(--border);
           border-radius: var(--boxel-form-control-border-radius);
           background-color: var(--card);
           color: var(--card-foreground);
@@ -186,17 +186,17 @@ export default class FeaturedImageField extends FieldDef {
             0 0,
             0 0.75rem;
           background-image:
-            linear-gradient(45deg, var(--boxel-300) 25%, transparent 25%),
-            linear-gradient(-45deg, var(--boxel-300) 25%, transparent 25%),
-            linear-gradient(45deg, transparent 75%, var(--boxel-300) 75%),
-            linear-gradient(-45deg, transparent 75%, var(--boxel-300) 75%);
+            linear-gradient(45deg, var(--border) 25%, transparent 25%),
+            linear-gradient(-45deg, var(--border) 25%, transparent 25%),
+            linear-gradient(45deg, transparent 75%, var(--border) 75%),
+            linear-gradient(-45deg, transparent 75%, var(--border) 75%);
           overflow: hidden;
         }
         .height-warning {
           display: flex;
           align-items: center;
           margin: 0;
-          color: var(--boxel-error-200);
+          color: var(--warning-ink);
           font: 500 var(--boxel-font-sm);
           letter-spacing: var(--boxel-lsp-xs);
         }

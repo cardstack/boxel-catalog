@@ -92,7 +92,7 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
         align-items: center;
         gap: var(--boxel-sp-xxs);
         font: 600 var(--boxel-font-sm);
-        color: var(--boxel-dark);
+        color: var(--foreground);
         margin: 0;
       }
 
@@ -114,18 +114,18 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
         gap: var(--boxel-sp-sm);
         width: 100%;
         padding: var(--boxel-sp) var(--boxel-sp);
-        background-color: var(--boxel-light);
+        background-color: var(--card);
         cursor: pointer;
         text-align: left;
         transition: background-color 0.15s ease;
       }
 
       .result-card + .result-card {
-        border-top: 1px solid var(--boxel-200);
+        border-top: 1px solid var(--border);
       }
 
       .result-card:hover {
-        background-color: var(--boxel-200);
+        background-color: var(--hover);
       }
 
       .result-icon {
@@ -139,7 +139,7 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
       .result-icon :deep(svg) {
         width: 1.75rem;
         height: 1.75rem;
-        color: var(--boxel-dark-green);
+        color: var(--primary-ink);
       }
 
       .result-content {
@@ -152,19 +152,19 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
 
       .result-name {
         font: 700 var(--boxel-font-sm);
-        color: var(--boxel-dark);
+        color: var(--card-foreground);
         margin: 0;
       }
 
       .result-address {
         font: var(--boxel-font-xs);
-        color: var(--boxel-600);
+        color: var(--muted-foreground);
         margin: 0;
       }
 
       .result-address-type {
         font: 600 var(--boxel-font-xs);
-        color: var(--boxel-dark);
+        color: var(--card-foreground);
         margin-top: var(--boxel-sp-5xs);
       }
 
@@ -176,7 +176,7 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
         gap: var(--boxel-sp-2xs);
         padding: var(--boxel-sp-lg) var(--boxel-sp);
         background-color: var(--boxel-surface-secondary);
-        border: 2px dashed var(--boxel-border-color);
+        border: 2px dashed var(--border);
         border-radius: var(--boxel-border-radius);
         color: var(--boxel-text-muted);
       }

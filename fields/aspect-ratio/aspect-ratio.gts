@@ -93,10 +93,10 @@ export default class AspectRatioField extends StringField {
           align-items: center;
           gap: 0.125rem;
           padding: var(--boxel-sp-xxs);
-          border: 1px solid var(--boxel-200);
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           background-color: transparent;
-          color: var(--boxel-450);
+          color: var(--muted-foreground);
           font: inherit;
           cursor: pointer;
           transition:
@@ -104,12 +104,12 @@ export default class AspectRatioField extends StringField {
             color 0.12s ease;
         }
         .ar-tile:hover {
-          border-color: var(--boxel-highlight);
+          border-color: var(--border-strong);
         }
         .ar-tile.selected {
-          border-color: var(--boxel-highlight);
-          color: var(--boxel-dark);
-          box-shadow: 0 0 0 0.0625rem var(--boxel-highlight);
+          border-color: var(--primary);
+          color: var(--foreground);
+          box-shadow: 0 0 0 0.0625rem var(--primary);
         }
         .ar-box {
           width: 1.5rem;
@@ -128,7 +128,7 @@ export default class AspectRatioField extends StringField {
           stroke-width: 1.5;
         }
         .ar-tile.selected .ar-svg rect {
-          fill: color-mix(in oklch, var(--boxel-highlight) 25%, transparent);
+          fill: color-mix(in oklch, var(--primary) 25%, transparent);
         }
         .ar-label {
           font-size: var(--boxel-font-size-xs);

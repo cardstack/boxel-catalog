@@ -95,7 +95,7 @@ export class PlaylistRow extends GlimmerComponent<PlaylistRowSignature> {
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--accent-foreground);
+        color: var(--primary-foreground);
         flex-shrink: 0;
       }
 

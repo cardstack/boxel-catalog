@@ -81,7 +81,7 @@ class EditTemplate extends Component<typeof LeafletMapConfigField> {
       }
 
       .config-section {
-        border-bottom: 1px solid var(--boxel-border-color);
+        border-bottom: 1px solid var(--border);
         padding-bottom: var(--boxel-sp-md);
       }
 

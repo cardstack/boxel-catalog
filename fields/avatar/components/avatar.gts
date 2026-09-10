@@ -670,8 +670,8 @@ export default class AvatarComponent extends Component<AvatarCreatorArgs> {
       .option-btn {
         aspect-ratio: 1;
         padding: var(--boxel-sp-xxs);
-        background-color: var(--boxel-300);
-        border: 2px solid var(--boxel-300);
+        background-color: var(--muted);
+        border: 2px solid var(--border);
         border-radius: var(--boxel-border-radius);
         cursor: pointer;
         transition: all 0.2s ease;
@@ -684,16 +684,16 @@ export default class AvatarComponent extends Component<AvatarCreatorArgs> {
       }
 
       .option-btn:hover {
-        border: 2px solid var(--boxel-highlight);
-        background-color: var(--boxel-light);
+        border: 2px solid var(--border-strong);
+        background-color: var(--hover);
         transform: translateY(-1px);
         box-shadow: 0 4px 12px
           color-mix(in oklch, var(--shadow-color) 15%, transparent);
       }
       /* Keep selected state consistent on hover */
       .option-btn.selected:hover {
-        background-color: var(--boxel-light);
-        border-color: var(--boxel-highlight);
+        background-color: var(--hover);
+        border-color: var(--info);
         transform: scale(1.02); /* keep steady; outline handled by ::after */
         box-shadow: none;
       }

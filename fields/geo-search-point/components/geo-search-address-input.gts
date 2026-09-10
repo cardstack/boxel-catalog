@@ -79,7 +79,7 @@ export default class GeoSearchAddressInput extends GlimmerComponent<GeoSearchAdd
         font-family: var(--boxel-font-family-mono);
         background-color: var(--inset);
         border-left: 3px solid var(--primary);
-        color: var(--boxel-dark);
+        color: var(--foreground);
       }
     </style>
   </template>

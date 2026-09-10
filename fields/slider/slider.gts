@@ -83,6 +83,11 @@ export default class SliderField extends NumberField {
           align-items: center;
           gap: var(--boxel-sp);
           width: 100%;
+          /* A native <input type=range> paints its track and thumb with the
+             browser's own accent (blue on most platforms), which no theme
+             token can reach. accent-color is the one property that hands
+             that back to the theme. */
+          accent-color: var(--primary);
         }
         .slider-value {
           font-weight: 600;

@@ -673,7 +673,7 @@ export default class AudioField extends FieldDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--accent-foreground);
+          color: var(--primary-foreground);
           flex-shrink: 0;
         }
 

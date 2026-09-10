@@ -133,10 +133,10 @@ export default class ContactLinkField extends FieldDef {
       {{/if}}
       <style scoped>
         a:hover {
-          border-color: var(--boxel-dark);
+          border-color: var(--border-strong);
         }
         a:focus:focus-visible {
-          outline-color: var(--boxel-highlight);
+          outline-color: var(--ring);
           outline-offset: -1px;
         }
       </style>
@@ -161,10 +161,10 @@ export default class ContactLinkField extends FieldDef {
       {{/if}}
       <style scoped>
         a:hover {
-          border-color: var(--boxel-dark);
+          border-color: var(--border-strong);
         }
         a:focus:focus-visible {
-          outline-color: var(--boxel-highlight);
+          outline-color: var(--ring);
           outline-offset: -1px;
         }
       </style>

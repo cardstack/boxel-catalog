@@ -110,7 +110,7 @@ export default class GeoPointMapPicker extends GlimmerComponent<MapPickerSignatu
 
       .map-container {
         width: 100%;
-        border: 1px solid var(--boxel-border-color);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
         position: relative;
@@ -123,7 +123,7 @@ export default class GeoPointMapPicker extends GlimmerComponent<MapPickerSignatu
         font-family: var(--boxel-font-family-mono);
         background-color: var(--inset);
         border-left: 3px solid var(--primary);
-        color: var(--boxel-dark);
+        color: var(--foreground);
       }
 
       .no-location-placeholder-text {
@@ -141,7 +141,7 @@ export default class GeoPointMapPicker extends GlimmerComponent<MapPickerSignatu
         justify-content: center;
         gap: var(--boxel-sp-2xs);
         background-color: var(--boxel-surface-secondary);
-        border: 2px dashed var(--boxel-border-color);
+        border: 2px dashed var(--border);
         border-radius: var(--boxel-border-radius);
         color: var(--boxel-text-muted);
         aspect-ratio: 16 / 9;

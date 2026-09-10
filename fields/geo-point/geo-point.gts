@@ -97,7 +97,7 @@ export class GeoPointAtom extends Component<typeof GeoPointField> {
         width: 0.875rem;
         height: 0.875rem;
         flex-shrink: 0;
-        color: var(--boxel-red);
+        color: var(--primary-ink);
       }
     </style>
   </template>

@@ -275,20 +275,25 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
         display: block;
       }
       /* input suffix, not a nested pill */
+      /* A suffix inside the input group, not a nested pill. BoxelButton
+         defaults to a 100px radius and supplies its own padding / border /
+         background, which out-specify element-level rules here and push the
+         label past the group's rounded corner — so drive it through the
+         button's own knobs, and draw the divider with the shadow knob where
+         no border rule can contest it. */
       .add-url-btn {
+        --boxel-button-border-radius: 0;
+        --boxel-button-color: transparent;
+        --boxel-button-border: none;
+        --boxel-button-box-shadow: inset 1px 0 0 var(--border);
+        --boxel-button-ghost-foreground: var(--primary-ink);
+        --boxel-button-padding: 0 var(--boxel-sp-sm);
+        --boxel-button-min-height: 0;
+        --boxel-button-min-width: 0;
+        --boxel-button-font: 600 var(--boxel-font-size-xs) / 1 var(--font-sans);
+        --boxel-button-letter-spacing: normal;
         align-self: stretch;
-        padding: 0 var(--boxel-sp-sm);
-        border: none;
-        border-left: 1px solid var(--border);
-        background-color: transparent;
-        color: var(--primary-ink);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        font-family: var(--font-sans);
         cursor: pointer;
-      }
-      .add-url-btn:hover {
-        background-color: var(--img-accent-bg);
       }
 
       /* ── empty state: link a card, or add by URL ── */
