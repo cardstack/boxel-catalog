@@ -28,7 +28,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/rhythm-studio"
         }
       },
       "currentPattern": {

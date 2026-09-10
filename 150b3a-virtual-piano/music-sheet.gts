@@ -240,18 +240,19 @@ export class MusicSheet extends CardDef {
       <style scoped>
         /* ── Design tokens ── */
         .ms-app {
-          --c-orange: #ff8c42;
-          --c-orange-dim: rgba(255, 140, 66, 0.15);
-          --c-orange-border: rgba(255, 140, 66, 0.32);
-          --c-bg: #0d0d1a;
-          --c-surface: #13132a;
-          --c-text: #f0f0ff;
-          --c-text-2: rgba(240, 240, 255, 0.65);
-          --c-muted: rgba(240, 240, 255, 0.32);
-          --c-border: rgba(255, 255, 255, 0.07);
+          --ms-warning-dim: color-mix(
+            in oklch,
+            var(--warning) 15%,
+            transparent
+          );
+          --ms-warning-border: color-mix(
+            in oklch,
+            var(--warning) 32%,
+            transparent
+          );
 
-          background: var(--c-bg);
-          color: var(--c-text);
+          background-color: var(--card);
+          color: var(--card-foreground);
           font-family: 'Inter', system-ui, sans-serif;
           min-height: 100%;
           display: flex;
@@ -262,8 +263,9 @@ export class MusicSheet extends CardDef {
         /* ── Hero ── */
         .ms-hero {
           position: relative;
-          min-height: clamp(220px, 30vw, 320px);
-          background-color: #1a1a2e;
+          min-height: clamp(13.75rem, 30vw, 20rem);
+          background-color: var(--card);
+          color: var(--card-foreground);
           background-size: cover;
           background-position: center;
           overflow: hidden;
@@ -275,9 +277,9 @@ export class MusicSheet extends CardDef {
           inset: 0;
           background: linear-gradient(
             to bottom,
-            rgba(13, 13, 26, 0.12) 0%,
-            rgba(13, 13, 26, 0.6) 50%,
-            rgba(13, 13, 26, 0.96) 100%
+            color-mix(in oklch, var(--card) 12%, transparent) 0%,
+            color-mix(in oklch, var(--card) 60%, transparent) 50%,
+            color-mix(in oklch, var(--card) 96%, transparent) 100%
           );
           display: flex;
           flex-direction: column;
@@ -292,7 +294,7 @@ export class MusicSheet extends CardDef {
           bottom: 0;
           left: 0;
           right: 0;
-          height: 52px;
+          height: 3.25rem;
           display: flex;
           gap: 2px;
           align-items: flex-end;
@@ -303,9 +305,10 @@ export class MusicSheet extends CardDef {
 
         .ms-wk {
           flex: 1;
-          height: 52px;
-          background: #f5f0e8;
-          border-radius: 0 0 4px 4px;
+          height: 3.25rem;
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border-radius: 0 0 0.25rem 0.25rem;
         }
 
         .ms-hero-content {
@@ -319,25 +322,25 @@ export class MusicSheet extends CardDef {
         .ms-title {
           font-size: clamp(1.75rem, 5cqi, 3.5rem);
           font-weight: 900;
-          color: var(--c-orange);
+          color: var(--warning-ink);
           margin: 0;
           line-height: 1.05;
           letter-spacing: -1px;
           text-transform: uppercase;
           text-shadow:
-            0 2px 24px rgba(255, 140, 66, 0.5),
-            0 0 60px rgba(255, 140, 66, 0.2);
+            0 2px 24px color-mix(in oklch, var(--warning) 50%, transparent),
+            0 0 60px color-mix(in oklch, var(--warning) 20%, transparent);
         }
 
         .ms-artist {
           font-size: clamp(0.875rem, 2cqi, 1.125rem);
-          color: var(--c-text-2);
+          color: var(--subtle-foreground);
           margin: 0;
         }
 
         .ms-artist em {
           font-style: italic;
-          color: var(--c-text);
+          color: var(--card-foreground);
           font-weight: 500;
         }
 
@@ -353,55 +356,72 @@ export class MusicSheet extends CardDef {
         .ms-diff-pill {
           display: inline-flex;
           align-items: center;
-          gap: 5px;
-          padding: 5px 14px;
-          border-radius: 20px;
-          font-size: 10px;
+          gap: 0.3125rem;
+          padding: 0.3125rem 0.875rem;
+          border-radius: 1.25rem;
+          font-size: 0.625rem;
           font-weight: 800;
           letter-spacing: 0.9px;
           text-transform: uppercase;
         }
 
         .ms-diff-num {
-          font-size: 16px;
+          font-size: 1rem;
           font-weight: 900;
           line-height: 1;
         }
 
         .diff-super-easy {
-          background: rgba(105, 240, 174, 0.15);
-          color: #69f0ae;
-          border: 1px solid rgba(105, 240, 174, 0.3);
+          background-color: color-mix(
+            in oklch,
+            var(--success) 15%,
+            transparent
+          );
+          color: var(--success-ink);
+          border: 1px solid color-mix(in oklch, var(--success) 30%, transparent);
         }
         .diff-easy {
-          background: rgba(130, 177, 255, 0.15);
-          color: #82b1ff;
-          border: 1px solid rgba(130, 177, 255, 0.3);
+          background-color: color-mix(
+            in oklch,
+            var(--primary) 15%,
+            transparent
+          );
+          color: var(--primary-ink);
+          border: 1px solid color-mix(in oklch, var(--primary) 30%, transparent);
         }
         .diff-intermediate {
-          background: rgba(255, 204, 128, 0.15);
-          color: #ffcc80;
-          border: 1px solid rgba(255, 204, 128, 0.3);
+          background-color: color-mix(
+            in oklch,
+            var(--warning) 15%,
+            transparent
+          );
+          color: var(--warning-ink);
+          border: 1px solid color-mix(in oklch, var(--warning) 30%, transparent);
         }
         .diff-expert {
-          background: rgba(255, 138, 128, 0.15);
-          color: #ff8a80;
-          border: 1px solid rgba(255, 138, 128, 0.3);
+          background-color: color-mix(
+            in oklch,
+            var(--destructive) 15%,
+            transparent
+          );
+          color: var(--destructive-ink);
+          border: 1px solid
+            color-mix(in oklch, var(--destructive) 30%, transparent);
         }
         .diff-unknown {
-          background: rgba(255, 255, 255, 0.06);
-          color: var(--c-muted);
-          border: 1px solid var(--c-border);
+          background-color: var(--hover);
+          color: var(--muted-foreground);
+          border: 1px solid var(--border);
         }
 
         .ms-bpm-chip {
-          padding: 5px 12px;
-          border-radius: 20px;
-          font-size: 11px;
+          padding: 0.3125rem 0.75rem;
+          border-radius: 1.25rem;
+          font-size: 0.6875rem;
           font-weight: 600;
-          background: rgba(255, 255, 255, 0.08);
-          color: var(--c-text-2);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          background-color: var(--hover);
+          color: var(--subtle-foreground);
+          border: 1px solid var(--border);
         }
 
         /* ── Stats bar ── */
@@ -410,33 +430,33 @@ export class MusicSheet extends CardDef {
           flex-wrap: wrap;
           gap: 0.5rem;
           padding: 0.875rem 2.25rem;
-          border-bottom: 1px solid var(--c-border);
+          border-bottom: 1px solid var(--border);
         }
 
         .ms-genre-chip {
           display: inline-flex;
           align-items: center;
-          gap: 5px;
-          padding: 4px 12px;
-          border-radius: 12px;
-          font-size: 11px;
+          gap: 0.3125rem;
+          padding: 0.25rem 0.75rem;
+          border-radius: 0.75rem;
+          font-size: 0.6875rem;
           font-weight: 700;
-          background: var(--c-orange-dim);
-          color: var(--c-orange);
-          border: 1px solid var(--c-orange-border);
+          background-color: var(--ms-warning-dim);
+          color: var(--warning-ink);
+          border: 1px solid var(--ms-warning-border);
         }
 
         .ms-stat-chip {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          padding: 4px 12px;
-          border-radius: 12px;
-          font-size: 11px;
+          gap: 0.25rem;
+          padding: 0.25rem 0.75rem;
+          border-radius: 0.75rem;
+          font-size: 0.6875rem;
           font-weight: 600;
-          background: rgba(255, 255, 255, 0.04);
-          color: var(--c-muted);
-          border: 1px solid var(--c-border);
+          background-color: var(--hover);
+          color: var(--muted-foreground);
+          border: 1px solid var(--border);
         }
 
         /* ── Notation section ── */
@@ -453,25 +473,25 @@ export class MusicSheet extends CardDef {
           align-items: center;
           gap: 0.625rem;
           padding-bottom: 0.75rem;
-          border-bottom: 1px solid var(--c-border);
+          border-bottom: 1px solid var(--border);
         }
 
         .ms-section-icon {
-          font-size: 16px;
+          font-size: 1rem;
         }
 
         .ms-section-title {
-          font-size: 11px;
+          font-size: 0.6875rem;
           font-weight: 800;
           letter-spacing: 1px;
-          color: var(--c-orange);
+          color: var(--warning-ink);
           text-transform: uppercase;
           flex: 1;
         }
 
         .ms-section-hint {
-          font-size: 10px;
-          color: var(--c-muted);
+          font-size: 0.625rem;
+          color: var(--muted-foreground);
           font-style: italic;
         }
 
@@ -479,7 +499,7 @@ export class MusicSheet extends CardDef {
           display: flex;
           flex-direction: column;
           gap: 0.625rem;
-          border-left: 3px solid var(--c-orange-border);
+          border-left: 3px solid var(--ms-warning-border);
           padding-left: 1.25rem;
         }
 
@@ -490,12 +510,12 @@ export class MusicSheet extends CardDef {
         }
 
         .ms-phrase-num {
-          font-size: 9px;
+          font-size: 0.5625rem;
           font-weight: 700;
-          color: var(--c-muted);
+          color: var(--muted-foreground);
           letter-spacing: 0.5px;
-          min-width: 16px;
-          padding-top: 8px;
+          min-width: 1rem;
+          padding-top: 0.5rem;
           text-align: right;
           font-variant-numeric: tabular-nums;
           flex-shrink: 0;
@@ -504,7 +524,7 @@ export class MusicSheet extends CardDef {
         .ms-tokens {
           display: flex;
           flex-wrap: wrap;
-          gap: 4px;
+          gap: 0.25rem;
           flex: 1;
         }
 
@@ -512,37 +532,37 @@ export class MusicSheet extends CardDef {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-width: 30px;
-          height: 30px;
-          padding: 0 5px;
-          border-radius: 5px;
+          min-width: 1.875rem;
+          height: 1.875rem;
+          padding: 0 0.3125rem;
+          border-radius: 0.3125rem;
           font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-          font-size: 12px;
+          font-size: 0.75rem;
           font-weight: 700;
         }
 
         .ms-note {
-          background: rgba(255, 255, 255, 0.08);
-          color: var(--c-text);
-          border: 1px solid rgba(255, 255, 255, 0.14);
+          background-color: var(--hover);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
           box-shadow:
-            0 1px 0 rgba(255, 255, 255, 0.06),
-            inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            0 1px 0 color-mix(in oklch, var(--card) 6%, transparent),
+            inset 0 1px 0 color-mix(in oklch, var(--card) 6%, transparent);
         }
 
         .ms-chord {
-          background: var(--c-orange-dim);
-          color: var(--c-orange);
-          border: 1px solid var(--c-orange-border);
-          font-size: 11px;
+          background-color: var(--ms-warning-dim);
+          color: var(--warning-ink);
+          border: 1px solid var(--ms-warning-border);
+          font-size: 0.6875rem;
           min-width: auto;
-          padding: 0 8px;
+          padding: 0 0.5rem;
         }
 
         .ms-rest {
-          color: var(--c-muted);
-          border: 1px dashed rgba(255, 255, 255, 0.1);
-          font-size: 9px;
+          color: var(--muted-foreground);
+          border: 1px dashed var(--border);
+          font-size: 0.5625rem;
           opacity: 0.6;
         }
 
@@ -554,7 +574,7 @@ export class MusicSheet extends CardDef {
           align-items: center;
           justify-content: center;
           gap: 0.75rem;
-          color: var(--c-muted);
+          color: var(--muted-foreground);
           padding: 3rem;
           text-align: center;
         }
@@ -622,13 +642,13 @@ export class MusicSheet extends CardDef {
           align-items: center;
           gap: 0.625rem;
           padding: 0.5rem 0.75rem;
-          border-radius: 6px;
-          background: rgba(255, 140, 66, 0.04);
-          border: 1px solid rgba(255, 140, 66, 0.1);
+          border-radius: 0.375rem;
+          background-color: var(--hover);
+          border: 1px solid color-mix(in oklch, var(--border) 10%, transparent);
         }
 
         .music-icon {
-          color: #ff8c42;
+          color: var(--warning-ink);
           flex-shrink: 0;
         }
 
@@ -642,25 +662,25 @@ export class MusicSheet extends CardDef {
 
         .song-name {
           font-weight: 600;
-          font-size: 13px;
-          color: #1a1a2e;
+          font-size: 0.8125rem;
+          color: var(--foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
         .song-artist {
-          font-size: 11px;
-          color: #888;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
         .diff-badge {
-          padding: 2px 8px;
-          border-radius: 12px;
-          font-size: 9px;
+          padding: 2px 0.5rem;
+          border-radius: 0.75rem;
+          font-size: 0.5625rem;
           font-weight: 800;
           letter-spacing: 0.5px;
           white-space: nowrap;
@@ -669,34 +689,38 @@ export class MusicSheet extends CardDef {
         }
 
         .diff-super-easy {
-          background: #e8f5e9;
-          color: #2e7d32;
+          background-color: var(--card);
+          color: var(--success-ink);
         }
         .diff-easy {
-          background: #e3f2fd;
-          color: #1565c0;
+          background-color: var(--card);
+          color: var(--primary-ink);
         }
         .diff-intermediate {
-          background: #fff3e0;
-          color: #e65100;
+          background-color: var(--card);
+          color: var(--warning-ink);
         }
         .diff-expert {
-          background: #fce4ec;
-          color: #c62828;
+          background-color: var(--card);
+          color: var(--destructive-ink);
         }
         .diff-unknown {
-          background: #f5f5f5;
-          color: #757575;
+          background-color: var(--card);
+          color: var(--muted-foreground);
         }
 
         .tempo-chip {
-          padding: 2px 7px;
-          border-radius: 10px;
-          font-size: 9px;
+          padding: 2px 0.4375rem;
+          border-radius: 0.625rem;
+          font-size: 0.5625rem;
           font-weight: 700;
-          background: rgba(255, 140, 66, 0.12);
-          color: #ff8c42;
-          border: 1px solid rgba(255, 140, 66, 0.25);
+          background-color: color-mix(
+            in oklch,
+            var(--warning) 12%,
+            transparent
+          );
+          color: var(--warning-ink);
+          border: 1px solid color-mix(in oklch, var(--warning) 25%, transparent);
           white-space: nowrap;
           flex-shrink: 0;
         }
@@ -951,21 +975,11 @@ export class MusicSheet extends CardDef {
       <style scoped>
         .ms-fitted {
           /* ── Design tokens ── */
-          --c-accent: #d97706;
-          --c-accent-bg: #fffbeb;
-          --c-accent-border: #fde68a;
-          --c-bg: #f8fafc;
-          --c-white: #ffffff;
-          --c-text: #0f172a;
-          --c-text-2: #1e293b;
-          --c-muted: #64748b;
-          --c-border: #e2e8f0;
-          --c-shadow:
-            0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+          --ms-shadow:
+            0 1px 0.1875rem
+              color-mix(in oklch, var(--shadow-color) 7%, transparent),
+            0 1px 2px color-mix(in oklch, var(--shadow-color) 4%, transparent);
           /* difficulty colours */
-          --c-easy: #10b981;
-          --c-mid: #f59e0b;
-          --c-hard: #ef4444;
 
           width: 100%;
           height: 100%;
@@ -992,28 +1006,33 @@ export class MusicSheet extends CardDef {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            background: var(--c-bg);
-            padding: 10px 8px;
+            gap: 0.375rem;
+            background-color: var(--card);
+            color: var(--card-foreground);
+            padding: 0.625rem 0.5rem;
           }
         }
 
         .badge-seal {
-          width: 44px;
-          height: 44px;
+          width: 2.75rem;
+          height: 2.75rem;
           border-radius: 50%;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(
+            135deg,
+            var(--warning) 0%,
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
+          );
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
-          box-shadow: var(--c-shadow);
+          color: var(--warning-foreground);
+          box-shadow: var(--ms-shadow);
         }
 
         .badge-title {
-          font-size: 9px;
+          font-size: 0.5625rem;
           font-weight: 600;
-          color: var(--c-muted);
+          color: var(--muted-foreground);
           text-align: center;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1027,30 +1046,35 @@ export class MusicSheet extends CardDef {
           .strip {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 0 14px;
-            background: var(--c-white);
-            border-left: 3px solid var(--c-accent);
+            gap: 0.5rem;
+            padding: 0 0.875rem;
+            background-color: var(--card);
+            color: var(--card-foreground);
+            border-left: 3px solid var(--warning);
           }
         }
 
         .strip-icon {
           flex-shrink: 0;
-          width: 26px;
-          height: 26px;
+          width: 1.625rem;
+          height: 1.625rem;
           border-radius: 50%;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(
+            135deg,
+            var(--warning) 0%,
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
+          );
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
+          color: var(--warning-foreground);
         }
 
         .strip-title {
           flex: 1;
-          font-size: 13px;
+          font-size: 0.8125rem;
           font-weight: 600;
-          color: var(--c-text);
+          color: var(--card-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -1058,12 +1082,12 @@ export class MusicSheet extends CardDef {
 
         .strip-artist {
           flex-shrink: 0;
-          font-size: 10px;
-          color: var(--c-muted);
+          font-size: 0.625rem;
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          max-width: 80px;
+          max-width: 5rem;
         }
 
         /* ══ TILE <400 × ≥170 ══ */
@@ -1071,79 +1095,103 @@ export class MusicSheet extends CardDef {
           .tile {
             display: flex;
             flex-direction: column;
-            background: var(--c-white);
+            background-color: var(--card);
+            color: var(--card-foreground);
           }
         }
 
         .tile-hd {
-          background: var(--c-white);
-          border-bottom: 1px solid var(--c-border);
-          padding: 9px 12px;
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border-bottom: 1px solid var(--border);
+          padding: 0.5625rem 0.75rem;
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
           flex-shrink: 0;
         }
 
         .tile-brand-icon {
-          width: 20px;
-          height: 20px;
-          border-radius: 5px;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          width: 1.25rem;
+          height: 1.25rem;
+          border-radius: 0.3125rem;
+          background: linear-gradient(
+            135deg,
+            var(--warning) 0%,
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
+          );
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
+          color: var(--warning-foreground);
           flex-shrink: 0;
         }
 
         .tile-eyebrow {
-          font-size: 10px;
+          font-size: 0.625rem;
           font-weight: 600;
-          color: var(--c-muted);
+          color: var(--muted-foreground);
           text-transform: uppercase;
           letter-spacing: 0.06em;
         }
 
         .tile-body {
           flex: 1;
-          background: var(--c-bg);
+          background-color: var(--card);
+          color: var(--card-foreground);
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 3px;
-          padding: 10px 12px;
+          gap: 0.1875rem;
+          padding: 0.625rem 0.75rem;
         }
 
         .tile-diff-ring {
-          width: clamp(40px, 10cqh, 56px);
-          height: clamp(40px, 10cqh, 56px);
+          width: clamp(2.5rem, 10cqh, 3.5rem);
+          height: clamp(2.5rem, 10cqh, 3.5rem);
           border-radius: 50%;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(
+            135deg,
+            var(--warning) 0%,
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
+          );
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
-          box-shadow: var(--c-shadow);
+          color: var(--warning-foreground);
+          box-shadow: var(--ms-shadow);
           margin-bottom: 2px;
         }
 
         .tile-diff-ring.diff-super-easy,
         .tile-diff-ring.diff-easy {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: linear-gradient(
+            135deg,
+            var(--success) 0%,
+            color-mix(in oklch, var(--success) 84%, var(--shadow-color)) 100%
+          );
         }
         .tile-diff-ring.diff-intermediate {
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          background: linear-gradient(
+            135deg,
+            var(--warning) 0%,
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
+          );
         }
         .tile-diff-ring.diff-expert {
-          background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+          background: linear-gradient(
+            135deg,
+            var(--destructive) 0%,
+            color-mix(in oklch, var(--destructive) 84%, var(--shadow-color))
+              100%
+          );
         }
 
         .tile-title {
-          font-size: 12px;
+          font-size: 0.75rem;
           font-weight: 700;
-          color: var(--c-text);
+          color: var(--card-foreground);
           text-align: center;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1153,8 +1201,8 @@ export class MusicSheet extends CardDef {
         }
 
         .tile-artist {
-          font-size: 10px;
-          color: var(--c-muted);
+          font-size: 0.625rem;
+          color: var(--muted-foreground);
           margin: 0;
           text-align: center;
           overflow: hidden;
@@ -1187,33 +1235,39 @@ export class MusicSheet extends CardDef {
           bottom: 0;
           left: 0;
           right: 0;
-          padding: 8px 10px 6px;
+          padding: 0.5rem 0.625rem 0.375rem;
           background: linear-gradient(
             to top,
-            rgba(0, 0, 0, 0.82) 0%,
-            rgba(0, 0, 0, 0) 100%
+            color-mix(in oklch, var(--foreground) 82%, transparent) 0%,
+            color-mix(in oklch, var(--foreground) 0%, transparent) 100%
           );
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 0.1875rem;
         }
 
         .tile-title--over {
-          color: #fff !important;
-          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+          color: var(--card-foreground) !important;
+          text-shadow: 0 1px 3px
+            color-mix(in oklch, var(--shadow-color) 60%, transparent);
         }
 
         .tile-artist--over {
-          color: rgba(255, 255, 255, 0.75) !important;
+          color: color-mix(
+            in oklch,
+            var(--card-foreground) 75%,
+            transparent
+          ) !important;
         }
 
         .tile-ft {
-          background: var(--c-white);
-          border-top: 1px solid var(--c-border);
-          padding: 5px 12px;
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border-top: 1px solid var(--border);
+          padding: 0.3125rem 0.75rem;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           flex-shrink: 0;
           justify-content: center;
         }
@@ -1223,48 +1277,67 @@ export class MusicSheet extends CardDef {
           .card {
             display: flex;
             flex-direction: row;
-            background: var(--c-white);
+            background-color: var(--card);
+            color: var(--card-foreground);
           }
         }
 
         .card-left {
-          width: 110px;
+          width: 6.875rem;
           flex-shrink: 0;
-          background: var(--c-bg);
+          background-color: var(--card);
+          color: var(--card-foreground);
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 5px;
-          padding: 16px 10px;
+          gap: 0.3125rem;
+          padding: 1rem 0.625rem;
         }
 
         .card-diff-ring {
-          width: clamp(40px, 8cqh, 56px);
-          height: clamp(40px, 8cqh, 56px);
+          width: clamp(2.5rem, 8cqh, 3.5rem);
+          height: clamp(2.5rem, 8cqh, 3.5rem);
           border-radius: 50%;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          background: linear-gradient(
+            135deg,
+            var(--warning) 0%,
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
+          );
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
-          box-shadow: var(--c-shadow);
+          color: var(--warning-foreground);
+          box-shadow: var(--ms-shadow);
           margin-bottom: 2px;
         }
 
         .card-diff-ring.diff-super-easy,
         .card-diff-ring.diff-easy {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: linear-gradient(
+            135deg,
+            var(--success) 0%,
+            color-mix(in oklch, var(--success) 84%, var(--shadow-color)) 100%
+          );
         }
         .card-diff-ring.diff-intermediate {
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          background: linear-gradient(
+            135deg,
+            var(--warning) 0%,
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
+          );
         }
         .card-diff-ring.diff-expert {
-          background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+          background: linear-gradient(
+            135deg,
+            var(--destructive) 0%,
+            color-mix(in oklch, var(--destructive) 84%, var(--shadow-color))
+              100%
+          );
         }
 
         .card-diff-pill {
-          font-size: 9px !important;
+          font-size: 0.5625rem !important;
         }
 
         /* card cover image */
@@ -1283,7 +1356,7 @@ export class MusicSheet extends CardDef {
 
         .card-cover-badge {
           position: absolute;
-          bottom: 6px;
+          bottom: 0.375rem;
           left: 0;
           right: 0;
           display: flex;
@@ -1291,25 +1364,25 @@ export class MusicSheet extends CardDef {
         }
 
         .card-tempo {
-          font-size: 10px;
+          font-size: 0.625rem;
           font-weight: 600;
-          color: var(--c-muted);
+          color: var(--muted-foreground);
           letter-spacing: 0.02em;
         }
 
         .card-divider {
           width: 1px;
-          background: var(--c-border);
+          background-color: var(--border);
           flex-shrink: 0;
-          margin: 14px 0;
+          margin: 0.875rem 0;
         }
 
         .card-body {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 3px;
-          padding: 14px 16px;
+          gap: 0.1875rem;
+          padding: 0.875rem 1rem;
           min-width: 0;
           justify-content: center;
         }
@@ -1317,34 +1390,38 @@ export class MusicSheet extends CardDef {
         .card-icon-row {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           margin-bottom: 2px;
         }
 
         .card-brand-icon {
-          width: 18px;
-          height: 18px;
-          border-radius: 4px;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #b45309 100%);
+          width: 1.125rem;
+          height: 1.125rem;
+          border-radius: 0.25rem;
+          background: linear-gradient(
+            135deg,
+            var(--warning) 0%,
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
+          );
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
+          color: var(--warning-foreground);
           flex-shrink: 0;
         }
 
         .card-eyebrow {
-          font-size: 10px;
+          font-size: 0.625rem;
           font-weight: 600;
-          color: var(--c-muted);
+          color: var(--muted-foreground);
           text-transform: uppercase;
           letter-spacing: 0.06em;
         }
 
         .card-title {
-          font-size: 15px;
+          font-size: 0.9375rem;
           font-weight: 700;
-          color: var(--c-text);
+          color: var(--card-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -1353,8 +1430,8 @@ export class MusicSheet extends CardDef {
         }
 
         .card-artist {
-          font-size: 12px;
-          color: var(--c-text-2);
+          font-size: 0.75rem;
+          color: var(--subtle-foreground);
           margin: 0;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1362,8 +1439,8 @@ export class MusicSheet extends CardDef {
         }
 
         .card-genre {
-          font-size: 10px;
-          color: var(--c-muted);
+          font-size: 0.625rem;
+          color: var(--muted-foreground);
           margin: 0;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1372,9 +1449,9 @@ export class MusicSheet extends CardDef {
 
         /* ══ Shared chips & badges ══ */
         .diff-badge {
-          padding: 2px 7px;
-          border-radius: 10px;
-          font-size: 9px;
+          padding: 2px 0.4375rem;
+          border-radius: 0.625rem;
+          font-size: 0.5625rem;
           font-weight: 700;
           letter-spacing: 0.4px;
           white-space: nowrap;
@@ -1383,51 +1460,51 @@ export class MusicSheet extends CardDef {
         }
 
         .diff-super-easy {
-          background: #d1fae5;
-          color: #065f46;
+          background-color: var(--success);
+          color: var(--success-foreground);
         }
         .diff-easy {
-          background: #d1fae5;
-          color: #065f46;
+          background-color: var(--success);
+          color: var(--success-foreground);
         }
         .diff-intermediate {
-          background: #fef3c7;
-          color: #92400e;
+          background-color: var(--warning);
+          color: var(--warning-foreground);
         }
         .diff-expert {
-          background: #fee2e2;
-          color: #991b1b;
+          background-color: var(--card);
+          color: var(--destructive-ink);
         }
         .diff-unknown {
-          background: #f1f5f9;
-          color: #64748b;
+          background-color: var(--card);
+          color: var(--primary-ink);
         }
 
         .tempo-chip {
-          padding: 2px 6px;
-          border-radius: 8px;
-          font-size: 9px;
+          padding: 2px 0.375rem;
+          border-radius: 0.5rem;
+          font-size: 0.5625rem;
           font-weight: 700;
-          background: var(--c-accent-bg);
-          border: 1px solid var(--c-accent-border);
-          color: var(--c-accent);
+          background-color: var(--card);
+          border: 1px solid var(--warning);
+          color: var(--warning-ink);
           white-space: nowrap;
           flex-shrink: 0;
         }
 
         .genre-chip {
-          padding: 2px 6px;
-          border-radius: 8px;
-          font-size: 9px;
+          padding: 2px 0.375rem;
+          border-radius: 0.5rem;
+          font-size: 0.5625rem;
           font-weight: 600;
-          background: var(--c-bg);
-          border: 1px solid var(--c-border);
-          color: var(--c-muted);
+          background-color: var(--card);
+          border: 1px solid var(--border);
+          color: var(--muted-foreground);
           white-space: nowrap;
           flex-shrink: 0;
           overflow: hidden;
           text-overflow: ellipsis;
-          max-width: 90px;
+          max-width: 5.625rem;
         }
       </style>
     </template>

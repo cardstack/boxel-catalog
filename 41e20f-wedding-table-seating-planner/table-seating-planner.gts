@@ -32,6 +32,10 @@ export class TableSeatingPlanner extends CardDef {
 
   @field eventLogo = contains(ImageSourceField);
   @field eventTitle = contains(StringField);
+  // Optional glyph for the event mark and table centrepieces (e.g. 囍 or ✝).
+  // Content, not colour, so it lives on the card rather than in a theme; empty
+  // falls back to the event initials.
+  @field motif = contains(StringField);
   @field eventDate = contains(DatetimeField);
   @field hosts = linksToMany(() => Host);
   @field venue = contains(StringField);

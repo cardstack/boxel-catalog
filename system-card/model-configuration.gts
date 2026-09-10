@@ -334,10 +334,10 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
 
     <style scoped>
       .mc-isolated {
-        background: var(--boxel-light, #ffffff);
-        color: var(--boxel-dark, #374151);
+        background-color: var(--card);
+        color: var(--foreground);
         font-family: var(--boxel-font-family);
-        max-width: 960px;
+        max-width: 60rem;
         margin: 0 auto;
         padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
       }
@@ -346,7 +346,7 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
       .hero {
         margin-bottom: var(--boxel-sp-xl);
         padding-bottom: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--boxel-200, #e8e8e8);
+        border-bottom: 1px solid var(--border);
       }
 
       .type-badge {
@@ -357,20 +357,20 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: var(--boxel-400, #afafb7);
+        color: var(--subtle-foreground);
         margin-bottom: var(--boxel-sp-xs);
       }
 
       .type-badge-icon {
         width: 1rem;
         height: 1rem;
-        color: var(--boxel-dark, #272330);
+        color: var(--foreground);
       }
 
       .hero-title {
         font-size: var(--boxel-font-size-xl);
         font-weight: 700;
-        color: var(--boxel-dark, #272330);
+        color: var(--foreground);
         margin: 0 0 var(--boxel-sp-xxs) 0;
         line-height: 1.2;
       }
@@ -379,11 +379,11 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
         display: inline-block;
         font-family: var(--boxel-monospace-font-family);
         font-size: var(--boxel-font-size-xs);
-        background: var(--boxel-100, #f8f7fa);
-        color: var(--boxel-500, #5a586a);
+        background-color: var(--card);
+        color: var(--muted-foreground);
         padding: var(--boxel-sp-6xs) var(--boxel-sp-xxs);
         border-radius: var(--boxel-border-radius-xs);
-        border: 1px solid var(--boxel-200, #e8e8e8);
+        border: 1px solid var(--border);
         margin-bottom: var(--boxel-sp-sm);
       }
 
@@ -393,7 +393,7 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
         gap: var(--boxel-sp-xxs);
         flex-wrap: wrap;
         font-size: var(--boxel-font-size-sm);
-        color: var(--boxel-400, #afafb7);
+        color: var(--subtle-foreground);
         margin-bottom: var(--boxel-sp-sm);
       }
 
@@ -402,7 +402,7 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
       }
 
       .stat-sep {
-        color: var(--boxel-300, #d1d1d1);
+        color: var(--subtle-foreground);
       }
 
       .modality-row {
@@ -422,7 +422,7 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
       .modality-pill {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        background: var(--boxel-100);
+        background-color: var(--boxel-100);
         color: var(--boxel-500);
         padding: 2px var(--boxel-sp-xxs);
         border-radius: var(--boxel-border-radius-xs);
@@ -447,18 +447,18 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
       }
 
       .hero-badge.purpose {
-        background: #6467f2;
-        color: #ffffff;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
 
       .hero-badge.recommended-badge {
-        background: #bbf7d0;
-        color: #065f46;
+        background-color: var(--success);
+        color: var(--success-foreground);
       }
 
       .hero-badge.recommended {
-        background: #d1fae5;
-        color: #065f46;
+        background-color: var(--success);
+        color: var(--success-foreground);
       }
 
       .badge-check-icon {
@@ -482,12 +482,12 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
       /* Detail grid */
       .detail-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
         gap: var(--boxel-sp-xs);
       }
 
       .detail-card {
-        background: var(--boxel-light);
+        background-color: var(--boxel-light);
         border: 1px solid var(--boxel-200);
         border-radius: var(--boxel-border-radius-sm);
         padding: var(--boxel-sp-sm);
@@ -513,7 +513,7 @@ class ModelConfigurationIsolated extends Component<typeof ModelConfiguration> {
         border: 1px solid var(--boxel-200);
         border-radius: var(--boxel-border-radius-sm);
         overflow: hidden;
-        height: 250px;
+        height: 15.625rem;
       }
     </style>
   </template>
@@ -815,7 +815,8 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .fitted-container {
         width: 100%;
         height: 100%;
-        background: #ffffff;
+        background-color: var(--card);
+        color: var(--card-foreground);
         overflow: hidden;
         position: relative;
       }
@@ -827,7 +828,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
         font-size: 0.625rem;
         font-weight: 700;
         padding: 0.25rem 0.5rem;
-        border-radius: 4px;
+        border-radius: 0.25rem;
         line-height: 1;
         display: inline-flex;
         align-items: center;
@@ -839,30 +840,30 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .strip-badge.generic,
       .tile-badge.generic,
       .card-badge.generic {
-        background: #f3f4f6;
-        color: #6b7280;
+        background-color: var(--card);
+        color: var(--muted-foreground);
       }
 
       .strip-badge.purpose,
       .tile-badge.purpose,
       .card-badge.purpose {
-        background: #6467f2;
-        color: #ffffff;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
 
       .strip-badge.recommended,
       .tile-badge.recommended,
       .card-badge.recommended {
-        background: #d1fae5; /* soft green */
-        color: #065f46; /* deep green text */
+        background-color: var(--success); /* soft green */
+        color: var(--success-foreground); /* deep green text */
         padding: 0.25rem;
       }
 
       .strip-badge.recommended-badge,
       .tile-badge.recommended-badge,
       .card-badge.recommended-badge {
-        background: #bbf7d0;
-        color: #065f46;
+        background-color: var(--success);
+        color: var(--success-foreground);
         padding: 0.25rem 0.5rem;
       }
 
@@ -910,7 +911,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .badge-logo {
         width: clamp(1.5rem, 60%, 3rem);
         height: clamp(1.5rem, 60%, 3rem);
-        color: #111827;
+        color: var(--foreground);
       }
 
       /* Hide strip when tile/card should show */
@@ -953,7 +954,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .strip-title {
         font-size: 0.875rem;
         font-weight: 600;
-        color: #111827;
+        color: var(--foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -964,13 +965,13 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
         align-items: center;
         gap: 0.375rem;
         font-size: 0.625rem;
-        color: #9ca3af;
+        color: var(--subtle-foreground);
       }
 
       .strip-icon {
         width: 1rem;
         height: 1rem;
-        color: #9ca3af;
+        color: var(--subtle-foreground);
         flex-shrink: 0;
       }
 
@@ -986,7 +987,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .strip-context {
         font-size: 0.6875rem;
         font-weight: 600;
-        color: #6b7280;
+        color: var(--muted-foreground);
         flex-shrink: 0;
         margin-left: auto;
       }
@@ -1023,7 +1024,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
         font-size: clamp(0.875rem, 4%, 1rem);
         font-weight: 700;
         margin: 0;
-        color: #111827;
+        color: var(--foreground);
         line-height: 1.2;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1035,7 +1036,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .tile-id {
         font-family: 'SF Mono', Monaco, monospace;
         font-size: 0.625rem;
-        color: #6b7280;
+        color: var(--muted-foreground);
         line-height: 1.4;
         word-break: break-all;
       }
@@ -1046,20 +1047,20 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
         gap: 0.375rem;
         margin-top: auto;
         padding-top: 0.5rem;
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid var(--border);
       }
 
       .tile-footer-icon {
         width: 0.875rem;
         height: 0.875rem;
-        color: #9ca3af;
+        color: var(--subtle-foreground);
         flex-shrink: 0;
       }
 
       .tile-stat {
         font-size: 0.6875rem;
         font-weight: 600;
-        color: #6b7280;
+        color: var(--muted-foreground);
       }
 
       /* Card format (≥400px width, ≥170px height) */
@@ -1094,7 +1095,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .card-icon {
         width: 1.125rem;
         height: 1.125rem;
-        color: #111827;
+        color: var(--foreground);
       }
 
       .card-type {
@@ -1102,14 +1103,14 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #6b7280;
+        color: var(--muted-foreground);
       }
 
       .card-title {
         font-size: 1.125rem;
         font-weight: 700;
         margin: 0;
-        color: #111827;
+        color: var(--foreground);
         line-height: 1.3;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1121,7 +1122,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .card-id {
         font-family: 'SF Mono', Monaco, monospace;
         font-size: 0.6875rem;
-        color: #6b7280;
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -1130,7 +1131,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .card-footer {
         margin-top: auto;
         padding-top: 0.75rem;
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid var(--border);
         display: flex;
         gap: 0.75rem;
         flex-wrap: wrap;
@@ -1139,7 +1140,7 @@ class ModelConfigurationFitted extends Component<typeof ModelConfiguration> {
       .footer-stat {
         font-size: 0.75rem;
         font-weight: 600;
-        color: #6b7280;
+        color: var(--muted-foreground);
       }
     </style>
   </template>

@@ -183,7 +183,7 @@ export class Genre extends CardDef {
           position: relative;
           width: 100%;
           height: 100%;
-          min-height: 320px;
+          min-height: 20rem;
           display: flex;
           overflow: hidden;
           font-family:
@@ -205,9 +205,9 @@ export class Genre extends CardDef {
           inset: 0;
           background: linear-gradient(
             to top,
-            rgba(0, 0, 0, 0.9) 0%,
-            rgba(0, 0, 0, 0.55) 40%,
-            rgba(0, 0, 0, 0.25) 100%
+            color-mix(in oklch, var(--tooltip) 90%, transparent) 0%,
+            color-mix(in oklch, var(--tooltip) 55%, transparent) 40%,
+            color-mix(in oklch, var(--tooltip) 25%, transparent) 100%
           );
         }
 
@@ -228,7 +228,7 @@ export class Genre extends CardDef {
           inset: 0;
           opacity: 0.03;
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-          background-size: 200px;
+          background-size: 12.5rem;
           pointer-events: none;
         }
 
@@ -246,8 +246,8 @@ export class Genre extends CardDef {
         .gi-eyebrow {
           display: flex;
           align-items: center;
-          gap: 7px;
-          font-size: 11px;
+          gap: 0.4375rem;
+          font-size: 0.6875rem;
           font-weight: 600;
           color: var(--gi-accent);
           text-transform: uppercase;
@@ -255,10 +255,10 @@ export class Genre extends CardDef {
         }
 
         .gi-eyebrow-dot {
-          width: 6px;
-          height: 6px;
+          width: 0.375rem;
+          height: 0.375rem;
           border-radius: 50%;
-          background: var(--gi-accent);
+          background-color: var(--gi-accent);
           box-shadow:
             0 0 10px var(--gi-accent),
             0 0 20px var(--gi-accent-dim);
@@ -272,25 +272,27 @@ export class Genre extends CardDef {
         }
 
         .gi-emoji-ring {
-          width: clamp(80px, 18vw, 120px);
-          height: clamp(80px, 18vw, 120px);
+          width: clamp(5rem, 18vw, 7.5rem);
+          height: clamp(5rem, 18vw, 7.5rem);
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.08);
+          background-color: var(--hover);
           border: 1px solid var(--gi-accent-border);
           backdrop-filter: blur(12px);
           display: flex;
           align-items: center;
           justify-content: center;
           box-shadow:
-            0 0 0 6px rgba(255, 255, 255, 0.04),
+            0 0 0 6px color-mix(in oklch, var(--card) 4%, transparent),
             0 0 40px var(--gi-accent-dim),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            inset 0 1px 0 color-mix(in oklch, var(--card) 15%, transparent);
         }
 
         .gi-emoji {
           font-size: clamp(2.5rem, 6vw, 4rem);
           line-height: 1;
-          filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+          filter: drop-shadow(
+            0 2px 8px color-mix(in oklch, var(--foreground) 50%, transparent)
+          );
         }
 
         .gi-name {
@@ -298,17 +300,17 @@ export class Genre extends CardDef {
           font-weight: 900;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: #ffffff;
+          color: var(--card-foreground);
           text-shadow:
-            0 2px 4px rgba(0, 0, 0, 0.6),
+            0 2px 4px color-mix(in oklch, var(--shadow-color) 60%, transparent),
             0 0 40px var(--gi-accent-dim);
           margin: 0;
           text-align: center;
         }
 
         .gi-rule {
-          width: 64px;
-          height: 3px;
+          width: 4rem;
+          height: 0.1875rem;
           border-radius: 2px;
           background: linear-gradient(
             90deg,
@@ -322,20 +324,20 @@ export class Genre extends CardDef {
         .gi-meta {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 0.625rem;
         }
 
         .gi-tag {
           display: flex;
           align-items: center;
-          gap: 5px;
-          padding: 6px 14px;
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          font-size: 11px;
+          gap: 0.3125rem;
+          padding: 0.375rem 0.875rem;
+          border-radius: 1.25rem;
+          background-color: var(--hover);
+          border: 1px solid var(--border);
+          font-size: 0.6875rem;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.7);
+          color: color-mix(in oklch, var(--card-foreground) 70%, transparent);
           backdrop-filter: blur(8px);
         }
       </style>
@@ -467,11 +469,7 @@ export class Genre extends CardDef {
 
       <style scoped>
         .gf {
-          --c-text: #ffffff;
-          --c-text-2: rgba(255, 255, 255, 0.8);
-          --c-muted: rgba(255, 255, 255, 0.5);
-          --c-border: rgba(255, 255, 255, 0.14);
-          --c-surface: rgba(255, 255, 255, 0.08);
+          --gf-surface: var(--hover);
           width: 100%;
           height: 100%;
           font-family:
@@ -506,7 +504,8 @@ export class Genre extends CardDef {
         .card-scrim {
           position: absolute;
           inset: 0;
-          background: rgba(0, 0, 0, 0.52);
+          background-color: var(--overlay);
+          color: var(--tooltip-foreground);
         }
         .tile-tint,
         .card-tint {
@@ -538,15 +537,15 @@ export class Genre extends CardDef {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 7px;
-          padding: 12px 8px;
+          gap: 0.4375rem;
+          padding: 0.75rem 0.5rem;
         }
 
         .badge-ring {
-          width: 46px;
-          height: 46px;
+          width: 2.875rem;
+          height: 2.875rem;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.1);
+          background-color: var(--hover);
           border: 1px solid var(--gf-accent-border);
           backdrop-filter: blur(6px);
           display: flex;
@@ -556,18 +555,19 @@ export class Genre extends CardDef {
         }
 
         .badge-emoji {
-          font-size: 22px;
+          font-size: 1.375rem;
           line-height: 1;
         }
 
         .badge-name {
-          font-size: 9px;
+          font-size: 0.5625rem;
           font-weight: 700;
-          color: var(--c-text-2);
+          color: var(--subtle-foreground);
           text-transform: uppercase;
           letter-spacing: 0.08em;
           text-align: center;
-          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+          text-shadow: 0 1px 3px
+            color-mix(in oklch, var(--shadow-color) 80%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -590,25 +590,28 @@ export class Genre extends CardDef {
           width: 100%;
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 0 14px;
+          gap: 0.625rem;
+          padding: 0 0.875rem;
         }
 
         .strip-emoji-wrap {
-          font-size: 22px;
+          font-size: 1.375rem;
           line-height: 1;
           flex-shrink: 0;
-          filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.6));
+          filter: drop-shadow(
+            0 1px 4px color-mix(in oklch, var(--foreground) 60%, transparent)
+          );
         }
 
         .strip-name {
           flex: 1;
-          font-size: 14px;
+          font-size: 0.875rem;
           font-weight: 800;
-          color: var(--c-text);
+          color: var(--card-foreground);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+          text-shadow: 0 1px 4px
+            color-mix(in oklch, var(--shadow-color) 70%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -616,13 +619,13 @@ export class Genre extends CardDef {
 
         .strip-chip {
           flex-shrink: 0;
-          font-size: 9px;
+          font-size: 0.5625rem;
           font-weight: 700;
           color: var(--gf-accent);
-          background: var(--gf-accent-dim);
+          background-color: var(--gf-accent-dim);
           border: 1px solid var(--gf-accent-border);
-          border-radius: 4px;
-          padding: 3px 7px;
+          border-radius: 0.25rem;
+          padding: 0.1875rem 0.4375rem;
           white-space: nowrap;
           backdrop-filter: blur(4px);
         }
@@ -641,19 +644,19 @@ export class Genre extends CardDef {
           z-index: 1;
           display: flex;
           align-items: center;
-          gap: 7px;
-          padding: 9px 12px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+          gap: 0.4375rem;
+          padding: 0.5625rem 0.75rem;
+          border-bottom: 1px solid var(--border);
           flex-shrink: 0;
-          background: rgba(0, 0, 0, 0.2);
+          background-color: color-mix(in oklch, var(--inset) 20%, transparent);
           backdrop-filter: blur(8px);
         }
 
         .tile-brand {
-          width: 20px;
-          height: 20px;
-          border-radius: 5px;
-          background: var(--gf-accent-dim);
+          width: 1.25rem;
+          height: 1.25rem;
+          border-radius: 0.3125rem;
+          background-color: var(--gf-accent-dim);
           border: 1px solid var(--gf-accent-border);
           display: flex;
           align-items: center;
@@ -663,9 +666,9 @@ export class Genre extends CardDef {
         }
 
         .tile-eyebrow {
-          font-size: 10px;
+          font-size: 0.625rem;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.6);
+          color: color-mix(in oklch, var(--card-foreground) 60%, transparent);
           text-transform: uppercase;
           letter-spacing: 0.08em;
         }
@@ -678,15 +681,15 @@ export class Genre extends CardDef {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 10px;
-          padding: 12px;
+          gap: 0.625rem;
+          padding: 0.75rem;
         }
 
         .tile-ring {
-          width: clamp(48px, 12cqh, 72px);
-          height: clamp(48px, 12cqh, 72px);
+          width: clamp(3rem, 12cqh, 4.5rem);
+          height: clamp(3rem, 12cqh, 4.5rem);
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.1);
+          background-color: var(--hover);
           border: 1px solid var(--gf-accent-border);
           backdrop-filter: blur(8px);
           display: flex;
@@ -696,18 +699,19 @@ export class Genre extends CardDef {
         }
 
         .tile-emoji {
-          font-size: clamp(22px, 6cqh, 36px);
+          font-size: clamp(1.375rem, 6cqh, 2.25rem);
           line-height: 1;
         }
 
         .tile-name {
-          font-size: clamp(14px, 4cqw, 22px);
+          font-size: clamp(0.875rem, 4cqw, 1.375rem);
           font-weight: 900;
-          color: var(--c-text);
+          color: var(--card-foreground);
           text-transform: uppercase;
           letter-spacing: 0.1em;
           text-align: center;
-          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+          text-shadow: 0 2px 8px
+            color-mix(in oklch, var(--shadow-color) 70%, transparent);
           margin: 0;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -716,7 +720,7 @@ export class Genre extends CardDef {
         }
 
         .tile-rule {
-          width: 40px;
+          width: 2.5rem;
           height: 2px;
           border-radius: 1px;
           background: linear-gradient(
@@ -737,7 +741,7 @@ export class Genre extends CardDef {
         }
 
         .card-left {
-          width: 130px;
+          width: 8.125rem;
           flex-shrink: 0;
           position: relative;
           display: flex;
@@ -749,10 +753,10 @@ export class Genre extends CardDef {
         .card-ring {
           position: relative;
           z-index: 1;
-          width: clamp(52px, 9cqh, 68px);
-          height: clamp(52px, 9cqh, 68px);
+          width: clamp(3.25rem, 9cqh, 4.25rem);
+          height: clamp(3.25rem, 9cqh, 4.25rem);
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.1);
+          background-color: var(--hover);
           border: 1px solid var(--gf-accent-border);
           backdrop-filter: blur(8px);
           display: flex;
@@ -762,13 +766,13 @@ export class Genre extends CardDef {
         }
 
         .card-emoji {
-          font-size: clamp(24px, 5cqh, 36px);
+          font-size: clamp(1.5rem, 5cqh, 2.25rem);
           line-height: 1;
         }
 
         .card-divider {
           width: 1px;
-          background: rgba(255, 255, 255, 0.12);
+          background-color: var(--hover);
           flex-shrink: 0;
         }
 
@@ -777,8 +781,8 @@ export class Genre extends CardDef {
           position: relative;
           display: flex;
           flex-direction: column;
-          gap: 4px;
-          padding: 16px 18px;
+          gap: 0.25rem;
+          padding: 1rem 1.125rem;
           min-width: 0;
           justify-content: center;
           background: linear-gradient(
@@ -803,15 +807,15 @@ export class Genre extends CardDef {
           z-index: 1;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           margin-bottom: 2px;
         }
 
         .card-brand-icon {
-          width: 18px;
-          height: 18px;
-          border-radius: 4px;
-          background: var(--gf-accent-dim);
+          width: 1.125rem;
+          height: 1.125rem;
+          border-radius: 0.25rem;
+          background-color: var(--gf-accent-dim);
           border: 1px solid var(--gf-accent-border);
           display: flex;
           align-items: center;
@@ -821,9 +825,9 @@ export class Genre extends CardDef {
         }
 
         .card-eyebrow {
-          font-size: 10px;
+          font-size: 0.625rem;
           font-weight: 600;
-          color: var(--c-muted);
+          color: var(--muted-foreground);
           text-transform: uppercase;
           letter-spacing: 0.08em;
         }
@@ -831,12 +835,13 @@ export class Genre extends CardDef {
         .card-name {
           position: relative;
           z-index: 1;
-          font-size: 20px;
+          font-size: 1.25rem;
           font-weight: 900;
-          color: var(--c-text);
+          color: var(--card-foreground);
           text-transform: uppercase;
           letter-spacing: 0.1em;
-          text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+          text-shadow: 0 1px 6px
+            color-mix(in oklch, var(--shadow-color) 50%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -847,7 +852,7 @@ export class Genre extends CardDef {
         .card-rule {
           position: relative;
           z-index: 1;
-          width: 32px;
+          width: 2rem;
           height: 2px;
           border-radius: 1px;
           background: linear-gradient(90deg, var(--gf-accent), transparent);
@@ -859,24 +864,24 @@ export class Genre extends CardDef {
           position: relative;
           z-index: 1;
           display: flex;
-          gap: 5px;
+          gap: 0.3125rem;
           flex-wrap: wrap;
         }
 
         .chip {
-          font-size: 9px;
+          font-size: 0.5625rem;
           font-weight: 600;
-          color: var(--c-muted);
-          background: rgba(255, 255, 255, 0.07);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          border-radius: 4px;
-          padding: 2px 7px;
+          color: var(--muted-foreground);
+          background-color: var(--hover);
+          border: 1px solid var(--border);
+          border-radius: 0.25rem;
+          padding: 2px 0.4375rem;
           white-space: nowrap;
         }
 
         .chip--accent {
           color: var(--gf-accent);
-          background: var(--gf-accent-dim);
+          background-color: var(--gf-accent-dim);
           border-color: var(--gf-accent-border);
         }
       </style>

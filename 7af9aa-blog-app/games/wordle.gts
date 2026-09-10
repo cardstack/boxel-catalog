@@ -208,12 +208,13 @@ class WordleIsolated extends Component<typeof Wordle> {
     <style scoped>
       .wordle {
         width: 100%;
-        max-width: 360px;
+        max-width: 22.5rem;
         margin: 0 auto;
         padding: var(--boxel-sp-lg) var(--boxel-sp);
-        background: #fafafa;
-        border: 1px solid #ececec;
-        border-radius: 16px;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
         text-align: center;
         font-family: 'Inter', system-ui, sans-serif;
         box-sizing: border-box;
@@ -223,31 +224,31 @@ class WordleIsolated extends Component<typeof Wordle> {
           800 1.5rem/1 'Inter',
           sans-serif;
         letter-spacing: -0.02em;
-        margin: 0 0 6px;
-        color: #121212;
+        margin: 0 0 0.375rem;
+        color: var(--foreground);
       }
       .wordle-status {
         font:
           500 0.85rem/1.3 'Inter',
           sans-serif;
-        color: #555;
-        margin-bottom: 14px;
-        min-height: 18px;
+        color: var(--muted-foreground);
+        margin-bottom: 0.875rem;
+        min-height: 1.125rem;
       }
       .wordle-status strong {
         font-weight: 800;
-        color: #121212;
+        color: var(--foreground);
       }
       .wordle-board {
         display: grid;
         grid-template-rows: repeat(6, 1fr);
-        gap: 6px;
-        margin-bottom: 14px;
+        gap: 0.375rem;
+        margin-bottom: 0.875rem;
       }
       .wordle-row {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
-        gap: 6px;
+        gap: 0.375rem;
       }
       .wordle-cell {
         aspect-ratio: 1;
@@ -257,42 +258,42 @@ class WordleIsolated extends Component<typeof Wordle> {
           800 1.4rem/1 'Inter',
           sans-serif;
         text-transform: uppercase;
-        color: #1a1a1b;
-        background: white;
-        border: 2px solid #d3d6da;
-        border-radius: 6px;
+        color: var(--foreground);
+        background-color: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 0.375rem;
         transition:
           background-color 0.15s,
           border-color 0.15s,
           color 0.15s;
       }
       .wordle-cell.is-empty.is-filled {
-        border-color: #878a8c;
+        border-color: var(--border-strong);
       }
       .wordle-cell.is-correct {
-        background: #6aaa64;
-        border-color: #6aaa64;
-        color: white;
+        background-color: var(--success);
+        border-color: var(--success);
+        color: var(--success-foreground);
       }
       .wordle-cell.is-present {
-        background: #c9b458;
-        border-color: #c9b458;
-        color: white;
+        background-color: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-foreground);
       }
       .wordle-cell.is-absent {
-        background: #787c7e;
-        border-color: #787c7e;
-        color: white;
+        background-color: var(--muted);
+        border-color: var(--border-strong);
+        color: var(--muted-foreground);
       }
       .wordle-input-row {
         display: flex;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .wordle-input {
         flex: 1;
-        padding: 8px 12px;
-        border: 1px solid #d3d6da;
-        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
         font:
           600 0.95rem/1 'Inter',
           sans-serif;
@@ -302,18 +303,18 @@ class WordleIsolated extends Component<typeof Wordle> {
         transition: border-color 0.15s;
       }
       .wordle-input:focus {
-        border-color: #2c2c2c;
+        border-color: var(--border-strong);
       }
       .wordle-submit,
       .wordle-reset {
-        padding: 8px 18px;
-        background: #2c2c2c;
-        color: white;
+        padding: 0.5rem 1.125rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: none;
-        border-radius: 8px;
+        border-radius: 0.5rem;
         cursor: pointer;
         font:
-          600 12px/1 'Inter',
+          600 0.75rem/1 'Inter',
           sans-serif;
         text-transform: uppercase;
         letter-spacing: 0.04em;
@@ -322,12 +323,13 @@ class WordleIsolated extends Component<typeof Wordle> {
           transform 0.1s;
       }
       .wordle-reset {
-        border-radius: 999px;
-        padding: 9px 22px;
+        border-radius: 62.4375rem;
+        padding: 0.5625rem 1.375rem;
       }
       .wordle-submit:hover,
       .wordle-reset:hover {
-        background: #1a1a1a;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .wordle-submit:active,
       .wordle-reset:active {
@@ -365,29 +367,29 @@ class WordleFitted extends Component<typeof Wordle> {
         width: 100%;
         height: 100%;
         display: grid;
-        grid-template-columns: 76px 1fr;
+        grid-template-columns: 4.75rem 1fr;
         align-items: center;
-        gap: 12px;
-        padding: 4px;
-        background: transparent;
+        gap: 0.75rem;
+        padding: 0.25rem;
+        background-color: transparent;
         min-width: 0;
       }
       .wf-icon {
-        width: 76px;
-        height: 76px;
+        width: 4.75rem;
+        height: 4.75rem;
         display: grid;
         place-items: center;
-        border-radius: 14px;
+        border-radius: 0.875rem;
         background:
           radial-gradient(
             circle at 20% 10%,
-            rgba(106, 170, 100, 0.08),
+            color-mix(in oklch, var(--success) 8%, transparent),
             transparent 60%
           ),
-          #ffffff;
+          var(--card);
         box-shadow:
-          inset 0 0 0 1px #e5e7eb,
-          0 4px 10px rgba(0, 0, 0, 0.05);
+          inset 0 0 0 1px var(--border),
+          0 4px 10px color-mix(in oklch, var(--shadow-color) 5%, transparent);
         flex-shrink: 0;
       }
       .wf-grid {
@@ -396,25 +398,28 @@ class WordleFitted extends Component<typeof Wordle> {
         gap: 2px;
       }
       .wf-tile {
-        width: 12px;
-        height: 12px;
+        width: 0.75rem;
+        height: 0.75rem;
         display: grid;
         place-items: center;
         border-radius: 1.5px;
         font:
           800 0.45rem/1 'Inter',
           sans-serif;
-        color: white;
+        color: var(--card-foreground);
         letter-spacing: 0.02em;
       }
       .wf-correct {
-        background: #6aaa64;
+        background-color: var(--success);
+        color: var(--success-foreground);
       }
       .wf-present {
-        background: #c9b458;
+        background-color: var(--accent);
+        color: var(--accent-foreground);
       }
       .wf-absent {
-        background: #787c7e;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .wf-meta {
         min-width: 0;
@@ -429,7 +434,7 @@ class WordleFitted extends Component<typeof Wordle> {
           sans-serif;
         letter-spacing: -0.01em;
         margin: 0;
-        color: #121212;
+        color: var(--foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -438,24 +443,24 @@ class WordleFitted extends Component<typeof Wordle> {
         font:
           500 0.78rem/1.3 'Inter',
           sans-serif;
-        color: #6b7280;
+        color: var(--muted-foreground);
         margin: 2px 0 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       .wf-tag {
-        margin-top: 6px;
+        margin-top: 0.375rem;
         align-self: flex-start;
         font:
           600 0.6rem/1 'Inter',
           sans-serif;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #15803d;
-        padding: 4px 8px;
-        background: rgba(106, 170, 100, 0.14);
-        border-radius: 999px;
+        color: var(--success-ink);
+        padding: 0.25rem 0.5rem;
+        background-color: color-mix(in oklch, var(--success) 14%, transparent);
+        border-radius: 62.4375rem;
         white-space: nowrap;
       }
 
@@ -465,7 +470,7 @@ class WordleFitted extends Component<typeof Wordle> {
           grid-template-rows: auto auto;
           justify-items: center;
           text-align: center;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .wf-tag {
           display: none;
@@ -477,17 +482,17 @@ class WordleFitted extends Component<typeof Wordle> {
 
       @container fitted-card ((1.0 < aspect-ratio) and (height <= 60px)) {
         .wf {
-          grid-template-columns: 40px 1fr;
-          gap: 8px;
+          grid-template-columns: 2.5rem 1fr;
+          gap: 0.5rem;
         }
         .wf-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 8px;
+          width: 2.5rem;
+          height: 2.5rem;
+          border-radius: 0.5rem;
         }
         .wf-tile {
-          width: 6px;
-          height: 6px;
+          width: 0.375rem;
+          height: 0.375rem;
           font-size: 0;
           border-radius: 1px;
         }

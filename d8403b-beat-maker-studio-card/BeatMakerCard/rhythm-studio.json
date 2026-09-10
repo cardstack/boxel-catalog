@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "BeatMakerCard",
-        "module": "../beat-maker"
+        "module": "@cardstack/catalog/d8403b-beat-maker-studio-card/beat-maker"
       }
     },
     "type": "card",
@@ -28,7 +28,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/rhythm-studio"
         }
       },
       "currentPattern": {

@@ -30,28 +30,62 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
           xmlns='http://www.w3.org/2000/svg'
         >
           {{! Outer ring }}
-          <circle cx='24' cy='24' r='22' stroke='#c9a84c' stroke-width='1.5' />
+          <circle
+            cx='24'
+            cy='24'
+            r='22'
+            stroke='var(--accent)'
+            stroke-width='1.5'
+          />
           {{! Inner circle fill }}
           <circle
             cx='24'
             cy='24'
             r='17'
-            fill='#0d0f12'
-            stroke='#c9a84c'
+            fill='var(--card)'
+            stroke='var(--accent)'
             stroke-width='1'
           />
           {{! Chip segments — 8 notches around the rim }}
-          <rect x='22.5' y='1' width='3' height='6' rx='1' fill='#c9a84c' />
-          <rect x='22.5' y='41' width='3' height='6' rx='1' fill='#c9a84c' />
-          <rect x='1' y='22.5' width='6' height='3' rx='1' fill='#c9a84c' />
-          <rect x='41' y='22.5' width='6' height='3' rx='1' fill='#c9a84c' />
+          <rect
+            x='22.5'
+            y='1'
+            width='3'
+            height='6'
+            rx='1'
+            fill='var(--accent)'
+          />
+          <rect
+            x='22.5'
+            y='41'
+            width='3'
+            height='6'
+            rx='1'
+            fill='var(--accent)'
+          />
+          <rect
+            x='1'
+            y='22.5'
+            width='6'
+            height='3'
+            rx='1'
+            fill='var(--accent)'
+          />
+          <rect
+            x='41'
+            y='22.5'
+            width='6'
+            height='3'
+            rx='1'
+            fill='var(--accent)'
+          />
           <rect
             x='35.2'
             y='6.1'
             width='3'
             height='6'
             rx='1'
-            fill='#c9a84c'
+            fill='var(--accent)'
             transform='rotate(45 35.2 6.1)'
           />
           <rect
@@ -60,7 +94,7 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
             width='3'
             height='6'
             rx='1'
-            fill='#c9a84c'
+            fill='var(--accent)'
             transform='rotate(45 6.1 35.2)'
           />
           <rect
@@ -69,7 +103,7 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
             width='6'
             height='3'
             rx='1'
-            fill='#c9a84c'
+            fill='var(--accent)'
             transform='rotate(45 6.1 6.1)'
           />
           <rect
@@ -78,7 +112,7 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
             width='6'
             height='3'
             rx='1'
-            fill='#c9a84c'
+            fill='var(--accent)'
             transform='rotate(45 35.2 35.2)'
           />
           {{! Card suit in centre }}
@@ -87,7 +121,7 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
             y='29'
             text-anchor='middle'
             font-size='16'
-            fill='#c9a84c'
+            fill='var(--accent)'
             font-family='Georgia, serif'
           >♠</text>
         </svg>
@@ -119,27 +153,40 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
            --validation-content-max-width   (default: 520px)
       */
       .validation-content {
-        --casino-gold: #c9a84c;
-        --casino-gold-bright: #e8c96a;
-        --casino-gold-border: rgba(201, 168, 76, 0.6);
-        --casino-gold-border-dim: rgba(201, 168, 76, 0.2);
-        --casino-gold-dim: rgba(201, 168, 76, 0.55);
-        --casino-crimson: #8b1a1a;
-        --casino-crimson-border: rgba(139, 26, 26, 0.55);
-        --casino-crimson-text: #f0b8b8;
-        --casino-crimson-strong: #e87070;
-        --casino-emerald: #0e7a50;
-        --casino-emerald-border: rgba(14, 122, 80, 0.45);
-        --casino-emerald-strong: #52c89a;
-        --casino-text: #f0e6c8;
-        --casino-text-muted: rgba(240, 230, 200, 0.55);
+        --casino-gold-border: color-mix(
+          in oklch,
+          var(--accent) 60%,
+          transparent
+        );
+        --casino-gold-border-dim: color-mix(
+          in oklch,
+          var(--accent) 20%,
+          transparent
+        );
+        --casino-gold-dim: color-mix(in oklch, var(--accent) 55%, transparent);
+        --casino-crimson-border: color-mix(
+          in oklch,
+          var(--destructive) 55%,
+          transparent
+        );
+        --casino-emerald-border: color-mix(
+          in oklch,
+          var(--success) 45%,
+          transparent
+        );
+        --casino-text: var(--warning-ink);
+        --casino-text-muted: color-mix(
+          in oklch,
+          var(--warning-ink) 55%,
+          transparent
+        );
         --casino-font: 'Georgia', 'Times New Roman', serif;
 
-        background: var(--validation-content-background, #08090b);
-        color: var(--validation-content-foreground, var(--casino-gold));
-        max-width: var(--validation-content-max-width, 520px);
+        background-color: var(--card);
+        color: var(--accent-ink);
+        max-width: var(--validation-content-max-width, 32.5rem);
 
-        border-radius: 4px;
+        border-radius: 0.25rem;
         padding: 2rem 2rem 1.75rem;
         width: 100%;
         position: relative;
@@ -148,11 +195,11 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
 
         /* Outer gold frame — two stacked borders */
         box-shadow:
-          0 0 0 1px #08090b,
+          0 0 0 1px var(--shadow-color),
           0 0 0 2px var(--casino-gold-border),
-          0 0 0 3px #08090b,
-          0 0 0 4px rgba(201, 168, 76, 0.25),
-          0 1rem 3rem rgba(0, 0, 0, 0.8);
+          0 0 0 3px var(--shadow-color),
+          0 0 0 4px color-mix(in oklch, var(--accent) 25%, transparent),
+          0 1rem 3rem color-mix(in oklch, var(--shadow-color) 80%, transparent);
         border: 1px solid var(--casino-gold-border);
       }
 
@@ -165,17 +212,12 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
         background-image:
           repeating-linear-gradient(
             45deg,
-            var(--casino-gold) 0px,
-            var(--casino-gold) 1px,
-            transparent 1px,
-            transparent 14px
+            var(--card) 0%,
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
           ),
           repeating-linear-gradient(
-            -45deg,
-            var(--casino-gold) 0px,
-            var(--casino-gold) 1px,
-            transparent 1px,
-            transparent 14px
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
           );
         pointer-events: none;
         z-index: 0;
@@ -195,7 +237,9 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
       .validation-chip__svg {
         width: 3rem;
         height: 3rem;
-        filter: drop-shadow(0 0 6px rgba(201, 168, 76, 0.35));
+        filter: drop-shadow(
+          0 0 6px color-mix(in oklch, var(--accent) 35%, transparent)
+        );
       }
 
       /* Title with flanking suit ornaments */
@@ -206,7 +250,7 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
         font-weight: 700;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--casino-gold-bright);
+        color: var(--accent-ink);
       }
 
       .validation-content h2::before {
@@ -248,8 +292,8 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
         font-size: 0.9rem;
         line-height: 1.5;
         padding: 0.875rem 1rem;
-        border-radius: 3px;
-        background: #0d0f12;
+        border-radius: 0.1875rem;
+        background-color: var(--card);
         color: var(--casino-text);
         border: 1px solid var(--casino-gold-border-dim);
         border-top: 2px solid var(--casino-gold-dim);
@@ -263,16 +307,16 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
       }
 
       .validation-step.incomplete {
-        background: #110808;
+        background-color: var(--card);
         border-color: var(--casino-crimson-border);
-        border-top-color: var(--casino-crimson);
-        color: var(--casino-crimson-text);
+        border-top-color: var(--destructive);
+        color: var(--destructive-ink);
       }
 
       .validation-step.complete {
-        background: #080f0c;
+        background-color: var(--card);
         border-color: var(--casino-emerald-border);
-        border-top-color: var(--casino-emerald);
+        border-top-color: var(--success);
         color: var(--casino-text);
       }
 
@@ -283,7 +327,7 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
         font-size: 0.875rem;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: var(--casino-gold);
+        color: var(--accent-ink);
       }
 
       .validation-step__message {
@@ -292,11 +336,11 @@ export default class ValidationSteps extends Component<ValidationStepsSignature>
       }
 
       .validation-step.incomplete strong {
-        color: var(--casino-crimson-strong);
+        color: var(--destructive-ink);
       }
 
       .validation-step.complete strong {
-        color: var(--casino-emerald-strong);
+        color: var(--success-ink);
       }
     </style>
     {{! template-lint-enable no-whitespace-for-layout }}

@@ -110,40 +110,30 @@ export class Table extends FieldDef {
         .t-row {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 10px 12px;
-          border: 1px solid var(--tsp-border, var(--border, rgba(0, 0, 0, 0.1)));
-          border-radius: 11px;
-          background: var(--tsp-background, var(--background, #fff));
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
+          gap: 0.75rem;
+          padding: 0.625rem 0.75rem;
+          border: 1px solid var(--border);
+          border-radius: 0.6875rem;
         }
         .t-glyph {
-          width: 40px;
-          height: 40px;
+          width: 2.5rem;
+          height: 2.5rem;
           flex: none;
           display: flex;
           align-items: center;
           justify-content: center;
-          font: 600 14px
-            var(
-              --tsp-font-serif,
-              var(--font-serif, 'Cormorant Garamond', serif)
-            );
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font: 600 0.875rem var(--font-serif);
+          color: var(--accent-foreground);
           background: linear-gradient(
             135deg,
-            #dcc188,
-            var(--tsp-accent, var(--accent, #c5a35c))
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
           );
           border-radius: 50%;
         }
         .t-rect,
         .t-square {
-          border-radius: 8px;
+          border-radius: 0.5rem;
         }
         .t-oval {
           border-radius: 50% / 40%;
@@ -153,31 +143,30 @@ export class Table extends FieldDef {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 0.1875rem;
         }
         .t-name {
-          font-size: 14px;
+          font-size: 0.875rem;
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
         }
         .t-vip {
-          font: 600 8px
-            var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          font: 600 0.5rem var(--font-sans);
           letter-spacing: 0.12em;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          background: var(--tsp-accent, var(--accent, #c5a35c));
-          border-radius: 4px;
-          padding: 2px 5px;
+          color: var(--accent-foreground);
+          background-color: var(--accent);
+          border-radius: 0.25rem;
+          padding: 2px 0.3125rem;
         }
         .t-meta {
-          font: 11px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
+          font: 0.6875rem var(--font-sans);
+          color: var(--muted-foreground);
         }
         .t-cap {
           flex: none;
-          font: 12px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
+          font: 0.75rem var(--font-sans);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -225,19 +214,13 @@ export class Table extends FieldDef {
           width: 100%;
           height: 100%;
           display: grid;
-          gap: 4px 10px;
-          padding: 10px 12px;
+          gap: 0.25rem 0.625rem;
+          padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
           align-content: center;
           grid-template-columns: auto minmax(0, 1fr);
           grid-template-areas: 'glyph head' 'glyph meta';
-          background: var(--tsp-background, var(--background, #fff));
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
         }
         .r-glyph {
           grid-area: glyph;
@@ -256,53 +239,48 @@ export class Table extends FieldDef {
           min-height: 0;
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
         }
         .glyph {
-          width: 42px;
-          height: 42px;
+          width: 2.625rem;
+          height: 2.625rem;
           display: flex;
           align-items: center;
           justify-content: center;
-          font: 600 15px
-            var(
-              --tsp-font-serif,
-              var(--font-serif, 'Cormorant Garamond', serif)
-            );
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font: 600 0.9375rem var(--font-serif);
+          color: var(--accent-foreground);
           background: linear-gradient(
             135deg,
-            #dcc188,
-            var(--tsp-accent, var(--accent, #c5a35c))
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
           );
           border-radius: 50%;
         }
         .t-rect,
         .t-square {
-          border-radius: 9px;
+          border-radius: 0.5625rem;
         }
         .t-oval {
           border-radius: 50% / 40%;
         }
         .name {
           font-weight: 600;
-          font-size: 14px;
+          font-size: 0.875rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .cap {
-          font: 12px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
+          font: 0.75rem var(--font-sans);
+          color: var(--muted-foreground);
         }
         .vip {
-          font: 600 8px
-            var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          font: 600 0.5rem var(--font-sans);
           letter-spacing: 0.12em;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          background: var(--tsp-accent, var(--accent, #c5a35c));
-          border-radius: 4px;
-          padding: 2px 5px;
+          color: var(--accent-foreground);
+          background-color: var(--accent);
+          border-radius: 0.25rem;
+          padding: 2px 0.3125rem;
         }
         @container tbl (width <= 90px) {
           .fit {
@@ -368,84 +346,74 @@ export class Table extends FieldDef {
         .t-iso {
           height: 100%;
           overflow-y: auto;
-          padding: 28px;
+          padding: 1.75rem;
           box-sizing: border-box;
-          background: var(--tsp-background, var(--background, #faf5ec));
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
         }
         h1 {
           margin: 0;
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
-          font-size: 28px;
+          font-family: var(--font-serif);
+          font-size: 1.75rem;
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 0.625rem;
         }
         .pill {
-          font: 600 9px
-            var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          font: 600 0.5625rem var(--font-sans);
           letter-spacing: 0.14em;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          background: var(--tsp-accent, var(--accent, #c5a35c));
-          border-radius: 5px;
-          padding: 3px 7px;
+          color: var(--accent-foreground);
+          background-color: var(--accent);
+          border-radius: 0.3125rem;
+          padding: 0.1875rem 0.4375rem;
         }
         .facts {
-          margin: 22px 0 0;
+          margin: 1.375rem 0 0;
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 14px;
+          gap: 0.875rem;
         }
         dt {
-          font: 10px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          font: 0.625rem var(--font-sans);
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
+          color: var(--muted-foreground);
         }
         dd {
-          margin: 4px 0 0;
-          font-size: 16px;
+          margin: 0.25rem 0 0;
+          font-size: 1rem;
         }
         section {
-          margin-top: 24px;
+          margin-top: 1.5rem;
         }
         h2 {
-          font: 10px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          font: 0.625rem var(--font-sans);
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
-          margin: 0 0 10px;
+          color: var(--muted-foreground);
+          margin: 0 0 0.625rem;
         }
         .note {
           margin: 0;
-          font-size: 14px;
+          font-size: 0.875rem;
           line-height: 1.6;
         }
         .res-cats {
           display: flex;
           flex-wrap: wrap;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .res-cat {
           display: inline-flex;
           align-items: center;
-          gap: 7px;
-          padding: 4px 11px 4px 8px;
-          border-radius: 999px;
-          border: 1px solid rgba(220, 193, 136, 0.35);
-          font-size: 12.5px;
+          gap: 0.4375rem;
+          padding: 0.25rem 0.6875rem 0.25rem 0.5rem;
+          border-radius: 62.4375rem;
+          border: 1px solid color-mix(in oklch, var(--accent) 35%, transparent);
+          font-size: 0.7812rem;
         }
         .res-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 3px;
+          width: 0.625rem;
+          height: 0.625rem;
+          border-radius: 0.1875rem;
           flex: none;
         }
       </style>

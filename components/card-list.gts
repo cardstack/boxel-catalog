@@ -75,7 +75,7 @@ export class CardList extends GlimmerComponent<CardListSignature> {
       }
       .card {
         height: auto;
-        min-height: var(--embedded-card-min-height, 345px);
+        min-height: var(--embedded-card-min-height, 21.5625rem);
         max-width: var(--embedded-card-max-width, 100%);
         width: 100%;
       }

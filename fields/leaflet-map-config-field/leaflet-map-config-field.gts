@@ -29,7 +29,7 @@ class AtomTemplate extends Component<typeof LeafletMapConfigField> {
       }
 
       .config-info {
-        font-size: 14px;
+        font-size: 0.875rem;
         color: var(--boxel-text-muted);
         line-height: normal;
       }
@@ -81,20 +81,20 @@ class EditTemplate extends Component<typeof LeafletMapConfigField> {
       }
 
       .config-section {
-        border-bottom: 1px solid var(--boxel-border-color);
+        border-bottom: 1px solid var(--border);
         padding-bottom: var(--boxel-sp-md);
       }
 
       .section-title {
         margin: 0 0 var(--boxel-sp-xs) 0;
-        font-size: 16px;
+        font-size: 1rem;
         font-weight: 600;
         color: var(--boxel-text-color);
       }
 
       .section-description {
         margin: 0;
-        font-size: 14px;
+        font-size: 0.875rem;
         color: var(--boxel-text-muted);
         line-height: 1.4;
       }
@@ -106,13 +106,13 @@ class EditTemplate extends Component<typeof LeafletMapConfigField> {
       }
 
       .field-label {
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 500;
         color: var(--boxel-text-color);
       }
 
       .field-help {
-        font-size: 12px;
+        font-size: 0.75rem;
         color: var(--boxel-text-muted);
         line-height: 1.3;
       }
@@ -128,7 +128,7 @@ class EditTemplate extends Component<typeof LeafletMapConfigField> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         cursor: pointer;
-        font-size: 14px;
+        font-size: 0.875rem;
       }
 
       .checkbox-label input[type='checkbox'] {

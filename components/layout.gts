@@ -86,8 +86,8 @@ export const TitleGroup: TemplateOnlyComponent<TitleGroupSignature> = <template>
     }
     .image-container {
       grid-row: 1 / 3;
-      width: var(--thumbnail-size, var(--boxel-icon-xl));
-      height: var(--thumbnail-size, var(--boxel-icon-xl));
+      width: var(--boxel-icon-xl);
+      height: var(--boxel-icon-xl);
       border: 1px solid var(--boxel-450);
       border-radius: var(--boxel-border-radius-xl);
       display: flex;
@@ -145,8 +145,7 @@ export class Layout extends GlimmerComponent<LayoutSignature> {
     <style scoped>
       .layout {
         --layout-padding: var(--boxel-sp-lg);
-        --sidebar-width: 255px;
-        --layout-background-color: var(--boxel-light);
+        --sidebar-width: 15.9375rem;
         display: flex;
         width: 100%;
         max-width: 100%;
@@ -176,7 +175,7 @@ export class Layout extends GlimmerComponent<LayoutSignature> {
       .content-header {
         position: relative;
         z-index: 1;
-        background-color: var(--layout-background-color);
+        background-color: var(--boxel-light);
         border-top: 1px solid var(--boxel-400);
       }
 
@@ -200,7 +199,7 @@ export class Layout extends GlimmerComponent<LayoutSignature> {
       }
 
       .content-header {
-        min-height: calc(60px + 2 * var(--layout-padding));
+        min-height: calc(3.75rem + 2 * var(--layout-padding));
         padding: var(--layout-padding);
         display: flex;
         flex-wrap: wrap;

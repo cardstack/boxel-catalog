@@ -128,26 +128,20 @@ export class MortgageCalculatorFitted extends Component<
     <style scoped>
       /* ── design tokens ── */
       .mcf-root {
-        --mc-green: #059669;
-        --mc-green-dark: #047857;
-        --mc-green-bg: #ecfdf5;
-        --mc-green-border: #6ee7b7;
-        --mc-teal: #007272;
-        --mc-teal-dark: #005858;
-        --mc-text: #0f172a;
-        --mc-text-2: #1e293b;
-        --mc-muted: #64748b;
-        --mc-surface: #ffffff;
         --mc-shadow:
-          0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+          0 1px 0.1875rem
+            color-mix(in oklch, var(--shadow-color) 8%, transparent),
+          0 1px 2px color-mix(in oklch, var(--shadow-color) 5%, transparent);
         --mc-shadow-md:
-          0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.05);
+          0 0.25rem 1rem
+            color-mix(in oklch, var(--shadow-color) 10%, transparent),
+          0 2px 0.25rem color-mix(in oklch, var(--shadow-color) 5%, transparent);
         --mc-overlay: linear-gradient(
           135deg,
-          rgba(255, 200, 60, 0.18) 0%,
-          rgba(60, 120, 40, 0.32) 35%,
-          rgba(8, 38, 18, 0.72) 70%,
-          rgba(3, 18, 8, 0.9) 100%
+          color-mix(in oklch, var(--warning) 18%, transparent) 0%,
+          color-mix(in oklch, var(--success) 32%, transparent) 35%,
+          color-mix(in oklch, var(--foreground) 72%, transparent) 70%,
+          color-mix(in oklch, var(--foreground) 90%, transparent) 100%
         );
         --mc-img-url: url('https://images.pexels.com/photos/31737842/pexels-photo-31737842.jpeg?auto=compress&cs=tinysrgb&w=800');
         container-type: size;
@@ -181,14 +175,15 @@ export class MortgageCalculatorFitted extends Component<
         .mcf-badge {
           display: flex;
           align-items: stretch;
-          background: var(--mc-surface);
-          border: 1px solid var(--mc-green-border);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--success);
           box-shadow: var(--mc-shadow);
         }
       }
 
       .mcf-b-img {
-        width: 34px;
+        width: 2.125rem;
         flex-shrink: 0;
         background:
           var(--mc-overlay),
@@ -208,7 +203,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-b-title {
         font-size: 0.5625rem;
         font-weight: 700;
-        color: var(--mc-text);
+        color: var(--foreground);
         text-transform: uppercase;
         letter-spacing: 0.06em;
         white-space: nowrap;
@@ -219,7 +214,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-b-amount {
         font-size: 0.8125rem;
         font-weight: 800;
-        color: var(--mc-teal);
+        color: var(--info-ink);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         overflow: hidden;
@@ -230,7 +225,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-b-sub {
         font-size: 0.5rem;
         font-weight: 600;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
         white-space: nowrap;
       }
 
@@ -242,14 +237,15 @@ export class MortgageCalculatorFitted extends Component<
         .mcf-strip {
           display: flex;
           align-items: stretch;
-          background: var(--mc-surface);
-          border: 1px solid var(--mc-green-border);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--success);
           box-shadow: var(--mc-shadow);
         }
       }
 
       .mcf-s-img {
-        width: clamp(40px, 15%, 56px);
+        width: clamp(2.5rem, 15%, 3.5rem);
         flex-shrink: 0;
         background:
           var(--mc-overlay),
@@ -271,7 +267,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-s-title {
         font-size: 0.75rem;
         font-weight: 700;
-        color: var(--mc-text);
+        color: var(--foreground);
         white-space: nowrap;
         line-height: 1.25;
       }
@@ -279,7 +275,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-s-meta {
         font-size: 0.5625rem;
         font-weight: 500;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -299,9 +295,9 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-s-cc {
         font-size: 0.5rem;
         font-weight: 700;
-        color: #fff;
-        background: var(--mc-teal);
-        border-radius: 999px;
+        color: var(--info-foreground);
+        background-color: var(--info);
+        border-radius: 62.4375rem;
         padding: 0.1rem 0.3rem;
         white-space: nowrap;
         line-height: 1.4;
@@ -310,7 +306,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-s-amount {
         font-size: 0.8125rem;
         font-weight: 800;
-        color: var(--mc-teal);
+        color: var(--info-ink);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         letter-spacing: -0.02em;
@@ -320,7 +316,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-s-mo {
         font-size: 0.4375rem;
         font-weight: 600;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
         text-transform: uppercase;
         letter-spacing: 0.04em;
         line-height: 1.2;
@@ -334,14 +330,15 @@ export class MortgageCalculatorFitted extends Component<
         .mcf-tile {
           display: flex;
           flex-direction: column;
-          background: var(--mc-surface);
-          border: 1px solid var(--mc-green-border);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--success);
           box-shadow: var(--mc-shadow);
         }
       }
 
       .mcf-t-img {
-        height: clamp(52px, 30%, 80px);
+        height: clamp(3.25rem, 30%, 5rem);
         flex-shrink: 0;
         background:
           var(--mc-overlay),
@@ -355,10 +352,10 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-t-cc {
         font-size: 0.5625rem;
         font-weight: 700;
-        color: #fff;
-        background: rgba(255, 255, 255, 0.18);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 999px;
+        color: var(--muted-foreground);
+        background-color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 62.4375rem;
         padding: 0.1rem 0.4rem;
         backdrop-filter: blur(4px);
       }
@@ -366,7 +363,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-t-rate {
         font-size: 0.5625rem;
         font-weight: 600;
-        color: rgba(255, 255, 255, 0.8);
+        color: color-mix(in oklch, var(--card-foreground) 80%, transparent);
       }
 
       .mcf-t-body {
@@ -381,7 +378,7 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-t-name {
         font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--mc-text);
+        color: var(--foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -392,14 +389,14 @@ export class MortgageCalculatorFitted extends Component<
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.07em;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
         margin-top: 0.25rem;
       }
 
       .mcf-t-amount {
         font-size: clamp(1.125rem, 6cqi, 1.75rem);
         font-weight: 800;
-        color: var(--mc-teal);
+        color: var(--info-ink);
         font-variant-numeric: tabular-nums;
         letter-spacing: -0.02em;
         white-space: nowrap;
@@ -420,8 +417,8 @@ export class MortgageCalculatorFitted extends Component<
         flex: 1;
         min-width: 0;
         overflow: hidden;
-        background: var(--mc-green-bg);
-        border: 1px solid var(--mc-green-border);
+        background-color: var(--card);
+        border: 1px solid var(--success);
         border-radius: 0.5rem;
         padding: 0.25rem 0.375rem;
         display: flex;
@@ -429,7 +426,7 @@ export class MortgageCalculatorFitted extends Component<
         gap: 0.1rem;
         font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--mc-text-2);
+        color: var(--foreground);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -440,7 +437,7 @@ export class MortgageCalculatorFitted extends Component<
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
         white-space: nowrap;
       }
 
@@ -453,8 +450,9 @@ export class MortgageCalculatorFitted extends Component<
         .mcf-card {
           display: flex;
           flex-direction: row;
-          background: var(--mc-surface);
-          border: 1px solid var(--mc-green-border);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--success);
           box-shadow: var(--mc-shadow-md);
         }
       }
@@ -466,7 +464,7 @@ export class MortgageCalculatorFitted extends Component<
 
         .mcf-c-img {
           width: 100% !important;
-          height: clamp(80px, 32%, 130px) !important;
+          height: clamp(5rem, 32%, 8.125rem) !important;
         }
 
         .mcf-c-body {
@@ -498,8 +496,9 @@ export class MortgageCalculatorFitted extends Component<
         margin: 0;
         font-size: clamp(0.75rem, 3cqi, 1rem);
         font-weight: 800;
-        color: #ffffff;
-        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+        color: var(--card-foreground);
+        text-shadow: 0 1px 6px
+          color-mix(in oklch, var(--shadow-color) 45%, transparent);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -509,10 +508,10 @@ export class MortgageCalculatorFitted extends Component<
       .mcf-c-pill {
         font-size: 0.5rem;
         font-weight: 700;
-        color: #fff;
-        background: rgba(255, 255, 255, 0.16);
-        border: 1px solid rgba(255, 255, 255, 0.28);
-        border-radius: 999px;
+        color: var(--muted-foreground);
+        background-color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 62.4375rem;
         padding: 0.15rem 0.5rem;
         white-space: nowrap;
         backdrop-filter: blur(6px);
@@ -541,13 +540,13 @@ export class MortgageCalculatorFitted extends Component<
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.07em;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
       }
 
       .mcf-c-hero-val {
         font-size: clamp(1rem, 4cqi, 1.625rem);
         font-weight: 800;
-        color: var(--mc-teal);
+        color: var(--info-ink);
         font-variant-numeric: tabular-nums;
         letter-spacing: -0.02em;
         white-space: nowrap;
@@ -558,7 +557,8 @@ export class MortgageCalculatorFitted extends Component<
 
       .mcf-c-divider {
         height: 1px;
-        background: var(--mc-green-border);
+        background-color: var(--success);
+        color: var(--success-foreground);
         opacity: 0.7;
       }
 
@@ -572,8 +572,9 @@ export class MortgageCalculatorFitted extends Component<
         display: flex;
         flex-direction: column;
         gap: 0.1rem;
-        background: var(--mc-green-bg);
-        border: 1px solid var(--mc-green-border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--success);
         border-radius: 0.5rem;
         padding: 0.25rem 0.4rem;
         min-width: 0;
@@ -585,14 +586,14 @@ export class MortgageCalculatorFitted extends Component<
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--mc-muted);
+        color: var(--primary-ink);
         white-space: nowrap;
       }
 
       .mcf-c-stat-val {
         font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--mc-text-2);
+        color: var(--foreground);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         overflow: hidden;

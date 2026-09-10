@@ -35,7 +35,7 @@ export const DietaryField = enumField(StringField, {
 });
 
 function swatch(color: string | null | undefined) {
-  return htmlSafe(`background:${color || '#c5a35c'}`);
+  return htmlSafe(`background-color:${color || 'var(--accent)'}`);
 }
 
 export class Guest extends Person {
@@ -113,21 +113,14 @@ export class Guest extends Person {
         .g-row {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 9px 12px;
-          border: 1px solid
-            var(--tsp-border, var(--border, rgba(220, 193, 136, 0.3)));
-          border-radius: 11px;
-          background: var(--tsp-background, var(--background, #ffffff));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          gap: 0.75rem;
+          padding: 0.5625rem 0.75rem;
+          border: 1px solid var(--border);
+          border-radius: 0.6875rem;
         }
         .g-avatar {
-          width: 38px;
-          height: 38px;
+          width: 2.375rem;
+          height: 2.375rem;
           border-radius: 50%;
           flex: none;
           object-fit: cover;
@@ -136,16 +129,12 @@ export class Guest extends Person {
           display: flex;
           align-items: center;
           justify-content: center;
-          font: 600 13px
-            var(
-              --tsp-font-serif,
-              var(--font-serif, 'Cormorant Garamond', serif)
-            );
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font: 600 0.8125rem var(--font-serif);
+          color: var(--accent-foreground);
           background: linear-gradient(
             135deg,
-            #dcc188,
-            var(--tsp-accent, var(--accent, #c5a35c))
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
           );
         }
         .g-main {
@@ -153,56 +142,55 @@ export class Guest extends Person {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 0.1875rem;
         }
         .g-name-line {
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
         }
         .g-name {
-          font-size: 14px;
+          font-size: 0.875rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .g-vip {
           flex: none;
-          font: 600 11px
-            var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
+          font: 600 0.6875rem var(--font-sans);
           letter-spacing: 0.12em;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          background: var(--tsp-accent, var(--accent, #c5a35c));
-          border-radius: 4px;
-          padding: 2px 5px;
+          color: var(--accent-foreground);
+          background-color: var(--accent);
+          border-radius: 0.25rem;
+          padding: 2px 0.3125rem;
         }
         .g-cat {
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: 11px;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #a5919c));
+          gap: 0.375rem;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
         }
         .g-dot {
-          width: 10px;
-          height: 10px;
+          width: 0.625rem;
+          height: 0.625rem;
           border-radius: 50%;
           flex: none;
         }
         .g-diet {
-          font-size: 11px;
-          color: var(--tsp-accent-deep, #a5854a);
+          font-size: 0.6875rem;
+          color: var(--accent-ink);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .g-party {
           flex: none;
-          font: 11px var(--tsp-font-sans, var(--font-sans, 'Jost', monospace));
-          color: var(--tsp-accent-deep, #dcc188);
-          border: 1px solid rgba(220, 193, 136, 0.35);
-          border-radius: 999px;
-          padding: 2px 8px;
+          font: 0.6875rem var(--font-sans);
+          color: var(--accent-ink);
+          border: 1px solid color-mix(in oklch, var(--accent) 35%, transparent);
+          border-radius: 62.4375rem;
+          padding: 2px 0.5rem;
         }
       </style>
     </template>
@@ -336,34 +324,12 @@ export class Guest extends Person {
            tokens to the Parisian look so app-level defaults can't restyle
            the card arbitrarily. A linked theme omits this class. */
         .tsp-default-theme {
-          --background: #faf6ec;
-          --foreground: #22283f;
-          --card: #fffdf8;
-          --card-foreground: #22283f;
-          --popover: #fffdf8;
-          --popover-foreground: #22283f;
-          --primary: #141b33;
-          --primary-foreground: #f3ead6;
-          --secondary: #c5a35c;
-          --secondary-foreground: #22283f;
-          --muted: #f4eddb;
-          --muted-foreground: #7d7460;
-          --accent: #c5a35c;
-          --accent-foreground: #22283f;
-          --border: rgba(197, 163, 92, 0.35);
-          --input: #fffdf8;
-          --ring: #c5a35c;
-          --radius: 0.75rem;
-          --font-sans: 'Jost', system-ui, sans-serif;
-          --font-serif: 'Cormorant Garamond', Georgia, serif;
+          color: var(--card-foreground);
         }
         .fitted {
           width: 100%;
           height: 100%;
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
+          font-family: var(--font-sans);
         }
         .fmt {
           display: none;
@@ -378,17 +344,17 @@ export class Guest extends Person {
           .badge {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 10px;
-            background: var(--tsp-card, var(--card, #fffdf8));
-            color: var(--tsp-card-foreground, var(--card-foreground, #22283f));
-            border-left: 3px solid var(--tsp-accent, var(--accent, #c5a35c));
+            gap: 0.5rem;
+            padding: 0.375rem 0.625rem;
+            background-color: var(--card);
+            color: var(--card-foreground);
+            border-left: 3px solid var(--accent);
           }
         }
         .b-dot {
           flex: none;
-          width: 8px;
-          height: 8px;
+          width: 0.5rem;
+          height: 0.5rem;
           border-radius: 50%;
         }
         .b-info {
@@ -396,10 +362,7 @@ export class Guest extends Person {
           min-width: 0;
         }
         .b-name {
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
+          font-family: var(--font-serif);
           font-size: clamp(0.7rem, 22cqmin, 0.95rem);
           line-height: 1.15;
           white-space: nowrap;
@@ -410,15 +373,15 @@ export class Guest extends Person {
           font-size: 0.5rem;
           letter-spacing: 0.16em;
           text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #7d7460));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .b-star {
           flex: none;
-          font-size: 11px;
-          color: var(--tsp-accent-deep, #a5854a);
+          font-size: 0.6875rem;
+          color: var(--accent-ink);
         }
 
         /* ── STRIP ── */
@@ -426,39 +389,30 @@ export class Guest extends Person {
           .strip {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 8px 14px 8px 12px;
+            gap: 0.75rem;
+            padding: 0.5rem 0.875rem 0.5rem 0.75rem;
             background: linear-gradient(
               120deg,
-              var(--tsp-card, var(--card, #fffdf8)) 55%,
-              var(--tsp-muted, var(--muted, #f4eddb)) 140%
+              var(--card) 55%,
+              var(--muted) 140%
             );
-            color: var(--tsp-card-foreground, var(--card-foreground, #22283f));
-            border-left: 3px solid var(--tsp-accent, var(--accent, #c5a35c));
-            box-shadow: inset 0 0 0 1px
-              var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
+            color: var(--card-foreground);
+            border-left: 3px solid var(--accent);
+            box-shadow: inset 0 0 0 1px var(--border);
           }
         }
         .s-ring {
           flex: none;
           display: block;
-          width: clamp(28px, 70cqmin, 44px);
-          height: clamp(28px, 70cqmin, 44px);
+          width: clamp(1.75rem, 70cqmin, 2.75rem);
+          height: clamp(1.75rem, 70cqmin, 2.75rem);
           border-radius: 50%;
           padding: 2px;
           background: conic-gradient(
             from 140deg,
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 60%,
-              #ffffff
-            ),
-            var(--tsp-accent, var(--accent, #c5a35c)),
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 60%,
-              #ffffff
-            )
+            color-mix(in oklch, var(--accent) 60%, var(--card)),
+            var(--accent),
+            color-mix(in oklch, var(--accent) 60%, var(--card))
           );
         }
         .s-av {
@@ -472,26 +426,16 @@ export class Guest extends Person {
           display: flex;
           align-items: center;
           justify-content: center;
-          font: 600 0.8em
-            var(
-              --tsp-font-serif,
-              var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-            );
-          color: var(
-            --tsp-accent-foreground,
-            var(--accent-foreground, #22283f)
-          );
-          background: var(--tsp-accent, var(--accent, #c5a35c));
+          font: 600 0.8em var(--font-serif);
+          color: var(--accent-foreground);
+          background-color: var(--accent);
         }
         .s-info {
           flex: 1;
           min-width: 0;
         }
         .s-name {
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
+          font-family: var(--font-serif);
           font-size: clamp(0.85rem, 26cqmin, 1.1rem);
           line-height: 1.15;
           white-space: nowrap;
@@ -501,20 +445,20 @@ export class Guest extends Person {
         .s-meta {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         .s-dot {
           flex: none;
-          width: 7px;
-          height: 7px;
+          width: 0.4375rem;
+          height: 0.4375rem;
           border-radius: 50%;
         }
         .s-cat {
           font-size: 0.55rem;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #7d7460));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -525,28 +469,18 @@ export class Guest extends Person {
           font-weight: 600;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(
-            --tsp-accent-foreground,
-            var(--accent-foreground, #22283f)
-          );
-          background: var(--tsp-accent, var(--accent, #c5a35c));
-          border-radius: 999px;
-          padding: 3px 8px;
+          color: var(--accent-foreground);
+          background-color: var(--accent);
+          border-radius: 62.4375rem;
+          padding: 0.1875rem 0.5rem;
           white-space: nowrap;
         }
         .s-orn {
           flex: none;
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
-          font-size: clamp(14px, 34cqmin, 22px);
+          font-family: var(--font-serif);
+          font-size: clamp(0.875rem, 34cqmin, 1.375rem);
           line-height: 1;
-          color: color-mix(
-            in srgb,
-            var(--tsp-accent, var(--accent, #c5a35c)) 45%,
-            transparent
-          );
+          color: color-mix(in oklch, var(--accent-ink) 45%, transparent);
         }
         @container fitted-card (max-height: 64px) {
           .s-tag,
@@ -559,57 +493,48 @@ export class Guest extends Person {
         @container fitted-card (max-width: 399px) and (min-height: 170px) {
           .tile {
             display: block;
-            padding: clamp(6px, 4cqmin, 12px);
+            padding: clamp(0.375rem, 4cqmin, 0.75rem);
             background: radial-gradient(
               130% 90% at 50% -12%,
-              var(--tsp-card, var(--card, #fffdf8)),
-              var(--tsp-muted, var(--muted, #f4eddb)) 78%
+              var(--card),
+              var(--muted) 78%
             );
-            color: var(--tsp-card-foreground, var(--card-foreground, #22283f));
+            color: var(--card-foreground);
           }
         }
         .t-frame {
           width: 100%;
           height: 100%;
           box-sizing: border-box;
-          border: 1px solid
-            var(--tsp-border, var(--border, rgba(197, 163, 92, 0.45)));
-          border-radius: calc(var(--tsp-radius, var(--radius, 0.75rem)) / 1.5);
+          border: 1px solid var(--border);
+          border-radius: calc(var(--radius) / 1.5);
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: clamp(3px, 2.4cqmin, 8px);
-          padding: clamp(6px, 5cqmin, 16px);
+          gap: clamp(0.1875rem, 2.4cqmin, 0.5rem);
+          padding: clamp(0.375rem, 5cqmin, 1rem);
           text-align: center;
           overflow: hidden;
         }
         .t-orn {
           flex: none;
-          font-size: clamp(9px, 6cqmin, 13px);
-          color: var(--tsp-accent-deep, #a5854a);
+          font-size: clamp(0.5625rem, 6cqmin, 0.8125rem);
+          color: var(--accent-ink);
         }
         .t-ring {
           position: relative;
           flex: none;
           display: block;
-          width: clamp(40px, 34cqmin, 84px);
-          height: clamp(40px, 34cqmin, 84px);
+          width: clamp(2.5rem, 34cqmin, 5.25rem);
+          height: clamp(2.5rem, 34cqmin, 5.25rem);
           border-radius: 50%;
           padding: 2px;
           background: conic-gradient(
             from 140deg,
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 60%,
-              #ffffff
-            ),
-            var(--tsp-accent, var(--accent, #c5a35c)),
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 60%,
-              #ffffff
-            )
+            color-mix(in oklch, var(--accent) 60%, var(--card)),
+            var(--accent),
+            color-mix(in oklch, var(--accent) 60%, var(--card))
           );
         }
         .t-av {
@@ -623,51 +548,38 @@ export class Guest extends Person {
           display: flex;
           align-items: center;
           justify-content: center;
-          font: 600 clamp(14px, 13cqmin, 30px)
-            var(
-              --tsp-font-serif,
-              var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-            );
-          color: var(
-            --tsp-accent-foreground,
-            var(--accent-foreground, #22283f)
-          );
-          background: var(--tsp-accent, var(--accent, #c5a35c));
+          font: 600 clamp(0.875rem, 13cqmin, 1.875rem) var(--font-serif);
+          color: var(--accent-foreground);
+          background-color: var(--accent);
         }
         .t-star {
           position: absolute;
           right: -2px;
           bottom: -2px;
-          width: clamp(14px, 10cqmin, 20px);
-          height: clamp(14px, 10cqmin, 20px);
+          width: clamp(0.875rem, 10cqmin, 1.25rem);
+          height: clamp(0.875rem, 10cqmin, 1.25rem);
           border-radius: 50%;
-          background: var(--tsp-accent, var(--accent, #c5a35c));
-          color: var(
-            --tsp-accent-foreground,
-            var(--accent-foreground, #22283f)
-          );
-          font-size: clamp(8px, 6cqmin, 11px);
+          background-color: var(--accent);
+          color: var(--accent-foreground);
+          font-size: clamp(0.5rem, 6cqmin, 0.6875rem);
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 2px solid var(--tsp-card, var(--card, #fffdf8));
+          border: 2px solid var(--card);
         }
         .t-kicker {
           font-size: clamp(0.42rem, 4cqmin, 0.55rem);
           letter-spacing: 0.26em;
           text-transform: uppercase;
-          color: var(--tsp-accent-deep, #a5854a);
+          color: var(--accent-ink);
           white-space: nowrap;
           overflow: hidden;
           max-width: 100%;
           text-overflow: ellipsis;
         }
         .t-name {
-          color: var(--tsp-primary, var(--primary, #141b33));
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
+          color: var(--primary-ink);
+          font-family: var(--font-serif);
           font-size: clamp(0.95rem, 11cqmin, 1.7rem);
           line-height: 1.12;
           max-width: 100%;
@@ -679,19 +591,19 @@ export class Guest extends Person {
         .t-cat {
           display: inline-flex;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
           max-width: 100%;
           font-size: clamp(0.5rem, 4.5cqmin, 0.62rem);
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #7d7460));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
         }
         .t-dot {
           flex: none;
-          width: 7px;
-          height: 7px;
+          width: 0.4375rem;
+          height: 0.4375rem;
           border-radius: 50%;
         }
         .t-rule {
@@ -701,7 +613,7 @@ export class Guest extends Person {
           background: linear-gradient(
             90deg,
             transparent,
-            var(--tsp-accent, var(--accent, #c5a35c)),
+            var(--accent),
             transparent
           );
         }
@@ -716,10 +628,10 @@ export class Guest extends Person {
         @container fitted-card (min-width: 400px) and (min-height: 170px) {
           .cardf {
             display: flex;
-            background: var(--tsp-card, var(--card, #fffdf8));
-            border: 1px solid
-              var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
-            border-radius: var(--tsp-radius, var(--radius, 0.75rem));
+            background-color: var(--card);
+            color: var(--card-foreground);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
           }
         }
         .c-body {
@@ -728,22 +640,19 @@ export class Guest extends Person {
           display: flex;
           flex-direction: column;
           justify-content: center;
-          gap: clamp(3px, 2.4cqmin, 8px);
-          padding: clamp(10px, 6cqmin, 22px);
-          color: var(--tsp-card-foreground, var(--card-foreground, #22283f));
+          gap: clamp(0.1875rem, 2.4cqmin, 0.5rem);
+          padding: clamp(0.625rem, 6cqmin, 1.375rem);
+          color: var(--card-foreground);
         }
         .c-kicker {
           font-size: clamp(0.45rem, 4cqmin, 0.58rem);
           letter-spacing: 0.28em;
           text-transform: uppercase;
-          color: var(--tsp-accent-deep, #a5854a);
+          color: var(--accent-ink);
         }
         .c-name {
-          color: var(--tsp-primary, var(--primary, #141b33));
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
+          color: var(--primary-ink);
+          font-family: var(--font-serif);
           font-size: clamp(1.2rem, 13cqmin, 2.2rem);
           line-height: 1.1;
           overflow: hidden;
@@ -754,47 +663,41 @@ export class Guest extends Person {
         .c-cat {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           font-size: clamp(0.55rem, 4.5cqmin, 0.7rem);
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #7d7460));
+          color: var(--muted-foreground);
         }
         .c-dot {
           flex: none;
-          width: 8px;
-          height: 8px;
+          width: 0.5rem;
+          height: 0.5rem;
           border-radius: 50%;
         }
         .c-foot {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 6px;
-          margin-top: clamp(2px, 2cqmin, 8px);
+          gap: 0.375rem;
+          margin-top: clamp(2px, 2cqmin, 0.5rem);
         }
         .c-pill {
           font-size: 0.52rem;
           font-weight: 600;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(
-            --tsp-accent-foreground,
-            var(--accent-foreground, #22283f)
-          );
-          background: var(--tsp-accent, var(--accent, #c5a35c));
-          border: 1px solid var(--tsp-accent, var(--accent, #c5a35c));
-          border-radius: 999px;
-          padding: 3px 10px;
+          color: var(--accent-foreground);
+          background-color: var(--accent);
+          border: 1px solid var(--accent);
+          border-radius: 62.4375rem;
+          padding: 0.1875rem 0.625rem;
           white-space: nowrap;
         }
         .c-pill-ghost {
-          color: var(--tsp-accent-deep, #a5854a);
-          background: transparent;
-          border-color: var(
-            --tsp-border,
-            var(--border, rgba(197, 163, 92, 0.45))
-          );
+          color: var(--accent-ink);
+          background-color: transparent;
+          border-color: var(--border);
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 100%;
@@ -802,50 +705,37 @@ export class Guest extends Person {
         .c-panel {
           flex: none;
           width: 34%;
-          max-width: 176px;
+          max-width: 11rem;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: clamp(4px, 3cqmin, 10px);
-          padding: clamp(8px, 5cqmin, 18px);
+          gap: clamp(0.25rem, 3cqmin, 0.625rem);
+          padding: clamp(0.5rem, 5cqmin, 1.125rem);
           background:
             radial-gradient(
               130% 90% at 50% -12%,
-              color-mix(
-                in srgb,
-                var(--tsp-accent, var(--accent, #c5a35c)) 18%,
-                transparent
-              ),
+              color-mix(in oklch, var(--inset) 18%, transparent),
               transparent 60%
             ),
-            var(--tsp-muted, var(--muted, #f4eddb));
-          border-left: 1px solid
-            var(--tsp-border, var(--border, rgba(197, 163, 92, 0.35)));
+            var(--muted);
+          border-left: 1px solid var(--border);
         }
         .c-orn {
-          font-size: clamp(10px, 6cqmin, 14px);
-          color: var(--tsp-accent-deep, #a5854a);
+          font-size: clamp(0.625rem, 6cqmin, 0.875rem);
+          color: var(--accent-ink);
         }
         .c-ring {
           display: block;
-          width: clamp(48px, 38cqmin, 96px);
-          height: clamp(48px, 38cqmin, 96px);
+          width: clamp(3rem, 38cqmin, 6rem);
+          height: clamp(3rem, 38cqmin, 6rem);
           border-radius: 50%;
-          padding: 2.5px;
+          padding: 0.1562rem;
           background: conic-gradient(
             from 140deg,
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 60%,
-              #ffffff
-            ),
-            var(--tsp-accent, var(--accent, #c5a35c)),
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 60%,
-              #ffffff
-            )
+            color-mix(in oklch, var(--accent) 60%, var(--card)),
+            var(--accent),
+            color-mix(in oklch, var(--accent) 60%, var(--card))
           );
         }
         .c-av {
@@ -859,16 +749,9 @@ export class Guest extends Person {
           display: flex;
           align-items: center;
           justify-content: center;
-          font: 600 clamp(16px, 14cqmin, 34px)
-            var(
-              --tsp-font-serif,
-              var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-            );
-          color: var(
-            --tsp-accent-foreground,
-            var(--accent-foreground, #22283f)
-          );
-          background: var(--tsp-accent, var(--accent, #c5a35c));
+          font: 600 clamp(1rem, 14cqmin, 2.125rem) var(--font-serif);
+          color: var(--accent-foreground);
+          background-color: var(--accent);
         }
         .c-panel-rule {
           width: 40%;
@@ -876,7 +759,7 @@ export class Guest extends Person {
           background: linear-gradient(
             90deg,
             transparent,
-            var(--tsp-accent, var(--accent, #c5a35c)),
+            var(--accent),
             transparent
           );
         }
@@ -1033,26 +916,7 @@ export class Guest extends Person {
            tokens to the Parisian look so app-level defaults can't restyle
            the card arbitrarily. A linked theme omits this class. */
         .tsp-default-theme {
-          --background: #faf6ec;
-          --foreground: #22283f;
-          --card: #fffdf8;
-          --card-foreground: #22283f;
-          --popover: #fffdf8;
-          --popover-foreground: #22283f;
-          --primary: #141b33;
-          --primary-foreground: #f3ead6;
-          --secondary: #c5a35c;
-          --secondary-foreground: #22283f;
-          --muted: #f4eddb;
-          --muted-foreground: #7d7460;
-          --accent: #c5a35c;
-          --accent-foreground: #22283f;
-          --border: rgba(197, 163, 92, 0.35);
-          --input: #fffdf8;
-          --ring: #c5a35c;
-          --radius: 0.75rem;
-          --font-sans: 'Jost', system-ui, sans-serif;
-          --font-serif: 'Cormorant Garamond', Georgia, serif;
+          color: var(--card-foreground);
         }
 
         .iso {
@@ -1061,25 +925,22 @@ export class Guest extends Person {
           height: 100%;
           overflow-y: auto;
           box-sizing: border-box;
-          padding: 26px 30px 34px;
+          padding: 1.625rem 1.875rem 2.125rem;
           background:
             radial-gradient(
               120% 60% at 50% -8%,
-              rgba(197, 163, 92, 0.16),
+              color-mix(in oklch, var(--card) 16%, transparent),
               transparent 60%
             ),
-            var(--tsp-background, var(--background, #f7f1e4));
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
+            var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .iso-mast,
         .iso-colophon {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 0.875rem;
         }
         .iso-rule {
           flex: 1;
@@ -1087,34 +948,31 @@ export class Guest extends Person {
           background: linear-gradient(
             90deg,
             transparent,
-            rgba(41, 26, 35, 0.35),
+            color-mix(in oklch, var(--card) 35%, transparent),
             transparent
           );
         }
         .iso-mast-title {
           flex: none;
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 10px;
+          font-family: var(--font-sans);
+          font-size: 0.625rem;
           letter-spacing: 0.34em;
           text-transform: uppercase;
-          color: var(--tsp-accent, var(--accent, #a5854a));
+          color: var(--accent-ink);
         }
         .iso-colophon {
-          margin-top: 34px;
+          margin-top: 2.125rem;
         }
         .iso-colophon-mark {
           flex: none;
-          font-size: 12px;
-          color: var(--tsp-accent, var(--accent, #a5854a));
+          font-size: 0.75rem;
+          color: var(--accent-ink);
         }
         .iso-hero {
           display: flex;
           align-items: center;
-          gap: 24px;
-          margin: 28px 0 10px;
+          gap: 1.5rem;
+          margin: 1.75rem 0 0.625rem;
         }
         .iso-portrait {
           position: relative;
@@ -1122,27 +980,15 @@ export class Guest extends Person {
         }
         .iso-ring {
           display: block;
-          width: 96px;
-          height: 96px;
+          width: 6rem;
+          height: 6rem;
           border-radius: 50%;
-          padding: 3px;
+          padding: 0.1875rem;
           background: conic-gradient(
             from 140deg,
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 60%,
-              #ffffff
-            ),
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 70%,
-              #000000
-            ),
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 60%,
-              #ffffff
-            )
+            color-mix(in oklch, var(--accent) 60%, var(--card)),
+            color-mix(in oklch, var(--accent) 70%, var(--card)),
+            color-mix(in oklch, var(--accent) 60%, var(--card))
           );
         }
         .iso-photo {
@@ -1151,61 +997,47 @@ export class Guest extends Person {
           border-radius: 50%;
           object-fit: cover;
           display: block;
-          background: var(--tsp-background, var(--background, #f7f1e4));
+          background-color: var(--background);
         }
         .iso-initials {
           display: flex;
           align-items: center;
           justify-content: center;
-          font: 600 30px
-            var(
-              --tsp-font-serif,
-              var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-            );
-          color: var(
-            --tsp-accent-foreground,
-            var(--accent-foreground, #22283f)
-          );
+          font: 600 1.875rem var(--font-serif);
+          color: var(--accent-foreground);
           background: linear-gradient(
             135deg,
-            color-mix(
-              in srgb,
-              var(--tsp-accent, var(--accent, #c5a35c)) 45%,
-              #ffffff
-            ),
-            var(--tsp-accent, var(--accent, #c5a35c))
+            color-mix(in oklch, var(--accent) 45%, var(--card)),
+            var(--accent)
           );
         }
         .iso-star {
           position: absolute;
           right: 0;
           bottom: 2px;
-          width: 26px;
-          height: 26px;
+          width: 1.625rem;
+          height: 1.625rem;
           border-radius: 50%;
-          background: var(--tsp-accent, var(--accent, #a5854a));
-          color: var(--tsp-card, var(--card, #fffdf8));
-          font-size: 13px;
+          background-color: var(--accent);
+          color: var(--accent-foreground);
+          font-size: 0.8125rem;
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 2px solid var(--tsp-background, var(--background, #f7f1e4));
+          border: 2px solid var(--background);
         }
         .iso-ident {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .iso-kicker {
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 9.5px;
+          font-family: var(--font-sans);
+          font-size: 0.5938rem;
           letter-spacing: 0.3em;
           text-transform: uppercase;
-          color: var(--tsp-accent, var(--accent, #a5854a));
+          color: var(--accent-ink);
         }
         .iso-name-input {
           width: 100%;
@@ -1213,134 +1045,123 @@ export class Guest extends Person {
           padding: 0 0 2px;
           border: none;
           border-bottom: 1px solid transparent;
-          background: transparent;
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
-          font-size: clamp(26px, 5.5cqw, 38px);
+          background-color: transparent;
+          font-family: var(--font-serif);
+          font-size: clamp(1.625rem, 5.5cqw, 2.375rem);
           font-weight: 500;
           line-height: 1.12;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          color: var(--foreground);
         }
         .iso-name-input:hover {
-          border-bottom-color: rgba(41, 26, 35, 0.2);
+          border-bottom-color: color-mix(
+            in oklch,
+            var(--border-strong) 20%,
+            transparent
+          );
         }
         .iso-name-input:focus {
           outline: none;
-          border-bottom-color: var(--tsp-accent, var(--accent, #a5854a));
+          border-bottom-color: var(--accent);
         }
         .iso-cats {
           display: flex;
           flex-wrap: wrap;
-          gap: 6px;
-          margin-top: 8px;
+          gap: 0.375rem;
+          margin-top: 0.5rem;
         }
         .iso-catchip {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 5px 11px;
-          border: 1px solid rgba(41, 26, 35, 0.2);
-          border-radius: 999px;
-          background: var(--tsp-card, var(--card, #fffdf8));
+          gap: 0.375rem;
+          padding: 0.3125rem 0.6875rem;
+          border: 1px solid
+            color-mix(in oklch, var(--border-strong) 20%, transparent);
+          border-radius: 62.4375rem;
+          background-color: var(--card);
           cursor: pointer;
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 11px;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font-family: var(--font-sans);
+          font-size: 0.6875rem;
+          color: var(--foreground);
         }
         .iso-catchip.is-on {
           border-color: transparent;
-          background: var(--tsp-accent, var(--accent, #a5854a));
-          color: var(--tsp-card, var(--card, #fffdf8));
+          background-color: var(--accent);
+          color: var(--accent-foreground);
         }
         .iso-vip-toggle {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 5px 13px;
-          border: 1px solid rgba(41, 26, 35, 0.28);
-          border-radius: 999px;
-          background: var(--tsp-card, var(--card, #fffdf8));
+          gap: 0.375rem;
+          padding: 0.3125rem 0.8125rem;
+          border: 1px solid
+            color-mix(in oklch, var(--border-strong) 28%, transparent);
+          border-radius: 62.4375rem;
+          background-color: var(--card);
           cursor: pointer;
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 9.5px;
+          font-family: var(--font-sans);
+          font-size: 0.5938rem;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          color: var(--foreground);
         }
         .iso-vip-toggle.is-on {
-          background: var(--tsp-accent, var(--accent, #a5854a));
-          border-color: var(--tsp-accent, var(--accent, #a5854a));
-          color: var(--tsp-card, var(--card, #fffdf8));
+          background-color: var(--accent);
+          border-color: var(--accent);
+          color: var(--accent-foreground);
         }
         .iso-tags {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
           margin-top: 2px;
         }
         .iso-pill {
           display: inline-flex;
           align-items: center;
-          gap: 7px;
-          padding: 5px 13px;
-          border: 1px solid rgba(41, 26, 35, 0.28);
-          border-radius: 999px;
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 9.5px;
+          gap: 0.4375rem;
+          padding: 0.3125rem 0.8125rem;
+          border: 1px solid
+            color-mix(in oklch, var(--border-strong) 28%, transparent);
+          border-radius: 62.4375rem;
+          font-family: var(--font-sans);
+          font-size: 0.5938rem;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
-          background: var(--tsp-card, var(--card, #fffdf8));
+          color: var(--foreground);
+          background-color: var(--card);
         }
         .iso-pill.is-vip {
-          background: var(--tsp-accent, var(--accent, #a5854a));
-          border-color: var(--tsp-accent, var(--accent, #a5854a));
-          color: var(--tsp-card, var(--card, #fffdf8));
+          background-color: var(--accent);
+          border-color: var(--accent);
+          color: var(--accent-foreground);
         }
         .iso-dot {
-          width: 9px;
-          height: 9px;
+          width: 0.5625rem;
+          height: 0.5625rem;
           border-radius: 50%;
           flex: none;
         }
         .iso-sect {
           display: flex;
           align-items: baseline;
-          gap: 12px;
-          margin: 32px 0 14px;
+          gap: 0.75rem;
+          margin: 2rem 0 0.875rem;
         }
         .iso-sect-no {
           flex: none;
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
+          font-family: var(--font-serif);
           font-style: italic;
-          font-size: 15px;
-          color: var(--tsp-accent, var(--accent, #a5854a));
+          font-size: 0.9375rem;
+          color: var(--accent-ink);
         }
         .iso-sect-title {
           flex: none;
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 10px;
+          font-family: var(--font-sans);
+          font-size: 0.625rem;
           letter-spacing: 0.3em;
           text-transform: uppercase;
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          color: var(--foreground);
         }
         .iso-sect .iso-rule {
           align-self: center;
@@ -1348,36 +1169,30 @@ export class Guest extends Person {
         .iso-party {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .iso-lbl {
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', sans-serif)
-          );
-          font-size: 9px;
+          font-family: var(--font-sans);
+          font-size: 0.5625rem;
           letter-spacing: 0.24em;
           text-transform: uppercase;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #8a7f6c));
+          color: var(--muted-foreground);
         }
         .iso-party-card {
-          max-width: 460px;
+          max-width: 28.75rem;
         }
         .iso-empty-line {
           margin: 0;
-          font-family: var(
-            --tsp-font-serif,
-            var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-          );
+          font-family: var(--font-serif);
           font-style: italic;
-          font-size: 13.5px;
-          color: var(--tsp-muted-foreground, var(--muted-foreground, #8a7f6c));
+          font-size: 0.8438rem;
+          color: var(--muted-foreground);
         }
         @container iso (max-width: 480px) {
           .iso-hero {
             flex-direction: column;
             align-items: flex-start;
-            gap: 16px;
+            gap: 1rem;
           }
         }
       </style>

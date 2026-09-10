@@ -163,7 +163,7 @@ export class BlogCategory extends CardDef {
             border-radius: var(--boxel-border-radius-xs);
             display: flex;
             align-items: center;
-            height: 32px;
+            height: 2rem;
             margin: auto 0;
             margin-right: var(--boxel-sp-xs);
           }

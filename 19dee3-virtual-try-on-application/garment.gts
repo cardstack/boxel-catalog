@@ -51,8 +51,6 @@ export class Garment extends CardDef {
            same whether rendered standalone or inside the app's tiles (the card
            is scoped, so it can't read the app's .app tokens — restate them). */
         .garment-fitted {
-          --surface2: #f1efea;
-          --muted: #8c887d;
           position: relative;
           display: flex;
           align-items: center;
@@ -60,7 +58,8 @@ export class Garment extends CardDef {
           width: 100%;
           height: 100%;
           overflow: hidden;
-          background-color: var(--surface2);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .garment-img {
           width: 100%;
@@ -70,7 +69,7 @@ export class Garment extends CardDef {
         .garment-fallback {
           width: 20%;
           height: 20%;
-          color: var(--muted);
+          color: var(--muted-foreground);
         }
         /* Caption hidden by default; only the `card` size reveals it. */
         .garment-caption {
@@ -85,9 +84,13 @@ export class Garment extends CardDef {
             inset-inline: 0;
             inset-block-end: 0;
             padding: var(--boxel-sp-xl) var(--boxel-sp) var(--boxel-sp-xs);
-            font: 700 15px/1.2 var(--boxel-font-family, system-ui, sans-serif);
-            color: #fff;
-            background: linear-gradient(to top, rgb(0 0 0 / 65%), transparent);
+            font: 700 0.9375rem/1.2 var(--boxel-font-family);
+            color: var(--tooltip-foreground);
+            background: linear-gradient(
+              to top,
+              color-mix(in oklch, var(--tooltip) 65%, transparent),
+              transparent
+            );
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -116,20 +119,18 @@ export class Garment extends CardDef {
         /* Same warm palette as the fitted format / the virtual-try-on app, so
            an embedded Garment reads consistently wherever it appears. */
         .garment-embedded {
-          --surface2: #f1efea;
-          --text: #1a1a1c;
-          --muted: #8c887d;
           display: flex;
           align-items: flex-start;
           gap: var(--boxel-sp-sm);
-          color: var(--text);
+          color: var(--foreground);
         }
         .thumb {
-          width: 64px;
-          height: 64px;
+          width: 4rem;
+          height: 4rem;
           object-fit: cover;
-          border-radius: 10px;
-          background-color: var(--surface2);
+          border-radius: 0.625rem;
+          background-color: var(--card);
+          color: var(--card-foreground);
           flex-shrink: 0;
         }
         .details {
@@ -144,7 +145,7 @@ export class Garment extends CardDef {
         }
         .category {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted);
+          color: var(--muted-foreground);
           text-transform: capitalize;
         }
       </style>

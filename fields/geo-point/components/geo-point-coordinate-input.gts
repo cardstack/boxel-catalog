@@ -118,7 +118,7 @@ export default class GeoPointCoordinateInput extends GlimmerComponent<Coordinate
 
       .coord-field :deep(.boxel-input) {
         border-radius: var(--boxel-border-radius-sm);
-        border: 1px solid var(--boxel-border-color);
+        border: 1px solid var(--input);
         width: 100%;
       }
     </style>

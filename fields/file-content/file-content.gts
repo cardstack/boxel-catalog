@@ -35,9 +35,10 @@ export class FileContentField extends FieldDef {
         .file-atom {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          padding: 2px 6px;
-          background: var(--muted, #f6f8fa);
+          gap: 0.25rem;
+          padding: 2px 0.375rem;
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           border-radius: var(--boxel-border-radius-sm);
           max-width: 100%;
           overflow: hidden;
@@ -45,14 +46,14 @@ export class FileContentField extends FieldDef {
 
         .file-atom-icon {
           flex-shrink: 0;
-          color: var(--muted-foreground, #656d76);
+          color: var(--muted-foreground);
         }
 
         .file-atom-name {
           font-size: var(--boxel-font-size-2xs);
           font-weight: 500;
           font-family: var(--boxel-monospace-font-family);
-          color: var(--foreground, #1f2328);
+          color: var(--foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -99,10 +100,11 @@ export class FileContentField extends FieldDef {
         .file-embedded {
           display: flex;
           flex-direction: column;
-          border: 1px solid var(--border, #d0d7de);
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
           overflow: hidden;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
 
         .file-header {
@@ -110,14 +112,15 @@ export class FileContentField extends FieldDef {
           align-items: center;
           gap: var(--boxel-sp-4xs);
           padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-          background: var(--muted, #f6f8fa);
-          border-bottom: 1px solid var(--border, #d0d7de);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
+          border-bottom: 1px solid var(--border);
           min-width: 0;
         }
 
         .file-header-icon {
           flex-shrink: 0;
-          color: var(--muted-foreground, #656d76);
+          color: var(--muted-foreground);
         }
 
         .file-name {
@@ -125,7 +128,7 @@ export class FileContentField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
           font-weight: 500;
           font-family: var(--boxel-monospace-font-family);
-          color: var(--foreground, #1f2328);
+          color: var(--foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -138,9 +141,9 @@ export class FileContentField extends FieldDef {
           font-weight: 600;
           font-family: var(--boxel-font-family);
           letter-spacing: var(--boxel-lsp-sm);
-          padding: 1px 5px;
-          background: var(--muted, #f6f8fa);
-          color: var(--muted-foreground, #656d76);
+          padding: 1px 0.3125rem;
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           border-radius: var(--boxel-border-radius-sm);
           white-space: nowrap;
         }
@@ -152,7 +155,7 @@ export class FileContentField extends FieldDef {
           font-weight: 400;
           font-family: var(--boxel-monospace-font-family);
           line-height: 1.6;
-          color: var(--muted-foreground, #656d76);
+          color: var(--muted-foreground);
           white-space: pre;
           overflow: hidden;
           display: -webkit-box;
@@ -195,9 +198,10 @@ export class FileManifestEntryField extends FieldDef {
         .file-atom {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          padding: 2px 6px;
-          background: var(--muted, #f6f8fa);
+          gap: 0.25rem;
+          padding: 2px 0.375rem;
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           border-radius: var(--boxel-border-radius-sm);
           max-width: 100%;
           overflow: hidden;
@@ -205,14 +209,14 @@ export class FileManifestEntryField extends FieldDef {
 
         .file-atom-icon {
           flex-shrink: 0;
-          color: var(--muted-foreground, #656d76);
+          color: var(--muted-foreground);
         }
 
         .file-atom-name {
           font-size: var(--boxel-font-size-2xs);
           font-weight: 500;
           font-family: var(--boxel-monospace-font-family);
-          color: var(--foreground, #1f2328);
+          color: var(--foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -223,7 +227,7 @@ export class FileManifestEntryField extends FieldDef {
           flex-shrink: 0;
           font-size: var(--boxel-font-size-2xs);
           font-family: var(--boxel-font-family);
-          color: var(--muted-foreground, #656d76);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>

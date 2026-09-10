@@ -64,15 +64,19 @@ export class AiImageGeneratorIsolated extends Component<
   // once — on the skeleton — not doubled in the composer too.
   @tracked pendingPrompt = '';
 
-  // In-card light/dark control. Stamped as `data-theme` on the card root; since
-  // `--boxel-color-scheme` is an inherited signal and the theme tokens are
-  // scoped, flipping it re-themes ONLY this card (a linked Theme's `.dark`
-  // block responds too via the CardContainer pipeline). Defaults to the
-  // studio-dark brand look.
+  // In-card light/dark control, stamped as `data-theme` on the card root.
+  // theme.css allows an explicit dark scheme on any subtree; this studio opts
+  // its own subtree in by default. Since `--boxel-color-scheme` is an inherited
+  // signal and theme tokens are scoped, the toggle re-themes ONLY this card,
+  // and a linked Theme's dark block responds too via the CardContainer pipeline.
   @tracked colorScheme: 'light' | 'dark' = 'dark';
 
+  get isDark() {
+    return this.colorScheme === 'dark';
+  }
+
   @action toggleColorScheme() {
-    this.colorScheme = this.colorScheme === 'dark' ? 'light' : 'dark';
+    this.colorScheme = this.isDark ? 'light' : 'dark';
   }
 
   // Focused editing session: opened by clicking Refine on a history image. It
@@ -677,17 +681,13 @@ export class AiImageGeneratorIsolated extends Component<
           class='scheme-toggle'
           {{on 'click' this.toggleColorScheme}}
           aria-label={{if
-            (eq this.colorScheme 'dark')
+            this.isDark
             'Switch to light mode'
             'Switch to dark mode'
           }}
-          title={{if
-            (eq this.colorScheme 'dark')
-            'Switch to light mode'
-            'Switch to dark mode'
-          }}
+          title={{if this.isDark 'Switch to light mode' 'Switch to dark mode'}}
         >
-          {{#if (eq this.colorScheme 'dark')}}
+          {{#if this.isDark}}
             <SunIcon />
           {{else}}
             <MoonIcon />
@@ -1218,54 +1218,22 @@ export class AiImageGeneratorIsolated extends Component<
 
     <style scoped>
       .ai-image {
-        --c-bg: var(--ai-image-bg, var(--background, #ffffff));
-        --c-fg: var(--ai-image-ink, var(--foreground, #1a1a1a));
-        --c-surface: var(--ai-image-surface, var(--card, #f7f7f7));
-        --c-muted: var(--ai-image-muted, var(--muted-foreground, #919191));
-        --c-accent: var(--ai-image-accent, var(--primary, #00b389));
-        --c-accent-fg: var(
-          --ai-image-accent-fg,
-          var(--primary-foreground, #ffffff)
-        );
-        --c-border: var(--ai-image-border, var(--border, #e8e8e8));
-        --c-edit: var(--ai-image-edit, var(--primary, #2f6fd0));
-        --c-inpaint: var(--ai-image-inpaint, #c2410c);
-        --c-danger: var(--ai-image-danger, var(--destructive, #d32f2f));
-        --c-radius: var(--ai-image-radius, var(--radius, 10px));
         position: relative;
         display: flex;
         flex-direction: column;
         height: 100%;
-        background: var(--c-bg);
-        color: var(--c-fg);
+        background-color: var(--canvas);
+        color: var(--foreground);
         font: var(--boxel-font-sm);
-        font-family: var(--ai-image-font, var(--font-sans, inherit));
+        font-family: var(--font-sans);
         container-type: inline-size;
       }
-      /* Default palette, pinned only when no theme is linked. Ships both a
-         light and a studio-dark variant keyed off the card's own data-theme,
-         so the in-card toggle re-themes just this card. A linked theme supplies
-         these semantic tokens itself and this block is absent. */
+      /* The in-card light/dark toggle needs no palette here: theme.css
+         declares the whole contract under [data-theme='dark'], so stamping
+         data-theme on this root re-themes just this card. Do not re-add a
+         card-level palette. */
       .ai-image-default-theme {
-        --background: #ffffff;
-        --foreground: #1a1a1a;
-        --card: #f6f6f8;
-        --card-foreground: #1a1a1a;
-        --muted-foreground: #6b6b76;
-        --border: rgba(0, 0, 0, 0.1);
-        --primary: #00b389;
-        --primary-foreground: #08100d;
-        --destructive: #d32f2f;
-        --radius: 14px;
-      }
-      .ai-image-default-theme[data-theme='dark'] {
-        --background: #101014;
-        --foreground: #ececf1;
-        --card: #18181e;
-        --card-foreground: #ececf1;
-        --muted-foreground: #8e8ea0;
-        --border: rgba(255, 255, 255, 0.09);
-        --destructive: #f87171;
+        color: var(--card-foreground);
       }
       .body {
         flex: 1 1 auto;
@@ -1280,8 +1248,9 @@ export class AiImageGeneratorIsolated extends Component<
         flex-direction: column;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp);
-        border-right: 1px solid var(--c-border);
-        background: var(--c-surface);
+        border-right: 1px solid var(--border);
+        background-color: var(--sidebar);
+        color: var(--sidebar-foreground);
         /* Model + Aspect stay put at the top; only the version list scrolls. */
         overflow: hidden;
       }
@@ -1294,7 +1263,9 @@ export class AiImageGeneratorIsolated extends Component<
           /* Stacked layout scrolls as a whole; version list uses its cap. */
           overflow-y: auto;
           border-right: none;
-          border-bottom: 1px solid var(--c-border);
+          border-bottom: 1px solid var(--border);
+          background-color: var(--sidebar);
+          color: var(--sidebar-foreground);
         }
       }
       .main {
@@ -1310,10 +1281,10 @@ export class AiImageGeneratorIsolated extends Component<
            dark; fixed 22px cell keeps it pixel-consistent as the thread
            scrolls. */
         background-image: radial-gradient(
-          color-mix(in srgb, var(--c-fg) 7%, transparent) 1px,
+          color-mix(in oklch, var(--foreground) 7%, transparent) 1px,
           transparent 1px
         );
-        background-size: 22px 22px;
+        background-size: 1.375rem 1.375rem;
         background-position: center top;
       }
       .header {
@@ -1322,7 +1293,7 @@ export class AiImageGeneratorIsolated extends Component<
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        border-bottom: 1px solid var(--c-border);
+        border-bottom: 1px solid var(--border);
       }
       .scheme-toggle {
         margin-left: auto;
@@ -1332,18 +1303,18 @@ export class AiImageGeneratorIsolated extends Component<
         justify-content: center;
         width: 2rem;
         height: 2rem;
-        border: 1px solid var(--c-border);
+        border: 1px solid var(--border);
         border-radius: 50%;
-        background: transparent;
-        color: var(--c-fg);
+        background-color: transparent;
+        color: var(--foreground);
         cursor: pointer;
         transition:
           border-color 0.15s ease,
           color 0.15s ease;
       }
       .scheme-toggle:hover {
-        border-color: var(--c-accent);
-        color: var(--c-accent);
+        border-color: var(--primary);
+        color: var(--primary-ink);
       }
       .scheme-toggle > :deep(svg) {
         width: 1.05rem;
@@ -1360,8 +1331,8 @@ export class AiImageGeneratorIsolated extends Component<
         height: 2rem;
         padding: 0.375rem;
         border-radius: 50%;
-        color: var(--c-accent);
-        background: color-mix(in srgb, var(--c-accent) 12%, transparent);
+        color: var(--primary-ink);
+        background-color: color-mix(in oklch, var(--primary) 12%, transparent);
       }
       .thread {
         flex: 1;
@@ -1405,21 +1376,21 @@ export class AiImageGeneratorIsolated extends Component<
       .version {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        color: var(--c-fg);
-        background: var(--c-surface);
-        border: 1px solid var(--c-border);
+        color: var(--foreground);
+        background-color: var(--card);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
         padding: 2px var(--boxel-sp-xxs);
       }
       .lineage {
         font-size: var(--boxel-font-size-xs);
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         font-style: italic;
       }
       .when {
         margin-left: auto;
         font-size: var(--boxel-font-size-xs);
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .turn-prompt-row {
         display: flex;
@@ -1430,7 +1401,7 @@ export class AiImageGeneratorIsolated extends Component<
         flex: 1 1 auto;
         min-width: 0;
         margin: 0;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       /* Copy-prompt button on a thread turn: always visible, brightens on hover. */
       .turn-copy {
@@ -1447,16 +1418,20 @@ export class AiImageGeneratorIsolated extends Component<
         font-weight: 600;
         border-radius: var(--boxel-border-radius-sm);
         padding: 2px var(--boxel-sp-xxs);
-        background: color-mix(in srgb, var(--c-fg) 10%, transparent);
-        color: var(--c-fg);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 10%,
+          transparent
+        );
+        color: var(--foreground);
       }
       .badge-inpaint {
-        background: color-mix(in srgb, var(--c-inpaint) 16%, transparent);
-        color: color-mix(in srgb, var(--c-inpaint), var(--c-fg) 40%);
+        background-color: color-mix(in oklch, var(--warning) 16%, transparent);
+        color: color-mix(in oklch, var(--warning-ink), var(--foreground) 40%);
       }
       .badge-edit {
-        background: color-mix(in srgb, var(--c-edit) 14%, transparent);
-        color: color-mix(in srgb, var(--c-edit), var(--c-fg) 40%);
+        background-color: color-mix(in oklch, var(--primary) 14%, transparent);
+        color: color-mix(in oklch, var(--primary-ink), var(--foreground) 40%);
       }
       /* Every turn renders at the SAME width so the transcript is a clean
          column; height follows each image's aspect ratio (ChatGPT-style),
@@ -1465,16 +1440,17 @@ export class AiImageGeneratorIsolated extends Component<
         display: block;
         width: 100%;
         height: auto;
-        border-radius: var(--c-radius);
-        border: 1px solid var(--c-border);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        box-shadow: 0 8px 32px
+          color-mix(in oklch, var(--shadow-color) 28%, transparent);
       }
       .turn-skeleton {
         width: 100%;
         aspect-ratio: 16 / 9;
-        border-radius: var(--c-radius);
+        border-radius: var(--radius);
         overflow: hidden;
-        border: 1px solid var(--c-border);
+        border: 1px solid var(--border);
       }
       .gen-center {
         position: relative;
@@ -1492,8 +1468,8 @@ export class AiImageGeneratorIsolated extends Component<
         width: 3rem;
         height: 3rem;
         border-radius: 50%;
-        color: var(--c-accent);
-        background: color-mix(in srgb, var(--c-accent) 14%, transparent);
+        color: var(--primary-ink);
+        background-color: color-mix(in oklch, var(--primary) 14%, transparent);
         animation: gen-pulse 1.8s ease-in-out infinite;
       }
       .gen-badge > :deep(svg) {
@@ -1506,13 +1482,13 @@ export class AiImageGeneratorIsolated extends Component<
       .gen-title {
         font-size: var(--boxel-font-size);
         font-weight: 700;
-        color: #1a1a1a;
+        color: var(--foreground);
       }
       .gen-sub {
         max-width: 20rem;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.4;
-        color: #6b6b76;
+        color: var(--muted-foreground);
       }
       .gen-dots {
         display: flex;
@@ -1523,7 +1499,8 @@ export class AiImageGeneratorIsolated extends Component<
         width: 0.4rem;
         height: 0.4rem;
         border-radius: 50%;
-        background: var(--c-accent);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         animation: gen-bounce 1.2s ease-in-out infinite;
       }
       .gen-dots span:nth-child(2) {
@@ -1565,7 +1542,7 @@ export class AiImageGeneratorIsolated extends Component<
         /* Fixed display width for every turn so v1, v2, … line up as a column
            regardless of aspect ratio; the hover actions anchor to this box. */
         width: 100%;
-        max-width: 380px;
+        max-width: 23.75rem;
       }
       /* Actions live on the image itself, revealed on hover/focus, so they
          read as tools for THIS image rather than competing with Generate. */
@@ -1596,11 +1573,11 @@ export class AiImageGeneratorIsolated extends Component<
         align-items: center;
         gap: var(--boxel-sp-4xs);
         padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-        border-radius: var(--boxel-border-radius-sm, 6px);
-        border: 1px solid var(--c-border);
-        background: color-mix(in srgb, var(--c-surface) 82%, transparent);
+        border-radius: var(--boxel-border-radius-sm);
+        border: 1px solid var(--border);
+        background-color: var(--card);
         backdrop-filter: blur(8px);
-        color: var(--c-fg);
+        color: var(--foreground);
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         line-height: 1.6;
@@ -1610,8 +1587,8 @@ export class AiImageGeneratorIsolated extends Component<
           color 0.15s ease;
       }
       .download:hover {
-        border-color: var(--c-accent);
-        color: var(--c-accent);
+        border-color: var(--primary);
+        color: var(--primary-ink);
       }
       .download:active {
         opacity: 0.8;
@@ -1625,28 +1602,28 @@ export class AiImageGeneratorIsolated extends Component<
         margin: auto;
         max-width: 32rem;
         padding: var(--boxel-sp-xl) var(--boxel-sp);
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .empty-badge {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 48px;
-        height: 48px;
+        width: 3rem;
+        height: 3rem;
         border-radius: 50%;
-        background: color-mix(in srgb, var(--c-accent) 18%, transparent);
-        color: var(--c-accent);
+        background-color: color-mix(in oklch, var(--primary) 18%, transparent);
+        color: var(--primary-ink);
         margin-bottom: var(--boxel-sp-xs);
       }
       .empty-badge > :deep(svg) {
-        width: 24px;
-        height: 24px;
+        width: 1.5rem;
+        height: 1.5rem;
       }
       .empty h2 {
         margin: 0;
         font-size: var(--boxel-font-size);
         font-weight: 700;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .empty p {
         margin: 0;
@@ -1662,13 +1639,13 @@ export class AiImageGeneratorIsolated extends Component<
         --boxel-pill-padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
         cursor: pointer;
-        background: transparent;
-        border-color: var(--c-border);
-        color: var(--c-fg);
+        background-color: transparent;
+        border-color: var(--border);
+        color: var(--foreground);
       }
       .example-chip:hover {
-        border-color: var(--c-accent);
-        color: var(--c-accent);
+        border-color: var(--primary);
+        color: var(--primary-ink);
       }
       /* Floating pill composer over the canvas, Midjourney-style. */
       .composer-dock {
@@ -1684,7 +1661,7 @@ export class AiImageGeneratorIsolated extends Component<
         align-items: center;
         gap: var(--boxel-sp-xxs);
         padding: var(--boxel-sp-xl) var(--boxel-sp-lg) var(--boxel-sp);
-        background: linear-gradient(transparent, var(--c-bg) 55%);
+        background: linear-gradient(transparent, var(--background) 55%);
         pointer-events: none;
       }
       .composer-dock > * {
@@ -1697,11 +1674,13 @@ export class AiImageGeneratorIsolated extends Component<
         flex-direction: column;
         gap: var(--boxel-sp-xxs);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--c-border);
+        border: 1px solid var(--border);
         border-radius: 1.5rem;
         /* Opaque so a tall generating skeleton behind it never ghosts through. */
-        background: var(--c-surface);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        box-shadow: 0 12px 40px
+          color-mix(in oklch, var(--shadow-color) 30%, transparent);
       }
       /* GPT-style memory toggle: follow-up prompts continue the latest image
          unless the person opts into a fresh one. */
@@ -1710,11 +1689,11 @@ export class AiImageGeneratorIsolated extends Component<
         gap: var(--boxel-sp-xxs);
       }
       .mode-chip {
-        border: 1px solid var(--c-border);
-        border-radius: 999px;
+        border: 1px solid var(--border);
+        border-radius: 62.4375rem;
         padding: 2px var(--boxel-sp-xs);
-        background: transparent;
-        color: var(--c-muted);
+        background-color: transparent;
+        color: var(--muted-foreground);
         font: inherit;
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
@@ -1724,9 +1703,9 @@ export class AiImageGeneratorIsolated extends Component<
           color 0.15s ease;
       }
       .mode-chip.active {
-        border-color: var(--c-accent);
-        color: var(--c-fg);
-        background: color-mix(in srgb, var(--c-accent) 12%, transparent);
+        border-color: var(--primary);
+        color: var(--foreground);
+        background-color: color-mix(in oklch, var(--primary) 12%, transparent);
       }
       .composer-main {
         display: flex;
@@ -1741,22 +1720,22 @@ export class AiImageGeneratorIsolated extends Component<
         background: none;
         cursor: pointer;
         font-size: 1rem;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         line-height: 1;
       }
       .prompt-input {
         min-height: 3.25rem;
         max-height: 10rem;
         resize: none;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .prompt-input::placeholder {
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       /* Bottom composer: borderless, blends into the pill card. */
       .composer-main .prompt-input {
         border: none;
-        background: transparent;
+        background-color: transparent;
         box-shadow: none;
       }
       .composer-main .prompt-input:focus,
@@ -1767,13 +1746,17 @@ export class AiImageGeneratorIsolated extends Component<
       }
       /* Refine modal: a visible bordered field on the dark modal surface. */
       .edit-controls .prompt-input {
-        border: 1px solid var(--c-border);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background: color-mix(in srgb, var(--c-fg) 4%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 4%,
+          transparent
+        );
       }
       .edit-controls .prompt-input:focus,
       .edit-controls .prompt-input:focus-visible {
-        border-color: var(--c-accent);
+        border-color: var(--primary);
         outline: none;
       }
       .setting {
@@ -1783,24 +1766,25 @@ export class AiImageGeneratorIsolated extends Component<
         /* Theme the in-place BoxelSelect dropdown through the card's tokens so
            its options (esp. the hover/highlight state) stay legible in dark and
            light — custom properties inherit into the rendered-in-place menu. */
-        --dropdown-background-color: var(--c-surface);
-        --dropdown-text-color: var(--c-fg);
+        --dropdown-background-color: var(--card);
+        color: var(--card-foreground);
+        --dropdown-text-color: var(--foreground);
         --dropdown-hover-color: color-mix(
-          in srgb,
-          var(--c-accent) 18%,
+          in oklch,
+          var(--primary) 18%,
           transparent
         );
         --dropdown-highlight-color: color-mix(
-          in srgb,
-          var(--c-accent) 24%,
+          in oklch,
+          var(--primary) 24%,
           transparent
         );
         --dropdown-highlight-hover-color: color-mix(
-          in srgb,
-          var(--c-accent) 32%,
+          in oklch,
+          var(--primary) 32%,
           transparent
         );
-        --dropdown-selected-text-color: var(--c-fg);
+        --dropdown-selected-text-color: var(--foreground);
       }
       /* ember-power-select marks the current value with
          `--selected`/`--highlighted` (not aria-*). Its default solid-accent fill
@@ -1809,16 +1793,16 @@ export class AiImageGeneratorIsolated extends Component<
       .setting :deep(.ember-power-select-option--selected),
       .setting :deep(.ember-power-select-option--highlighted) {
         background-color: color-mix(
-          in srgb,
-          var(--c-accent) 22%,
+          in oklch,
+          var(--primary) 22%,
           transparent
         ) !important;
-        color: var(--c-fg) !important;
+        color: var(--foreground) !important;
       }
       .setting-label {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       /* Aspect ratio locked to the source image during a refine / continue. */
       .aspect-locked {
@@ -1827,16 +1811,20 @@ export class AiImageGeneratorIsolated extends Component<
         justify-content: space-between;
         gap: var(--boxel-sp-xxs);
         padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-        border: 1px solid var(--c-border);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background: color-mix(in srgb, var(--c-fg) 5%, transparent);
-        color: var(--c-muted);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 5%,
+          transparent
+        );
+        color: var(--muted-foreground);
         cursor: not-allowed;
       }
       .aspect-locked-value {
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .aspect-locked-icon {
         width: 0.9rem;
@@ -1862,10 +1850,12 @@ export class AiImageGeneratorIsolated extends Component<
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        border: 1px solid var(--c-border);
-        border-radius: var(--c-radius);
-        background: var(--c-surface);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        box-shadow: 0 12px 40px
+          color-mix(in oklch, var(--shadow-color) 30%, transparent);
         animation: turn-in 0.12s ease-out;
       }
       .version-popover-img {
@@ -1889,7 +1879,7 @@ export class AiImageGeneratorIsolated extends Component<
       .version-popover-tag {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .version-popover-prompt-row {
         display: flex;
@@ -1902,7 +1892,7 @@ export class AiImageGeneratorIsolated extends Component<
         margin: 0 0 var(--boxel-sp-4xs);
         font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         display: -webkit-box;
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
@@ -1919,16 +1909,20 @@ export class AiImageGeneratorIsolated extends Component<
         padding: 0;
         border: none;
         border-radius: var(--boxel-border-radius-sm);
-        background: transparent;
-        color: var(--c-muted);
+        background-color: transparent;
+        color: var(--muted-foreground);
         cursor: pointer;
         transition:
           color 0.15s ease,
           background 0.15s ease;
       }
       .pop-icon:hover {
-        color: var(--c-fg);
-        background: color-mix(in srgb, var(--c-fg) 8%, transparent);
+        color: var(--foreground);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 8%,
+          transparent
+        );
       }
       .pop-icon > :deep(svg) {
         width: 0.9rem;
@@ -1956,11 +1950,15 @@ export class AiImageGeneratorIsolated extends Component<
         pointer-events: none;
       }
       .rail {
-        stroke: var(--c-border);
+        stroke: var(--subtle-foreground);
         stroke-width: 1.5;
       }
       .rail-branch {
-        stroke: color-mix(in srgb, var(--c-accent) 55%, var(--c-border));
+        stroke: color-mix(
+          in oklch,
+          var(--primary-ink) 55%,
+          var(--subtle-foreground)
+        );
       }
       .version-btn {
         position: absolute;
@@ -1973,8 +1971,8 @@ export class AiImageGeneratorIsolated extends Component<
         padding: 0 var(--boxel-sp-5xs) 0 var(--rail-w, 2.5rem);
         border: 1px solid transparent;
         border-radius: var(--boxel-border-radius-sm);
-        background: transparent;
-        color: var(--c-fg);
+        background-color: transparent;
+        color: var(--foreground);
         font: inherit;
         text-align: left;
         cursor: pointer;
@@ -1983,41 +1981,49 @@ export class AiImageGeneratorIsolated extends Component<
           background 0.15s ease;
       }
       .version-btn:hover {
-        border-color: var(--c-border);
-        background: color-mix(in srgb, var(--c-fg) 6%, transparent);
+        border-color: var(--border);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 6%,
+          transparent
+        );
       }
       .version-btn.current {
-        border-color: var(--c-accent);
-        background: color-mix(in srgb, var(--c-accent) 12%, transparent);
+        border-color: var(--primary);
+        background-color: color-mix(in oklch, var(--primary) 12%, transparent);
       }
       /* Node dot, positioned over its lane on the SVG grid. */
       .version-dot {
         position: absolute;
         top: 50%;
-        width: 10px;
-        height: 10px;
+        width: 0.625rem;
+        height: 0.625rem;
         transform: translateY(-50%);
         border-radius: 50%;
-        background: var(--c-muted);
-        border: 2px solid var(--c-surface);
+        /* Neutral node: the emphasised line token, not an ink — it must read
+           against --card at 10px, which --muted would not. */
+        background-color: var(--border-strong);
+        border: 2px solid var(--card);
       }
       .version-btn.current .version-dot {
-        background: var(--c-accent);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       /* A root = a NEW image (no parent): a hollow ring, so it reads as the
          start of a fresh lineage rather than a point on the trunk. */
       .version-btn.root .version-dot {
-        background: var(--c-surface);
-        border-color: var(--c-muted);
-        box-shadow: inset 0 0 0 2px var(--c-muted);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-color: var(--muted-foreground);
+        box-shadow: inset 0 0 0 2px var(--muted-foreground);
       }
       .version-btn.root.current .version-dot {
-        border-color: var(--c-accent);
-        box-shadow: inset 0 0 0 2px var(--c-accent);
+        border-color: var(--primary);
+        box-shadow: inset 0 0 0 2px var(--primary);
       }
       .version-btn.branch .version-dot {
         box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--c-accent) 30%, transparent);
+          color-mix(in oklch, var(--primary) 30%, transparent);
       }
       .version-thumb {
         flex-shrink: 0;
@@ -2025,7 +2031,7 @@ export class AiImageGeneratorIsolated extends Component<
         height: 1.75rem;
         object-fit: cover;
         border-radius: var(--boxel-border-radius-sm);
-        border: 1px solid var(--c-border);
+        border: 1px solid var(--border);
       }
       .version-info {
         min-width: 0;
@@ -2042,7 +2048,7 @@ export class AiImageGeneratorIsolated extends Component<
         text-overflow: ellipsis;
         white-space: nowrap;
         font-size: var(--boxel-font-size-xs);
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       /* Re-point the aspect tiles' literal boxel grays at the theme chain so
          they read correctly on the studio-dark (or any themed) surface. The
@@ -2050,12 +2056,12 @@ export class AiImageGeneratorIsolated extends Component<
          needs full width for the 4-column grid to lay out like the sidebar. */
       .setting :deep(.ar-tile),
       .edit-setting :deep(.ar-tile) {
-        border-color: var(--c-border);
-        color: var(--c-muted);
+        border-color: var(--border);
+        color: var(--muted-foreground);
       }
       .setting :deep(.ar-tile.selected),
       .edit-setting :deep(.ar-tile.selected) {
-        color: var(--c-fg);
+        color: var(--foreground);
       }
       .edit-setting :deep(.ar-grid) {
         width: 100%;
@@ -2071,24 +2077,24 @@ export class AiImageGeneratorIsolated extends Component<
         padding: 0;
         border: none;
         border-radius: 50%;
-        background: var(--c-accent);
-        color: var(--c-accent-fg);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         cursor: pointer;
         transition: background 0.15s ease;
       }
       .stop-btn:hover {
-        background: color-mix(in srgb, var(--c-accent) 88%, #000000);
+        background-color: color-mix(in oklch, var(--primary) 88%, var(--card));
       }
       .stop-glyph {
         width: 0.7rem;
         height: 0.7rem;
         border-radius: 2px;
-        background: currentColor;
+        background-color: currentColor;
       }
       .error {
         width: 100%;
         max-width: 42rem;
-        color: var(--c-danger);
+        color: var(--destructive-ink);
         font-size: var(--boxel-font-size-xs);
         margin: 0;
       }
@@ -2096,7 +2102,8 @@ export class AiImageGeneratorIsolated extends Component<
       .edit-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.65);
+        background-color: var(--overlay);
+        color: var(--tooltip-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2104,15 +2111,16 @@ export class AiImageGeneratorIsolated extends Component<
         z-index: 10;
       }
       .edit-modal {
-        background: var(--c-bg);
+        background-color: var(--background);
         border-radius: var(--boxel-border-radius);
         padding: var(--boxel-sp);
-        width: min(560px, 100%);
+        width: min(35rem, 100%);
         max-height: 92%;
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-xs);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 12px 40px
+          color-mix(in oklch, var(--shadow-color) 35%, transparent);
         overflow: hidden;
       }
       /* Header (title) and footer (prompt + actions) stay fixed; only the
@@ -2147,7 +2155,11 @@ export class AiImageGeneratorIsolated extends Component<
         display: inline-flex;
         gap: 2px;
         padding: 2px;
-        background: color-mix(in srgb, var(--c-fg) 10%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 10%,
+          transparent
+        );
         border-radius: var(--boxel-border-radius);
         align-self: flex-start;
       }
@@ -2158,14 +2170,15 @@ export class AiImageGeneratorIsolated extends Component<
         font: inherit;
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         padding: var(--boxel-sp-xxs) var(--boxel-sp-sm);
         border-radius: calc(var(--boxel-border-radius) - 2px);
       }
       .tab.active {
-        background: var(--c-bg);
-        color: var(--c-fg);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+        background-color: var(--background);
+        color: var(--foreground);
+        box-shadow: 0 1px 2px
+          color-mix(in oklch, var(--shadow-color) 12%, transparent);
       }
       .edit-setting {
         display: flex;
@@ -2188,8 +2201,9 @@ export class AiImageGeneratorIsolated extends Component<
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background: var(--c-surface);
-        border: 1px solid var(--c-border);
+        background-color: var(--inset);
+        color: var(--foreground);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
         padding: var(--boxel-sp-xxs);
       }
@@ -2220,7 +2234,7 @@ export class AiImageGeneratorIsolated extends Component<
       .edit-hint {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       /* Provenance record of the image being refined. */
       .edit-record {
@@ -2229,9 +2243,13 @@ export class AiImageGeneratorIsolated extends Component<
         gap: var(--boxel-sp-4xs) var(--boxel-sp-sm);
         margin: 0;
         padding: var(--boxel-sp-xs);
-        border: 1px solid var(--c-border);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background: color-mix(in srgb, var(--c-fg) 4%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 4%,
+          transparent
+        );
       }
       .edit-record .rec {
         min-width: 0;
@@ -2242,12 +2260,12 @@ export class AiImageGeneratorIsolated extends Component<
       .edit-record dt {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .edit-record dd {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--c-fg);
+        color: var(--foreground);
         overflow-wrap: anywhere;
         /* A long prompt must not balloon the record; clamp to a few lines. */
         display: -webkit-box;
@@ -2270,16 +2288,16 @@ export class AiImageGeneratorIsolated extends Component<
          stays readable on the themed (incl. studio-dark) modal surface. */
       .ghost-btn {
         --boxel-button-color: transparent;
-        --boxel-button-border-color: var(--c-border);
-        --boxel-button-text-color: var(--c-fg);
-        background: transparent;
-        border-color: var(--c-border);
-        color: var(--c-fg);
+        --boxel-button-border-color: var(--border);
+        --boxel-button-text-color: var(--foreground);
+        background-color: transparent;
+        border-color: var(--border);
+        color: var(--foreground);
       }
       .ghost-btn:hover:not(:disabled) {
-        border-color: var(--c-accent);
-        color: var(--c-accent);
-        background: transparent;
+        border-color: var(--primary);
+        color: var(--primary-ink);
+        background-color: transparent;
       }
     </style>
   </template>
@@ -2319,14 +2337,12 @@ export class AiImageGeneratorEmbedded extends Component<
     </div>
     <style scoped>
       .embedded {
-        --c-muted: var(--ai-image-muted, var(--muted-foreground, #919191));
-        --c-border: var(--ai-image-border, var(--border, #e8e8e8));
         position: relative;
         height: 100%;
-        min-height: 120px;
+        min-height: 7.5rem;
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
-        background: var(--c-border);
+        background-color: var(--border);
       }
       .embedded img {
         width: 100%;
@@ -2339,7 +2355,7 @@ export class AiImageGeneratorEmbedded extends Component<
         align-items: center;
         justify-content: center;
         height: 100%;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .caption {
         position: absolute;
@@ -2351,13 +2367,16 @@ export class AiImageGeneratorEmbedded extends Component<
         gap: var(--boxel-sp-xxs);
         padding: var(--boxel-sp-xs);
         /* Sits on a fixed dark scrim over the image, so always light. */
-        color: #ffffff;
+        color: var(--tooltip-foreground);
         font-size: var(--boxel-font-size-sm);
-        background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+        background: linear-gradient(
+          transparent,
+          color-mix(in oklch, var(--tooltip) 70%, transparent)
+        );
       }
       .cap-icon {
-        width: 14px;
-        height: 14px;
+        width: 0.875rem;
+        height: 0.875rem;
       }
     </style>
   </template>

@@ -51,25 +51,25 @@ export class LineChart extends GlimmerComponent<LineChartSignature> {
     {
       key: 'totalPaid',
       label: 'Cumulative Paid',
-      color: 'var(--mc-teal, #007272)',
+      color: 'var(--info)',
       dashed: false,
     },
     {
       key: 'principalPaid',
       label: 'Cumulative Principal',
-      color: 'var(--mc-green, #059669)',
+      color: 'var(--success)',
       dashed: false,
     },
     {
       key: 'interestPaid',
       label: 'Cumulative Interest',
-      color: 'var(--chart-5, #ef4444)',
+      color: 'var(--chart-5)',
       dashed: false,
     },
     {
       key: 'balance',
       label: 'Remaining Balance',
-      color: 'var(--chart-2, #589BFF)',
+      color: 'var(--chart-2)',
       dashed: true,
     },
   ];
@@ -369,10 +369,10 @@ export class LineChart extends GlimmerComponent<LineChartSignature> {
         padding: 0.25rem 0.625rem;
         font-size: 0.75rem;
         font-weight: 500;
-        background: var(--muted, #f3f4f6);
-        color: var(--muted-foreground, #6b7280);
-        border: 1px solid var(--border, #e5e7eb);
-        border-radius: 999px;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border: 1px solid var(--border);
+        border-radius: 62.4375rem;
         cursor: pointer;
         transition:
           background 0.18s ease,
@@ -381,38 +381,39 @@ export class LineChart extends GlimmerComponent<LineChartSignature> {
         font-family: inherit;
       }
       .lc-toggle:hover {
-        background: var(--accent, #e5e7eb);
+        background-color: var(--accent);
+        color: var(--accent-foreground);
       }
       .lc-toggle.active {
-        background: var(--card, #ffffff);
-        color: var(--foreground, #111111);
-        border-color: var(--ring, #9ca3af);
-        box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.06));
+        background-color: var(--card);
+        color: var(--foreground);
+        border-color: var(--ring);
+        box-shadow: var(--shadow-xs);
       }
       .lc-swatch {
         display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 3px;
+        width: 0.625rem;
+        height: 0.625rem;
+        border-radius: 0.1875rem;
       }
       .lc-svg {
         width: 100%;
         height: auto;
-        max-height: 360px;
+        max-height: 22.5rem;
         font-family: inherit;
         user-select: none;
         cursor: crosshair;
       }
       .lc-grid {
-        stroke: var(--border, #e5e7eb);
+        stroke: var(--subtle-foreground);
         stroke-width: 1;
         stroke-dasharray: 2, 3;
         opacity: 0.7;
       }
       .lc-y-label,
       .lc-x-label {
-        font-size: 11px;
-        fill: var(--muted-foreground, #6b7280);
+        font-size: 0.6875rem;
+        fill: var(--muted-foreground);
         font-weight: 500;
       }
       .lc-line {
@@ -421,7 +422,7 @@ export class LineChart extends GlimmerComponent<LineChartSignature> {
         stroke-dashoffset: 0;
       }
       .lc-guide {
-        stroke: var(--ring, #9ca3af);
+        stroke: var(--ring);
         stroke-width: 1;
         stroke-dasharray: 3, 3;
       }
@@ -429,14 +430,14 @@ export class LineChart extends GlimmerComponent<LineChartSignature> {
         position: absolute;
         top: 2.5rem;
         right: 1rem;
-        background: var(--popover, #ffffff);
-        color: var(--popover-foreground, #111111);
-        border: 1px solid var(--border, #e5e7eb);
+        background-color: var(--popover);
+        color: var(--popover-foreground);
+        border: 1px solid var(--border);
         border-radius: 0.5rem;
         padding: 0.625rem 0.75rem;
-        box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.1));
+        box-shadow: var(--shadow-md);
         font-size: 0.75rem;
-        min-width: 220px;
+        min-width: 13.75rem;
         pointer-events: none;
         z-index: 5;
       }
@@ -447,13 +448,13 @@ export class LineChart extends GlimmerComponent<LineChartSignature> {
       }
       .lc-tooltip-row {
         display: grid;
-        grid-template-columns: 14px 1fr auto;
+        grid-template-columns: 0.875rem 1fr auto;
         align-items: center;
         gap: 0.375rem;
         padding: 0.125rem 0;
       }
       .lc-tooltip-label {
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
       .lc-tooltip-value {
         font-weight: 600;

@@ -433,7 +433,8 @@
       "floorPlanHeight": 487,
       "floorPlanLocked": false,
       "floorPlanOpacity": 41,
-      "invitationMessage": null
+      "invitationMessage": null,
+      "motif": "囍"
     },
     "relationships": {
       "hosts.0": {

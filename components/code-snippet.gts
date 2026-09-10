@@ -19,13 +19,6 @@ export default class CodeSnippet extends GlimmerComponent<CodeSnippetSignature> 
     </div>
     <style scoped>
       .code-snippet-container {
-        --field-header-bg: var(--boxel-200);
-        --field-bg: var(--card, var(--boxel-100));
-        --field-fg: var(--card-foreground, var(--boxel-dark));
-        --field-border: var(
-          --border,
-          color-mix(in oklab, var(--field-fg) 20%, var(--field-bg))
-        );
         display: flex;
         flex-direction: column;
       }
@@ -33,11 +26,11 @@ export default class CodeSnippet extends GlimmerComponent<CodeSnippetSignature> 
         margin-left: auto;
       }
       .code-snippet-header {
-        border: 1px solid var(--field-border);
+        border: 1px solid var(--border);
         border-bottom: none;
-        border-top-left-radius: var(--radius, var(--boxel-border-radius));
-        border-top-right-radius: var(--radius, var(--boxel-border-radius));
-        background-color: var(--field-header-bg);
+        border-top-left-radius: var(--radius);
+        border-top-right-radius: var(--radius);
+        background-color: var(--boxel-200);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -51,18 +44,15 @@ export default class CodeSnippet extends GlimmerComponent<CodeSnippetSignature> 
       .code-snippet {
         margin-block: 0;
         padding: var(--boxel-sp);
-        background-color: var(--field-bg);
-        border: 1px solid var(--field-border);
+        background-color: var(--card);
+        border: 1px solid var(--border);
         border-top: none;
-        border-bottom-left-radius: var(--radius, var(--boxel-border-radius));
-        border-bottom-right-radius: var(--radius, var(--boxel-border-radius));
+        border-bottom-left-radius: var(--radius);
+        border-bottom-right-radius: var(--radius);
         border-top-left-radius: 0;
         border-top-right-radius: 0;
-        color: var(--field-fg);
-        font-family: var(
-          --font-mono,
-          var(--boxel-monospace-font-family, monospace)
-        );
+        color: var(--card-foreground);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         white-space: pre-wrap;
         word-break: break-word;

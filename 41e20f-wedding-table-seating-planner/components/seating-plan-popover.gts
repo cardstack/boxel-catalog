@@ -181,28 +181,25 @@ export default class SeatingPlanPopover extends Component<Signature> {
         position: relative;
         display: flex;
         flex-direction: column;
-        max-height: min(480px, calc(100vh - 48px));
-        background: var(--tsp-popover, var(--popover, #fdfaf2));
-        color: var(--tsp-foreground, var(--foreground, #22283f));
-        font-family: var(
-          --tsp-font-sans,
-          var(--font-sans, 'Jost', system-ui, sans-serif)
-        );
+        max-height: min(30rem, calc(100vh - 3rem));
+        background-color: var(--popover);
+        color: var(--popover-foreground);
+        font-family: var(--font-sans);
         overflow: hidden;
       }
       .spp-glow {
         position: absolute;
         inset: -40% -20% auto -20%;
-        height: 150px;
+        height: 9.375rem;
         background:
           radial-gradient(
             60% 90% at 30% 0%,
-            rgba(197, 163, 92, 0.35),
+            color-mix(in oklch, var(--accent) 35%, transparent),
             transparent 70%
           ),
           radial-gradient(
             60% 90% at 100% 0%,
-            rgba(230, 207, 154, 0.2),
+            color-mix(in oklch, var(--accent) 20%, transparent),
             transparent 70%
           );
         pointer-events: none;
@@ -214,85 +211,72 @@ export default class SeatingPlanPopover extends Component<Signature> {
         flex: none;
         display: flex;
         align-items: flex-start;
-        gap: 8px;
-        padding: 16px 16px 12px;
+        gap: 0.5rem;
+        padding: 1rem 1rem 0.75rem;
         background: linear-gradient(
           168deg,
-          var(--tsp-primary, var(--primary, #141b33)),
-          color-mix(
-            in srgb,
-            var(--tsp-primary, var(--primary, #141b33)) 90%,
-            #ffffff
-          )
+          var(--card),
+          color-mix(in oklch, var(--card) 90%, var(--card))
         );
-        border-bottom: 1px solid rgba(197, 163, 92, 0.25);
+        border-bottom: 1px solid
+          color-mix(in oklch, var(--border) 25%, transparent);
       }
       .spp-titles {
         flex: 1;
         min-width: 0;
       }
       .spp-kicker {
-        font-family: var(
-          --tsp-font-sans,
-          var(--font-sans, 'Jost', system-ui, sans-serif)
-        );
-        font-size: 9.5px;
+        font-family: var(--font-sans);
+        font-size: 0.5938rem;
         font-weight: 500;
         letter-spacing: 0.3em;
         text-transform: uppercase;
-        color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--accent-ink);
       }
       .spp-title {
-        font-family: var(
-          --tsp-font-serif,
-          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-        );
-        font-size: 22px;
+        font-family: var(--font-serif);
+        font-size: 1.375rem;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .spp-head .spp-title {
-        color: var(
-          --tsp-primary-foreground,
-          var(--primary-foreground, #f3ead6)
-        );
+        color: var(--primary-foreground);
       }
       .spp-close {
         flex: none;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 30px;
-        height: 30px;
+        width: 1.875rem;
+        height: 1.875rem;
         border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: rgba(255, 255, 255, 0.05);
-        color: var(
-          --tsp-primary-foreground,
-          var(--primary-foreground, #f3ead6)
-        );
-        font-size: 12px;
+        border: 1px solid var(--border);
+        background-color: var(--hover);
+        color: var(--foreground);
+        font-size: 0.75rem;
         line-height: 1;
         cursor: pointer;
         transition: 0.15s;
       }
       .spp-close:hover {
-        border-color: var(--tsp-accent, var(--accent, #c5a35c));
-        color: var(--tsp-accent, var(--accent, #c5a35c));
+        border-color: var(--accent);
+        color: var(--accent-ink);
       }
       .spp-body {
         position: relative;
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        padding: 4px 18px 18px;
+        padding: 0.25rem 1.125rem 1.125rem;
       }
       .spp-foot {
         flex: none;
-        padding: 12px 18px;
-        border-top: 1px solid rgba(197, 163, 92, 0.25);
-        background: var(--tsp-muted, var(--muted, #f4eddb));
+        padding: 0.75rem 1.125rem;
+        border-top: 1px solid
+          color-mix(in oklch, var(--accent) 25%, transparent);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

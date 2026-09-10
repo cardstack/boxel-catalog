@@ -231,75 +231,24 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
          → semantic theme token → boxel/literal fallback. The --img-* names
          are the resolved values every rule below reads. */
       .image-source-root {
-        --img-bg: var(
-          --mlt-img-bg,
-          var(--img-source-bg, var(--card, var(--boxel-light, #fff)))
-        );
-        --img-text: var(
-          --mlt-img-text,
-          var(
-            --img-source-text,
-            var(--card-foreground, var(--boxel-700, #272330))
-          )
-        );
-        --img-dim: var(
-          --mlt-img-text-dim,
-          var(
-            --img-source-text-dim,
-            var(--muted-foreground, var(--boxel-400, #afafb7))
-          )
-        );
-        --img-border: var(
-          --mlt-img-border,
-          var(
-            --img-source-border,
-            var(--border, var(--boxel-border-color, #d3d3d3))
-          )
-        );
         /* accent deliberately skips the app's global --primary (the boxel
            highlight green would take over every control) — hosts/themes
            re-skin it through the --img-source-accent knob instead, exactly like
            the single-image editor's --boxel-purple */
-        --img-accent: var(
-          --mlt-img-accent,
-          var(--img-source-accent, var(--boxel-purple, #6638ff))
-        );
-        --img-accent-fg: var(
-          --mlt-img-accent-fg,
-          var(--img-source-accent-fg, var(--boxel-light, #fff))
-        );
-        --img-danger: var(
-          --mlt-img-danger,
-          var(
-            --img-source-danger,
-            var(--destructive, var(--boxel-danger, #ff5050))
-          )
-        );
-        --img-font: var(
-          --mlt-img-font,
-          var(
-            --img-source-font,
-            var(--font-sans, var(--boxel-font-family, sans-serif))
-          )
-        );
 
-        --img-accent-bg: color-mix(in srgb, var(--img-accent) 8%, transparent);
-        /* the input group's focus ring reads var(--ring, --boxel-highlight);
+        --img-accent-bg: color-mix(in oklch, var(--primary) 8%, transparent);
+        /* the input group's focus ring reads var(--ring);
            re-point both locally so focus matches the accent instead of the
            app's global highlight green */
-        --ring: var(--mlt-img-ring, var(--img-source-ring, var(--img-accent)));
-        --boxel-highlight: var(
-          --mlt-img-ring,
-          var(--img-source-ring, var(--img-accent))
-        );
+        --boxel-highlight: var(--primary);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-2xs);
-        background: var(--img-bg);
-        font-family: var(--img-font);
-        color: var(--img-text);
-        border: 1px solid var(--img-border);
-        border-radius: var(--boxel-radius, 10px);
+        background-color: var(--card);
+        font-family: var(--font-sans);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-radius);
         padding: var(--boxel-sp-xs);
         /* lets the empty-state layout respond to the host's width */
         container-type: inline-size;
@@ -312,9 +261,10 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
         max-height: 12rem;
         width: 100%;
         padding: var(--boxel-sp-2xs);
-        border-radius: var(--boxel-border-radius-sm, 6px);
+        border-radius: var(--boxel-border-radius-sm);
         overflow: hidden;
-        background: var(--boxel-100, #f8f7fa);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .hero img {
         display: block;
@@ -330,7 +280,7 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
         flex-wrap: nowrap;
         gap: var(--boxel-sp-2xs);
         margin: 0;
-        padding: 4px 2px;
+        padding: 0.25rem 2px;
         list-style: none;
         overflow-x: auto;
       }
@@ -354,37 +304,39 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
         width: 100%;
         height: 100%;
         object-fit: cover;
-        border-radius: var(--boxel-border-radius-sm, 6px);
-        border: 1px solid var(--img-border);
-        background: var(--boxel-100, #f8f7fa);
+        border-radius: var(--boxel-border-radius-sm);
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .thumb.is-active .thumb-pick img {
-        border-color: var(--img-accent);
-        box-shadow: 0 0 0 1px var(--img-accent);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 1px var(--primary);
       }
       .remove-btn {
         position: absolute;
-        top: -4px;
-        right: -4px;
+        top: -0.25rem;
+        right: -0.25rem;
         z-index: 1;
         display: grid;
         place-items: center;
         width: 1rem;
         height: 1rem;
         padding: 0;
-        border: 1px solid var(--img-border);
+        border: 1px solid var(--border);
         border-radius: 50%;
-        background: var(--img-bg);
-        color: var(--img-text);
-        --icon-color: var(--img-text);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        --icon-color: var(--card-foreground);
+        box-shadow: 0 1px 3px
+          color-mix(in oklch, var(--shadow-color) 15%, transparent);
         cursor: pointer;
       }
       .remove-btn:hover,
       .remove-btn:focus {
-        background: var(--img-danger);
-        color: var(--img-bg);
-        --icon-color: var(--img-bg);
+        background-color: var(--destructive);
+        color: var(--destructive-foreground);
+        --icon-color: var(--card);
       }
 
       /* ── the linksTo editor's Link Image button, re-skinned exactly like
@@ -394,16 +346,16 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
         justify-content: center;
       }
       .file-link-btn :deep(.add-new.boxel-button) {
-        --boxel-button-text-color: var(--img-accent);
+        --boxel-button-text-color: var(--primary-ink);
         --boxel-button-color: transparent;
-        --boxel-button-border: 1px solid var(--img-accent);
-        --boxel-button-padding: var(--boxel-sp-5xs, 2px) var(--boxel-sp-xs);
+        --boxel-button-border: 1px solid var(--primary);
+        --boxel-button-padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
         --boxel-button-min-height: 0;
         min-height: 0;
-        font-size: var(--boxel-font-size-xs, 12px);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 500;
         letter-spacing: 0;
-        border-radius: var(--boxel-border-radius-sm, 6px);
+        border-radius: var(--boxel-border-radius-sm);
         width: auto;
         height: auto;
       }
@@ -417,48 +369,53 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
         width: 100%;
       }
       .file-link-btn--bar :deep(.add-new.boxel-button) {
-        --boxel-button-border: 1px dashed var(--img-border);
+        --boxel-button-border: 1px dashed var(--border);
       }
       .file-link-btn--bar :deep(.add-new.boxel-button:hover) {
-        --boxel-button-border: 1px dashed var(--img-accent);
+        --boxel-button-border: 1px dashed var(--primary);
       }
 
       /* ── url row (compact: shrink the input group via its own tokens) ── */
       .url-form {
         margin: 0;
         --boxel-input-group-padding-x: var(--boxel-sp-xs);
-        --boxel-input-group-padding-y: var(--boxel-sp-5xs, 2px);
+        --boxel-input-group-padding-y: var(--boxel-sp-5xs);
         --boxel-input-height: 1.75rem;
       }
       .url-form :deep(.boxel-input-group),
       .url-form :deep(.form-control) {
-        font-size: var(--boxel-font-size-xs, 12px);
+        font-size: var(--boxel-font-size-xs);
       }
       .url-form :deep(.text-accessory) {
-        --icon-color: var(--img-accent);
-        color: var(--img-accent);
+        --icon-color: var(--primary);
+        color: var(--primary-ink);
       }
       .url-form :deep(.text-accessory svg) {
-        --icon-color: var(--img-accent);
-        color: var(--img-accent);
+        --icon-color: var(--primary);
+        color: var(--primary-ink);
         display: block;
       }
       /* input suffix, not a nested pill — a left rule instead of its own
          rounded border avoids double corners inside the input group */
+      /* A suffix inside the input group, not a nested pill. BoxelButton
+         defaults to a 100px radius and supplies its own padding / border /
+         background, which out-specify element-level rules here and push the
+         label past the group's rounded corner — so drive it through the
+         button's own knobs, and draw the divider with the shadow knob where
+         no border rule can contest it. */
       .add-url-btn {
+        --boxel-button-border-radius: 0;
+        --boxel-button-color: transparent;
+        --boxel-button-border: none;
+        --boxel-button-box-shadow: inset 1px 0 0 var(--border);
+        --boxel-button-ghost-foreground: var(--primary-ink);
+        --boxel-button-padding: 0 var(--boxel-sp-sm);
+        --boxel-button-min-height: 0;
+        --boxel-button-min-width: 0;
+        --boxel-button-font: 600 var(--boxel-font-size-xs) / 1 var(--font-sans);
+        --boxel-button-letter-spacing: normal;
         align-self: stretch;
-        padding: 0 var(--boxel-sp-sm);
-        border: none;
-        border-left: 1px solid var(--img-border);
-        background: transparent;
-        color: var(--img-accent);
-        font-size: var(--boxel-font-size-xs, 12px);
-        font-weight: 600;
-        font-family: var(--img-font);
         cursor: pointer;
-      }
-      .add-url-btn:hover {
-        background: var(--img-accent-bg);
       }
 
       /* ── empty state: pick a card, or add by URL ── */
@@ -473,29 +430,29 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: var(--boxel-sp-5xs, 2px);
+        gap: var(--boxel-sp-5xs);
         padding: var(--boxel-sp-xs);
-        border: 1px dashed var(--img-border);
-        border-radius: var(--boxel-border-radius-sm, 6px);
-        background: transparent;
-        font-family: var(--img-font);
+        border: 1px dashed var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+        background-color: transparent;
+        font-family: var(--font-sans);
       }
       /* soft accent tile around the icon (the mock's rounded chip) */
       .empty-pick-icon {
         box-sizing: content-box;
         padding: var(--boxel-sp-xs);
-        border-radius: var(--boxel-border-radius, 10px);
-        background: var(--img-accent-bg);
-        color: var(--img-accent);
-        --icon-color: var(--img-accent);
+        border-radius: var(--boxel-border-radius);
+        background-color: var(--img-accent-bg);
+        color: var(--primary-ink);
+        --icon-color: var(--primary);
       }
       .empty-pick-title {
-        font-size: var(--boxel-font-size-xs, 12px);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--img-text);
+        color: var(--card-foreground);
       }
       .empty-pick .file-link-btn {
-        margin-top: var(--boxel-sp-4xs, 4px);
+        margin-top: var(--boxel-sp-4xs);
       }
       /* line — (or) — line, running the full height of the empty state */
       .empty-divider {
@@ -503,36 +460,36 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: var(--boxel-sp-5xs, 2px);
+        gap: var(--boxel-sp-5xs);
       }
       .empty-divider::before,
       .empty-divider::after {
         content: '';
         width: 1px;
         flex: 1;
-        background: var(--img-border);
+        background-color: var(--border);
       }
       .empty-or {
         display: grid;
         place-items: center;
         width: 1.75rem;
         height: 1.75rem;
-        border: 1px solid var(--img-border);
+        border: 1px solid var(--border);
         border-radius: 50%;
-        font-size: var(--boxel-font-size-2xs, 11px);
-        color: var(--img-dim);
-        background: var(--img-bg);
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+        background-color: var(--card);
       }
       .empty-url {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp-4xs, 4px);
+        gap: var(--boxel-sp-4xs);
         min-width: 0;
       }
       .empty-url-title {
-        font-size: var(--boxel-font-size-xs, 12px);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--img-text);
+        color: var(--card-foreground);
       }
       /* narrow hosts (sidebars): stack the two paths, divider goes flat,
          and the dashed box drops — the divider already separates the two
@@ -545,7 +502,7 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
            (the mock's stacked layout) */
         .empty-pick {
           border: none;
-          padding: var(--boxel-sp-5xs, 2px);
+          padding: var(--boxel-sp-5xs);
           gap: var(--boxel-sp-xs);
         }
         .empty-pick-title {
@@ -575,8 +532,8 @@ export default class MultiImageSourceEditor extends Component<MultiImageSourceEd
       }
       .error {
         margin: 0;
-        font-size: var(--boxel-font-size-xs, 12px);
-        color: var(--img-danger);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--destructive-ink);
       }
     </style>
   </template>

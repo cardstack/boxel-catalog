@@ -123,21 +123,16 @@ class AiImageEmbedded extends Component<typeof AiImage> {
     </div>
     <style scoped>
       .ai-image-piece {
-        --c-surface: var(--ai-image-surface, var(--card, #ffffff));
-        --c-fg: var(--ai-image-ink, var(--card-foreground, #1a1a1a));
-        --c-muted: var(--ai-image-muted, var(--muted-foreground, #919191));
-        --c-border: var(--ai-image-border, var(--border, #e8e8e8));
-        --c-edit: var(--ai-image-edit, var(--primary, #2f6fd0));
-        --c-inpaint: var(--ai-image-inpaint, #c2410c);
-        --c-radius: var(--ai-image-radius, var(--radius, 10px));
+        --c-fg: var(--card-foreground);
         container-type: inline-size;
         display: flex;
         flex-direction: column;
         height: 100%;
         min-height: 0;
-        border-radius: var(--c-radius);
+        border-radius: var(--radius);
         overflow: hidden;
-        background: var(--c-surface);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .piece-image {
         width: 100%;
@@ -151,15 +146,15 @@ class AiImageEmbedded extends Component<typeof AiImage> {
         align-items: center;
         justify-content: center;
         flex: 1 1 auto;
-        color: var(--c-muted);
-        background: var(--c-border);
+        color: var(--muted-foreground);
+        background-color: var(--border);
       }
       .piece-body {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xxs);
         padding: var(--boxel-sp-xs);
-        border-top: 1px solid var(--c-border);
+        border-top: 1px solid var(--border);
       }
       .piece-badge {
         flex-shrink: 0;
@@ -167,16 +162,16 @@ class AiImageEmbedded extends Component<typeof AiImage> {
         font-weight: 600;
         border-radius: var(--boxel-border-radius-sm);
         padding: 2px var(--boxel-sp-xxs);
-        background: color-mix(in srgb, var(--c-fg) 10%, transparent);
+        background-color: color-mix(in oklch, var(--c-fg) 10%, transparent);
         color: var(--c-fg);
       }
       .badge-inpaint {
-        background: color-mix(in srgb, var(--c-inpaint) 16%, transparent);
-        color: color-mix(in srgb, var(--c-inpaint), var(--c-fg) 40%);
+        background-color: color-mix(in oklch, var(--warning) 16%, transparent);
+        color: color-mix(in oklch, var(--warning-ink), var(--c-fg) 40%);
       }
       .badge-edit {
-        background: color-mix(in srgb, var(--c-edit) 14%, transparent);
-        color: color-mix(in srgb, var(--c-edit), var(--c-fg) 40%);
+        background-color: color-mix(in oklch, var(--primary) 14%, transparent);
+        color: color-mix(in oklch, var(--primary-ink), var(--c-fg) 40%);
       }
       .piece-prompt {
         flex: 1 1 auto;
@@ -190,7 +185,7 @@ class AiImageEmbedded extends Component<typeof AiImage> {
       .piece-when {
         flex-shrink: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
     </style>
   </template>
@@ -247,38 +242,32 @@ class AiImageIsolated extends Component<typeof AiImage> {
     </div>
     <style scoped>
       .ai-image-detail {
-        --c-surface: var(--ai-image-surface, var(--card, #ffffff));
-        --c-fg: var(--ai-image-ink, var(--card-foreground, #1a1a1a));
-        --c-muted: var(--ai-image-muted, var(--muted-foreground, #919191));
-        --c-border: var(--ai-image-border, var(--border, #e8e8e8));
-        --c-edit: var(--ai-image-edit, var(--primary, #2f6fd0));
-        --c-inpaint: var(--ai-image-inpaint, #c2410c);
-        --c-radius: var(--ai-image-radius, var(--radius, 10px));
+        --c-fg: var(--card-foreground);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-xs);
         height: 100%;
         padding: var(--boxel-sp);
         overflow-y: auto;
-        background: var(--c-surface);
+        background-color: var(--card);
         color: var(--c-fg);
         font: var(--boxel-font-sm);
-        font-family: var(--ai-image-font, var(--font-sans, inherit));
+        font-family: var(--font-sans);
       }
       .detail-image {
         max-width: 40rem;
         width: 100%;
-        border-radius: var(--c-radius);
-        border: 1px solid var(--c-border);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
       }
       .detail-placeholder {
         display: grid;
         place-items: center;
         aspect-ratio: 16 / 9;
         max-width: 40rem;
-        border-radius: var(--c-radius);
-        background: var(--c-border);
-        color: var(--c-muted);
+        border-radius: var(--radius);
+        background-color: var(--border);
+        color: var(--muted-foreground);
       }
       .detail-meta {
         display: flex;
@@ -290,20 +279,20 @@ class AiImageIsolated extends Component<typeof AiImage> {
         font-weight: 600;
         border-radius: var(--boxel-border-radius-sm);
         padding: 2px var(--boxel-sp-xxs);
-        background: color-mix(in srgb, var(--c-fg) 10%, transparent);
+        background-color: color-mix(in oklch, var(--c-fg) 10%, transparent);
         color: var(--c-fg);
       }
       .badge-inpaint {
-        background: color-mix(in srgb, var(--c-inpaint) 16%, transparent);
-        color: color-mix(in srgb, var(--c-inpaint), var(--c-fg) 40%);
+        background-color: color-mix(in oklch, var(--warning) 16%, transparent);
+        color: color-mix(in oklch, var(--warning-ink), var(--c-fg) 40%);
       }
       .badge-edit {
-        background: color-mix(in srgb, var(--c-edit) 14%, transparent);
-        color: color-mix(in srgb, var(--c-edit), var(--c-fg) 40%);
+        background-color: color-mix(in oklch, var(--primary) 14%, transparent);
+        color: color-mix(in oklch, var(--primary-ink), var(--c-fg) 40%);
       }
       .detail-when {
         font-size: var(--boxel-font-size-xs);
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .detail-prompt {
         margin: 0;
@@ -314,7 +303,7 @@ class AiImageIsolated extends Component<typeof AiImage> {
         align-items: center;
         gap: var(--boxel-sp-xxs);
         font-size: var(--boxel-font-size-xs);
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .detail-record {
         display: grid;
@@ -325,7 +314,7 @@ class AiImageIsolated extends Component<typeof AiImage> {
       }
       .detail-record dt {
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .detail-record dd {
         margin: 0;
@@ -334,7 +323,7 @@ class AiImageIsolated extends Component<typeof AiImage> {
       .detail-record-label {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .detail-mask {
         display: flex;
@@ -344,9 +333,10 @@ class AiImageIsolated extends Component<typeof AiImage> {
       .detail-mask-image {
         max-width: 10rem;
         border-radius: var(--boxel-border-radius-sm);
-        border: 1px solid var(--c-border);
+        border: 1px solid var(--border);
         /* The mask's black pixels mean "keep" — always render on black. */
-        background: #000000;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
     </style>
   </template>

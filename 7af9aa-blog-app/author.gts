@@ -126,14 +126,14 @@ export class Author extends CardDef {
             system-ui,
             sans-serif
           );
-          max-width: 760px;
+          max-width: 47.5rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xxl) var(--boxel-sp-lg);
           font-family: var(--blog-font-family, 'Inter', system-ui, sans-serif);
           font-size: 1rem;
-          color: var(--blog-color-body, #1a1a1a);
+          color: var(--foreground);
           text-wrap: pretty;
-          background: var(--blog-color-bg, #ffffff);
+          background-color: var(--card);
         }
         h1,
         h2,
@@ -150,7 +150,7 @@ export class Author extends CardDef {
           gap: var(--boxel-sp-xl);
           align-items: center;
           padding-bottom: var(--boxel-sp-xl);
-          border-bottom: 1px solid var(--blog-color-divider, #d1d5db);
+          border-bottom: 1px solid var(--border);
         }
         .featured-image :deep(figure) {
           margin: 0;
@@ -160,15 +160,15 @@ export class Author extends CardDef {
         }
         .featured-image :deep(.image),
         .featured-image :deep(img) {
-          width: 160px;
-          height: 160px;
+          width: 10rem;
+          height: 10rem;
           border-radius: 50%;
-          border: 1px solid var(--blog-color-divider, #d1d5db);
+          border: 1px solid var(--border);
           object-fit: cover;
           object-position: center;
           box-shadow: var(
             --blog-shadow-portrait,
-            0 4px 14px rgba(0, 0, 0, 0.08)
+            0 4px 14px color-mix(in oklch, var(--foreground) 8%, transparent)
           );
           display: block;
         }
@@ -176,23 +176,23 @@ export class Author extends CardDef {
           min-width: 0;
         }
         .eyebrow {
-          margin: 0 0 4px;
+          margin: 0 0 0.25rem;
           font: var(--blog-font-eyebrow, 700 0.7rem/1 sans-serif);
           letter-spacing: var(--blog-tracking-eyebrow, 0.18em);
           text-transform: uppercase;
-          color: var(--blog-color-subtle, #6b6b6b);
+          color: var(--muted-foreground);
         }
         .name {
           font: var(--blog-font-display-l, 800 2.6rem/1.05 sans-serif);
           letter-spacing: var(--blog-tracking-tight, -0.02em);
           margin: 0;
-          color: var(--blog-color-text, #121212);
+          color: var(--foreground);
         }
         .description {
           margin: var(--boxel-sp-xs) 0 0;
           font: 500 1.05rem/1.4
             var(--blog-font-family, 'Inter', system-ui, sans-serif);
-          color: var(--blog-color-subtle, #6b6b6b);
+          color: var(--muted-foreground);
         }
         .links {
           margin-top: var(--boxel-sp);
@@ -201,10 +201,10 @@ export class Author extends CardDef {
           gap: var(--boxel-sp-xs);
         }
         .links :deep(.pill) {
-          border: 1px solid var(--blog-color-divider, #d1d5db);
-          background: transparent;
-          border-radius: var(--blog-radius-pill, 999px);
-          padding: 4px 12px;
+          border: 1px solid var(--border);
+          background-color: transparent;
+          border-radius: var(--blog-radius-pill, 62.4375rem);
+          padding: 0.25rem 0.75rem;
           font: 500 0.78rem
             var(--blog-font-family, 'Inter', system-ui, sans-serif);
           transition:
@@ -212,12 +212,12 @@ export class Author extends CardDef {
             border-color 0.15s;
         }
         .links :deep(.pill:hover) {
-          background: rgba(0, 0, 0, 0.04);
+          background-color: color-mix(in oklch, var(--tooltip) 4%, transparent);
           border-color: var(--boxel-500);
         }
         .links :deep(svg) {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
         }
 
         .quote {
@@ -230,8 +230,8 @@ export class Author extends CardDef {
           margin: 0;
           font: var(--blog-font-pullquote, 600 1.5rem/1.35 sans-serif);
           letter-spacing: var(--blog-tracking-tighter, -0.01em);
-          color: var(--blog-color-text, #121212);
-          max-width: 560px;
+          color: var(--foreground);
+          max-width: 35rem;
           margin-inline: auto;
         }
         .quote p::before {
@@ -239,14 +239,14 @@ export class Author extends CardDef {
           display: block;
           font: 800 4rem/0.5
             var(--blog-font-family, 'Inter', system-ui, sans-serif);
-          color: var(--blog-color-accent, #7b61ff);
+          color: var(--primary-ink);
           margin-bottom: var(--boxel-sp-sm);
         }
 
         .summary {
           margin: var(--boxel-sp-xl) 0 0;
           font: var(--blog-font-body, 400 1.0625rem/1.7 sans-serif);
-          color: var(--blog-color-body, #1a1a1a);
+          color: var(--foreground);
         }
         .full-bio {
           margin-top: var(--boxel-sp-xl);
@@ -324,14 +324,14 @@ export class Author extends CardDef {
           align-items: start;
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp-xl) 0;
-          background: transparent;
+          background-color: transparent;
           font-family: var(--blog-font-family, 'Inter', system-ui, sans-serif);
           text-wrap: pretty;
-          color: var(--blog-color-body, #1a1a1a);
+          color: var(--foreground);
         }
         .thumbnail-image {
-          width: 92px;
-          height: 92px;
+          width: 5.75rem;
+          height: 5.75rem;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -339,9 +339,12 @@ export class Author extends CardDef {
           background-size: cover;
           background-repeat: no-repeat;
           border-radius: 50%;
-          border: 1px solid var(--blog-color-divider, #d1d5db);
-          color: var(--blog-color-placeholder, #b5b5b5);
-          box-shadow: var(--blog-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.06));
+          border: 1px solid var(--border);
+          color: var(--subtle-foreground);
+          box-shadow: var(
+            --blog-shadow-card,
+            0 1px 3px color-mix(in oklch, var(--foreground) 6%, transparent)
+          );
         }
         .author-body {
           display: flex;
@@ -362,21 +365,21 @@ export class Author extends CardDef {
           font: var(--blog-font-eyebrow, 700 0.7rem/1 sans-serif);
           letter-spacing: var(--blog-tracking-eyebrow, 0.18em);
           text-transform: uppercase;
-          color: var(--blog-color-subtle, #6b6b6b);
+          color: var(--muted-foreground);
         }
         .name {
           font: var(--blog-font-name, 800 1.5rem/1.15 sans-serif);
           letter-spacing: var(--blog-tracking-tighter, -0.01em);
-          color: var(--blog-color-text, #121212);
+          color: var(--foreground);
         }
         .role {
           font: 500 0.9rem/1.4
             var(--blog-font-family, 'Inter', system-ui, sans-serif);
-          color: var(--blog-color-subtle, #6b6b6b);
+          color: var(--muted-foreground);
         }
         .bio {
           font: var(--blog-font-body-sm, 400 0.95rem/1.6 sans-serif);
-          color: var(--blog-color-body, #1a1a1a);
+          color: var(--foreground);
           max-width: 56ch;
         }
         .author-bio-links {
@@ -389,23 +392,23 @@ export class Author extends CardDef {
         }
         .author-bio-links :deep(.pill) {
           --pill-background-color: transparent;
-          border: 1px solid var(--blog-color-divider, #d1d5db);
-          border-radius: var(--blog-radius-pill, 999px);
-          padding: 4px 12px;
+          border: 1px solid var(--border);
+          border-radius: var(--blog-radius-pill, 62.4375rem);
+          padding: 0.25rem 0.75rem;
           font: 500 0.78rem
             var(--blog-font-family, 'Inter', system-ui, sans-serif);
-          color: var(--blog-color-body, #1a1a1a);
+          color: var(--foreground);
           transition:
             background-color 0.15s,
             border-color 0.15s;
         }
         .author-bio-links :deep(.pill:hover) {
-          background: rgba(0, 0, 0, 0.04);
+          background-color: color-mix(in oklch, var(--tooltip) 4%, transparent);
           border-color: var(--boxel-500);
         }
         .author-bio-links :deep(svg) {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
         }
 
         @media (max-width: 560px) {
@@ -455,8 +458,8 @@ export class Author extends CardDef {
           flex-shrink: 0;
         }
         .author-thumbnail {
-          width: 24px;
-          height: 24px;
+          width: 1.5rem;
+          height: 1.5rem;
           border-radius: 50%;
           border: 1px solid var(--boxel-400);
           overflow: hidden;
@@ -493,13 +496,13 @@ export class Author extends CardDef {
       </article>
       <style scoped>
         .author-fitted {
-          --link-icon-size: var(--author-link-icon-size, 15px);
-          --thumbnail-size: var(--author-thumbnail-size, 60px);
-          --gap-size: var(--author-gap-size, var(--boxel-sp-xxs));
+          --link-icon-size: var(--author-link-icon-size, 0.9375rem);
+          --thumbnail-size: var(--author-thumbnail-size, 3.75rem);
+          --gap-size: var(--boxel-sp-xxs);
           width: 100%;
           height: 100%;
-          min-width: 100px;
-          min-height: 29px;
+          min-width: 6.25rem;
+          min-height: 1.8125rem;
           gap: var(--gap-size);
           overflow: hidden;
           padding: var(--boxel-sp-xs);
@@ -603,7 +606,7 @@ export class Author extends CardDef {
 
         @container fitted-card (aspect-ratio <= 1.0) and (180px <= height < 224px) {
           .author-fitted {
-            --thumbnail-size: 40px;
+            --thumbnail-size: 2.5rem;
             display: grid;
             grid-template:
               'img' max-content
@@ -623,7 +626,7 @@ export class Author extends CardDef {
 
         @container fitted-card (aspect-ratio <= 1.0) and (148px <= height < 180px) {
           .author-fitted {
-            --thumbnail-size: 40px;
+            --thumbnail-size: 2.5rem;
             display: grid;
             grid-template:
               'img' max-content
@@ -644,7 +647,7 @@ export class Author extends CardDef {
 
         @container fitted-card (aspect-ratio <= 1.0) and (128px <= height < 148px) {
           .author-fitted {
-            --thumbnail-size: 40px;
+            --thumbnail-size: 2.5rem;
             display: grid;
             grid-template:
               'img' max-content
@@ -665,8 +668,8 @@ export class Author extends CardDef {
 
         @container fitted-card (aspect-ratio <= 1.0) and (118px <= height < 128px) {
           .author-fitted {
-            --thumbnail-size: 40px;
-            --link-icon-size: 13px;
+            --thumbnail-size: 2.5rem;
+            --link-icon-size: 0.8125rem;
             --gap-size: var(--boxel-sp-4xs);
             display: grid;
             grid-template:
@@ -685,8 +688,8 @@ export class Author extends CardDef {
 
         @container fitted-card (aspect-ratio <= 1.0) and (92px <= height < 118px) {
           .author-fitted {
-            --thumbnail-size: 40px;
-            --link-icon-size: 13px;
+            --thumbnail-size: 2.5rem;
+            --link-icon-size: 0.8125rem;
             --gap-size: var(--boxel-sp-4xs);
             display: grid;
             grid-template:
@@ -705,7 +708,7 @@ export class Author extends CardDef {
 
         @container fitted-card (aspect-ratio <= 1.0) and (height < 92px) {
           .author-fitted {
-            --thumbnail-size: 20px;
+            --thumbnail-size: 1.25rem;
             --gap-size: var(--boxel-sp-4xs);
             display: grid;
             grid-template:
@@ -773,7 +776,7 @@ export class Author extends CardDef {
         @container fitted-card ((1.0 < aspect-ratio) and (115px <= height <= 150px)) {
           .author-fitted {
             --gap-size: var(--boxel-sp-xxs) var(--boxel-sp-sm);
-            --thumbnail-size: 50px;
+            --thumbnail-size: 3.125rem;
             display: grid;
             grid-template:
               'img header' minmax(var(--thumbnail-size), max-content)
@@ -796,8 +799,8 @@ export class Author extends CardDef {
         @container fitted-card ((1.0 < aspect-ratio) and (78px <= height <= 114px)) {
           .author-fitted {
             --gap-size: var(--boxel-sp-xxxs) var(--boxel-sp-xs);
-            --thumbnail-size: 20px;
-            --link-icon-size: 15px;
+            --thumbnail-size: 1.25rem;
+            --link-icon-size: 0.9375rem;
             display: grid;
             grid-template:
               'img header' minmax(var(--thumbnail-size), max-content)
@@ -821,7 +824,7 @@ export class Author extends CardDef {
         @container fitted-card ((1.0 < aspect-ratio) and (500px <= width) and (56px <= height <= 77px)) {
           .author-fitted {
             --gap-size: var(--boxel-sp-xs);
-            --thumbnail-size: 34px;
+            --thumbnail-size: 2.125rem;
             display: grid;
             grid-template: 'img header' 1fr / max-content 1fr;
             padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
@@ -839,7 +842,7 @@ export class Author extends CardDef {
         @container fitted-card ((1.0 < aspect-ratio) and (width <= 499px) and (height <= 77px)) {
           .author-fitted {
             --gap-size: var(--boxel-sp-xxs);
-            --thumbnail-size: 40px;
+            --thumbnail-size: 2.5rem;
             display: grid;
             grid-template: 'img header' 1fr / max-content 1fr;
             align-items: center;
@@ -858,7 +861,7 @@ export class Author extends CardDef {
         @container fitted-card ((1.0 < aspect-ratio) and (height <= 55px)) {
           .author-fitted {
             --gap-size: var(--boxel-sp-xs);
-            --thumbnail-size: 20px;
+            --thumbnail-size: 1.25rem;
             display: grid;
             grid-template: 'img header' 1fr / max-content 1fr;
             align-items: center;

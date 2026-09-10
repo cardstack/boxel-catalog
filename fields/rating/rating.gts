@@ -72,10 +72,10 @@ export default class RatingField extends NumberField {
         .rating-field-edit {
           display: flex;
           align-items: center;
-          gap: calc(var(--spacing, 0.25rem) * 2);
+          gap: calc(var(--spacing) * 2);
         }
         .star-btn {
-          --boxel-button-ghost-foreground: var(--muted-foreground, #cbd5e1);
+          --boxel-button-ghost-foreground: var(--muted-foreground);
           background: none;
           border: none;
           font-size: 1.25rem;
@@ -86,15 +86,12 @@ export default class RatingField extends NumberField {
             color 0.2s;
         }
         .star-filled {
-          --boxel-button-ghost-foreground: var(
-            --warning,
-            var(--boxel-yellow, #ffd800)
-          );
+          --boxel-button-ghost-foreground: var(--warning-ink);
         }
         .rating-value {
-          margin-left: calc(var(--spacing, 0.25rem) * 2);
+          margin-left: calc(var(--spacing) * 2);
           font-weight: 600;
-          color: var(--muted-foreground, #64748b);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -139,20 +136,20 @@ export default class RatingField extends NumberField {
         .rating-field-atom {
           display: inline-flex;
           align-items: center;
-          gap: calc(var(--spacing, 0.25rem) * 1);
+          gap: calc(var(--spacing) * 1);
           line-height: 1;
         }
         .atom-star {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #cbd5e1);
+          color: var(--muted-foreground);
         }
         .atom-star.highlighted {
-          color: var(--warning, var(--boxel-yellow, #ffd800));
+          color: var(--warning-ink);
         }
         .atom-value {
           font-size: 0.6875rem;
           font-weight: 600;
-          color: var(--foreground, #0f172a);
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -195,13 +192,13 @@ export default class RatingField extends NumberField {
         .rating-field-edit {
           display: flex;
           align-items: center;
-          gap: calc(var(--spacing, 0.25rem) * 2);
+          gap: calc(var(--spacing) * 2);
         }
         .star-btn {
           background: none;
           border: none;
           font-size: 1.25rem;
-          color: var(--muted-foreground, #cbd5e1);
+          color: var(--muted-foreground);
           cursor: pointer;
           padding: 0;
           transition:
@@ -209,12 +206,12 @@ export default class RatingField extends NumberField {
             color 0.2s;
         }
         .star-filled {
-          color: var(--warning, var(--boxel-yellow, #ffd800));
+          color: var(--warning-ink);
         }
         .rating-value {
-          margin-left: calc(var(--spacing, 0.25rem) * 2);
+          margin-left: calc(var(--spacing) * 2);
           font-weight: 600;
-          color: var(--muted-foreground, #64748b);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

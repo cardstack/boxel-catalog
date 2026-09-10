@@ -219,7 +219,7 @@ export default class FixtureGlyph extends Component<Signature> {
         display: block;
         overflow: visible;
         pointer-events: none;
-        color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--accent-ink);
       }
       .fx-glyph path,
       .fx-glyph rect,

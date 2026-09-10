@@ -99,12 +99,13 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
     <style scoped>
       .ttt {
         width: 100%;
-        max-width: 360px;
+        max-width: 22.5rem;
         margin: 0 auto;
         padding: var(--boxel-sp-lg) var(--boxel-sp);
-        background: #fafafa;
-        border: 1px solid #ececec;
-        border-radius: 16px;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
         text-align: center;
         font-family: 'Inter', system-ui, sans-serif;
         box-sizing: border-box;
@@ -114,32 +115,32 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
           800 1.5rem/1 'Inter',
           sans-serif;
         letter-spacing: -0.02em;
-        margin: 0 0 8px;
-        color: #121212;
+        margin: 0 0 0.5rem;
+        color: var(--foreground);
       }
       .ttt-status {
         font:
           500 0.9rem/1 'Inter',
           sans-serif;
-        color: #555;
-        margin-bottom: 18px;
-        height: 18px;
+        color: var(--muted-foreground);
+        margin-bottom: 1.125rem;
+        height: 1.125rem;
       }
       .ttt-status strong {
         font-weight: 800;
-        color: #121212;
+        color: var(--foreground);
       }
       .ttt-board {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        margin-bottom: 18px;
+        gap: 0.5rem;
+        margin-bottom: 1.125rem;
       }
       .ttt-cell {
         aspect-ratio: 1;
-        background: white;
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
+        background-color: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 0.75rem;
         font:
           800 2.2rem/1 'Inter',
           sans-serif;
@@ -148,11 +149,12 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
           background-color 0.12s,
           border-color 0.12s,
           transform 0.1s;
-        color: #121212;
+        color: var(--foreground);
       }
       .ttt-cell:hover:not(.is-filled):not([disabled]) {
-        background: #f0f0f0;
-        border-color: #aaa;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-color: var(--border);
       }
       .ttt-cell:active:not(.is-filled):not([disabled]) {
         transform: scale(0.96);
@@ -161,20 +163,20 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
         cursor: default;
       }
       .ttt-cell.is-x {
-        color: #2563eb;
+        color: var(--primary-ink);
       }
       .ttt-cell.is-o {
-        color: #dc2626;
+        color: var(--destructive-ink);
       }
       .ttt-reset {
-        padding: 9px 22px;
-        background: #2c2c2c;
-        color: white;
+        padding: 0.5625rem 1.375rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: none;
-        border-radius: 999px;
+        border-radius: 62.4375rem;
         cursor: pointer;
         font:
-          600 12px/1 'Inter',
+          600 0.75rem/1 'Inter',
           sans-serif;
         text-transform: uppercase;
         letter-spacing: 0.06em;
@@ -183,7 +185,8 @@ class TicTacToeIsolated extends Component<typeof TicTacToe> {
           transform 0.1s;
       }
       .ttt-reset:hover {
-        background: #1a1a1a;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .ttt-reset:active {
         transform: scale(0.96);
@@ -220,72 +223,74 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
         width: 100%;
         height: 100%;
         display: grid;
-        grid-template-columns: 76px 1fr;
+        grid-template-columns: 4.75rem 1fr;
         align-items: center;
-        gap: 12px;
-        padding: 4px;
-        background: transparent;
+        gap: 0.75rem;
+        padding: 0.25rem;
+        background-color: transparent;
         min-width: 0;
       }
       .ttt-fitted-icon {
-        width: 76px;
-        height: 76px;
-        border-radius: 14px;
+        width: 4.75rem;
+        height: 4.75rem;
+        border-radius: 0.875rem;
         display: grid;
         place-items: center;
         background:
           radial-gradient(
             circle at 20% 10%,
-            rgba(255, 255, 255, 0.25),
+            color-mix(in oklch, var(--card) 25%, transparent),
             transparent 50%
           ),
-          #4f46e5;
+          var(--primary);
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.3),
-          0 6px 14px rgba(79, 70, 229, 0.28);
+          inset 0 1px 0 color-mix(in oklch, var(--card) 30%, transparent),
+          0 6px 14px color-mix(in oklch, var(--primary) 28%, transparent);
         overflow: hidden;
         flex-shrink: 0;
       }
       .ttt-board {
         position: relative;
-        width: 56px;
-        height: 56px;
+        width: 3.5rem;
+        height: 3.5rem;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: repeat(3, 1fr);
         gap: 2px;
-        background: rgba(255, 255, 255, 0.32);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         padding: 2px;
-        border-radius: 6px;
+        border-radius: 0.375rem;
       }
       .ttt-cell {
-        background: rgba(13, 13, 30, 0.55);
+        background-color: var(--card);
         display: grid;
         place-items: center;
         font:
           800 0.78rem/1 'Inter',
           system-ui,
           sans-serif;
-        color: #ffffff;
+        color: var(--card-foreground);
         border-radius: 2px;
       }
       .ttt-x {
-        color: #fde68a;
+        color: var(--warning-ink);
       }
       .ttt-o {
-        color: #a5f3fc;
+        color: var(--info-ink);
       }
       .ttt-strike {
         position: absolute;
         top: 50%;
-        left: -4px;
-        right: -4px;
+        left: -0.25rem;
+        right: -0.25rem;
         height: 2px;
-        background: #ffffff;
+        background-color: var(--card);
+        color: var(--card-foreground);
         transform: rotate(-45deg);
         transform-origin: center;
         border-radius: 2px;
-        box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+        box-shadow: 0 0 6px color-mix(in oklch, var(--card) 70%, transparent);
       }
       .ttt-fitted-meta {
         min-width: 0;
@@ -301,7 +306,7 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
           sans-serif;
         letter-spacing: -0.01em;
         margin: 0;
-        color: #121212;
+        color: var(--foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -311,14 +316,14 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
           500 0.78rem/1.3 'Inter',
           system-ui,
           sans-serif;
-        color: #6b7280;
+        color: var(--muted-foreground);
         margin: 2px 0 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       .ttt-fitted-tag {
-        margin-top: 6px;
+        margin-top: 0.375rem;
         align-self: flex-start;
         font:
           600 0.6rem/1 'Inter',
@@ -326,10 +331,10 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
           sans-serif;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #6366f1;
-        padding: 4px 8px;
-        background: rgba(99, 102, 241, 0.1);
-        border-radius: 999px;
+        color: var(--primary-ink);
+        padding: 0.25rem 0.5rem;
+        background-color: color-mix(in oklch, var(--primary) 10%, transparent);
+        border-radius: 62.4375rem;
         white-space: nowrap;
       }
 
@@ -339,7 +344,7 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
           grid-template-rows: auto auto;
           justify-items: center;
           text-align: center;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .ttt-fitted-tag {
           display: none;
@@ -351,17 +356,17 @@ class TicTacToeFitted extends Component<typeof TicTacToe> {
 
       @container fitted-card ((1.0 < aspect-ratio) and (height <= 60px)) {
         .ttt-fitted {
-          grid-template-columns: 40px 1fr;
-          gap: 8px;
+          grid-template-columns: 2.5rem 1fr;
+          gap: 0.5rem;
         }
         .ttt-fitted-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 8px;
+          width: 2.5rem;
+          height: 2.5rem;
+          border-radius: 0.5rem;
         }
         .ttt-board {
-          width: 28px;
-          height: 28px;
+          width: 1.75rem;
+          height: 1.75rem;
           gap: 1px;
         }
         .ttt-cell {

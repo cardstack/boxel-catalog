@@ -37,9 +37,6 @@ class TierItemIsolated extends Component<typeof TierItem> {
         gap: 1rem;
         justify-items: center;
         padding: 1.5rem;
-        background: var(--background, #15161a);
-        color: var(--foreground, #f4f5f7);
-        font-family: var(--font-sans, system-ui, sans-serif);
       }
       .hero {
         max-width: 12rem;
@@ -125,7 +122,7 @@ class TierItemFitted extends Component<typeof TierItem> {
         overflow: hidden;
       }
       .fit {
-        --type-base: clamp(10px, calc(4px + 2.4cqi + 1cqb), 16px);
+        --type-base: clamp(0.625rem, calc(0.25rem + 2.4cqi + 1cqb), 1rem);
         width: 100%;
         height: 100%;
         /* Flex-center so a name-only card (no image) sits dead center instead
@@ -136,12 +133,12 @@ class TierItemFitted extends Component<typeof TierItem> {
         align-items: center;
         justify-content: center;
         gap: 2px;
-        padding: 4px;
+        padding: 0.25rem;
         box-sizing: border-box;
         overflow: hidden;
-        background: var(--card, #1c1e24);
-        color: var(--foreground, #f4f5f7);
-        font-family: var(--font-sans, system-ui, sans-serif);
+        background-color: var(--card);
+        color: var(--foreground);
+        font-family: var(--font-sans);
       }
       .r-hero {
         flex: 1 1 auto;
@@ -167,7 +164,7 @@ class TierItemFitted extends Component<typeof TierItem> {
         display: -webkit-box;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 3;
-        font-size: var(--type-base, 11px);
+        font-size: var(--type-base);
         font-weight: 600;
         text-align: center;
         line-height: 1.15;

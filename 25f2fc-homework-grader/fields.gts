@@ -75,32 +75,29 @@ export class GradeField extends FieldDef {
       </div>
       <style scoped>
         .g-edit {
-          --g-accent: var(--primary, #2563eb);
-          --g-text: var(--foreground, #0f172a);
-          --g-muted: var(--muted-foreground, #64748b);
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          color: var(--g-text);
+          gap: 0.75rem;
+          color: var(--foreground);
         }
         .g-edit-grade {
-          max-width: 140px;
+          max-width: 8.75rem;
         }
         .g-edit-field {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 0.25rem;
           min-width: 0;
         }
         .g-edit-label {
-          font-size: 11px;
+          font-size: 0.6875rem;
           font-weight: 700;
           letter-spacing: 0.07em;
           text-transform: uppercase;
-          color: var(--g-muted);
+          color: var(--muted-foreground);
         }
         .g-edit-field:focus-within .g-edit-label {
-          color: var(--g-accent);
+          color: var(--primary-ink);
         }
       </style>
     </template>
@@ -135,60 +132,64 @@ export class GradeField extends FieldDef {
         .grade-layout {
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 1.25rem;
           font-family:
             -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
         }
 
         .grade-circle {
           flex-shrink: 0;
-          width: 48px;
-          height: 48px;
+          width: 3rem;
+          height: 3rem;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 20px;
+          font-size: 1.25rem;
           font-weight: 800;
-          color: var(--c-on-blue, #ffffff);
-          background: #2563eb;
+          color: var(--primary-foreground);
+          background-color: var(--primary);
         }
 
         .grade-circle.grade-A {
-          background: #10b981;
+          background-color: var(--success);
+          color: var(--success-foreground);
         }
 
         .grade-circle.grade-B {
-          background: #2563eb;
+          background-color: var(--primary);
+          color: var(--primary-foreground);
         }
 
         .grade-circle.grade-C {
-          background: #f59e0b;
+          background-color: var(--warning);
+          color: var(--warning-foreground);
         }
 
         .grade-circle.grade-D,
         .grade-circle.grade-E,
         .grade-circle.grade-F {
-          background: #ef4444;
+          background-color: var(--destructive);
+          color: var(--destructive-foreground);
         }
 
         .details-column {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 1rem;
           flex: 1;
         }
 
         .feedback-row {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 0.625rem;
         }
 
         .detail-label {
-          font-size: 11px;
+          font-size: 0.6875rem;
           font-weight: 600;
-          color: #64748b;
+          color: var(--primary-ink);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           white-space: nowrap;
@@ -196,73 +197,73 @@ export class GradeField extends FieldDef {
 
         .feedback-content {
           flex: 1;
-          font-size: 14px;
+          font-size: 0.875rem;
           line-height: 1.75;
-          color: #1e293b;
+          color: var(--foreground);
         }
 
         .feedback-content :deep(.markdown-content) {
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 0.875rem;
         }
 
         .feedback-content :deep(.markdown-content h1),
         .feedback-content :deep(.markdown-content h2),
         .feedback-content :deep(.markdown-content h3) {
-          font-size: 15px;
+          font-size: 0.9375rem;
           font-weight: 700;
-          color: #0f172a;
+          color: var(--foreground);
           margin: 0;
-          padding-bottom: 8px;
-          border-bottom: 1px solid #e2e8f0;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid var(--border);
         }
 
         .feedback-content :deep(.markdown-content h4) {
-          font-size: 13px;
+          font-size: 0.8125rem;
           font-weight: 600;
-          color: #334155;
+          color: var(--foreground);
           margin: 0;
         }
 
         .feedback-content :deep(.markdown-content p) {
           margin: 0;
-          font-size: 14px;
+          font-size: 0.875rem;
           line-height: 1.75;
-          color: #334155;
+          color: var(--foreground);
         }
 
         .feedback-content :deep(.markdown-content strong) {
-          color: #0f172a;
+          color: var(--foreground);
           font-weight: 700;
         }
 
         .feedback-content :deep(.markdown-content em) {
-          color: #475569;
+          color: var(--muted-foreground);
         }
 
         .feedback-content :deep(.markdown-content ul),
         .feedback-content :deep(.markdown-content ol) {
-          padding-left: 20px;
+          padding-left: 1.25rem;
           margin: 0;
           display: flex;
           flex-direction: column;
-          gap: 5px;
+          gap: 0.3125rem;
         }
 
         .feedback-content :deep(.markdown-content li) {
-          font-size: 14px;
+          font-size: 0.875rem;
           line-height: 1.65;
-          color: #334155;
+          color: var(--foreground);
         }
 
         .feedback-content :deep(.markdown-content blockquote) {
-          border-left: 3px solid #2563eb;
-          padding: 8px 14px;
-          background: #eff6ff;
-          border-radius: 0 6px 6px 0;
+          border-left: 3px solid var(--primary);
+          padding: 0.5rem 0.875rem;
+          background-color: var(--card);
+          border-radius: 0 0.375rem 0.375rem 0;
           margin: 0;
-          color: #1e40af;
+          color: var(--primary-ink);
           font-style: italic;
         }
       </style>
@@ -298,38 +299,34 @@ export class QuestionField extends FieldDef {
       </div>
       <style scoped>
         .q-edit {
-          --q-accent: var(--primary, #2563eb);
-          --q-text: var(--foreground, #0f172a);
-          --q-muted: var(--muted-foreground, #64748b);
-          --q-border: var(--border, #e2e8f0);
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          color: var(--q-text);
+          gap: 0.75rem;
+          color: var(--foreground);
         }
         .q-edit-points {
-          max-width: 120px;
+          max-width: 7.5rem;
         }
         .q-edit-field {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 0.25rem;
           min-width: 0;
         }
         .q-edit-label {
-          font-size: 11px;
+          font-size: 0.6875rem;
           font-weight: 700;
           letter-spacing: 0.07em;
           text-transform: uppercase;
-          color: var(--q-muted);
+          color: var(--muted-foreground);
         }
         .q-edit-field :deep(.boxel-input),
         .q-edit-field :deep(input),
         .q-edit-field :deep(textarea) {
-          font-size: 13px;
+          font-size: 0.8125rem;
         }
         .q-edit-field:focus-within .q-edit-label {
-          color: var(--q-accent);
+          color: var(--primary-ink);
         }
       </style>
     </template>
@@ -372,7 +369,7 @@ export class QuestionField extends FieldDef {
         }
 
         .question-block {
-          background: var(--boxel-100);
+          background-color: var(--boxel-100);
           border-radius: var(--boxel-border-radius-sm);
           border-left: 3px solid var(--boxel-purple);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
@@ -395,7 +392,7 @@ export class QuestionField extends FieldDef {
         .answer-section {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 0.25rem;
           flex: 1;
         }
       </style>

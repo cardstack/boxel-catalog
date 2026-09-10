@@ -1,0 +1,71 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rootVariables": {
+        "background": "#0e1013",
+        "foreground": "#e6e9ee",
+        "card": "#171a20",
+        "cardForeground": "#e6e9ee",
+        "popover": "#1d2128",
+        "popoverForeground": "#e6e9ee",
+        "primary": "#22d3ee",
+        "primaryForeground": "#06202a",
+        "secondary": "#242a33",
+        "secondaryForeground": "#e6e9ee",
+        "muted": "#1b1f26",
+        "mutedForeground": "#9aa3ad",
+        "accent": "#7dd3fc",
+        "accentForeground": "#06202a",
+        "destructive": "#f0604d",
+        "destructiveForeground": "#1a0705",
+        "border": "#2b313a",
+        "input": "#2b313a",
+        "ring": "#22d3ee",
+        "canvas": "#090b0e",
+        "inset": "#12151a",
+        "sidebar": "#12161c",
+        "sidebarForeground": "#e6e9ee",
+        "tooltip": "#0b0d10",
+        "tooltipForeground": "#f3f5f8",
+        "fontSans": "'Inter', system-ui, sans-serif",
+        "fontMono": "'IBM Plex Mono', Menlo, monospace",
+        "radius": "0.5rem",
+        "stripe": "#1c1f25",
+        "field": "#171a20",
+        "hover": "#e6e9ee14",
+        "selected": "#20323a",
+        "overlay": "#e6e9ee80",
+        "subtleForeground": "#6b727a",
+        "borderStrong": "#70757d",
+        "sidebarBorder": "#2b313a",
+        "sidebarPrimary": "#22d3ee",
+        "sidebarPrimaryForeground": "#06202a",
+        "sidebarAccent": "#7dd3fc",
+        "sidebarAccentForeground": "#06202a",
+        "sidebarRing": "#22d3ee",
+        "success": "#85d388",
+        "successForeground": "#111111",
+        "warning": "#e8b351",
+        "warningForeground": "#111111",
+        "info": "#79c2ff",
+        "infoForeground": "#111111",
+        "attention": "#fb99c9",
+        "attentionForeground": "#111111"
+      },
+      "customCssImports": [],
+      "cardInfo": {
+        "name": "Chrome Piano",
+        "summary": "Virtual Piano's default look — graphite chassis, chrome panels, cyan indicator lights.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/structured-theme",
+        "name": "default"
+      }
+    }
+  }
+}

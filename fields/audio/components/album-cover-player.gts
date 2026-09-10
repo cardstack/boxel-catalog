@@ -76,9 +76,10 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
       .album-player {
         display: flex;
         flex-direction: column;
-        background: var(--boxel-light, #ffffff);
-        border: 1px solid var(--boxel-border-color, #e5e7eb);
-        border-radius: var(--boxel-border-radius, 0.5rem);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius);
         overflow: hidden;
       }
 
@@ -94,16 +95,17 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
         height: 100%;
         background: linear-gradient(
           135deg,
-          var(--primary, #3b82f6) 0%,
-          var(--accent, #60a5fa) 50%,
-          var(--primary, #3b82f6) 100%
+          var(--card) 0%,
+          var(--card) 50%,
+          var(--primary) 100%
         );
       }
 
       .cover-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.2);
+        background-color: var(--overlay);
+        color: var(--tooltip-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -125,14 +127,15 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: white !important;
-        color: var(--primary, #3b82f6) !important;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+        background-color: var(--card) !important;
+        color: var(--primary-ink) !important;
+        box-shadow: 0 10px 25px -5px
+          color-mix(in oklch, var(--shadow-color) 30%, transparent) !important;
         transition: all 0.2s;
       }
 
       .album-play-btn:hover {
-        background: rgba(255, 255, 255, 0.95) !important;
+        background-color: var(--card) !important;
         transform: scale(1.05);
       }
 
@@ -146,7 +149,7 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
       .album-title {
         font-weight: 700;
         font-size: 1.125rem;
-        color: var(--foreground, #1f2937);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -154,7 +157,7 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
 
       .album-artist {
         font-size: 0.875rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -170,14 +173,16 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
       .album-progress-bar {
         width: 100%;
         height: 0.375rem;
-        background: var(--muted, #e5e7eb);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border-radius: 0.1875rem;
         overflow: hidden;
       }
 
       .album-progress-fill {
         height: 100%;
-        background: var(--primary, #3b82f6);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         transition: width 0.1s linear;
       }
 
@@ -185,7 +190,7 @@ export class AlbumCoverPlayer extends GlimmerComponent<AlbumCoverPlayerSignature
         display: flex;
         justify-content: space-between;
         font-size: 0.75rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
 

@@ -46,12 +46,12 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
     </ul>
     <style scoped>
       .cards {
-        --default-grid-view-min-width: 224px;
+        --default-grid-view-min-width: 14rem;
         --default-grid-view-max-width: 1fr;
-        --default-grid-view-height: 360px;
+        --default-grid-view-height: 22.5rem;
         --default-strip-view-min-width: 49%;
         --default-strip-view-max-width: 1fr;
-        --default-strip-view-height: 180px;
+        --default-strip-view-height: 11.25rem;
 
         display: grid;
         gap: var(--boxel-sp);

@@ -110,22 +110,20 @@ export default class GeoPointMapPicker extends GlimmerComponent<MapPickerSignatu
 
       .map-container {
         width: 100%;
-        border: 1px solid var(--boxel-border-color);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
         position: relative;
       }
 
       .coordinate-display {
-        --coordinate-display-bg-color: #daf3ff;
-        --coordinate-display-border-color: #0ea5e9;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
         line-height: var(--boxel-line-height-xs);
         font-family: var(--boxel-font-family-mono);
-        background: var(--coordinate-display-bg-color);
-        border-left: 3px solid var(--coordinate-display-border-color);
-        color: var(--boxel-dark);
+        background-color: var(--inset);
+        border-left: 3px solid var(--primary);
+        color: var(--foreground);
       }
 
       .no-location-placeholder-text {
@@ -142,16 +140,16 @@ export default class GeoPointMapPicker extends GlimmerComponent<MapPickerSignatu
         align-items: center;
         justify-content: center;
         gap: var(--boxel-sp-2xs);
-        background: var(--boxel-surface-secondary);
-        border: 2px dashed var(--boxel-border-color);
+        background-color: var(--boxel-surface-secondary);
+        border: 2px dashed var(--border);
         border-radius: var(--boxel-border-radius);
         color: var(--boxel-text-muted);
         aspect-ratio: 16 / 9;
       }
 
       .placeholder-icon {
-        width: 24px;
-        height: 24px;
+        width: 1.5rem;
+        height: 1.5rem;
       }
 
       .placeholder-text {

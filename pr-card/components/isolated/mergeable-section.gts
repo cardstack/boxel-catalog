@@ -45,26 +45,18 @@ export class MergeableSection extends GlimmerComponent<MergeableSectionSignature
         align-items: flex-start;
         gap: var(--boxel-sp-sm);
         padding: var(--boxel-sp-sm) var(--boxel-sp-lg);
-        border-top: 1px solid var(--border, var(--boxel-border-color));
-        border-bottom: 1px solid var(--border, var(--boxel-border-color));
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
       }
       .mergeable-banner--blocked {
-        background: color-mix(
-          in srgb,
-          var(--destructive, #d73a49) 5%,
-          var(--card, #ffffff)
-        );
+        background-color: color-mix(in oklch, var(--card) 5%, var(--card));
       }
       .mergeable-banner--ok {
-        background: color-mix(
-          in srgb,
-          var(--chart-1, #28a745) 5%,
-          var(--card, #ffffff)
-        );
+        background-color: color-mix(in oklch, var(--chart-1) 5%, var(--card));
       }
       .mergeable-icon-wrap {
-        width: 32px;
-        height: 32px;
+        width: 2rem;
+        height: 2rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -72,15 +64,16 @@ export class MergeableSection extends GlimmerComponent<MergeableSectionSignature
         flex-shrink: 0;
       }
       .mergeable-icon-wrap--blocked {
-        background: var(--destructive, #d73a49);
+        background-color: var(--destructive);
+        color: var(--destructive-foreground);
       }
       .mergeable-icon-wrap--ok {
-        background: var(--chart-1, #28a745);
+        background-color: var(--chart-1);
       }
       .mergeable-icon {
-        width: 16px;
-        height: 16px;
-        color: #ffffff;
+        width: 1rem;
+        height: 1rem;
+        color: var(--card-foreground);
       }
       .mergeable-content {
         display: flex;
@@ -91,13 +84,13 @@ export class MergeableSection extends GlimmerComponent<MergeableSectionSignature
       .mergeable-title {
         font-size: var(--boxel-font-sm);
         font-weight: 700;
-        color: var(--foreground, #1f2328);
+        color: var(--foreground);
         line-height: 1.4;
       }
       .mergeable-reason,
       .mergeable-subtitle {
         font-size: var(--boxel-font-sm);
-        color: var(--muted-foreground, #656d76);
+        color: var(--muted-foreground);
         line-height: 1.5;
       }
     </style>

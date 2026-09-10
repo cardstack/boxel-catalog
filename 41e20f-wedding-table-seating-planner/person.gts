@@ -59,21 +59,14 @@ export class Person extends CardDef {
         .p-row {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 9px 12px;
-          border: 1px solid
-            var(--tsp-border, var(--border, rgba(220, 193, 136, 0.3)));
-          border-radius: 11px;
-          background: var(--tsp-background, var(--background, #ffffff));
-          font-family: var(
-            --tsp-font-sans,
-            var(--font-sans, 'Jost', system-ui, sans-serif)
-          );
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          gap: 0.75rem;
+          padding: 0.5625rem 0.75rem;
+          border: 1px solid var(--border);
+          border-radius: 0.6875rem;
         }
         .p-avatar {
-          width: 38px;
-          height: 38px;
+          width: 2.375rem;
+          height: 2.375rem;
           border-radius: 50%;
           flex: none;
           object-fit: cover;
@@ -82,16 +75,12 @@ export class Person extends CardDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          font: 600 13px
-            var(
-              --tsp-font-serif,
-              var(--font-serif, 'Cormorant Garamond', serif)
-            );
-          color: var(--tsp-foreground, var(--foreground, #22283f));
+          font: 600 0.8125rem var(--font-serif);
+          color: var(--accent-foreground);
           background: linear-gradient(
             135deg,
-            #dcc188,
-            var(--tsp-accent, var(--accent, #c5a35c))
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
           );
         }
         .p-main {
@@ -99,10 +88,10 @@ export class Person extends CardDef {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 0.1875rem;
         }
         .p-name {
-          font-size: 14px;
+          font-size: 0.875rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

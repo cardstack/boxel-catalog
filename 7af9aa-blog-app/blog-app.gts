@@ -129,8 +129,8 @@ export class BlogApp extends CardDef {
           .fitted-blog :deep(.thumbnail-section) {
             border: 1px solid var(--boxel-450);
             border-radius: var(--boxel-border-radius-lg);
-            width: 40px;
-            height: 40px;
+            width: 2.5rem;
+            height: 2.5rem;
             overflow: hidden;
           }
           .fitted-blog :deep(.card-thumbnail) {
@@ -138,8 +138,8 @@ export class BlogApp extends CardDef {
             height: 100%;
           }
           .fitted-blog :deep(.card-type-icon) {
-            width: 20px;
-            height: 20px;
+            width: 1.25rem;
+            height: 1.25rem;
           }
           .fitted-blog :deep(.info-section) {
             display: flex;

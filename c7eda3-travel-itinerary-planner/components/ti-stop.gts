@@ -48,23 +48,23 @@ export class ItineraryStopEmbedded extends Component<typeof ItineraryStop> {
     </div>
     <style scoped>
       .stop {
-        --stop-color: var(--ti-accent, var(--primary, #ff385c));
+        --stop-color: var(--primary);
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 0.25rem;
         border-left: 3px solid var(--stop-color);
         padding-left: var(--boxel-sp-xs);
       }
       .stop-head {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 0.375rem;
       }
       .stop-dot {
-        width: 9px;
-        height: 9px;
+        width: 0.5625rem;
+        height: 0.5625rem;
         border-radius: 50%;
-        background: var(--stop-color);
+        background-color: var(--stop-color);
         flex-shrink: 0;
       }
       .stop-name {
@@ -74,7 +74,7 @@ export class ItineraryStopEmbedded extends Component<typeof ItineraryStop> {
       .stop-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 0.375rem;
         align-items: center;
       }
       .stop-day,
@@ -82,28 +82,28 @@ export class ItineraryStopEmbedded extends Component<typeof ItineraryStop> {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         color: color-mix(
-          in srgb,
+          in oklch,
           var(--stop-color) 62%,
-          var(--c-text, #222222) 38%
+          var(--foreground) 38%
         );
       }
       .stop-cost {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        color: var(--ti-cost, var(--foreground, #222222));
-        background: var(--ti-cost-bg, var(--muted, #f3f3f3));
-        border-radius: 999px;
-        padding: 1px 8px;
+        color: var(--foreground);
+        background-color: var(--muted);
+        border-radius: 62.4375rem;
+        padding: 1px 0.5rem;
       }
       .stop-cat {
         font-size: var(--boxel-font-size-xs);
-        color: var(--ti-muted, var(--muted-foreground, #717171));
+        color: var(--muted-foreground);
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
       .stop-addr {
         font-size: var(--boxel-font-size-xs);
-        color: var(--ti-muted, var(--muted-foreground, #717171));
+        color: var(--muted-foreground);
       }
     </style>
   </template>

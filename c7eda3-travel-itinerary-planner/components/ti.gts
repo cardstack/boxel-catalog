@@ -718,16 +718,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
          can't restyle the card arbitrarily. A linked theme omits this
          class, so its tokens win. */
       .ti-default-theme {
-        --background: #ffffff;
-        --foreground: #222222;
-        --card: #ffffff;
-        --card-foreground: #222222;
-        --muted: #f7f7f7;
-        --muted-foreground: #717171;
-        --border: #dddddd;
-        --primary: #ff385c;
-        --primary-foreground: #ffffff;
-        --radius: 10px;
+        color: var(--card-foreground);
       }
       .ti-app {
         /* Brand palette: each token resolves to the active design-system
@@ -736,16 +727,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
            Airbnb brand default (rausch accent, charcoal text, warm neutrals).
            (--accent-dark / --accent-bg have no semantic slot, so they stay at
            the literal Airbnb value regardless of theme.) */
-        --c-accent: var(--primary, #ff385c);
-        --c-accent-dark: #bd1e59;
-        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
-        --c-text: var(--foreground, #222222);
-        --c-text-light: var(--primary-foreground, #ffffff);
-        --c-muted: var(--muted-foreground, #717171);
-        --c-border: var(--border, #dddddd);
-        --c-border-light: var(--border, #ebebeb);
-        --c-bg: var(--muted, #f7f7f7);
-        --c-card: var(--card, #ffffff);
+        --c-accent-bg: color-mix(in oklch, var(--primary) 10%, var(--card));
         height: 100%;
         min-height: 100%;
         display: flex;
@@ -754,11 +736,11 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
            container and trap the sticky header against itself. Leaving it
            visible lets the header stick to whichever ancestor actually
            scrolls — the inner .ti-body still owns the internal scroll. */
-        background: var(--c-bg);
+        background-color: var(--canvas);
         font-family:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
           Arial, sans-serif;
-        color: var(--c-text);
+        color: var(--foreground);
       }
       .ti-top {
         position: sticky;
@@ -768,38 +750,40 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         align-items: center;
         justify-content: space-between;
         gap: var(--boxel-sp);
-        background: var(--c-card, #ffffff);
-        border-bottom: 1px solid var(--c-border-light);
-        padding: 16px 24px;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-bottom: 1px solid var(--border);
+        padding: 1rem 1.5rem;
         flex-shrink: 0;
       }
       .ti-brand {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 0.75rem;
       }
       .ti-brand-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        background: var(--c-accent);
-        color: var(--c-text-light);
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.75rem;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 10px rgba(255, 56, 92, 0.3);
+        box-shadow: 0 4px 10px
+          color-mix(in oklch, var(--destructive) 30%, transparent);
       }
       .ti-title {
-        font-size: 18px;
+        font-size: 1.125rem;
         font-weight: 800;
         margin: 0;
         letter-spacing: -0.02em;
-        color: var(--c-text);
+        color: var(--foreground);
       }
       .ti-sub {
-        font-size: 13px;
+        font-size: 0.8125rem;
         margin: 0;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       @keyframes ti-msg-in {
         from {
@@ -817,17 +801,17 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         grid-auto-flow: column;
         grid-auto-columns: max-content;
         justify-content: start;
-        gap: 6px;
+        gap: 0.375rem;
         overflow-x: auto;
-        padding-bottom: 4px;
+        padding-bottom: 0.25rem;
       }
       .ti-ai-chip {
-        border: 1px solid var(--c-border);
-        background: var(--c-card, #ffffff);
-        color: var(--c-text);
-        border-radius: 999px;
-        padding: 7px 13px;
-        font-size: 12px;
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--foreground);
+        border-radius: 62.4375rem;
+        padding: 0.4375rem 0.8125rem;
+        font-size: 0.75rem;
         font-weight: 600;
         cursor: pointer;
         transition:
@@ -835,76 +819,82 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
           background 0.12s ease;
       }
       .ti-ai-chip:hover {
-        border-color: var(--c-text);
-        background: var(--c-bg);
+        border-color: var(--foreground);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .ti-ai-chip.is-selected {
-        border-color: var(--c-text);
-        background: var(--c-text);
-        color: var(--c-text-light);
+        border-color: var(--foreground);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .ti-ai-chip-confirm {
         align-self: flex-end;
         border: none;
-        background: var(--c-accent);
-        color: var(--c-text-light);
-        border-radius: 999px;
-        padding: 8px 16px;
-        font-size: 12px;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        border-radius: 62.4375rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
         font-weight: 700;
         cursor: pointer;
         transition: background 0.12s ease;
       }
       .ti-ai-chip-confirm:hover {
-        background: var(--c-accent-dark);
+        background-color: var(--attention);
+        color: var(--attention-foreground);
       }
       .ti-ai-chip-confirm.is-secondary {
         align-self: stretch;
-        background: transparent;
-        border: 1px solid var(--c-border);
-        color: var(--c-text);
+        background-color: transparent;
+        border: 1px solid var(--border);
+        color: var(--foreground);
         text-align: center;
       }
       .ti-ai-chip-confirm.is-secondary:hover {
-        border-color: var(--c-text);
-        background: var(--c-bg);
+        border-color: var(--foreground);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .ti-ai-chip.is-cat {
-        padding: 4px 6px;
+        padding: 0.25rem 0.375rem;
         display: inline-flex;
         align-items: center;
       }
       .ti-ai-chip.is-cat.is-selected {
-        background: var(--c-bg);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         color: inherit;
-        border-color: var(--c-text);
-        box-shadow: 0 0 0 1px var(--c-text);
+        border-color: var(--foreground);
+        box-shadow: 0 0 0 1px var(--shadow-color);
       }
       .ti-ai-preview {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 0.625rem;
         align-self: stretch;
-        padding: 12px;
-        border: 1px solid var(--c-border-light);
-        border-radius: 14px;
-        background: var(--c-card, #ffffff);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.875rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        box-shadow: 0 1px 3px
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
         animation: ti-msg-in 0.18s ease both;
       }
       .ti-ai-preview-day {
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 0.3125rem;
       }
       .ti-ai-preview-badge {
         align-self: flex-start;
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 800;
-        color: var(--c-accent);
-        background: var(--c-accent-bg);
-        border-radius: 999px;
-        padding: 2px 9px;
+        color: var(--primary-ink);
+        background-color: var(--c-accent-bg);
+        border-radius: 62.4375rem;
+        padding: 2px 0.5625rem;
       }
       .ti-ai-preview-stops {
         list-style: none;
@@ -912,22 +902,23 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
       }
       .ti-ai-preview-stop {
         display: flex;
         flex-direction: column;
         min-width: 0;
-        border-radius: 8px;
+        border-radius: 0.5rem;
       }
       .ti-ai-preview-stop.is-open {
-        background: var(--c-bg);
-        padding: 6px 8px;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        padding: 0.375rem 0.5rem;
       }
       .ti-ai-preview-row {
         display: flex;
         align-items: baseline;
-        gap: 7px;
+        gap: 0.4375rem;
         width: 100%;
         min-width: 0;
         padding: 2px 0;
@@ -940,12 +931,12 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
-        border: 1px solid var(--c-border-light);
-        border-radius: 7px;
-        background: var(--c-card, #ffffff);
-        color: var(--c-muted);
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 1px solid var(--border);
+        border-radius: 0.4375rem;
+        background-color: var(--card);
+        color: var(--muted-foreground);
         cursor: pointer;
         transition:
           border-color 0.12s ease,
@@ -953,36 +944,28 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
           background 0.12s ease;
       }
       .ti-ai-preview-view:hover {
-        border-color: var(--c-accent);
-        color: var(--c-accent);
+        border-color: var(--primary);
+        color: var(--primary-ink);
       }
       .ti-ai-preview-stop.is-open .ti-ai-preview-view {
-        border-color: var(--c-accent);
-        background: var(--c-accent-bg);
-        color: var(--c-accent);
+        border-color: var(--primary);
+        background-color: var(--c-accent-bg);
+        color: var(--primary-ink);
       }
       /* The stop edit popover portals to document.body, OUTSIDE the host
          card, so the --c-* palette must be re-declared here or every var()
          resolves to nothing. Same design-system-token contract as the host. */
       .ti-ai-stop-pop {
-        --c-accent: var(--primary, #ff385c);
-        --c-accent-dark: #bd1e59;
-        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
-        --c-text: var(--foreground, #222222);
-        --c-muted: var(--muted-foreground, #717171);
-        --c-border: var(--border, #dddddd);
-        --c-border-light: var(--border, #ebebeb);
-        --c-bg: var(--muted, #f7f7f7);
-        --c-card: var(--card, #ffffff);
+        --c-accent-bg: color-mix(in oklch, var(--primary) 10%, var(--card));
         display: flex;
         flex-direction: column;
-        width: 320px;
+        width: 20rem;
         max-width: 100%;
         box-sizing: border-box;
         font-family:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
           Arial, sans-serif;
-        color: var(--c-text);
+        color: var(--foreground);
       }
       /* Scrolling body — ONLY this scrolls; the header is a static flex
          sibling above it (same model as the first-level .ai-chat-body /
@@ -995,11 +978,11 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         flex: 1;
         min-height: 0;
         max-height: calc(
-          min(500px, 80vh, var(--bx-popover-avail-h, 100vh)) - 56px
+          min(31.25rem, 80vh, var(--bx-popover-avail-h, 100vh)) - 3.5rem
         );
         overflow-y: auto;
         scroll-behavior: smooth;
-        padding: 16px;
+        padding: 1rem;
         box-sizing: border-box;
       }
       /* The expanded editor is the ItineraryStop field's own edit
@@ -1007,11 +990,12 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-ai-stop-edit {
         width: 100%;
         min-width: 0;
-        font-size: 12px;
-        background: var(--c-card, #ffffff);
-        border: 1px solid var(--c-border-light);
-        border-radius: 10px;
-        padding: 10px;
+        font-size: 0.75rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 0.625rem;
+        padding: 0.625rem;
         box-sizing: border-box;
       }
       /* Static header — a flex sibling sitting ABOVE the scrolling body
@@ -1023,31 +1007,31 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
-        padding: 14px 16px;
-        border-bottom: 1px solid var(--c-border-light);
+        gap: 0.5rem;
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid var(--border);
       }
       .ti-ai-stop-head-title {
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 800;
-        color: var(--c-text);
+        color: var(--foreground);
       }
       .ti-ai-stop-head-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .ti-ai-stop-close {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 30px;
-        height: 30px;
+        width: 1.875rem;
+        height: 1.875rem;
         flex-shrink: 0;
-        border: 1px solid var(--c-border);
+        border: 1px solid var(--border);
         border-radius: 50%;
-        background: var(--c-card, #ffffff);
-        color: var(--c-muted);
+        background-color: var(--card);
+        color: var(--muted-foreground);
         cursor: pointer;
         transition:
           border-color 0.12s ease,
@@ -1055,20 +1039,20 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
           background 0.12s ease;
       }
       .ti-ai-stop-close:hover {
-        border-color: var(--c-text);
-        color: var(--c-text);
-        background: var(--c-bg);
+        border-color: var(--foreground);
+        color: var(--muted-foreground);
+        background-color: var(--muted);
       }
       .ti-ai-preview-remove {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 0.3125rem;
         border: none;
-        background: transparent;
-        padding: 3px 0;
-        font-size: 11px;
+        background-color: transparent;
+        padding: 0.1875rem 0;
+        font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--c-accent-dark);
+        color: var(--attention-ink);
         cursor: pointer;
       }
       .ti-ai-preview-remove:hover {
@@ -1076,67 +1060,68 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       .ti-ai-preview-time {
         flex-shrink: 0;
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--c-accent);
+        color: var(--primary-ink);
         font-variant-numeric: tabular-nums;
       }
       .ti-ai-preview-name {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--c-text);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .ti-ai-preview-cat {
         flex-shrink: 0;
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         text-transform: uppercase;
         letter-spacing: 0.04em;
       }
       .ti-ai-inputrow {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
         margin: 0;
       }
       .ti-ai-input {
         flex: 1;
         min-width: 0;
         font: inherit;
-        font-size: 13px;
-        color: var(--c-text);
-        background: var(--c-card, #ffffff);
-        border: 1px solid var(--c-border);
-        border-radius: 999px;
-        padding: 9px 14px;
+        font-size: 0.8125rem;
+        color: var(--foreground);
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 62.4375rem;
+        padding: 0.5625rem 0.875rem;
       }
       .ti-ai-input:focus {
         outline: none;
-        border-color: var(--c-text);
+        border-color: var(--foreground);
       }
       .ti-ai-input::placeholder {
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .ti-ai-send {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 36px;
-        height: 36px;
+        width: 2.25rem;
+        height: 2.25rem;
         flex-shrink: 0;
         border-radius: 50%;
         border: none;
-        background: var(--c-accent);
-        color: var(--c-text-light);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         cursor: pointer;
         transition: background 0.12s ease;
       }
       .ti-ai-send:hover:not(:disabled) {
-        background: var(--c-accent-dark);
+        background-color: var(--attention);
+        color: var(--attention-foreground);
       }
       .ti-ai-send:disabled {
         opacity: 0.4;
@@ -1146,14 +1131,14 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: 0.375rem;
         width: 100%;
-        padding: 11px 14px;
-        border-radius: 12px;
+        padding: 0.6875rem 0.875rem;
+        border-radius: 0.75rem;
         border: none;
-        background: var(--c-accent);
-        color: var(--c-text-light);
-        font-size: 13px;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        font-size: 0.8125rem;
         font-weight: 700;
         cursor: pointer;
         transition:
@@ -1162,7 +1147,7 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       .ti-ai-generate:hover:not(:disabled) {
         box-shadow: 0 4px 14px
-          color-mix(in srgb, var(--c-accent) 45%, transparent);
+          color-mix(in oklch, var(--primary) 45%, transparent);
         transform: translateY(-1px);
       }
       .ti-ai-generate:disabled {
@@ -1178,21 +1163,21 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         width: 100%;
         box-sizing: border-box;
         resize: vertical;
-        min-height: 52px;
+        min-height: 3.25rem;
         font: inherit;
-        font-size: 13px;
-        color: var(--c-text);
-        background: var(--c-card, #ffffff);
-        border: 1px solid var(--c-border);
-        border-radius: 12px;
-        padding: 9px 12px;
+        font-size: 0.8125rem;
+        color: var(--foreground);
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 0.5625rem 0.75rem;
       }
       .ti-ai-textarea:focus {
         outline: none;
-        border-color: var(--c-text);
+        border-color: var(--foreground);
       }
       .ti-ai-textarea::placeholder {
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .ti-ai-daterange {
         width: 100%;
@@ -1215,14 +1200,15 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         overflow: hidden;
       }
       .ti-panel {
-        width: 340px;
+        width: 21.25rem;
         flex-shrink: 0;
-        background: var(--c-card, #ffffff);
-        border-right: 1px solid var(--c-border-light);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
-        gap: 18px;
-        padding: 20px;
+        gap: 1.125rem;
+        padding: 1.25rem;
         min-height: 0;
         overflow-y: auto;
       }
@@ -1231,47 +1217,48 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-frame {
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        padding: 16px;
-        border: 1px solid var(--c-border);
-        border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        gap: 0.75rem;
+        padding: 1rem;
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        box-shadow: 0 2px 8px
+          color-mix(in oklch, var(--shadow-color) 5%, transparent);
       }
       .ti-frame-field {
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 0.3125rem;
       }
       .ti-frame-label {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--c-text);
+        color: var(--foreground);
       }
 
       /* Header actions + share popover */
       .ti-top-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
         position: relative;
       }
       .ti-ai-trigger {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 0.375rem;
       }
       .ti-share-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 36px;
-        height: 36px;
+        width: 2.25rem;
+        height: 2.25rem;
         border-radius: 50%;
-        border: 1px solid var(--c-border);
-        background: var(--c-card, #ffffff);
-        color: var(--c-text);
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--foreground);
         cursor: pointer;
         transition:
           background 0.12s ease,
@@ -1279,9 +1266,9 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       .ti-share-btn:hover,
       .ti-share-btn.is-open {
-        background: var(--c-accent-bg);
-        border-color: var(--c-accent);
-        color: var(--c-accent-dark);
+        background-color: var(--c-accent-bg);
+        border-color: var(--primary);
+        color: var(--attention-ink);
       }
       .ti-share {
         position: relative;
@@ -1293,54 +1280,47 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
          re-declare the --c-* palette, since the portaled node no longer
          inherits it from .ti-app. */
       .ti-share-pop {
-        --c-accent: var(--primary, #ff385c);
-        --c-accent-dark: #bd1e59;
-        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
-        --c-text: var(--foreground, #222222);
-        --c-text-light: var(--primary-foreground, #ffffff);
-        --c-muted: var(--muted-foreground, #717171);
-        --c-border-light: var(--border, #ebebeb);
-        --c-bg: var(--muted, #f7f7f7);
-        --c-card: var(--card, #ffffff);
-        width: 200px;
+        --c-accent-bg: color-mix(in oklch, var(--primary) 10%, var(--card));
+        width: 12.5rem;
         max-width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 10px;
-        padding: 16px;
+        gap: 0.625rem;
+        padding: 1rem;
         box-sizing: border-box;
         font-family:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
           Arial, sans-serif;
       }
       .ti-share-title {
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 800;
-        color: var(--c-text);
+        color: var(--foreground);
         margin: 0;
       }
       .ti-share-qr {
-        width: 150px;
-        height: 150px;
+        width: 9.375rem;
+        height: 9.375rem;
       }
       .ti-share-copy {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 0.375rem;
         width: 100%;
         justify-content: center;
-        padding: 8px 12px;
-        border-radius: 10px;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.625rem;
         border: none;
-        background: var(--c-text);
-        color: var(--c-text-light);
-        font-size: 12px;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        font-size: 0.75rem;
         font-weight: 700;
         cursor: pointer;
       }
       .ti-share-copy:hover {
-        background: #000;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
 
       .ti-list-head {
@@ -1352,20 +1332,20 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-list-title {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 15px;
+        gap: 0.5rem;
+        font-size: 0.9375rem;
         font-weight: 800;
         letter-spacing: -0.01em;
-        color: var(--c-text);
+        color: var(--foreground);
         margin: 0;
       }
       .ti-list-count {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--c-text-light);
-        background: var(--c-accent);
-        border-radius: 999px;
-        padding: 1px 9px;
+        color: var(--primary-foreground);
+        background-color: var(--primary);
+        border-radius: 62.4375rem;
+        padding: 1px 0.5625rem;
       }
       .ti-currency {
         margin-left: auto;
@@ -1374,14 +1354,14 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-budget-bar {
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-top: 10px;
-        padding: 10px 14px;
-        border-radius: 12px;
+        gap: 0.625rem;
+        margin-top: 0.625rem;
+        padding: 0.625rem 0.875rem;
+        border-radius: 0.75rem;
         /* inverted receipt-style total strip: foreground as fill, background
            as text, so it stays paired under any linked theme */
-        background: var(--c-text);
-        color: var(--background, #ffffff);
+        background-color: var(--tooltip);
+        color: var(--tooltip-foreground);
       }
       .ti-budget-head {
         display: flex;
@@ -1389,17 +1369,17 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         gap: 1px;
       }
       .ti-budget-label {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
       }
       .ti-budget-sub {
-        font-size: 10px;
+        font-size: 0.625rem;
         opacity: 0.6;
       }
       .ti-budget-amount {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 800;
         font-variant-numeric: tabular-nums;
       }
@@ -1408,13 +1388,13 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         flex-shrink: 0;
       }
       .ti-budget-currency :deep(.currency-field-edit) {
-        min-width: 84px;
-        font-size: 12px;
+        min-width: 5.25rem;
+        font-size: 0.75rem;
       }
       .ti-add-day {
-        --boxel-button-border-radius: 999px;
-        --boxel-button-border-color: var(--c-text);
-        --boxel-button-text-color: var(--c-text);
+        --boxel-button-border-radius: 62.4375rem;
+        --boxel-button-border-color: var(--foreground);
+        --boxel-button-text-color: var(--foreground);
         font-weight: 700;
         white-space: nowrap;
         flex-shrink: 0;
@@ -1423,33 +1403,34 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       .ti-days {
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 1.125rem;
       }
       .ti-day-group {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 0.375rem;
       }
       .ti-day-head {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
         width: 100%;
         border: none;
-        padding: 6px 2px;
+        padding: 0.375rem 2px;
         cursor: pointer;
         text-align: left;
         position: sticky;
         top: 0;
-        background: var(--c-card, #ffffff);
+        background-color: var(--inset);
+        color: var(--foreground);
         z-index: 2;
-        border-radius: 8px;
+        border-radius: 0.5rem;
       }
       .ti-day-head.is-droptarget {
-        background: var(--c-accent-bg);
+        background-color: var(--c-accent-bg);
       }
       .ti-day-chevron {
-        color: var(--c-muted);
+        color: var(--muted-foreground);
         transition: transform 0.15s ease;
         flex-shrink: 0;
       }
@@ -1457,24 +1438,24 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         transform: rotate(-90deg);
       }
       .ti-day-label {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 800;
-        color: var(--c-text);
+        color: var(--foreground);
         white-space: nowrap;
         letter-spacing: -0.01em;
       }
       .ti-day-count {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--c-muted);
-        background: var(--c-bg);
-        border-radius: 999px;
-        padding: 1px 8px;
+        color: var(--muted-foreground);
+        background-color: var(--muted);
+        border-radius: 62.4375rem;
+        padding: 1px 0.5rem;
       }
       .ti-day-rule {
         flex: 1;
         height: 1px;
-        background: var(--c-border-light);
+        background-color: var(--border);
       }
 
       .ti-stops {
@@ -1484,18 +1465,20 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         padding: 2px 0;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 0.375rem;
       }
       .ti-stop {
-        --stop-color: var(--c-accent);
+        --stop-color: var(--primary);
         position: relative;
         display: flex;
         align-items: center;
         gap: 2px;
-        background: var(--c-card, #ffffff);
-        border: 1px solid var(--c-border-light);
-        border-radius: 14px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: 0.875rem;
+        box-shadow: 0 1px 2px
+          color-mix(in oklch, var(--shadow-color) 4%, transparent);
         animation: ti-stop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
         transition:
           box-shadow 0.15s ease,
@@ -1525,13 +1508,14 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         animation-delay: 0.16s;
       }
       .ti-stop:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-color: var(--c-border);
+        box-shadow: 0 4px 12px
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
+        border-color: var(--border);
       }
       .ti-stop.is-sel {
         border-color: var(--stop-color);
         box-shadow: 0 0 0 2px
-          color-mix(in srgb, var(--stop-color) 30%, transparent);
+          color-mix(in oklch, var(--stop-color) 30%, transparent);
       }
       .ti-stop.is-dragging {
         opacity: 0.45;
@@ -1544,68 +1528,68 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding-left: 7px;
-        color: var(--c-border);
+        padding-left: 0.4375rem;
+        color: var(--subtle-foreground);
         cursor: grab;
         flex-shrink: 0;
       }
       .ti-stop:hover .ti-grip {
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .ti-stop-row {
         flex: 1;
         display: flex;
         align-items: center;
-        gap: 9px;
-        background: transparent;
+        gap: 0.5625rem;
+        background-color: transparent;
         border: none;
-        padding: 11px 4px 11px 6px;
+        padding: 0.6875rem 0.25rem 0.6875rem 0.375rem;
         cursor: pointer;
         text-align: left;
         min-width: 0;
       }
       .ti-stop-dot {
-        width: 10px;
-        height: 10px;
+        width: 0.625rem;
+        height: 0.625rem;
         border-radius: 50%;
-        background: var(--stop-color);
+        background-color: var(--stop-color);
         flex-shrink: 0;
       }
       .ti-stop-time {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 700;
         color: color-mix(
-          in srgb,
+          in oklch,
           var(--stop-color) 62%,
-          var(--c-text, #222222) 38%
+          var(--foreground) 38%
         );
         font-variant-numeric: tabular-nums;
         flex-shrink: 0;
       }
       .ti-stop-cost {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--c-muted, var(--muted-foreground, #717171));
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
         flex-shrink: 0;
         margin-left: auto;
-        padding-right: 4px;
+        padding-right: 0.25rem;
       }
       .ti-stop-name {
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 500;
-        color: var(--c-text);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .ti-icon-btn {
-        background: transparent;
+        background-color: transparent;
         border: none;
-        padding: 8px 10px;
+        padding: 0.5rem 0.625rem;
         cursor: pointer;
-        color: var(--c-muted);
-        border-radius: 8px;
+        color: var(--muted-foreground);
+        border-radius: 0.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1621,31 +1605,31 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         opacity: 1;
       }
       .ti-icon-btn:hover {
-        color: var(--c-accent);
-        background: var(--c-accent-bg);
+        color: var(--primary-ink);
+        background-color: var(--c-accent-bg);
       }
       .ti-icon-btn.is-editing {
         opacity: 1;
-        color: var(--c-accent);
-        background: var(--c-accent-bg);
+        color: var(--primary-ink);
+        background-color: var(--c-accent-bg);
       }
       .ti-icon-btn.ti-danger:hover {
-        color: #ef4444;
-        background: #fee2e2;
+        color: var(--destructive-ink);
+        background-color: var(--card);
       }
       .ti-add-stop {
         align-self: flex-start;
-        margin-left: 8px;
-        background: transparent;
+        margin-left: 0.5rem;
+        background-color: transparent;
         border: none;
-        padding: 4px 2px;
+        padding: 0.25rem 2px;
         cursor: pointer;
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 700;
-        color: var(--c-accent);
+        color: var(--primary-ink);
       }
       .ti-add-stop:hover {
-        color: var(--c-accent-dark);
+        color: var(--attention-ink);
         text-decoration: underline;
       }
 
@@ -1653,42 +1637,44 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
         text-align: center;
-        color: var(--c-muted);
-        padding: 40px 16px;
-        border: 1px dashed var(--c-border);
-        border-radius: 16px;
+        color: var(--muted-foreground);
+        padding: 2.5rem 1rem;
+        border: 1px dashed var(--border);
+        border-radius: 1rem;
       }
       .ti-empty-title {
-        font-size: 16px;
+        font-size: 1rem;
         font-weight: 800;
-        color: var(--c-text);
+        color: var(--foreground);
         margin: 0;
       }
       .ti-empty-hint {
-        font-size: 13px;
+        font-size: 0.8125rem;
         margin: 0;
         line-height: 1.5;
       }
       .ti-empty-btn {
-        --boxel-button-color: var(--c-accent);
-        --boxel-button-text-color: var(--c-text-light);
-        --boxel-button-border-color: var(--c-accent);
-        --boxel-button-border-radius: 10px;
-        margin-top: 4px;
+        --boxel-button-color: var(--primary);
+        --boxel-button-text-color: var(--primary-foreground);
+        --boxel-button-border-color: var(--primary);
+        --boxel-button-border-radius: 0.625rem;
+        margin-top: 0.25rem;
         font-weight: 700;
       }
 
       /* Right-side edit panel (slides in) */
       .ti-edit-panel {
-        width: 360px;
+        width: 22.5rem;
         flex-shrink: 0;
         display: flex;
         flex-direction: column;
-        background: var(--c-card, #ffffff);
-        border-left: 1px solid var(--c-border-light);
-        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-left: 1px solid var(--border);
+        box-shadow: -8px 0 24px
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
         z-index: 1100;
         animation: ti-slide-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
@@ -1708,50 +1694,51 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         align-items: center;
         justify-content: space-between;
         gap: var(--boxel-sp-sm);
-        padding: 16px 20px;
-        border-bottom: 1px solid var(--c-border-light);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border);
       }
       .ti-editor-heading {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .ti-editor-title {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 800;
         letter-spacing: -0.01em;
-        color: var(--c-text);
+        color: var(--foreground);
         margin: 0;
       }
       .ti-editor-day {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--c-text-light);
-        background: var(--c-accent);
-        border-radius: 999px;
-        padding: 2px 9px;
+        color: var(--primary-foreground);
+        background-color: var(--primary);
+        border-radius: 62.4375rem;
+        padding: 2px 0.5625rem;
       }
       .ti-editor-close {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
+        width: 2rem;
+        height: 2rem;
         border-radius: 50%;
         border: none;
-        background: transparent;
-        color: var(--c-text);
+        background-color: transparent;
+        color: var(--foreground);
         cursor: pointer;
         transition: background 0.12s ease;
       }
       .ti-editor-close:hover {
-        background: var(--c-bg);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .ti-editor-body {
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        padding: 20px;
+        padding: 1.25rem;
       }
 
       .ti-map {
@@ -1762,28 +1749,30 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
       }
       .ti-map-filter {
         position: absolute;
-        top: 14px;
+        top: 0.875rem;
         left: 50%;
         transform: translateX(-50%);
         z-index: 1000;
         display: flex;
-        gap: 4px;
-        max-width: calc(100% - 28px);
+        gap: 0.25rem;
+        max-width: calc(100% - 1.75rem);
         overflow-x: auto;
-        padding: 5px;
-        background: var(--c-card, #ffffff);
-        border-radius: 999px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+        padding: 0.3125rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-radius: 62.4375rem;
+        box-shadow: 0 2px 12px
+          color-mix(in oklch, var(--shadow-color) 18%, transparent);
       }
       .ti-chip {
         flex-shrink: 0;
         border: none;
-        background: transparent;
-        color: var(--c-text);
-        font-size: 12px;
+        background-color: transparent;
+        color: var(--foreground);
+        font-size: 0.75rem;
         font-weight: 700;
-        padding: 6px 14px;
-        border-radius: 999px;
+        padding: 0.375rem 0.875rem;
+        border-radius: 62.4375rem;
         cursor: pointer;
         white-space: nowrap;
         transition:
@@ -1791,11 +1780,12 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
           color 0.12s ease;
       }
       .ti-chip:hover {
-        background: var(--c-bg);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .ti-chip.is-active {
-        background: var(--c-text);
-        color: var(--c-text-light);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .ti-map-empty {
         flex: 1;
@@ -1803,15 +1793,15 @@ export class TravelItineraryIsolated extends Component<typeof TravelItinerary> {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        color: var(--c-muted);
+        gap: 0.5rem;
+        color: var(--muted-foreground);
         text-align: center;
         padding: var(--boxel-sp);
-        background: var(--c-bg);
+        background-color: var(--muted);
       }
       .ti-map-empty p {
         margin: 0;
-        font-size: 14px;
+        font-size: 0.875rem;
         max-width: 28ch;
       }
     </style>
@@ -2003,33 +1993,17 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
 
     <style scoped>
       .ti-default-theme {
-        --background: #ffffff;
-        --foreground: #222222;
-        --card: #ffffff;
-        --card-foreground: #222222;
-        --muted: #f7f7f7;
-        --muted-foreground: #717171;
-        --border: #dddddd;
-        --primary: #ff385c;
-        --primary-foreground: #ffffff;
-        --radius: 10px;
+        color: var(--card-foreground);
       }
       .fitted-trip {
         /* See TravelItineraryIsolated above for the design-system-token / literal palette. */
-        --c-accent: var(--primary, #ff385c);
-        --c-accent-dark: #bd1e59;
-        --c-accent-bg: color-mix(in srgb, var(--c-accent) 10%, #ffffff);
-        --c-text: var(--foreground, #222222);
-        --c-text-light: var(--primary-foreground, #ffffff);
-        --c-muted: var(--muted-foreground, #717171);
-        --c-bg: var(--muted, #f7f7f7);
-        --c-card: var(--card, #ffffff);
+        --c-accent-bg: color-mix(in oklch, var(--primary) 10%, var(--card));
         width: 100%;
         height: 100%;
         font-family:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
           Arial, sans-serif;
-        color: var(--c-text);
+        color: var(--foreground);
       }
       .badge,
       .strip,
@@ -2046,30 +2020,30 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 9px;
-        background: var(--c-accent);
-        color: var(--c-text-light);
-        width: 28px;
-        height: 28px;
+        border-radius: 0.5625rem;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        width: 1.75rem;
+        height: 1.75rem;
       }
       .ft-icon-lg {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.75rem;
       }
       .ft-title {
         font-weight: 800;
         letter-spacing: -0.01em;
-        color: var(--c-text);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         margin: 0;
       }
       .ft-meta {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--c-muted);
+        color: var(--muted-foreground);
       }
       .ft-info,
       .ft-body {
@@ -2086,10 +2060,10 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           flex-direction: column;
           align-items: flex-start;
           justify-content: center;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .badge .ft-title {
-          font-size: 13px;
+          font-size: 0.8125rem;
           white-space: normal;
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -2103,10 +2077,10 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           display: flex;
           flex-direction: row;
           align-items: center;
-          gap: 10px;
+          gap: 0.625rem;
         }
         .strip .ft-title {
-          font-size: 14px;
+          font-size: 0.875rem;
         }
       }
 
@@ -2123,17 +2097,17 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
         .t-hero {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 12px 14px;
-          background: var(--c-accent);
-          color: var(--c-text-light);
+          gap: 0.625rem;
+          padding: 0.75rem 0.875rem;
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .t-hero-icon {
-          width: 34px;
-          height: 34px;
-          border-radius: 10px;
-          background: rgba(255, 255, 255, 0.22);
-          color: var(--c-text-light);
+          width: 2.125rem;
+          height: 2.125rem;
+          border-radius: 0.625rem;
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .t-head-text {
           display: flex;
@@ -2142,57 +2116,57 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           min-width: 0;
         }
         .tile .ft-title {
-          font-size: 15px;
-          color: var(--c-text-light);
+          font-size: 0.9375rem;
+          color: var(--primary-foreground);
           white-space: normal;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
         }
         .t-sub {
-          font-size: 11px;
+          font-size: 0.6875rem;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.85);
+          color: color-mix(in oklch, var(--card-foreground) 85%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .t-meta-row {
           flex-shrink: 0;
-          padding: 9px 14px 5px;
-          font-size: 10px;
+          padding: 0.5625rem 0.875rem 0.3125rem;
+          font-size: 0.625rem;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          color: var(--c-muted);
+          color: var(--muted-foreground);
         }
         .t-days {
           flex: 1;
           min-height: 0;
           display: flex;
           flex-direction: column;
-          gap: 6px;
-          padding: 3px 12px 12px;
+          gap: 0.375rem;
+          padding: 0.1875rem 0.75rem 0.75rem;
           overflow: hidden;
         }
         .t-day {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
           min-width: 0;
         }
         .t-day-badge {
           flex-shrink: 0;
-          font-size: 10px;
+          font-size: 0.625rem;
           font-weight: 800;
-          color: var(--c-accent);
-          background: var(--c-accent-bg);
-          border-radius: 999px;
-          padding: 2px 9px;
+          color: var(--primary-ink);
+          background-color: var(--c-accent-bg);
+          border-radius: 62.4375rem;
+          padding: 2px 0.5625rem;
         }
         .t-day-preview {
-          font-size: 12px;
-          color: var(--c-muted);
+          font-size: 0.75rem;
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -2212,14 +2186,14 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
         .c-hero {
           display: flex;
           align-items: flex-start;
-          gap: 14px;
-          padding: 18px 20px;
-          background: var(--c-accent);
-          color: var(--c-text-light);
+          gap: 0.875rem;
+          padding: 1.125rem 1.25rem;
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .c-hero-icon {
-          background: rgba(255, 255, 255, 0.22);
-          color: var(--c-text-light);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .c-head-text {
           flex: 1;
@@ -2229,10 +2203,10 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           min-width: 0;
         }
         .c-hero-title {
-          font-size: 19px;
+          font-size: 1.1875rem;
           font-weight: 800;
           letter-spacing: -0.01em;
-          color: var(--c-text-light);
+          color: var(--primary-foreground);
           margin: 0;
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -2240,17 +2214,17 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           overflow: hidden;
         }
         .c-hero-sub {
-          font-size: 13px;
+          font-size: 0.8125rem;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.92);
+          color: color-mix(in oklch, var(--card-foreground) 92%, transparent);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .c-hero-meta {
-          font-size: 12px;
+          font-size: 0.75rem;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.78);
+          color: color-mix(in oklch, var(--card-foreground) 78%, transparent);
           margin-top: 2px;
         }
         .c-qr {
@@ -2258,30 +2232,33 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
         }
         .c-qr-svg {
-          width: 66px;
-          height: 66px;
-          padding: 6px;
-          background: var(--c-text-light);
-          border-radius: 10px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+          width: 4.125rem;
+          height: 4.125rem;
+          padding: 0.375rem;
+          /* Pad matches the hero surface; the QR field draws its own white margin
+           and black modules, so the pad never needs an ink pairing. */
+          background-color: var(--card);
+          border-radius: 0.625rem;
+          box-shadow: 0 4px 12px
+            color-mix(in oklch, var(--shadow-color) 18%, transparent);
         }
         .c-qr-cap {
-          font-size: 9px;
+          font-size: 0.5625rem;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: rgba(255, 255, 255, 0.95);
+          color: color-mix(in oklch, var(--card-foreground) 95%, transparent);
         }
         .c-content {
           flex: 1;
           min-height: 0;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          padding: 16px 20px;
+          gap: 0.75rem;
+          padding: 1rem 1.25rem;
           overflow: hidden;
         }
         .c-days {
@@ -2289,25 +2266,26 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           min-height: 0;
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 0.5rem;
           overflow: hidden;
         }
         .c-day {
           display: flex;
           align-items: flex-start;
-          gap: 10px;
-          padding: 9px 12px;
-          background: var(--c-bg);
-          border-radius: 12px;
+          gap: 0.625rem;
+          padding: 0.5625rem 0.75rem;
+          background-color: var(--muted);
+          color: var(--muted-foreground);
+          border-radius: 0.75rem;
         }
         .c-day-badge {
           flex-shrink: 0;
-          font-size: 11px;
+          font-size: 0.6875rem;
           font-weight: 800;
-          color: var(--c-text-light);
-          background: var(--c-accent);
-          border-radius: 999px;
-          padding: 3px 10px;
+          color: var(--primary-foreground);
+          background-color: var(--primary);
+          border-radius: 62.4375rem;
+          padding: 0.1875rem 0.625rem;
         }
         .c-day-text {
           display: flex;
@@ -2316,13 +2294,13 @@ export class TravelItineraryFitted extends Component<typeof TravelItinerary> {
           min-width: 0;
         }
         .c-day-count {
-          font-size: 12px;
+          font-size: 0.75rem;
           font-weight: 700;
-          color: var(--c-text);
+          color: var(--foreground);
         }
         .c-day-preview {
-          font-size: 12px;
-          color: var(--c-muted);
+          font-size: 0.75rem;
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

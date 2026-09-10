@@ -201,7 +201,7 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
         padding: var(--boxel-sp);
         border: 1px solid var(--boxel-200);
         border-radius: var(--boxel-border-radius-lg);
-        background: var(--boxel-50);
+        background-color: var(--boxel-50);
       }
       .result-title {
         margin: 0;
@@ -222,7 +222,11 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
         border-radius: var(--boxel-border-radius);
       }
       .status--error {
-        background: color-mix(in srgb, var(--boxel-error-100) 12%, white);
+        background-color: color-mix(
+          in oklch,
+          var(--boxel-error-100) 12%,
+          var(--card)
+        );
         color: var(--boxel-error-100);
       }
     </style>

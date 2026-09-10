@@ -73,15 +73,13 @@ export default class GeoSearchAddressInput extends GlimmerComponent<GeoSearchAdd
       }
 
       .coordinate-display {
-        --coordinate-display-bg-color: #daf3ff;
-        --coordinate-display-border-color: #0ea5e9;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
         line-height: var(--boxel-line-height-xs);
         font-family: var(--boxel-font-family-mono);
-        background: var(--coordinate-display-bg-color);
-        border-left: 3px solid var(--coordinate-display-border-color);
-        color: var(--boxel-dark);
+        background-color: var(--inset);
+        border-left: 3px solid var(--primary);
+        color: var(--foreground);
       }
     </style>
   </template>

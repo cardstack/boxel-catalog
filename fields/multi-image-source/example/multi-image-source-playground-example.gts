@@ -97,23 +97,23 @@ export class MultiImageSourceExample extends CardDef {
       <style scoped>
         .field-example {
           display: grid;
-          gap: var(--boxel-sp, 1rem);
-          max-width: 680px;
+          gap: var(--boxel-sp);
+          max-width: 42.5rem;
           margin-inline: auto;
-          padding: var(--boxel-sp-lg, 1.5rem);
-          font-family: var(--boxel-font-family, system-ui, sans-serif);
-          color: var(--boxel-dark, #111827);
+          padding: var(--boxel-sp-lg);
+          font-family: var(--boxel-font-family);
+          color: var(--foreground);
         }
         .fe-header {
           display: grid;
-          gap: var(--boxel-sp-4xs, 0.25rem);
+          gap: var(--boxel-sp-4xs);
         }
         .fe-eyebrow {
           font-size: 0.6875rem;
           font-weight: 600;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: var(--boxel-purple, #6b46c1);
+          color: var(--primary-ink);
         }
         .fe-title {
           margin: 0;
@@ -125,55 +125,58 @@ export class MultiImageSourceExample extends CardDef {
           margin: 0;
           font-size: 0.875rem;
           line-height: 1.5;
-          color: var(--boxel-500, #64748b);
+          color: var(--primary-ink);
         }
         .fe-panel {
           display: grid;
-          gap: var(--boxel-sp-xs, 0.5rem);
-          padding: var(--boxel-sp, 1rem);
-          border: 1px solid var(--boxel-200, #e5e7eb);
-          border-radius: var(--boxel-border-radius, 0.5rem);
-          background: var(--boxel-light, #fff);
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .fe-panel--code {
-          background: var(--boxel-100, #f8fafc);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .fe-panel-head {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: var(--boxel-sp-xs, 0.5rem);
+          gap: var(--boxel-sp-xs);
         }
         .fe-panel-label {
           font-size: 0.75rem;
           font-weight: 600;
           letter-spacing: 0.04em;
           text-transform: uppercase;
-          color: var(--boxel-400, #94a3b8);
+          color: var(--subtle-foreground);
         }
         .fe-panel-hint {
           font-size: 0.75rem;
-          color: var(--boxel-400, #94a3b8);
+          color: var(--subtle-foreground);
         }
         .fe-api-intro {
           margin: 0;
           font-size: 0.75rem;
-          color: var(--boxel-500, #64748b);
+          color: var(--primary-ink);
         }
         .fe-api {
           display: grid;
           gap: 1px;
-          background: var(--boxel-200, #e5e7eb);
-          border: 1px solid var(--boxel-200, #e5e7eb);
+          background-color: var(--inset);
+          border: 1px solid var(--border);
           border-radius: 0.375rem;
           overflow: hidden;
         }
         .fe-api-row {
           display: grid;
           grid-template-columns: 1.2fr 1.4fr 0.8fr 2fr;
-          gap: var(--boxel-sp-xs, 0.5rem);
+          gap: var(--boxel-sp-xs);
           padding: 0.5rem 0.625rem;
-          background: var(--boxel-light, #fff);
+          background-color: var(--card);
+          color: var(--card-foreground);
           font-size: 0.75rem;
           line-height: 1.4;
         }
@@ -182,32 +185,24 @@ export class MultiImageSourceExample extends CardDef {
           text-transform: uppercase;
           letter-spacing: 0.03em;
           font-size: 0.6875rem;
-          color: var(--boxel-400, #94a3b8);
-          background: var(--boxel-100, #f8fafc);
+          color: var(--subtle-foreground);
+          background-color: var(--inset);
         }
         .fe-api-name {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
-          color: var(--boxel-purple, #6b46c1);
+          font-family: var(--boxel-monospace-font-family);
+          color: var(--primary-ink);
           word-break: break-word;
         }
         .fe-api-type {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
-          color: var(--boxel-500, #64748b);
+          font-family: var(--boxel-monospace-font-family);
+          color: var(--primary-ink);
           word-break: break-word;
         }
         .fe-api-default {
-          color: var(--boxel-500, #64748b);
+          color: var(--primary-ink);
         }
         .fe-api-desc {
-          color: var(--boxel-dark, #374151);
+          color: var(--foreground);
         }
         @media (max-width: 500px) {
           .fe-api-row {
@@ -216,6 +211,8 @@ export class MultiImageSourceExample extends CardDef {
           }
           .fe-api-row--head {
             display: none;
+            background-color: var(--inset);
+            color: var(--foreground);
           }
         }
       </style>

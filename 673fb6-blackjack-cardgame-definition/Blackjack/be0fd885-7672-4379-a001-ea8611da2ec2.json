@@ -42,7 +42,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/casino-felt"
         }
       },
       "cardInfo.cardThumbnail": {
