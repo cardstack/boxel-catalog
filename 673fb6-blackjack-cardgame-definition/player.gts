@@ -256,17 +256,12 @@ class FittedTemplate extends Component<typeof Player> {
         background-image:
           repeating-linear-gradient(
             45deg,
-            var(--card) 0px,
-            var(--card) 1px,
-            transparent 1px,
-            transparent 1.125rem
+            var(--card) 0%,
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
           ),
           repeating-linear-gradient(
-            -45deg,
-            var(--accent) 0px,
-            var(--accent) 1px,
-            transparent 1px,
-            transparent 1.125rem
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
           );
         border-radius: inherit;
         pointer-events: none;
@@ -500,17 +495,12 @@ class IsolatedTemplate extends Component<typeof Player> {
         background-image:
           repeating-linear-gradient(
             45deg,
-            var(--card) 0px,
-            var(--card) 1px,
-            transparent 1px,
-            transparent 1.125rem
+            var(--card) 0%,
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
           ),
           repeating-linear-gradient(
-            -45deg,
-            var(--accent) 0px,
-            var(--accent) 1px,
-            transparent 1px,
-            transparent 1.125rem
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
           );
         pointer-events: none;
       }

@@ -131,7 +131,11 @@ export class Guest extends Person {
           justify-content: center;
           font: 600 0.8125rem var(--font-serif);
           color: var(--accent-foreground);
-          background: linear-gradient(135deg, var(--accent), var(--accent));
+          background: linear-gradient(
+            135deg,
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
+          );
         }
         .g-main {
           flex: 1;

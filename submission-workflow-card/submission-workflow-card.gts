@@ -1539,9 +1539,9 @@ export class SubmissionWorkflowCard extends CardDef {
           box-sizing: border-box;
           background: linear-gradient(
             160deg,
-            var(--card),
-            var(--card) 55%,
-            var(--card)
+            color-mix(in oklch, var(--card) 72%, var(--shadow-color)) 0%,
+            color-mix(in oklch, var(--card) 88%, var(--shadow-color)) 50%,
+            var(--card) 100%
           );
           color: var(--card-foreground);
           padding: 0.875rem 1rem;
@@ -1662,7 +1662,11 @@ export class SubmissionWorkflowCard extends CardDef {
           align-items: center;
           gap: 0.5rem;
           padding: 0.625rem 0.875rem;
-          background: linear-gradient(135deg, var(--card), var(--card));
+          background: linear-gradient(
+            135deg,
+            color-mix(in oklch, var(--card) 78%, var(--shadow-color)) 0%,
+            var(--card) 100%
+          );
           color: var(--card-foreground);
           border-radius: 0.625rem;
           font-family:

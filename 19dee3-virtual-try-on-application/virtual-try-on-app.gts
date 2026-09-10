@@ -2132,7 +2132,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         /* ── Gold = the PRIMARY / hero action color ── */
         --gold: var(--accent);
         --gold-soft: color-mix(in oklch, var(--gold) 14%, var(--card));
-        --primary-grad: linear-gradient(135deg, var(--accent), var(--accent));
+        --primary-grad: linear-gradient(
+          135deg,
+          var(--accent),
+          color-mix(in oklch, var(--accent) 82%, var(--shadow-color))
+        );
 
         /* ── Near-black = neutral/secondary contrast (e.g. "All" pill) ── */
         --accent-dim: var(--hover);
@@ -4719,7 +4723,11 @@ export class VirtualTryOnApp extends CardDef {
           );
           --gold: var(--accent);
           --gold-soft: color-mix(in oklch, var(--gold) 14%, var(--card));
-          --primary-grad: linear-gradient(135deg, var(--accent), var(--accent));
+          --primary-grad: linear-gradient(
+            135deg,
+            var(--accent),
+            color-mix(in oklch, var(--accent) 82%, var(--shadow-color))
+          );
 
           position: relative;
           width: 100%;
@@ -4745,11 +4753,9 @@ export class VirtualTryOnApp extends CardDef {
           z-index: 3;
           background: linear-gradient(
             90deg,
-            transparent,
-            var(--accent),
-            var(--accent),
-            var(--accent),
-            transparent
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 88%, var(--shadow-color)) 50%,
+            color-mix(in oklch, var(--accent) 74%, var(--shadow-color)) 100%
           );
           background-size: 200% 100%;
           animation: sheen 6s linear infinite;
@@ -4928,7 +4934,11 @@ export class VirtualTryOnApp extends CardDef {
           position: relative;
           flex-shrink: 0;
           overflow: hidden;
-          background: linear-gradient(135deg, var(--card), var(--card));
+          background: linear-gradient(
+            135deg,
+            var(--card) 0%,
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
+          );
           display: flex;
           align-items: center;
           justify-content: center;

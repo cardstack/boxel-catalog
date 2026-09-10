@@ -6689,14 +6689,46 @@ export class TableSeatingPlannerIsolated extends Component<
           pointer-events: none;
           --mk: var(--overlay);
           background:
-            linear-gradient(var(--mk), var(--mk)) left 0 top 6mm / 3mm 0.2mm,
-            linear-gradient(var(--mk), var(--mk)) left 6mm top 0 / 0.2mm 3mm,
-            linear-gradient(var(--mk), var(--mk)) right 0 top 6mm / 3mm 0.2mm,
-            linear-gradient(var(--mk), var(--mk)) right 6mm top 0 / 0.2mm 3mm,
-            linear-gradient(var(--mk), var(--mk)) left 0 bottom 6mm / 3mm 0.2mm,
-            linear-gradient(var(--mk), var(--mk)) left 6mm bottom 0 / 0.2mm 3mm,
-            linear-gradient(var(--mk), var(--mk)) right 0 bottom 6mm / 3mm 0.2mm,
-            linear-gradient(var(--mk), var(--mk)) right 6mm bottom 0 / 0.2mm 3mm;
+            linear-gradient(
+                var(--mk) 0%,
+                color-mix(in oklch, var(--mk) 84%, var(--shadow-color)) 100%
+              )
+              left 0 top 6mm / 3mm 0.2mm,
+            linear-gradient(
+                var(--mk) 0%,
+                color-mix(in oklch, var(--mk) 84%, var(--shadow-color)) 100%
+              )
+              left 6mm top 0 / 0.2mm 3mm,
+            linear-gradient(
+                var(--mk) 0%,
+                color-mix(in oklch, var(--mk) 84%, var(--shadow-color)) 100%
+              )
+              right 0 top 6mm / 3mm 0.2mm,
+            linear-gradient(
+                var(--mk) 0%,
+                color-mix(in oklch, var(--mk) 84%, var(--shadow-color)) 100%
+              )
+              right 6mm top 0 / 0.2mm 3mm,
+            linear-gradient(
+                var(--mk) 0%,
+                color-mix(in oklch, var(--mk) 84%, var(--shadow-color)) 100%
+              )
+              left 0 bottom 6mm / 3mm 0.2mm,
+            linear-gradient(
+                var(--mk) 0%,
+                color-mix(in oklch, var(--mk) 84%, var(--shadow-color)) 100%
+              )
+              left 6mm bottom 0 / 0.2mm 3mm,
+            linear-gradient(
+                var(--mk) 0%,
+                color-mix(in oklch, var(--mk) 84%, var(--shadow-color)) 100%
+              )
+              right 0 bottom 6mm / 3mm 0.2mm,
+            linear-gradient(
+                var(--mk) 0%,
+                color-mix(in oklch, var(--mk) 84%, var(--shadow-color)) 100%
+              )
+              right 6mm bottom 0 / 0.2mm 3mm;
           background-repeat: no-repeat;
         }
         /* Chart mode: the whole seating layout scaled to one overview page. */
@@ -9808,7 +9840,11 @@ export class TableSeatingPlannerIsolated extends Component<
         justify-content: center;
         font: 600 0.75rem var(--font-serif);
         color: var(--accent-foreground);
-        background: linear-gradient(135deg, var(--accent), var(--accent));
+        background: linear-gradient(
+          135deg,
+          var(--accent) 0%,
+          color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
+        );
       }
       .inv-row-name {
         font-size: 0.8438rem;
@@ -10151,7 +10187,11 @@ export class TableSeatingPlannerIsolated extends Component<
         justify-content: center;
         font: 600 0.875rem var(--font-serif);
         color: var(--accent-foreground);
-        background: linear-gradient(135deg, var(--accent), var(--accent));
+        background: linear-gradient(
+          135deg,
+          var(--accent) 0%,
+          color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
+        );
       }
       .seat-info {
         position: absolute;
@@ -10187,7 +10227,11 @@ export class TableSeatingPlannerIsolated extends Component<
         justify-content: center;
         font: 600 0.9375rem var(--font-serif);
         color: var(--accent-foreground);
-        background: linear-gradient(135deg, var(--accent), var(--accent));
+        background: linear-gradient(
+          135deg,
+          var(--accent) 0%,
+          color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
+        );
       }
       .si-id {
         min-width: 0;
@@ -10274,7 +10318,11 @@ export class TableSeatingPlannerIsolated extends Component<
         justify-content: space-between;
         gap: 0.625rem;
         padding: 0.6875rem 0.75rem 0.625rem 1rem;
-        background: linear-gradient(168deg, var(--card), var(--card));
+        background: linear-gradient(
+          168deg,
+          var(--card) 0%,
+          color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
+        );
         border-bottom: 1px solid
           color-mix(in oklch, var(--border) 25%, transparent);
       }

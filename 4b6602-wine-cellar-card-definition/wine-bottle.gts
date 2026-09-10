@@ -557,7 +557,7 @@ export class WineBottle extends CardDef {
           background: radial-gradient(
             ellipse at top,
             var(--inset) 0%,
-            var(--inset) 70%
+            color-mix(in oklch, var(--inset) 84%, var(--shadow-color)) 100%
           );
           padding: var(--boxel-sp-xl);
           min-height: 100%;
@@ -627,7 +627,11 @@ export class WineBottle extends CardDef {
         .label-panel {
           aspect-ratio: 3 / 4;
           max-height: 22rem;
-          background: linear-gradient(180deg, var(--inset), var(--inset));
+          background: linear-gradient(
+            180deg,
+            var(--inset) 0%,
+            color-mix(in oklch, var(--inset) 84%, var(--shadow-color)) 100%
+          );
           border: 1px solid var(--_rule);
           border-radius: var(--radius);
           padding: var(--boxel-sp-sm);
@@ -1138,7 +1142,11 @@ export class WineBottle extends CardDef {
           width: 100%;
           height: 100%;
           overflow: hidden;
-          background: linear-gradient(180deg, var(--card), var(--card));
+          background: linear-gradient(
+            180deg,
+            var(--card) 0%,
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
+          );
           color: var(--card-foreground);
           font-family: var(--font-serif);
         }

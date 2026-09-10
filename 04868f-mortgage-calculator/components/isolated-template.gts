@@ -604,9 +604,9 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         background: linear-gradient(
           135deg,
           var(--card) 0%,
-          var(--card) 40%,
-          var(--card) 70%,
-          var(--card) 100%
+          color-mix(in oklch, var(--card) 90%, var(--shadow-color)) 40%,
+          color-mix(in oklch, var(--card) 80%, var(--shadow-color)) 70%,
+          color-mix(in oklch, var(--card) 68%, var(--shadow-color)) 100%
         );
         background-size: 300% 300%;
         animation: mcBgDrift 12s ease-in-out infinite;
@@ -935,7 +935,11 @@ Use reasonable defaults whenever a value is missing. Never return null.`;
         justify-content: space-between;
         gap: 0.5rem;
         padding: 0.5rem 0.75rem 0.5rem 0.875rem;
-        background: linear-gradient(135deg, var(--card) 0%, var(--card) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--card) 0%,
+          color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
+        );
         border-radius: 0.75rem;
         margin-bottom: 0.625rem;
         box-shadow: 0 2px 8px color-mix(in oklch, var(--info) 22%, transparent);

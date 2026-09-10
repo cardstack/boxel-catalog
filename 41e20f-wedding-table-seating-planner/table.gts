@@ -124,7 +124,11 @@ export class Table extends FieldDef {
           justify-content: center;
           font: 600 0.875rem var(--font-serif);
           color: var(--accent-foreground);
-          background: linear-gradient(135deg, var(--accent), var(--accent));
+          background: linear-gradient(
+            135deg,
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
+          );
           border-radius: 50%;
         }
         .t-rect,
@@ -245,7 +249,11 @@ export class Table extends FieldDef {
           justify-content: center;
           font: 600 0.9375rem var(--font-serif);
           color: var(--accent-foreground);
-          background: linear-gradient(135deg, var(--accent), var(--accent));
+          background: linear-gradient(
+            135deg,
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 84%, var(--shadow-color)) 100%
+          );
           border-radius: 50%;
         }
         .t-rect,

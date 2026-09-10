@@ -311,7 +311,7 @@ export class WineCellar extends CardDef {
           background: radial-gradient(
             ellipse at top,
             var(--inset) 0%,
-            var(--inset) 70%
+            color-mix(in oklch, var(--inset) 84%, var(--shadow-color)) 100%
           );
           padding: var(--boxel-sp-xl);
           min-height: 100%;
@@ -626,7 +626,7 @@ export class WineCellar extends CardDef {
           background: radial-gradient(
             ellipse at top,
             var(--card) 0%,
-            var(--card) 70%
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
           );
           color: var(--card-foreground);
           font-family: 'Georgia', serif;
@@ -718,7 +718,7 @@ export class WineCellar extends CardDef {
           background: radial-gradient(
             ellipse at top,
             var(--card) 0%,
-            var(--card) 70%
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
           );
           color: var(--card-foreground);
           font-family: 'Georgia', serif;

@@ -276,7 +276,11 @@ class AudioFieldFitted extends Component<typeof AudioField> {
 
       .card-background {
         flex: 1;
-        background: linear-gradient(135deg, var(--card), var(--card));
+        background: linear-gradient(
+          135deg,
+          color-mix(in oklch, var(--card) 78%, var(--shadow-color)) 0%,
+          var(--card) 100%
+        );
         display: flex;
         align-items: center;
         justify-content: center;

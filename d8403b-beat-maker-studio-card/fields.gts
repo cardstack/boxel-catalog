@@ -293,7 +293,11 @@ export class BeatPatternCard extends CardDef {
 
       <style scoped>
         .beat-pattern-card {
-          background: linear-gradient(135deg, var(--card) 0%, var(--card) 100%);
+          background: linear-gradient(
+            135deg,
+            color-mix(in oklch, var(--card) 78%, var(--shadow-color)) 0%,
+            var(--card) 100%
+          );
           border-radius: var(--boxel-border-radius-xl);
           padding: 0.875rem;
           color: var(--card-foreground);

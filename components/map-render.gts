@@ -274,7 +274,7 @@ function injectPopupStyles() {
     /* skeleton shimmer */
     .bx-sk-img, .bx-sk-line {
       border-radius: 0.375rem;
-      background-image: linear-gradient(100deg, var(--card) 30%, var(--card) 50%, var(--card) 70%);
+      background-image: linear-gradient(100deg, var(--card) 0%, color-mix(in oklch, var(--card) 88%, var(--shadow-color)) 50%, color-mix(in oklch, var(--card) 74%, var(--shadow-color)) 100%);
       background-size: 200% 100%;
       animation: bx-sk-shimmer 1.2s ease-in-out infinite;
     }

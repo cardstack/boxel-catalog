@@ -64,7 +64,11 @@ export class WaveformPlayer extends GlimmerComponent<WaveformPlayerSignature> {
 
     <style scoped>
       .waveform-player {
-        background: linear-gradient(135deg, var(--card), var(--card));
+        background: linear-gradient(
+          135deg,
+          color-mix(in oklch, var(--card) 78%, var(--shadow-color)) 0%,
+          var(--card) 100%
+        );
         border-radius: var(--boxel-border-radius);
         padding: var(--boxel-sp-lg);
         color: var(--card-foreground);

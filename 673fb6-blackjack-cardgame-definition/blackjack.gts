@@ -952,14 +952,34 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         );
         --chip-red: linear-gradient(
           145deg,
-          var(--destructive),
-          var(--destructive)
+          var(--destructive) 0%,
+          color-mix(in oklch, var(--destructive) 84%, var(--shadow-color)) 100%
         );
-        --chip-blue: linear-gradient(145deg, var(--primary), var(--primary));
-        --chip-green: linear-gradient(145deg, var(--success), var(--success));
-        --chip-black: linear-gradient(145deg, var(--tooltip), var(--tooltip));
-        --chip-purple: linear-gradient(145deg, var(--primary), var(--primary));
-        --btn-hit: linear-gradient(145deg, var(--success), var(--success));
+        --chip-blue: linear-gradient(
+          145deg,
+          var(--primary) 0%,
+          color-mix(in oklch, var(--primary) 84%, var(--shadow-color)) 100%
+        );
+        --chip-green: linear-gradient(
+          145deg,
+          var(--success) 0%,
+          color-mix(in oklch, var(--success) 84%, var(--shadow-color)) 100%
+        );
+        --chip-black: linear-gradient(
+          145deg,
+          var(--tooltip) 0%,
+          color-mix(in oklch, var(--tooltip) 84%, var(--shadow-color)) 100%
+        );
+        --chip-purple: linear-gradient(
+          145deg,
+          var(--primary) 0%,
+          color-mix(in oklch, var(--primary) 84%, var(--shadow-color)) 100%
+        );
+        --btn-hit: linear-gradient(
+          145deg,
+          var(--success),
+          color-mix(in oklch, var(--success) 82%, var(--shadow-color))
+        );
         --btn-stand: linear-gradient(
           145deg,
           var(--primary),
@@ -968,7 +988,7 @@ class IsolatedTemplate extends Component<typeof Blackjack> {
         --btn-double: linear-gradient(
           145deg,
           var(--destructive),
-          var(--destructive)
+          color-mix(in oklch, var(--destructive) 82%, var(--shadow-color))
         );
 
         background: var(--casino-felt-bg);
@@ -2016,8 +2036,8 @@ class FittedTemplate extends Component<typeof Blackjack> {
         --felt-bg: radial-gradient(
           ellipse at 50% 25%,
           var(--inset) 0%,
-          var(--inset) 55%,
-          var(--inset) 100%
+          color-mix(in oklch, var(--inset) 88%, var(--shadow-color)) 50%,
+          color-mix(in oklch, var(--inset) 74%, var(--shadow-color)) 100%
         );
         --felt-sheen: radial-gradient(
           circle at 18% 12%,
@@ -2027,13 +2047,29 @@ class FittedTemplate extends Component<typeof Blackjack> {
         --panel-border: color-mix(in oklch, var(--inset) 45%, transparent);
         --chip-red: linear-gradient(
           145deg,
-          var(--destructive),
-          var(--destructive)
+          var(--destructive) 0%,
+          color-mix(in oklch, var(--destructive) 84%, var(--shadow-color)) 100%
         );
-        --chip-blue: linear-gradient(145deg, var(--primary), var(--primary));
-        --chip-green: linear-gradient(145deg, var(--success), var(--success));
-        --chip-black: linear-gradient(145deg, var(--tooltip), var(--tooltip));
-        --chip-purple: linear-gradient(145deg, var(--primary), var(--primary));
+        --chip-blue: linear-gradient(
+          145deg,
+          var(--primary) 0%,
+          color-mix(in oklch, var(--primary) 84%, var(--shadow-color)) 100%
+        );
+        --chip-green: linear-gradient(
+          145deg,
+          var(--success) 0%,
+          color-mix(in oklch, var(--success) 84%, var(--shadow-color)) 100%
+        );
+        --chip-black: linear-gradient(
+          145deg,
+          var(--tooltip) 0%,
+          color-mix(in oklch, var(--tooltip) 84%, var(--shadow-color)) 100%
+        );
+        --chip-purple: linear-gradient(
+          145deg,
+          var(--primary) 0%,
+          color-mix(in oklch, var(--primary) 84%, var(--shadow-color)) 100%
+        );
         --casino-font: 'Georgia', 'Times New Roman', serif;
 
         width: 100%;

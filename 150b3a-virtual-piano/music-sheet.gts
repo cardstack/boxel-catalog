@@ -1020,7 +1020,7 @@ export class MusicSheet extends CardDef {
           background: linear-gradient(
             135deg,
             var(--warning) 0%,
-            var(--warning) 100%
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
           );
           display: flex;
           align-items: center;
@@ -1062,7 +1062,7 @@ export class MusicSheet extends CardDef {
           background: linear-gradient(
             135deg,
             var(--warning) 0%,
-            var(--warning) 100%
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
           );
           display: flex;
           align-items: center;
@@ -1118,7 +1118,7 @@ export class MusicSheet extends CardDef {
           background: linear-gradient(
             135deg,
             var(--warning) 0%,
-            var(--warning) 100%
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
           );
           display: flex;
           align-items: center;
@@ -1154,7 +1154,7 @@ export class MusicSheet extends CardDef {
           background: linear-gradient(
             135deg,
             var(--warning) 0%,
-            var(--warning) 100%
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
           );
           display: flex;
           align-items: center;
@@ -1169,21 +1169,22 @@ export class MusicSheet extends CardDef {
           background: linear-gradient(
             135deg,
             var(--success) 0%,
-            var(--success) 100%
+            color-mix(in oklch, var(--success) 84%, var(--shadow-color)) 100%
           );
         }
         .tile-diff-ring.diff-intermediate {
           background: linear-gradient(
             135deg,
             var(--warning) 0%,
-            var(--warning) 100%
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
           );
         }
         .tile-diff-ring.diff-expert {
           background: linear-gradient(
             135deg,
             var(--destructive) 0%,
-            var(--destructive) 100%
+            color-mix(in oklch, var(--destructive) 84%, var(--shadow-color))
+              100%
           );
         }
 
@@ -1301,7 +1302,7 @@ export class MusicSheet extends CardDef {
           background: linear-gradient(
             135deg,
             var(--warning) 0%,
-            var(--warning) 100%
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
           );
           display: flex;
           align-items: center;
@@ -1316,21 +1317,22 @@ export class MusicSheet extends CardDef {
           background: linear-gradient(
             135deg,
             var(--success) 0%,
-            var(--success) 100%
+            color-mix(in oklch, var(--success) 84%, var(--shadow-color)) 100%
           );
         }
         .card-diff-ring.diff-intermediate {
           background: linear-gradient(
             135deg,
             var(--warning) 0%,
-            var(--warning) 100%
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
           );
         }
         .card-diff-ring.diff-expert {
           background: linear-gradient(
             135deg,
             var(--destructive) 0%,
-            var(--destructive) 100%
+            color-mix(in oklch, var(--destructive) 84%, var(--shadow-color))
+              100%
           );
         }
 
@@ -1399,7 +1401,7 @@ export class MusicSheet extends CardDef {
           background: linear-gradient(
             135deg,
             var(--warning) 0%,
-            var(--warning) 100%
+            color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
           );
           display: flex;
           align-items: center;

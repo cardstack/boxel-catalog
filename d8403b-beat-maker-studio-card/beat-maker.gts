@@ -976,7 +976,11 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
     <style scoped>
       /* ═══ STUDIO SHELL — fills the card container fully ═══ */
       .studio {
-        background: linear-gradient(160deg, var(--card) 0%, var(--card) 100%);
+        background: linear-gradient(
+          160deg,
+          color-mix(in oklch, var(--card) 78%, var(--shadow-color)) 0%,
+          var(--card) 100%
+        );
         border-radius: var(--boxel-border-radius-xl);
         padding: 1.125rem;
         color: var(--card-foreground);
@@ -1053,7 +1057,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         background: linear-gradient(
           90deg,
           var(--warning) 0%,
-          var(--warning) 100%
+          color-mix(in oklch, var(--warning) 84%, var(--shadow-color)) 100%
         );
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -1223,7 +1227,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         background: linear-gradient(
           135deg,
           var(--success) 0%,
-          var(--success) 100%
+          color-mix(in oklch, var(--success) 84%, var(--shadow-color)) 100%
         );
         color: var(--success-foreground);
         display: flex;
@@ -1248,7 +1252,7 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
         background: linear-gradient(
           135deg,
           var(--destructive) 0%,
-          var(--destructive) 100%
+          color-mix(in oklch, var(--destructive) 84%, var(--shadow-color)) 100%
         );
         box-shadow: 0 4px 16px
           color-mix(in oklch, var(--destructive) 50%, transparent);
@@ -1394,7 +1398,11 @@ class BeatMakerIsolated extends Component<typeof BeatMakerCard> {
 
       /* ═══ SEQUENCER GRID — pads fill full width ═══ */
       .sequencer {
-        background: linear-gradient(160deg, var(--inset), var(--inset));
+        background: linear-gradient(
+          160deg,
+          color-mix(in oklch, var(--inset) 78%, var(--shadow-color)) 0%,
+          var(--inset) 100%
+        );
         border-radius: var(--boxel-border-radius-lg);
         padding: 1rem 1rem 0.875rem;
         border: 1px solid var(--border);
@@ -2143,7 +2151,11 @@ export class BeatMakerCard extends CardDef {
           height: 100%;
           padding: clamp(0.25rem, 3%, 0.75rem);
           box-sizing: border-box;
-          background: linear-gradient(145deg, var(--card) 0%, var(--card) 100%);
+          background: linear-gradient(
+            145deg,
+            color-mix(in oklch, var(--card) 78%, var(--shadow-color)) 0%,
+            var(--card) 100%
+          );
           border-radius: var(--boxel-border-radius-xl);
           overflow: hidden;
         }
@@ -2378,7 +2390,11 @@ export class BeatMakerCard extends CardDef {
         }
 
         .tile-hero {
-          background: linear-gradient(135deg, var(--card) 0%, var(--card) 100%);
+          background: linear-gradient(
+            135deg,
+            var(--card) 0%,
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
+          );
           border-radius: var(--boxel-border-radius-lg);
           padding: 0.875rem;
           display: flex;
@@ -2493,7 +2509,11 @@ export class BeatMakerCard extends CardDef {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          background: linear-gradient(135deg, var(--card) 0%, var(--card) 100%);
+          background: linear-gradient(
+            135deg,
+            var(--card) 0%,
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
+          );
           padding: 0.875rem 1rem;
           border-radius: var(--boxel-border-radius-lg);
           gap: 1rem;
