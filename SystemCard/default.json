@@ -96,11 +96,6 @@
       },
       "modelConfigurations.14": {
         "links": {
-          "self": "../ModelConfiguration/z-ai-glm-52"
-        }
-      },
-      "modelConfigurations.15": {
-        "links": {
           "self": "../ModelConfiguration/qwen-qwen3-7-max"
         }
       }
