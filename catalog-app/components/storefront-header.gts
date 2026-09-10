@@ -100,6 +100,7 @@ export default class StorefrontHeader extends GlimmerComponent<StorefrontHeaderS
         width: 1.75rem;
         height: 1.75rem;
         flex-shrink: 0;
+        --icon-color: var(--foreground);
       }
       .brand-name {
         font: 600 0.8125rem/1.1 var(--font-sans);

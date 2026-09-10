@@ -115,7 +115,7 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
       .accent {
         /* Text reads better a shade dimmer than the true, neon --primary
            brand color (#00ffba) — that hue is reserved for button fills. */
-        color: var(--success-ink);
+        color: var(--primary-ink);
       }
       .how-body {
         display: grid;
@@ -142,17 +142,20 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
         height: 0.625rem;
         border-radius: 50%;
       }
+      /* Literal macOS window chrome — a picture of a window, not status.
+         These three keep their real values in every theme: a theme that
+         recolours --destructive must not recolour a close button, and the
+         semantic hues would also drift (this theme leaves --success and
+         --warning undefined, so they resolved to generic defaults). The one
+         deliberate exception to the token-only rule; scoped to these dots. */
       .chrome-dot.red {
-        background-color: var(--destructive);
-        color: var(--destructive-foreground);
+        background-color: #ff5f57;
       }
       .chrome-dot.amber {
-        background-color: var(--warning);
-        color: var(--warning-foreground);
+        background-color: #febc2e;
       }
       .chrome-dot.green {
-        background-color: var(--success);
-        color: var(--success-foreground);
+        background-color: #28c840;
       }
       .chrome-label {
         margin-left: 0.5rem;
@@ -187,7 +190,7 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
       .step-n {
         flex-shrink: 0;
         font: 700 0.875rem/1.6 var(--font-mono);
-        color: var(--success-ink);
+        color: var(--primary-ink);
       }
       .step-title {
         font: 700 1.0625rem/1.2 var(--font-sans);

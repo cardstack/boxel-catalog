@@ -246,12 +246,12 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
         inset: 0;
         background-image:
           linear-gradient(
-            color-mix(in oklch, var(--card) 4%, transparent) 1px,
+            color-mix(in oklch, var(--border) 50%, transparent) 1px,
             transparent 1px
           ),
           linear-gradient(
             90deg,
-            color-mix(in oklch, var(--card) 4%, transparent) 1px,
+            color-mix(in oklch, var(--border) 50%, transparent) 1px,
             transparent 1px
           );
         background-size: 1.875rem 1.875rem;
@@ -290,9 +290,11 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
         color: var(--foreground);
       }
       .headline-accent {
-        /* Text reads better a shade dimmer than the true, neon --primary
-           brand color (#00ffba) — that hue is reserved for button fills. */
-        color: var(--success-ink);
+        /* --primary-ink is the brand hue dimmed toward --foreground: the neon
+           --primary itself is reserved for button fills and is unreadable as
+           text. Do not reach for --success here — that is the semantic status
+           hue, and this green is the brand. */
+        color: var(--primary-ink);
       }
       .lead {
         margin: 1.625rem 0 0;
@@ -335,8 +337,8 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
         width: 0.4375rem;
         height: 0.4375rem;
         border-radius: 50%;
-        background-color: var(--success);
-        color: var(--success-foreground);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .ctas {
         display: flex;
@@ -365,7 +367,7 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
         color: var(--foreground);
       }
       .cta-link:hover {
-        color: var(--success-ink);
+        color: var(--primary-ink);
       }
 
       /* Spotlight carousel: a fixed-ratio stage crossfading between 1-3

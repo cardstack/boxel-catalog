@@ -136,15 +136,21 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
         font-weight: 700;
       }
       .hover-details {
-        font: 600 0.75rem/1 var(--font-sans);
-        color: var(--tooltip-foreground);
-        --boxel-button-text-color: var(--tooltip-foreground);
-        --boxel-button-background: transparent;
-        background-color: transparent;
-        border: none;
+        /* A text link, not a pill: BoxelButton's default is a 100px radius, so
+           zero it and drop the fill through the button's own knobs rather than
+           fighting them with element-level rules. */
+        --boxel-button-border-radius: 0;
+        --boxel-button-color: transparent;
+        --boxel-button-border: none;
+        --boxel-button-box-shadow: none;
+        --boxel-button-ghost-foreground: var(--tooltip-foreground);
+        --boxel-button-font: 600 0.75rem/1 var(--font-sans);
+        --boxel-button-letter-spacing: normal;
+        --boxel-button-padding: 0 0 0.125rem;
+        --boxel-button-min-height: 0;
+        --boxel-button-min-width: 0;
         border-bottom: 1px solid
           color-mix(in oklch, var(--tooltip-foreground) 50%, transparent);
-        padding-bottom: 0.125rem;
         cursor: pointer;
       }
       @container fitted-card (height <= 105px) {

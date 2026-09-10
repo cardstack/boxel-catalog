@@ -607,17 +607,20 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         height: 0.6875rem;
         border-radius: 50%;
       }
+      /* Literal macOS window chrome — a picture of a window, not status.
+         These three keep their real values in every theme: a theme that
+         recolours --destructive must not recolour a close button, and the
+         semantic hues would also drift (this theme leaves --success and
+         --warning undefined, so they resolved to generic defaults). The one
+         deliberate exception to the token-only rule; scoped to these dots. */
       .chrome-dot.red {
-        background-color: var(--destructive);
-        color: var(--destructive-foreground);
+        background-color: #ff5f57;
       }
       .chrome-dot.amber {
-        background-color: var(--warning);
-        color: var(--warning-foreground);
+        background-color: #febc2e;
       }
       .chrome-dot.green {
-        background-color: var(--success);
-        color: var(--success-foreground);
+        background-color: #28c840;
       }
       .chrome-label {
         margin-left: 0.625rem;
@@ -697,19 +700,25 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         display: flex;
         gap: 0.25rem;
       }
+      /* Styled through BoxelButton's own knobs: its default is a 100px pill
+         (.boxel-button:not(.rectangular)), which bent the underline around
+         the corners. The underline rides the box-shadow knob so no button
+         border rule can contest it. */
       .tab {
-        padding: 0.75rem 1rem;
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        cursor: pointer;
-        font: 600 0.84rem/1 var(--font-sans);
-        color: var(--muted-foreground);
+        --boxel-button-border-radius: 0;
+        --boxel-button-border: none;
+        --boxel-button-padding: 0.75rem 1rem;
+        --boxel-button-min-height: 0;
+        --boxel-button-min-width: 0;
+        --boxel-button-font: 600 0.84rem/1 var(--font-sans);
+        --boxel-button-letter-spacing: normal;
+        --boxel-button-ghost-foreground: var(--muted-foreground);
+        --boxel-button-box-shadow: inset 0 -2px 0 transparent;
         margin-bottom: -1px;
       }
       .tab.is-active {
-        color: var(--foreground);
-        border-bottom-color: var(--foreground);
+        --boxel-button-ghost-foreground: var(--foreground);
+        --boxel-button-box-shadow: inset 0 -2px 0 var(--foreground);
       }
 
       .panel {
@@ -786,7 +795,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         text-transform: uppercase;
         padding: 0.3125rem 0.625rem;
         background-color: var(--card);
-        color: var(--success-ink);
+        color: var(--primary-ink);
         border-radius: 62.4375rem;
         margin-bottom: 0.75rem;
       }
