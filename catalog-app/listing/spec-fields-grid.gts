@@ -97,7 +97,7 @@ export default class SpecFieldsGrid extends GlimmerComponent<Signature> {
         padding: 0.5rem 0.75rem;
         border: 1px solid var(--border);
         border-radius: 0.5rem;
-        background-color: var(--card);
+        background: var(--card);
         color: var(--card-foreground);
       }
       .field-name {

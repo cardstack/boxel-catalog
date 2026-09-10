@@ -116,11 +116,7 @@ export class CatalogImageOverlay extends GlimmerComponent<CatalogImageOverlaySig
           align-items: center;
           gap: var(--boxel-sp-sm);
           opacity: 0;
-          background-color: color-mix(
-            in oklch,
-            var(--tooltip) 60%,
-            transparent
-          );
+          background-color: rgba(0, 0, 0, 0.6);
           transition: opacity 0.3s ease;
           pointer-events: auto;
         }
@@ -135,19 +131,17 @@ export class CatalogImageOverlay extends GlimmerComponent<CatalogImageOverlaySig
           --boxel-button-border: 1px solid var(--boxel-light);
           --boxel-button-text-color: var(--boxel-100);
           box-shadow:
-            0 15px 20px
-              color-mix(in oklch, var(--shadow-color) 12%, transparent),
-            0 5px 10px color-mix(in oklch, var(--shadow-color) 10%, transparent);
+            0 15px 20px rgba(0, 0, 0, 0.12),
+            0 5px 10px rgba(0, 0, 0, 0.1);
           pointer-events: auto;
-          min-width: 6.25rem;
+          min-width: 100px;
         }
         .overlay-button:hover {
           --boxel-button-text-color: var(--boxel-light);
           --boxel-button-color: var(--boxel-purple);
           box-shadow:
-            0 15px 25px
-              color-mix(in oklch, var(--shadow-color) 20%, transparent),
-            0 7px 15px color-mix(in oklch, var(--shadow-color) 15%, transparent);
+            0 15px 25px rgba(0, 0, 0, 0.2),
+            0 7px 15px rgba(0, 0, 0, 0.15);
           cursor: pointer;
         }
 

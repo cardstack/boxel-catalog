@@ -85,13 +85,9 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
 
     <style scoped>
       .how {
-        border-top: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
-        background-color: color-mix(
-          in oklch,
-          var(--background) 94%,
-          var(--card)
-        );
+        border-top: 1px solid var(--border, #ddd8cb);
+        border-bottom: 1px solid var(--border, #ddd8cb);
+        background: color-mix(in srgb, var(--background, #f0ede4) 94%, #fff);
       }
       .how-inner {
         max-width: 80rem;
@@ -99,23 +95,23 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
         padding: 3.5rem 2rem;
       }
       .eyebrow {
-        font: 600 0.6875rem/1 var(--font-mono);
+        font: 600 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--muted-foreground);
+        color: var(--muted-foreground, #908b7e);
         margin-bottom: 0.75rem;
       }
       .how-title {
         margin: 0 0 2rem;
         max-width: 34rem;
-        font: 700 2rem/1.1 var(--font-sans);
+        font: 700 2rem/1.1 var(--font-sans, 'IBM Plex Sans', sans-serif);
         letter-spacing: -0.03em;
-        color: var(--foreground);
+        color: var(--foreground, #16161c);
       }
       .accent {
         /* Text reads better a shade dimmer than the true, neon --primary
            brand color (#00ffba) — that hue is reserved for button fills. */
-        color: var(--primary-ink);
+        color: #11cf8a;
       }
       .how-body {
         display: grid;
@@ -124,49 +120,41 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
         align-items: center;
       }
       .how-visual {
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background: var(--card, #fff);
         border-radius: 1rem;
         overflow: hidden;
-        box-shadow: var(--shadow-md);
+        box-shadow: var(--shadow-md, 0 18px 40px -26px rgba(0, 0, 0, 0.4));
       }
       .chrome {
         display: flex;
         align-items: center;
         gap: 0.4375rem;
         padding: 0.75rem 0.875rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border, #f0ece3);
       }
       .chrome-dot {
         width: 0.625rem;
         height: 0.625rem;
         border-radius: 50%;
       }
-      /* Literal macOS window chrome — a picture of a window, not status.
-         These three keep their real values in every theme: a theme that
-         recolours --destructive must not recolour a close button, and the
-         semantic hues would also drift (this theme leaves --success and
-         --warning undefined, so they resolved to generic defaults). The one
-         deliberate exception to the token-only rule; scoped to these dots. */
       .chrome-dot.red {
-        background-color: #ff5f57;
+        background: #ff5f57;
       }
       .chrome-dot.amber {
-        background-color: #febc2e;
+        background: #febc2e;
       }
       .chrome-dot.green {
-        background-color: #28c840;
+        background: #28c840;
       }
       .chrome-label {
         margin-left: 0.5rem;
-        font: 500 0.6875rem/1 var(--font-mono);
-        color: var(--muted-foreground);
+        font: 500 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
+        color: var(--muted-foreground, #b3aea2);
       }
       .visual-slot {
         aspect-ratio: 16 / 10;
         overflow: hidden;
-        background-color: var(--muted);
-        color: var(--muted-foreground);
+        background: var(--muted, #f0ede4);
       }
       .visual-gif {
         width: 100%;
@@ -189,17 +177,17 @@ export default class StorefrontHowItWorks extends GlimmerComponent {
       }
       .step-n {
         flex-shrink: 0;
-        font: 700 0.875rem/1.6 var(--font-mono);
-        color: var(--primary-ink);
+        font: 700 0.875rem/1.6 var(--font-mono, 'IBM Plex Mono', monospace);
+        color: #11cf8a;
       }
       .step-title {
-        font: 700 1.0625rem/1.2 var(--font-sans);
-        color: var(--foreground);
+        font: 700 1.0625rem/1.2 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--foreground, #16161c);
       }
       .step-body {
         margin: 0.25rem 0 0;
-        font: 400 0.875rem/1.5 var(--font-sans);
-        color: var(--muted-foreground);
+        font: 400 0.875rem/1.5 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #5f5b52);
       }
 
       @container (max-width: 56rem) {

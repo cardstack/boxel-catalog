@@ -215,14 +215,23 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
         background-color: inherit;
       }
       .list-item-buttons.is-expanded {
-        background-color: var(--boxel-filter-expanded-background);
+        background-color: var(--boxel-filter-expanded-background, transparent);
       }
       .list-item-buttons:not(.is-selected):hover {
-        background-color: var(--boxel-300);
+        background-color: var(
+          --boxel-filter-hover-background,
+          var(--boxel-300)
+        );
       }
       .list-item-buttons.is-selected {
-        background-color: var(--primary);
-        color: var(--primary-foreground);
+        background-color: var(
+          --boxel-filter-selected-background,
+          var(--foreground, var(--boxel-dark))
+        );
+        color: var(
+          --boxel-filter-selected-foreground,
+          var(--background, var(--boxel-light))
+        );
       }
 
       .filter-list__button {
@@ -239,7 +248,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
         overflow: hidden;
         text-align: left;
         border: none;
-        background-color: transparent;
+        background: transparent;
         cursor: pointer;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         color: inherit;
@@ -269,7 +278,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
         height: 2rem;
         flex-shrink: 0;
         border: none;
-        background-color: transparent;
+        background: transparent;
         cursor: pointer;
         color: inherit;
         border-radius: var(--boxel-border-radius-sm);
@@ -278,12 +287,12 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
         transform: rotate(180deg);
       }
       .caret-icon {
-        width: 0.625rem;
-        height: 0.625rem;
+        width: 10px;
+        height: 10px;
       }
 
       .sphere-skeleton {
-        height: 1.25rem;
+        height: 20px;
         width: 100%;
       }
 
@@ -304,7 +313,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
       }
       .category-pill-btn :deep(.atom-format) {
         box-shadow: none;
-        background-color: transparent;
+        background: transparent;
       }
       .category-pill-btn:hover {
         --boxel-pill-background-color: var(--boxel-300);

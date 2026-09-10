@@ -1189,9 +1189,9 @@ export class WineBottle extends CardDef {
           inset: 0;
           background: linear-gradient(
             180deg,
-            color-mix(in oklch, var(--foreground) 35%, transparent) 0%,
+            color-mix(in oklch, var(--tooltip) 35%, transparent) 0%,
             transparent 30%,
-            color-mix(in oklch, var(--foreground) 82%, transparent) 100%
+            color-mix(in oklch, var(--tooltip) 82%, transparent) 100%
           );
           pointer-events: none;
         }

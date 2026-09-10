@@ -98,8 +98,7 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
         position: absolute;
         inset: 0;
         z-index: 4;
-        background-color: var(--overlay);
-        color: var(--tooltip-foreground);
+        background: rgba(13, 13, 18, 0.62);
         backdrop-filter: blur(0.125rem);
         display: flex;
         flex-direction: column;
@@ -121,36 +120,26 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
       }
       .hover-btn {
         padding: 0.6875rem 1.25rem;
-        background-color: var(--card);
-        color: var(--foreground);
+        background: color-mix(in srgb, var(--card, #fff) 96%, transparent);
+        color: var(--foreground, #16161c);
         border: none;
-        border-radius: 62.4375rem;
+        border-radius: 999px;
         cursor: pointer;
-        font: 600 0.8125rem/1 var(--font-sans);
-        box-shadow: 0 6px 16px
-          color-mix(in oklch, var(--shadow-color) 30%, transparent);
+        font: 600 0.8125rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
       }
       .hover-btn-primary {
-        background-color: var(--accent);
-        color: var(--accent-foreground);
+        background: var(--accent, #16e098);
+        color: var(--primary-foreground, #04231a);
         font-weight: 700;
       }
       .hover-details {
-        /* A text link, not a pill: BoxelButton's default is a 100px radius, so
-           zero it and drop the fill through the button's own knobs rather than
-           fighting them with element-level rules. */
-        --boxel-button-border-radius: 0;
-        --boxel-button-color: transparent;
-        --boxel-button-border: none;
-        --boxel-button-box-shadow: none;
-        --boxel-button-ghost-foreground: var(--tooltip-foreground);
-        --boxel-button-font: 600 0.75rem/1 var(--font-sans);
-        --boxel-button-letter-spacing: normal;
-        --boxel-button-padding: 0 0 0.125rem;
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
-        border-bottom: 1px solid
-          color-mix(in oklch, var(--tooltip-foreground) 50%, transparent);
+        font: 600 0.75rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: #fff;
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        padding-bottom: 0.125rem;
         cursor: pointer;
       }
       @container fitted-card (height <= 105px) {

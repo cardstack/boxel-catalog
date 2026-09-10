@@ -33,9 +33,10 @@ const FilterGroupWrapper: TemplateOnlyComponent<FilterGroupWrapperArgs> =
         .filter-group {
           display: flex;
           flex-direction: column;
-          /* Knob, not a contract-token fallback: .filter-category-group sets
-             this to transparent so nested groups sit flat on the sidebar. */
-          background-color: var(--filter-group-background-color, var(--card));
+          background-color: var(
+            --filter-group-background-color,
+            var(--boxel-light)
+          );
           border-radius: var(--boxel-border-radius);
           padding: var(--boxel-sp-xs);
           gap: var(--boxel-sp-sm);

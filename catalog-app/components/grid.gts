@@ -94,7 +94,7 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
         --default-grid-view-height: 22rem;
         --default-strip-view-min-width: 49%;
         --default-strip-view-max-width: 1fr;
-        --default-strip-view-height: 11.25rem;
+        --default-strip-view-height: 180px;
 
         display: grid;
         gap: 1.375rem;
@@ -110,9 +110,8 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
         aspect-ratio: 4 / 3;
         border-radius: 1rem;
         overflow: hidden;
-        background-color: var(--card);
-        color: var(--card-foreground);
-        box-shadow: var(--shadow-sm);
+        background: var(--card, #fff);
+        box-shadow: var(--shadow-sm, 0 14px 30px -22px rgba(0, 0, 0, 0.4));
         transition:
           transform 160ms ease,
           box-shadow 160ms ease;
@@ -122,7 +121,7 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
       }
       .cards.grid-view .grid-view-container:hover {
         transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
+        box-shadow: var(--shadow-lg, 0 26px 44px -22px rgba(0, 0, 0, 0.45));
       }
       /* No-screenshot (monogram) cards are shorter than screenshot ones.
          Mirror the codebase's proven `.parent :deep(descendant:has(x))` shape
@@ -166,17 +165,17 @@ export class CardsGrid extends GlimmerComponent<CardsGridSignature> {
 
       .no-results {
         grid-column: 1 / -1;
-        border: 1.5px dashed var(--border);
+        border: 1.5px dashed var(--border, #cdc8ba);
         border-radius: 1rem;
         padding: 3.5rem;
         text-align: center;
-        font: 500 0.875rem var(--font-sans);
-        color: var(--muted-foreground);
+        font: 500 0.875rem var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #8a8578);
       }
       .clear-link {
         border: none;
-        background-color: transparent;
-        color: var(--primary-ink);
+        background: transparent;
+        color: var(--primary, #00b886);
         text-decoration: underline;
         cursor: pointer;
         font: inherit;

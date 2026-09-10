@@ -50,10 +50,10 @@ export default class TopBarFilter extends GlimmerComponent<TopBarFilterSignature
         gap: var(--boxel-sp-xs);
       }
       .spec-filter-pill {
-        --pill-border-radius: 3.125rem;
+        --pill-border-radius: 50px;
         --pill-font: 600 var(--boxel-font);
         --pill-padding: var(--boxel-sp-5xs) var(--boxel-sp);
-        min-width: 6.25rem;
+        min-width: 100px;
         justify-content: center;
       }
       .spec-filter-pill.active {

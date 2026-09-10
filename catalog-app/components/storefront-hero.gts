@@ -54,12 +54,12 @@ class HeroSpotlightSlide extends GlimmerComponent<SlideSignature> {
   get coverStyle() {
     let v = this.typeMeta.colorVar;
     return htmlSafe(
-      `background: linear-gradient(135deg, color-mix(in oklch, var(${v}) 22%, transparent), color-mix(in oklch, var(${v}) 6%, transparent)), var(--card);`,
+      `background: linear-gradient(135deg, color-mix(in srgb, var(${v}, #ff5b9c) 22%, transparent), color-mix(in srgb, var(${v}, #ff5b9c) 6%, transparent)), #fbfaf5;`,
     );
   }
 
   get monogramStyle() {
-    return htmlSafe(`color: var(${this.typeMeta.colorVar});`);
+    return htmlSafe(`color: var(${this.typeMeta.colorVar}, #ff5b9c);`);
   }
 
   <template>
@@ -102,7 +102,7 @@ class HeroSpotlightSlide extends GlimmerComponent<SlideSignature> {
         justify-content: center;
       }
       .monogram {
-        font: 600 4rem/1 var(--font-serif);
+        font: 600 4rem/1 var(--font-serif, 'IBM Plex Serif', serif);
       }
     </style>
   </template>
@@ -234,26 +234,15 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
       .hero {
         position: relative;
         overflow: hidden;
-        background-color: color-mix(
-          in oklch,
-          var(--background) 92%,
-          var(--card)
-        );
-        border-bottom: 1px solid var(--border);
+        background: color-mix(in srgb, var(--background, #f0ede4) 92%, #fff);
+        border-bottom: 1px solid var(--border, #ddd8cb);
       }
       .grid-paper {
         position: absolute;
         inset: 0;
         background-image:
-          linear-gradient(
-            color-mix(in oklch, var(--border) 50%, transparent) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            90deg,
-            color-mix(in oklch, var(--border) 50%, transparent) 1px,
-            transparent 1px
-          );
+          linear-gradient(#15151b0a 1px, transparent 1px),
+          linear-gradient(90deg, #15151b0a 1px, transparent 1px);
         background-size: 1.875rem 1.875rem;
         pointer-events: none;
       }
@@ -268,7 +257,7 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
         pointer-events: none;
         background: radial-gradient(
           circle,
-          color-mix(in oklch, var(--primary) 30%, transparent) 0%,
+          color-mix(in srgb, var(--primary, #11cf8a) 30%, transparent) 0%,
           transparent 70%
         );
         animation: hglow 12s infinite;
@@ -285,60 +274,56 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
       }
       .headline {
         margin: 0;
-        font: 700 4.875rem/0.92 var(--font-sans);
+        font: 700 4.875rem/0.92 var(--font-sans, 'IBM Plex Sans', sans-serif);
         letter-spacing: -0.045em;
-        color: var(--foreground);
+        color: var(--foreground, #15151b);
       }
       .headline-accent {
-        /* --primary-ink is the brand hue dimmed toward --foreground: the neon
-           --primary itself is reserved for button fills and is unreadable as
-           text. Do not reach for --success here — that is the semantic status
-           hue, and this green is the brand. */
-        color: var(--primary-ink);
+        /* Text reads better a shade dimmer than the true, neon --primary
+           brand color (#00ffba) — that hue is reserved for button fills. */
+        color: #11cf8a;
       }
       .lead {
         margin: 1.625rem 0 0;
-        font: 600 1.375rem/1.25 var(--font-sans);
+        font: 600 1.375rem/1.25 var(--font-sans, 'IBM Plex Sans', sans-serif);
         letter-spacing: -0.01em;
-        color: var(--foreground);
+        color: var(--foreground, #15151b);
       }
       .sub {
         margin: 0.75rem 0 0;
         max-width: 27.5rem;
-        font: 400 0.97rem/1.6 var(--font-sans);
-        color: var(--muted-foreground);
+        font: 400 0.97rem/1.6 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #5f5b52);
       }
       .chips {
         display: inline-flex;
         align-items: center;
         margin-top: 1.625rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--border, #d3cdbf);
         border-radius: 0.625rem;
         overflow: hidden;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background: var(--card, #fff);
       }
       .chip {
         padding: 0.625rem 0.875rem;
-        font: 600 0.6875rem/1 var(--font-mono);
+        font: 600 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--muted-foreground);
-        border-left: 1px solid var(--border);
+        color: var(--muted-foreground, #6f6c64);
+        border-left: 1px solid var(--border, #e7e3d8);
       }
       .chip-live {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        color: var(--foreground);
+        color: var(--foreground, #15151b);
         border-left: none;
       }
       .chip-dot {
         width: 0.4375rem;
         height: 0.4375rem;
         border-radius: 50%;
-        background-color: var(--primary);
-        color: var(--primary-foreground);
+        background: #11cf8a;
       }
       .ctas {
         display: flex;
@@ -348,12 +333,12 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
       }
       .cta-primary {
         padding: 0.9375rem 1.625rem;
-        background-color: var(--primary);
-        color: var(--primary-foreground);
+        background: var(--primary, #00ffba);
+        color: var(--primary-foreground, #04231a);
         border: none;
         border-radius: 0.75rem;
         cursor: pointer;
-        font: 700 0.875rem/1 var(--font-sans);
+        font: 700 0.875rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
       }
       .cta-primary:hover {
         filter: brightness(0.94);
@@ -361,13 +346,13 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
       }
       .cta-link {
         border: none;
-        background-color: transparent;
+        background: transparent;
         cursor: pointer;
-        font: 600 0.875rem/1 var(--font-sans);
-        color: var(--foreground);
+        font: 600 0.875rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--foreground, #15151b);
       }
       .cta-link:hover {
-        color: var(--primary-ink);
+        color: #11cf8a;
       }
 
       /* Spotlight carousel: a fixed-ratio stage crossfading between 1-3
@@ -378,7 +363,7 @@ export default class StorefrontHero extends GlimmerComponent<HeroSignature> {
         aspect-ratio: 4 / 3;
         border-radius: 1.125rem;
         overflow: hidden;
-        box-shadow: var(--shadow-xl);
+        box-shadow: var(--shadow-xl, 0 30px 70px -24px rgba(0, 0, 0, 0.4));
       }
       .stage.rotating .slide {
         position: absolute;

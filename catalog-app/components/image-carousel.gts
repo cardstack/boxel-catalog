@@ -186,9 +186,8 @@ export default class ImageCarouselComponent extends GlimmerComponent<Signature> 
           display: block;
           border-radius: var(--boxel-border-radius-sm);
           box-shadow:
-            0 15px 20px
-              color-mix(in oklch, var(--shadow-color) 12%, transparent),
-            0 5px 10px color-mix(in oklch, var(--shadow-color) 10%, transparent);
+            0 15px 20px rgba(0, 0, 0, 0.12),
+            0 5px 10px rgba(0, 0, 0, 0.1);
         }
 
         .carousel-arrow {
@@ -222,7 +221,7 @@ export default class ImageCarouselComponent extends GlimmerComponent<Signature> 
 
         .carousel-dots {
           position: absolute;
-          bottom: 0.3125rem;
+          bottom: 5px;
           left: 50%;
           z-index: calc(var(--boxel-carousel-z-index) + 2);
           transform: translateX(-50%);
@@ -232,8 +231,8 @@ export default class ImageCarouselComponent extends GlimmerComponent<Signature> 
         }
 
         .carousel-dot {
-          width: 0.625rem;
-          height: 0.625rem;
+          width: 10px;
+          height: 10px;
           background-color: var(--boxel-100);
           border: 1px solid var(--boxel-500);
           border-radius: 50%;
@@ -248,9 +247,8 @@ export default class ImageCarouselComponent extends GlimmerComponent<Signature> 
 
         .image-carousel:hover .carousel-item img {
           box-shadow:
-            0 15px 20px
-              color-mix(in oklch, var(--shadow-color) 20%, transparent),
-            0 7px 10px color-mix(in oklch, var(--shadow-color) 12%, transparent);
+            0 15px 20px rgba(0, 0, 0, 0.2),
+            0 7px 10px rgba(0, 0, 0, 0.12);
         }
 
         @container (max-height: 140px) {

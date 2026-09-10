@@ -221,22 +221,22 @@ class EmbeddedTemplate extends Component<typeof Listing> {
   };
 
   get chipDotStyle() {
-    return htmlSafe(`background-color: var(${this.typeMeta.colorVar});`);
+    return htmlSafe(`background: var(${this.typeMeta.colorVar}, #ff5b9c);`);
   }
 
   get coverStyle() {
     let v = this.typeMeta.colorVar;
     return htmlSafe(
-      `background: linear-gradient(135deg, color-mix(in oklch, var(${v}) 22%, transparent), color-mix(in oklch, var(${v}) 6%, transparent)), var(--card);`,
+      `background: linear-gradient(135deg, color-mix(in srgb, var(${v}, #ff5b9c) 22%, transparent), color-mix(in srgb, var(${v}, #ff5b9c) 6%, transparent)), #fbfaf5;`,
     );
   }
 
   get monogramStyle() {
-    return htmlSafe(`color: var(${this.typeMeta.colorVar});`);
+    return htmlSafe(`color: var(${this.typeMeta.colorVar}, #ff5b9c);`);
   }
 
   specGroupDotStyle = (kind: string) =>
-    htmlSafe(`background-color: var(${typeMetaForKey(kind).colorVar});`);
+    htmlSafe(`background: var(${typeMetaForKey(kind).colorVar}, #ff5b9c);`);
 
   // When arriving from a gallery card's Remix, scroll the panel into view and
   // briefly highlight it so the user lands ready to fork.
@@ -504,12 +504,16 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       .listing-detail {
         /* Same catalog-domain signal colors as the storefront index, so the
            type chip + monogram match the homepage (this is a separate render). */
-        --type-card: var(--chart-1);
-        --type-component: var(--chart-2);
-        --type-field: var(--chart-3);
-        --type-skill: var(--chart-4);
-        --type-theme: var(--chart-5);
-        --type-app: var(--primary);
+        --type-card: var(--chart-1, #ff5b9c);
+        --type-component: var(--chart-2, #2bb3ff);
+        --type-field: var(--chart-3, #7b5bff);
+        --type-skill: var(--chart-4, #c2e23f);
+        --type-theme: var(--chart-5, #ff9d3d);
+        --type-app: var(--brand, #6c4bf5);
+        --brand: #6c4bf5;
+        background: var(--background, #ece9e1);
+        color: var(--foreground, #16161c);
+        font-family: var(--font-sans, 'IBM Plex Sans', sans-serif);
         padding: 2.5rem 2rem 5.625rem;
         container-type: inline-size;
         container-name: listing-detail;
@@ -522,15 +526,15 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font: 500 0.75rem/1 var(--font-mono);
-        color: var(--muted-foreground);
+        font: 500 0.75rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
+        color: var(--muted-foreground, #8a8578);
         margin-bottom: 1rem;
       }
       .crumb-type {
-        color: var(--primary-ink);
+        color: var(--brand, #6c4bf5);
       }
       .crumb-current {
-        color: var(--foreground);
+        color: var(--foreground, #16161c);
       }
       .title-row {
         display: flex;
@@ -540,7 +544,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       }
       .title {
         margin: 0;
-        font: 700 2.625rem/1 var(--font-sans);
+        font: 700 2.625rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
         letter-spacing: -0.03em;
       }
       .type-chip {
@@ -548,11 +552,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         align-items: center;
         gap: 0.375rem;
         padding: 0.375rem 0.6875rem;
-        background-color: var(--card);
-        color: var(--card-foreground);
-        border: 1px solid var(--border);
-        border-radius: 62.4375rem;
-        font: 600 0.625rem/1 var(--font-mono);
+        background: var(--card, #fff);
+        border: 1px solid var(--border, #ddd8cb);
+        border-radius: 999px;
+        font: 600 0.625rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.08em;
         text-transform: uppercase;
       }
@@ -564,16 +567,16 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       .lede {
         margin: 0;
         max-width: 37.5rem;
-        font: 400 1rem/1.55 var(--font-sans);
-        color: var(--muted-foreground);
+        font: 400 1rem/1.55 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #5f5b52);
       }
       .byline {
         margin-top: 1.125rem;
-        font: 500 0.8125rem/1 var(--font-sans);
-        color: var(--muted-foreground);
+        font: 500 0.8125rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #6b675e);
       }
       .byline strong {
-        color: var(--foreground);
+        color: var(--foreground, #16161c);
         font-weight: 600;
       }
 
@@ -590,11 +593,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       }
 
       .preview-frame {
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background: var(--card, #fff);
         border-radius: 1.125rem;
         padding: 0.875rem;
-        box-shadow: var(--shadow-md);
+        box-shadow: var(--shadow-md, 0 18px 40px -26px rgba(0, 0, 0, 0.4));
       }
       .chrome {
         display: flex;
@@ -607,37 +609,30 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         height: 0.6875rem;
         border-radius: 50%;
       }
-      /* Literal macOS window chrome — a picture of a window, not status.
-         These three keep their real values in every theme: a theme that
-         recolours --destructive must not recolour a close button, and the
-         semantic hues would also drift (this theme leaves --success and
-         --warning undefined, so they resolved to generic defaults). The one
-         deliberate exception to the token-only rule; scoped to these dots. */
       .chrome-dot.red {
-        background-color: #ff5f57;
+        background: #ff5f57;
       }
       .chrome-dot.amber {
-        background-color: #febc2e;
+        background: #febc2e;
       }
       .chrome-dot.green {
-        background-color: #28c840;
+        background: #28c840;
       }
       .chrome-label {
         margin-left: 0.625rem;
-        font: 500 0.6875rem/1 var(--font-mono);
-        color: var(--muted-foreground);
+        font: 500 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
+        color: var(--muted-foreground, #b3aea2);
       }
       .live {
         margin-left: auto;
-        font: 600 0.625rem/1 var(--font-mono);
+        font: 600 0.625rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.06em;
-        color: var(--primary-ink);
+        color: var(--primary, #00b886);
       }
       .preview {
         position: relative;
         aspect-ratio: 4 / 3;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background: #2a1410;
         border-radius: 0.625rem;
         overflow: hidden;
       }
@@ -664,7 +659,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         justify-content: center;
       }
       .monogram {
-        font: 600 5rem/1 var(--font-serif);
+        font: 600 5rem/1 var(--font-serif, 'IBM Plex Serif', serif);
       }
 
       .thumbs {
@@ -679,12 +674,11 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         border-radius: 0.5625rem;
         overflow: hidden;
         cursor: pointer;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background: #2a1410;
         border: 2px solid transparent;
       }
       .thumb.is-active {
-        border-color: var(--foreground);
+        border-color: var(--foreground, #16161c);
       }
       .thumb img {
         width: 100%;
@@ -696,29 +690,23 @@ class EmbeddedTemplate extends Component<typeof Listing> {
 
       .tabs {
         margin-top: 2.25rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border, #d8d3c6);
         display: flex;
         gap: 0.25rem;
       }
-      /* Styled through BoxelButton's own knobs: its default is a 100px pill
-         (.boxel-button:not(.rectangular)), which bent the underline around
-         the corners. The underline rides the box-shadow knob so no button
-         border rule can contest it. */
       .tab {
-        --boxel-button-border-radius: 0;
-        --boxel-button-border: none;
-        --boxel-button-padding: 0.75rem 1rem;
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
-        --boxel-button-font: 600 0.84rem/1 var(--font-sans);
-        --boxel-button-letter-spacing: normal;
-        --boxel-button-ghost-foreground: var(--muted-foreground);
-        --boxel-button-box-shadow: inset 0 -2px 0 transparent;
+        padding: 0.75rem 1rem;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        font: 600 0.84rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #8a8578);
         margin-bottom: -1px;
       }
       .tab.is-active {
-        --boxel-button-ghost-foreground: var(--foreground);
-        --boxel-button-box-shadow: inset 0 -2px 0 var(--foreground);
+        color: var(--foreground, #16161c);
+        border-bottom-color: var(--foreground, #16161c);
       }
 
       .panel {
@@ -726,18 +714,18 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       }
       .panel-title {
         margin: 0 0 0.75rem;
-        font: 600 1.1875rem/1.2 var(--font-sans);
+        font: 600 1.1875rem/1.2 var(--font-sans, 'IBM Plex Sans', sans-serif);
       }
       .fields-title {
         margin-top: 1.875rem;
       }
       .panel-sub {
         margin: 0 0 1.125rem;
-        font: 400 0.84rem/1.5 var(--font-sans);
-        color: var(--muted-foreground);
+        font: 400 0.84rem/1.5 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #807c72);
       }
       .muted {
-        color: var(--muted-foreground);
+        color: var(--muted-foreground, #807c72);
       }
 
       .include-group {
@@ -755,10 +743,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         border-radius: 50%;
       }
       .include-kind {
-        font: 600 0.6875rem/1 var(--font-mono);
+        font: 600 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--muted-foreground);
+        color: var(--muted-foreground, #8a8578);
       }
       .include-cards {
         display: grid;
@@ -767,7 +755,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       }
       .include-card {
         min-height: 3.5rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--border, #e7e3d8);
         border-radius: 0.5rem;
       }
 
@@ -782,27 +770,26 @@ class EmbeddedTemplate extends Component<typeof Listing> {
 
       .license-card {
         padding: 1.125rem 1.25rem;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background: var(--card, #fff);
         border-radius: 0.8125rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--border, #eae5da);
         max-width: 40rem;
       }
       .license-pill {
         display: inline-block;
-        font: 600 0.6875rem/1 var(--font-mono);
+        font: 600 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.08em;
         text-transform: uppercase;
         padding: 0.3125rem 0.625rem;
-        background-color: var(--card);
-        color: var(--primary-ink);
-        border-radius: 62.4375rem;
+        background: #eafaf3;
+        color: #00936b;
+        border-radius: 999px;
         margin-bottom: 0.75rem;
       }
       .license-body {
         margin: 0;
-        font: 400 0.84rem/1.6 var(--font-sans);
-        color: var(--muted-foreground);
+        font: 400 0.84rem/1.6 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #5f5b52);
       }
 
       .right {
@@ -813,64 +800,65 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         gap: 1rem;
       }
       .remix-panel {
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background: #14141a;
+        color: #fff;
         border-radius: 1.125rem;
         padding: 1.375rem;
       }
       @keyframes remixPulse {
         0% {
           box-shadow: 0 0 0 0
-            color-mix(in oklch, var(--accent) 60%, transparent);
+            color-mix(in srgb, var(--accent, #16e098) 60%, transparent);
         }
         50% {
           box-shadow:
-            0 0 0 6px color-mix(in oklch, var(--accent) 45%, transparent),
-            0 0 34px 6px color-mix(in oklch, var(--accent) 60%, transparent);
+            0 0 0 6px
+              color-mix(in srgb, var(--accent, #16e098) 45%, transparent),
+            0 0 34px 6px
+              color-mix(in srgb, var(--accent, #16e098) 60%, transparent);
         }
         100% {
           box-shadow: 0 0 0 0
-            color-mix(in oklch, var(--accent) 60%, transparent);
+            color-mix(in srgb, var(--accent, #16e098) 60%, transparent);
         }
       }
       .remix-panel.is-focused {
         animation: remixPulse 900ms ease-in-out 2;
       }
       .remix-eyebrow {
-        font: 600 0.6875rem/1 var(--font-mono);
+        font: 600 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--accent-ink);
+        color: var(--accent, #16e098);
       }
       .remix-title {
-        font: 700 2rem/1.05 var(--font-sans);
+        font: 700 2rem/1.05 var(--font-sans, 'IBM Plex Sans', sans-serif);
         margin: 0.875rem 0 0.375rem;
       }
       .remix-sub {
         margin: 0 0 1.125rem;
-        font: 400 0.8125rem/1.5 var(--font-sans);
-        color: var(--subtle-foreground);
+        font: 400 0.8125rem/1.5 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: #b7b4ab;
       }
       .remix-secondary {
         width: 100%;
         margin-top: 0.625rem;
         padding: 0.75rem;
-        background-color: transparent;
-        color: var(--card-foreground);
-        border: 1px solid var(--border-strong);
+        background: transparent;
+        color: #fff;
+        border: 1px solid #3a3a44;
         border-radius: 0.75rem;
         cursor: pointer;
-        font: 600 0.8125rem/1 var(--font-sans);
+        font: 600 0.8125rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
       }
       .remix-secondary:hover {
-        background-color: var(--hover);
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .info-card {
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background: var(--card, #fff);
         border-radius: 1rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--border, #eae5da);
         padding: 0.25rem 1.25rem;
       }
       .info-row {
@@ -878,33 +866,32 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         align-items: center;
         justify-content: space-between;
         padding: 0.8125rem 0;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border, #f0ece3);
       }
       .info-row:last-child {
         border-bottom: none;
       }
       .info-label {
-        font: 500 0.6875rem/1 var(--font-mono);
+        font: 500 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--muted-foreground);
+        color: var(--muted-foreground, #8a8578);
       }
       .info-value {
-        font: 600 0.8125rem/1 var(--font-sans);
+        font: 600 0.8125rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
       }
 
       .tags-card {
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background: var(--card, #fff);
         border-radius: 1rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--border, #eae5da);
         padding: 1.125rem 1.25rem;
       }
       .tags-title {
-        font: 600 0.6875rem/1 var(--font-mono);
+        font: 600 0.6875rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--muted-foreground);
+        color: var(--muted-foreground, #8a8578);
         margin-bottom: 0.75rem;
       }
       .tags-list {
@@ -913,11 +900,11 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         gap: 0.4375rem;
       }
       .tag {
-        font: 500 0.6875rem/1 var(--font-sans);
+        font: 500 0.6875rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
         padding: 0.375rem 0.6875rem;
-        background-color: var(--secondary);
-        border-radius: 62.4375rem;
-        color: var(--secondary-foreground);
+        background: var(--secondary, #f3f0e8);
+        border-radius: 999px;
+        color: var(--foreground, #46433c);
       }
 
       @container listing-detail (max-width: 56rem) {

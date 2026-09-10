@@ -105,8 +105,7 @@ export default class ShowcaseView extends GlimmerComponent<ShowcaseViewArgs> {
       .showcase-divider {
         border: none;
         height: 1px;
-        background-color: var(--muted);
-        color: var(--muted-foreground);
+        background-color: #999999;
         margin: var(--boxel-sp-xl) 0;
       }
 

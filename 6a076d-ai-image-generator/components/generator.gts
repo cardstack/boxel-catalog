@@ -2371,7 +2371,7 @@ export class AiImageGeneratorEmbedded extends Component<
         font-size: var(--boxel-font-size-sm);
         background: linear-gradient(
           transparent,
-          color-mix(in oklch, var(--foreground) 70%, transparent)
+          color-mix(in oklch, var(--tooltip) 70%, transparent)
         );
       }
       .cap-icon {

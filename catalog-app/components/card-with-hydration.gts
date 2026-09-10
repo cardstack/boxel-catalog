@@ -76,7 +76,7 @@ export class CardWithHydration extends GlimmerComponent<CardWithHydrationSignatu
 
       .card:hover {
         cursor: pointer;
-        outline: 1px solid var(--primary);
+        outline: 1px solid var(--primary, var(--boxel-purple));
       }
 
       .instance-error {
@@ -91,11 +91,7 @@ export class CardWithHydration extends GlimmerComponent<CardWithHydrationSignatu
         z-index: var(--instance-error-z-index);
         width: 100%;
         height: 100%;
-        background-color: color-mix(
-          in oklch,
-          var(--destructive) 10%,
-          transparent
-        );
+        background-color: rgba(255, 0, 0, 0.1);
       }
       .instance-error.boundaries {
         box-shadow: 0 0 0 1px var(--boxel-error-300);

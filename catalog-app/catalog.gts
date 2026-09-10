@@ -211,13 +211,18 @@ class Isolated extends Component<typeof Catalog> {
       .catalog-storefront {
         /* Catalog-domain signal colors (the general palette/fonts come from the
            linked Catalog Storefront theme via cardInfo.theme). */
-        --type-card: var(--chart-1);
-        --type-component: var(--chart-2);
-        --type-field: var(--chart-3);
-        --type-skill: var(--chart-4);
-        --type-theme: var(--chart-5);
-        --type-app: var(--primary);
+        --type-card: var(--chart-1, #ff5b9c);
+        --type-component: var(--chart-2, #2bb3ff);
+        --type-field: var(--chart-3, #7b5bff);
+        --type-skill: var(--chart-4, #c2e23f);
+        --type-theme: var(--chart-5, #ff9d3d);
+        --type-app: var(--brand, #6c4bf5);
+        --brand: #6c4bf5;
+        --layout-container-background-color: var(--background, #ece9e1);
         --layout-content-padding: 0;
+        background: var(--background, #ece9e1);
+        color: var(--foreground, #16161c);
+        font-family: var(--font-sans, 'IBM Plex Sans', sans-serif);
       }
 
       .storefront-body {
@@ -239,14 +244,14 @@ class Isolated extends Component<typeof Catalog> {
       }
       .gallery-title {
         margin: 0;
-        font: 700 1.875rem/1 var(--font-sans);
+        font: 700 1.875rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
         letter-spacing: -0.025em;
-        color: var(--foreground);
+        color: var(--foreground, #16161c);
       }
       .gallery-sub {
         margin: 0.5rem 0 0;
-        font: 400 0.875rem/1.4 var(--font-sans);
-        color: var(--muted-foreground);
+        font: 400 0.875rem/1.4 var(--font-sans, 'IBM Plex Sans', sans-serif);
+        color: var(--muted-foreground, #6b675e);
       }
     </style>
   </template>

@@ -205,9 +205,9 @@ export class Genre extends CardDef {
           inset: 0;
           background: linear-gradient(
             to top,
-            color-mix(in oklch, var(--foreground) 90%, transparent) 0%,
-            color-mix(in oklch, var(--foreground) 55%, transparent) 40%,
-            color-mix(in oklch, var(--foreground) 25%, transparent) 100%
+            color-mix(in oklch, var(--tooltip) 90%, transparent) 0%,
+            color-mix(in oklch, var(--tooltip) 55%, transparent) 40%,
+            color-mix(in oklch, var(--tooltip) 25%, transparent) 100%
           );
         }
 

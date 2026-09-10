@@ -324,7 +324,7 @@ export default class Stepper extends Component<StepperSignature> {
         padding: var(--boxel-sp);
         background-color: var(
           --stepper-scrim-bg,
-          color-mix(in oklch, var(--foreground) 30%, transparent)
+          color-mix(in oklch, var(--overlay) 30%, transparent)
         );
         backdrop-filter: blur(2px);
       }
