@@ -14,7 +14,8 @@
         "summary": null,
         "notes": null,
         "cardThumbnailURL": null
-      }
+      },
+      "cardDescription": "Records that the holder actually arrived."
     },
     "relationships": {
       "linkedExamples.0": {

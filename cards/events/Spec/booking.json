@@ -14,7 +14,8 @@
         "summary": null,
         "notes": null,
         "cardThumbnailURL": null
-      }
+      },
+      "cardDescription": "A claim on places at an Event — who is coming, how many places, where the money stands, and whether they actually showed up."
     },
     "relationships": {
       "linkedExamples.0": {

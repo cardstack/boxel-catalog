@@ -14,7 +14,8 @@
         "summary": null,
         "notes": null,
         "cardThumbnailURL": null
-      }
+      },
+      "cardDescription": "Moves a booking's attendance intent to Going — the purchase-complete / \"see you there\" transition."
     },
     "relationships": {
       "linkedExamples.0": {
