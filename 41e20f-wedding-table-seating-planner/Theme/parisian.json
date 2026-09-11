@@ -49,7 +49,9 @@
         "warning": "#B8732A",
         "warningForeground": "#ffffff",
         "info": "#3E5C86",
-        "infoForeground": "#ffffff"
+        "infoForeground": "#ffffff",
+        "attention": "#9C5B7A",
+        "attentionForeground": "#ffffff"
       },
       "customCssImports": [
         "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Jost:ital,wght@0,300..600;1,300..600&display=swap"

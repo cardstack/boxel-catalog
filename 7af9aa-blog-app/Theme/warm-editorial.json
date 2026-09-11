@@ -40,6 +40,8 @@
         "border": "#e0d6c6",
         "card": "#fffdf8",
         "cardForeground": "#1a1410",
+        "popover": "#fffdf8",
+        "popoverForeground": "#1a1410",
         "fontSans": "'Lora', Georgia, 'Times New Roman', serif",
         "fontSerif": "'Playfair Display', Georgia, serif",
         "radius": "4px",

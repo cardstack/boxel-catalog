@@ -37,6 +37,7 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
                 <Button
                   @kind='text-only'
                   @size='auto'
+                  @rectangular={{true}}
                   class='result-card'
                   {{on 'click' (fn @onSelectResult result.display_name)}}
                 >
@@ -111,6 +112,7 @@ export default class GeoSearchTopResultsAddon extends GlimmerComponent<GeoSearch
         border: none;
         display: flex;
         align-items: flex-start;
+        justify-content: flex-start;
         gap: var(--boxel-sp-sm);
         width: 100%;
         padding: var(--boxel-sp) var(--boxel-sp);

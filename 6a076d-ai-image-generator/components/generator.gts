@@ -106,6 +106,14 @@ export class AiImageGeneratorIsolated extends Component<
     return Boolean((this.args.model as any)?.cardInfo?.theme);
   }
 
+  // A linked Theme's tokens must take over entirely — stamping our own
+  // data-theme would trip theme.css's built-in [data-theme='dark'] contract
+  // and override the linked Theme's specific values with a generic dark
+  // palette. Only stamp it for the card's own default (unlinked) experience.
+  get themeAttr(): 'light' | 'dark' | undefined {
+    return this.hasLinkedTheme ? undefined : this.colorScheme;
+  }
+
   get commandContext() {
     return (this.args as any).context?.commandContext;
   }
@@ -669,30 +677,36 @@ export class AiImageGeneratorIsolated extends Component<
   <template>
     <div
       class='ai-image {{unless this.hasLinkedTheme "ai-image-default-theme"}}'
-      data-theme={{this.colorScheme}}
+      data-theme={{this.themeAttr}}
       {{this.seedDefaults}}
     >
       <header class='header'>
         <SparklesIcon class='header-icon' />
         <h1>{{if @model.cardTitle @model.cardTitle 'AI Image Generator'}}</h1>
-        <Button
-          @kind='text-only'
-          @size='auto'
-          class='scheme-toggle'
-          {{on 'click' this.toggleColorScheme}}
-          aria-label={{if
-            this.isDark
-            'Switch to light mode'
-            'Switch to dark mode'
-          }}
-          title={{if this.isDark 'Switch to light mode' 'Switch to dark mode'}}
-        >
-          {{#if this.isDark}}
-            <SunIcon />
-          {{else}}
-            <MoonIcon />
-          {{/if}}
-        </Button>
+        {{#unless this.hasLinkedTheme}}
+          <Button
+            @kind='text-only'
+            @size='auto'
+            class='scheme-toggle'
+            {{on 'click' this.toggleColorScheme}}
+            aria-label={{if
+              this.isDark
+              'Switch to light mode'
+              'Switch to dark mode'
+            }}
+            title={{if
+              this.isDark
+              'Switch to light mode'
+              'Switch to dark mode'
+            }}
+          >
+            {{#if this.isDark}}
+              <SunIcon />
+            {{else}}
+              <MoonIcon />
+            {{/if}}
+          </Button>
+        {{/unless}}
       </header>
 
       <div class='body'>
@@ -1478,7 +1492,7 @@ export class AiImageGeneratorIsolated extends Component<
       }
       /* The generating overlay is a fixed light material (see
          generating-overlay.gts) that does not invert with the theme, so its
-         text uses fixed dark ink rather than the theme's --c-fg. */
+         text uses fixed dark ink rather than the theme's foreground. */
       .gen-title {
         font-size: var(--boxel-font-size);
         font-weight: 700;

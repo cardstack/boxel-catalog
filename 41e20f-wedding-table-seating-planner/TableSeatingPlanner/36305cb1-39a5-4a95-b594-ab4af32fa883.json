@@ -197,7 +197,8 @@
       "floorPlanHeight": 1221,
       "floorPlanLocked": false,
       "floorPlanOpacity": 45,
-      "invitationMessage": null
+      "invitationMessage": null,
+      "motif": null
     },
     "relationships": {
       "hosts.0": {
@@ -257,7 +258,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/parisian"
         }
       },
       "cardInfo.cardThumbnail": {

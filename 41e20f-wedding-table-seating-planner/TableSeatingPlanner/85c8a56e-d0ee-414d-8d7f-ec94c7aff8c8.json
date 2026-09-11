@@ -30,7 +30,10 @@
           "z": 11,
           "themeColor": "#c5a35c",
           "reservedCategories": [],
-          "seatSlots": [],
+          "seatSlots": [
+            0,
+            2
+          ],
           "vip": true,
           "rank": null,
           "locked": false,
@@ -118,7 +121,11 @@
           "z": 15,
           "themeColor": "#c5a35c",
           "reservedCategories": [],
-          "seatSlots": [],
+          "seatSlots": [
+            0,
+            2,
+            1
+          ],
           "vip": false,
           "rank": null,
           "locked": false,
@@ -509,11 +516,6 @@
       },
       "tables.0.seatedGuests.1": {
         "links": {
-          "self": "../Guest/yvonne"
-        }
-      },
-      "tables.0.seatedGuests.2": {
-        "links": {
           "self": "../Guest/robin"
         }
       },
@@ -549,12 +551,12 @@
       },
       "tables.4.seatedGuests.1": {
         "links": {
-          "self": "../Guest/yvonne"
+          "self": "../Guest/robin"
         }
       },
       "tables.4.seatedGuests.2": {
         "links": {
-          "self": "../Guest/robin"
+          "self": "../Guest/yvonne"
         }
       },
       "tables.5.seatedGuests.0": {
