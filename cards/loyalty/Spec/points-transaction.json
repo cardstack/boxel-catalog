@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../loyalty-account",
+        "name": "PointsTransaction"
+      },
+      "specType": "card",
+      "readMe": "# Points Transaction\n\n## Summary\nOne entry in a loyalty account's ledger: a signed `amount` of points, the `reason` a member reads, the `source` that produced it (Attendance, Survey, Redemption, Registration…), and when it `occurredAt`, with an optional `expiresAt`. The entry links its `account`; the account never links its entries. A Loyalty Account's isolated view lists the ledger by live query on this type, so a program's history is a set of facts, not an array on the hot card.\n\n## Usage\n```ts\nimport { PointsTransaction } from '@cardstack/catalog/cards/loyalty/loyalty-account';\n\n@field account = linksTo(LoyaltyAccount);\n@field amount = contains(NumberField); // negative for redemptions\n```\nThe Credit Points command is the single writer: it appends an entry and moves the account's `pointsBalance` in the same step, so the balance and the ledger cannot disagree. The linked example is Jason Lim's account, whose ledger holds three entries.\n\n## Non-goals\nNo currency and no conversion: a point is a count, and what it is worth is decided where points are earned or redeemed. No expiry engine: `expiresAt` is stored so a consumer can act on it.",
+      "cardTitle": "Points Transaction",
+      "cardDescription": "A signed ledger entry against a loyalty account: amount, reason, source, when.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Points Transaction",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PointsTransaction/jason-attend-away"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
