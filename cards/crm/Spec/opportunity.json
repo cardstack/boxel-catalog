@@ -14,7 +14,9 @@
         "notes": null,
         "cardThumbnailURL": null
       },
-      "containedExamples": []
+      "containedExamples": [],
+      "cardTitle": "Opportunity",
+      "cardDescription": "A qualified pursuit in the pipeline: value, stage with legal transitions, probability, close date and owner."
     },
     "relationships": {
       "linkedExamples.0": {
