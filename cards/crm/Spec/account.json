@@ -14,7 +14,9 @@
         "notes": null,
         "cardThumbnailURL": null
       },
-      "containedExamples": []
+      "containedExamples": [],
+      "cardTitle": "Account",
+      "cardDescription": "The party record every commercial document links to: a company or person you sell to, with owner, billing and contact details."
     },
     "relationships": {
       "linkedExamples.0": {
