@@ -14,7 +14,8 @@
         "summary": null,
         "notes": null,
         "cardThumbnailURL": null
-      }
+      },
+      "cardDescription": "The identifier a membership program prints on the card — stable, human-readable, quoted over the phone."
     },
     "relationships": {
       "linkedExamples.0": {

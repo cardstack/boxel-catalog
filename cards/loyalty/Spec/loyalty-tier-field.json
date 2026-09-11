@@ -14,7 +14,8 @@
         "summary": null,
         "notes": null,
         "cardThumbnailURL": null
-      }
+      },
+      "cardDescription": "A member's standing on an ordered ladder."
     },
     "relationships": {
       "linkedExamples.0": {
