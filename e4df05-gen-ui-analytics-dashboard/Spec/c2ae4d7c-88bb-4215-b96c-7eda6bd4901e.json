@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Dataset\n\n## Summary\n\nA schema-less table card: any screenshot, CSV, or pasted grid becomes one of these, whatever its columns — so ad-hoc data never needs its own CardDef. Columns and rows are stored as JSON strings (`columnsJson` is `[{ name, type }]` with type `string | number | date`; `rowsJson` is `[{ column: value, … }]`), parsed defensively by the exported `parseColumns` / `parseRows` helpers (malformed JSON yields `[]`, never a crash). Every dataset carries its provenance: `sourceNote` is a human-readable origin line whose leading vocabulary drives the provenance badge via the exported `provenanceKind` — `web-sourced …` (live search results), `… AI-recalled …` (model memory), anything else (a file the user dropped) — and `sourceFileUrl` links back to the original file written into the realm. The isolated view is a full data-table place: title, provenance badge, row/column counts, column-type chips, a sticky-header scrollable table with right-aligned numeric columns. The embedded view shows the badge, the count, and the first 12 rows with a \"+N more rows\" line.\n\nChartCards reference a Dataset via `linksTo`, so one dataset can feed several charts and a chart's data can be inspected on its own card.\n\n## Import\n\n```js\nimport { Dataset, parseColumns, parseRows, provenanceKind } from '../dataset';\n```\n\n## Usage\n\n```js\nnew Dataset({\n  title: 'Tesla 2025 quarterly deliveries',\n  columnsJson: JSON.stringify([\n    { name: 'quarter', type: 'string' },\n    { name: 'deliveries', type: 'number' },\n  ]),\n  rowsJson: JSON.stringify([\n    { quarter: 'Q1', deliveries: 336681 },\n    { quarter: 'Q2', deliveries: 384122 },\n  ]),\n  sourceNote: 'web-sourced: quarterly press releases',\n  sourceFileUrl: 'https://…/sources/deliveries.csv',\n});\n```\n\n`sourceFileUrl` stays a plain string because a raw realm file write returns a URL, not a card id. Keep `rowsJson` within the 512KB realm card budget — the dashboard's ingestion paths cap rows for you and say so when they do.\n",
+      "ref": {
+        "name": "Dataset",
+        "module": "../dataset"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Dataset",
+      "cardDescription": "Schema-less table card with provenance — any CSV, screenshot, or pasted grid, whatever its columns",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

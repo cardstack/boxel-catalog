@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla Sales in Malaysia by Year",
+      "cardInfo": {
+        "name": "Tesla Sales in Malaysia by Year",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "chartKind": "bar",
+      "dimension": {
+        "path": "year",
+        "bucket": "none"
+      },
+      "measure": {
+        "path": "unitsSold",
+        "aggregate": "sum"
+      },
+      "span": 1,
+      "seriesBy": null,
+      "rowSpan": 1
+    },
+    "relationships": {
+      "dataset": {
+        "links": {
+          "self": "../Dataset/tesla-malaysia-sales"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../chart-card",
+        "name": "ChartCard"
+      }
+    }
+  }
+}

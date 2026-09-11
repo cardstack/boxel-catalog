@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla 2025 Revenue Mix",
+      "chartKind": "donut",
+      "dimension": {
+        "path": "segment",
+        "bucket": "none"
+      },
+      "measure": {
+        "path": "revenueBillionUsd",
+        "aggregate": "sum"
+      },
+      "seriesBy": null,
+      "span": 1,
+      "cardInfo": {
+        "name": "Tesla 2025 Revenue Mix",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "rowSpan": 2
+    },
+    "relationships": {
+      "dataset": {
+        "links": {
+          "self": "../Dataset/tesla-2025-revenue-segments"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../chart-card",
+        "name": "ChartCard"
+      }
+    }
+  }
+}

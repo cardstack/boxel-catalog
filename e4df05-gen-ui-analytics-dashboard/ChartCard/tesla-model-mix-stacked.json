@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla Deliveries by Model (2021–2025)",
+      "chartKind": "stacked-bar",
+      "dimension": {
+        "path": "year",
+        "bucket": "none"
+      },
+      "measure": {
+        "path": "deliveries",
+        "aggregate": "sum"
+      },
+      "seriesBy": "model",
+      "span": 1,
+      "cardInfo": {
+        "name": "Tesla Deliveries by Model (2021–2025)",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "rowSpan": 1
+    },
+    "relationships": {
+      "dataset": {
+        "links": {
+          "self": "../Dataset/tesla-deliveries-by-model"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../chart-card",
+        "name": "ChartCard"
+      }
+    }
+  }
+}

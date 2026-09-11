@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla 2025 Quarterly Deliveries",
+      "columnsJson": "[{\"name\":\"quarter\",\"type\":\"string\"},{\"name\":\"deliveries\",\"type\":\"number\"}]",
+      "rowsJson": "[{\"quarter\":\"Q1 2025\",\"deliveries\":336681},{\"quarter\":\"Q2 2025\",\"deliveries\":384122},{\"quarter\":\"Q3 2025\",\"deliveries\":462890},{\"quarter\":\"Q4 2025\",\"deliveries\":428307}]",
+      "sourceNote": "AI-recalled figures — may be outdated",
+      "sourceFileUrl": null,
+      "cardInfo": {
+        "name": "Tesla 2025 Quarterly Deliveries",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../dataset",
+        "name": "Dataset"
+      }
+    }
+  }
+}
