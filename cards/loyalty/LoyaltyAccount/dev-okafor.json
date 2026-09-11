@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "memberNumber": "NBF-2021-00005590",
+      "tier": "Silver",
+      "tierSince": "2024-02-01",
+      "memberSince": "2021-05-11",
+      "status": "Lapsed",
+      "pointsBalance": 75,
+      "lifetimePoints": 2310,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "holder": {
+        "links": {
+          "self": "../../crm/Contact/dev-okafor"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../loyalty-account",
+        "name": "LoyaltyAccount"
+      }
+    }
+  }
+}
