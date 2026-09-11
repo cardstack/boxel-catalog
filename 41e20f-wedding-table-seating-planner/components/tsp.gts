@@ -6923,11 +6923,7 @@ export class TableSeatingPlannerIsolated extends Component<
         font-weight: 500;
         letter-spacing: 0.3em;
         text-transform: uppercase;
-        color: color-mix(
-          in oklch,
-          var(--primary-foreground) 70%,
-          transparent
-        );
+        color: color-mix(in oklch, var(--primary-foreground) 70%, transparent);
       }
       .tsp-hosts-row {
         display: flex;
@@ -7041,11 +7037,7 @@ export class TableSeatingPlannerIsolated extends Component<
         font-weight: 500;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: color-mix(
-          in oklch,
-          var(--primary-foreground) 50%,
-          transparent
-        );
+        color: color-mix(in oklch, var(--primary-foreground) 50%, transparent);
         pointer-events: none;
       }
       .tsp-date:has(.tsp-date-hint) input[type='datetime-local'] {
@@ -7084,11 +7076,7 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0;
       }
       .tsp-venue::placeholder {
-        color: color-mix(
-          in oklch,
-          var(--primary-foreground) 50%,
-          transparent
-        );
+        color: color-mix(in oklch, var(--primary-foreground) 50%, transparent);
       }
       .tsp-venue:focus {
         outline: none;

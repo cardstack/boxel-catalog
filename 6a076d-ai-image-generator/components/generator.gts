@@ -694,7 +694,11 @@ export class AiImageGeneratorIsolated extends Component<
               'Switch to light mode'
               'Switch to dark mode'
             }}
-            title={{if this.isDark 'Switch to light mode' 'Switch to dark mode'}}
+            title={{if
+              this.isDark
+              'Switch to light mode'
+              'Switch to dark mode'
+            }}
           >
             {{#if this.isDark}}
               <SunIcon />
