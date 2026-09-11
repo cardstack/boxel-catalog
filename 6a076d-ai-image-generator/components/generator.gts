@@ -1236,7 +1236,7 @@ export class AiImageGeneratorIsolated extends Component<
         display: flex;
         flex-direction: column;
         height: 100%;
-        background-color: var(--background);
+        background-color: var(--canvas);
         color: var(--foreground);
         font: var(--boxel-font-sm);
         font-family: var(--font-sans);
@@ -1263,8 +1263,8 @@ export class AiImageGeneratorIsolated extends Component<
         gap: var(--boxel-sp);
         padding: var(--boxel-sp);
         border-right: 1px solid var(--border);
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--sidebar);
+        color: var(--sidebar-foreground);
         /* Model + Aspect stay put at the top; only the version list scrolls. */
         overflow: hidden;
       }
