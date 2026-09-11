@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# swatchStyle\n\n## Summary\n\nBuilds an `htmlSafe` inline `background-color` style for a swatch element from a hex color, falling back to the card's slate brand color when no color has been picked yet. Used by the embedded and fitted formats.\n\n## Import\n\n```javascript\nimport { swatchStyle } from '../utils/munsell';\n```\n\n## Usage\n\n```hbs\n<span class='swatch' style={{swatchStyle @model.selectedColor}}></span>\n```",
+      "ref": {
+        "module": "../utils/munsell",
+        "name": "swatchStyle"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "swatchStyle",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# munsellNotation\n\n## Summary\n\nFormats a chip's full Munsell notation from hue `h` (fraction in `[0, 1)`), value `v`, and chroma `c` \u2014 `'5PB 3/12'` for chromatic chips, the neutral form `'N 5/'` when chroma is below 0.5. This is the notation saved to the card's `selectedMunsell` field on pick.\n\n## Import\n\n```javascript\nimport { munsellNotation } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nmunsellNotation(0.7, 3, 12); // '5PB 3/12'\nmunsellNotation(0, 5, 0); // 'N 5/'\n```",
+      "ref": {
+        "module": "../utils/munsell",
+        "name": "munsellNotation"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "munsellNotation",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

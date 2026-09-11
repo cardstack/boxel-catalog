@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "pick": {
+        "hex": "#2e8b6a",
+        "munsell": "5G 5/8"
+      },
+      "title": "Color Tree Field",
+      "description": "A Munsell color pick as a field: the edit format is the full 3D studio, so any card gets perceptual hue/value/chroma picking with one contains().",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../color-tree-field-playground-example",
+        "name": "ColorTreeFieldExample"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# ColorTreeStudio\n\n## Summary\n\nThe interactive Munsell studio as a reusable glimmer component — the room the specimen is held in. `ColorTreeField`'s edit format renders this component; the studio itself owns no field state. The current selection flows in through `@color` / `@munsell`, and picks flow out (debounced 300ms) through `@onPick`. `@compact` bounds the room for form use (panel closed by default, reduced masthead); `@hasLinkedTheme` suppresses the built-in night-sky palette when a Theme card is linked.\n\nIt carries the full experience: tumble/slice/atlas interaction, the Munsell↔Itten morph, contextual hints, the control panel, and the ambient WebAudio layer.\n\n## Import\n\n```javascript\nimport { ColorTreeStudio } from '../components/color-tree-studio';\n```\n\n## Usage\n\n```gts\n<ColorTreeStudio\n  @color={{this.hex}}\n  @munsell={{this.notation}}\n  @onPick={{this.onPick}}\n  @compact={{true}}\n/>\n```",
+      "ref": {
+        "module": "../components/color-tree-studio",
+        "name": "ColorTreeStudio"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "ColorTreeStudio",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

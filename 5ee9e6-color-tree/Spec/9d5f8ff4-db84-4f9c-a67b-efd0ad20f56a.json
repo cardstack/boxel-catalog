@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# TreeEngine\n\n## Summary\n\nOwns the WebGL scene behind the isolated format: the renderer, main and scout-miniature cameras, the four shader passes (voxels, halo, grid, ring), camera framing, and analytic color picking. The isolated component owns the tracked UI state and drives the engine through its targets and shared uniforms.\n\nKey API: `constructor(canvas)`, `buildMesh()` / `buildGuides()` to (re)build geometry, `setDensity(idx)` for the three lattice densities, `buildGrid(mode, slicePos01)` for the slice guides, `tumble(dx, dy)` / `zoom(delta)` / `refit()` / `resize()` for camera control, `pickHex(cx, cy)` returning a `PickResult` (`{ hex, notation }`) or `null`, `loop()` as the render loop, and `dispose()` for teardown.\n\n## Import\n\n```javascript\nimport { TreeEngine } from '../utils/tree-engine';\n```\n\n## Usage\n\n```javascript\nlet engine = new TreeEngine(canvasElement);\nengine.buildMesh();\nengine.buildGuides();\nengine.loop();\n\nlet pick = engine.pickHex(pointerX, pointerY);\nif (pick) {\n  console.log(pick.hex, pick.notation); // '#b04a3c', '5R 5/10'\n}\n\nengine.dispose();\n```",
+      "ref": {
+        "module": "../utils/tree-engine",
+        "name": "TreeEngine"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "TreeEngine",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

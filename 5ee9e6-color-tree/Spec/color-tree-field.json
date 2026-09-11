@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# ColorTreeField\n\n## Summary\n\nA Munsell color pick as a field. Reach for it when a flat color picker is not enough: the **edit format is the full 3D studio** (`ColorTreeStudio`) bounded to the form, so a card author gets perceptual hue/value/chroma picking on any card with one `contains()`. The value is the picked `hex` (a `ColorField`) plus its Munsell `munsell` notation (a `StringField`). The embedded format is a compact swatch + hex + notation strip; the atom format is a tiny swatch + notation.\n\n## Import\n\n```javascript\nimport { ColorTreeField } from '../color-tree-field';\n```\n\n## Usage\n\n```gts\nexport class MyCard extends CardDef {\n  @field accentColor = contains(ColorTreeField);\n}\n```\n\nRendering:\n\n```hbs\n<@fields.accentColor @format='edit' />   {{! the 3D studio picker }}\n<@fields.accentColor />                  {{! swatch + hex + notation }}\n<@fields.accentColor @format='atom' />   {{! tiny swatch + notation }}\n```\n\nPicking happens in the studio's atlas view: open the atlas, hold a spot on the page, and the field's `hex`/`munsell` are set (and the hex copied to the clipboard).",
+      "ref": {
+        "module": "../color-tree-field",
+        "name": "ColorTreeField"
+      },
+      "specType": "field",
+      "containedExamples": [],
+      "cardTitle": "ColorTreeField",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

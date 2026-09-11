@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# toHex2\n\n## Summary\n\nConverts one color channel in `[0, 1]` to a two-digit lowercase hex byte, clamping out-of-range input.\n\n## Import\n\n```javascript\nimport { toHex2 } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\ntoHex2(1); // 'ff'\ntoHex2(0.5); // '80'\n```",
+      "ref": {
+        "module": "../utils/munsell",
+        "name": "toHex2"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "toHex2",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
