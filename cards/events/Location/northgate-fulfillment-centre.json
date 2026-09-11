@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Northbridge Training Ground",
+      "kind": "Training Ground",
+      "address": {
+        "addressLine1": "Millbrook Lane",
+        "addressLine2": null,
+        "city": "Northbridge",
+        "state": "West Yorkshire",
+        "postalCode": "LS9 4QT",
+        "country": {
+          "name": "United Kingdom",
+          "code": "GB"
+        },
+        "poBoxNumber": null
+      },
+      "geo": {
+        "lat": 53.8121,
+        "lon": -1.4933
+      },
+      "phone": "+441132456789",
+      "website": null,
+      "description": "First-team and academy training complex — three grass pitches, one all-weather dome, and the club gym. Open days on the first Sunday of each month.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../location",
+        "name": "Location"
+      }
+    }
+  }
+}

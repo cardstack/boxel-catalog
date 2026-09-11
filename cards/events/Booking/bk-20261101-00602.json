@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "reference": "BK-20261101-00602",
+      "quantity": 1,
+      "rsvp": "Going",
+      "paymentStatus": "Paid",
+      "totalPrice": {
+        "amount": 42,
+        "currency": {
+          "code": "GBP"
+        }
+      },
+      "checkedInAt": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "event": {
+        "links": {
+          "self": "../Event/latin-cardio-launch"
+        }
+      },
+      "holder": {
+        "links": {
+          "self": "../../crm/Contact/priya-shah"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../booking",
+        "name": "Booking"
+      },
+      "_touched": 1787195046855
+    }
+  }
+}
