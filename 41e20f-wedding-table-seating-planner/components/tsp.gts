@@ -6817,8 +6817,8 @@ export class TableSeatingPlannerIsolated extends Component<
         align-items: center;
         gap: 0.625rem 1.625rem;
         padding: 0.625rem 1.625rem;
-        background-color: var(--card);
-        color: var(--card-foreground);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border-bottom: 1px solid
           color-mix(in oklch, var(--border) 45%, transparent);
       }
@@ -6868,7 +6868,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border-bottom: 1px solid transparent;
         border-radius: 0;
         padding: 0 0 2px;
-        color: var(--accent-ink);
+        color: var(--primary-foreground);
         font-family: var(--font-serif);
         font-weight: 600;
         font-size: 1.75rem;
@@ -6876,7 +6876,7 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: border-color 0.15s;
       }
       .tsp-event-title::placeholder {
-        color: var(--accent-ink);
+        color: var(--primary-foreground);
         opacity: 0.55;
       }
       .tsp-event-title:hover {
@@ -6896,8 +6896,13 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 1.625rem;
         padding: 0.5rem 1.25rem;
         border-radius: 0.875rem;
-        background-color: var(--hover);
-        border: 1px solid var(--border);
+        background-color: color-mix(
+          in oklch,
+          var(--primary-foreground) 12%,
+          transparent
+        );
+        border: 1px solid
+          color-mix(in oklch, var(--primary-foreground) 30%, transparent);
       }
       .tsp-meta-col {
         display: flex;
@@ -6907,14 +6912,22 @@ export class TableSeatingPlannerIsolated extends Component<
       }
       .tsp-meta-div {
         width: 1px;
-        background-color: var(--border);
+        background-color: color-mix(
+          in oklch,
+          var(--primary-foreground) 30%,
+          transparent
+        );
       }
       .tsp-meta-label {
         font-size: 0.6875rem;
         font-weight: 500;
         letter-spacing: 0.3em;
         text-transform: uppercase;
-        color: color-mix(in oklch, var(--card-foreground) 55%, transparent);
+        color: color-mix(
+          in oklch,
+          var(--primary-foreground) 70%,
+          transparent
+        );
       }
       .tsp-hosts-row {
         display: flex;
@@ -6983,9 +6996,13 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0 0.25rem;
         gap: 0.3125rem;
         border-style: dashed;
-        border-color: color-mix(in oklch, var(--accent) 55%, transparent);
+        border-color: color-mix(
+          in oklch,
+          var(--primary-foreground) 55%,
+          transparent
+        );
         background-color: transparent;
-        color: var(--accent-ink);
+        color: var(--primary-foreground);
         font-family: var(--font-sans);
         font-size: 0.875rem;
       }
@@ -7002,8 +7019,8 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0 0.625rem;
       }
       .tsp-host-add:hover {
-        border-color: var(--accent);
-        color: var(--accent-ink);
+        border-color: var(--primary-foreground);
+        color: var(--primary-foreground);
       }
       .tsp-date {
         position: relative;
@@ -7024,7 +7041,11 @@ export class TableSeatingPlannerIsolated extends Component<
         font-weight: 500;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: color-mix(in oklch, var(--card-foreground) 50%, transparent);
+        color: color-mix(
+          in oklch,
+          var(--primary-foreground) 50%,
+          transparent
+        );
         pointer-events: none;
       }
       .tsp-date:has(.tsp-date-hint) input[type='datetime-local'] {
@@ -7034,7 +7055,7 @@ export class TableSeatingPlannerIsolated extends Component<
         min-height: 0;
         border: none;
         background-color: transparent;
-        color: var(--accent-ink);
+        color: var(--primary-foreground);
         font-family: var(--font-sans);
         font-size: 0.6562rem;
         font-weight: 500;
@@ -7054,7 +7075,7 @@ export class TableSeatingPlannerIsolated extends Component<
         width: 9.375rem;
         border: none;
         background-color: transparent;
-        color: var(--accent-ink);
+        color: var(--primary-foreground);
         font-family: var(--font-sans);
         font-size: 0.6562rem;
         font-weight: 500;
@@ -7063,7 +7084,11 @@ export class TableSeatingPlannerIsolated extends Component<
         padding: 0;
       }
       .tsp-venue::placeholder {
-        color: color-mix(in oklch, var(--card-foreground) 50%, transparent);
+        color: color-mix(
+          in oklch,
+          var(--primary-foreground) 50%,
+          transparent
+        );
       }
       .tsp-venue:focus {
         outline: none;
@@ -7077,8 +7102,13 @@ export class TableSeatingPlannerIsolated extends Component<
         gap: 2px;
         padding: 0.1875rem;
         border-radius: 1.875rem;
-        border: 1px solid color-mix(in oklch, var(--border) 45%, transparent);
-        background-color: color-mix(in oklch, var(--sidebar) 12%, transparent);
+        border: 1px solid
+          color-mix(in oklch, var(--primary-foreground) 30%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--primary-foreground) 12%,
+          transparent
+        );
       }
       .tsp-navbtn {
         height: 1.875rem;
@@ -7086,7 +7116,7 @@ export class TableSeatingPlannerIsolated extends Component<
         border-radius: 1.875rem;
         border: 1px solid transparent;
         background-color: transparent;
-        color: var(--accent-ink);
+        color: var(--primary-foreground);
         font-family: var(--font-sans);
         font-size: 0.6875rem;
         font-weight: 500;
@@ -7096,7 +7126,7 @@ export class TableSeatingPlannerIsolated extends Component<
         transition: 0.15s;
       }
       .tsp-navbtn:hover {
-        color: var(--accent-ink);
+        color: var(--primary-foreground);
       }
       .tsp-navbtn.is-on {
         background-color: var(--popover);

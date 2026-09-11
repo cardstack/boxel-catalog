@@ -216,18 +216,25 @@ function injectPopupStyles() {
   // not UI chrome. The popup chrome below reads the theme contract tokens
   // (theme.css declares them on :root, so they resolve in document.head too).
   style.textContent = `
+    /* !important: leaflet.min.css loads from a CDN <link> that lands later in
+       document order than this injected <style>, so its same-specificity
+       .leaflet-popup-content-wrapper background rule otherwise wins the
+       cascade and silences the theme override below. */
     .leaflet-popup-content-wrapper {
       border-radius: 0.75rem;
       box-shadow: 0 0.5rem 1.5rem color-mix(in oklch, var(--foreground) 16%, transparent);
       padding: 0.125rem;
+      background-color: var(--popover) !important;
+      color: var(--popover-foreground) !important;
     }
+    .leaflet-popup-tip { background-color: var(--popover) !important; }
     .leaflet-popup-content { margin: 0.75rem 0.875rem; }
     .bx-rich-popup {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: var(--foreground);
+      color: var(--popover-foreground);
       line-height: 1.4;
     }
-    .bx-rich-popup strong { font-size: 0.875rem; font-weight: 700; color: var(--foreground); }
+    .bx-rich-popup strong { font-size: 0.875rem; font-weight: 700; color: var(--popover-foreground); }
     .bx-rp-img {
       display: block; width: 100%; height: 7.75rem; object-fit: cover;
       border-radius: 0.5rem; margin: 0.5rem 0; background-color: var(--card);
@@ -240,7 +247,7 @@ function injectPopupStyles() {
       text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 0.125rem;
     }
     .bx-rp-item {
-      font-size: 0.78125rem; line-height: 1.6; color: var(--foreground);
+      font-size: 0.78125rem; line-height: 1.6; color: var(--popover-foreground);
       padding-left: 0.875rem; position: relative;
     }
     .bx-rp-item::before {
@@ -251,7 +258,7 @@ function injectPopupStyles() {
     .bx-rp-kind { margin-top: 0.125rem; font-size: 0.6875rem; color: var(--muted-foreground); }
     .bx-rp-hours {
       display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.375rem;
-      margin-top: 0.5rem; font-size: 0.75rem; color: var(--foreground);
+      margin-top: 0.5rem; font-size: 0.75rem; color: var(--popover-foreground);
     }
     .bx-rp-hours-text { color: var(--muted-foreground); }
     .bx-rp-badge { font-size: 0.6875rem; font-weight: 700; }
@@ -259,7 +266,7 @@ function injectPopupStyles() {
     .bx-rp-closed { color: var(--destructive-ink); }
     .bx-rp-meta {
       display: block; margin-top: 0.375rem; font-size: 0.75rem;
-      color: var(--foreground); text-decoration: none;
+      color: var(--popover-foreground); text-decoration: none;
     }
     a.bx-rp-meta { color: var(--primary-ink); }
     a.bx-rp-meta:hover { text-decoration: underline; }

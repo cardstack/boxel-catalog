@@ -40,6 +40,8 @@
         "border": "#d1d5db",
         "card": "#ffffff",
         "cardForeground": "#121212",
+        "popover": "#ffffff",
+        "popoverForeground": "#121212",
         "fontSans": "'Inter', system-ui, -apple-system, sans-serif",
         "radius": "12px",
         "canvas": "#e9e9e9",
