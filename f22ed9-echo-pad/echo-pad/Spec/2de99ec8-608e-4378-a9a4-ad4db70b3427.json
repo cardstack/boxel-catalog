@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "Sends the circled ink (PNG data URL + mode + Skill-card instructions) through the request-forward proxy to a vision model and returns validated text/sketch/scene channels. Caches by capture hash so identical asks are never paid for twice.",
+      "ref": {
+        "module": "../commands/recognize-ink-command",
+        "name": "RecognizeInkCommand"
+      },
+      "specType": "command",
+      "containedExamples": [],
+      "cardTitle": "RecognizeInkCommand",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "Whitelisted scene-grammar validator plus a recursive-descent math expression parser (no eval) for function graphs.",
+      "ref": {
+        "module": "../utils/scene",
+        "name": "validateSceneSpec"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "validateSceneSpec",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

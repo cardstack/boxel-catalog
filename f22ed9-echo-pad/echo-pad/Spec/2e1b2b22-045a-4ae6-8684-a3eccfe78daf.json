@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "Embedded summary: ink glance beside the newest note and board facts.",
+      "ref": {
+        "module": "../components/formats",
+        "name": "EchoPadEmbedded"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "EchoPadEmbedded",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

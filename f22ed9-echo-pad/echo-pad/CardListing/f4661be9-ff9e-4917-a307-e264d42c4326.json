@@ -1,0 +1,153 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Echo Pad",
+      "summary": "Echo Pad is a whiteboard that answers back: write math, sketch diagrams, or scribble half-formed ideas in blue ink, and an AI marker replies in red pen directly on the paper — checking your work, writing the missing answer into the blank, completing your drawing, or playing a short manim animation of the idea inside a projection slip. Circle any region and pick Solve, Check, Complete, Explain or Animate, or leave the ambient Auto mode on and the marker follows along as you write, proposing help only when your pen pauses. Every AI response is a draft you accept or dismiss, so the board stays yours: handwriting recognition, math checking and grading, sketch completion, and hand-drawn-curve-to-animation morphing on an infinite zoomable canvas.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/echo-pad-1c0f5c.png"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/education-courses"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Category/ai-automation"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../../EchoPad/arithmetic-check"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../../EchoPad/wave-study"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../../EchoPad/diagram-complete"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/ambient-marking-3c91d4.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/wave-morph-scene-7be2a1.png"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "skills.0": {
+        "links": {
+          "self": "../Skill/echo-marker"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/ai"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "https://app.boxel.ai/catalog/Tag/app"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/bb45a3c4-c96b-4a49-b903-2426be4001b5"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/75b1c152-d2cf-401d-8c66-dde32f735a7c"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/2de99ec8-608e-4378-a9a4-ad4db70b3427"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/5a94d17e-1a3c-47ab-95d8-59cb5104e30d"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/09862dce-770f-4e34-b0fe-c0f0ae65e43d"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/04196a72-1b33-46cb-adc7-11f105c12fcc"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/2e1b2b22-045a-4ae6-8684-a3eccfe78daf"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/b87dbcab-3f75-4de7-a690-af41c6cf9e2b"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/1535c33b-d0d6-4f89-9ed1-bd305c5ed882"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/3552a1a1-dfc4-4344-9270-dd7b683fb87b"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/5ebd1f7e-043d-4632-8866-b5c6c10eea7f"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/e565fb4c-1eb6-4e36-a5fd-ac51eeb2b934"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://app.boxel.ai/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      }
+    }
+  }
+}

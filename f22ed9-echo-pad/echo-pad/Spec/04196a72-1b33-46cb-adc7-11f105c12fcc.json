@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "The full board app: three-layer camera sandwich (canvas ink, SVG overlays, DOM slips), five-mode Select puck, ambient auto-scan, zoom cluster, drafting title block, and draft/accept/undo flows.",
+      "ref": {
+        "module": "../components/isolated",
+        "name": "EchoPadIsolated"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "EchoPadIsolated",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "Poster-first manim player: lazy-loads the vendored runtime, one active scene at a time, paper mode for ink scenes and darkroom for composed ones, full teardown on close.",
+      "ref": {
+        "module": "../components/scene-player",
+        "name": "EchoScenePlayer"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "EchoScenePlayer",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
