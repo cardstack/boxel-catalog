@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../fulfilment-status-chip",
+        "name": "StatusChip"
+      },
+      "specType": "component",
+      "readMe": "# Fulfilment Status Chip\n\n## Summary\nThe one place the fulfilment blocks decide how a lifecycle hue renders: fill, border and text are all mixed `in oklch` from a single hue toward the theme's own tokens, so the chip stays legible on light and dark grounds and the three can never come apart.\n\n## API\n- `StatusChip` — template-only component; args `@style: StatusStyle` (`{ value, label, hue }`), optional `@compact`\n- `StatusStyle` — the option-table row shape that `Order Status` and `Shipment Status` export for each value\n\n## Usage\n```ts\nimport { StatusChip } from '@cardstack/catalog/cards/fulfilment/fulfilment-status-chip';\nimport { orderStatusStyle } from '@cardstack/catalog/cards/fulfilment/order-status';\n\n<StatusChip @style={{orderStatusStyle @model.status}} />\n```\n\n## Non-goals\nNot a status field: it renders a hue it is handed. Vocabularies and transitions live in the status fields that consume it. For a transition-graph status use the catalog `Status` field and `StatePill` instead.",
+      "cardTitle": "Fulfilment Status Chip",
+      "cardDescription": "Renders a fulfilment lifecycle hue as a chip whose fill, border and text derive from one hue mixed toward theme tokens.",
+      "cardInfo": {
+        "name": "Fulfilment Status Chip",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

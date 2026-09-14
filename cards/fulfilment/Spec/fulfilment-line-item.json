@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../fulfilment-line-item",
+        "name": "FulfilmentLineItemField"
+      },
+      "specType": "field",
+      "cardTitle": "Fulfilment Line Item Field",
+      "cardDescription": "One order line: SKU, product name, quantity, unit price and how many have actually shipped; the line total is computed.",
+      "readMe": "## Invoice Line Item (IL)\n\nSKU, product name, quantity, unit price, and how many have actually shipped. `lineTotal` is computed and never stored.\n\n**Attributes, not a link to the product.** Two independent reasons that happen to agree:\n\n1. *Layering.* A field must not import a card — that is an upward dependency, and it would make this field unusable without the whole fulfilment card set.\n2. *Correctness.* An order line is a snapshot. Prices change and products get renamed; what the customer bought at 14:02 on Tuesday does not. A line that read through a link would silently rewrite history.\n\nIt also happens to be what fitted rendering needs: prerendered fitted does not resolve links, so an attribute-only line renders at every size.\n\n`quantityFulfilled` exists because fulfilment is not all-or-nothing — a split shipment sends 2 of 3 now and 1 next week. `outstanding` and `isFullyFulfilled` derive from it.\n\nThe embedded view is row-shaped with **constant-width trailing slots** (em dash when empty), so a list of lines column-aligns regardless of what any individual row is missing.\n\n### Examples\n\nTwo contained examples: a multi-unit line and a partially fulfilled one.\n\n### Non-goals\n\nNo discounts, no tax per line. Order-level shipping and tax live on the order; per-line tax is a jurisdictional problem that would need its own block.",
+      "cardInfo": {
+        "name": "Invoice Line Item (IL)",
+        "summary": "One row of what was bought — a snapshot, attribute-only, so it renders in fitted and never rewrites history."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
