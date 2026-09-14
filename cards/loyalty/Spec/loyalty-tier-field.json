@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "cardTitle": "Loyalty Tier field",
+      "cardTitle": "Loyalty Tier Field",
       "specType": "field",
       "ref": {
         "module": "../loyalty-tier-field",

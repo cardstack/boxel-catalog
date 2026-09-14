@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "cardTitle": "Member Number field",
+      "cardTitle": "Member Number Field",
       "specType": "field",
       "ref": {
         "module": "../member-number-field",

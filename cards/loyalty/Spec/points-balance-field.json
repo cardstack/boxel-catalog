@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "cardTitle": "Points Balance field",
+      "cardTitle": "Points Balance Field",
       "specType": "field",
       "ref": {
         "module": "../points-balance-field",

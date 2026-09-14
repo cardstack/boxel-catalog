@@ -19,7 +19,7 @@ import { Contact } from '@cardstack/catalog/cards/crm/contact';
 import LoyaltyTierField from './loyalty-tier-field';
 import MemberNumberField from './member-number-field';
 import PointsBalanceField from './points-balance-field';
-import { statusField } from '@cardstack/catalog/fields/status/status';
+import { MembershipStatusField } from './membership-status-field';
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 
 // Token-derived color only — never a user string.
@@ -27,35 +27,15 @@ function htmlSafeColor(color: string) {
   return htmlSafe(`color: ${color};`);
 }
 
-/**
- * Membership standing: Active is the working state, Lapsed is recoverable
- * neglect (renewal missed, points frozen by program rules), Closed is a
- * deliberate end that can still be reopened by re-enrolment.
- */
-export const MembershipStatusField = statusField({
-  displayName: 'Membership Status',
-  options: [
-    { value: 'Active', hue: 'green', meaning: 'In good standing' },
-    {
-      value: 'Lapsed',
-      hue: 'amber',
-      meaning: 'Renewal missed — recoverable',
-      holds: true,
-    },
-    {
-      value: 'Closed',
-      hue: 'slate',
-      meaning: 'Deliberately ended',
-      terminal: true,
-      holds: true,
-    },
-  ],
-  transitions: {
-    Active: ['Lapsed', 'Closed'],
-    Lapsed: ['Active', 'Closed'],
-    Closed: ['Active'],
-  },
-});
+function signedPoints(amount?: number | null): string {
+  let n = amount ?? 0;
+  return `${n > 0 ? '+' : ''}${new Intl.NumberFormat().format(n)}`;
+}
+
+function pointsColor(amount?: number | null): string {
+  let hue: Hue = (amount ?? 0) > 0 ? 'green' : 'red';
+  return stateColor(hue).fg;
+}
 
 /**
  * A membership in a loyalty program — the account that accumulates standing,
@@ -275,8 +255,13 @@ export class LoyaltyAccount extends CardDef {
         this,
         () => {
           let ref = identifyCard(PointsTransaction);
-          return ref && this.args.model?.id
-            ? { filter: { type: ref } }
+          let id = this.args.model?.id;
+          return ref && id
+            ? {
+                filter: { on: ref, eq: { 'account.id': id } },
+                sort: [{ on: ref, by: 'occurredAt', direction: 'desc' }],
+                page: { size: 10 },
+              }
             : undefined;
         },
         () => {
@@ -288,38 +273,23 @@ export class LoyaltyAccount extends CardDef {
     }
 
     get ledger(): PointsTransaction[] {
-      let id = this.args.model?.id;
-      if (!id) {
-        return [];
-      }
-      return ((this.ledgerQuery?.instances ?? []) as PointsTransaction[])
-        .filter((t) => t?.account?.id === id)
-        .sort(
-          (a, b) =>
-            new Date(b.occurredAt ?? 0).getTime() -
-            new Date(a.occurredAt ?? 0).getTime(),
-        )
-        .slice(0, 10);
+      return (this.ledgerQuery?.instances ?? []) as PointsTransaction[];
     }
 
     get ledgerLoading(): boolean {
       return Boolean(this.ledgerQuery?.isLoading);
     }
 
-    /** Prerender has no query surface; the panel only renders live. */
+    /** A context without a query provider yields no resource; hide the panel rather than claim an empty ledger. */
     get hasLedgerQuery(): boolean {
       return Boolean(this.ledgerQuery);
     }
 
-    signedAmount = (transaction: PointsTransaction): string => {
-      let amount = transaction.amount ?? 0;
-      return `${amount > 0 ? '+' : ''}${new Intl.NumberFormat().format(amount)}`;
-    };
+    signedAmount = (transaction: PointsTransaction): string =>
+      signedPoints(transaction.amount);
 
-    amountStyle = (transaction: PointsTransaction) => {
-      let hue: Hue = (transaction.amount ?? 0) > 0 ? 'green' : 'red';
-      return htmlSafeColor(stateColor(hue).fg);
-    };
+    amountStyle = (transaction: PointsTransaction) =>
+      htmlSafeColor(pointsColor(transaction.amount));
 
     whenLabel = (transaction: PointsTransaction): string => {
       let at = transaction.occurredAt;
@@ -602,8 +572,7 @@ export class PointsTransaction extends CardDef {
 
   static atom = class Atom extends Component<typeof PointsTransaction> {
     get signed() {
-      let amount = this.args.model.amount ?? 0;
-      return `${amount > 0 ? '+' : ''}${new Intl.NumberFormat().format(amount)}`;
+      return signedPoints(this.args.model.amount);
     }
     <template>
       <span class='ptx-atom'>{{this.signed}} pts</span>
@@ -618,15 +587,11 @@ export class PointsTransaction extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof PointsTransaction> {
-    get isCredit() {
-      return (this.args.model.amount ?? 0) > 0;
-    }
     get signed() {
-      let amount = this.args.model.amount ?? 0;
-      return `${amount > 0 ? '+' : ''}${new Intl.NumberFormat().format(amount)}`;
+      return signedPoints(this.args.model.amount);
     }
     get amountColor() {
-      return stateColor(this.isCredit ? 'green' : 'red').fg;
+      return pointsColor(this.args.model.amount);
     }
     <template>
       <div class='ptx'>
@@ -692,6 +657,232 @@ export class PointsTransaction extends CardDef {
           color: var(--muted-foreground, #6b7280);
           white-space: nowrap;
           flex-shrink: 0;
+        }
+      </style>
+    </template>
+  };
+
+  static fitted = class Fitted extends Component<typeof PointsTransaction> {
+    get signed() {
+      return signedPoints(this.args.model.amount);
+    }
+    get amountColor() {
+      return pointsColor(this.args.model.amount);
+    }
+    <template>
+      <div class='ptx-fitted'>
+        <div class='ptx-head'>
+          <span
+            class='ptx-amount'
+            style={{htmlSafeColor this.amountColor}}
+          >{{this.signed}}</span>
+          <span class='ptx-unit'>pts</span>
+        </div>
+        <span class='ptx-reason'>{{if
+            @model.reason
+            @model.reason
+            'Points adjustment'
+          }}</span>
+        <div class='ptx-meta'>
+          {{#if @model.source}}
+            <span class='ptx-source'>{{@model.source}}</span>
+          {{/if}}
+          {{#if @model.occurredAt}}
+            <span class='ptx-when'><@fields.occurredAt /></span>
+          {{/if}}
+        </div>
+      </div>
+      <style scoped>
+        .ptx-fitted {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 0.25rem;
+          padding: 0.5rem 0.75rem;
+          overflow: hidden;
+        }
+        .ptx-head {
+          display: flex;
+          align-items: baseline;
+          gap: 0.25rem;
+        }
+        .ptx-amount {
+          font-size: 1.25rem;
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+          line-height: 1;
+        }
+        .ptx-unit {
+          font-size: 0.6875rem;
+          color: var(--muted-foreground, #6b7280);
+        }
+        .ptx-reason {
+          font-size: 0.8125rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .ptx-meta {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground, #6b7280);
+        }
+        .ptx-source {
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          padding: 0.125rem 0.5rem;
+          border-radius: 999px;
+          background: var(--muted, #f3f4f6);
+          white-space: nowrap;
+        }
+        .ptx-when {
+          white-space: nowrap;
+        }
+        @container fitted-card (max-height: 50px) {
+          .ptx-fitted {
+            flex-direction: row;
+            align-items: center;
+            gap: 0.5rem;
+          }
+          .ptx-amount {
+            font-size: 0.9375rem;
+          }
+          .ptx-meta {
+            display: none;
+          }
+        }
+        @container fitted-card (max-width: 150px) {
+          .ptx-meta {
+            display: none;
+          }
+        }
+      </style>
+    </template>
+  };
+
+  static isolated = class Isolated extends Component<typeof PointsTransaction> {
+    get signed() {
+      return signedPoints(this.args.model.amount);
+    }
+    get amountColor() {
+      return pointsColor(this.args.model.amount);
+    }
+    <template>
+      <article class='ptx-page'>
+        <header class='ptx-hero'>
+          <span
+            class='ptx-amount'
+            style={{htmlSafeColor this.amountColor}}
+          >{{this.signed}}</span>
+          <span class='ptx-unit'>points</span>
+          <h1 class='ptx-title'>{{if
+              @model.reason
+              @model.reason
+              'Points adjustment'
+            }}</h1>
+          {{#if @model.source}}
+            <span class='ptx-source'>{{@model.source}}</span>
+          {{/if}}
+        </header>
+        <section class='panel'>
+          <h2>When</h2>
+          <dl class='facts'>
+            <div>
+              <dt>Occurred</dt>
+              <dd>{{#if @model.occurredAt}}<@fields.occurredAt
+                  />{{else}}—{{/if}}</dd>
+            </div>
+            <div>
+              <dt>Expires</dt>
+              <dd>{{#if @model.expiresAt}}<@fields.expiresAt
+                  />{{else}}Never{{/if}}</dd>
+            </div>
+          </dl>
+        </section>
+        {{#if @model.account}}
+          <section class='panel'>
+            <h2>Account</h2>
+            <div class='linked'><@fields.account @format='embedded' /></div>
+          </section>
+        {{/if}}
+      </article>
+      <style scoped>
+        .ptx-page {
+          display: grid;
+          gap: 1rem;
+          padding: 1.5rem;
+          max-width: 40rem;
+        }
+        .ptx-hero {
+          display: grid;
+          grid-template-columns: auto auto;
+          align-items: baseline;
+          column-gap: 0.375rem;
+          row-gap: 0.5rem;
+        }
+        .ptx-amount {
+          font-size: 2.5rem;
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+          line-height: 1;
+        }
+        .ptx-unit {
+          font-size: 0.875rem;
+          color: var(--muted-foreground, #6b7280);
+        }
+        .ptx-title {
+          grid-column: 1 / -1;
+          margin: 0;
+          font-size: 1.125rem;
+          font-weight: 600;
+        }
+        .ptx-source {
+          grid-column: 1 / -1;
+          justify-self: start;
+          font-size: 0.625rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          padding: 0.125rem 0.5rem;
+          border-radius: 999px;
+          background: var(--muted, #f3f4f6);
+          color: var(--muted-foreground, #6b7280);
+        }
+        .panel {
+          border: 1px solid var(--border, #e5e7eb);
+          border-radius: var(--boxel-border-radius, 0.5rem);
+          padding: 1rem;
+        }
+        .panel h2 {
+          margin: 0 0 0.5rem;
+          font-size: 0.6875rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--muted-foreground, #6b7280);
+        }
+        .facts {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+          gap: 0.75rem;
+          margin: 0;
+        }
+        .facts dt {
+          font-size: 0.75rem;
+          color: var(--muted-foreground, #6b7280);
+        }
+        .facts dd {
+          margin: 0;
+          font-size: 0.875rem;
+        }
+        .linked {
+          border: 1px solid var(--border, #e5e7eb);
+          border-radius: var(--boxel-border-radius, 0.5rem);
+          overflow: hidden;
         }
       </style>
     </template>
