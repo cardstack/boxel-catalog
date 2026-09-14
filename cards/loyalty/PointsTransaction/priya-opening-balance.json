@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "amount": 4400,
+      "reason": "Balance carried over from the previous programme",
+      "source": "Migration",
+      "occurredAt": "2026-01-05T09:00:00.000Z",
+      "expiresAt": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "account": {
+        "links": {
+          "self": "../LoyaltyAccount/priya-shah"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../loyalty-account",
+        "name": "PointsTransaction"
+      }
+    }
+  }
+}

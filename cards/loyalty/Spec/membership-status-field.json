@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Membership Status Field",
+      "specType": "field",
+      "ref": {
+        "module": "../membership-status-field",
+        "name": "MembershipStatusField"
+      },
+      "readMe": "# Membership Status\n\n## Summary\nWhere a loyalty membership stands: Active / Lapsed / Closed. Catalog field at\n`cards/loyalty/membership-status-field.gts`, built on the catalog's\n`statusField`, so it renders as constrained dropdowns and state pills and\nexposes the transition graph to consumers.\n\n## API\n- `Active` (green) — in good standing\n- `Lapsed` (amber, holds) — renewal missed; recoverable, points frozen by program rules\n- `Closed` (slate, terminal, holds) — deliberately ended; reopens only by re-enrolment\n- Transitions: Active → Lapsed | Closed; Lapsed → Active | Closed; Closed → Active\n\n## Usage\n```ts\nimport { MembershipStatusField } from '@cardstack/catalog/cards/loyalty/membership-status-field';\nimport { canTransition } from '@cardstack/catalog/fields/status/status';\n\n@field status = contains(MembershipStatusField);\ncanTransition(MembershipStatusField, account.status, 'Closed');\n```\nLoyalty Account carries it as `status`; the Credit Points command refuses to\nmove points on a Closed account.\n\n## Non-goals\nTier is not status — a Lapsed Gold member is still Gold. Renewal dates and\ngrace periods are the program's schedule, one level up.",
+      "cardDescription": "Where a loyalty membership stands — Active, Lapsed (recoverable) or Closed — with the legal moves between them.",
+      "cardInfo": {
+        "name": "Membership Status",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../LoyaltyAccount/dev-okafor"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

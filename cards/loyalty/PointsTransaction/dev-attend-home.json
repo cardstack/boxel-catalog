@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "amount": 75,
+      "reason": "Attended v Harrow Vale (home)",
+      "source": "Attendance",
+      "occurredAt": "2026-08-02T15:40:00.000Z",
+      "expiresAt": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "account": {
+        "links": {
+          "self": "../LoyaltyAccount/dev-okafor"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../loyalty-account",
+        "name": "PointsTransaction"
+      }
+    }
+  }
+}
