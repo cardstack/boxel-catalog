@@ -134,7 +134,11 @@ export default class RatingField extends NumberField {
           >★</span>
           <span class='atom-value'>{{this.numericValue}}</span>
         {{else}}
-          <span class='atom-value unset' aria-label='Not rated'>—</span>
+          <span
+            class='atom-value unset'
+            role='img'
+            aria-label='Not rated'
+          >—</span>
         {{/if}}
       </span>
 
@@ -156,6 +160,9 @@ export default class RatingField extends NumberField {
           font-size: 0.6875rem;
           font-weight: 600;
           color: var(--foreground);
+        }
+        .atom-value.unset {
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -188,17 +195,21 @@ export default class RatingField extends NumberField {
 
     <template>
       <div class='rating-field-edit' data-test-rating-embedded>
-        {{#each this.stars as |star|}}
-          <span
-            class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
-          >{{if (lte star this.numericValue) '★' '☆'}}</span>
-        {{/each}}
         {{#if this.hasValue}}
+          {{#each this.stars as |star|}}
+            <span
+              class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
+            >{{if (lte star this.numericValue) '★' '☆'}}</span>
+          {{/each}}
           <span
             class='rating-value'
           >{{this.numericValue}}/{{this.maxStars}}</span>
         {{else}}
-          <span class='rating-value' aria-label='Not rated'>—</span>
+          <span
+            class='rating-value unset'
+            role='img'
+            aria-label='Not rated'
+          >—</span>
         {{/if}}
       </div>
 
@@ -225,6 +236,10 @@ export default class RatingField extends NumberField {
         .rating-value {
           margin-left: calc(var(--spacing) * 2);
           font-weight: 600;
+          color: var(--muted-foreground);
+        }
+        .rating-value.unset {
+          margin-left: 0;
           color: var(--muted-foreground);
         }
       </style>
