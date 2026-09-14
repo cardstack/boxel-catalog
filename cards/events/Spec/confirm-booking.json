@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "cardTitle": "Confirm Booking command",
+      "cardTitle": "Confirm Booking",
       "specType": "command",
       "ref": {
         "module": "../confirm-booking",
