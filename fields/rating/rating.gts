@@ -128,8 +128,18 @@ export default class RatingField extends NumberField {
 
     <template>
       <span class='rating-field-atom' data-test-rating-atom>
-        <span class='atom-star {{if this.isHighlighted "highlighted"}}'>★</span>
-        <span class='atom-value'>{{this.numericValue}}</span>
+        {{#if this.hasValue}}
+          <span
+            class='atom-star {{if this.isHighlighted "highlighted"}}'
+          >★</span>
+          <span class='atom-value'>{{this.numericValue}}</span>
+        {{else}}
+          <span
+            class='atom-value unset'
+            role='img'
+            aria-label='Not rated'
+          >—</span>
+        {{/if}}
       </span>
 
       <style scoped>
@@ -151,6 +161,9 @@ export default class RatingField extends NumberField {
           font-weight: 600;
           color: var(--foreground);
         }
+        .atom-value.unset {
+          color: var(--muted-foreground);
+        }
       </style>
     </template>
   };
@@ -162,6 +175,10 @@ export default class RatingField extends NumberField {
 
     get options() {
       return this.config.options ?? {};
+    }
+
+    get hasValue() {
+      return hasValue(this.args.model);
     }
 
     get numericValue() {
@@ -178,14 +195,22 @@ export default class RatingField extends NumberField {
 
     <template>
       <div class='rating-field-edit' data-test-rating-embedded>
-        {{#each this.stars as |star|}}
+        {{#if this.hasValue}}
+          {{#each this.stars as |star|}}
+            <span
+              class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
+            >{{if (lte star this.numericValue) '★' '☆'}}</span>
+          {{/each}}
           <span
-            class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
-          >{{if (lte star this.numericValue) '★' '☆'}}</span>
-        {{/each}}
-        <span
-          class='rating-value'
-        >{{this.numericValue}}/{{this.maxStars}}</span>
+            class='rating-value'
+          >{{this.numericValue}}/{{this.maxStars}}</span>
+        {{else}}
+          <span
+            class='rating-value unset'
+            role='img'
+            aria-label='Not rated'
+          >—</span>
+        {{/if}}
       </div>
 
       <style scoped>
@@ -211,6 +236,10 @@ export default class RatingField extends NumberField {
         .rating-value {
           margin-left: calc(var(--spacing) * 2);
           font-weight: 600;
+          color: var(--muted-foreground);
+        }
+        .rating-value.unset {
+          margin-left: 0;
           color: var(--muted-foreground);
         }
       </style>
