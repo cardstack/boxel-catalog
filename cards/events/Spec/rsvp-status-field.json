@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "cardTitle": "RSVP Status field",
+      "cardTitle": "RSVP Status Field",
       "specType": "field",
       "ref": {
         "module": "../rsvp-status-field",
