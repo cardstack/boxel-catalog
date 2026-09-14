@@ -1,5 +1,4 @@
 import {
-  CardDef,
   Component,
   contains,
   field,
@@ -7,7 +6,6 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import { on } from '@ember/modifier';
 import StringField from 'https://cardstack.com/base/string';
-import EmailField from 'https://cardstack.com/base/email';
 import PhoneNumberField from 'https://cardstack.com/base/phone-number';
 import enumField from 'https://cardstack.com/base/enum';
 import ContactIcon from '@cardstack/boxel-icons/address-book';
@@ -15,19 +13,24 @@ import PhoneIcon from '@cardstack/boxel-icons/phone';
 import MailIcon from '@cardstack/boxel-icons/mail';
 import { Avatar } from '@cardstack/boxel-ui/components';
 import { Account } from './account';
+import { PersonBase } from '../people/person-base';
 
 const ContactRoleField = enumField(StringField, {
   options: ['decision maker', 'champion', 'influencer', 'user', 'billing'],
   displayName: 'Contact Role',
 });
 
-export class Contact extends CardDef {
+// A Contact is a Person: `email`, `photo`, `initials` and the base embedded
+// row come from PersonBase. CRM keeps the split `firstName`/`lastName` it has
+// always stored and satisfies the base's single `name` by computing it, so
+// anything written against PersonBase (initials, avatars, the hire-copy in
+// HR's Approve Offer) works on a Contact unchanged.
+export class Contact extends PersonBase {
   static displayName = 'Contact';
   static icon = ContactIcon;
 
   @field firstName = contains(StringField);
   @field lastName = contains(StringField);
-  @field email = contains(EmailField);
   @field phone = contains(PhoneNumberField);
   @field jobTitle = contains(StringField);
   @field role = contains(ContactRoleField);
