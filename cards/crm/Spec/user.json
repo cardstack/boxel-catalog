@@ -14,7 +14,9 @@
         "notes": null,
         "cardThumbnailURL": null
       },
-      "containedExamples": []
+      "containedExamples": [],
+      "cardTitle": "User",
+      "cardDescription": "The minimal assignment identity: a name and email that renders as an initials avatar in every format."
     },
     "relationships": {
       "linkedExamples.0": {

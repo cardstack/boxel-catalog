@@ -14,7 +14,9 @@
         "notes": null,
         "cardThumbnailURL": null
       },
-      "containedExamples": []
+      "containedExamples": [],
+      "cardTitle": "Contact",
+      "cardDescription": "An individual person at an Account, with role, email and phone: the human you actually talk to."
     },
     "relationships": {
       "linkedExamples.0": {

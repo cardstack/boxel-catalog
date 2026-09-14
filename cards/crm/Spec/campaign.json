@@ -14,7 +14,9 @@
         "notes": null,
         "cardThumbnailURL": null
       },
-      "containedExamples": []
+      "containedExamples": [],
+      "cardTitle": "Campaign",
+      "cardDescription": "A marketing activity that produces leads: type, status, dates, budget and spend."
     },
     "relationships": {
       "linkedExamples.0": {
