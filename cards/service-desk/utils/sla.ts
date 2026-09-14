@@ -421,7 +421,7 @@ export function urgencyRank(snapshot: TimerSnapshot): number {
   }
 }
 
-/** The one place the six states map to a hue name from `utils/index`. */
+/** The one place the six states map to a hue name from `components/state-pill`. */
 export const TIMER_HUE: Record<TimerState, string> = {
   met: 'green',
   healthy: 'green',

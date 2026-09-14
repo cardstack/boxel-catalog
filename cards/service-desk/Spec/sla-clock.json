@@ -7,7 +7,7 @@
         "name": "slaClock"
       },
       "specType": null,
-      "readMe": "# SLA Clock\n\n## Summary\nOne ref-counted interval for the whole page. Badges and lens predicates subscribe to the same ticking instant, so a queue of fifty rows costs one timer and the rail's count never disagrees with a row's badge.\n\n## API\n`slaClock.now` (tracked), `slaClock.subscribe()` returns an unsubscribe; the interval exists only while something is subscribed.\n\n## Usage\n```ts\nimport { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';\n\nthis.unsubscribe = slaClock.subscribe();\nget now() { return slaClock.now; }\n```\n\n## Non-goals\nNot a scheduler; it only reports the current instant once a second.",
+      "readMe": "# SLA Clock\n\n## Summary\nOne ref-counted interval for the whole page. Badges and lens predicates subscribe to the same ticking instant, so a queue of fifty rows costs one timer and the rail's count never disagrees with a row's badge.\n\n## API\n`slaClock.now` (tracked); `slaClock.subscribe()` / `slaClock.unsubscribe()` are a ref-counted pair — the interval exists only while at least one subscriber is registered.\n\n## Usage\n```ts\nimport { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';\n\nconstructor(owner: unknown, args: Args) {\n  super(owner, args);\n  slaClock.subscribe();\n  registerDestructor(this, () => slaClock.unsubscribe());\n}\nget now() { return slaClock.now; }\n```\n\n## Non-goals\nNot a scheduler; it only reports the current instant once a second.",
       "cardTitle": "SLA Clock",
       "cardDescription": "A single ref-counted one-second clock every SLA badge and predicate reads, so a page pays for one interval.",
       "cardInfo": {
