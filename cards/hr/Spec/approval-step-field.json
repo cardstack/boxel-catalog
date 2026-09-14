@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../approval-step-field",
+        "name": "ApprovalStepField"
+      },
+      "specType": "field",
+      "readMe": "# Approval Step\n\n## Summary\nOne step of an approval chain: the `approver` (linksTo Employee), a `decision` (pending / approved / rejected — `ApprovalDecisionField`, exported with its colour map), `decidedAt`, `comment`, an optional `delegatedTo`, `openedAt`, `holdReason` and `conditions`.\n\n## API\nExports `ApprovalStepField`, `ApprovalDecisionField`, `APPROVAL_DECISIONS`, `APPROVAL_DECISION_LABELS`, `APPROVAL_DECISION_COLORS`. Amber for the undecided middle state, green for a forward decision, red for a stop.\n\n## Usage\n```ts\nimport { ApprovalStepField } from '@cardstack/catalog/cards/hr/approval-step-field';\n\n@field steps = containsMany(ApprovalStepField);\n```\nApproval Chain Field holds the ordered steps; the Approve Chain Step command writes the decision.\n\n## Non-goals\nNo routing logic of its own — who approves next is the chain's decision.",
+      "cardTitle": "Approval Step Field",
+      "cardDescription": "One approver's step in an approval chain: decision, timing, delegation and conditions, with the shared decision colour map.",
+      "cardInfo": {
+        "name": "Approval Step Field",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Offer/df5b8208-9ecc-4132-b595-700dd0a73d77"
+        }
+      }
+    }
+  }
+}

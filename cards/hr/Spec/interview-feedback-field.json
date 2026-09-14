@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../interview-feedback-field",
+        "name": "InterviewFeedbackField"
+      },
+      "specType": "field",
+      "readMe": "# Interview Feedback\n\n## Summary\nOne interviewer's written feedback: `interviewer` (linksTo Employee), `interviewDate`, a 1–5 `rating` and free-text `notes`. Lighter than a Scorecard — for loops that collect a single impression per interviewer rather than scored criteria.\n\n## Usage\n```ts\nimport { InterviewFeedbackField } from '@cardstack/catalog/cards/hr/interview-feedback-field';\n\n@field feedback = containsMany(InterviewFeedbackField);\n```\n\n## Non-goals\nNo aggregate: averaging feedback into a decision is the consumer's call.",
+      "cardTitle": "Interview Feedback Field",
+      "cardDescription": "One interviewer's feedback on a candidate: who, when, a 1–5 rating and notes.",
+      "cardInfo": {
+        "name": "Interview Feedback Field",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Candidate/interviewing-amara"
+        }
+      }
+    }
+  }
+}
