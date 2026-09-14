@@ -45,6 +45,16 @@ export function stateColor(hue: Hue): StateColor {
   };
 }
 
+export const DEFAULT_STATE_COLOR: StateColor = stateColor('slate');
+
+/** Look a value up in a card's own state→colour map; unknown or empty values get the neutral slate. */
+export function stateColorOf(
+  map: Record<string, StateColor>,
+  key?: string | null,
+): StateColor {
+  return (key && map[key]) || DEFAULT_STATE_COLOR;
+}
+
 interface Signature {
   Args: {
     label?: string | null;
