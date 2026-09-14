@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- ember-eslint-parser loses template-scope references in this module, so every identifier used only inside a <template> reports as unused; ember-tsc's noUnusedLocals is the check that holds here. */
 import {
   CardDef,
   Component,
