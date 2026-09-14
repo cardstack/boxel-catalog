@@ -128,8 +128,14 @@ export default class RatingField extends NumberField {
 
     <template>
       <span class='rating-field-atom' data-test-rating-atom>
-        <span class='atom-star {{if this.isHighlighted "highlighted"}}'>★</span>
-        <span class='atom-value'>{{this.numericValue}}</span>
+        {{#if this.hasValue}}
+          <span
+            class='atom-star {{if this.isHighlighted "highlighted"}}'
+          >★</span>
+          <span class='atom-value'>{{this.numericValue}}</span>
+        {{else}}
+          <span class='atom-value unset' aria-label='Not rated'>—</span>
+        {{/if}}
       </span>
 
       <style scoped>
@@ -164,6 +170,10 @@ export default class RatingField extends NumberField {
       return this.config.options ?? {};
     }
 
+    get hasValue() {
+      return hasValue(this.args.model);
+    }
+
     get numericValue() {
       return getNumericValue(this.args.model);
     }
@@ -183,9 +193,13 @@ export default class RatingField extends NumberField {
             class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
           >{{if (lte star this.numericValue) '★' '☆'}}</span>
         {{/each}}
-        <span
-          class='rating-value'
-        >{{this.numericValue}}/{{this.maxStars}}</span>
+        {{#if this.hasValue}}
+          <span
+            class='rating-value'
+          >{{this.numericValue}}/{{this.maxStars}}</span>
+        {{else}}
+          <span class='rating-value' aria-label='Not rated'>—</span>
+        {{/if}}
       </div>
 
       <style scoped>
