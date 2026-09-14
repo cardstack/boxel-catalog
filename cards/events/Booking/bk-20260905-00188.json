@@ -2,28 +2,33 @@
   "data": {
     "type": "card",
     "attributes": {
-      "reference": null,
-      "quantity": null,
-      "rsvp": null,
-      "paymentStatus": null,
+      "reference": "BK-20260905-00188",
+      "quantity": 2,
+      "rsvp": "Declined",
+      "paymentStatus": "Refunded",
       "totalPrice": {
-        "amount": null,
+        "amount": 90,
         "currency": {
-          "code": null
+          "code": "GBP"
         }
       },
       "checkedInAt": null,
       "cardInfo": {
         "name": null,
         "summary": null,
-        "cardThumbnailURL": null,
-        "notes": null
+        "notes": null,
+        "cardThumbnailURL": null
       }
     },
     "relationships": {
       "event": {
         "links": {
-          "self": "../Event/latin-cardio-launch"
+          "self": "../Event/end-of-season-awards-night"
+        }
+      },
+      "holder": {
+        "links": {
+          "self": "../../crm/Contact/dev-okafor"
         }
       }
     },

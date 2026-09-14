@@ -2,17 +2,17 @@
   "data": {
     "type": "card",
     "attributes": {
-      "reference": "BK-20260802-00144",
-      "quantity": 1,
-      "rsvp": "Going",
-      "paymentStatus": "Paid",
+      "reference": "BK-20261103-00611",
+      "quantity": 2,
+      "rsvp": "Waitlisted",
+      "paymentStatus": "Unpaid",
       "totalPrice": {
-        "amount": 35,
+        "amount": 90,
         "currency": {
           "code": "GBP"
         }
       },
-      "checkedInAt": "2026-08-27T10:27:00.000Z",
+      "checkedInAt": null,
       "cardInfo": {
         "name": null,
         "summary": null,
@@ -23,12 +23,12 @@
     "relationships": {
       "event": {
         "links": {
-          "self": "../Event/latin-cardio-launch"
+          "self": "../Event/end-of-season-awards-night"
         }
       },
       "holder": {
         "links": {
-          "self": "../../crm/Contact/dev-okafor"
+          "self": "../../crm/Contact/farah-zulkifli"
         }
       }
     },
@@ -36,8 +36,7 @@
       "adoptsFrom": {
         "module": "../booking",
         "name": "Booking"
-      },
-      "_touched": 1787195032634
+      }
     }
   }
 }

@@ -12,7 +12,7 @@
           "code": "GBP"
         }
       },
-      "checkedInAt": "2026-08-14T06:40:24.114Z",
+      "checkedInAt": "2026-08-27T10:21:00.000Z",
       "cardInfo": {
         "name": null,
         "summary": null,
@@ -23,7 +23,7 @@
     "relationships": {
       "event": {
         "links": {
-          "self": "../Event/northbridge-v-riverton"
+          "self": "../Event/latin-cardio-launch"
         }
       },
       "holder": {

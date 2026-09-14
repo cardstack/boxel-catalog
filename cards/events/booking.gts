@@ -54,19 +54,6 @@ export const BookingPaymentStatusField = statusField({
   },
 });
 
-/**
- * A claim on places at an Event — who is coming, how many places, where the
- * money stands, and whether they actually showed up. Four facts, four
- * fields, deliberately not collapsed: `rsvp` is intent, `paymentStatus` is
- * money, `checkedInAt` is what happened, `quantity` is how much of the
- * capacity this claim consumes.
- *
- * `checkedInAt` is an event fact written once by the Check In Booking
- * command (which is also what makes a ticket one-time-use); anything
- * derived — attendance rates, no-show lists — is computed from it, never
- * stored. Seat-level assignment (section, row, seat) is a seating-plan
- * concern for the consumer's extending card.
- */
 class BookingIsolated extends Component<typeof Booking> {
   @tracked runningAction: 'confirm' | 'check-in' | undefined;
   @tracked actionProblem: string | undefined;
@@ -90,11 +77,12 @@ class BookingIsolated extends Component<typeof Booking> {
   get canConfirm(): boolean {
     let m = this.args.model;
     return (
-      this.canAct &&
-      !m.checkedInAt &&
-      m.rsvp !== 'Going' &&
-      m.rsvp !== 'Declined'
+      this.canAct && !m.checkedInAt && m.rsvp !== 'Going'
     );
+  }
+
+  get hasActions(): boolean {
+    return this.canConfirm || this.canCheckIn;
   }
 
   get canCheckIn(): boolean {
@@ -176,7 +164,7 @@ class BookingIsolated extends Component<typeof Booking> {
           <p class='fact'>Checked in <@fields.checkedInAt /></p>
         {{else}}
           <p class='fact fact-empty'>Not checked in</p>
-          {{#if this.canCheckIn}}
+          {{#if this.hasActions}}
             <div class='actions'>
               {{#if this.canConfirm}}
                 <Button
@@ -186,12 +174,14 @@ class BookingIsolated extends Component<typeof Booking> {
                   {{on 'click' this.confirm}}
                 >Confirm</Button>
               {{/if}}
-              <Button
-                @kind='primary'
-                @size='small'
-                @loading={{eq this.runningAction 'check-in'}}
-                {{on 'click' this.checkIn}}
-              >Check in</Button>
+              {{#if this.canCheckIn}}
+                <Button
+                  @kind='primary'
+                  @size='small'
+                  @loading={{eq this.runningAction 'check-in'}}
+                  {{on 'click' this.checkIn}}
+                >Check in</Button>
+              {{/if}}
             </div>
           {{/if}}
           {{#if this.actionProblem}}
@@ -308,6 +298,19 @@ class BookingIsolated extends Component<typeof Booking> {
   </template>
 }
 
+/**
+ * A claim on places at an Event — who is coming, how many places, where the
+ * money stands, and whether they actually showed up. Four facts, four
+ * fields, deliberately not collapsed: `rsvp` is intent, `paymentStatus` is
+ * money, `checkedInAt` is what happened, `quantity` is how much of the
+ * capacity this claim consumes.
+ *
+ * `checkedInAt` is an event fact written once by the Check In Booking
+ * command (which is also what makes a ticket one-time-use); anything
+ * derived — attendance rates, no-show lists — is computed from it, never
+ * stored. Seat-level assignment (section, row, seat) is a seating-plan
+ * concern for the consumer's extending card.
+ */
 export class Booking extends CardDef {
   static displayName = 'Booking';
   static icon = TicketIcon;

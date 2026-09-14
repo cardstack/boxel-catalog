@@ -23,7 +23,7 @@
     "relationships": {
       "event": {
         "links": {
-          "self": "../Event/northbridge-v-riverton"
+          "self": "../Event/end-of-season-awards-night"
         }
       },
       "holder": {

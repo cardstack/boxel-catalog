@@ -23,7 +23,7 @@
     "relationships": {
       "event": {
         "links": {
-          "self": "../Event/latin-cardio-launch"
+          "self": "../Event/end-of-season-awards-night"
         }
       },
       "holder": {

@@ -2,14 +2,14 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "Northbridge Training Ground",
-      "kind": "Training Ground",
+      "name": "Northgate Fulfilment Centre",
+      "kind": "Warehouse",
       "address": {
-        "addressLine1": "Millbrook Lane",
+        "addressLine1": "Unit 4, Northgate Industrial Estate",
         "addressLine2": null,
         "city": "Northbridge",
         "state": "West Yorkshire",
-        "postalCode": "LS9 4QT",
+        "postalCode": "LS10 1AB",
         "country": {
           "name": "United Kingdom",
           "code": "GB"
@@ -17,12 +17,12 @@
         "poBoxNumber": null
       },
       "geo": {
-        "lat": 53.8121,
-        "lon": -1.4933
+        "lat": 53.7712,
+        "lon": -1.5218
       },
-      "phone": "+441132456789",
+      "phone": "+441132000456",
       "website": null,
-      "description": "First-team and academy training complex — three grass pitches, one all-weather dome, and the club gym. Open days on the first Sunday of each month.",
+      "description": "Regional fulfilment centre and click-and-collect point \u2014 twelve loading bays, ambient and chilled storage, and a customer collection desk open 07:00\u201321:00 seven days a week.",
       "cardInfo": {
         "name": null,
         "summary": null,
