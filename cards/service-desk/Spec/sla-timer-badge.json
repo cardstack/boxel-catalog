@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../components/sla-timer-badge",
+        "name": "SlaTimerBadge"
+      },
+      "specType": "component",
+      "readMe": "# SLA Timer Badge\n\n## Summary\nDraws one SLA timer as a hue-coded chip with an optional proportional bar: remaining time, urgency colour, paused and breached states. Live only where hydrated; prerendered slots pass `@live={{false}}` and show the stored snapshot.\n\n## API\nArgs: `facts?: TimerFacts` (an SLA Timer field model works directly), `caption?`, `live?`, `bar?`. Ticks off the shared `slaClock` so a queue of badges costs one interval.\n\n## Usage\n```ts\nimport { SlaTimerBadge } from '@cardstack/catalog/cards/service-desk/components/sla-timer-badge';\n\n<SlaTimerBadge @facts={{@model.resolutionTimer}} @caption='Resolution' @live={{true}} />\n```\n\n## Non-goals\nNo SLA arithmetic of its own: deadlines come stored on the timer, the countdown comes from `utils/sla`.",
+      "cardTitle": "SLA Timer Badge",
+      "cardDescription": "A hue-coded chip for one SLA timer with remaining time and urgency, ticking off the shared SLA clock.",
+      "cardInfo": {
+        "name": "SLA Timer Badge",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Ticket/1288-invoice-download"
+        }
+      }
+    }
+  }
+}
