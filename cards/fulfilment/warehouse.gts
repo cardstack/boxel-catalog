@@ -1,5 +1,4 @@
 import {
-import { cached } from '@glimmer/tracking';
   CardDef,
   Component,
   StringField,
@@ -8,6 +7,7 @@ import { cached } from '@glimmer/tracking';
   field,
   realmURL,
 } from 'https://cardstack.com/base/card-api';
+import { cached } from '@glimmer/tracking';
 import NumberField from 'https://cardstack.com/base/number';
 import BooleanField from 'https://cardstack.com/base/boolean';
 import AddressField from 'https://cardstack.com/base/address';
@@ -233,8 +233,8 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
           {{else}}
             <p class='wh-map-empty'>
               <MapPin width='18' height='18' role='presentation' />
-              No coordinates on this warehouse yet. Add a latitude and
-              longitude to place it on the map.
+              No coordinates on this warehouse yet. Add a latitude and longitude
+              to place it on the map.
             </p>
           {{/if}}
         </section>
@@ -302,8 +302,8 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
             <p class='hint'>{{this.rows.length}}
               rows in total; the
               {{this.needsAttention.length}}
-              at or below their reorder point are listed. Open the Inventory
-              tab for the rest.</p>
+              at or below their reorder point are listed. Open the Inventory tab
+              for the rest.</p>
             {{! Loading is not empty. Space is reserved so the section does not
             jump when the query lands. }}
           {{else if this.isQueryLoading}}
