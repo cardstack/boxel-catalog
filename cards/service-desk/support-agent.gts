@@ -12,7 +12,7 @@ import enumField from 'https://cardstack.com/base/enum';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
 
-import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
+import { PersonBase } from '../people/person-base';
 
 // The Ticket CodeRef, built from the REALM URL at read time.
 //

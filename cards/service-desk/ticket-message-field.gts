@@ -14,7 +14,7 @@ import { formatDateTime } from '@cardstack/boxel-ui/helpers';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { FeedEntry } from './components/feed';
-import { initialsOf } from '@cardstack/catalog/cards/people/person-base';
+import { initialsOf } from '../people/person-base';
 
 export const AUTHOR_ROLES = ['Customer', 'Agent', 'System'] as const;
 export const VISIBILITIES = ['Public', 'Internal'] as const;
