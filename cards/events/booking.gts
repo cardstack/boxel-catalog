@@ -76,9 +76,7 @@ class BookingIsolated extends Component<typeof Booking> {
 
   get canConfirm(): boolean {
     let m = this.args.model;
-    return (
-      this.canAct && !m.checkedInAt && m.rsvp !== 'Going'
-    );
+    return this.canAct && !m.checkedInAt && m.rsvp !== 'Going';
   }
 
   get hasActions(): boolean {
