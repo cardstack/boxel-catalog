@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Northgate Fulfilment Centre",
+      "kind": "Warehouse",
+      "address": {
+        "addressLine1": "Unit 4, Northgate Industrial Estate",
+        "addressLine2": null,
+        "city": "Northbridge",
+        "state": "West Yorkshire",
+        "postalCode": "LS10 1AB",
+        "country": {
+          "name": "United Kingdom",
+          "code": "GB"
+        },
+        "poBoxNumber": null
+      },
+      "geo": {
+        "lat": 53.7712,
+        "lon": -1.5218
+      },
+      "phone": "+441132000456",
+      "website": null,
+      "description": "Regional fulfilment centre and click-and-collect point \u2014 twelve loading bays, ambient and chilled storage, and a customer collection desk open 07:00\u201321:00 seven days a week.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../location",
+        "name": "Location"
+      }
+    }
+  }
+}
