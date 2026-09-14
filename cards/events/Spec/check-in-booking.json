@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "cardTitle": "Check In Booking command",
+      "cardTitle": "Check In Booking",
       "specType": "command",
       "ref": {
         "module": "../check-in-booking",
