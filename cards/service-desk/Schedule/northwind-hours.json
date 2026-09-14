@@ -1,0 +1,68 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Northwind Plant hours",
+      "timeZone": "Asia/Kuala_Lumpur",
+      "isDefault": true,
+      "windows": [
+        {
+          "day": "Monday",
+          "opensAt": {
+            "value": "08:00"
+          },
+          "closesAt": {
+            "value": "17:30"
+          }
+        },
+        {
+          "day": "Tuesday",
+          "opensAt": {
+            "value": "08:00"
+          },
+          "closesAt": {
+            "value": "17:30"
+          }
+        },
+        {
+          "day": "Wednesday",
+          "opensAt": {
+            "value": "08:00"
+          },
+          "closesAt": {
+            "value": "17:30"
+          }
+        },
+        {
+          "day": "Thursday",
+          "opensAt": {
+            "value": "08:00"
+          },
+          "closesAt": {
+            "value": "17:30"
+          }
+        },
+        {
+          "day": "Friday",
+          "opensAt": {
+            "value": "08:00"
+          },
+          "closesAt": {
+            "value": "17:30"
+          }
+        }
+      ],
+      "holidays": [
+        "2026-09-16",
+        "2026-12-25"
+      ]
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../schedule",
+        "name": "Schedule"
+      }
+    }
+  }
+}

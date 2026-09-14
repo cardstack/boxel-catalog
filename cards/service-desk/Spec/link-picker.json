@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../components/link-picker",
+        "name": "LinkPicker"
+      },
+      "specType": "component",
+      "readMe": "# Link Picker\n\n## Summary\nEdits a linksTo value in place: shows the linked card's title (and an optional detail line), and opens a searchable popover over one card type to change it.\n\n## API\nArgs: `label`, `value?: CardDef`, `emptyLabel`, `detail?`, `cardClass` (a class, so subclasses are included), `context?`, `realms`, `onChange`.\n\n## Usage\n```ts\nimport { LinkPicker } from '@cardstack/catalog/cards/service-desk/components/link-picker';\n\n<LinkPicker @label='Assignee' @value={{@model.assignee}} @emptyLabel='Unassigned' @cardClass={{SupportAgent}} @realms={{this.realms}} @context={{@context}} @onChange={{this.assign}} />\n```\nBuilt on the catalog Popover. Ticket Workspace uses it for assignee, queue, category and policy.\n\n## Non-goals\nNot a field editor for many-to-many links, and not a general search box; it picks one card of one type.",
+      "cardTitle": "Link Picker",
+      "cardDescription": "An in-place picker for a linksTo value: title, detail line and a searchable popover over one card type.",
+      "cardInfo": {
+        "name": "Link Picker",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Ticket/1288-invoice-download"
+        }
+      }
+    }
+  }
+}

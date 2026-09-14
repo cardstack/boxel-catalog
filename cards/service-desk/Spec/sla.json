@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../utils/sla",
+        "name": "timerSnapshot"
+      },
+      "specType": null,
+      "readMe": "# SLA Calculations\n\n## Summary\nPure SLA arithmetic with no card, template or Ember imports. Business-hours maths (`addBusinessMinutes`, `businessMinutesBetween`, timezone-aware via Intl) runs once in a command when a timer starts, pauses or resumes and is stored as `deadlineAt`; countdown maths (`timerSnapshot`, `urgencyRank`, `TIMER_HUE`, `sortByUrgency`) is cheap and runs constantly.\n\n## API\n`ALWAYS_ON`, `zonedParts`, `addBusinessMinutes`, `businessMinutesBetween`, `formatMinutes`, `timerSnapshot`, `urgencyRank`, `TIMER_HUE`, `sortByUrgency`.\n\n## Usage\n```ts\nimport { timerSnapshot, addBusinessMinutes } from '@cardstack/catalog/cards/service-desk/utils/sla';\n\nlet snap = timerSnapshot(timer, Date.now());\nlet deadline = addBusinessMinutes(startedAt, policy.resolutionMinutes, schedule);\n```\n\n## Non-goals\nNo stored state and no clock of its own; callers pass the instant (see SLA Clock).",
+      "cardTitle": "SLA Calculations",
+      "cardDescription": "Pure SLA arithmetic: business-hours deadlines computed once and stored, cheap countdown snapshots computed constantly.",
+      "cardInfo": {
+        "name": "SLA Calculations",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
