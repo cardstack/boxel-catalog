@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "FileEmbeddedShell",
+        "module": "https://cardstack.com/base/file-formats/file-shell-embedded"
+      },
+      "specType": "component",
+      "readMe": "## File Embedded Card (FE)\n\nThe format that **flows inside a document**. Renders complete content by default.\n\n### It picks a shape from the file's domain\n\nThe decision that makes this shell worth reading: it does **not** impose one height on every family. A video, a waveform, a note sequence and a portrait photograph each need different vertical room, and a single fixed frame would letterbox three of them to suit the fourth.\n\nSo the shape comes from what the file *is*, not from the slot it lands in.\n\n### Complete content, by default\n\nUnlike `file-shell-fitted`, the embedded shell is not under a work budget — it may fetch and show the whole thing. An author embedding a file in a document expects to read it, not to see a teaser.\n\nThe loading, failure and staleness states are still `FilePreviewStage`'s job, not this shell's.\n\n### The family this belongs to\n\nFive pieces make up how a file renders in Boxel:\n\n| Piece | Job |\n|---|---|\n| `file-shell-atom` | inline reference — icon, name, extension |\n| `file-shell-embedded` | complete content, flowing inside a document |\n| `file-shell-fitted` | the parent-sized collection cell |\n| `file-shell-isolated` | the full work surface |\n| `file-preview-stage` | the slot all four project into; owns loading, failure, provenance |\n\nA shell never knows how to draw a PDF, a waveform or a 3D scene. It renders the\nstage, and the stage hands the remaining space to the family's own renderer,\ndeclared by a FileDef subclass as `static previewComponent`. A file whose family\nhas no renderer yet gets an honest generic pane rather than a broken one.\n",
+      "cardInfo": {
+        "name": "File Embedded Card",
+        "summary": "Complete content flowing inside a document; height comes from the file's domain, not a fixed frame."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

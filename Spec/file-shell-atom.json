@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "FileAtomShell",
+        "module": "https://cardstack.com/base/file-formats/file-shell-atom"
+      },
+      "specType": "component",
+      "readMe": "## File Atom Card (FA)\n\nA small inline reference to a file: type icon, name, extension.\n\nIt is meant to sit **inside prose** and inside a custom summary line, so it deliberately does two things no other shell does:\n\n- **mounts no domain renderer** — there is no preview, no waveform, no thumbnail\n- **takes no more vertical space than the text around it**\n\nThat is the whole design. An atom that grew a thumbnail would break the line height of every paragraph that mentions a file, and an atom that booted a renderer would make a sentence containing five file references pay for five decoders.\n\nIt is the smallest of the four shells, and that is the point: everything a file reference needs inline, nothing it does not.\n\n### The family this belongs to\n\nFive pieces make up how a file renders in Boxel:\n\n| Piece | Job |\n|---|---|\n| `file-shell-atom` | inline reference — icon, name, extension |\n| `file-shell-embedded` | complete content, flowing inside a document |\n| `file-shell-fitted` | the parent-sized collection cell |\n| `file-shell-isolated` | the full work surface |\n| `file-preview-stage` | the slot all four project into; owns loading, failure, provenance |\n\nA shell never knows how to draw a PDF, a waveform or a 3D scene. It renders the\nstage, and the stage hands the remaining space to the family's own renderer,\ndeclared by a FileDef subclass as `static previewComponent`. A file whose family\nhas no renderer yet gets an honest generic pane rather than a broken one.\n",
+      "cardInfo": {
+        "name": "File Atom Card",
+        "summary": "Inline file reference — icon, name, extension. No renderer, no extra line height."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ImagePreview",
+        "module": "https://cardstack.com/base/file-formats/image-preview"
+      },
+      "specType": "component",
+      "readMe": "## Image File Preview — pixels (IP)\n\nOne of the two components behind the **Media File Preview** row, and the simplest renderer in the family.\n\n**The browser is the decoder.** This is one native `<img>` via the `FileImage` primitive. The component's entire job is *choosing how the pixels meet the frame it is handed* — nothing else.\n\nIt is also a **content-only** component exported from the `file-formats/index` barrel, so an embedding author can render just the pixels with no shell chrome. That author then owns the loading and failure states, because `FilePreviewStage` is not in the tree.\n\nIt is deliberately the thinnest renderer here: anything more would be re-implementing what the browser already does well.\n\n\nProjected into the four format shells by `FilePreviewStage`, which owns the loading, failure and staleness panes.\n",
+      "cardInfo": {
+        "name": "Image File Preview",
+        "summary": "One native <img> via FileImage; the only decision is how the pixels meet the frame."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
