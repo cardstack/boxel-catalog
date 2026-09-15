@@ -7,7 +7,7 @@
 // quadratic falloff from each hue's peak gives the solid its honest,
 // lopsided canopy — it refuses to be a sphere.
 // =============================================================================
-import { htmlSafe } from '@ember/template';
+import { clamp } from '@cardstack/base/number/util/index';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    MUNSELL DATA — measured, lumpy, human
@@ -113,7 +113,7 @@ export function chipColor(
 }
 
 export function toHex2(x: number): string {
-  let v = Math.max(0, Math.min(255, Math.round(x * 255)));
+  let v = clamp(Math.round(x * 255), 0, 255);
   return v.toString(16).padStart(2, '0');
 }
 
@@ -124,10 +124,6 @@ export function chipHex(h: number, v: number, c: number): string {
 
 export function rgbHex(r: number, g: number, b: number): string {
   return `#${toHex2(r)}${toHex2(g)}${toHex2(b)}`;
-}
-
-export function swatchStyle(color: string | undefined | null) {
-  return htmlSafe(`background-color: ${color || '#39505e'}`);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

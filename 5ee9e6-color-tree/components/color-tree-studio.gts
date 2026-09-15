@@ -12,14 +12,14 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { guidFor } from '@ember/object/internals';
 import { modifier } from 'ember-modifier';
-import { htmlSafe } from '@ember/template';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { Button } from '@cardstack/boxel-ui/components';
+import { cn, cssVar, eq } from '@cardstack/boxel-ui/helpers';
+import { Button, IconButton, Swatch } from '@cardstack/boxel-ui/components';
 import EyeIcon from '@cardstack/boxel-icons/eye';
 import EyeOffIcon from '@cardstack/boxel-icons/eye-off';
 import { debounce } from 'lodash';
-import { HUE_TIERS, hueLabel, swatchStyle } from '../utils/munsell';
+import { HUE_TIERS, hueLabel } from '../utils/munsell';
 import { TreeEngine } from '../utils/tree-engine';
 
 export interface ColorTreeStudioSignature {
@@ -29,8 +29,6 @@ export interface ColorTreeStudioSignature {
     munsell?: string | null;
     /* called (debounced) when the user picks a chip off the open atlas */
     onPick?: (hex: string, notation: string) => void;
-    /* suppresses the studio's own night-sky palette when a theme is linked */
-    hasLinkedTheme?: boolean;
     /* bounded height + panel closed by default, for field edit format */
     compact?: boolean;
   };
@@ -41,6 +39,10 @@ export interface ColorTreeStudioSignature {
    STUDIO — the room the specimen is held in
    ═══════════════════════════════════════════════════════════════════════════ */
 export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
+  /* the studio is a field edit format, so several can share one page —
+     ids must be instance-scoped or the labels cross-wire */
+  uid = `ct-${guidFor(this)}`;
+
   @tracked densityIdx = 1;
   @tracked sliceMode = 0; // 0 off · 1 hue · 2 value
   @tracked morphed = false; // false = Munsell tree · true = Itten sphere
@@ -486,14 +488,12 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
     this.pickFxTimer = window.setTimeout(() => (this.pickFx = null), 750);
   }
 
+  /* px units are attached here so the template can hand the values straight
+     to the cssVar helper, which emits custom properties verbatim */
   get pickFxList() {
-    return this.pickFx ? [this.pickFx] : [];
+    let fx = this.pickFx;
+    return fx ? [{ ...fx, cssX: `${fx.x}px`, cssY: `${fx.y}px` }] : [];
   }
-
-  /* hex comes from our own chipHex/rgbHex, so it's always a #rrggbb
-     literal — never an unvalidated string interpolated into a style */
-  pickFxStyle = (fx: { x: number; y: number; hex: string }) =>
-    htmlSafe(`left: ${fx.x}px; top: ${fx.y}px; --fx-color: ${fx.hex}`);
 
   onWheel = (evt: Event) => {
     let e = evt as WheelEvent;
@@ -723,6 +723,29 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
     return this.sliceMode !== 0;
   }
 
+  /* the density and slice rows are the same "chip toggle group" shape
+     three times over — one data array per row instead of hand-repeating
+     the Button markup per option */
+  densityOptions = [
+    { value: 0, label: '10' },
+    { value: 1, label: '20' },
+    { value: 2, label: '40' },
+  ];
+
+  sliceOptions = [
+    { value: 0, label: 'OFF' },
+    {
+      value: 1,
+      label: 'HUE',
+      title: 'vertical leaf through the trunk — drag ⟷ to turn the pages',
+    },
+    {
+      value: 2,
+      label: 'VALUE',
+      title: 'horizontal cut across the trunk — drag ↕ to move through values',
+    },
+  ];
+
   /* the hint speaks to the view that's actually on stage: gestures for
      the 3D solid, page-reading for the open atlas */
   get hintText(): string {
@@ -745,13 +768,11 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
 
   <template>
     {{! template-lint-disable no-pointer-down-event-binding }}
-    <div
-      class='room
-        {{unless @hasLinkedTheme "ct-default-theme"}}
-        {{if @compact "compact"}}'
-    >
+    <div class={{cn 'room' compact=@compact}}>
       <canvas
         class='stage'
+        role='img'
+        aria-label='3D Munsell color solid — drag to rotate, scroll to zoom'
         {{this.setupScene}}
         {{on 'pointerdown' this.onPointerDown}}
         {{on 'pointermove' this.onPointerMove}}
@@ -761,51 +782,62 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       ></canvas>
 
       <header class='masthead'>
-        <div class='kanji'>色 立 体</div>
-        <h1 class='name'>THE COLOR TREE</h1>
+        <div class='kanji' aria-hidden='true'>色 立 体</div>
+        {{! h2, not h1 — this studio is an edit format nested in a host
+            surface that owns the page's h1 }}
+        <h2 class='name'>THE COLOR TREE</h2>
         <p class='credit'>after Munsell × Itten</p>
       </header>
 
       <button
         type='button'
-        class='hamburger {{if this.panelOpen "panel-open"}}'
+        class={{cn 'hamburger' panel-open=this.panelOpen}}
+        data-test-toggle-panel
         aria-label='Toggle control panel'
+        aria-pressed='{{this.panelOpen}}'
         {{on 'click' this.togglePanel}}
       >{{if this.panelOpen '✕' '☰'}}</button>
 
-      {{#if this.toast}}
-        <button
-          type='button'
-          class='toast'
-          title='dismiss'
-          data-test-toast
-          {{on 'click' this.dismissToast}}
-        >{{this.toast}}<span class='toast-x'>✕</span></button>
-      {{/if}}
+      {{! the live region is always in the DOM so a screen reader is already
+          watching it when the text arrives; announcing only works if the
+          region pre-exists the content change }}
+      <div class='toast-live' role='status'>
+        {{#if this.toast}}
+          <button
+            type='button'
+            class='toast'
+            title='dismiss'
+            data-test-toast
+            {{on 'click' this.dismissToast}}
+          >{{this.toast}}<span
+              class='toast-x'
+              aria-hidden='true'
+            >✕</span></button>
+        {{/if}}
+      </div>
 
       {{#if this.atlasIsOpen}}
         {{#if this.miniOpen}}
           <div class='mini-frame'></div>
         {{/if}}
-        <button
-          type='button'
-          class='mini-toggle {{if this.miniOpen "mini-open"}}'
+        <IconButton
+          @icon={{if this.miniOpen EyeOffIcon EyeIcon}}
+          @width='0.95rem'
+          @height='0.95rem'
+          class={{cn 'mini-toggle' mini-open=this.miniOpen}}
           data-test-toggle-mini
           aria-pressed='{{this.miniOpen}}'
           aria-label='Toggle 3D preview'
           title={{if this.miniOpen 'Hide 3D preview' 'Show 3D preview'}}
           {{on 'click' this.toggleMini}}
-        >
-          {{#if this.miniOpen}}
-            <EyeOffIcon class='mini-toggle-icon' />
-          {{else}}
-            <EyeIcon class='mini-toggle-icon' />
-          {{/if}}
-        </button>
+        />
       {{/if}}
 
       {{#each this.pickFxList key='id' as |fx|}}
-        <div class='pick-fx' style={{this.pickFxStyle fx}}></div>
+        <div
+          class='pick-fx'
+          style={{cssVar fx-x=fx.cssX fx-y=fx.cssY fx-color=fx.hex}}
+        ></div>
       {{/each}}
 
       <div class='stage-actions'>
@@ -819,6 +851,7 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
         <Button
           @kind='text-only'
           class='chip wide'
+          data-test-scan
           {{on 'click' this.cycleScan}}
         >
           {{this.scanLabel}}
@@ -829,45 +862,38 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       {{#if this.panelOpen}}
         <aside class='panel'>
           <div class='prow'>
-            <span class='label'>hue pages</span>
-            <span class='pgroup'>
-              <Button
-                @kind='text-only'
-                class='chip sq {{if (eq this.densityIdx 0) "active"}}'
-                {{on 'click' (fn this.setDensity 0)}}
-              >10</Button>
-              <Button
-                @kind='text-only'
-                class='chip sq {{if (eq this.densityIdx 1) "active"}}'
-                {{on 'click' (fn this.setDensity 1)}}
-              >20</Button>
-              <Button
-                @kind='text-only'
-                class='chip sq {{if (eq this.densityIdx 2) "active"}}'
-                {{on 'click' (fn this.setDensity 2)}}
-              >40</Button>
+            <span class='label' id='{{this.uid}}-density'>hue pages</span>
+            <span
+              class='pgroup'
+              role='group'
+              aria-labelledby='{{this.uid}}-density'
+            >
+              {{#each this.densityOptions as |opt|}}
+                <Button
+                  @kind='text-only'
+                  class={{cn 'chip sq' active=(eq this.densityIdx opt.value)}}
+                  aria-pressed='{{eq this.densityIdx opt.value}}'
+                  {{on 'click' (fn this.setDensity opt.value)}}
+                >{{opt.label}}</Button>
+              {{/each}}
             </span>
           </div>
           <div class='prow'>
-            <span class='label'>slice</span>
-            <span class='pgroup'>
-              <Button
-                @kind='text-only'
-                class='chip sq {{if (eq this.sliceMode 0) "active"}}'
-                {{on 'click' (fn this.setSlice 0)}}
-              >OFF</Button>
-              <Button
-                @kind='text-only'
-                class='chip sq {{if (eq this.sliceMode 1) "active"}}'
-                title='vertical leaf through the trunk — drag ⟷ to turn the pages'
-                {{on 'click' (fn this.setSlice 1)}}
-              >HUE</Button>
-              <Button
-                @kind='text-only'
-                class='chip sq {{if (eq this.sliceMode 2) "active"}}'
-                title='horizontal cut across the trunk — drag ↕ to move through values'
-                {{on 'click' (fn this.setSlice 2)}}
-              >VALUE</Button>
+            <span class='label' id='{{this.uid}}-slice'>slice</span>
+            <span
+              class='pgroup'
+              role='group'
+              aria-labelledby='{{this.uid}}-slice'
+            >
+              {{#each this.sliceOptions as |opt|}}
+                <Button
+                  @kind='text-only'
+                  class={{cn 'chip sq' active=(eq this.sliceMode opt.value)}}
+                  aria-pressed='{{eq this.sliceMode opt.value}}'
+                  title={{opt.title}}
+                  {{on 'click' (fn this.setSlice opt.value)}}
+                >{{opt.label}}</Button>
+              {{/each}}
             </span>
           </div>
           {{#if (eq this.sliceMode 1)}}
@@ -879,14 +905,14 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
               through values</p>
           {{/if}}
           <div class='prow'>
-            <span class='label'>scan</span>
+            <label class='label' for='{{this.uid}}-scan'>scan</label>
             <input
+              id='{{this.uid}}-scan'
               type='range'
               class='dial'
               min='0'
               max='100'
               value={{this.slicePos}}
-              aria-label='scan'
               disabled={{eq this.sliceMode 0}}
               title={{if
                 (eq this.sliceMode 0)
@@ -897,50 +923,50 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
             />
           </div>
           <div class='prow'>
-            <span class='label'>chroma</span>
+            <label class='label' for='{{this.uid}}-chroma'>chroma</label>
             <input
+              id='{{this.uid}}-chroma'
               type='range'
               class='dial'
               min='0'
               max='100'
               value={{this.chromaPos}}
-              aria-label='chroma'
               {{on 'input' this.onChroma}}
             />
           </div>
           <div class='prow'>
-            <span class='label'>glow</span>
+            <label class='label' for='{{this.uid}}-glow'>glow</label>
             <input
+              id='{{this.uid}}-glow'
               type='range'
               class='dial'
               min='0'
               max='100'
               value={{this.glowPos}}
-              aria-label='glow'
               {{on 'input' this.onGlow}}
             />
           </div>
           <div class='prow'>
-            <span class='label'>contrast</span>
+            <label class='label' for='{{this.uid}}-contrast'>contrast</label>
             <input
+              id='{{this.uid}}-contrast'
               type='range'
               class='dial'
               min='0'
               max='100'
               value={{this.contrastPos}}
-              aria-label='contrast'
               {{on 'input' this.onContrast}}
             />
           </div>
           <div class='prow'>
-            <span class='label'>turn</span>
+            <label class='label' for='{{this.uid}}-turn'>turn</label>
             <input
+              id='{{this.uid}}-turn'
               type='range'
               class='dial'
               min='0'
               max='100'
               value={{this.turnPos}}
-              aria-label='turn'
               {{on 'input' this.onTurn}}
             />
           </div>
@@ -948,6 +974,7 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
             <Button
               @kind='text-only'
               class='chip'
+              aria-pressed='{{this.paused}}'
               {{on 'click' this.togglePause}}
             >
               {{if this.paused 'RESUME' 'PAUSE'}}
@@ -955,6 +982,7 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
             <Button
               @kind='text-only'
               class='chip'
+              aria-pressed='{{this.soundOn}}'
               {{on 'click' this.toggleSound}}
             >
               {{if this.soundOn 'SOUND OFF' 'SOUND ON'}}
@@ -962,21 +990,19 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
             {{#if this.gyroAvailable}}
               <Button
                 @kind='text-only'
-                class='chip {{if this.gyroOn "active"}}'
+                class={{cn 'chip' active=this.gyroOn}}
                 {{on 'click' this.toggleGyro}}
               >GYRO</Button>
             {{/if}}
           </div>
           <p class='stats'>{{this.chipCount}} voxels · {{this.statsCaption}}</p>
           {{#if this.selectedHex}}
-            <div class='picked'>
-              <span
-                class='picked-swatch'
-                style={{swatchStyle this.selectedHex}}
-              ></span>
-              <span class='picked-hex'>{{this.selectedHex}}</span>
-              <span class='picked-munsell'>{{this.selectedNotation}}</span>
-            </div>
+            <Swatch
+              class='picked'
+              @style='round'
+              @color={{this.selectedHex}}
+              @label={{this.selectedNotation}}
+            />
           {{/if}}
           <p class='note'>Munsell measured color and it would not stay a sphere:
             every hue climbs to its own peak chroma at its own value, so the
@@ -988,6 +1014,13 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
     </div>
 
     <style scoped>
+      /* The room is an intrinsically dark object, not a themed surface: a
+         Munsell solid reads wrongly against a light ground, so the stage must
+         stay dark under every theme. That is what the --tooltip pair is for
+         (pret-ui token table, "any intrinsically dark object"). Both the ground
+         and its ink come from that one pair so they can never disagree, and a
+         theme can still restyle it — unlike a stamped data-theme, which would
+         override a linked theme's own values. */
       .room {
         --panel-w: min(21rem, 85%);
         position: relative;
@@ -995,27 +1028,18 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
         height: 100vh;
         max-height: 100%;
         overflow: hidden;
+        /* atmospheric vignette, not a colour choice: white/black are the
+           lighten/darken DIRECTION applied to the theme's own --tooltip, so
+           the gradient tracks the theme rather than pinning a literal. srgb
+           is deliberate here — oklch flattens the falloff. Not a rule-6 hit. */
         background: radial-gradient(
           120% 90% at 50% 30%,
-          color-mix(in srgb, var(--background, #050a12) 92%, white) 0%,
-          var(--background, #050a12) 55%,
-          color-mix(in srgb, var(--background, #050a12) 82%, black) 100%
+          color-mix(in srgb, var(--tooltip) 92%, white) 0%,
+          var(--tooltip) 55%,
+          color-mix(in srgb, var(--tooltip) 82%, black) 100%
         );
-        color: var(--foreground, #e8f1f4);
-        font-family: var(
-          --font-mono,
-          ui-monospace,
-          'SF Mono',
-          Menlo,
-          monospace
-        );
-      }
-      .ct-default-theme {
-        --background: #050a12;
-        --foreground: #e8f1f4;
-        --border: #e8f1f4;
-        --primary: #e8f1f4;
-        --primary-foreground: #0a1522;
+        color: var(--tooltip-foreground);
+        font-family: var(--font-mono);
       }
       /* field edit format: a bounded studio instead of a full-height room */
       .room.compact {
@@ -1089,14 +1113,10 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
         width: 2.3rem;
         height: 2.3rem;
         border: 1px solid
-          color-mix(in srgb, var(--border, #e8f1f4) 22%, transparent);
+          color-mix(in oklch, var(--tooltip-foreground) 22%, transparent);
         border-radius: 50%;
-        background: color-mix(
-          in srgb,
-          var(--background, #03070e) 55%,
-          transparent
-        );
-        color: var(--foreground, #e8f1f4);
+        background-color: color-mix(in oklch, var(--tooltip) 55%, transparent);
+        color: var(--tooltip-foreground);
         font-size: 0.95rem;
         cursor: pointer;
       }
@@ -1105,43 +1125,57 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       .hamburger.panel-open {
         right: calc(var(--panel-w) + 0.9rem);
       }
+      /* Swatch renders [label][value][preview]; the studio's chip reads
+         [preview][hex][notation], so the preview is pulled first with
+         `order` rather than re-typing the component. */
       .picked {
-        display: flex;
-        align-items: center;
         gap: 0.55rem;
         margin-top: 0.9rem;
         padding: 0.45rem 0.7rem;
         border: 1px solid
-          color-mix(in srgb, var(--border, #e8f1f4) 18%, transparent);
+          color-mix(in oklch, var(--tooltip-foreground) 18%, transparent);
         border-radius: 999px;
-        background: color-mix(
-          in srgb,
-          var(--background, #03070e) 55%,
-          transparent
-        );
+        background-color: color-mix(in oklch, var(--tooltip) 55%, transparent);
         font-size: 0.68rem;
         letter-spacing: 0.08em;
+        --boxel-swatch-border-color: color-mix(
+          in oklch,
+          var(--tooltip-foreground) 35%,
+          transparent
+        );
       }
-      .picked-swatch {
+      .picked :deep(.boxel-swatch-preview) {
+        order: -1;
         width: 1rem;
         height: 1rem;
         border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.35);
         flex-shrink: 0;
       }
-      .picked-munsell {
+      .picked :deep(.boxel-swatch-label) {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        gap: 0.55rem;
+      }
+      .picked :deep(.boxel-swatch-name) {
         opacity: 0.6;
+      }
+      .picked :deep(.boxel-swatch-value) {
+        font: inherit;
       }
       .pick-fx {
         position: absolute;
-        width: 16px;
-        height: 16px;
-        margin: -8px 0 0 -8px;
+        left: var(--fx-x);
+        top: var(--fx-y);
+        width: 1rem;
+        height: 1rem;
+        /* half the dot, to centre it on the click point JS sets via left/top */
+        margin: -0.5rem 0 0 -0.5rem;
         border-radius: 50%;
-        background: var(--fx-color);
+        background-color: var(--fx-color);
         box-shadow:
           0 0 18px 4px var(--fx-color),
-          0 0 42px 14px color-mix(in srgb, var(--fx-color) 55%, transparent);
+          0 0 42px 14px color-mix(in oklch, var(--fx-color) 55%, transparent);
         pointer-events: none;
         z-index: 25;
         animation: pick-pulse 0.75s ease-out forwards;
@@ -1162,74 +1196,79 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       }
       .mini-frame {
         /* frames the scout miniature, which is scissor-rendered into the
-           same canvas at these exact coordinates (bottom-left origin) */
+           same canvas at these exact coordinates (bottom-left origin).
+           px is deliberate and rule-3 exempt: these mirror tree-engine's
+           setScissor(14, 110, miniSize, miniSize) and
+           miniSize = min(w * 0.32, 168), which are WebGL pixel space. In rem
+           they would desync from the render at any root font-size but 16px. */
         position: absolute;
         left: 14px;
         bottom: 110px;
         width: min(32%, 168px);
         aspect-ratio: 1;
         border: 1px solid
-          color-mix(in srgb, var(--border, #e8f1f4) 22%, transparent);
+          color-mix(in oklch, var(--tooltip-foreground) 22%, transparent);
         pointer-events: none;
         z-index: 5;
       }
-      .mini-toggle {
+      /* re-skinned via IconButton's own custom-property knobs (boxel-ui's
+         re-skin rule) rather than raw width/height/background/color, which
+         a bare .mini-toggle selector could lose to .boxel-icon-button's own
+         rule depending on stylesheet load order; the compound selector
+         (both classes live on the same element) wins on specificity either
+         way, which border/border-radius still need since IconButton hands
+         those no knob at all */
+      .mini-toggle.boxel-icon-button {
         /* docked inside the scout frame's bottom-left corner (the frame
            anchors at 14px/110px), so the scout can be waved away when it
-           covers the atlas page — and invited back from the same spot */
+           covers the atlas page — and invited back from the same spot.
+           px for the same rule-3 exemption as .mini-frame: this offset is
+           measured against that canvas-pixel anchor, not the type scale */
         position: absolute;
         left: 20px;
         bottom: 116px;
-        width: 1.6rem;
-        height: 1.6rem;
-        display: grid;
-        place-items: center;
-        border: 1px solid
-          color-mix(in srgb, var(--border, #e8f1f4) 22%, transparent);
-        border-radius: 2px;
-        background: color-mix(
-          in srgb,
-          var(--background, #03070e) 45%,
+        --boxel-icon-button-width: 1.6rem;
+        --boxel-icon-button-height: 1.6rem;
+        --boxel-icon-button-background: color-mix(
+          in oklch,
+          var(--tooltip) 45%,
           transparent
         );
-        color: var(--foreground, #e8f1f4);
-        font: inherit;
-        font-size: 0.7rem;
-        line-height: 1;
-        cursor: pointer;
+        --boxel-icon-button-color: var(--tooltip-foreground);
+        border: 1px solid
+          color-mix(in oklch, var(--tooltip-foreground) 22%, transparent);
+        border-radius: 0.125rem;
         z-index: 6;
         transition:
           background 0.2s ease,
           color 0.2s ease;
       }
-      .mini-toggle:hover {
-        background: color-mix(
-          in srgb,
-          var(--foreground, #e8f1f4) 12%,
+      .mini-toggle.boxel-icon-button:hover {
+        --boxel-icon-button-background: color-mix(
+          in oklch,
+          var(--tooltip-foreground) 12%,
           transparent
         );
       }
-      .mini-toggle.mini-open {
-        color: var(--primary, #e8f1f4);
+      .mini-toggle.boxel-icon-button.mini-open {
+        --boxel-icon-button-color: var(--primary);
       }
-      .mini-toggle-icon {
-        width: 0.95rem;
-        height: 0.95rem;
-      }
-      .toast {
+      /* the wrapper carries the placement so the always-present live region
+         adds no layout or hit area of its own when empty */
+      .toast-live {
         position: absolute;
         bottom: 7.5rem;
         left: 50%;
         transform: translateX(-50%);
         z-index: 40;
+        pointer-events: none;
+      }
+      .toast {
+        pointer-events: auto;
         padding: 0.5rem 0.9rem;
         border-radius: 999px;
-        background: color-mix(
-          in srgb,
-          var(--primary, #e8f1f4) 92%,
-          transparent
-        );
-        color: var(--primary-foreground, #0a1522);
+        background-color: color-mix(in oklch, var(--primary) 92%, transparent);
+        color: var(--primary-foreground);
         font: inherit;
         font-size: 0.68rem;
         letter-spacing: 0.08em;
@@ -1252,11 +1291,11 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       @keyframes toast-glow {
         0% {
           box-shadow: 0 0 0 0
-            color-mix(in srgb, var(--primary, #e8f1f4) 70%, transparent);
+            color-mix(in oklch, var(--primary) 70%, transparent);
         }
         45% {
           box-shadow: 0 0 22px 4px
-            color-mix(in srgb, var(--primary, #e8f1f4) 45%, transparent);
+            color-mix(in oklch, var(--primary) 45%, transparent);
         }
         100% {
           box-shadow: 0 0 0 0 transparent;
@@ -1273,14 +1312,10 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       .chip {
         padding: 0.38rem 0.8rem;
         border: 1px solid
-          color-mix(in srgb, var(--border, #e8f1f4) 22%, transparent);
-        border-radius: 2px;
-        background: color-mix(
-          in srgb,
-          var(--background, #03070e) 45%,
-          transparent
-        );
-        color: var(--foreground, #e8f1f4);
+          color-mix(in oklch, var(--tooltip-foreground) 22%, transparent);
+        border-radius: 0.125rem;
+        background-color: color-mix(in oklch, var(--tooltip) 45%, transparent);
+        color: var(--tooltip-foreground);
         font: inherit;
         font-size: 0.62rem;
         letter-spacing: 0.14em;
@@ -1290,15 +1325,15 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
           color 0.2s ease;
       }
       .chip:hover {
-        background: color-mix(
-          in srgb,
-          var(--foreground, #e8f1f4) 12%,
+        background-color: color-mix(
+          in oklch,
+          var(--tooltip-foreground) 12%,
           transparent
         );
       }
       .chip.active {
-        background: var(--primary, #e8f1f4);
-        color: var(--primary-foreground, #0a1522);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
       }
       .chip.wide {
         min-width: 8rem;
@@ -1308,7 +1343,7 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       }
       .dial {
         width: 8.2rem;
-        accent-color: var(--primary, #e8f1f4);
+        accent-color: var(--primary);
       }
       .dial:disabled {
         opacity: 0.3;
@@ -1317,25 +1352,31 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
       .slice-note {
         margin: -0.15rem 0 0;
         padding: 0.2rem 0.4rem;
-        border-radius: 2px;
+        border-radius: 0.125rem;
         font-size: 0.6rem;
         letter-spacing: 0.08em;
-        color: var(--muted-foreground, #7e93a8);
+        /* --muted-foreground may only sit on --muted/--background/--card, so
+           on this dark ground the de-emphasis is a dilution of the room's ink */
+        color: color-mix(in oklch, var(--tooltip-foreground) 70%, transparent);
         animation: slice-note-pulse 2.2s ease-out;
       }
       @keyframes slice-note-pulse {
         0%,
         45% {
-          color: var(--primary-foreground, #0a1522);
-          background: color-mix(
-            in srgb,
-            var(--primary, #e8f1f4) 85%,
+          color: var(--primary-foreground);
+          background-color: color-mix(
+            in oklch,
+            var(--primary) 85%,
             transparent
           );
         }
         100% {
-          color: var(--muted-foreground, #7e93a8);
-          background: transparent;
+          color: color-mix(
+            in oklch,
+            var(--tooltip-foreground) 70%,
+            transparent
+          );
+          background-color: transparent;
         }
       }
       .panel {
@@ -1347,12 +1388,8 @@ export class ColorTreeStudio extends Component<ColorTreeStudioSignature> {
         width: var(--panel-w);
         padding: 1.4rem;
         border-left: 1px solid
-          color-mix(in srgb, var(--border, #e8f1f4) 14%, transparent);
-        background: color-mix(
-          in srgb,
-          var(--background, #02040a) 86%,
-          transparent
-        );
+          color-mix(in oklch, var(--tooltip-foreground) 14%, transparent);
+        background-color: color-mix(in oklch, var(--tooltip) 86%, transparent);
         backdrop-filter: blur(8px);
         overflow-y: auto;
         box-sizing: border-box;
