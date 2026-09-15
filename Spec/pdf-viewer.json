@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "PdfViewer",
+        "module": "https://cardstack.com/base/file-formats/pdf-viewer"
+      },
+      "specType": "component",
+      "readMe": "## Document File Preview — PDF (PV)\n\nThe PDF family's renderer, and the shortest one here for a good reason: **the browser is the reader**.\n\nEmbedded and isolated mount the document in a native `<object>` viewer — scrolling, selection and search come for free. Re-implementing any of that in 1,000 lines of canvas would be strictly worse than the thing already in the browser.\n\n### Fitted shows a placeholder, not a PDF engine per tile\n\nA budgeted collection cell gets a lightweight page placeholder. A grid of 40 PDFs must not boot 40 document engines.\n\n### The poster is waiting on a contract, not on effort\n\nSame as `OfficePreview`: the first-page poster needs the derived-artifact contract (CS-12231) to rasterize and store a page image. When that lands and populates `thumbnailUrl`, the preview stage prefers the real poster **automatically, with no change to this component**.\n\n132 lines. Most of the work is deciding what *not* to build.\n\n\nProjected into the four format shells by `FilePreviewStage`, which owns the loading, failure and staleness panes.\n",
+      "cardInfo": {
+        "name": "Document File Preview — PDF",
+        "summary": "Native <object> viewer in the reading formats; a placeholder in fitted so a grid never boots an engine per tile."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/pdf-moderate.pdf"
+        }
+      }
+    }
+  }
+}

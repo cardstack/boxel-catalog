@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "FileFittedShell",
+        "module": "https://cardstack.com/base/file-formats/file-shell-fitted"
+      },
+      "specType": "component",
+      "readMe": "## File Fitted Card (FF)\n\nThe parent-sized collection cell, and **the format most often prerendered**.\n\n### It queries the host's container and refuses to make its own\n\nLayout is driven entirely by the host's `fitted-card` size container. This shell queries that container and **deliberately does not create a competing one**.\n\nThat single decision is why a grid tile, a list strip and a badge-height row each get a composition that *fits*, rather than a scaled-down copy of one design. A shell that declared `container-type: size` itself would shadow the host's container and every cell would size against its own box instead of the slot it was given.\n\n### The budgets are applied before this component ever sees the data\n\nTruncated text, capped rows and entries, resampled waveforms — all of it happens in `fileViewModel` at projection time, not here. By the time the fitted shell renders, the payload is already bounded.\n\nThis matters for anyone extending a family renderer: **do not add a budget in the component**. If a fitted cell is showing too much, the projection is what needs fixing, and fixing it there keeps the prerender path bounded too.\n\n### The family this belongs to\n\nFive pieces make up how a file renders in Boxel:\n\n| Piece | Job |\n|---|---|\n| `file-shell-atom` | inline reference — icon, name, extension |\n| `file-shell-embedded` | complete content, flowing inside a document |\n| `file-shell-fitted` | the parent-sized collection cell |\n| `file-shell-isolated` | the full work surface |\n| `file-preview-stage` | the slot all four project into; owns loading, failure, provenance |\n\nA shell never knows how to draw a PDF, a waveform or a 3D scene. It renders the\nstage, and the stage hands the remaining space to the family's own renderer,\ndeclared by a FileDef subclass as `static previewComponent`. A file whose family\nhas no renderer yet gets an honest generic pane rather than a broken one.\n",
+      "cardInfo": {
+        "name": "File Fitted Card",
+        "summary": "The collection cell; queries the host's size container rather than making its own, and renders an already-budgeted payload."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/pdf-moderate.pdf"
+        }
+      }
+    }
+  }
+}

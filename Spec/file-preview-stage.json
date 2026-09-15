@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "FilePreviewStage",
+        "module": "https://cardstack.com/base/file-formats/file-preview-stage"
+      },
+      "specType": "component",
+      "readMe": "## File Preview Router (FP)\n\nThe preview slot the four format shells project into — and the reason a shell never has to know what a PDF is.\n\n```gts\n<FilePreviewStage @model={{viewModel}} @format='isolated' @fields={{@fields}} />\n```\n\n### What the stage owns, so no family has to\n\n- the **current-render cache**\n- the **loading** and **failure** panes\n- **provenance** and **staleness** signals — whether what you are looking at came from the source bytes or from something derived, and whether it is still current\n- the generic pane for a family with no renderer yet\n\nEverything else is handed to `static previewComponent` on the FileDef subclass.\n\n### Two signatures, deliberately different\n\n`FilePreviewSignature` is the shell-facing face: `{ model: FileViewModel, format, fields }`. The `format` arg tells the renderer which budget it is under — `fitted` is the collection cell, `embedded` and `isolated` may show complete content.\n\n`ContentPreviewSignature` is the content-only face for the components the `file-formats/index` barrel exports (`MarkdownPreview`, `ImagePreview`, `AudioPreview`): just the content, no shell chrome — no file bar, no inspector, no Download or Copy-link. An embedding author who imports one of those **owns the loading, failure and staleness states themselves**, because the stage is not there to draw them.\n\n### The projection trap\n\n`ContentPreviewSignature.model` accepts either the FileDef instance (the common case — the component projects it through `fileViewModel` itself) or a **prebuilt** `FileViewModel`, which is what the shells pass.\n\nA prebuilt view model must have been projected **at the same format** you then pass as `format`. Fitted budgets are applied at projection time, so a complete-content projection rendered at `'fitted'` would feed the whole file to the snippet branch. A consumer that varies `format` should pass the instance and let the component re-project.\n\n### `fields` is a delegation hatch, not a data bag\n\nThe host format component's `@fields` is threaded through so a family renderer can delegate to a declared field's own component — a `MarkdownField` viewer, say — instead of re-implementing that rendering.\n\n### The family this belongs to\n\nFive pieces make up how a file renders in Boxel:\n\n| Piece | Job |\n|---|---|\n| `file-shell-atom` | inline reference — icon, name, extension |\n| `file-shell-embedded` | complete content, flowing inside a document |\n| `file-shell-fitted` | the parent-sized collection cell |\n| `file-shell-isolated` | the full work surface |\n| `file-preview-stage` | the slot all four project into; owns loading, failure, provenance |\n\nA shell never knows how to draw a PDF, a waveform or a 3D scene. It renders the\nstage, and the stage hands the remaining space to the family's own renderer,\ndeclared by a FileDef subclass as `static previewComponent`. A file whose family\nhas no renderer yet gets an honest generic pane rather than a broken one.\n",
+      "cardInfo": {
+        "name": "File Preview Router",
+        "summary": "The slot the four file shells project into; owns loading, failure, provenance and the current-render cache."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/pdf-moderate.pdf"
+        }
+      }
+    }
+  }
+}

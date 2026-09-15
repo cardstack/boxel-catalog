@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "OfficePreview",
+        "module": "https://cardstack.com/base/file-formats/office-preview"
+      },
+      "specType": "component",
+      "readMe": "## Document File Preview — Office (OP)\n\nThe Office families' renderer: `.docx`, `.pptx`, `.xlsx`.\n\n### Why it renders structure, not the document\n\nThe browser **cannot display an Office file natively** — unlike the PDF viewer's native `<object>`. So this renders the structure the extractor read out of the package:\n\n| Kind | What is drawn |\n|---|---|\n| document | the text flow |\n| deck | the slide outline |\n| workbook | the sheet grid |\n\n### One component, three families\n\nThey share a stage, a fitted placeholder, and the same provenance — *\"structured information derived from the source\"* — so this is one component that branches on the file's `previewKind` for the domain-specific body. Three near-identical components would have tripled the surface for one differing block.\n\n### The fitted poster is deliberately absent\n\nA first-page/first-slide poster is **not drawn here**. It needs the derived-artifact contract (CS-12231) to rasterize and store a real rendition.\n\nOnce that lands and populates `thumbnailUrl`, the preview stage prefers the real poster over the typed placeholder **automatically, with no change to this component**. That is why the placeholder is typed rather than generic — it is holding a shape the real artifact will fill.\n\n\nProjected into the four format shells by `FilePreviewStage`, which owns the loading, failure and staleness panes.\n",
+      "cardInfo": {
+        "name": "Document File Preview — Office",
+        "summary": "Renders extracted structure (text flow / slide outline / sheet grid) because the browser cannot display Office files."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/docx-moderate.docx"
+        }
+      },
+      "fileExamples.1": {
+        "links": {
+          "self": "../filedef-fixtures/samples/pptx-moderate.pptx"
+        }
+      },
+      "fileExamples.2": {
+        "links": {
+          "self": "../filedef-fixtures/samples/xlsx-moderate.xlsx"
+        }
+      }
+    }
+  }
+}

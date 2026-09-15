@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "FontSpecimen",
+        "module": "https://cardstack.com/base/file-formats/font-specimen"
+      },
+      "specType": "component",
+      "readMe": "## Font File Preview (FS)\n\nThe font family's renderer. **The browser is the decoder**: `applyFileFont` loads the linked face onto the specimen container and every sample below inherits it — so what you see is the real typeface, not a description of it.\n\n### Each format gets a different amount of the specimen, on one load\n\n| Format | What it shows |\n|---|---|\n| fitted | a single showcase glyph |\n| embedded | compact name plus pangram |\n| isolated | full waterfall + character map |\n\nAll three share **one FontFace load**. The specimen scales, the cost does not.\n\n### Two deliberate typographic choices\n\n**The pangram is a type designer's, not \"quick brown fox\".** It covers every letter *and* mixes shapes that expose a face's personality faster than the familiar sentence does.\n\n**The waterfall is reading sizes, not display sizes.** Large enough at the top to read the letterforms, small enough at the bottom to prove the face still holds up as body text — which is the question someone evaluating a font actually has.\n\n\nProjected into the four format shells by `FilePreviewStage`, which owns the loading, failure and staleness panes — this component draws content only.\n",
+      "cardInfo": {
+        "name": "Font File Preview",
+        "summary": "Real typeface via applyFileFont; one FontFace load, three specimen depths, a designer's pangram and a reading-size waterfall."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/otf-moderate.otf"
+        }
+      }
+    }
+  }
+}

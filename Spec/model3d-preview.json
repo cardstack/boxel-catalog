@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Model3DPreview",
+        "module": "https://cardstack.com/base/file-formats/model3d-preview"
+      },
+      "specType": "component",
+      "readMe": "## Model File Preview (MP)\n\nThe 3D model family's renderer, and the one with the most gates — because WebGL is the most expensive thing any preview can do.\n\n### Three.js from a CDN, at live render only\n\nLoaded from esm.sh **only at live client render time** — the sanctioned Boxel pattern for external libraries (the loader resolves `https://` specifiers).\n\n### Two gates keep WebGL off the paths where it must not run\n\n**PRERENDER.** Server-side rendering — indexing and prerender — never boots WebGL and never fetches the CDN engine. `isLiveRender()` is the deterministic gate, and the **static cube is the prerender representation**. This is not a fallback; it is the correct answer on that path.\n\n**VIEWPORT.** The viewer boots only while on-screen and **disposes its context when scrolled off**, re-booting on re-entry. Without this, a strip of embedded models would hold a dozen live GL contexts at once and the browser would start dropping the oldest.\n\n### Fitted never boots at all\n\nA collection cell that a grid can show dozens of at once shows the static cube, full stop. Not a smaller viewer — no context.\n\n### The family it serves\n\n`StlDef`, `ThreeMfDef`, `GltfDef`, `GlbDef` all sit under `ThreeDModelDef`, which declares this as its `previewComponent`. Their facts land on the shared `model3d` field; the fitted hero fact reads `model3d.triangles`.\n\n\nProjected into the four format shells by `FilePreviewStage`, which owns the loading, failure and staleness panes — this component draws content only.\n",
+      "cardInfo": {
+        "name": "Model File Preview",
+        "summary": "Live WebGL orbit viewer behind two gates — never on prerender, never in a fitted cell, disposed when off-screen."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/glb-moderate.glb"
+        }
+      },
+      "fileExamples.1": {
+        "links": {
+          "self": "../filedef-fixtures/samples/stl-moderate.stl"
+        }
+      },
+      "fileExamples.2": {
+        "links": {
+          "self": "../filedef-fixtures/samples/three-mf-moderate.3mf"
+        }
+      }
+    }
+  }
+}

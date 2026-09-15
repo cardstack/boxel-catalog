@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "MidiPreview",
+        "module": "https://cardstack.com/base/file-formats/midi-preview"
+      },
+      "specType": "component",
+      "readMe": "## MIDI File Preview (MF)\n\nThe MIDI family's renderer — and the one that most needed a design decision, because **a MIDI file has no sound**.\n\nA Standard MIDI File is symbolic performance data: which notes to play and when. There is no audio until a synthesizer renders it, and no browser plays one from an `<audio>` element.\n\n### So it draws neither a player nor a waveform\n\nUnlike `AudioPreview`, this presents **what the sequence is**:\n\n- a **pitch band** — the piano's full span, with the piece's own range shaded across it\n- tracks, notes, running time, tempo, key, meter\n- the **General MIDI voices** the programs name\n\n### `program 40` → `Violin`\n\nThe GM Level 1 sound set is mapped, so a bare program number becomes an instrument name. That mapping is the difference between a debug dump and a preview someone can read.\n\n### Everything shown is already a field\n\nEvery value comes from `MidiMetadataField`, populated by the extract pass. This stays a **view of extracted data and never a re-parse** — which is why it costs nothing in a collection.\n\n\nProjected into the four format shells by `FilePreviewStage`, which owns the loading, failure and staleness panes — this component draws content only.\n",
+      "cardInfo": {
+        "name": "MIDI File Preview",
+        "summary": "Symbolic performance data made legible: pitch band, GM voice names, no player and no waveform."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/midi-moderate.mid"
+        }
+      }
+    }
+  }
+}

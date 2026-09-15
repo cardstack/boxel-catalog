@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "HtmlPreview",
+        "module": "https://cardstack.com/base/file-formats/html-preview"
+      },
+      "specType": "component",
+      "readMe": "## HTML File Preview (HH)\n\nThe web family's renderer. An HTML file is **both a rendered page and inspectable markup**, so the detailed view shows the document the way a browser would *and* a source view beside it.\n\n### Sandbox posture — read this before changing anything here\n\nThe source is fetched with the caller's session and handed to the frame as **`srcdoc`**, so the document renders from an **opaque origin**: no cookies, no storage, no realm session.\n\n```\nsandbox = allow-scripts          ← authored behaviour runs\n          (NOT allow-same-origin) ← inside the isolation\n```\n\n`allow-scripts` **without** `allow-same-origin` is the load-bearing combination. Granting both together would let the framed document reach back into the realm origin with the viewer's session — which is the whole attack this posture exists to prevent. Powerful features are denied outright.\n\n### A fitted cell never mounts a frame\n\nA collection of documents must not each fetch and execute a page. The fitted branch renders a static prose summary built from the **already-extracted metadata**, so a grid of 50 HTML files boots zero frames.\n\n\nProjected into the four format shells by `FilePreviewStage`, which owns the loading, failure and staleness panes — this component draws content only.\n",
+      "cardInfo": {
+        "name": "HTML File Preview",
+        "summary": "Sandboxed srcdoc frame plus a source view; fitted cells get a static summary and never mount a frame."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/html-moderate.html"
+        }
+      }
+    }
+  }
+}
