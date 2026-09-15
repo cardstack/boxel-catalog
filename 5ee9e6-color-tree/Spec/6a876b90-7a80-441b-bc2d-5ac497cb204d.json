@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# rgbHex\n\n## Summary\n\nFormats an RGB triple (each channel in `[0, 1]`) as a CSS hex string.\n\n## Import\n\n```javascript\nimport { rgbHex } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nrgbHex(1, 0.5, 0); // '#ff8000'\n```",
+      "ref": {
+        "module": "../utils/munsell",
+        "name": "rgbHex"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "rgbHex",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# ColorTreeFieldExample\n\n## Summary\n\nThe playground example for `ColorTreeField` — shows the field the way a card author will meet it: the 3D studio as the edit format, the compact embedded/atom read-outs, and the one-line `contains()` needed to adopt it.\n\n## Import\n\n```javascript\nimport { ColorTreeFieldExample } from '../example/color-tree-field-playground-example';\n```",
+      "ref": {
+        "module": "../example/color-tree-field-playground-example",
+        "name": "ColorTreeFieldExample"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "ColorTreeFieldExample",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
