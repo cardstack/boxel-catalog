@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "Output of RecognizeInkCommand: annotation text, plus optional sketchJson/sceneJson payloads already validated by the pure helpers in utils.",
+      "ref": {
+        "module": "../commands/recognize-ink-command",
+        "name": "RecognizeInkOutput"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "RecognizeInkOutput",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "Pure validation core for model responses: splits text, draw polylines, write labels and scene blocks, clamping every channel. No card imports; unit-tested.",
+      "ref": {
+        "module": "../utils/index",
+        "name": "splitEchoResponse"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "splitEchoResponse",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
