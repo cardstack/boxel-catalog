@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../utils",
+        "name": "daysBetween"
+      },
+      "specType": null,
+      "readMe": "# HR Utils\n\n## Summary\nThree small helpers the HR cards share: `daysBetween(from, to = now)` for tenure, time-in-stage and days-open counts; `liveCount(links)` for how many entries of a linksToMany are actually present; and `formatMoney(n, { compact })` for salary figures (`$85,000`, or `$85k` in tight slots — compact only kicks in at 1,000 so an hourly rate never reads `$0k`).\n\n## Usage\n```ts\nimport { daysBetween, liveCount } from '@cardstack/catalog/cards/hr/utils';\n\ndaysBetween(candidate.appliedDate); // days in pipeline\nliveCount(meeting.interviewers);\n```\n\n## Non-goals\nAnything HR-specific in shape: these are date and link arithmetic only.",
+      "cardTitle": "HR Utils",
+      "cardDescription": "daysBetween, liveCount and a compact salary formatter — the arithmetic the HR cards share.",
+      "cardInfo": {
+        "name": "HR Utils",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
