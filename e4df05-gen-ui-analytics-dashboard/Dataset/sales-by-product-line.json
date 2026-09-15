@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sales by Product Line",
+      "columnsJson": "[{\"name\":\"productLine\",\"type\":\"string\"},{\"name\":\"totalSales\",\"type\":\"number\"}]",
+      "rowsJson": "[{\"productLine\":\"Classic Cars\",\"totalSales\":3919616},{\"productLine\":\"Vintage Cars\",\"totalSales\":1903151},{\"productLine\":\"Motorcycles\",\"totalSales\":1166388},{\"productLine\":\"Trucks and Buses\",\"totalSales\":1127790},{\"productLine\":\"Planes\",\"totalSales\":975004},{\"productLine\":\"Ships\",\"totalSales\":714437},{\"productLine\":\"Trains\",\"totalSales\":226243}]",
+      "sourceNote": "extracted from sales-data-sample.csv",
+      "sourceFileUrl": null,
+      "cardInfo": {
+        "name": "Sales by Product Line",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../dataset",
+        "name": "Dataset"
+      }
+    }
+  }
+}

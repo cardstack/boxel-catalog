@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla Annual Deliveries by Model",
+      "columnsJson": "[{\"name\":\"year\",\"type\":\"string\"},{\"name\":\"model\",\"type\":\"string\"},{\"name\":\"deliveries\",\"type\":\"number\"}]",
+      "rowsJson": "[{\"year\":\"2021\",\"model\":\"Model 3\",\"deliveries\":500713},{\"year\":\"2021\",\"model\":\"Model Y\",\"deliveries\":410517},{\"year\":\"2021\",\"model\":\"Model S/X\",\"deliveries\":24942},{\"year\":\"2022\",\"model\":\"Model 3\",\"deliveries\":538000},{\"year\":\"2022\",\"model\":\"Model Y\",\"deliveries\":709000},{\"year\":\"2022\",\"model\":\"Model S/X\",\"deliveries\":66851},{\"year\":\"2023\",\"model\":\"Model 3\",\"deliveries\":529000},{\"year\":\"2023\",\"model\":\"Model Y\",\"deliveries\":1211000},{\"year\":\"2023\",\"model\":\"Model S/X\",\"deliveries\":68581},{\"year\":\"2024\",\"model\":\"Model 3\",\"deliveries\":511000},{\"year\":\"2024\",\"model\":\"Model Y\",\"deliveries\":1209000},{\"year\":\"2024\",\"model\":\"Model S/X\",\"deliveries\":69226},{\"year\":\"2025\",\"model\":\"Model 3\",\"deliveries\":455000},{\"year\":\"2025\",\"model\":\"Model Y\",\"deliveries\":1085000},{\"year\":\"2025\",\"model\":\"Model S/X\",\"deliveries\":72000}]",
+      "sourceNote": "AI-recalled figures — may be outdated",
+      "sourceFileUrl": null,
+      "cardInfo": {
+        "name": "Tesla Annual Deliveries by Model",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../dataset",
+        "name": "Dataset"
+      }
+    }
+  }
+}
