@@ -12,6 +12,56 @@
       }
     },
     "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../example/ColorTreeFieldExample/dc3c493e-5883-4f74-b6e4-63d2b75795c6"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../example/ColorTreeFieldExample/bc3ae52b-904d-46b5-9913-9f703f7cac04"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../../Tag/field"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../Category/design-creative"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/color-tree-62294a09.png"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/01-munsell-tree.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/02-itten-sphere.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/03-studio-controls.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/04-atlas-hue-leaf.png"
+        }
+      },
       "specs.0": {
         "links": {
           "self": "../Spec/color-tree-field"
@@ -99,62 +149,7 @@
       },
       "specs.17": {
         "links": {
-          "self": "../Spec/4f9c667b-efd0-4d20-b56a-876b907a8084"
-        }
-      },
-      "specs.18": {
-        "links": {
           "self": "../../Spec/code-snippet"
-        }
-      },
-      "examples.0": {
-        "links": {
-          "self": "../example/ColorTreeFieldExample/dc3c493e-5883-4f74-b6e4-63d2b75795c6"
-        }
-      },
-      "examples.1": {
-        "links": {
-          "self": "../example/ColorTreeFieldExample/bc3ae52b-904d-46b5-9913-9f703f7cac04"
-        }
-      },
-      "tags.0": {
-        "links": {
-          "self": "https://app.boxel.ai/catalog/Tag/field"
-        }
-      },
-      "categories.0": {
-        "links": {
-          "self": "https://app.boxel.ai/catalog/Category/design-creative"
-        }
-      },
-      "license": {
-        "links": {
-          "self": null
-        }
-      },
-      "cardInfo.cardThumbnail": {
-        "links": {
-          "self": "../ListingThumbnails/color-tree-62294a09.png"
-        }
-      },
-      "images.0": {
-        "links": {
-          "self": "../Screenshots/01-munsell-tree.png"
-        }
-      },
-      "images.1": {
-        "links": {
-          "self": "../Screenshots/02-itten-sphere.png"
-        }
-      },
-      "images.2": {
-        "links": {
-          "self": "../Screenshots/03-studio-controls.png"
-        }
-      },
-      "images.3": {
-        "links": {
-          "self": "../Screenshots/04-atlas-hue-leaf.png"
         }
       }
     },

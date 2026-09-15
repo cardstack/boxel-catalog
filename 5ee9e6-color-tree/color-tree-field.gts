@@ -14,7 +14,7 @@ import {
 import StringField from 'https://cardstack.com/base/string';
 import ColorField from 'https://cardstack.com/base/color';
 import PaletteIcon from '@cardstack/boxel-icons/palette';
-import { swatchStyle } from './utils/munsell';
+import { Swatch } from '@cardstack/boxel-ui/components';
 import { ColorTreeStudio } from './components/color-tree-studio';
 
 export class ColorTreeField extends FieldDef {
@@ -43,7 +43,7 @@ export class ColorTreeField extends FieldDef {
       <style scoped>
         .ctf-edit {
           height: 26rem;
-          border-radius: var(--radius, 0.5rem);
+          border-radius: var(--radius);
           overflow: hidden;
         }
       </style>
@@ -53,11 +53,15 @@ export class ColorTreeField extends FieldDef {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <div class='ctf-embedded' data-test-color-tree-field-embedded>
-        <span class='swatch' style={{swatchStyle @model.hex}}></span>
         {{#if @model.hex}}
-          <span class='hex'>{{@model.hex}}</span>
-          <span class='munsell'>{{@model.munsell}}</span>
+          <Swatch
+            class='ctf-swatch'
+            @style='round'
+            @color={{@model.hex}}
+            @label={{@model.munsell}}
+          />
         {{else}}
+          <Swatch class='ctf-swatch' @style='round' @hideLabel={{true}} />
           <span class='munsell'>no chip picked yet</span>
         {{/if}}
       </div>
@@ -66,22 +70,44 @@ export class ColorTreeField extends FieldDef {
         .ctf-embedded {
           display: inline-flex;
           align-items: center;
-          gap: calc(var(--spacing, 0.25rem) * 2);
-          font-family: var(--font-mono, ui-monospace, 'SF Mono', monospace);
+          gap: calc(var(--spacing) * 2);
+          font-family: var(--font-mono);
           font-size: 0.8125rem;
           letter-spacing: 0.06em;
-          color: var(--foreground, #0f172a);
+          color: var(--foreground);
         }
-        .swatch {
+        /* Swatch renders [label][value][preview]; this field reads
+           [preview][hex][notation], so the preview is pulled first with
+           `order` rather than re-typing the component. */
+        .ctf-swatch {
+          gap: calc(var(--spacing) * 2);
+          --boxel-swatch-border-color: color-mix(
+            in oklch,
+            var(--foreground) 30%,
+            transparent
+          );
+        }
+        .ctf-swatch :deep(.boxel-swatch-preview) {
+          order: -1;
           width: 1.4rem;
           height: 1.4rem;
           border-radius: 50%;
-          border: 1px solid
-            color-mix(in srgb, var(--foreground, #0f172a) 30%, transparent);
           flex-shrink: 0;
         }
+        .ctf-swatch :deep(.boxel-swatch-label) {
+          display: flex;
+          flex-direction: row-reverse;
+          align-items: center;
+          gap: calc(var(--spacing) * 2);
+        }
+        .ctf-swatch :deep(.boxel-swatch-name) {
+          color: var(--muted-foreground);
+        }
+        .ctf-swatch :deep(.boxel-swatch-value) {
+          font: inherit;
+        }
         .munsell {
-          color: var(--muted-foreground, #64748b);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -90,7 +116,14 @@ export class ColorTreeField extends FieldDef {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='ctf-atom' data-test-color-tree-field-atom>
-        <span class='swatch' style={{swatchStyle @model.hex}}></span>
+        {{! hideLabel: the atom shows the notation only, never the hex, so
+            Swatch contributes just its preview here }}
+        <Swatch
+          class='ctf-atom-swatch'
+          @style='round'
+          @hideLabel={{true}}
+          @color={{@model.hex}}
+        />
         <span class='label'>{{if
             @model.munsell
             @model.munsell
@@ -102,22 +135,27 @@ export class ColorTreeField extends FieldDef {
         .ctf-atom {
           display: inline-flex;
           align-items: center;
-          gap: calc(var(--spacing, 0.25rem) * 1);
+          gap: var(--spacing);
           line-height: 1;
-          font-family: var(--font-mono, ui-monospace, 'SF Mono', monospace);
+          font-family: var(--font-mono);
           font-size: 0.6875rem;
           letter-spacing: 0.06em;
         }
-        .swatch {
+        .ctf-atom-swatch {
+          --boxel-swatch-border-color: color-mix(
+            in oklch,
+            var(--foreground) 30%,
+            transparent
+          );
+        }
+        .ctf-atom-swatch :deep(.boxel-swatch-preview) {
           width: 0.8rem;
           height: 0.8rem;
           border-radius: 50%;
-          border: 1px solid
-            color-mix(in srgb, var(--foreground, #0f172a) 30%, transparent);
           flex-shrink: 0;
         }
         .label {
-          color: var(--muted-foreground, #64748b);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

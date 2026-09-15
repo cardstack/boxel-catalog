@@ -1,7 +1,7 @@
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Button, FieldContainer } from '@cardstack/boxel-ui/components';
 import { Component } from '@cardstack/base/card-api';
 
 import { parseInk } from '../utils/index';
@@ -40,7 +40,7 @@ export class EchoPadEdit extends Component<typeof EchoPad> {
     <section class='ep-edit'>
       <header class='ep-edit-head'>
         <span class='eyebrow'>Echo Pad</span>
-        <h2>Board settings</h2>
+        <h3>Board settings</h3>
         <p class='hint'>Drawing happens on the board itself — open it to write,
           circle ink and echo.</p>
       </header>
@@ -72,12 +72,13 @@ export class EchoPadEdit extends Component<typeof EchoPad> {
                     echo.content
                     '—'
                   }}</span>
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='small'
                   class='echo-remove'
                   aria-label='Remove {{if echo.label echo.label "echo"}}'
                   {{on 'click' (fn this.removeEcho index)}}
-                >Remove</button>
+                >Remove</Button>
               </li>
             {{/each}}
           </ul>
@@ -87,7 +88,12 @@ export class EchoPadEdit extends Component<typeof EchoPad> {
       </div>
 
       <div class='ep-edit-danger'>
-        <button type='button' {{on 'click' this.clearInk}}>Erase all ink</button>
+        <Button
+          @kind='text-only'
+          @size='small'
+          class='clear-ink-btn'
+          {{on 'click' this.clearInk}}
+        >Erase all ink</Button>
         <span class='hint'>Removes every stroke and resets the view. Echoes
           stay.</span>
       </div>
@@ -95,37 +101,43 @@ export class EchoPadEdit extends Component<typeof EchoPad> {
 
     <style scoped>
       .ep-edit {
-        --paper: var(--ep-paper, #f7f4ec);
-        --ink: var(--ep-ink, #2b3f8c);
-        --echo: var(--ep-echo, #c33d2e);
-        --chrome: var(--ep-chrome, #3a3527);
-        --chrome-soft: var(--ep-chrome-soft, #6d6753);
-        --edge: var(--ep-edge, #56503f);
+        /* Board palette. Glimmer scopes <style> per component, so this block
+           is necessarily duplicated in isolated.gts, edit.gts and BOTH
+           components in formats.gts (Embedded + Fitted) — 4 copies. Change
+           one, change all four, or the formats drift apart. */
+        --paper: var(--background);
+        --ink: var(--chart-4);
+        --echo: var(--chart-1);
+        --chrome: var(--foreground);
+        --chrome-soft: var(--muted-foreground);
+        --edge: var(--border);
+        --font-chrome: var(--font-mono);
+        --font-hand: 'Caveat', cursive;
         display: flex;
         flex-direction: column;
-        gap: 18px;
-        padding: 20px;
-        font-family: var(--ep-font-chrome, 'IBM Plex Mono', monospace);
+        gap: 1.125rem;
+        padding: 1.25rem;
+        font-family: var(--font-chrome);
         color: var(--chrome);
       }
       .eyebrow {
-        font-size: 9px;
+        font-size: 0.5625rem;
         font-weight: 600;
         letter-spacing: 0.26em;
         text-transform: uppercase;
         color: var(--echo);
       }
-      .ep-edit-head h2 {
-        margin: 6px 0 4px;
-        font-family: var(--ep-font-hand, 'Caveat', cursive);
-        font-size: 30px;
+      .ep-edit-head h3 {
+        margin: 0.375rem 0 0.25rem;
+        font-family: var(--font-hand);
+        font-size: 1.875rem;
         font-weight: 600;
         line-height: 1;
         color: var(--ink);
       }
       .hint {
         margin: 0;
-        font-size: 10.5px;
+        font-size: 0.65625rem;
         line-height: 1.6;
         color: var(--chrome-soft);
       }
@@ -136,22 +148,22 @@ export class EchoPadEdit extends Component<typeof EchoPad> {
       }
       .fact {
         flex: 1;
-        padding: 8px 12px;
-        border-left: 1px solid rgba(43, 63, 140, 0.4);
+        padding: 0.5rem 0.75rem;
+        border-left: 1px solid color-mix(in oklch, var(--ink) 40%, transparent);
       }
       .fact:first-child {
         border-left: 0;
       }
       .fact-k {
         display: block;
-        font-size: 8px;
+        font-size: 0.5rem;
         letter-spacing: 0.22em;
         text-transform: uppercase;
         color: var(--chrome-soft);
-        margin-bottom: 3px;
+        margin-bottom: 0.1875rem;
       }
       .fact-v {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 600;
         color: var(--ink);
       }
@@ -160,23 +172,23 @@ export class EchoPadEdit extends Component<typeof EchoPad> {
       }
       .ep-edit-echoes ul {
         list-style: none;
-        margin: 8px 0 0;
+        margin: 0.5rem 0 0;
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 0.375rem;
       }
       .ep-edit-echoes li {
         display: flex;
         align-items: baseline;
-        gap: 10px;
-        padding: 8px 10px;
+        gap: 0.625rem;
+        padding: 0.5rem 0.625rem;
         border: 1px solid var(--edge);
-        background: var(--paper);
+        background-color: var(--paper);
       }
       .echo-mode {
         flex: none;
-        font-size: 8px;
+        font-size: 0.5rem;
         font-weight: 600;
         letter-spacing: 0.2em;
         text-transform: uppercase;
@@ -185,35 +197,38 @@ export class EchoPadEdit extends Component<typeof EchoPad> {
       .echo-text {
         flex: 1;
         min-width: 0;
-        font-family: var(--ep-font-hand, 'Caveat', cursive);
-        font-size: 17px;
+        font-family: var(--font-hand);
+        font-size: 1.0625rem;
         color: var(--echo);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .echo-remove,
-      .ep-edit-danger button {
+      .ep-edit-echoes li .echo-remove,
+      .ep-edit-danger .clear-ink-btn {
         flex: none;
         border: 1.5px solid var(--echo);
-        background: none;
+        background-color: transparent;
         color: var(--echo);
-        font: 600 9px/1 var(--ep-font-chrome, 'IBM Plex Mono', monospace);
+        font-weight: 600;
+        font-size: 0.5625rem;
+        line-height: 1;
+        font-family: var(--font-chrome);
         letter-spacing: 0.18em;
         text-transform: uppercase;
-        padding: 7px 10px;
+        padding: 0.4375rem 0.625rem;
         cursor: pointer;
       }
       .empty {
-        margin: 8px 0 0;
-        font-size: 10.5px;
+        margin: 0.5rem 0 0;
+        font-size: 0.65625rem;
         color: var(--chrome-soft);
       }
       .ep-edit-danger {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding-top: 4px;
+        gap: 0.75rem;
+        padding-top: 0.25rem;
       }
     </style>
   </template>

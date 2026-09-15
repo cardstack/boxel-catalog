@@ -1,16 +1,16 @@
 import { Component } from '@cardstack/base/card-api';
 
-import { parseInk, strokeBBox, unionBBox, type InkDoc } from '../utils/index';
+import {
+  flatPointsToPath,
+  parseInk,
+  strokeBBox,
+  unionBBox,
+  type InkDoc,
+} from '../utils/index';
 import type { EchoPad } from '../echo-pad';
 
 function inkPaths(doc: InkDoc): { d: string; w: number }[] {
-  return doc.strokes.map((s) => {
-    let d = `M ${s.pts[0]} ${s.pts[1]}`;
-    for (let i = 2; i < s.pts.length; i += 2) {
-      d += ` L ${s.pts[i]} ${s.pts[i + 1]}`;
-    }
-    return { d, w: s.w };
-  });
+  return doc.strokes.map((s) => ({ d: flatPointsToPath(s.pts), w: s.w }));
 }
 
 function inkViewBox(doc: InkDoc): string {
@@ -39,10 +39,6 @@ export class EchoPadEmbedded extends Component<typeof EchoPad> {
     return new InkGlance(this.args.model?.inkJson);
   }
 
-  get themed(): boolean {
-    return Boolean((this.args.model as any)?.cardInfo?.theme);
-  }
-
   get echoCount(): number {
     return (this.args.model?.echoes ?? []).filter(Boolean).length;
   }
@@ -63,16 +59,20 @@ export class EchoPadEmbedded extends Component<typeof EchoPad> {
   }
 
   <template>
-    <div class='ep-embedded {{if this.themed "themed"}}'>
+    <article class='ep-embedded'>
       <div class='ink'>
         {{#if this.ink.paths.length}}
-          <svg viewBox={{this.ink.viewBox}} preserveAspectRatio='xMidYMid meet'>
+          <svg
+            viewBox={{this.ink.viewBox}}
+            preserveAspectRatio='xMidYMid meet'
+            aria-hidden='true'
+          >
             {{#each this.ink.paths as |p|}}
               <path d={{p.d}} stroke-width='4' />
             {{/each}}
           </svg>
         {{else}}
-          <svg viewBox='0 0 96 74' class='mark'>
+          <svg viewBox='0 0 96 74' class='mark' aria-hidden='true'>
             <path d='M14 44 C 20 20, 52 14, 74 26' class='mark-ink' />
             <path
               d='M8 40 C 16 8, 74 4, 88 30 C 96 48, 60 68, 28 60 C 12 56, 4 50, 8 40 Z'
@@ -86,12 +86,8 @@ export class EchoPadEmbedded extends Component<typeof EchoPad> {
       </div>
       <div class='body'>
         <div class='eyebrow'>Echo Pad · Board</div>
-        <div class='name'>{{if
-            @model.title
-            @model.title
-            'Untitled board'
-          }}</div>
-        <div class='sum'>
+        <h3 class='name'>{{if @model.title @model.title 'Untitled board'}}</h3>
+        <p class='sum'>
           {{#if this.echoCount}}
             Handwritten board with accepted echoes — circle ink and the answer
             arrives beside it.
@@ -99,52 +95,49 @@ export class EchoPadEmbedded extends Component<typeof EchoPad> {
             Handwritten board awaiting its first echo — circle ink and the
             answer arrives beside it.
           {{/if}}
-        </div>
-        <div class='meta'>{{this.strokeCount}}
-          strokes ·
-          <b>{{this.echoLabel}}</b></div>
+        </p>
+        <dl class='meta'>
+          <dt>Strokes</dt>
+          <dd>{{this.strokeCount}}</dd>
+          <dt>Echoes</dt>
+          <dd class='meta-echo'>{{this.echoLabel}}</dd>
+        </dl>
       </div>
-    </div>
+    </article>
     <style scoped>
       .ep-embedded {
-        --paper: var(--ep-paper, #f7f4ec);
-        --paper-raised: var(--ep-paper-raised, #fffdf5);
-        --ink: var(--ep-ink, #2b3f8c);
-        --echo: var(--ep-echo, #c33d2e);
-        --chrome: var(--ep-chrome, #3a3527);
-        --chrome-soft: var(--ep-chrome-soft, #6d6753);
-        --edge: var(--ep-edge, #56503f);
-        --grid: var(--ep-grid, rgba(90, 120, 160, 0.14));
-        --font-chrome: var(--ep-font-chrome, 'IBM Plex Mono', monospace);
-        --font-hand: var(--ep-font-hand, 'Caveat', cursive);
+        /* Board palette. Glimmer scopes <style> per component, so this block
+           is necessarily duplicated in isolated.gts, edit.gts and BOTH
+           components in formats.gts (Embedded + Fitted) — 4 copies. Change
+           one, change all four, or the formats drift apart. */
+        --paper: var(--background);
+        --paper-raised: var(--card);
+        --ink: var(--chart-4);
+        --echo: var(--chart-1);
+        --chrome: var(--foreground);
+        --chrome-soft: var(--muted-foreground);
+        --edge: var(--border);
+        --grid: color-mix(in oklch, var(--border) 45%, transparent);
+        --font-chrome: var(--font-mono);
+        --font-hand: 'Caveat', cursive;
         display: flex;
         height: 100%;
-        min-height: 110px;
-        font-family: var(
-          --ep-font-chrome,
-          var(--font-mono, 'IBM Plex Mono', monospace)
-        );
+        min-height: 6.875rem;
+        font-family: var(--font-chrome);
         color: var(--chrome);
         background-color: var(--paper);
         background-image:
-          linear-gradient(
-            var(--ep-grid, rgba(90, 120, 160, 0.14)) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            90deg,
-            var(--ep-grid, rgba(90, 120, 160, 0.14)) 1px,
-            transparent 1px
-          );
-        background-size: 14px 14px;
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 0.875rem 0.875rem;
       }
       .ink {
         position: relative;
         flex: none;
         width: 34%;
-        max-width: 170px;
-        min-width: 110px;
-        border-right: 1px solid rgba(90, 120, 160, 0.3);
+        max-width: 10.625rem;
+        min-width: 6.875rem;
+        border-right: 1px solid var(--grid);
         overflow: hidden;
       }
       .ink svg {
@@ -160,36 +153,38 @@ export class EchoPadEmbedded extends Component<typeof EchoPad> {
       .mark-ink {
         stroke-width: 2.4;
       }
-      .mark-lasso {
-        stroke: var(--echo) !important;
+      /* raised to out-specify `.ink path` (0,1,1) rather than !important */
+      .ink path.mark-lasso {
+        stroke: var(--echo);
         stroke-width: 2;
         stroke-dasharray: 7 6;
       }
       .slip-chip {
         position: absolute;
-        right: 6px;
-        bottom: 10px;
+        right: 0.375rem;
+        bottom: 0.625rem;
         max-width: 84%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        background: var(--paper-raised);
-        border: 1px solid #eae4d2;
-        box-shadow: 0 3px 8px rgba(50, 40, 20, 0.2);
-        padding: 3px 8px;
+        background-color: var(--paper-raised);
+        border: 1px solid color-mix(in oklch, var(--edge) 30%, var(--paper));
+        box-shadow: 0 3px 8px
+          color-mix(in oklch, var(--chrome) 20%, transparent);
+        padding: 0.1875rem 0.5rem;
         transform: rotate(1.6deg);
         font-family: var(--font-hand);
-        font-size: 13px;
+        font-size: 0.8125rem;
         color: var(--echo);
       }
       .body {
         position: relative;
         flex: 1;
         min-width: 0;
-        padding: 14px 16px;
+        padding: 0.875rem 1rem;
       }
       .eyebrow {
-        font-size: 7.5px;
+        font-size: 0.46875rem;
         font-weight: 600;
         letter-spacing: 0.24em;
         text-transform: uppercase;
@@ -197,49 +192,50 @@ export class EchoPadEmbedded extends Component<typeof EchoPad> {
       }
       .name {
         font-family: var(--font-hand);
-        font-size: 28px;
+        font-weight: 400;
+        font-size: 1.75rem;
         line-height: 1.05;
         color: var(--ink);
-        margin-top: 6px;
+        margin: 0.375rem 0 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .sum {
-        font-size: 9.5px;
+        font-size: 0.59375rem;
         line-height: 1.7;
         color: var(--chrome-soft);
-        margin-top: 6px;
+        margin: 0.375rem 0 0;
         display: -webkit-box;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
         overflow: hidden;
       }
       .meta {
-        margin-top: 8px;
-        font-size: 8.5px;
+        margin: 0.5rem 0 0;
+        display: flex;
+        gap: 0.375rem;
+        font-size: 0.53125rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--chrome-soft);
       }
-      .meta b {
-        color: var(--echo);
+      .meta dt {
+        display: inline;
       }
-
-      /* semantic tier only when a Theme card is linked */
-      .ep-embedded.themed,
-      .themed .fit {
-        --paper: var(--ep-paper, var(--background, #f7f4ec));
-        --paper-raised: var(--ep-paper-raised, var(--card, #fffdf5));
-        --ink: var(--ep-ink, var(--primary, #2b3f8c));
-        --echo: var(--ep-echo, var(--accent, #c33d2e));
-        --chrome: var(--ep-chrome, var(--foreground, #3a3527));
-        --chrome-soft: var(--ep-chrome-soft, var(--muted-foreground, #6d6753));
-        --edge: var(--ep-edge, var(--border, #56503f));
-        --font-chrome: var(
-          --ep-font-chrome,
-          var(--font-mono, 'IBM Plex Mono', monospace)
-        );
+      .meta dt::after {
+        content: ':';
+      }
+      .meta dd {
+        display: inline;
+        margin: 0;
+      }
+      .meta dd + dt {
+        margin-left: 0.5rem;
+      }
+      .meta .meta-echo {
+        color: var(--echo);
+        font-weight: 600;
       }
     </style>
   </template>
@@ -248,10 +244,6 @@ export class EchoPadEmbedded extends Component<typeof EchoPad> {
 export class EchoPadFitted extends Component<typeof EchoPad> {
   get ink(): InkGlance {
     return new InkGlance(this.args.model?.inkJson);
-  }
-
-  get themed(): boolean {
-    return Boolean((this.args.model as any)?.cardInfo?.theme);
   }
 
   get echoCount(): number {
@@ -274,20 +266,25 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
   }
 
   <template>
-    <div class='cq {{if this.themed "themed"}}'>
+    <article class='cq'>
       <div class='fit'>
         <div class='r-ink'>
           {{#if this.ink.paths.length}}
             <svg
               viewBox={{this.ink.viewBox}}
               preserveAspectRatio='xMidYMid meet'
+              aria-hidden='true'
             >
               {{#each this.ink.paths as |p|}}
                 <path d={{p.d}} stroke-width='4' />
               {{/each}}
             </svg>
           {{else}}
-            <svg viewBox='0 0 96 74' preserveAspectRatio='xMidYMid meet'>
+            <svg
+              viewBox='0 0 96 74'
+              preserveAspectRatio='xMidYMid meet'
+              aria-hidden='true'
+            >
               <path d='M14 44 C 20 20, 52 14, 74 26' class='mark-ink' />
               <path
                 d='M8 40 C 16 8, 74 4, 88 30 C 96 48, 60 68, 28 60 C 12 56, 4 50, 8 40 Z'
@@ -303,15 +300,16 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
           {{/if}}
         </div>
         <div class='r-head'>
-          <div class='name'>{{if @model.title @model.title 'Echo Pad'}}</div>
+          <h3 class='name'>{{if @model.title @model.title 'Echo Pad'}}</h3>
         </div>
-        <div class='r-meta'>
-          <span>{{this.strokeCount}}
-            strokes ·
-            <b>{{this.echoLabel}}</b></span>
-        </div>
+        <dl class='r-meta'>
+          <dt>Strokes</dt>
+          <dd>{{this.strokeCount}}</dd>
+          <dt>Echoes</dt>
+          <dd class='meta-echo'>{{this.echoLabel}}</dd>
+        </dl>
       </div>
-    </div>
+    </article>
     <style scoped>
       .cq {
         container-type: size;
@@ -321,16 +319,20 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
         overflow: hidden;
       }
       .fit {
-        --paper: var(--ep-paper, #f7f4ec);
-        --paper-raised: var(--ep-paper-raised, #fffdf5);
-        --ink: var(--ep-ink, #2b3f8c);
-        --echo: var(--ep-echo, #c33d2e);
-        --chrome: var(--ep-chrome, #3a3527);
-        --chrome-soft: var(--ep-chrome-soft, #6d6753);
-        --edge: var(--ep-edge, #56503f);
-        --grid: var(--ep-grid, rgba(90, 120, 160, 0.14));
-        --font-chrome: var(--ep-font-chrome, 'IBM Plex Mono', monospace);
-        --font-hand: var(--ep-font-hand, 'Caveat', cursive);
+        /* Board palette. Glimmer scopes <style> per component, so this block
+           is necessarily duplicated in isolated.gts, edit.gts and BOTH
+           components in formats.gts (Embedded + Fitted) — 4 copies. Change
+           one, change all four, or the formats drift apart. */
+        --paper: var(--background);
+        --paper-raised: var(--card);
+        --ink: var(--chart-4);
+        --echo: var(--chart-1);
+        --chrome: var(--foreground);
+        --chrome-soft: var(--muted-foreground);
+        --edge: var(--border);
+        --grid: color-mix(in oklch, var(--border) 45%, transparent);
+        --font-chrome: var(--font-mono);
+        --font-hand: 'Caveat', cursive;
         width: 100%;
         height: 100%;
         display: grid;
@@ -338,37 +340,30 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
         grid-template-areas: 'ink' 'head' 'meta';
         overflow: hidden;
         box-sizing: border-box;
-        font-family: var(
-          --ep-font-chrome,
-          var(--font-mono, 'IBM Plex Mono', monospace)
-        );
+        font-family: var(--font-chrome);
         color: var(--chrome);
         background-color: var(--paper);
         background-image:
-          linear-gradient(
-            var(--ep-grid, rgba(90, 120, 160, 0.14)) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            90deg,
-            var(--ep-grid, rgba(90, 120, 160, 0.14)) 1px,
-            transparent 1px
-          );
-        background-size: 12px 12px;
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 0.75rem 0.75rem;
 
         --type-ratio: 1.25;
         --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
         --type-base: clamp(
-          10px,
-          calc(3px + 2.2cqi + 1cqb - 0.6 * var(--ar)),
-          18px
+          0.625rem,
+          calc(0.1875rem + 2.2cqi + 1cqb - 0.6 * var(--ar)),
+          1.125rem
         );
-        --fit-meta-size: max(8px, calc(var(--type-base) / var(--type-ratio)));
+        --fit-meta-size: max(
+          0.5rem,
+          calc(var(--type-base) / var(--type-ratio))
+        );
         --fit-headline-size: max(
-          12px,
+          0.75rem,
           calc(var(--type-base) * pow(var(--type-ratio), 2))
         );
-        --fit-pad: clamp(5px, calc(2px + 1.8cqi), 12px);
+        --fit-pad: clamp(0.3125rem, calc(0.125rem + 1.8cqi), 0.75rem);
       }
       .r-ink,
       .r-head,
@@ -393,8 +388,9 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
       .mark-ink {
         stroke-width: 2.4;
       }
-      .mark-lasso {
-        stroke: var(--echo) !important;
+      /* raised to out-specify `.r-ink path` (0,1,1) rather than !important */
+      .r-ink path.mark-lasso {
+        stroke: var(--echo);
         stroke-width: 2;
         stroke-dasharray: 7 6;
       }
@@ -402,13 +398,16 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
         position: absolute;
         right: 0;
         top: 0;
-        background: var(--echo);
+        background-color: var(--echo);
         color: var(--paper-raised);
-        font-size: max(7px, calc(var(--type-base) / pow(var(--type-ratio), 2)));
+        font-size: max(
+          0.4375rem,
+          calc(var(--type-base) / pow(var(--type-ratio), 2))
+        );
         font-weight: 600;
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        padding: 3px 6px;
+        padding: 0.1875rem 0.375rem;
       }
       .slip-chip {
         position: absolute;
@@ -418,20 +417,21 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        background: var(--paper-raised);
-        border: 1px solid #eae4d2;
-        box-shadow: 0 3px 8px rgba(50, 40, 20, 0.2);
-        padding: 2px 8px;
+        background-color: var(--paper-raised);
+        border: 1px solid color-mix(in oklch, var(--edge) 30%, var(--paper));
+        box-shadow: 0 3px 8px
+          color-mix(in oklch, var(--chrome) 20%, transparent);
+        padding: 0.125rem 0.5rem;
         transform: rotate(1.6deg);
         font-family: var(--font-hand);
-        font-size: max(11px, var(--type-base));
+        font-size: max(0.6875rem, var(--type-base));
         color: var(--echo);
       }
       .r-head {
         grid-area: head;
-        padding: 2px var(--fit-pad) 0;
+        padding: 0.125rem var(--fit-pad) 0;
         border-top: 1.5px solid var(--ink);
-        background: var(--paper);
+        background-color: var(--paper);
       }
       .name {
         font-family: var(--font-hand);
@@ -446,22 +446,39 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
       }
       .r-meta {
         grid-area: meta;
-        padding: 1px var(--fit-pad) var(--fit-pad);
+        margin: 0;
+        padding: 0.0625rem var(--fit-pad) var(--fit-pad);
+        display: flex;
+        gap: 0.375rem;
         font-size: var(--fit-meta-size);
         letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--chrome-soft);
-        background: var(--paper);
+        background-color: var(--paper);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .r-meta b {
+      .r-meta dt {
+        display: inline;
+      }
+      .r-meta dt::after {
+        content: ':';
+      }
+      .r-meta dd {
+        display: inline;
+        margin: 0;
+      }
+      .r-meta dd + dt {
+        margin-left: 0.5rem;
+      }
+      .r-meta .meta-echo {
         color: var(--echo);
+        font-weight: 600;
       }
 
       /* badge: the mark only, no meta */
-      @container card (width <= 150px) and (height <= 169px) {
+      @container card (width <= 9.375rem) and (height <= 10.5625rem) {
         .r-meta,
         .echo-badge {
           display: none;
@@ -475,22 +492,22 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
         }
       }
 
-      /* under ~66px tall the chip truncates to noise — drop it */
-      @container card (height <= 66px) {
+      /* under ~4.125rem tall the chip truncates to noise — drop it */
+      @container card (height <= 4.125rem) {
         .slip-chip {
           display: none;
         }
       }
 
       /* strip: short & wide — ink thumb beside text */
-      @container card (width > 150px) and (height <= 169px) {
+      @container card (width > 9.375rem) and (height <= 10.5625rem) {
         .fit {
-          grid-template-columns: minmax(56px, 30%) 1fr;
+          grid-template-columns: minmax(3.5rem, 30%) 1fr;
           grid-template-rows: minmax(0, 1fr) auto;
           grid-template-areas: 'ink head' 'ink meta';
         }
         .r-ink {
-          border-right: 1px solid rgba(90, 120, 160, 0.3);
+          border-right: 1px solid var(--grid);
         }
         .r-head {
           border-top: none;
@@ -502,14 +519,15 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
       }
 
       /* card tier: ink zone left, panel right */
-      @container card (width >= 400px) and (height >= 170px) {
+      @container card (width >= 25rem) and (height >= 10.625rem) {
         .fit {
-          grid-template-columns: minmax(0, 1.5fr) minmax(200px, 1fr);
+          grid-template-columns: minmax(0, 1.5fr) minmax(12.5rem, 1fr);
           grid-template-rows: minmax(0, 1fr) auto;
           grid-template-areas: 'ink head' 'ink meta';
         }
         .r-ink {
-          border-right: 1.5px solid rgba(43, 63, 140, 0.4);
+          border-right: 1.5px solid
+            color-mix(in oklch, var(--ink) 40%, transparent);
         }
         .r-head {
           border-top: none;
@@ -525,22 +543,6 @@ export class EchoPadFitted extends Component<typeof EchoPad> {
           white-space: normal;
           line-height: 1.9;
         }
-      }
-
-      /* semantic tier only when a Theme card is linked */
-      .ep-embedded.themed,
-      .themed .fit {
-        --paper: var(--ep-paper, var(--background, #f7f4ec));
-        --paper-raised: var(--ep-paper-raised, var(--card, #fffdf5));
-        --ink: var(--ep-ink, var(--primary, #2b3f8c));
-        --echo: var(--ep-echo, var(--accent, #c33d2e));
-        --chrome: var(--ep-chrome, var(--foreground, #3a3527));
-        --chrome-soft: var(--ep-chrome-soft, var(--muted-foreground, #6d6753));
-        --edge: var(--ep-edge, var(--border, #56503f));
-        --font-chrome: var(
-          --ep-font-chrome,
-          var(--font-mono, 'IBM Plex Mono', monospace)
-        );
       }
     </style>
   </template>

@@ -5,6 +5,7 @@
 // =============================================================================
 // @ts-ignore — CDN module has no type defs
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/+esm';
+import { clamp } from '@cardstack/base/number/util/index';
 import {
   TAU,
   V_STEP,
@@ -355,21 +356,21 @@ export class TreeEngine {
     let bound = boundTree * (1 - m) + (SPHERE_R + 1.6) * m;
     let dV = (bound * 1.28) / this.tanV;
     let dH = dV / this.camera.aspect;
-    return Math.min(Math.max(Math.max(dV, dH), 16), 130);
+    return clamp(Math.max(dV, dH), 16, 130);
   }
 
   tumble(dx: number, dy: number) {
     this.velY = dx * 0.005;
     this.velX = dy * 0.005;
     this.rotY += this.velY;
-    this.rotX = Math.max(-1.2, Math.min(1.2, this.rotX + this.velX));
+    this.rotX = clamp(this.rotX + this.velX, -1.2, 1.2);
   }
 
   zoom(delta: number) {
     this.userApproached = true;
     // the far clamp stays close enough that an accidental trackpad
     // scroll can never shrink the specimen to a speck
-    this.dist = Math.max(18, Math.min(70, this.dist + delta));
+    this.dist = clamp(this.dist + delta, 18, 70);
   }
 
   /* double-click hands the framing back to the auto-fit */

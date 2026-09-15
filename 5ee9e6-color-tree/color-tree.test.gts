@@ -9,11 +9,16 @@ import { ColorTreeField } from './color-tree-field';
 import { ColorTreeFieldExample } from './example/color-tree-field-playground-example';
 import {
   buildArrays,
+  chipColor,
   chipHex,
+  hslToRgb,
   hueLabel,
+  lerpWrap,
   lerpWrapDeg,
   maxChroma,
   munsellNotation,
+  rgbHex,
+  toHex2,
 } from './utils/munsell';
 
 import { getLoader } from '../tests/helpers/field-test-helpers';
@@ -64,10 +69,7 @@ export function runTests() {
           'no pick hint while the atlas is closed',
         );
 
-      let [, scanButton] = [
-        ...document.querySelectorAll('.stage-actions button'),
-      ];
-      await click(scanButton as Element);
+      await click('[data-test-scan]');
 
       assert.dom('.hint').containsText('copy its hex');
       assert
@@ -86,7 +88,7 @@ export function runTests() {
         .doesNotExist('the compact studio starts with the panel closed');
       assert.dom('.hamburger').hasText('☰');
 
-      await click('.hamburger');
+      await click('[data-test-toggle-panel]');
 
       assert.dom('.panel').exists('the panel opens');
       assert.dom('.hamburger').hasClass('panel-open');
@@ -95,16 +97,13 @@ export function runTests() {
 
     test('color-tree field scan dial only engages while a cut is open', async function (assert) {
       await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
-      await click('.hamburger');
+      await click('[data-test-toggle-panel]');
 
       assert
         .dom('input[aria-label="scan"]')
         .isDisabled('the scan dial is greyed out on the closed solid');
 
-      let [, scanButton] = [
-        ...document.querySelectorAll('.stage-actions button'),
-      ];
-      await click(scanButton as Element);
+      await click('[data-test-scan]');
 
       assert
         .dom('input[aria-label="scan"]')
@@ -118,10 +117,7 @@ export function runTests() {
         .dom('[data-test-toggle-mini]')
         .doesNotExist('no scout toggle while the atlas is closed');
 
-      let [, scanButton] = [
-        ...document.querySelectorAll('.stage-actions button'),
-      ];
-      await click(scanButton as Element);
+      await click('[data-test-scan]');
 
       assert.dom('.mini-frame').exists('the scout shows on the open atlas');
       assert
@@ -171,6 +167,48 @@ export function runTests() {
       // between 5R (357°) and 5YR (32°) the blend crosses 0°, not 180°
       let deg = lerpWrapDeg(0.05);
       assert.true(deg >= 0 && deg < 32, `deg ${deg} takes the short way`);
+    });
+
+    test('color-tree field toHex2 clamps and pads to two hex digits', function (assert) {
+      assert.strictEqual(toHex2(0), '00');
+      assert.strictEqual(toHex2(1), 'ff', 'above 1 clamps to ff');
+      assert.strictEqual(toHex2(-1), '00', 'below 0 clamps to 00');
+      assert.strictEqual(toHex2(0.5), '80', '0.5 rounds to 128 → 80');
+    });
+
+    test('color-tree field rgbHex assembles a css hex color from 0-1 channels', function (assert) {
+      assert.strictEqual(rgbHex(1, 0, 0), '#ff0000');
+      assert.strictEqual(rgbHex(0, 0, 0), '#000000');
+    });
+
+    test('color-tree field hslToRgb reproduces primary hues at full saturation', function (assert) {
+      let [r, g, b] = hslToRgb(0, 1, 0.5);
+      assert.true(r > 0.95 && g < 0.05 && b < 0.05, 'hue 0 is red');
+      let [r2, g2, b2] = hslToRgb(120, 1, 0.5);
+      assert.true(r2 < 0.05 && g2 > 0.95 && b2 < 0.05, 'hue 120 is green');
+    });
+
+    test('color-tree field chipColor renders neutrals as gray and chromatic chips as tinted', function (assert) {
+      let [r, g, b] = chipColor(0, 5, 0);
+      assert.true(
+        Math.abs(r - g) < 0.05 && Math.abs(g - b) < 0.05,
+        'a zero-chroma chip is neutral (r ≈ g ≈ b)',
+      );
+      let [rc, gc, bc] = chipColor(0, 5, 12);
+      assert.false(
+        Math.abs(rc - gc) < 0.02 && Math.abs(gc - bc) < 0.02,
+        'a saturated chip is not neutral',
+      );
+    });
+
+    test('color-tree field lerpWrap eases smoothly between adjacent array entries', function (assert) {
+      let arr = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90];
+      assert.strictEqual(lerpWrap(arr, 0), 0, 'exact index returns the value');
+      let mid = lerpWrap(arr, 0.05);
+      assert.true(
+        mid > 0 && mid < 10,
+        'halfway between two ticks interpolates between them',
+      );
     });
 
     test('color-tree field buildArrays produces a consistent lattice', function (assert) {

@@ -28,7 +28,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../echo-pad/Theme/echo-pad-paper"
         }
       }
     },

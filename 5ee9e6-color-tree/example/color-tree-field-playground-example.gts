@@ -37,7 +37,7 @@ export class ColorTreeFieldExample extends CardDef {
 
         <section class='fe-panel'>
           <div class='fe-panel-head'>
-            <span class='fe-panel-label'>Interactive</span>
+            <h2 class='fe-panel-label'>Interactive</h2>
             <span class='fe-panel-hint'>Open the atlas, hold a spot to pick</span>
           </div>
           <div class='fe-panel-body'>
@@ -47,7 +47,7 @@ export class ColorTreeFieldExample extends CardDef {
 
         <section class='fe-panel'>
           <div class='fe-panel-head'>
-            <span class='fe-panel-label'>Preview</span>
+            <h2 class='fe-panel-label'>Preview</h2>
             <span class='fe-panel-hint'>Embedded and atom formats</span>
           </div>
           <div class='fe-panel-body fe-panel-body--row'>
@@ -58,7 +58,7 @@ export class ColorTreeFieldExample extends CardDef {
 
         <section class='fe-panel fe-panel--code'>
           <div class='fe-panel-head'>
-            <span class='fe-panel-label'>Usage</span>
+            <h2 class='fe-panel-label'>Usage</h2>
           </div>
           <CodeSnippet @code={{usageCode}} />
         </section>
@@ -68,11 +68,11 @@ export class ColorTreeFieldExample extends CardDef {
         .field-example {
           display: grid;
           gap: var(--boxel-sp, 1rem);
-          max-width: 680px;
+          max-width: 42.5rem;
           margin-inline: auto;
           padding: var(--boxel-sp-lg, 1.5rem);
-          font-family: var(--boxel-font-family, system-ui, sans-serif);
-          color: var(--boxel-dark, #111827);
+          font-family: var(--font-sans);
+          color: var(--foreground);
         }
         .fe-header {
           display: grid;
@@ -83,7 +83,7 @@ export class ColorTreeFieldExample extends CardDef {
           font-weight: 600;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: var(--boxel-purple, #6b46c1);
+          color: var(--primary-ink);
         }
         .fe-title {
           margin: 0;
@@ -95,18 +95,20 @@ export class ColorTreeFieldExample extends CardDef {
           margin: 0;
           font-size: 0.875rem;
           line-height: 1.5;
-          color: var(--boxel-500, #64748b);
+          color: var(--muted-foreground);
         }
         .fe-panel {
           display: grid;
           gap: var(--boxel-sp-xs, 0.5rem);
           padding: var(--boxel-sp, 1rem);
-          border: 1px solid var(--boxel-200, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius, 0.5rem);
-          background: var(--boxel-light, #fff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .fe-panel--code {
-          background: var(--boxel-100, #f8fafc);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .fe-panel-head {
           display: flex;
@@ -115,15 +117,16 @@ export class ColorTreeFieldExample extends CardDef {
           gap: var(--boxel-sp-xs, 0.5rem);
         }
         .fe-panel-label {
+          margin: 0;
           font-size: 0.75rem;
           font-weight: 600;
           letter-spacing: 0.04em;
           text-transform: uppercase;
-          color: var(--boxel-400, #94a3b8);
+          color: var(--muted-foreground);
         }
         .fe-panel-hint {
           font-size: 0.75rem;
-          color: var(--boxel-400, #94a3b8);
+          color: var(--muted-foreground);
         }
         .fe-panel-body--row {
           display: flex;

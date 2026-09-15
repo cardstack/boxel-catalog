@@ -13,6 +13,28 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    SHADERS — morph, slice, light
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* shared by VOXEL_VSH, HALO_VSH and RING_VSH — each vertex shader stitches
+   this in verbatim, since GLSL has no cross-program import; it decides
+   whether a voxel belongs to the current hue leaf or value plane */
+const SLICE_GATE_GLSL = `
+float sliceGate(float angle, float value, float cfrac){
+  float s = 1.0;
+  if (uSliceMode > 0.5 && uSliceMode < 1.5){
+    float phi = uSlicePos * 3.14159265;
+    float dA = angle - phi;
+    dA = abs(atan(sin(dA), cos(dA)));
+    dA = min(dA, 3.14159265 - dA);      /* the leaf holds a hue and its complement */
+    s = 1.0 - smoothstep(uSliceHalf * 0.55, uSliceHalf * 0.95, dA);
+    s = max(s, step(cfrac, 0.001));     /* the trunk belongs to every leaf */
+  } else if (uSliceMode > 1.5){
+    float dv = abs(value - uSlicePos * 10.0);
+    s = (1.0 - smoothstep(0.4, 0.75, dv)) * step(0.001, cfrac);
+  }
+  return s;
+}
+`;
+
 export const VOXEL_VSH = `
 attribute vec3 aTree;
 attribute vec3 aSphere;
@@ -29,23 +51,7 @@ uniform vec3 uCamR, uCamU, uCamF, uAnchor;
 varying vec3 vColor;
 varying vec3 vNormal;
 varying float vPage;
-
-float sliceGate(float angle, float value, float cfrac){
-  float s = 1.0;
-  if (uSliceMode > 0.5 && uSliceMode < 1.5){
-    float phi = uSlicePos * 3.14159265;
-    float dA = angle - phi;
-    dA = abs(atan(sin(dA), cos(dA)));
-    dA = min(dA, 3.14159265 - dA);      /* the leaf holds a hue and its complement */
-    s = 1.0 - smoothstep(uSliceHalf * 0.55, uSliceHalf * 0.95, dA);
-    s = max(s, step(cfrac, 0.001));     /* the trunk belongs to every leaf */
-  } else if (uSliceMode > 1.5){
-    float dv = abs(value - uSlicePos * 10.0);
-    s = (1.0 - smoothstep(0.4, 0.75, dv)) * step(0.001, cfrac);
-  }
-  return s;
-}
-
+${SLICE_GATE_GLSL}
 void main(){
   float gate = sliceGate(aAngle, aValue, aCFrac);
   /* chroma reveal: outer chips fade first as the dial closes */
@@ -141,23 +147,7 @@ uniform float uSliceMode, uSlicePos, uSliceHalf, uHueCount, uCellHue, uCellVal;
 uniform vec3 uCamR, uCamU, uAnchor;
 varying vec3 vColor;
 varying float vA;
-
-float sliceGate(float angle, float value, float cfrac){
-  float s = 1.0;
-  if (uSliceMode > 0.5 && uSliceMode < 1.5){
-    float phi = uSlicePos * 3.14159265;
-    float dA = angle - phi;
-    dA = abs(atan(sin(dA), cos(dA)));
-    dA = min(dA, 3.14159265 - dA);
-    s = 1.0 - smoothstep(uSliceHalf * 0.55, uSliceHalf * 0.95, dA);
-    s = max(s, step(cfrac, 0.001));
-  } else if (uSliceMode > 1.5){
-    float dv = abs(value - uSlicePos * 10.0);
-    s = (1.0 - smoothstep(0.4, 0.75, dv)) * step(0.001, cfrac);
-  }
-  return s;
-}
-
+${SLICE_GATE_GLSL}
 void main(){
   float gate = sliceGate(aAngle, aValue, aCFrac);
   float vis = 1.0 - smoothstep(uChroma + 0.02, uChroma + 0.14, aCFrac);
@@ -264,23 +254,7 @@ uniform float uChart, uMorph, uScale, uMini;
 uniform float uSliceMode, uSlicePos, uSliceHalf, uHueCount, uCellHue, uCellVal;
 uniform vec3 uCamR, uCamU, uAnchor;
 varying float vA;
-
-float sliceGate(float angle, float value, float cfrac){
-  float s = 1.0;
-  if (uSliceMode > 0.5 && uSliceMode < 1.5){
-    float phi = uSlicePos * 3.14159265;
-    float dA = angle - phi;
-    dA = abs(atan(sin(dA), cos(dA)));
-    dA = min(dA, 3.14159265 - dA);
-    s = 1.0 - smoothstep(uSliceHalf * 0.55, uSliceHalf * 0.95, dA);
-    s = max(s, step(cfrac, 0.001));
-  } else if (uSliceMode > 1.5){
-    float dv = abs(value - uSlicePos * 10.0);
-    s = (1.0 - smoothstep(0.4, 0.75, dv)) * step(0.001, cfrac);
-  }
-  return s;
-}
-
+${SLICE_GATE_GLSL}
 void main(){
   float sIn = sliceGate(aAngle, aValue, aCFrac);
   float lin = uMorph * uMorph * (3.0 - 2.0 * uMorph);
