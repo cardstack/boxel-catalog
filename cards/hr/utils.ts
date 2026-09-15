@@ -14,7 +14,13 @@ export function daysBetween(
   return Math.max(0, Math.round((end.getTime() - start.getTime()) / 86400000));
 }
 
-/** How many of a linksToMany's entries are present — a count that ignores unresolved links. */
+/**
+ * How many of a linksToMany's entries are present. Deleting a card does not
+ * rewrite the cards linking to it, so the dead reference survives: the slot
+ * stays in the array, `length` is unchanged, and the entry reads as
+ * `undefined`. Counting raw `.length` therefore reports members or skills
+ * that are visibly no longer there.
+ */
 export function liveCount(links: unknown[] | null | undefined): number {
   return (links ?? []).filter(Boolean).length;
 }

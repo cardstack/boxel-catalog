@@ -27,6 +27,10 @@ export const DURATION_UNITS: DurationUnit[] = [
   'years',
 ];
 
+// Pick the unit that reads naturally for a span measured in days. A tenure of
+// 1303 days is technically correct and useless — nobody thinks in four-digit
+// day counts. Short spans stay in days because that IS how recruiters talk
+// about them ("31 days to hire").
 const DAYS_PER_UNIT: Record<DurationUnit, number> = {
   minutes: 1 / (24 * 60),
   hours: 1 / 24,
@@ -110,7 +114,7 @@ export class DurationField extends FieldDef {
 
   @field value = contains(NumberField);
   @field unit = contains(StringField, {
-    description: 'One of: minutes, hours, days, weeks, months',
+    description: 'One of: minutes, hours, days, weeks, months, years',
   });
 
   @field label = contains(StringField, {

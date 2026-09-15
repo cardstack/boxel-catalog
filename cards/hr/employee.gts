@@ -459,12 +459,11 @@ export class Employee extends PersonBase {
   @field onboardingStatus = contains(OnboardingStatusField);
   @field salary = contains(NumberField);
   @field manager = linksTo(() => Employee);
-  // Academy Desk (Extend, additive): what this person is qualified to teach.
-  // Optional free-text credentials/subjects; read by the Cohort's instructor
-  // assignment UI. No instance needs migrating — absent means "unspecified".
+  // Optional free-text credentials/subjects, for consumers that staff teaching
+  // or mentoring from the same employee records. Absent means "unspecified",
+  // so no instance needs migrating.
   @field teachingQualifications = containsMany(StringField, {
-    description:
-      'Subjects or credentials this person may teach (Academy Desk).',
+    description: 'Subjects or credentials this person is qualified to teach',
   });
   @field weeklyInterviewCapacityHours = contains(NumberField, {
     description:
