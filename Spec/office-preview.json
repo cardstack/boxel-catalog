@@ -19,23 +19,6 @@
         "module": "https://cardstack.com/base/spec",
         "name": "Spec"
       }
-    },
-    "relationships": {
-      "fileExamples.0": {
-        "links": {
-          "self": "../filedef-fixtures/samples/docx-moderate.docx"
-        }
-      },
-      "fileExamples.1": {
-        "links": {
-          "self": "../filedef-fixtures/samples/pptx-moderate.pptx"
-        }
-      },
-      "fileExamples.2": {
-        "links": {
-          "self": "../filedef-fixtures/samples/xlsx-moderate.xlsx"
-        }
-      }
     }
   }
 }
