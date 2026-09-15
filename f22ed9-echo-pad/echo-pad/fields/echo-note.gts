@@ -33,24 +33,22 @@ export class EchoNoteField extends FieldDef {
       </div>
       <style scoped>
         .echo-note {
-          font-family: var(
-            --ep-font-chrome,
-            var(--font-mono, 'IBM Plex Mono', monospace)
-          );
+          font-family: var(--font-mono);
         }
         .echo-note-label {
           font-size: 0.65rem;
           font-weight: 600;
           letter-spacing: 0.22em;
           text-transform: uppercase;
-          color: var(--ep-echo, #c33d2e);
-          margin-bottom: 4px;
+          color: var(--chart-1);
+          margin-bottom: 0.25rem;
         }
         .echo-note-content {
-          font-family: var(--ep-font-hand, 'Caveat', cursive);
+          /* bespoke typographic identity, not part of the token contract */
+          font-family: 'Caveat', cursive;
           font-size: 1.3rem;
           line-height: 1.25;
-          color: var(--ep-echo, #c33d2e);
+          color: var(--chart-1);
           white-space: pre-wrap;
         }
       </style>

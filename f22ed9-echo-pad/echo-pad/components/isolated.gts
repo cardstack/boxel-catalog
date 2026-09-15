@@ -1,15 +1,20 @@
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
-import { htmlSafe, type SafeString } from '@ember/template';
+import { concat, fn } from '@ember/helper';
 import { modifier } from 'ember-modifier';
 import { restartableTask, timeout } from 'ember-concurrency';
 
+import CheckIcon from '@cardstack/boxel-icons/check';
 import EraserIcon from '@cardstack/boxel-icons/eraser';
 import HandIcon from '@cardstack/boxel-icons/hand';
 import LassoIcon from '@cardstack/boxel-icons/lasso';
+import MinusIcon from '@cardstack/boxel-icons/minus';
 import PencilIcon from '@cardstack/boxel-icons/pencil';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import PlusIcon from '@cardstack/boxel-icons/plus';
+import RotateCcwIcon from '@cardstack/boxel-icons/rotate-ccw';
+import XIcon from '@cardstack/boxel-icons/x';
+import { Button, IconButton } from '@cardstack/boxel-ui/components';
+import { cn, cssVar, eq } from '@cardstack/boxel-ui/helpers';
 import { Component } from '@cardstack/base/card-api';
 
 import {
@@ -19,11 +24,13 @@ import {
 import { EchoScenePlayer } from './scene-player';
 import { mapStrokesToManim } from '../utils/scene';
 import { EchoNoteField } from '../fields/echo-note';
+import { clamp } from '@cardstack/base/number/util/index';
+
 import {
   asEchoMode,
-  clamp,
   ECHO_MODES,
-  INK_COLOR,
+  echoErrorCode,
+  flatPointsToPath,
   mapLabelsToWorld,
   mapPolylinesToWorld,
   parseSketchJson,
@@ -117,9 +124,29 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
 
   inkLoaded = false;
 
+  // The board's own --ink token (which itself resolves to var(--chart-4))
+  // is the single source of truth for drawn-ink color; caching it avoids a
+  // getComputedStyle call on every pointer-move segment. Invalidated
+  // whenever boardEl is (re)attached, since that's the only time the
+  // resolved value could change (a live theme swap re-renders the board).
+  _resolvedInkColor: string | null = null;
+
+  resolvedInkColor(): string {
+    if (this._resolvedInkColor) {
+      return this._resolvedInkColor;
+    }
+    let resolved = this.boardEl ? getComputedStyle(this.boardEl) : null;
+    this._resolvedInkColor =
+      resolved?.getPropertyValue('--ink').trim() || '#2b3f8c';
+    return this._resolvedInkColor;
+  }
+
   setupBoard = modifier((el: HTMLElement) => {
     this.boardEl = el;
-    let canvas = el.querySelector('canvas.ink-layer') as HTMLCanvasElement;
+    this._resolvedInkColor = null;
+    let canvas = el.querySelector(
+      'canvas[data-ink-layer]',
+    ) as HTMLCanvasElement;
     this.canvas = canvas;
     // one-shot: our own debounced save mutates inkJson, which re-runs this
     // modifier — re-seeding from the model then would clobber live state
@@ -167,10 +194,14 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
     }
   }
 
-  get worldTransform(): SafeString {
-    return htmlSafe(
-      `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`,
-    );
+  // cssVar is a template helper, so the getters hand it ready-made CSS values
+  // and the template does the emitting.
+  get worldCss() {
+    return {
+      panX: `${this.panX}px`,
+      panY: `${this.panY}px`,
+      zoom: `${this.zoom}`,
+    };
   }
 
   get zoomPercent() {
@@ -433,7 +464,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
     );
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = INK_COLOR;
+    ctx.strokeStyle = this.resolvedInkColor();
     for (let s of this.strokes) {
       this.strokePath(ctx, s);
     }
@@ -496,7 +527,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       s.pts[n - 1] - s.pts[n - 3],
     );
     ctx.lineCap = 'round';
-    ctx.strokeStyle = INK_COLOR;
+    ctx.strokeStyle = this.resolvedInkColor();
     ctx.lineWidth = velocityWidth(s.w, d);
     ctx.beginPath();
     ctx.moveTo(s.pts[n - 4], s.pts[n - 3]);
@@ -646,38 +677,34 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
 
   get lassoPath(): string {
     let pts = this.lassoPts;
-    if (!pts || pts.length < 4) {
+    if (!pts) {
       return '';
     }
     // the svg sits at (-4000, -4000) so ink at negative world coords still renders
-    let d = `M ${pts[0] + 4000} ${pts[1] + 4000}`;
-    for (let i = 2; i < pts.length; i += 2) {
-      d += ` L ${pts[i] + 4000} ${pts[i + 1] + 4000}`;
-    }
-    if (this.lassoBBox) {
-      d += ' Z';
-    }
-    return d;
+    return flatPointsToPath(pts, {
+      offsetX: 4000,
+      offsetY: 4000,
+      close: !!this.lassoBBox,
+    });
   }
 
-  get puckStyle(): SafeString {
+  // null when there is no lasso — the template omits the element rather than
+  // hiding it, which is what the old inline `display: none` achieved.
+  get puckCss() {
     let box = this.lassoBBox;
-    if (!box) {
-      return htmlSafe('display: none');
-    }
-    return htmlSafe(`left: ${box.minX}px; top: ${box.maxY + 18}px`);
+    return box ? { x: `${box.minX}px`, y: `${box.maxY + 18}px` } : null;
   }
 
-  get scanStyle(): SafeString {
+  get scanCss() {
     let box = this.lassoBBox;
-    if (!box) {
-      return htmlSafe('display: none');
-    }
-    return htmlSafe(
-      `left: ${box.minX - 8}px; top: ${box.minY - 8}px; width: ${
-        box.maxX - box.minX + 16
-      }px; height: ${box.maxY - box.minY + 16}px`,
-    );
+    return box
+      ? {
+          x: `${box.minX - 8}px`,
+          y: `${box.minY - 8}px`,
+          w: `${box.maxX - box.minX + 16}px`,
+          h: `${box.maxY - box.minY + 16}px`,
+        }
+      : null;
   }
 
   // ambient scanning: after a pause in writing, quietly offer an echo on the
@@ -721,12 +748,9 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
     return this.strokes.slice(base);
   }
 
-  get autoDotStyle(): SafeString {
+  get autoDotCss() {
     let d = this.autoDot;
-    if (!d) {
-      return htmlSafe('display: none');
-    }
-    return htmlSafe(`left: ${d.x}px; top: ${d.y}px`);
+    return d ? { x: `${d.x}px`, y: `${d.y}px` } : null;
   }
 
   toggleAuto = () => {
@@ -848,10 +872,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       this.lassoPts = null;
       this.lassoBBox = null;
     } catch (err: any) {
-      let empty = /empty annotation/i.test(
-        err instanceof Error ? err.message : String(err),
-      );
-      if (empty) {
+      if (echoErrorCode(err) === 'empty') {
         // the marker looked and had nothing to add — ambient silence, not an error
         this.dismissLasso();
         this.autoSuppressedBelow = this.strokes.length + AUTO_MIN_STROKES;
@@ -944,7 +965,8 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
     if (!ctx) {
       throw new Error('Could not capture the board region.');
     }
-    ctx.fillStyle = '#ffffff';
+    let resolved = this.boardEl ? getComputedStyle(this.boardEl) : null;
+    ctx.fillStyle = resolved?.getPropertyValue('--paper').trim() || '#ffffff';
     ctx.fillRect(0, 0, off.width, off.height);
     ctx.setTransform(
       scale,
@@ -956,7 +978,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
     );
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#1a1a3a';
+    ctx.strokeStyle = this.resolvedInkColor();
     let padded = expandBBox(box, margin);
     for (let s of this.strokes) {
       let sb = strokeBBox(s);
@@ -992,37 +1014,24 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
           parsed.polylines.length ? parsed.polylines : null,
           parsed.labels,
         ),
-        style: htmlSafe(
-          `left: ${override?.x ?? note.x ?? 0}px; top: ${
-            override?.y ?? note.y ?? 0
-          }px; width: ${note.width ?? DRAFT_WIDTH}px`,
-        ),
+        cssX: `${override?.x ?? note.x ?? 0}px`,
+        cssY: `${override?.y ?? note.y ?? 0}px`,
+        cssW: `${note.width ?? DRAFT_WIDTH}px`,
       };
     });
   }
 
-  get draftStyle(): SafeString {
+  get draftCss() {
     let d = this.draft;
-    if (!d) {
-      return htmlSafe('display: none');
-    }
-    return htmlSafe(`left: ${d.x}px; top: ${d.y}px; width: ${d.width}px`);
+    return d ? { x: `${d.x}px`, y: `${d.y}px`, w: `${d.width}px` } : null;
   }
 
-  get errorStyle(): SafeString {
+  get errorCss() {
     let s = this.echoError;
-    if (!s) {
-      return htmlSafe('display: none');
-    }
-    return htmlSafe(`left: ${s.x}px; top: ${s.y}px; width: ${DRAFT_WIDTH}px`);
+    return s ? { x: `${s.x}px`, y: `${s.y}px`, w: `${DRAFT_WIDTH}px` } : null;
   }
 
-  get draftSketchOverlay(): {
-    style: SafeString;
-    viewBox: string;
-    paths: string[];
-    texts: EchoLabel[];
-  } | null {
+  get draftSketchOverlay(): SketchOverlay | null {
     return sketchOverlay(
       this.draft?.sketchWorld ?? null,
       this.draft?.labelsWorld ?? [],
@@ -1060,13 +1069,6 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       // unreachable skill (remixed realm, offline) — the local grammar stands in
     }
     return this.markerInstructions ?? '';
-  }
-
-  // a linked Theme card means the host has injected semantic tokens into this
-  // card's scope; only then may our tokens defer to them (otherwise the host's
-  // default palette would erase the board's own identity)
-  get themed(): boolean {
-    return Boolean((this.args.model as any)?.cardInfo?.theme);
   }
 
   get lastInkLabel(): string {
@@ -1220,17 +1222,14 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
   <template>
     {{! a drawing surface: strokes start on pointerdown, overlays absorb it }}
     {{! template-lint-disable no-pointer-down-event-binding }}
-    <section
-      class='echo-pad {{if this.themed "themed"}}'
-      aria-label='Echo Pad whiteboard'
-    >
+    <main class='echo-pad' aria-label='Echo Pad whiteboard'>
 
       {{! ruler toolbar }}
       <header class='ruler'>
         <div class='tools' role='radiogroup' aria-label='Drawing tools'>
           <button
             type='button'
-            class='tool {{if (eq this.tool "pen") "active"}}'
+            class={{cn 'tool' active=(eq this.tool 'pen')}}
             aria-pressed='{{if (eq this.tool "pen") "true" "false"}}'
             aria-label='Pen'
             title='Pen (P)'
@@ -1240,7 +1239,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
             >Pen</span></button>
           <button
             type='button'
-            class='tool {{if (eq this.tool "eraser") "active"}}'
+            class={{cn 'tool' active=(eq this.tool 'eraser')}}
             aria-pressed='{{if (eq this.tool "eraser") "true" "false"}}'
             aria-label='Eraser'
             title='Eraser (E)'
@@ -1250,7 +1249,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
             >Eraser</span></button>
           <button
             type='button'
-            class='tool {{if (eq this.tool "lasso") "active"}}'
+            class={{cn 'tool' active=(eq this.tool 'lasso')}}
             aria-pressed='{{if (eq this.tool "lasso") "true" "false"}}'
             aria-label='Select'
             title='Select (S)'
@@ -1260,7 +1259,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
             >Select</span></button>
           <button
             type='button'
-            class='tool {{if (eq this.tool "pan") "active"}}'
+            class={{cn 'tool' active=(eq this.tool 'pan')}}
             aria-pressed='{{if (eq this.tool "pan") "true" "false"}}'
             aria-label='Pan'
             title='Pan (H, or hold Space)'
@@ -1273,16 +1272,23 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         <div class='brand'>
           <button
             type='button'
-            class='auto-toggle {{if this.autoEnabled "on"}}'
+            class={{cn 'auto-toggle' on=this.autoEnabled}}
             aria-pressed='{{if this.autoEnabled "true" "false"}}'
             title='Ambient echo: after you pause writing, a dot offers help'
             {{on 'click' this.toggleAuto}}
+            aria-label='Ambient echo'
           >
-            {{if this.autoEnabled 'Auto ●' 'Auto ○'}}
+            Auto
+            <i class='auto-dot-glyph' aria-hidden='true'>{{if
+                this.autoEnabled
+                '●'
+                '○'
+              }}</i>
           </button>
-          <button
-            type='button'
-            class='clear-btn {{if this.clearArmed "armed"}}'
+          <Button
+            @kind='secondary'
+            @size='small'
+            class={{cn 'clear-btn' armed=this.clearArmed}}
             {{on 'click' this.armClear}}
           >
             {{if
@@ -1290,27 +1296,27 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
               'Tap again to erase everything'
               '⌫ Clear board'
             }}
-          </button>
+          </Button>
           <span class='zoom-controls'>
-            <button
-              type='button'
+            <IconButton
+              @icon={{MinusIcon}}
               class='zoom-btn'
               aria-label='Zoom out'
               {{on 'click' this.zoomOut}}
-            >−</button>
-            <button
-              type='button'
+            />
+            <Button
+              @kind='text-only'
               class='zoom-btn zoom-pct'
               aria-label='Reset zoom to 100%'
               title='Reset zoom'
               {{on 'click' this.zoomReset}}
-            >{{this.zoomPercent}}%</button>
-            <button
-              type='button'
+            >{{this.zoomPercent}}%</Button>
+            <IconButton
+              @icon={{PlusIcon}}
               class='zoom-btn'
               aria-label='Zoom in'
               {{on 'click' this.zoomIn}}
-            >+</button>
+            />
           </span>
           <span class='zoom'>undo ⌘Z</span>
           <span class='brand-name'>Echo Pad</span>
@@ -1319,7 +1325,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
 
       {{! board }}
       <div
-        class='board tool-{{this.tool}} {{if this.spaceHeld "space-pan"}}'
+        class={{cn 'board' (concat 'tool-' this.tool) space-pan=this.spaceHeld}}
         {{this.setupBoard}}
         {{on 'pointerdown' this.onPointerDown}}
         {{on 'pointermove' this.onPointerMove}}
@@ -1329,58 +1335,91 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       >
         <canvas
           class='ink-layer'
+          data-ink-layer
           role='img'
           aria-label={{this.boardLabel}}
         ></canvas>
 
         {{! world-space overlays share the camera transform }}
-        <div class='world' style={{this.worldTransform}}>
+        <div
+          class='world'
+          style={{cssVar
+            world-pan-x=this.worldCss.panX
+            world-pan-y=this.worldCss.panY
+            world-zoom=this.worldCss.zoom
+          }}
+        >
 
           <svg class='lasso-svg' width='8000' height='8000' aria-hidden='true'>
             <path d={{this.lassoPath}} class='lasso-path' />
           </svg>
 
           {{#if this.thinkingLabel}}
-            <div class='scan' style={{this.scanStyle}}><i></i></div>
+            {{#if this.scanCss}}
+              <div
+                class='scan'
+                style={{cssVar
+                  scan-x=this.scanCss.x
+                  scan-y=this.scanCss.y
+                  scan-w=this.scanCss.w
+                  scan-h=this.scanCss.h
+                }}
+                aria-hidden='true'
+              ><i></i></div>
+            {{/if}}
           {{/if}}
 
           {{! action puck at the lasso }}
-          <div class='puck' style={{this.puckStyle}}>
-            {{#if this.thinkingLabel}}
-              <span class='puck-dot'></span>
-              <span class='puck-thinking'>{{this.thinkingLabel}}</span>
-              <button
-                type='button'
-                class='puck-x'
-                aria-label='Cancel'
-                {{on 'click' this.cancelEcho}}
-                {{on 'pointerdown' this.stopEvent}}
-              >✕ Cancel</button>
-            {{else}}
-              {{#each this.echoModes as |m|}}
-                <button
-                  type='button'
-                  class='puck-mode'
-                  {{on 'click' (fn this.startEcho m.key)}}
+          {{#if this.puckCss}}
+            <div
+              class='puck'
+              style={{cssVar puck-x=this.puckCss.x puck-y=this.puckCss.y}}
+              role='toolbar'
+              aria-label='Selection actions'
+            >
+              {{#if this.thinkingLabel}}
+                <span class='puck-dot'></span>
+                <span
+                  class='puck-thinking'
+                  role='status'
+                >{{this.thinkingLabel}}</span>
+                <Button
+                  @kind='text-only'
+                  class='puck-x'
+                  aria-label='Cancel'
+                  {{on 'click' this.cancelEcho}}
                   {{on 'pointerdown' this.stopEvent}}
-                >{{m.label}}</button>
-              {{/each}}
-              <button
-                type='button'
-                class='puck-x'
-                aria-label='Dismiss selection'
-                {{on 'click' this.dismissLasso}}
-                {{on 'pointerdown' this.stopEvent}}
-              >✕</button>
-            {{/if}}
-          </div>
+                >✕ Cancel</Button>
+              {{else}}
+                {{#each this.echoModes as |m|}}
+                  <Button
+                    @kind='text-only'
+                    class='puck-mode'
+                    {{on 'click' (fn this.startEcho m.key)}}
+                    {{on 'pointerdown' this.stopEvent}}
+                  >{{m.label}}</Button>
+                {{/each}}
+                <IconButton
+                  @icon={{XIcon}}
+                  @variant='text-only'
+                  class='puck-x'
+                  aria-label='Dismiss selection'
+                  {{on 'click' this.dismissLasso}}
+                  {{on 'pointerdown' this.stopEvent}}
+                />
+              {{/if}}
+            </div>
+          {{/if}}
 
           {{! ambient auto-echo: the marker noticed — costs nothing until clicked }}
-          {{#if this.autoDot}}
+          {{#if this.autoDotCss}}
             <button
               type='button'
               class='auto-dot'
-              style={{this.autoDotStyle}}
+              style={{cssVar
+                auto-dot-x=this.autoDotCss.x
+                auto-dot-y=this.autoDotCss.y
+              }}
               aria-label='The marker noticed this — echo incoming'
               title='Echo incoming — click to run now, Esc to dismiss'
               {{on 'click' this.expandAutoDot}}
@@ -1393,7 +1432,12 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
             {{#if entry.sketchOverlay}}
               <svg
                 class='sketch-overlay'
-                style={{entry.sketchOverlay.style}}
+                style={{cssVar
+                  overlay-x=entry.sketchOverlay.cssX
+                  overlay-y=entry.sketchOverlay.cssY
+                  overlay-w=entry.sketchOverlay.cssW
+                  overlay-h=entry.sketchOverlay.cssH
+                }}
                 viewBox={{entry.sketchOverlay.viewBox}}
                 aria-hidden='true'
               >
@@ -1413,7 +1457,12 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
           {{#if this.draftSketchOverlay}}
             <svg
               class='sketch-overlay ghost-sketch'
-              style={{this.draftSketchOverlay.style}}
+              style={{cssVar
+                overlay-x=this.draftSketchOverlay.cssX
+                overlay-y=this.draftSketchOverlay.cssY
+                overlay-w=this.draftSketchOverlay.cssW
+                overlay-h=this.draftSketchOverlay.cssH
+              }}
               viewBox={{this.draftSketchOverlay.viewBox}}
               aria-hidden='true'
             >
@@ -1430,20 +1479,25 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
           {{#each this.echoNotes as |entry|}}
             <div
               class='echo-accepted'
-              style={{entry.style}}
+              style={{cssVar
+                slip-x=entry.cssX
+                slip-y=entry.cssY
+                slip-w=entry.cssW
+              }}
               {{on 'pointerdown' (fn this.startNoteDrag entry.index)}}
             >
               <div class='echo-stamp'>
                 <span>{{if entry.note.label entry.note.label 'Echo'}}
                   ·
                   {{if entry.note.mode entry.note.mode 'solve'}}</span>
-                <button
-                  type='button'
+                <IconButton
+                  @icon={{XIcon}}
+                  @variant='text-only'
                   class='echo-remove'
                   aria-label='Remove {{entry.note.label}}'
                   {{on 'click' (fn this.removeNote entry.index)}}
                   {{on 'pointerdown' this.stopEvent}}
-                >✕</button>
+                />
               </div>
               {{#if entry.note.sceneJson}}
                 <div class='scene-slip'>
@@ -1456,7 +1510,14 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
 
           {{! draft slip: taped on, not yet ink }}
           {{#if this.draft}}
-            <div class='draft' style={{this.draftStyle}}>
+            <div
+              class='draft'
+              style={{cssVar
+                slip-x=this.draftCss.x
+                slip-y=this.draftCss.y
+                slip-w=this.draftCss.w
+              }}
+            >
               <div class='draft-tape' aria-hidden='true'></div>
               <div
                 class='draft-grip'
@@ -1471,38 +1532,50 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
               {{/if}}
               <div class='draft-text'>{{this.draft.content}}</div>
               <div class='draft-actions'>
-                <button
-                  type='button'
+                <Button
+                  @kind='primary'
+                  @size='small'
                   class='accept'
                   {{on 'click' this.acceptDraft}}
                   {{on 'pointerdown' this.stopEvent}}
-                >✓ Accept</button>
-                <button
-                  type='button'
+                ><CheckIcon width='14' height='14' /> Accept</Button>
+                <Button
+                  @kind='secondary'
+                  @size='small'
                   {{on 'click' this.dismissDraft}}
                   {{on 'pointerdown' this.stopEvent}}
-                >✕ Dismiss</button>
+                ><XIcon width='14' height='14' /> Dismiss</Button>
               </div>
             </div>
           {{/if}}
 
           {{! error slip }}
           {{#if this.echoError}}
-            <div class='draft error-slip' style={{this.errorStyle}}>
+            <div
+              class='draft error-slip'
+              style={{cssVar
+                slip-x=this.errorCss.x
+                slip-y=this.errorCss.y
+                slip-w=this.errorCss.w
+              }}
+              role='alert'
+            >
               <div class='draft-tag muted'>Echo · could not read</div>
               <div class='draft-text'>{{this.echoError.message}}</div>
               <div class='draft-actions'>
-                <button
-                  type='button'
+                <Button
+                  @kind='primary'
+                  @size='small'
                   class='accept'
                   {{on 'click' this.retryEcho}}
                   {{on 'pointerdown' this.stopEvent}}
-                >↻ Retry</button>
-                <button
-                  type='button'
+                ><RotateCcwIcon width='14' height='14' /> Retry</Button>
+                <Button
+                  @kind='secondary'
+                  @size='small'
                   {{on 'click' this.dismissLasso}}
                   {{on 'pointerdown' this.stopEvent}}
-                >✕ Dismiss</button>
+                ><XIcon width='14' height='14' /> Dismiss</Button>
               </div>
             </div>
           {{/if}}
@@ -1562,50 +1635,45 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         {{#if this.toast}}
           <div class='toast' role='status'>
             {{this.toast.message}}
-            <button type='button' {{on 'click' this.undoToast}}>Undo</button>
+            <Button
+              @kind='text-only'
+              @size='small'
+              {{on 'click' this.undoToast}}
+            >Undo</Button>
           </div>
         {{/if}}
       </div>
 
-    </section>
+    </main>
     <style scoped>
       @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
       .echo-pad {
-        --paper: var(--ep-paper, #f7f4ec);
-        --paper-raised: var(--ep-paper-raised, #fffdf5);
-        --grid: var(--ep-grid, rgba(90, 120, 160, 0.14));
-        --grid-major: var(--ep-grid-major, rgba(90, 120, 160, 0.28));
-        --ink: var(--ep-ink, #2b3f8c);
-        --echo: var(--ep-echo, #c33d2e);
-        --chrome: var(--ep-chrome, #3a3527);
-        --chrome-soft: var(--ep-chrome-soft, #6d6753);
-        --edge: var(--ep-edge, #56503f);
-        --tape: var(--ep-tape, rgba(226, 215, 178, 0.85));
-        --font-hand: var(--ep-font-hand, 'Caveat', cursive);
-        --font-chrome: var(--ep-font-chrome, 'IBM Plex Mono', monospace);
+        /* the board's paper/ink/echo/chrome identity always resolves through
+           the contract-token cascade — theme.css guarantees these tokens at
+           every boundary, so there is no un-themed fallback tier */
+        --paper: var(--background);
+        --paper-raised: var(--card);
+        --grid: color-mix(in oklch, var(--border) 45%, transparent);
+        --grid-major: color-mix(in oklch, var(--border) 85%, transparent);
+        /* ink and echo are two authored channels — the person's pen and the
+           marker's reply — so they take data-series tokens, not emphasis ones.
+           --primary/--accent are wrong here by role AND render broken: --accent
+           defaults to --boxel-200 grey, which makes every reply invisible. */
+        --ink: var(--chart-4);
+        --echo: var(--chart-1);
+        --chrome: var(--foreground);
+        --chrome-soft: var(--muted-foreground);
+        --edge: var(--border);
+        --tape: color-mix(in oklch, var(--chrome-soft) 30%, var(--paper));
+        --font-hand: 'Caveat', cursive;
+        --font-chrome: var(--font-mono);
         height: 100%;
         display: flex;
         flex-direction: column;
-        background: var(--paper);
+        background-color: var(--paper);
         font-family: var(--font-chrome);
         color: var(--chrome);
-      }
-
-      /* the semantic tier engages ONLY when a Theme card is linked — otherwise
-         the host's default palette would overwrite the board's own identity */
-      .echo-pad.themed {
-        --paper: var(--ep-paper, var(--background, #f7f4ec));
-        --paper-raised: var(--ep-paper-raised, var(--card, #fffdf5));
-        --ink: var(--ep-ink, var(--primary, #2b3f8c));
-        --echo: var(--ep-echo, var(--accent, #c33d2e));
-        --chrome: var(--ep-chrome, var(--foreground, #3a3527));
-        --chrome-soft: var(--ep-chrome-soft, var(--muted-foreground, #6d6753));
-        --edge: var(--ep-edge, var(--border, #56503f));
-        --font-chrome: var(
-          --ep-font-chrome,
-          var(--font-mono, 'IBM Plex Mono', monospace)
-        );
       }
 
       /* ---- ruler toolbar ---- */
@@ -1613,11 +1681,11 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         position: relative;
         z-index: 4;
         flex: none;
-        height: 52px;
+        height: 3.25rem;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 0 18px;
+        gap: 0.5rem;
+        padding: 0 1.125rem;
         background: linear-gradient(
           color-mix(in srgb, var(--paper) 88%, var(--chrome)),
           color-mix(in srgb, var(--paper) 72%, var(--chrome))
@@ -1626,24 +1694,27 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       }
       .tools {
         display: flex;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .tool {
-        height: 34px;
-        padding: 0 12px;
+        height: 2.125rem;
+        padding: 0 0.75rem;
         display: inline-flex;
         align-items: center;
-        gap: 7px;
+        gap: 0.4375rem;
         border: 1.5px solid var(--edge);
-        background: var(--paper);
+        background-color: var(--paper);
         color: var(--chrome);
-        font: 500 10.5px/1 var(--font-chrome);
+        font-weight: 500;
+        font-size: 0.65625rem;
+        line-height: 1;
+        font-family: var(--font-chrome);
         letter-spacing: 0.18em;
         text-transform: uppercase;
         cursor: pointer;
       }
       .tool.active {
-        background: var(--ink);
+        background-color: var(--ink);
         border-color: var(--ink);
         color: var(--paper);
       }
@@ -1652,46 +1723,58 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         outline-offset: 2px;
       }
       .tool-icon {
-        width: 15px;
-        height: 15px;
+        width: 0.9375rem;
+        height: 0.9375rem;
       }
       .brand {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 0.875rem;
         margin-left: auto;
+      }
+      .auto-dot-glyph {
+        font-style: normal;
+        margin-left: 0.25rem;
       }
       .auto-toggle {
         border: 1.5px solid var(--edge);
-        background: var(--paper);
+        background-color: var(--paper);
         color: var(--chrome-soft);
-        font: 600 9.5px/1 var(--font-chrome);
+        font-weight: 600;
+        font-size: 0.59375rem;
+        line-height: 1;
+        font-family: var(--font-chrome);
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        padding: 9px 12px;
+        padding: 0.5625rem 0.75rem;
         cursor: pointer;
       }
       .auto-toggle.on {
         color: var(--echo);
         border-color: var(--echo);
       }
-      .clear-btn {
+      .brand .clear-btn {
         border: 1.5px solid var(--edge);
-        background: var(--paper);
+        background-color: var(--paper);
         color: var(--chrome);
-        font: 600 9.5px/1 var(--font-chrome);
+        font-weight: 600;
+        font-size: 0.59375rem;
+        line-height: 1;
+        font-family: var(--font-chrome);
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        padding: 9px 12px;
+        padding: 0.5625rem 0.75rem;
         cursor: pointer;
       }
-      .clear-btn.armed {
-        background: var(--echo);
+      .brand .clear-btn.armed {
+        background-color: var(--echo);
         border-color: var(--echo);
         color: var(--paper-raised);
       }
       .zoom {
-        font: 400 10.5px/1 var(--font-chrome);
+        font-weight: 400;
+        font-size: 0.65625rem;
+        line-height: 1;
         color: var(--chrome-soft);
         letter-spacing: 0.1em;
       }
@@ -1699,26 +1782,50 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         display: inline-flex;
         align-items: stretch;
         border: 1.5px solid var(--edge);
-        background: var(--paper);
+        background-color: var(--paper);
       }
-      .zoom-btn {
+      .zoom-controls .zoom-btn {
+        /* IconButton is re-skinned through its own knobs, not a specificity
+           war: it sizes from padding rather than its default fixed square, and
+           paints transparent so the group's shared border shows through. */
+        --boxel-icon-button-width: auto;
+        --boxel-icon-button-height: auto;
+        --boxel-icon-button-padding: 0.5625rem 0.625rem;
+        --boxel-icon-button-background: transparent;
+        --boxel-icon-button-color: var(--chrome);
         border: none;
-        background: none;
+        background-color: transparent;
         color: var(--chrome);
-        font: 600 11px/1 var(--font-chrome);
-        padding: 9px 10px;
+        font-weight: 600;
+        font-size: 0.6875rem;
+        line-height: 1;
+        font-family: var(--font-chrome);
+        padding: 0.5625rem 0.625rem;
         cursor: pointer;
       }
-      .zoom-btn + .zoom-btn {
+      /* border-radius is the one axis IconButton exposes no knob for — it
+         hardcodes var(--boxel-border-radius), which rounds each segment out of
+         the flush group. :deep() is the sanctioned reach-in (never :global()). */
+      .zoom-controls :deep(.boxel-icon-button) {
+        border-radius: 0;
+      }
+      .zoom-controls .zoom-btn + .zoom-btn {
         border-left: 1.5px solid var(--edge);
       }
       .zoom-pct {
-        min-width: 52px;
+        --boxel-button-min-height: 0;
+        --boxel-button-min-width: 0;
+        --boxel-button-border-radius: 0;
+        --boxel-button-padding: 0.5625rem 0.625rem;
+        --boxel-button-text-color: var(--chrome-soft);
+        min-width: 3.25rem;
         letter-spacing: 0.08em;
         color: var(--chrome-soft);
       }
       .brand-name {
-        font: 600 12px/1 var(--font-chrome);
+        font-weight: 600;
+        font-size: 0.75rem;
+        line-height: 1;
         letter-spacing: 0.3em;
         text-transform: uppercase;
       }
@@ -1737,10 +1844,10 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
           linear-gradient(var(--grid-major) 1px, transparent 1px),
           linear-gradient(90deg, var(--grid-major) 1px, transparent 1px);
         background-size:
-          16px 16px,
-          16px 16px,
-          80px 80px,
-          80px 80px;
+          1rem 1rem,
+          1rem 1rem,
+          5rem 5rem,
+          5rem 5rem;
         cursor: crosshair;
       }
       .board.tool-pan,
@@ -1763,6 +1870,8 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         width: 0;
         height: 0;
         transform-origin: 0 0;
+        transform: translate(var(--world-pan-x, 0), var(--world-pan-y, 0))
+          scale(var(--world-zoom, 1));
         z-index: 2;
       }
       .lasso-svg {
@@ -1776,7 +1885,7 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         pointer-events: none;
       }
       .lasso-path {
-        fill: rgba(195, 61, 46, 0.03);
+        fill: color-mix(in oklch, var(--echo) 3%, transparent);
         stroke: var(--echo);
         stroke-width: 2;
         stroke-dasharray: 9 8;
@@ -1786,6 +1895,10 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
 
       .scan {
         position: absolute;
+        left: var(--scan-x);
+        top: var(--scan-y);
+        width: var(--scan-w);
+        height: var(--scan-h);
         overflow: hidden;
         pointer-events: none;
       }
@@ -1794,10 +1907,10 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         top: 0;
         bottom: 0;
         width: 1.5px;
-        background: rgba(195, 61, 46, 0.75);
+        background-color: color-mix(in oklch, var(--echo) 75%, transparent);
         box-shadow:
-          -14px 0 18px rgba(195, 61, 46, 0.12),
-          -3px 0 6px rgba(195, 61, 46, 0.25);
+          -14px 0 18px color-mix(in oklch, var(--echo) 12%, transparent),
+          -3px 0 6px color-mix(in oklch, var(--echo) 25%, transparent);
         animation: ep-scan 2.2s ease-in-out infinite;
       }
       @keyframes ep-scan {
@@ -1812,30 +1925,42 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       /* ---- puck ---- */
       .puck {
         position: absolute;
+        left: var(--puck-x);
+        top: var(--puck-y);
         display: flex;
         align-items: stretch;
         border: 1.5px solid var(--edge);
-        background: var(--paper);
-        box-shadow: 4px 4px 0 rgba(60, 55, 40, 0.25);
+        background-color: var(--paper);
+        box-shadow: 4px 4px 0
+          color-mix(in oklch, var(--chrome) 25%, transparent);
         white-space: nowrap;
       }
       .puck button {
         border: none;
-        background: none;
+        background-color: transparent;
         cursor: pointer;
-        font: 600 11px/1 var(--font-chrome);
+        font-weight: 600;
+        font-size: 0.6875rem;
+        line-height: 1;
+        font-family: var(--font-chrome);
         letter-spacing: 0.18em;
         text-transform: uppercase;
         color: var(--chrome);
-        padding: 11px 14px;
+        padding: 0.6875rem 0.875rem;
         border-left: 1.5px solid var(--edge);
       }
       .puck button:first-child {
         border-left: none;
       }
+      .puck-mode {
+        --boxel-button-min-height: 0;
+        --boxel-button-min-width: 0;
+        --boxel-button-border-radius: 0;
+        --boxel-button-padding: 0.6875rem 0.875rem;
+      }
       .puck .puck-mode:hover,
       .puck .puck-mode:focus-visible {
-        background: var(--echo);
+        background-color: var(--echo);
         color: var(--paper-raised);
         outline: none;
       }
@@ -1844,12 +1969,12 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       }
       .puck-dot {
         align-self: center;
-        width: 8px;
-        height: 8px;
-        margin-left: 12px;
+        width: 0.5rem;
+        height: 0.5rem;
+        margin-left: 0.75rem;
         border-radius: 50%;
-        background: var(--echo);
-        box-shadow: 0 0 0 3px rgba(195, 61, 46, 0.18);
+        background-color: var(--echo);
+        box-shadow: 0 0 0 3px color-mix(in oklch, var(--echo) 18%, transparent);
         animation: ep-pulse 1.2s ease-in-out infinite;
       }
       @keyframes ep-pulse {
@@ -1859,8 +1984,10 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       }
       .puck-thinking {
         align-self: center;
-        padding: 0 4px 0 10px;
-        font: 600 10px/1 var(--font-chrome);
+        padding: 0 0.25rem 0 0.625rem;
+        font-weight: 600;
+        font-size: 0.625rem;
+        line-height: 1;
         letter-spacing: 0.18em;
         text-transform: uppercase;
       }
@@ -1868,30 +1995,33 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       /* ---- the noticing dot ---- */
       .auto-dot {
         position: absolute;
-        width: 26px;
-        height: 26px;
+        left: var(--auto-dot-x);
+        top: var(--auto-dot-y);
+        width: 1.625rem;
+        height: 1.625rem;
         border: none;
-        background: none;
+        background-color: transparent;
         padding: 0;
         cursor: pointer;
       }
       .auto-dot i {
         position: absolute;
-        inset: 6px;
+        inset: 0.375rem;
         border-radius: 50%;
-        background: var(--echo);
-        box-shadow: 0 0 0 0 rgba(195, 61, 46, 0.35);
+        background-color: var(--echo);
+        box-shadow: 0 0 0 0 color-mix(in oklch, var(--echo) 35%, transparent);
         animation: ep-notice 1.6s ease-out infinite;
       }
       @keyframes ep-notice {
         0% {
-          box-shadow: 0 0 0 0 rgba(195, 61, 46, 0.35);
+          box-shadow: 0 0 0 0 color-mix(in oklch, var(--echo) 35%, transparent);
         }
         70% {
-          box-shadow: 0 0 0 10px rgba(195, 61, 46, 0);
+          box-shadow: 0 0 0 10px
+            color-mix(in oklch, var(--echo) 0%, transparent);
         }
         100% {
-          box-shadow: 0 0 0 0 rgba(195, 61, 46, 0);
+          box-shadow: 0 0 0 0 color-mix(in oklch, var(--echo) 0%, transparent);
         }
       }
       .auto-dot:focus-visible i {
@@ -1902,13 +2032,18 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       .scene-slip {
         width: 100%;
         aspect-ratio: 16 / 10;
-        margin: 4px 0 10px;
+        margin: 0.25rem 0 0.625rem;
         border: 1.5px solid var(--edge);
-        box-shadow: 4px 4px 0 rgba(60, 55, 40, 0.25);
+        box-shadow: 4px 4px 0
+          color-mix(in oklch, var(--chrome) 25%, transparent);
         overflow: hidden;
       }
       .sketch-overlay {
         position: absolute;
+        left: var(--overlay-x);
+        top: var(--overlay-y);
+        width: var(--overlay-w);
+        height: var(--overlay-h);
         max-width: none;
         overflow: visible;
         pointer-events: none;
@@ -1937,34 +2072,42 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       /* ---- accepted echoes ---- */
       .echo-accepted {
         position: absolute;
+        left: var(--slip-x);
+        top: var(--slip-y);
+        width: var(--slip-w);
         cursor: grab;
       }
       .echo-stamp {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font: 600 9px/1 var(--font-chrome);
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: 0.5625rem;
+        line-height: 1;
         letter-spacing: 0.24em;
         text-transform: uppercase;
-        color: rgba(195, 61, 46, 0.65);
-        margin-bottom: 5px;
+        color: color-mix(in oklch, var(--echo) 65%, transparent);
+        margin-bottom: 0.3125rem;
       }
-      .echo-remove {
+      .echo-stamp .echo-remove {
         border: none;
-        background: none;
-        color: rgba(195, 61, 46, 0.45);
-        font: 500 10px/1 var(--font-chrome);
+        background-color: transparent;
+        color: color-mix(in oklch, var(--echo) 45%, transparent);
+        font-weight: 500;
+        font-size: 0.625rem;
+        line-height: 1;
+        font-family: var(--font-chrome);
         cursor: pointer;
-        padding: 2px 4px;
+        padding: 0.125rem 0.25rem;
         opacity: 0;
       }
-      .echo-accepted:hover .echo-remove,
-      .echo-remove:focus-visible {
+      .echo-accepted:hover .echo-stamp .echo-remove,
+      .echo-stamp .echo-remove:focus-visible {
         opacity: 1;
       }
       .echo-text {
         font-family: var(--font-hand);
-        font-size: 24px;
+        font-size: 1.5rem;
         line-height: 1.25;
         color: var(--echo);
         white-space: pre-wrap;
@@ -1973,91 +2116,105 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       /* ---- draft / error slips ---- */
       .draft {
         position: absolute;
-        background: var(--paper-raised);
-        border: 1px solid #eae4d2;
-        padding: 20px 22px 16px;
+        left: var(--slip-x);
+        top: var(--slip-y);
+        width: var(--slip-w);
+        background-color: var(--paper-raised);
+        color: var(--card-foreground);
+        border: 1px solid color-mix(in oklch, var(--edge) 30%, var(--paper));
+        padding: 1.25rem 1.375rem 1rem;
         transform: rotate(1.2deg);
         box-shadow:
-          0 14px 30px rgba(50, 40, 20, 0.28),
-          0 2px 6px rgba(50, 40, 20, 0.18);
+          0 14px 30px color-mix(in oklch, var(--chrome) 28%, transparent),
+          0 2px 6px color-mix(in oklch, var(--chrome) 18%, transparent);
         animation: ep-slip-in 0.35s ease-out;
       }
       @keyframes ep-slip-in {
         from {
           opacity: 0;
-          transform: rotate(1.2deg) translateY(-8px);
+          transform: rotate(1.2deg) translateY(-0.5rem);
         }
       }
       .draft-tape {
         position: absolute;
-        top: -11px;
+        top: -0.6875rem;
         left: 50%;
-        width: 96px;
-        height: 22px;
+        width: 6rem;
+        height: 1.375rem;
         transform: translateX(-50%) rotate(-2deg);
-        background: var(--tape);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+        background-color: var(--tape);
+        box-shadow: 0 2px 4px
+          color-mix(in oklch, var(--shadow-color) 12%, transparent);
       }
       .draft-grip {
         position: absolute;
-        top: 8px;
-        right: 10px;
-        color: rgba(60, 55, 40, 0.4);
+        top: 0.5rem;
+        right: 0.625rem;
+        color: color-mix(in oklch, var(--chrome) 40%, transparent);
         cursor: grab;
-        font-size: 13px;
-        letter-spacing: 2px;
-        padding: 2px 4px;
+        font-size: 0.8125rem;
+        letter-spacing: 0.125rem;
+        padding: 0.125rem 0.25rem;
       }
       .draft-tag {
         display: flex;
         align-items: center;
-        gap: 10px;
-        font: 600 9.5px/1 var(--font-chrome);
+        gap: 0.625rem;
+        font-weight: 600;
+        font-size: 0.59375rem;
+        line-height: 1;
         letter-spacing: 0.26em;
         text-transform: uppercase;
         color: var(--echo);
-        margin-bottom: 10px;
+        margin-bottom: 0.625rem;
       }
       .draft-tag::after {
         content: '';
         flex: 1;
         height: 1px;
-        background: rgba(195, 61, 46, 0.35);
+        background-color: color-mix(in oklch, var(--echo) 35%, transparent);
       }
       .draft-tag.muted {
         color: var(--chrome-soft);
       }
       .draft-tag.muted::after {
-        background: rgba(109, 103, 83, 0.35);
+        background-color: color-mix(
+          in oklch,
+          var(--chrome-soft) 35%,
+          transparent
+        );
       }
       .draft-text {
         font-family: var(--font-hand);
-        font-size: 24px;
+        font-size: 1.5rem;
         line-height: 1.25;
         color: var(--echo);
         white-space: pre-wrap;
       }
       .error-slip .draft-text {
         color: var(--chrome);
-        font-size: 22px;
+        font-size: 1.375rem;
       }
       .draft-actions {
         display: flex;
-        gap: 10px;
-        margin-top: 16px;
+        gap: 0.625rem;
+        margin-top: 1rem;
       }
       .draft-actions button {
-        font: 600 10px/1 var(--font-chrome);
+        font-weight: 600;
+        font-size: 0.625rem;
+        line-height: 1;
+        font-family: var(--font-chrome);
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        padding: 9px 14px;
+        padding: 0.5625rem 0.875rem;
         border: 1.5px solid var(--echo);
-        background: none;
+        background-color: transparent;
         color: var(--echo);
         cursor: pointer;
       }
       .draft-actions button.accept {
-        background: var(--echo);
+        background-color: var(--echo);
         color: var(--paper-raised);
       }
 
@@ -2067,25 +2224,25 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         left: 14%;
         top: 30%;
         z-index: 1;
-        color: rgba(43, 63, 140, 0.32);
+        color: color-mix(in oklch, var(--ink) 32%, transparent);
         pointer-events: none;
       }
       .ghost-line1 {
         font-family: var(--font-hand);
-        font-size: 32px;
+        font-size: 2rem;
         transform: rotate(-1deg);
       }
       .ghost-line2 {
         font-family: var(--font-hand);
-        font-size: 22px;
-        margin-top: 4px;
+        font-size: 1.375rem;
+        margin-top: 0.25rem;
         transform: rotate(-0.4deg);
       }
       .ghost-lasso {
         position: absolute;
-        right: -96px;
-        top: 2px;
-        color: rgba(195, 61, 46, 0.3);
+        right: -6rem;
+        top: 0.125rem;
+        color: color-mix(in oklch, var(--echo) 30%, transparent);
       }
 
       /* ---- title block ---- */
@@ -2094,24 +2251,24 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
         right: 0;
         bottom: 0;
         z-index: 3;
-        min-width: 300px;
+        min-width: 18.75rem;
         border: 1.5px solid var(--ink);
         border-right: 0;
         border-bottom: 0;
-        background: var(--paper);
+        background-color: var(--paper);
         color: var(--ink);
       }
       .tb-row {
         display: flex;
-        border-top: 1px solid rgba(43, 63, 140, 0.5);
+        border-top: 1px solid color-mix(in oklch, var(--ink) 50%, transparent);
       }
       .tb-row:first-child {
         border-top: 0;
       }
       .tb-cell {
         flex: 1;
-        padding: 6px 12px 5px;
-        border-left: 1px solid rgba(43, 63, 140, 0.5);
+        padding: 0.375rem 0.75rem 0.3125rem;
+        border-left: 1px solid color-mix(in oklch, var(--ink) 50%, transparent);
       }
       .tb-cell:first-child {
         border-left: 0;
@@ -2121,20 +2278,20 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       }
       .tb-k {
         display: block;
-        font-size: 7.5px;
+        font-size: 0.46875rem;
         letter-spacing: 0.22em;
         text-transform: uppercase;
         opacity: 0.65;
-        margin-bottom: 2px;
+        margin-bottom: 0.125rem;
       }
       .tb-v {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 600;
         letter-spacing: 0.04em;
       }
       .tb-v.tb-hand {
         font-family: var(--font-hand);
-        font-size: 17px;
+        font-size: 1.0625rem;
       }
       .tb-v.tb-red {
         color: var(--echo);
@@ -2143,24 +2300,30 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
       /* ---- toast ---- */
       .toast {
         position: absolute;
-        left: 18px;
-        bottom: 16px;
+        left: 1.125rem;
+        bottom: 1rem;
         z-index: 4;
         display: flex;
         align-items: center;
-        gap: 14px;
-        background: var(--chrome);
+        gap: 0.875rem;
+        background-color: var(--chrome);
         color: var(--paper);
-        padding: 10px 14px;
-        font: 500 10px/1 var(--font-chrome);
+        padding: 0.625rem 0.875rem;
+        font-weight: 500;
+        font-size: 0.625rem;
+        line-height: 1;
         letter-spacing: 0.12em;
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 8px 18px
+          color-mix(in oklch, var(--shadow-color) 30%, transparent);
       }
       .toast button {
         border: none;
-        background: none;
-        color: #f0c775;
-        font: 700 10px/1 var(--font-chrome);
+        background-color: transparent;
+        color: var(--paper);
+        font-weight: 700;
+        font-size: 0.625rem;
+        line-height: 1;
+        font-family: var(--font-chrome);
         letter-spacing: 0.2em;
         text-transform: uppercase;
         cursor: pointer;
@@ -2180,15 +2343,20 @@ export class EchoPadIsolated extends Component<typeof EchoPad> {
   </template>
 }
 
-function sketchOverlay(
-  polylines: number[][] | null,
-  labels: EchoLabel[] = [],
-): {
-  style: SafeString;
+type SketchOverlay = {
+  cssX: string;
+  cssY: string;
+  cssW: string;
+  cssH: string;
   viewBox: string;
   paths: string[];
   texts: EchoLabel[];
-} | null {
+};
+
+function sketchOverlay(
+  polylines: number[][] | null,
+  labels: EchoLabel[] = [],
+): SketchOverlay | null {
   let lineBox = polylines?.length ? polylinesBBox(polylines) : null;
   let boxes: BBox[] = lineBox ? [lineBox] : [];
   for (let l of labels) {
@@ -2207,9 +2375,10 @@ function sketchOverlay(
   let w = Math.max(1, box.maxX - box.minX + pad * 2);
   let h = Math.max(1, box.maxY - box.minY + pad * 2);
   return {
-    style: htmlSafe(
-      `left: ${box.minX - pad}px; top: ${box.minY - pad}px; width: ${w}px; height: ${h}px`,
-    ),
+    cssX: `${box.minX - pad}px`,
+    cssY: `${box.minY - pad}px`,
+    cssW: `${w}px`,
+    cssH: `${h}px`,
     viewBox: `${box.minX - pad} ${box.minY - pad} ${w} ${h}`,
     paths: polylines?.length ? polylinesToPaths(JSON.stringify(polylines)) : [],
     texts: labels,
@@ -2229,16 +2398,26 @@ function velocityWidth(base: number, dist: number): number {
   return base * clamp(1.45 - dist / 28, 0.6, 1.35);
 }
 
+// One message per condition: each says what happened and what to do about it.
+// A failure the board cannot identify must not borrow the "circle more" advice
+// — that sends the user redrawing when the cause was billing or an outage.
 function friendlyEchoError(err: unknown): string {
-  let raw = err instanceof Error ? err.message : String(err);
-  if (/402|credit/i.test(raw)) {
-    return "You're out of AI credits.";
+  switch (echoErrorCode(err)) {
+    case 'out-of-credits':
+      return "You're out of AI credits — top up to keep using the marker.";
+    case 'rate-limited':
+      return 'Too many requests just now — wait a moment, then circle it again.';
+    case 'network':
+      return 'The request did not make it through — check your connection and retry.';
+    case 'upstream':
+      return 'The marker service is having trouble. Nothing wrong with your board — try again shortly.';
+    case 'bad-request':
+      return 'That region was too large or too complex to send — circle a smaller piece.';
+    case 'no-capture':
+      return 'Nothing was captured — draw a closed loop around the ink you want read.';
+    case 'empty':
+      return "I couldn't read that — try circling a little more context.";
+    default:
+      return 'The marker could not finish that one. Try again, or circle a slightly different region.';
   }
-  if (/timeout|network|fetch/i.test(raw)) {
-    return 'The request did not make it through — check your connection and retry.';
-  }
-  if (/empty annotation|could not read/i.test(raw)) {
-    return "I couldn't read that — try circling a little more context.";
-  }
-  return "I couldn't read that — try circling a little more context.";
 }

@@ -3,7 +3,9 @@
 // parser for function graphs. The model NEVER supplies executable code —
 // everything here is data, deterministically interpreted.
 
-import { clamp, type BBox, type InkStroke } from './index';
+import { clamp } from '@cardstack/base/number/util/index';
+
+import { type BBox, type InkStroke } from './index';
 
 export const SCENE_MAX_STEPS = 16;
 export const SCENE_MAX_DURATION = 4;

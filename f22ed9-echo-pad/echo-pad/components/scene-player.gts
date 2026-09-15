@@ -4,6 +4,8 @@ import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
 
 import PlayIcon from '@cardstack/boxel-icons/play';
+import XIcon from '@cardstack/boxel-icons/x';
+import { IconButton } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
 import {
@@ -376,13 +378,14 @@ export class EchoScenePlayer extends Component<Signature> {
           {{this.mountPlayer}}
           {{on 'pointerdown' this.stopEvent}}
         ></div>
-        <button
-          type='button'
+        <IconButton
+          @icon={{XIcon}}
+          @variant='text-only'
           class='scene-stop'
           aria-label='Close animation'
           {{on 'click' this.stop}}
           {{on 'pointerdown' this.stopEvent}}
-        >✕</button>
+        />
       {{else}}
         <button
           type='button'
@@ -401,11 +404,21 @@ export class EchoScenePlayer extends Component<Signature> {
     </div>
     <style scoped>
       .echo-scene {
+        /* Two skins. Paper mode blends with the whiteboard's own theme. Screen
+           mode is a projector — an intrinsically dark object — so it takes the
+           contract's inverted pair (--tooltip / --tooltip-foreground) and both
+           of its colours come from that one pair, which is what keeps them from
+           disagreeing under any theme. Only the manim scene CONSTANTS in JS stay
+           literal: they feed a runtime that cannot read var(). */
+        --paper: var(--background);
+        --echo: var(--chart-1);
+        --chrome-soft: var(--muted-foreground);
         position: relative;
         width: 100%;
         height: 100%;
-        min-height: 180px;
-        background: #0b0d12;
+        min-height: 11.25rem;
+        background-color: var(--tooltip);
+        color: var(--tooltip-foreground);
         overflow: hidden;
       }
       .mount {
@@ -418,7 +431,7 @@ export class EchoScenePlayer extends Component<Signature> {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 0.625rem;
         width: 100%;
         height: 100%;
         min-height: inherit;
@@ -426,69 +439,67 @@ export class EchoScenePlayer extends Component<Signature> {
         background:
           radial-gradient(
             80% 70% at 50% 40%,
-            rgba(200, 255, 61, 0.06),
+            color-mix(in oklch, var(--tooltip-foreground) 6%, transparent),
             transparent 70%
           ),
-          #0b0d12;
-        color: #c8ff3d;
+          var(--tooltip);
+        color: var(--tooltip-foreground);
         cursor: pointer;
-        font-family: var(
-          --ep-font-chrome,
-          var(--font-mono, 'IBM Plex Mono', monospace)
-        );
+        font-family: var(--font-mono);
       }
       .glyph {
-        width: 34px;
-        height: 34px;
+        width: 2.125rem;
+        height: 2.125rem;
       }
       .scene-title {
-        font-size: 10px;
+        font-size: 0.625rem;
         letter-spacing: 0.22em;
         text-transform: uppercase;
-        color: #9aa48c;
+        color: color-mix(in oklch, var(--tooltip-foreground) 70%, transparent);
         max-width: 90%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .scene-err {
-        font-size: 9px;
+        font-size: 0.5625rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: #e2604f;
+        color: var(--destructive-ink);
       }
       [data-bg='paper'] {
-        background: #f7f4ec;
+        background-color: var(--paper);
       }
       [data-bg='paper'] .poster {
         background:
           radial-gradient(
             80% 70% at 50% 40%,
-            rgba(195, 61, 46, 0.05),
+            color-mix(in oklch, var(--echo) 5%, transparent),
             transparent 70%
           ),
-          #f7f4ec;
-        color: #c33d2e;
+          var(--paper);
+        color: var(--echo);
       }
       [data-bg='paper'] .scene-title {
-        color: #6d6753;
+        color: var(--chrome-soft);
       }
       [data-bg='paper'] .scene-stop {
-        border-color: rgba(195, 61, 46, 0.5);
-        background: rgba(247, 244, 236, 0.85);
-        color: #c33d2e;
+        border-color: color-mix(in oklch, var(--echo) 50%, transparent);
+        background-color: color-mix(in oklch, var(--paper) 85%, transparent);
+        color: var(--echo);
       }
-      .scene-stop {
+      .echo-scene .scene-stop {
         position: absolute;
-        top: 6px;
-        right: 6px;
-        width: 26px;
-        height: 26px;
-        border: 1px solid rgba(200, 255, 61, 0.4);
+        top: 0.375rem;
+        right: 0.375rem;
+        width: 1.625rem;
+        height: 1.625rem;
+        border: 1px solid
+          color-mix(in oklch, var(--tooltip-foreground) 40%, transparent);
         border-radius: 50%;
-        background: rgba(11, 13, 18, 0.8);
-        color: #c8ff3d;
-        font-size: 11px;
+        background-color: color-mix(in oklch, var(--tooltip) 80%, transparent);
+        color: var(--tooltip-foreground);
+        font-size: 0.6875rem;
         cursor: pointer;
       }
     </style>

@@ -7,6 +7,8 @@ import {
   asEchoMode,
   buildEchoPrompt,
   echoCacheKey,
+  echoCodeForStatus,
+  EchoError,
   splitEchoResponse,
 } from '../utils/index';
 
@@ -24,6 +26,40 @@ export class RecognizeInkOutput extends CardDef {
   @field mode = contains(StringField);
   @field sketchJson = contains(StringField); // polylines the model drew back, if any
   @field sceneJson = contains(StringField); // validated manim scene spec, if any
+}
+
+// OpenRouter reports the reason in the body as { error: { code, message } }.
+// Both are kept: the code so the board can branch, the message so the thrown
+// error still says what actually happened.
+async function echoErrorFromResponse(response: Response): Promise<EchoError> {
+  let status = response.status;
+  let providerCode: string | undefined;
+  let detail = '';
+  try {
+    let body = await response.text();
+    if (body) {
+      detail = body;
+      try {
+        let parsed = JSON.parse(body);
+        let code = parsed?.error?.code;
+        providerCode = code == null ? undefined : String(code);
+        detail = parsed?.error?.message || body;
+      } catch {
+        // not JSON — keep the raw body as the detail
+      }
+    }
+  } catch {
+    // body unreadable — statusText is all we have
+  }
+  let code = echoCodeForStatus(status);
+  let suffix = providerCode ? ` [${providerCode}]` : '';
+  return new EchoError(
+    code,
+    `Echo request failed (${status}${suffix}): ${
+      detail || response.statusText
+    }`,
+    { status, providerCode },
+  );
 }
 
 const VISION_MODEL = 'anthropic/claude-sonnet-5';
@@ -49,7 +85,7 @@ export class RecognizeInkCommand extends Command<
   protected async run(input: RecognizeInkInput): Promise<RecognizeInkOutput> {
     let { imageDataUrl, mode, boardName, instructions } = input;
     if (!imageDataUrl?.startsWith('data:image/')) {
-      throw new Error('No ink image was captured.');
+      throw new EchoError('no-capture', 'No ink image was captured.');
     }
     let modeKey = asEchoMode(mode);
 
@@ -94,23 +130,13 @@ export class RecognizeInkCommand extends Command<
     });
 
     if (!result.response.ok) {
-      let body = '';
-      try {
-        body = await result.response.text();
-      } catch {
-        // fall through to statusText
-      }
-      throw new Error(
-        `Echo request failed (${result.response.status}): ${
-          body || result.response.statusText
-        }`,
-      );
+      throw await echoErrorFromResponse(result.response);
     }
 
     let data = await result.response.json();
     let split = splitEchoResponse(data?.choices?.[0]?.message?.content);
     if (!split.text && !split.polylines && !split.labels && !split.scene) {
-      throw new Error('The model returned an empty annotation.');
+      throw new EchoError('empty', 'The model returned an empty annotation.');
     }
 
     let output = new RecognizeInkOutput();

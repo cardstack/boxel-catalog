@@ -2,6 +2,8 @@
 // keeps the module testable and lets the command's validation core run as
 // plain functions.
 
+import { clamp } from '@cardstack/base/number/util/index';
+
 import { extractSceneBlock, SCENE_GRAMMAR, type SceneSpec } from './scene';
 
 export type InkStroke = {
@@ -65,8 +67,6 @@ export function asEchoMode(v: unknown): EchoModeKey {
     : 'solve';
 }
 
-export const INK_COLOR = '#2b3f8c';
-export const ECHO_COLOR = '#c33d2e';
 export const ZOOM_MIN = 0.25;
 export const ZOOM_MAX = 4;
 export const ECHO_MAX_CHARS = 1200;
@@ -110,20 +110,38 @@ export function parseInk(json: string | undefined | null): InkDoc {
   }
 }
 
-export function strokeBBox(stroke: InkStroke): BBox {
+// The one min/max scan over flat [x0,y0,x1,y1,...] points. strokeBBox and
+// polylinesBBox both delegate here; they differ only in what an empty input
+// means to each caller, so each keeps its own guard.
+export function pointsBBox(pts: number[]): BBox | null {
+  if (pts.length < 2) {
+    return null;
+  }
   let minX = Infinity,
     minY = Infinity,
     maxX = -Infinity,
     maxY = -Infinity;
-  for (let i = 0; i < stroke.pts.length; i += 2) {
-    let x = stroke.pts[i],
-      y = stroke.pts[i + 1];
+  for (let i = 0; i < pts.length; i += 2) {
+    let x = pts[i],
+      y = pts[i + 1];
     if (x < minX) minX = x;
     if (x > maxX) maxX = x;
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
   }
   return { minX, minY, maxX, maxY };
+}
+
+export function strokeBBox(stroke: InkStroke): BBox {
+  // an empty stroke keeps the inverted-infinity box, so unionBBox stays neutral
+  return (
+    pointsBBox(stroke.pts) ?? {
+      minX: Infinity,
+      minY: Infinity,
+      maxX: -Infinity,
+      maxY: -Infinity,
+    }
+  );
 }
 
 export function unionBBox(boxes: BBox[]): BBox | null {
@@ -211,10 +229,6 @@ function segmentDistSq(
   let cx = ax + t * dx,
     cy = ay + t * dy;
   return (px - cx) * (px - cx) + (py - cy) * (py - cy);
-}
-
-export function clamp(n: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, n));
 }
 
 function round1(n: number): number {
@@ -388,22 +402,68 @@ export function parseSketchJson(json: string | undefined | null): {
   }
 }
 
+// Shared "flat [x0,y0,x1,y1,...] world points → SVG path 'd'" builder. Used
+// for AI-drawn sketch polylines, the ink-glance preview, and the lasso
+// selection outline — three call sites, one algorithm.
+export function flatPointsToPath(
+  pts: number[],
+  opts: { offsetX?: number; offsetY?: number; close?: boolean } = {},
+): string {
+  if (pts.length < 4) {
+    return '';
+  }
+  let { offsetX = 0, offsetY = 0, close = false } = opts;
+  let d = `M ${pts[0] + offsetX} ${pts[1] + offsetY}`;
+  for (let i = 2; i < pts.length; i += 2) {
+    d += ` L ${pts[i] + offsetX} ${pts[i + 1] + offsetY}`;
+  }
+  if (close) {
+    d += ' Z';
+  }
+  return d;
+}
+
 export function polylinesToPaths(json: string | undefined | null): string[] {
   return parseSketchJson(json)
     .polylines.filter((l) => l.length >= 4)
-    .map((l) => {
-      let d = `M ${l[0]} ${l[1]}`;
-      for (let i = 2; i < l.length; i += 2) {
-        d += ` L ${l[i]} ${l[i + 1]}`;
-      }
-      return d;
-    });
+    .map((l) => flatPointsToPath(l));
 }
 
 export function labelsFromSketchJson(
   json: string | undefined | null,
 ): EchoLabel[] {
   return parseSketchJson(json).labels;
+}
+
+// The capture image spans box ± margin in world units. Models are asked for
+// image-pixel coordinates but some reply normalized 0–100, so the basis is
+// detected from the largest coordinate seen. One definition, two callers.
+type WorldBasis = {
+  x0: number;
+  y0: number;
+  w: number;
+  h: number;
+  basisX: number;
+  basisY: number;
+};
+
+function worldBasis(
+  box: BBox,
+  margin: number,
+  imageW: number,
+  imageH: number,
+  coords: number[],
+): WorldBasis {
+  let maxCoord = Math.max(...coords, 0);
+  let normalized = maxCoord <= 105;
+  return {
+    x0: box.minX - margin,
+    y0: box.minY - margin,
+    w: box.maxX - box.minX + margin * 2,
+    h: box.maxY - box.minY + margin * 2,
+    basisX: normalized ? 100 : Math.max(1, imageW),
+    basisY: normalized ? 100 : Math.max(1, imageH),
+  };
 }
 
 export function mapLabelsToWorld(
@@ -414,13 +474,13 @@ export function mapLabelsToWorld(
   imageW: number,
   imageH: number,
 ): EchoLabel[] {
-  let x0 = box.minX - margin;
-  let y0 = box.minY - margin;
-  let w = box.maxX - box.minX + margin * 2;
-  let h = box.maxY - box.minY + margin * 2;
-  let maxCoord = Math.max(...allCoords, 0);
-  let basisX = maxCoord <= 105 ? 100 : Math.max(1, imageW);
-  let basisY = maxCoord <= 105 ? 100 : Math.max(1, imageH);
+  let { x0, y0, w, h, basisX, basisY } = worldBasis(
+    box,
+    margin,
+    imageW,
+    imageH,
+    allCoords,
+  );
   return labels.map((l) => ({
     text: l.text,
     x: x0 + (l.x / basisX) * w,
@@ -437,15 +497,13 @@ export function mapPolylinesToWorld(
   imageH: number,
   basisCoords?: number[],
 ): number[][] {
-  // the capture image spans box ± margin in world units. Models are asked for
-  // image-pixel coordinates, but some reply normalized 0–100 — detect which.
-  let x0 = box.minX - margin;
-  let y0 = box.minY - margin;
-  let w = box.maxX - box.minX + margin * 2;
-  let h = box.maxY - box.minY + margin * 2;
-  let maxCoord = Math.max(...(basisCoords ?? polylines.flat()), 0);
-  let basisX = maxCoord <= 105 ? 100 : Math.max(1, imageW);
-  let basisY = maxCoord <= 105 ? 100 : Math.max(1, imageH);
+  let { x0, y0, w, h, basisX, basisY } = worldBasis(
+    box,
+    margin,
+    imageW,
+    imageH,
+    basisCoords ?? polylines.flat(),
+  );
   return polylines.map((l) =>
     l.map((n, i) =>
       i % 2 === 0 ? x0 + (n / basisX) * w : y0 + (n / basisY) * h,
@@ -455,20 +513,75 @@ export function mapPolylinesToWorld(
 
 export function polylinesBBox(polylines: number[][]): BBox | null {
   let pts = polylines.flat();
-  if (pts.length < 4) {
-    return null;
+  // a single point is not a sketch worth boxing — needs at least two
+  return pts.length < 4 ? null : pointsBBox(pts);
+}
+
+/* ── the command → board error contract ────────────────────────────────────
+   The board has to tell an out-of-credits failure from a rate limit from an
+   unreadable scribble, because each one needs different advice. Carrying that
+   as a formatted sentence and re-deriving it with a regex on the other side
+   loses the distinction, so the condition travels as a code instead. */
+
+export type EchoErrorCode =
+  | 'no-capture' // nothing was lassoed, or the crop failed
+  | 'out-of-credits' // 402 — the account cannot pay for the call
+  | 'rate-limited' // 429 — too many calls, retry later
+  | 'bad-request' // 400/413/415 — the image or prompt was rejected
+  | 'upstream' // 5xx — the provider failed, nothing the user did
+  | 'network' // the request never completed
+  | 'empty' // the model looked and had nothing to add
+  | 'unknown';
+
+export class EchoError extends Error {
+  readonly code: EchoErrorCode;
+  readonly status?: number;
+  readonly providerCode?: string;
+
+  constructor(
+    code: EchoErrorCode,
+    message: string,
+    opts: { status?: number; providerCode?: string } = {},
+  ) {
+    super(message);
+    this.name = 'EchoError';
+    this.code = code;
+    this.status = opts.status;
+    this.providerCode = opts.providerCode;
   }
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity;
-  for (let i = 0; i < pts.length; i += 2) {
-    if (pts[i] < minX) minX = pts[i];
-    if (pts[i] > maxX) maxX = pts[i];
-    if (pts[i + 1] < minY) minY = pts[i + 1];
-    if (pts[i + 1] > maxY) maxY = pts[i + 1];
+}
+
+// Duck-typed rather than `instanceof`: a command's throw may be re-wrapped
+// before it reaches the board, and the code is what matters, not the class.
+export function echoErrorCode(err: unknown): EchoErrorCode {
+  let code = (err as { code?: unknown } | null)?.code;
+  if (typeof code === 'string') {
+    return code as EchoErrorCode;
   }
-  return { minX, minY, maxX, maxY };
+  // last resort for a throw that never carried a code (e.g. a raw fetch
+  // rejection from below the command)
+  let raw = err instanceof Error ? err.message : String(err);
+  if (/timeout|network|fetch|abort/i.test(raw)) {
+    return 'network';
+  }
+  return 'unknown';
+}
+
+// Maps a provider HTTP status onto the contract above.
+export function echoCodeForStatus(status: number): EchoErrorCode {
+  if (status === 402) {
+    return 'out-of-credits';
+  }
+  if (status === 429) {
+    return 'rate-limited';
+  }
+  if (status === 400 || status === 413 || status === 415) {
+    return 'bad-request';
+  }
+  if (status >= 500) {
+    return 'upstream';
+  }
+  return 'unknown';
 }
 
 // A cheap deterministic key over the capture + mode. Not cryptographic — it
