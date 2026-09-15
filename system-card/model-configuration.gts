@@ -25,6 +25,12 @@ const PurposeField = enumField(StringField, {
 
 const TRAILING_ZERO_DECIMAL_RE = new RegExp('\\.0$');
 
+// 'none' is the explicit off switch on the reasoning effort field; an empty
+// value means not specified. Neither is a thinking configuration.
+function isThinking(effort: string | undefined | null): boolean {
+  return !!effort && effort !== 'none';
+}
+
 export class ModelConfiguration extends BaseModelConfiguration {
   static displayName = 'Model Configuration';
 
@@ -125,13 +131,17 @@ export class ModelConfiguration extends BaseModelConfiguration {
           this.purpose.charAt(0).toUpperCase() + this.purpose.slice(1);
         const purposeSegment = emoji + ' ' + purposeLabel + '\u30FB';
         const modelSegment = modelName || fullModelName || 'Model';
-        const thinkingSuffix = this.reasoningEffort ? '\u30FBThinking' : '';
+        const thinkingSuffix = isThinking(this.reasoningEffort)
+          ? '\u30FBThinking'
+          : '';
         const autoTitle = purposeSegment + modelSegment + thinkingSuffix;
         return this.cardInfo?.name || autoTitle;
       }
 
       if (fullModelName) {
-        const thinkingSuffix = this.reasoningEffort ? '\u30FBThinking' : '';
+        const thinkingSuffix = isThinking(this.reasoningEffort)
+          ? '\u30FBThinking'
+          : '';
         const autoTitle = '\u2713 ' + fullModelName + thinkingSuffix;
         return this.cardInfo?.name || autoTitle;
       }
@@ -169,7 +179,7 @@ export class ModelConfiguration extends BaseModelConfiguration {
       if (!this.openRouterModel) {
         return '';
       }
-      if (this.reasoningEffort) {
+      if (isThinking(this.reasoningEffort)) {
         return '\u{1F4A1}';
       }
       return '\u26A1';
@@ -206,6 +216,7 @@ const PURPOSE_LABELS: Record<string, string> = {
 };
 
 const REASONING_EFFORT_LABELS: Record<string, string> = {
+  none: 'Off',
   minimal: 'Minimal',
   low: 'Low',
   medium: 'Medium',
