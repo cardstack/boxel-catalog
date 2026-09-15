@@ -2,6 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
+      "reasoningEffort": "none",
       "cardInfo": {
         "name": "MoonshotAI: Kimi K2.7 Code",
         "summary": null,
