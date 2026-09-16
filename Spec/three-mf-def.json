@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ThreeMfDef",
+        "module": "https://cardstack.com/base/three-mf-def"
+      },
+      "specType": "file",
+      "readMe": "## 3MF Package (3M)\n\nThe FileDef for **3MF** — 3D Manufacturing Format, the OPC/ZIP package that modern slicers (Bambu Studio, PrusaSlicer, Cura) save a print job as. Sits in the 3D-model family beside `StlDef`, `GltfDef` and `GlbDef`; richer than STL, because a 3MF carries a whole build plate rather than one anonymous mesh.\n\n```ts\nexport class ThreeMfDef extends ThreeDModelDef {\n  static displayName = '3MF Package';\n  static icon = PrinterIcon;\n  static acceptTypes = '.3mf,model/3mf,application/vnd.ms-3mfdocument';\n}\n```\n\n### Family position\n\n`FileDef` → `ThreeDModelDef` → `ThreeMfDef`. The family supplies the icon and the live renderer (`Model3DPreview`) and inherits the four shared format shells (atom, fitted, embedded, isolated) and their chrome. A leaf adds **only** its `extractAttributes`, projecting that format's header facts onto the family's single `model3d` field via `model3dAttributes`. So this module is a reader, not a card design — it has no template of its own by construction.\n\n### What it extracts\n\n`threeMfToModel3d` projects the package header + slicer config onto `model3d`:\n\n| `model3d` key | 3MF source |\n|---|---|\n| `format` | always `'3MF package'` |\n| `meshes` | `printPartCount` |\n| `triangles` | `configuredFaceCount` (summed from the slicer config) |\n| `materials` / `materialNames` | `<basematerials>` in `<resources>` |\n| `unit` | the `<model>` root's `unit` attribute |\n| `generator` | the writing application |\n| `designer`, `license` | `<metadata>` children |\n| `plateCount`, `printPartCount`, `extruderCount` | slicer config |\n\nGeometry counts come from the slicer config, so a 3MF with no config keeps its material and provenance facts and reports **no** geometry counts — the honest header-only answer rather than a fabricated zero.\n\nPhysical dimensions are deliberately **not** extracted. The live client-side viewer computes them instead: cheaper at index time, and correct, because it applies the build/component transforms a prologue scan would ignore.\n\n### Why the reader is bounded (`three-mf-meta-extractor.ts`)\n\nA 3MF's useful text metadata all sits at the **top** of the `*.model` part — the `<model>` root's namespaces and unit, the `<metadata>` children, the `<basematerials>` — every bit of it ahead of the geometry (`<object>`/`<mesh>`/`<vertices>`). The reader exploits that layout twice:\n\n1. `unzipSync`'s `filter` runs **before** decompression, so only the `.model` and `model_settings.config` entries are decompressed. Plate-thumbnail PNGs, textures and `.rels` are never paid for.\n2. Metadata is read off the model part's **prologue** (everything up to the first `<object>`) with lightweight regex — no DOM parse of the vertex/triangle body.\n\nPure JS (`fflate` + regex, no DOM), so it is directly unit-testable.\n\n**ZIP-bomb backstop.** Any entry declaring a decompressed size over 128 MB is rejected. Declared sizes can be forged, so this stops the honest bomb, not an adversarial one — realm files come from authenticated members, so it is hardening, not a DoS guarantee.\n\n### The size-cap rule that is easy to get wrong\n\nOver `fileSizeLimitBytes` (default `DEFAULT_FILE_SIZE_LIMIT_BYTES`, the same ceiling the write path enforces), extraction is skipped and the base attributes are returned **as `ThreeMfDef`**. It must **not** throw `FileContentMismatchError` there — that would demote the file to a plain `FileDef` and lose the 3D card entirely. The file still renders through the live viewer, which parses its own geometry; it just shows an empty inspector panel and the cube placeholder.\n\n`FileContentMismatchError` is thrown in exactly two places: a wrong extension, and a payload `parseThreeMf` cannot read (not a ZIP, no `.model` part, or a `.model` whose root isn't the 3MF core `<model>` element).\n\n### Related types\n\n`ThreeMfMetadata` and `ThreeMfPrintPartData` are TypeScript interfaces inside the extractor, **not** `FieldDef` classes. The FieldDef their values land on is the family's shared `Model3dMetadataField` in `file-formats/metadata-fields.gts`.\n\n### Examples\n\nLinked as a `fileExamples` entry: `filedef-fixtures/samples/three-mf-moderate.3mf`.\n\n### Siblings\n\n`gltf-model-def` and `glb-model-def`. The fourth leaf under `ThreeDModelDef`, `StlDef`, has no Spec in this realm.",
+      "cardInfo": {
+        "name": "3MF Manufacturing Model",
+        "summary": "FileDef for the 3MF (OPC/ZIP) slicer package: bounded prologue-only metadata read, projected onto the shared model3d field."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/three-mf-moderate.3mf"
+        }
+      }
+    }
+  }
+}

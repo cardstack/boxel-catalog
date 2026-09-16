@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "GltfDef",
+        "module": "https://cardstack.com/base/gltf-model-def"
+      },
+      "specType": "file",
+      "readMe": "## glTF Model File (gM)\n\nThe FileDef for **`.gltf`** — the JSON form of glTF, the runtime-oriented 3D transmission format. One of two leaves in `gltf-model-def.gts`; the other is `GlbDef` (`.glb`), the same document in a binary wrapper.\n\n```ts\nexport class GltfDef extends ThreeDModelDef {\n  static displayName = 'glTF Model';\n  static icon = File3dIcon;\n  static acceptTypes = '.gltf,model/gltf+json';\n}\n```\n\n### Family position\n\n`FileDef` → `ThreeDModelDef` → `GltfDef`. The family supplies the icon and the live renderer (`Model3DPreview`) and inherits the four shared format shells (atom, fitted, embedded, isolated). A leaf adds only its `extractAttributes`, projecting header facts onto the family's single `model3d` field via `model3dAttributes`. No template of its own, by construction.\n\n### Why glTF reads richer than STL or 3MF\n\nA glTF header **enumerates its scene graph directly**, so vertex, node, animation, texture and dimension facts sit cheaply in the JSON chunk. Unlike STL (one anonymous solid) or 3MF (counts only from a slicer config), these are honest header-only answers — nothing is inferred and no geometry is walked.\n\n| `model3d` key | glTF source |\n|---|---|\n| `format` | `\"glTF JSON <version>\"` (container label + `gltfVersion`) |\n| `meshes` | `meshCount` |\n| `triangles` | `triangleCount` |\n| `vertices` | `vertexCount` |\n| `materials` | `materialCount` |\n| `nodes` | `nodeCount` |\n| `animations` | `animationCount` |\n| `textures` | `textureCount` |\n| `dimensions` | `dimensions` (model-space bounding box) |\n| `generator` | `generator` |\n\n### One shared extract step, two leaves\n\n`extractGltfAttributes(expectedExtension, containerLabel, …)` does the work for both leaves. `parseGltf` auto-detects the container form, so the **only** per-format difference is which extension is accepted and how a parse failure is described. Do not fork this function to add a third container — pass a new pair of arguments.\n\n### Buffers and textures may be external\n\nA `.gltf` document's buffers and textures can be external files or base64-embedded. The header read here needs **neither** — it never resolves a `uri`. A glTF whose `.bin` sidecar is missing still indexes with full scene-graph facts.\n\n### Three failure branches, and why two of them keep the card\n\n1. **Wrong extension** → `FileContentMismatchError`. Demotes to a plain `FileDef`.\n2. **Over the size cap** (`fileSizeLimitBytes`, default `DEFAULT_FILE_SIZE_LIMIT_BYTES` — the same ceiling the write path enforces) → skip the sniff, **keep the model type**. The file still renders through the live viewer, which parses its own geometry; it just shows an empty inspector panel and the cube placeholder. Throwing here would lose the 3D card entirely.\n3. **Unparseable but recognisably a container** → for `.glb`, `isGlbContainer` catches glTF 1.0, truncated files and out-of-order chunks and keeps the 3D card, mirroring branch 2. Only bytes that are not a glTF container at all fall through to the mismatch error.\n\n### Examples\n\nLinked as a `fileExamples` entry: `filedef-fixtures/samples/gltf-moderate.gltf`.\n\n### Siblings\n\n`glb-model-def` (same module). The shared metadata field is `Model3dMetadataField` in `file-formats/metadata-fields.gts`.",
+      "cardInfo": {
+        "name": "glTF Model File",
+        "summary": "FileDef for .gltf — scene-graph facts read straight from the JSON chunk, projected onto the shared model3d field."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/gltf-moderate.gltf"
+        }
+      }
+    }
+  }
+}

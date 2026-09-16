@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "GlbDef",
+        "module": "https://cardstack.com/base/gltf-model-def"
+      },
+      "specType": "file",
+      "readMe": "## GLB Model File (GM)\n\nThe FileDef for **`.glb`** — the binary container form of glTF. Same document as a `.gltf`, wrapped in a chunked binary envelope. The second of two leaves in `gltf-model-def.gts`; the first is `GltfDef`.\n\n```ts\nexport class GlbDef extends ThreeDModelDef {\n  static displayName = 'glTF Binary Model';\n  static icon = File3dIcon;\n  static acceptTypes = '.glb,model/gltf-binary';\n}\n```\n\n### Why this is a separate leaf and not a flag\n\nA FileDef leaf is selected by extension, so `.glb` and `.gltf` need two classes even though they share one document model. What they do **not** need is two implementations: both call the shared `extractGltfAttributes(expectedExtension, containerLabel, …)`, and `parseGltf` auto-detects the container. The only per-format difference is which extension is accepted and how a parse failure is described. `format` comes out as `\"Binary glTF <version>\"` rather than `\"glTF JSON <version>\"` — the container label is the sole divergence in the projected facts.\n\nSo: **one module, one reader, two rows.** Anyone adding a third container form adds a class and a pair of arguments, not a copy of the function.\n\n### What it extracts\n\n`parseGltf` reads **only the JSON chunk**, never the binary geometry that follows it. Everything `GltfDef` reports, this reports: `meshes`, `triangles`, `vertices`, `materials`, `nodes`, `animations`, `textures`, `dimensions` (model-space bounding box) and `generator` — all projected onto the family's shared `model3d` field via `model3dAttributes`.\n\n### The GLB-specific rescue branch\n\nThis is the one behaviour `.glb` has that `.gltf` does not. When `parseGltf` returns nothing, `isGlbContainer(bytes)` gets a second look:\n\n- **Bytes announce a GLB container but cannot be summarized** — glTF 1.0, a truncated file, chunks out of order — the base attributes are returned and the file **keeps its 3D card**. The live client-side viewer may still render it; it just shows an empty inspector panel and the cube placeholder. This mirrors the size-cap branch deliberately.\n- **Bytes are not a glTF container at all** → `FileContentMismatchError`, and the file demotes to a plain `FileDef`.\n\nThe same rule as everywhere in this family: never throw on a file that is genuinely 3D but merely unreadable, because throwing loses the 3D card entirely.\n\n### Size cap\n\nOver `fileSizeLimitBytes` (default `DEFAULT_FILE_SIZE_LIMIT_BYTES` — the same ceiling the write path enforces) extraction is skipped and the base attributes returned **as `GlbDef`**. `.glb` files are where this branch actually fires in practice, since the binary form is the one people ship at size.\n\n### Examples\n\nLinked as a `fileExamples` entry: `filedef-fixtures/samples/glb-moderate.glb`.\n\n### Siblings\n\n`gltf-model-def` (same module). The shared metadata field is `Model3dMetadataField` in `file-formats/metadata-fields.gts`.",
+      "cardInfo": {
+        "name": "GLB Model File",
+        "summary": "FileDef for .glb — same reader as glTF, plus a rescue branch that keeps the 3D card for unreadable containers."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "fileExamples.0": {
+        "links": {
+          "self": "../filedef-fixtures/samples/glb-moderate.glb"
+        }
+      }
+    }
+  }
+}

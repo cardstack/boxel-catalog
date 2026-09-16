@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AudioPreview",
+        "module": "https://cardstack.com/base/file-formats/audio-preview"
+      },
+      "specType": "component",
+      "readMe": "## Audio File Preview — waveform + player (AP)\n\nThe other half of the **Media File Preview** row.\n\n**The browser is the decoder** — the reading formats mount one native `<audio controls>`. But a sound file **has no picture**, so the visual handed to the shells is the amplitude envelope the extract pass read out of the bytes, drawn as a waveform.\n\n### The envelope arrives already bounded\n\n`fileViewModel` resamples it before this component sees it: **64 bars in a fitted cell, 256 in the reading formats**. This component only draws — it never sees an unbounded payload, which is what keeps a grid of audio files cheap.\n\n### A file with no envelope still renders\n\nAn over-budget FLAC, a stream that would not re-read: the **duration and identity carry the cell**, and the waveform area falls back to the family glyph. Never a broken frame. This is the rule across the whole family — a file that is genuinely playable must not lose its card because one derived fact could not be computed.\n\n### Related but different\n\nThe catalog ships `fields/audio` with `MiniPlayer`, `WaveformPlayer` and six siblings — a full **AudioField** for authored audio with likes, play counts and trim. That is for audio a card *owns*. This is for **any audio file in a realm**, with no card modelling it.\n\n\nProjected into the four format shells by `FilePreviewStage`, which owns the loading, failure and staleness panes.\n",
+      "cardInfo": {
+        "name": "Audio File Preview",
+        "summary": "Native <audio> plus a pre-resampled amplitude envelope; identity carries the cell when the envelope is missing."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
