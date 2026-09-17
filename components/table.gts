@@ -6,6 +6,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
+import sortBy from '../utils/sort';
 
 // A record table over instances the consumer already holds, with the columns
 // declared rather than derived from a schema: "which of this card's forty
@@ -131,25 +132,18 @@ export class Table extends GlimmerComponent<TableSignature> {
   }
 
   get sortedItems(): CardDef[] {
-    let items = (this.args.items ?? []).filter(Boolean);
+    let items = (this.args.items ?? []).filter((x) => x != null);
     if (this.isControlled) {
       return items;
     }
     let column = this.args.columns.find((c) => c.key === this.sortKey);
     let read = column ? sortReader(column) : undefined;
     if (!read) return items;
-    let dir = this.sortDir === 'asc' ? 1 : -1;
-    return [...items].sort((a, b) => {
-      let av = read(a);
-      let bv = read(b);
-      if (av == null && bv == null) return 0;
-      if (av == null) return 1;
-      if (bv == null) return -1;
-      if (typeof av === 'number' && typeof bv === 'number') {
-        return (av - bv) * dir;
-      }
-      return String(av).localeCompare(String(bv)) * dir;
-    });
+    // Ordering comes from the shared sort verb, so a column sorted through
+    // this table and the same column sorted through sortBy agree: dates by
+    // time rather than by their string form, "P2" before "P10", booleans
+    // false-first, empties last in both directions, and ties stable.
+    return sortBy(items, read, this.sortDir === 'desc' ? 'desc' : 'asc');
   }
 
   @tracked page = 0;
