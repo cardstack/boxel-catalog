@@ -1,0 +1,84 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "offeredTitle": "Platform Engineer",
+      "salary": 165000,
+      "equity": 3500,
+      "bonus": 8000,
+      "startDate": "2026-09-14",
+      "extendedDate": "2026-08-03",
+      "expirationDate": "2026-08-17",
+      "decisionDate": null,
+      "status": "pending",
+      "approvalChain": {
+        "startedAt": "2026-08-03T09:00:00.000Z",
+        "steps": [
+          {
+            "decision": "approved",
+            "decidedAt": "2026-08-03T14:20:00.000Z",
+            "comment": "Band and level check out against the platform ladder.",
+            "openedAt": "2026-08-03T09:00:00.000Z",
+            "holdReason": null,
+            "conditions": null
+          },
+          {
+            "decision": "approved",
+            "decidedAt": "2026-08-04T11:05:00.000Z",
+            "comment": "Headcount confirmed against the Q3 plan.",
+            "openedAt": "2026-08-03T14:20:00.000Z",
+            "holdReason": null,
+            "conditions": null
+          },
+          {
+            "decision": "pending",
+            "decidedAt": null,
+            "comment": null,
+            "openedAt": "2026-08-04T11:05:00.000Z",
+            "holdReason": null,
+            "conditions": "Equity grant needs a board resolution before sign-off."
+          }
+        ]
+      },
+      "cardInfo": {
+        "name": "Tom\u00e1s Ribeiro \u2014 Offer (in approval)",
+        "summary": "A three-step approval chain with the third step still open: the bottleneck sits on Sofia Reyes.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "candidate": {
+        "links": {
+          "self": "../Candidate/offer-tomas"
+        }
+      },
+      "position": {
+        "links": {
+          "self": "../Position/platform-engineer"
+        }
+      },
+      "approvalChain.steps.0.approver": {
+        "links": {
+          "self": "../Employee/marcus-webb"
+        }
+      },
+      "approvalChain.steps.1.approver": {
+        "links": {
+          "self": "../Employee/dana-kim"
+        }
+      },
+      "approvalChain.steps.2.approver": {
+        "links": {
+          "self": "../Employee/sofia-reyes"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../offer",
+        "name": "Offer"
+      }
+    }
+  }
+}
