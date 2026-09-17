@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../skill",
+        "name": "Skill"
+      },
+      "specType": "card",
+      "readMe": "# Skill\n\n## Summary\nA named skill with a `category` (`SkillCategoryField`: the vocabulary and colour map are exported as `SKILL_CATEGORIES` / `SKILL_CATEGORY_COLORS`). Candidates and Positions link skills so matching is by card, not by string.\n\n## Usage\n```ts\nimport { Skill } from '@cardstack/catalog/cards/hr/skill';\n\n@field skills = linksToMany(Skill);\n```\n\n## Non-goals\nNo proficiency level — that belongs on the link's owner (a candidate's years with a skill), not on the shared skill card.",
+      "cardTitle": "Skill",
+      "cardDescription": "A named skill with a colour-coded category, linked from candidates and positions so matching is by card rather than by string.",
+      "cardInfo": {
+        "name": "Skill",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Skill/typescript"
+        }
+      }
+    }
+  }
+}
