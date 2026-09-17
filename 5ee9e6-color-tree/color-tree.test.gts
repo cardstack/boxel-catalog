@@ -1,5 +1,5 @@
 import { click } from '@ember/test-helpers';
-import { module, test } from 'qunit';
+import { module, skip, test } from 'qunit';
 
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { renderCard } from '@cardstack/host/tests/helpers/render-component';
@@ -23,12 +23,28 @@ import {
 
 import { getLoader } from '../tests/helpers/field-test-helpers';
 
+// The studio draws through a WebGL canvas. A browser with no GPU and no
+// software rasteriser returns no context, and the renderer throws while it is
+// being constructed, which fails the test before any assertion runs. These
+// render where a context is available and report as skipped where it is not,
+// so the failure mode is visible rather than silent.
+function hasWebGLContext(): boolean {
+  try {
+    let canvas = document.createElement('canvas');
+    return Boolean(canvas.getContext('webgl2') ?? canvas.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
+
+const studioTest = hasWebGLContext() ? test : skip;
+
 export function runTests() {
   module('Rendering | color-tree field', function (hooks) {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
 
-    test('color-tree field example renders the studio as the edit format', async function (assert) {
+    studioTest('color-tree field example renders the studio as the edit format', async function (assert) {
       let card = new ColorTreeFieldExample({
         pick: new ColorTreeField({ hex: '#2e8b6a', munsell: '5G 5/8' }),
         title: 'Color Tree Field',
@@ -47,7 +63,7 @@ export function runTests() {
       assert.dom('[data-test-color-tree-field-atom]').containsText('5G 5/8');
     });
 
-    test('color-tree field renders the designed empty state', async function (assert) {
+    studioTest('color-tree field renders the designed empty state', async function (assert) {
       await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
 
       assert
@@ -58,7 +74,7 @@ export function runTests() {
         .containsText('no chip picked yet');
     });
 
-    test('color-tree field hint speaks to the view on stage', async function (assert) {
+    studioTest('color-tree field hint speaks to the view on stage', async function (assert) {
       await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
 
       assert.dom('.hint').containsText('drag to tumble');
@@ -80,7 +96,7 @@ export function runTests() {
         );
     });
 
-    test('color-tree field hamburger docks at the panel edge while it is open', async function (assert) {
+    studioTest('color-tree field hamburger docks at the panel edge while it is open', async function (assert) {
       await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
 
       assert
@@ -95,7 +111,7 @@ export function runTests() {
       assert.dom('.hamburger').hasText('✕');
     });
 
-    test('color-tree field scan dial only engages while a cut is open', async function (assert) {
+    studioTest('color-tree field scan dial only engages while a cut is open', async function (assert) {
       await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
       await click('[data-test-toggle-panel]');
 
@@ -110,7 +126,7 @@ export function runTests() {
         .isEnabled('opening the atlas engages the scan dial');
     });
 
-    test('color-tree field scout miniature toggles away over the open atlas', async function (assert) {
+    studioTest('color-tree field scout miniature toggles away over the open atlas', async function (assert) {
       await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
 
       assert
