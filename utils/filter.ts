@@ -61,6 +61,9 @@ export default function filterBy<T>(
   items: readonly (T | null | undefined)[],
   ...predicates: Predicate<T>[]
 ): T[] {
-  let present = (items ?? []).filter(Boolean) as T[];
+  // `!= null`, not `filter(Boolean)`: the hole this skips is an unloaded
+  // link, and Boolean would also drop 0, '' and false — silently losing
+  // rows from any list of numbers or ids.
+  let present = (items ?? []).filter((x) => x != null) as T[];
   return present.filter((item) => predicates.every((p) => p(item)));
 }
