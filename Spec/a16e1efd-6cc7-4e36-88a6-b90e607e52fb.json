@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "\n\n**Not `utils/sort`.** This builds an index `Sort` expression and the picker that chooses one; `utils/sort` orders an array already in hand. The import paths differ by one character.",
       "ref": {
         "module": "../components/sort",
         "name": "SortMenu"

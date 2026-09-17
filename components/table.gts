@@ -37,7 +37,7 @@ export interface TableColumn {
    * accessor per column.
    */
   value?: (item: CardDef) => string | number | null | undefined;
-  sortValue?: (item: CardDef) => string | number | null | undefined;
+  sortValue?: (item: CardDef) => string | number | Date | null | undefined;
 }
 
 function cellValue(column: TableColumn, item: CardDef): string {
@@ -139,10 +139,10 @@ export class Table extends GlimmerComponent<TableSignature> {
     let column = this.args.columns.find((c) => c.key === this.sortKey);
     let read = column ? sortReader(column) : undefined;
     if (!read) return items;
-    // Ordering comes from the shared sort verb, so a column sorted through
-    // this table and the same column sorted through sortBy agree: dates by
-    // time rather than by their string form, "P2" before "P10", booleans
-    // false-first, empties last in both directions, and ties stable.
+    // Ordering comes from the shared sort verb, so a column sorted here and the
+    // same column sorted by a direct sortBy call agree: numbers numerically,
+    // Dates by time, "P2" before "P10", booleans false-first, empties last in
+    // both directions, ties stable.
     return sortBy(items, read, this.sortDir === 'desc' ? 'desc' : 'asc');
   }
 

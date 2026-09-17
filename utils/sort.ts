@@ -1,6 +1,6 @@
-// The shared sort verb: one type-aware comparator so every list in every app
-// orders the same way. Four shipped apps re-derived this before it existed —
-// and a string sort puts "P10" before "P2" and 2026-02-01 after 2026-01-31T….
+// The shared sort verb: one type-aware comparator, so every list orders the
+// same way. A plain string sort puts "P10" before "P2" and 2026-02-01 after
+// 2026-01-31T…, which is what this exists to prevent.
 
 export type SortDirection = 'asc' | 'desc';
 
