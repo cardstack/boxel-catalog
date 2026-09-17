@@ -109,7 +109,7 @@ export function durationAtomLabel(
 }
 
 export class DurationField extends FieldDef {
-  static displayName = 'Duration (single unit)';
+  static displayName = 'Duration (scaled unit)';
   static icon = ClockIcon;
 
   @field value = contains(NumberField);
