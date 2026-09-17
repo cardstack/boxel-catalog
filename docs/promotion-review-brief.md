@@ -2,11 +2,11 @@
 
 What a cold reviewer looks at on a Gold-Spec promotion PR. Used by the A4 review job and by a human or a local Claude Code session reviewing the same PR. One source of truth so the two cannot drift.
 
-**The reviewer is never the author.** A session that wrote the PR has already decided every question this brief asks; re-asking them in the same context measures nothing. The 2026-08-21 retirement of the ConceptReview pipeline is the precedent: 117 of 118 reviews were agent-filed in one day and the pipeline measured nothing. Run this from a fresh session with the diff and this brief, nothing else.
+**The reviewer is never the author.** A session that wrote the PR has already decided every question this brief asks, so asking them again in the same context measures nothing. Run this from a fresh session with the diff and this brief, nothing else.
 
 ## Out of scope: everything CI already owns
 
-`scripts/check-promotion.py` runs on every PR and covers dangling imports and refs, matrix-realm leftovers, unresolved examples, instance `adoptsFrom` shape, Spec coverage, `cardInfo.name`, `cardTitle` convention, `cardDescription` presence, and the readMe length floor. Do not re-report any of those. If CI is green, treat them as settled and spend the review on what follows.
+`scripts/check-promotion.py` runs on every PR and covers dangling imports and refs, realm leftovers, unresolved examples, instance `adoptsFrom` shape, Spec coverage, `cardInfo.name`, `cardTitle` convention, `cardDescription` presence, the readMe length floor, the base-import form, and shared code reaching into `cards/`. Do not re-report any of those. If CI is green, treat them as settled and spend the review on what follows.
 
 ## 1. The readMe earns its place
 
@@ -26,7 +26,7 @@ Every linked example resolves, because CI checked. Ask instead whether they show
 
 ## 3. Nothing was rebuilt that the catalog already has
 
-The closure arrives wholesale, so this is where duplication enters. Check each new module against `fields/`, `components/`, `commands/`, `packages/base` and `boxel-ui` by **kind, not name**. The precedent is Score: a self-declared copy of `fields/rating`, which was retired rather than promoted, and its consumers repointed. If a moved module duplicates something already in the catalog, the finding is "repoint at the existing one", not "rename it".
+The closure arrives wholesale, so this is where duplication enters. Check each new module against `fields/`, `components/`, `commands/`, `packages/base` and `boxel-ui` by **kind, not name**. If a moved module duplicates something already in the catalog, the finding is "repoint at the existing one", not "rename it" — a near-copy of an existing field is retired in favour of it, and its consumers move.
 
 ## 4. The block stays domain-neutral
 
@@ -37,12 +37,13 @@ The tell is the block's code naming a field, a type or a format that belongs to 
 - Is the target folder right? Fields in `fields/<name>/`, components at the root, cards in `cards/<cluster>/`, and a cluster's own commands in `cards/<cluster>/commands/`.
 - Root `commands/` is in practice the listing-submission workflow namespace (`listing-create`, `process-github-event`), and it already holds plain function modules (`commands/utils.ts`, `commands/image-utils.ts`) as well. It is not a general home for helpers.
 - Root `utils/` is the surface for a cross-domain pure helper — a comparator, a predicate builder. A module there is not invokable; a `Command` subclass never belongs in it.
+- Base imports use the canonical `@cardstack/base/…` alias.
 - Is a new `cards/<cluster>/` name the one a stranger would guess, and does it match the domain rather than the app that happened to need it?
 - Plain kebab folder names, no six-hex prefix. Those are minted by the listing submission workflow, which this pipeline does not run.
 
 ## 6. Changes beyond the move
 
-The pilot's rule is that modules move verbatim apart from import rewriting. Any other edit in the diff is a deliberate change and needs a reason in the PR body. Read those edits specifically: they are where regressions enter, because they were written under type-checker pressure rather than design pressure. Hoisting a view out of a class expression is fine. Silently dropping a guard is not.
+A promoted module moves verbatim apart from import rewriting. Any other edit in the diff is a deliberate change and needs a reason in the PR body. `scripts/promotion-residue.py <folder>` isolates exactly those lines: it compares line multisets against the source realm, so a relocated block cancels out and only real edits remain. Read those edits specifically: they are where regressions enter, because they were written under type-checker pressure rather than design pressure. Hoisting a view out of a class expression is fine. Silently dropping a guard is not.
 
 ## 7. The prose is evergreen
 

@@ -1,20 +1,19 @@
 name: Promotion Check
 
-# Lane A3. The mechanical half of reviewing a Gold-Spec promotion PR, so the
+# The mechanical half of reviewing a Gold-Spec promotion PR, so the
 # human reviewer starts from a clean diff and spends their judgment on prose,
-# shape and naming. Every check encodes a defect a human reviewer has had to
-# catch by hand on a promotion PR.
+# shape and naming. Each check encodes a defect a reviewer would otherwise
+# have to catch by hand.
 #
 # Runs on every PR because the checks are cheap and a Spec with a dangling ref
 # is wrong wherever it appears. Errors fail the job; convention findings fail
-# only in this --changed mode, which is what a promotion PR owes.
+# only for files the PR adds, which is what arriving content owes.
 
 on:
   pull_request:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   promotion-check:
@@ -30,10 +29,12 @@ jobs:
 
       - name: Check promoted Specs, modules and instances
         id: check
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           set +e
           python3 scripts/check-promotion.py \
-            --changed origin/${{ github.base_ref }} | tee check.txt
+            --changed "origin/$BASE_REF" | tee check.txt
           echo "status=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Summary

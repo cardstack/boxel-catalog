@@ -1,6 +1,6 @@
 name: Claude Review
 
-# Lane A4. A cold reviewer on a Gold-Spec promotion PR: a fresh session that
+# A cold reviewer on a Gold-Spec promotion PR: a fresh session that
 # did not write the branch, briefed by docs/promotion-review-brief.md, posting
 # findings as review comments.
 #
@@ -12,9 +12,8 @@ name: Claude Review
 #
 # Approval and merge stay human. This job posts comments and never approves.
 #
-# REQUIRES a repository or organisation secret named ANTHROPIC_API_KEY. None
-# exists in cardstack/boxel-catalog or cardstack/boxel today, so the job
-# skips itself rather than failing every PR. Provision the secret to turn it on.
+# Requires a repository or organisation secret named ANTHROPIC_API_KEY. The
+# job skips itself when none is set, so it is inert until one is provisioned.
 
 on:
   pull_request:
@@ -29,11 +28,15 @@ permissions:
   contents: read
   pull-requests: write
 
+concurrency:
+  group: claude-review-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   review:
     name: Cold review
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false || github.event_name == 'workflow_dispatch'
+    if: github.event.pull_request.draft == false
     steps:
       - name: Check for the API key
         id: gate
@@ -54,7 +57,9 @@ jobs:
 
       - name: Review against the promotion brief
         if: steps.gate.outputs.enabled == 'true'
-        uses: anthropics/claude-code-action@v1
+        # Pinned like every other third-party action here: this one is handed
+        # the API key and a write token.
+        uses: anthropics/claude-code-action@v1  # TODO: replace with a commit SHA
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

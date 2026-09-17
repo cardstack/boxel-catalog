@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lane A3 — the pre-review checklist for a Gold-Spec promotion PR.
+"""The pre-review checklist for a Spec promotion PR.
 
   python3 scripts/check-promotion.py                 # check the whole catalog
   python3 scripts/check-promotion.py cards/hr        # check one folder
@@ -15,23 +15,23 @@ defect that a reviewer would otherwise have to catch by hand:
                     row, so promoting the code silently un-verifies the concept
   spec-title        cardTitle convention: bare name, fields get " Field"
   spec-description  the Spec chooser tile renders blank without it
-  spec-readme       >= 300 chars, and its import line must name the catalog
-                    module, not the matrix realm it came from
+  spec-readme-floor >= 300 chars (convention)
+  spec-readme       the import line names the catalog module (error)
   spec-coverage     every moved module has a Spec: the catalog holds no loose code
   example-link      a linked example that 404s renders an empty Examples section
   instance-adopts   instance adoptsFrom must be RELATIVE: an absolute
                     @cardstack/catalog ref to a not-yet-merged module makes the
                     submissions push fail with a 500
-  import-base       base imports use the https://cardstack.com/base/ form
+  import-base       base imports use the canonical @cardstack/base/ alias
   import-dangling   every relative import resolves on disk
   import-matrix     nothing still imports the matrix realm
   import-inverted   shared code (fields/, components/, commands/) never imports
                     a domain card out of cards/
 
 Findings carry a severity. ERROR is always wrong and always fails. CONVENTION
-is what a promotion PR owes: it fails in --changed mode, and in a whole-tree
-audit it is reported as existing debt without failing, because the catalog
-predates these rules and 44 files still import base by its package alias.
+is what ARRIVING content owes: it fails for a file the PR adds, and is
+reported without failing for anything else, so a PR is judged on what it
+brings rather than on the backlog it happens to touch.
 
 Two rules are deliberately narrow, because the wide reading of each flags
 correct code:
@@ -57,11 +57,12 @@ import sys
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MATRIX_REALM = "realms-staging.stack.cards/richard.tan1"
-BASE_OK = "https://cardstack.com/base/"
-BASE_BAD = "@cardstack/base/"
+# Any author's realm on the staging host, not one person's.
+MATRIX_REALM_RE = re.compile(r"realms-staging\.stack\.cards/[^/'\"]+/boxel-software-matrix-layer")
+BASE_OK = "@cardstack/base/"
+BASE_DRIFT = "https://cardstack.com/base/"
 CODE_EXT = (".gts", ".ts")
-SHARED_DIRS = ("fields", "components", "commands")
+SHARED_DIRS = ("fields", "components", "commands", "utils")
 BLOCK_DIRS = SHARED_DIRS + ("cards",)
 # Folders that document a block rather than being one: their modules need no
 # Spec of their own and may consume anything they like to render an example.
@@ -70,9 +71,9 @@ DOC_SEGMENTS = ("/example/", "/Spec/")
 ERROR = "error"
 CONVENTION = "convention"
 
-# A multi-line import puts its specifier on a line starting with neither
-# import nor export; anchoring on those keywords made these checks blind to 433
-# specifiers across the matrix realm.
+# A multi-line import puts its specifier on a line starting with a brace, so
+# the `from` clause is matched wherever it lands rather than anchored on the
+# import keyword.
 IMPORT_RE = re.compile(
     r"""\bfrom\s*['"]([^'"]+)['"]"""
     r"""|^\s*import\s*['"]([^'"]+)['"]""", re.M)
@@ -102,7 +103,9 @@ def rel(path):
 def resolve_module(from_dir, spec):
     """Resolve a relative module specifier to a repo-relative file, or None."""
     base = os.path.normpath(os.path.join(from_dir, spec))
-    for cand in (base + ".gts", base + ".ts",
+    # The specifier as written comes first: a realm module may carry its own
+    # extension, and a readMe's consumption line usually does.
+    for cand in (base, base + ".gts", base + ".ts",
                  os.path.join(base, "index.gts"), os.path.join(base, "index.ts")):
         if os.path.isfile(cand):
             return rel(cand)
@@ -144,7 +147,7 @@ def scope_paths(args):
     for r in roots:
         for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, r)):
             dirnames[:] = [d for d in dirnames
-                           if d not in (".git", "node_modules", ".boxel-history")]
+                           if not d.startswith(".") and d != "node_modules"]
             for name in filenames:
                 out.append(rel(os.path.join(dirpath, name)))
     return out
@@ -159,11 +162,35 @@ def load_json(path):
 
 
 def is_spec(doc):
-    adopts = ((doc.get("data") or {}).get("meta") or {}).get("adoptsFrom") or {}
-    return adopts.get("name") == "Spec"
+    """A Spec, including the catalog's own subclasses.
+
+    Ten shared fields adopt a per-field subclass (StatusFieldSpec,
+    RatingFieldSpec, …) rather than Spec itself. Matching only "Spec" skips
+    every check on those files AND makes the coverage check report their
+    modules as unspecced."""
+    data = doc.get("data") or {}
+    adopts = (data.get("meta") or {}).get("adoptsFrom") or {}
+    name = adopts.get("name") or ""
+    if name == "Spec" or name.endswith("Spec"):
+        return True
+    attrs = data.get("attributes") or {}
+    return bool(attrs.get("specType")) and isinstance(attrs.get("ref"), dict)
 
 
 # ---------------------------------------------------------------- checks
+
+TEMPLATE_LITERAL_RE = re.compile(r"`(?:\\.|[^`\\])*`", re.S)
+BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.S)
+
+
+def strip_noncode(src):
+    """Blank out template literals and block comments before scanning imports.
+
+    A fixture that stores card source in backticks otherwise reports its
+    embedded import paths as dangling."""
+    src = BLOCK_COMMENT_RE.sub("", src)
+    return TEMPLATE_LITERAL_RE.sub("``", src)
+
 
 def check_code(paths, report):
     for path in paths:
@@ -176,16 +203,16 @@ def check_code(paths, report):
             continue
         from_dir = os.path.dirname(os.path.join(ROOT, path))
         top = path.split("/", 1)[0]
-        for m in IMPORT_RE.finditer(src):
+        for m in IMPORT_RE.finditer(strip_noncode(src)):
             spec = m.group(1) or m.group(2)
             if not spec:
                 continue
-            if spec.startswith(BASE_BAD):
+            if spec.startswith(BASE_DRIFT):
                 report.fail("import-base", path,
-                            f"{spec} — a promoted module imports base as "
-                            f"{BASE_OK}…", CONVENTION)
+                            f"{spec} — base imports use the canonical "
+                            f"{BASE_OK}… alias", CONVENTION)
                 continue
-            if MATRIX_REALM in spec:
+            if MATRIX_REALM_RE.search(spec):
                 report.fail("import-matrix", path,
                             f"{spec} — still points at the matrix realm")
                 continue
@@ -202,7 +229,7 @@ def check_code(paths, report):
                                 f"not depend on a domain card")
 
 
-def check_specs(paths, report):
+def check_specs(paths, report, added=None):
     """Returns module -> spec path, so coverage can be judged after."""
     covered = {}
     for path in paths:
@@ -212,6 +239,11 @@ def check_specs(paths, report):
         if not doc or not is_spec(doc):
             continue
         attrs = (doc.get("data") or {}).get("attributes") or {}
+        # Conventions are what ARRIVING content owes. Judging every Spec a PR
+        # happens to touch would block routine traffic on a backlog the PR did
+        # not create: most Specs already in the catalog carry no cardInfo.name
+        # and no cardDescription.
+        arriving = added is None or path in added
         spec_dir = os.path.dirname(os.path.join(ROOT, path))
         name = ((attrs.get("cardInfo") or {}).get("name") or "").strip()
         spec_type = (attrs.get("specType") or "").strip()
@@ -232,35 +264,41 @@ def check_specs(paths, report):
         elif not module:
             report.fail("spec-ref", path, "ref has no module")
 
-        if not name:
-            report.fail("spec-name", path,
-                        "cardInfo.name is empty — the crawl matches tracker "
-                        "rows on this field, so the row keeps pointing at the "
-                        "matrix realm Spec and the close-out un-verifies it",
-                        CONVENTION)
-        if not title:
-            report.fail("spec-title", path, "cardTitle is empty", CONVENTION)
-        elif spec_type == "field" and not title.endswith(" Field"):
-            report.fail("spec-title", path,
-                        f'cardTitle "{title}" — a field Spec\'s title ends '
-                        f'in " Field" (step-1 convention)', CONVENTION)
-        elif spec_type != "field" and title.endswith(" Field"):
-            report.fail("spec-title", path,
-                        f'cardTitle "{title}" — only field Specs carry the '
-                        f'" Field" suffix', CONVENTION)
-        if not desc:
-            report.fail("spec-description", path,
-                        "cardDescription is empty — the Spec chooser tile "
-                        "renders blank", CONVENTION)
-        if len(readme) < 300:
-            report.fail("spec-readme", path,
-                        f"readMe is {len(readme)} chars, below the 300-char "
-                        f"floor", CONVENTION)
+        if arriving:
+            if not name:
+                report.fail("spec-name", path,
+                            "cardInfo.name is empty — the crawl matches tracker "
+                            "rows on this field, so the row keeps pointing at "
+                            "the realm Spec and the close-out un-verifies it",
+                            CONVENTION)
+            if not title:
+                report.fail("spec-title", path, "cardTitle is empty", CONVENTION)
+            elif spec_type == "field" and not title.endswith(" Field"):
+                report.fail("spec-title", path,
+                            f'cardTitle "{title}" — a field Spec\'s title ends '
+                            f'in " Field"', CONVENTION)
+            elif spec_type != "field" and title.endswith(" Field"):
+                report.fail("spec-title", path,
+                            f'cardTitle "{title}" — only field Specs carry the '
+                            f'" Field" suffix', CONVENTION)
+            if not desc:
+                report.fail("spec-description", path,
+                            "cardDescription is empty — the Spec chooser tile "
+                            "renders blank", CONVENTION)
+            if len(readme) < 300:
+                report.fail("spec-readme-floor", path,
+                            f"readMe is {len(readme)} chars, below the 300-char "
+                            f"floor", CONVENTION)
         for imported in README_IMPORT_RE.findall(readme):
-            if MATRIX_REALM in imported or imported.startswith(BASE_BAD):
+            if MATRIX_REALM_RE.search(imported):
                 report.fail("spec-readme", path,
                             f"readMe imports {imported} — the consumption line "
-                            f"must name the catalog module")
+                            f"names the realm the code came from, not where it "
+                            f"lives now")
+            elif arriving and imported.startswith(BASE_DRIFT):
+                report.fail("import-base", path,
+                            f"readMe imports {imported} — base imports use the "
+                            f"canonical {BASE_OK}… alias", CONVENTION)
             elif imported.startswith(".") and not resolve_module(spec_dir, imported):
                 report.fail("spec-readme", path,
                             f"readMe imports {imported}, which does not resolve "
@@ -276,15 +314,20 @@ def check_specs(paths, report):
                 if not os.path.isfile(resolved):
                     report.fail("example-link", path,
                                 f"{key} -> {link} does not resolve")
-            elif MATRIX_REALM in link:
+            elif MATRIX_REALM_RE.search(link):
                 report.fail("example-link", path,
                             f"{key} -> {link} still points at the matrix realm")
     return covered
 
 
 def added_by_pr(base):
-    """Paths this branch adds relative to BASE — an absolute adoptsFrom naming
-    one of these is what 500s the submissions push."""
+    """Paths this branch adds relative to BASE.
+
+    Falls back to untracked files the same way `scope_paths` does. Without that
+    fallback, a branch with nothing committed yields an empty set, and then the
+    coverage check skips every path while the absolute-adoptsFrom check can
+    fire neither severity — two checks reporting clean having looked at
+    nothing, in the one mode the untracked fallback exists to cover."""
     if not base:
         return None
     merge_base = subprocess.run(["git", "merge-base", base, "HEAD"], cwd=ROOT,
@@ -292,6 +335,9 @@ def added_by_pr(base):
     out = subprocess.run(["git", "diff", "--name-only", "--diff-filter=A",
                           merge_base or base, "HEAD"],
                          cwd=ROOT, capture_output=True, text=True).stdout.split()
+    if not out:
+        out = subprocess.run(["git", "ls-files", "--others", "--exclude-standard"],
+                             cwd=ROOT, capture_output=True, text=True).stdout.split()
     return set(out)
 
 
@@ -321,7 +367,7 @@ def check_instances(paths, report, added=None):
                             f"adoptsFrom {module} is absolute; safe only "
                             f"because the module is already merged",
                             CONVENTION)
-        elif MATRIX_REALM in module:
+        elif MATRIX_REALM_RE.search(module):
             report.fail("instance-adopts", path,
                         f"adoptsFrom {module} still points at the matrix realm")
         elif module.startswith("."):
@@ -373,9 +419,9 @@ def main():
     # A promotion PR owes the conventions; a whole-tree audit only reports them.
     strict = bool(args.changed)
     report = Report()
-    check_code(paths, report)
-    covered = check_specs(paths, report)
     added = added_by_pr(args.changed)
+    check_code(paths, report)
+    covered = check_specs(paths, report, added)
     check_instances(paths, report, added)
     check_coverage(paths, covered, report, added)
     blocking = report.blocking(strict)
@@ -412,12 +458,20 @@ def main():
     conventions = len(report.findings) - errors
     print(f"\n  {errors} errors, {conventions} convention findings"
           f"{'' if strict else ' (reported, not blocking)'}\n")
-    for check in sorted(by_check, key=lambda c: (by_check[c][0]["severity"] != ERROR, c)):
+    def rank(check):
+        return (all(f["severity"] != ERROR for f in by_check[check]), check)
+
+    for check in sorted(by_check, key=rank):
         items = by_check[check]
-        tag = "ERROR" if items[0]["severity"] == ERROR else "convention"
+        errs = sum(1 for f in items if f["severity"] == ERROR)
+        tag = ("ERROR" if errs == len(items)
+               else "convention" if errs == 0
+               else f"{errs} ERROR + {len(items) - errs} convention")
         print(f"  [{tag}] {check} ({len(items)})")
         for f in items[:12]:
-            print(f"    {f['path']}")
+            mark = "" if errs in (0, len(items)) else (
+                "ERROR " if f["severity"] == ERROR else "convention ")
+            print(f"    {mark}{f['path']}")
             print(f"      {f['detail']}")
         if len(items) > 12:
             print(f"    … {len(items) - 12} more")

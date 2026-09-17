@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Lane A4 support — what a promotion PR changed BEYOND moving the code.
+"""What a promotion PR changed BEYOND moving the code.
 
   python3 scripts/promotion-residue.py cards/hr
 
-The pilot's rule is that modules move verbatim apart from import rewriting.
+A promoted module moves verbatim apart from import rewriting.
 Everything else in the diff is a deliberate change and is where regressions
 enter, because those edits are written under type-checker pressure rather than
 design pressure. A reviewer needs exactly those lines and nothing else.
@@ -21,18 +21,28 @@ Pairs a catalog module with its matrix-realm original by basename WITH the
 extension: dropping the extension pairs utils/sort.ts with components/sort.gts,
 which are unrelated blocks."""
 import collections, os, re, sys
-CAT=os.path.expanduser("~/Developer/boxel-catalog")
-MIR=os.path.expanduser("~/Developer/boxel/packages/experiments-realm/boxel-software-matrix-layer")
-FOLDER=sys.argv[1] if len(sys.argv)>1 else "cards/hr"
-# Drops whole import statements, multi-line ones included: the specifier line of
-# a multi-line import starts with `}`, so anchoring on the import keyword left
-# `} from '...';` in the comparison and reported pure import rewrites as content.
+CAT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MIR=os.environ.get("MATRIX_REALM_DIR") or os.path.expanduser(
+    "~/Developer/boxel/packages/experiments-realm/boxel-software-matrix-layer")
+if len(sys.argv) < 2:
+    sys.exit("usage: promotion-residue.py <folder>   (e.g. cards/crm, utils)")
+FOLDER=sys.argv[1]
+if not os.path.isdir(MIR):
+    sys.exit(
+        "the realm this compares against is not on this machine:\n"
+        f"  {MIR}\n"
+        "Set MATRIX_REALM_DIR. Without it every module reads as new on arrival\n"
+        "and the report says nothing changed, which is the one answer it must\n"
+        "never give by accident.")
+# Drops whole import statements, multi-line ones included. The specifier line of
+# a multi-line import starts with `}`, so the `from` clause is matched wherever
+# it lands rather than anchored on the import keyword.
 IMP=re.compile(r"""^\s*(?:import|export)\b.*?from\s*['"][^'"]+['"];?\s*$"""
                r"""|^\s*import\s*['"][^'"]+['"];?\s*$"""
                r"""|^\s*\}?\s*from\s*['"][^'"]+['"];?\s*$"""
                r"""|^\s*(?:import|export)\s*\{\s*$"""
-               r"""|^\s*(?:type\s+)?[A-Za-z_$][\w$]*\s*,\s*$""")
-TRIVIAL={"","{","}","});","}","}}","},",")","(",");","};","]","[","},{"}
+               )
+TRIVIAL={"","{","}","});","}}","},",")","(",");","};","]","[","},{"}
 
 def bag(path):
     c=collections.Counter()
@@ -72,4 +82,10 @@ for rel,removed,added in sorted(rows):
     for l,c in list(removed.items())[:25]: print(f"   - {l[:150]}")
     for l,c in list(added.items())[:25]: print(f"   + {l[:150]}")
     if len(removed)>25 or len(added)>25: print("   … truncated")
-print(f"\n==== real content change: -{tot_rm} +{tot_add} lines")
+paired = sum(1 for _, removed, _ in rows if removed is not None)
+print(f"\n==== real content change: -{tot_rm} +{tot_add} lines "
+      f"({paired}/{len(rows)} modules compared against a counterpart)")
+if rows and not paired:
+    print("no module in this folder has a counterpart in the realm, so nothing\n"
+          "was compared. A close-out that already deleted them reads exactly\n"
+          "like a clean move; check MATRIX_REALM_DIR before trusting a zero.")
