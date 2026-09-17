@@ -330,10 +330,16 @@ def check_instances(paths, report, added=None):
                             f"adoptsFrom {module} does not resolve on disk")
 
 
-def check_coverage(paths, covered, report):
-    """Every module the PR adds carries a Spec — the catalog holds no loose
-    code (pilot doc: closure creep is real, thin Specs included)."""
+def check_coverage(paths, covered, report, added=None):
+    """Every module the PR ADDS carries a Spec — the catalog holds no loose
+    code, thin Specs included.
+
+    Only added modules. `covered` is built from the Specs in this run's scope,
+    so a PR that merely edits an existing module would otherwise be told its
+    module has no Spec, when the Spec simply sits outside the diff."""
     for path in paths:
+        if added is not None and path not in added:
+            continue
         if not path.endswith(CODE_EXT):
             continue
         if path in covered:
@@ -369,8 +375,9 @@ def main():
     report = Report()
     check_code(paths, report)
     covered = check_specs(paths, report)
-    check_instances(paths, report, added_by_pr(args.changed))
-    check_coverage(paths, covered, report)
+    added = added_by_pr(args.changed)
+    check_instances(paths, report, added)
+    check_coverage(paths, covered, report, added)
     blocking = report.blocking(strict)
 
     if args.json:
@@ -385,6 +392,14 @@ def main():
 
     mode = f"promotion PR vs {args.changed}" if strict else "audit"
     print(f"\nPROMOTION CHECK — {len(paths)} files, {mode}")
+    if strict:
+        dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
+                               cwd=ROOT, capture_output=True, text=True).stdout.split("\n")
+        dirty = [l[3:] for l in dirty if l.strip()]
+        if dirty:
+            print(f"  ({len(dirty)} uncommitted change(s) NOT checked — the diff "
+                  f"reads commits: {', '.join(dirty[:3])}"
+                  f"{'…' if len(dirty) > 3 else ''})")
     if strict and not paths:
         print("\n  nothing to check — is this branch actually ahead of "
               f"{args.changed}?\n")
