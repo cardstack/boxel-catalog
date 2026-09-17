@@ -44,7 +44,19 @@ The tell is the block's code naming a field, a type or a format that belongs to 
 
 The pilot's rule is that modules move verbatim apart from import rewriting. Any other edit in the diff is a deliberate change and needs a reason in the PR body. Read those edits specifically: they are where regressions enter, because they were written under type-checker pressure rather than design pressure. Hoisting a view out of a class expression is fine. Silently dropping a guard is not.
 
-## 7. What the Gold label could not see
+## 7. The prose is evergreen
+
+This repository is public and the issue tracker is private, so prose that names a ticket or a PR number is opaque to almost everyone who will ever read it, and prose that narrates how the author got here rots the moment anything is restructured. Load the `evergreen-comments` skill for the full rules; on a promotion PR, check for:
+
+- **Journey language** in a readMe, a code comment or the PR description: "originally", "an earlier attempt", "used to", "previously", "no longer", "until now", "now we", "as of today". A reader has no anchor for when "now" was. State the contract timelessly.
+- **A correction narrated in place.** "An earlier version of this description said X" belongs in the commit, not in the description. Rewrite to the current shape.
+- **Ticket IDs and PR numbers** in readMes, code comments, workflows or the description. Name the mechanism, not the change that introduced it.
+
+Two things are deliberately exempt: commit messages, and a **commit SHA in a review reply**, which is required rather than merely allowed — a reply reporting a fix names the commit so the reviewer knows what to re-read. Verify the SHA exists before writing it.
+
+Pre-existing prose you are merely editing around is out of scope. This governs what the PR introduces.
+
+## 8. What the Gold label could not see
 
 Gold is computed from counts. Two things it cannot check, worth one look each:
 
@@ -53,4 +65,4 @@ Gold is computed from counts. Two things it cannot check, worth one look each:
 
 ## How to report
 
-Post findings as PR review comments on the line they concern. Lead with the claim, then the consequence. No praise sections, no summary of what the PR does, the author knows. If nothing in sections 1 to 7 is wrong, say that in one line and approve nothing: approval and merge stay human.
+Post findings as PR review comments on the line they concern. Lead with the claim, then the consequence. No praise sections, no summary of what the PR does, the author knows. If nothing in sections 1 to 8 is wrong, say that in one line and approve nothing: approval and merge stay human.
