@@ -44,113 +44,153 @@ export function runTests() {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
 
-    studioTest('color-tree field example renders the studio as the edit format', async function (assert) {
-      let card = new ColorTreeFieldExample({
-        pick: new ColorTreeField({ hex: '#2e8b6a', munsell: '5G 5/8' }),
-        title: 'Color Tree Field',
-      });
-      await renderCard(getLoader(), card, 'isolated');
+    studioTest(
+      'color-tree field example renders the studio as the edit format',
+      async function (assert) {
+        let card = new ColorTreeFieldExample({
+          pick: new ColorTreeField({ hex: '#2e8b6a', munsell: '5G 5/8' }),
+          title: 'Color Tree Field',
+        });
+        await renderCard(getLoader(), card, 'isolated');
 
-      assert
-        .dom('[data-test-color-tree-field-edit] canvas.stage')
-        .exists('the edit format hosts the 3D studio');
-      assert
-        .dom('[data-test-color-tree-field-edit] .room')
-        .hasClass('compact', 'the studio runs bounded in a form');
-      assert
-        .dom('[data-test-color-tree-field-embedded]')
-        .containsText('#2e8b6a');
-      assert.dom('[data-test-color-tree-field-atom]').containsText('5G 5/8');
-    });
+        assert
+          .dom('[data-test-color-tree-field-edit] canvas.stage')
+          .exists('the edit format hosts the 3D studio');
+        assert
+          .dom('[data-test-color-tree-field-edit] .room')
+          .hasClass('compact', 'the studio runs bounded in a form');
+        assert
+          .dom('[data-test-color-tree-field-embedded]')
+          .containsText('#2e8b6a');
+        assert.dom('[data-test-color-tree-field-atom]').containsText('5G 5/8');
+      },
+    );
 
-    studioTest('color-tree field renders the designed empty state', async function (assert) {
-      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
-
-      assert
-        .dom('[data-test-color-tree-field-edit] canvas.stage')
-        .exists('the studio renders with no pick saved');
-      assert
-        .dom('[data-test-color-tree-field-embedded]')
-        .containsText('no chip picked yet');
-    });
-
-    studioTest('color-tree field hint speaks to the view on stage', async function (assert) {
-      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
-
-      assert.dom('.hint').containsText('drag to tumble');
-      assert
-        .dom('.hint')
-        .doesNotContainText(
-          'copy its hex',
-          'no pick hint while the atlas is closed',
+    studioTest(
+      'color-tree field renders the designed empty state',
+      async function (assert) {
+        await renderCard(
+          getLoader(),
+          new ColorTreeFieldExample({}),
+          'isolated',
         );
 
-      await click('[data-test-scan]');
+        assert
+          .dom('[data-test-color-tree-field-edit] canvas.stage')
+          .exists('the studio renders with no pick saved');
+        assert
+          .dom('[data-test-color-tree-field-embedded]')
+          .containsText('no chip picked yet');
+      },
+    );
 
-      assert.dom('.hint').containsText('copy its hex');
-      assert
-        .dom('.hint')
-        .doesNotContainText(
-          'drag to tumble',
-          'no tumble hint on the open atlas',
+    studioTest(
+      'color-tree field hint speaks to the view on stage',
+      async function (assert) {
+        await renderCard(
+          getLoader(),
+          new ColorTreeFieldExample({}),
+          'isolated',
         );
-    });
 
-    studioTest('color-tree field hamburger docks at the panel edge while it is open', async function (assert) {
-      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
+        assert.dom('.hint').containsText('drag to tumble');
+        assert
+          .dom('.hint')
+          .doesNotContainText(
+            'copy its hex',
+            'no pick hint while the atlas is closed',
+          );
 
-      assert
-        .dom('.panel')
-        .doesNotExist('the compact studio starts with the panel closed');
-      assert.dom('.hamburger').hasText('☰');
+        await click('[data-test-scan]');
 
-      await click('[data-test-toggle-panel]');
+        assert.dom('.hint').containsText('copy its hex');
+        assert
+          .dom('.hint')
+          .doesNotContainText(
+            'drag to tumble',
+            'no tumble hint on the open atlas',
+          );
+      },
+    );
 
-      assert.dom('.panel').exists('the panel opens');
-      assert.dom('.hamburger').hasClass('panel-open');
-      assert.dom('.hamburger').hasText('✕');
-    });
+    studioTest(
+      'color-tree field hamburger docks at the panel edge while it is open',
+      async function (assert) {
+        await renderCard(
+          getLoader(),
+          new ColorTreeFieldExample({}),
+          'isolated',
+        );
 
-    studioTest('color-tree field scan dial only engages while a cut is open', async function (assert) {
-      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
-      await click('[data-test-toggle-panel]');
+        assert
+          .dom('.panel')
+          .doesNotExist('the compact studio starts with the panel closed');
+        assert.dom('.hamburger').hasText('☰');
 
-      assert
-        .dom('input[aria-label="scan"]')
-        .isDisabled('the scan dial is greyed out on the closed solid');
+        await click('[data-test-toggle-panel]');
 
-      await click('[data-test-scan]');
+        assert.dom('.panel').exists('the panel opens');
+        assert.dom('.hamburger').hasClass('panel-open');
+        assert.dom('.hamburger').hasText('✕');
+      },
+    );
 
-      assert
-        .dom('input[aria-label="scan"]')
-        .isEnabled('opening the atlas engages the scan dial');
-    });
+    studioTest(
+      'color-tree field scan dial only engages while a cut is open',
+      async function (assert) {
+        await renderCard(
+          getLoader(),
+          new ColorTreeFieldExample({}),
+          'isolated',
+        );
+        await click('[data-test-toggle-panel]');
 
-    studioTest('color-tree field scout miniature toggles away over the open atlas', async function (assert) {
-      await renderCard(getLoader(), new ColorTreeFieldExample({}), 'isolated');
+        assert
+          .dom('input[aria-label="scan"]')
+          .isDisabled('the scan dial is greyed out on the closed solid');
 
-      assert
-        .dom('[data-test-toggle-mini]')
-        .doesNotExist('no scout toggle while the atlas is closed');
+        await click('[data-test-scan]');
 
-      await click('[data-test-scan]');
+        assert
+          .dom('input[aria-label="scan"]')
+          .isEnabled('opening the atlas engages the scan dial');
+      },
+    );
 
-      assert.dom('.mini-frame').exists('the scout shows on the open atlas');
-      assert
-        .dom('[data-test-toggle-mini]')
-        .hasAttribute('aria-pressed', 'true');
+    studioTest(
+      'color-tree field scout miniature toggles away over the open atlas',
+      async function (assert) {
+        await renderCard(
+          getLoader(),
+          new ColorTreeFieldExample({}),
+          'isolated',
+        );
 
-      await click('[data-test-toggle-mini]');
+        assert
+          .dom('[data-test-toggle-mini]')
+          .doesNotExist('no scout toggle while the atlas is closed');
 
-      assert.dom('.mini-frame').doesNotExist('the toggle waves the scout away');
-      assert
-        .dom('[data-test-toggle-mini]')
-        .hasAttribute('aria-pressed', 'false');
+        await click('[data-test-scan]');
 
-      await click('[data-test-toggle-mini]');
+        assert.dom('.mini-frame').exists('the scout shows on the open atlas');
+        assert
+          .dom('[data-test-toggle-mini]')
+          .hasAttribute('aria-pressed', 'true');
 
-      assert.dom('.mini-frame').exists('the toggle brings the scout back');
-    });
+        await click('[data-test-toggle-mini]');
+
+        assert
+          .dom('.mini-frame')
+          .doesNotExist('the toggle waves the scout away');
+        assert
+          .dom('[data-test-toggle-mini]')
+          .hasAttribute('aria-pressed', 'false');
+
+        await click('[data-test-toggle-mini]');
+
+        assert.dom('.mini-frame').exists('the toggle brings the scout back');
+      },
+    );
 
     test('color-tree field munsellNotation formats chromatic and neutral chips', function (assert) {
       assert.strictEqual(munsellNotation(0, 5, 12), '5R 5/12');
