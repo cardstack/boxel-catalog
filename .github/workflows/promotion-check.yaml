@@ -1,0 +1,54 @@
+name: Promotion Check
+
+# Lane A3. The mechanical half of reviewing a Gold-Spec promotion PR, so the
+# human reviewer starts from a clean diff and spends their judgment on prose,
+# shape and naming. Every check encodes a defect a human reviewer has had to
+# catch by hand on a promotion PR.
+#
+# Runs on every PR because the checks are cheap and a Spec with a dangling ref
+# is wrong wherever it appears. Errors fail the job; convention findings fail
+# only in this --changed mode, which is what a promotion PR owes.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  promotion-check:
+    name: Promotion check
+    runs-on: ubuntu-latest
+    concurrency:
+      group: promotion-check-${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Check promoted Specs, modules and instances
+        id: check
+        run: |
+          set +e
+          python3 scripts/check-promotion.py \
+            --changed origin/${{ github.base_ref }} | tee check.txt
+          echo "status=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '## Promotion check'
+            echo
+            echo '```'
+            cat check.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail on findings
+        if: steps.check.outputs.status != '0'
+        run: |
+          echo "::error::promotion check found blocking issues — see the job summary"
+          exit 1
