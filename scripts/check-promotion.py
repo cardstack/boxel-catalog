@@ -192,7 +192,7 @@ def strip_noncode(src):
     return TEMPLATE_LITERAL_RE.sub("``", src)
 
 
-def check_code(paths, report):
+def check_code(paths, report, added=None):
     for path in paths:
         if not path.endswith(CODE_EXT):
             continue
@@ -203,14 +203,20 @@ def check_code(paths, report):
             continue
         from_dir = os.path.dirname(os.path.join(ROOT, path))
         top = path.split("/", 1)[0]
+        # Same rule as the Spec conventions: a PR owes the import form on code
+        # it brings, not on a file it happens to edit. Otherwise touching one
+        # line of an existing module fails on an import style that was already
+        # there.
+        arriving = added is None or path in added
         for m in IMPORT_RE.finditer(strip_noncode(src)):
             spec = m.group(1) or m.group(2)
             if not spec:
                 continue
             if spec.startswith(BASE_DRIFT):
-                report.fail("import-base", path,
-                            f"{spec} — base imports use the canonical "
-                            f"{BASE_OK}… alias", CONVENTION)
+                if arriving:
+                    report.fail("import-base", path,
+                                f"{spec} — base imports use the canonical "
+                                f"{BASE_OK}… alias", CONVENTION)
                 continue
             if MATRIX_REALM_RE.search(spec):
                 report.fail("import-matrix", path,
@@ -420,7 +426,7 @@ def main():
     strict = bool(args.changed)
     report = Report()
     added = added_by_pr(args.changed)
-    check_code(paths, report)
+    check_code(paths, report, added)
     covered = check_specs(paths, report, added)
     check_instances(paths, report, added)
     check_coverage(paths, covered, report, added)
