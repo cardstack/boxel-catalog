@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Filter utility",
+      "specType": "command",
+      "ref": {
+        "module": "../utils/filter",
+        "name": "default"
+      },
+      "readMe": "# Filter\n\n## Summary\nThe shared filter verb: predicate builders every list view composes instead of re-deriving. `filterBy(items, ...predicates)` AND-composes and skips holes; `textMatch(needle, ...accessors)` is the case-insensitive \"does any field mention this?\" every search box wants; `oneOf(allowed, accessor)` is the chip/facet filter where an empty selection means \"no filter\"; `withinRange(min, max, accessor)` covers numbers and dates with open bounds. The invariant: a filter never throws on a hole \u2014 an unloaded link or empty field simply doesn't match.\n\n## Usage\n```ts\nimport filterBy, {\n  textMatch,\n  oneOf,\n  withinRange,\n} from '@cardstack/catalog/utils/filter';\n\nlet visible = filterBy(\n  tasks,\n  textMatch(query, (t) => t.title, (t) => t.details),\n  oneOf(selectedTags, (t) => t.tags?.[0]?.name),\n  withinRange(dueFrom, dueTo, (t) => t.dueDate),\n  (t) => t.recordStatus !== 'Archived',\n);\n```\nA list view composes these rather than writing its own; tag and status filtering over a task list is the shape they are built for.\n\n**A range is a claim that the field has a value.** `textMatch('')` and `oneOf([])` pass everything through, so an untouched facet filters nothing. `withinRange` is deliberately different: an item whose accessor yields null or undefined is excluded even when both bounds are open, because asking for a range at all asserts the field is populated. A facet that should tolerate empties filters on presence separately.\n\n`oneOf` compares by value, so its accessor must yield a primitive key \u2014 an id or a name, not a linked card or a Date. For a `linksToMany` facet, read the key: `(t) => t.tag?.id`.\n\n## Non-goals\nNot a query. Index-backed filtering belongs to search `filter` expressions, whose catalog surface sits beside `components/sort.gts`; this builds predicates over an array already in hand. Where a view needs both, derive them from one definition so they cannot disagree. Composition is AND-only: a consumer needing OR writes the predicate itself.\n\n**On `specType`.** This is a plain module, not an invokable `Command`. The base `SpecType` enum is card / field / component / app / command and has no slot for a helper module, so `command` is the least wrong value \u2014 but anything enumerating command Specs to find something callable will surface this one, and it is not.",
+      "cardInfo": {
+        "name": "Filter",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Predicate builders for list views \u2014 text match, one-of, within-range \u2014 composed by filterBy, where a missing field or unloaded link simply fails to match instead of throwing."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
