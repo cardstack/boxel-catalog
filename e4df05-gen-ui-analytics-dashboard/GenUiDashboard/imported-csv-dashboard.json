@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Imported Sales Data",
+      "layoutJson": "{\"sales-by-product-line-bar\":{\"x\":96,\"y\":64,\"w\":624,\"h\":416}}",
+      "cardInfo": {
+        "name": "Imported Sales Data",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cards.0": {
+        "links": {
+          "self": "../ChartCard/sales-by-product-line-bar"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../gen-ui-dashboard",
+        "name": "GenUiDashboard"
+      }
+    }
+  }
+}
