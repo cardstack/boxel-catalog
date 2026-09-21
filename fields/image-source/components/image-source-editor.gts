@@ -138,8 +138,8 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
                       <IconLink width='14' height='14' aria-hidden='true' />
                     </Accessories.Text>
                   </:before>
-                  <:after>
-                    <Button
+                  <:after as |Accessories|>
+                    <Accessories.Button
                       @kind='text-only'
                       @size='auto'
                       type='submit'
@@ -147,7 +147,7 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
                       data-test-image-source-url-add
                     >
                       Add
-                    </Button>
+                    </Accessories.Button>
                   </:after>
                 </BoxelInputGroup>
               </form>
@@ -274,24 +274,21 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
         color: var(--primary-ink);
         display: block;
       }
-      /* input suffix, not a nested pill */
-      /* A suffix inside the input group, not a nested pill. BoxelButton
-         defaults to a 100px radius and supplies its own padding / border /
-         background, which out-specify element-level rules here and push the
-         label past the group's rounded corner — so drive it through the
-         button's own knobs, and draw the divider with the shadow knob where
-         no border rule can contest it. */
+      /* A suffix inside the input group, not a nested pill. Rendered through
+         the group's own Button accessory so it inherits the group's height
+         and left divider; BoxelButton's pill radius, fill and padding are
+         driven through its own knobs. */
       .add-url-btn {
         --boxel-button-border-radius: 0;
         --boxel-button-color: transparent;
-        --boxel-button-border: none;
-        --boxel-button-box-shadow: inset 1px 0 0 var(--border);
         --boxel-button-ghost-foreground: var(--primary-ink);
         --boxel-button-padding: 0 var(--boxel-sp-sm);
-        --boxel-button-min-height: 0;
         --boxel-button-min-width: 0;
         --boxel-button-font: 600 var(--boxel-font-size-xs) / 1 var(--font-sans);
         --boxel-button-letter-spacing: normal;
+        /* BoxelButton pins height to min-content, which defeats the flex
+           stretch; release it so the suffix fills the full input height. */
+        height: auto;
         align-self: stretch;
         cursor: pointer;
       }
