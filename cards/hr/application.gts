@@ -16,22 +16,11 @@ import { htmlSafe } from '@ember/template';
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 import { Position } from '@cardstack/catalog/cards/hr/position';
 import { stateColor, stateColorOf, type StateColor } from '@cardstack/catalog/components/state-pill';
+import { daysBetween } from '@cardstack/catalog/cards/hr/utils';
 import FileDownloadLink from '@cardstack/catalog/cards/hr/components/file-download-link';
 
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 // How long this application has been sitting. Shared by both formats.
-function daysWaiting(appliedDate?: Date | null): number | undefined {
-  if (!appliedDate) {
-    return undefined;
-  }
-  let d = new Date(appliedDate);
-  if (isNaN(d.getTime())) {
-    return undefined;
-  }
-  return Math.max(0, Math.round((Date.now() - d.getTime()) / MS_PER_DAY));
-}
-
 export const APPLICATION_STATUSES = [
   'new',
   'reviewing',
@@ -119,7 +108,7 @@ export class Application extends PersonBase {
       return text.split(/\s+/).filter(Boolean).length;
     }
     get waitLabel(): string | undefined {
-      let d = daysWaiting(this.args.model?.appliedDate);
+      let d = daysBetween(this.args.model?.appliedDate);
       return d == null ? undefined : `${d} days in queue`;
     }
 
@@ -601,7 +590,7 @@ export class Application extends PersonBase {
       return order.map((step, i) => ({ step, done: idx >= 0 && i <= idx }));
     }
     get waitLabel(): string | undefined {
-      let d = daysWaiting(this.args.model?.appliedDate);
+      let d = daysBetween(this.args.model?.appliedDate);
       return d == null ? undefined : `${d}d waiting`;
     }
 
