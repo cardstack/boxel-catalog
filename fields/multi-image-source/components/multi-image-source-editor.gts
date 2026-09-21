@@ -40,7 +40,6 @@ const UrlAddForm: TemplateOnlyComponent<UrlAddFormSignature> = <template>
       <:after as |Accessories|>
         <Accessories.Button
           @kind='text-only'
-          @size='auto'
           type='submit'
           class='add-url-btn'
           data-test-multi-image-source-url-add

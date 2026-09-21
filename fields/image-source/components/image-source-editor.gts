@@ -141,7 +141,6 @@ export default class ImageSourceEditor extends Component<ImageSourceEditorSignat
                   <:after as |Accessories|>
                     <Accessories.Button
                       @kind='text-only'
-                      @size='auto'
                       type='submit'
                       class='add-url-btn'
                       data-test-image-source-url-add
