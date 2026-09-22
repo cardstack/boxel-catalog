@@ -107,7 +107,7 @@ export class Team extends CardDef {
         <div class='body'>
           <div class='main'>
             <h2 class='panel-title'>Members</h2>
-            {{#if this.members.length}}
+            {{#if @model.members.length}}
               <ul class='member-list'>
                 {{#each @fields.members as |Member|}}
                   <li><Member
