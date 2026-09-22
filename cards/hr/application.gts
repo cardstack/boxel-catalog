@@ -15,10 +15,13 @@ import { htmlSafe } from '@ember/template';
 
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 import { Position } from '@cardstack/catalog/cards/hr/position';
-import { stateColor, stateColorOf, type StateColor } from '@cardstack/catalog/components/state-pill';
+import {
+  stateColor,
+  stateColorOf,
+  type StateColor,
+} from '@cardstack/catalog/components/state-pill';
 import { daysBetween } from '@cardstack/catalog/cards/hr/utils';
 import FileDownloadLink from '@cardstack/catalog/cards/hr/components/file-download-link';
-
 
 // How long this application has been sitting. Shared by both formats.
 export const APPLICATION_STATUSES = [
@@ -72,7 +75,8 @@ export class Application extends PersonBase {
   });
   @field resumeFile = linksTo(FileDef, {
     searchable: true,
-    description: 'The original resume file (PDF, etc.) submitted with the application',
+    description:
+      'The original resume file (PDF, etc.) submitted with the application',
   });
   @field coverLetterFile = linksTo(FileDef, { searchable: true });
   @field referrerName = contains(StringField, {
@@ -187,9 +191,9 @@ export class Application extends PersonBase {
             {{#if @model.resumeText}}
               <p class='prose'>{{@model.resumeText}}</p>
             {{else}}
-              <p class='empty'>No resume text on file — this is what a
-                Screen conversion and any later AI parsing on the resulting
-                Candidate both read.</p>
+              <p class='empty'>No resume text on file — this is what a Screen
+                conversion and any later AI parsing on the resulting Candidate
+                both read.</p>
             {{/if}}
 
             <h2 class='panel-title spaced'>Cover letter</h2>
@@ -470,9 +474,7 @@ export class Application extends PersonBase {
         {{#if @model.photo.resolvedUrl}}
           <img class='ae-avatar' src={{@model.photo.resolvedUrl}} alt='' />
         {{else}}
-          <span
-            class='ae-avatar ae-initials'
-          >{{@model.initials}}</span>
+          <span class='ae-avatar ae-initials'>{{@model.initials}}</span>
         {{/if}}
         <div class='ae-main'>
           <span class='ae-name'>{{@model.title}}</span>
