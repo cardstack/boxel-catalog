@@ -1,39 +1,46 @@
 import GlimmerComponent from '@glimmer/component';
 
-// Money Display — the money-rendering primitive: tabular numerals,
-// currency-correct precision (0 dp JPY, 3 dp KWD, 2 dp default), negatives
-// as red parentheses, optional base-currency subline for foreign amounts.
-// A display wrapper over plain values — explicitly NOT a money data type
-// (base AmountWithCurrency owns storage).
+// Money Display — the money-rendering primitive: tabular numerals, the
+// currency's own precision, negatives as red parentheses, an optional
+// base-currency subline for foreign amounts. A display wrapper over plain
+// values — explicitly NOT a money data type (base AmountWithCurrency owns
+// storage). Formatting is Intl's currency style, the same output as the
+// catalog's formatMoney helpers, so a total reads identically in a Money
+// Display and in a card that formats it inline.
 
-const ZERO_DP = new Set(['JPY', 'KRW', 'VND', 'CLP', 'ISK']);
-const THREE_DP = new Set(['KWD', 'BHD', 'OMR', 'JOD', 'TND', 'IQD', 'LYD']);
+function currencyFormat(code: string): Intl.NumberFormat | undefined {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: code.toUpperCase(),
+    });
+  } catch {
+    return undefined;
+  }
+}
 
+/** The currency's minor-unit digits as Intl reports them: 0 for JPY, 3 for KWD. */
 export function decimalsFor(code?: string | null): number {
-  let c = (code ?? '').toUpperCase();
-  if (ZERO_DP.has(c)) {
-    return 0;
-  }
-  if (THREE_DP.has(c)) {
-    return 3;
-  }
-  return 2;
+  return (
+    (code && currencyFormat(code)?.resolvedOptions().maximumFractionDigits) ??
+    2
+  );
 }
 
 export function formatMoneyDisplay(
   amount?: number | null,
   code?: string | null,
 ): string {
-  if (amount == null) {
+  if (amount == null || !Number.isFinite(amount)) {
     return '—';
   }
-  let dp = decimalsFor(code);
-  let abs = Math.abs(amount).toLocaleString('en-US', {
-    minimumFractionDigits: dp,
-    maximumFractionDigits: dp,
-  });
-  let cur = code ? `${code.toUpperCase()} ` : '$';
-  return amount < 0 ? `(${cur}${abs})` : `${cur}${abs}`;
+  let format = code ? currencyFormat(code) : undefined;
+  let abs = format
+    ? format.format(Math.abs(amount))
+    : Math.abs(amount).toLocaleString('en-US', {
+        maximumFractionDigits: 2,
+      });
+  return amount < 0 ? `(${abs})` : abs;
 }
 
 interface Signature {

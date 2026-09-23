@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Territory\n\nA named sales region or segment: `name`, `region` and `owner` (linksTo the CRM User). Deals and forecasts are scoped to a Territory rather than to an individual rep, so quota reporting survives a rep being reassigned.\n\n```ts\nimport { Territory } from '@cardstack/catalog/cards/commerce/territory';\n\n@field territory = linksTo(Territory);\n```\n\n### Non-goals\nDoes not carve boundaries itself: `region` is free text because geography, industry vertical and account tier are each a consumer's call. Does not compute quota attainment.\n\n### Example\n`Territory/west-coast-enterprise`, owned by `User/priya-shah`.",
+      "readMe": "## Territory\n\nA named sales region or segment: `name`, `region` and `owner` (linksTo the CRM User). Scope a deal or a forecast to a Territory rather than to an individual rep, and quota reporting survives the rep being reassigned.\n\n```ts\nimport { Territory } from '@cardstack/catalog/cards/commerce/territory';\n\n@field territory = linksTo(Territory);\n```\n\n### Non-goals\nDoes not carve boundaries itself: `region` is free text because geography, industry vertical and account tier are each a consumer's call. Does not compute quota attainment.\n\n### Example\n`Territory/west-coast-enterprise`, owned by `User/priya-shah`.",
       "ref": {
         "module": "../territory",
         "name": "Territory"

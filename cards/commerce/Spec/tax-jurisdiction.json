@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Tax Jurisdiction\n\n`country`, `region` and `rate` (PercentageField): a lookup table every priced document for that region reads, so a rate change is made once.\n\n```ts\nimport { TaxJurisdiction } from '@cardstack/catalog/cards/commerce/tax-jurisdiction';\n\n@field taxJurisdiction = linksTo(TaxJurisdiction);\n```\n\nA document links its jurisdiction rather than copying the rate, and `orderTotals(items, jurisdiction.rate)` from `line-item-totals` applies it.\n\n### Non-goals\nNot a tax engine: no product-category rules, no exemptions, no filing. One flat rate per region.\n\n### Example\n`TaxJurisdiction/california-us` at 7.25%.",
+      "readMe": "## Tax Jurisdiction\n\n`country`, `region` and `rate` (PercentageField): a lookup table for one region's rate, so a rate change is made in one place.\n\n```ts\nimport { TaxJurisdiction } from '@cardstack/catalog/cards/commerce/tax-jurisdiction';\n\n@field taxJurisdiction = linksTo(TaxJurisdiction);\n```\n\nLink the jurisdiction from the priced document rather than copying its rate, and apply it with `orderTotals(items, jurisdiction.rate)` from `line-item-totals`.\n\n### Non-goals\nNot a tax engine: no product-category rules, no exemptions, no filing. One flat rate per region.\n\n### Example\n`TaxJurisdiction/california-us` at 7.25%.",
       "ref": {
         "module": "../tax-jurisdiction",
         "name": "TaxJurisdiction"

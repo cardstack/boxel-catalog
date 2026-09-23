@@ -138,10 +138,8 @@ export class Deal extends Opportunity {
       </article>
       <style scoped>
         .deal-page {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered (boxel-theming C2).
+          /* A stage hue is data — closed-lost reads red whatever the theme — so it is
+           declared here rather than pulled from a semantic token.
            The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
            a dark theme while its text darkens, and the pair silently fails. So the text
            colour is pulled toward the theme's own --foreground, and the fill is then

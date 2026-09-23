@@ -9,9 +9,9 @@ import {
 import LayersIcon from '@cardstack/boxel-icons/layers';
 
 // Plan — a named, recurring tier of the product (e.g. "Pro", "Enterprise").
-// Deliberately has no price field of its own: prices are separate cards that
-// link to the Plan they price, and a Plan's current prices are a query over
-// them rather than a stored back-link every price change would rewrite.
+// Deliberately has no price field of its own: a consumer's price records link
+// to the Plan, and a Plan's current prices are a query over them rather than
+// a stored back-link every price change would rewrite.
 
 export class Plan extends CardDef {
   static displayName = 'Plan';

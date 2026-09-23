@@ -2,14 +2,24 @@
   "data": {
     "type": "card",
     "attributes": {
-      "version": 1,
-      "status": "sent",
+      "version": 2,
+      "status": "won",
       "lineItems": [
         {
           "description": "Enterprise plan — annual",
           "quantity": 1,
           "unitPrice": {
-            "amount": 62000,
+            "amount": 54500,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        },
+        {
+          "description": "Onboarding package",
+          "quantity": 1,
+          "unitPrice": {
+            "amount": 3500,
             "currency": {
               "code": "USD"
             }
@@ -26,7 +36,7 @@
     "relationships": {
       "supersedes": {
         "links": {
-          "self": null
+          "self": "./acme-enterprise-renewal-q1"
         }
       },
       "deal": {

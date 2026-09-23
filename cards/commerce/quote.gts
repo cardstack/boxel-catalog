@@ -39,7 +39,7 @@ export class Quote extends CardDef {
 
   @field total = contains(NumberField, {
     computeVia: function (this: Quote) {
-      return sumLineItems(this.lineItems);
+      return sumLineItems(this.lineItems).total;
     },
   });
 
