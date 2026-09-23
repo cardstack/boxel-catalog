@@ -19,7 +19,7 @@ import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { Contract } from './contract';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { formatDay } from './format';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { tracked } from '@glimmer/tracking';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';

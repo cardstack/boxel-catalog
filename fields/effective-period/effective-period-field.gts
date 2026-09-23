@@ -29,8 +29,21 @@ import { dueDays } from '@cardstack/catalog/fields/due-date/due-date';
  * MSA, a licence and an insurance policy all carry one of these.
  */
 
-function toDate(v?: Date | string | null): Date | undefined {
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * A Date, a date-only string or a timestamp string as a Date. A date-only
+ * `YYYY-MM-DD` is built from its parts as a LOCAL date: `new Date('2026-10-13')`
+ * is UTC midnight, which is the 12th anywhere west of UTC.
+ */
+export function toDate(v?: Date | string | null): Date | undefined {
   if (!v) return undefined;
+  if (typeof v === 'string') {
+    let m = DATE_ONLY.exec(v);
+    if (m) {
+      return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    }
+  }
   let d = new Date(v);
   return Number.isFinite(d.getTime()) ? d : undefined;
 }

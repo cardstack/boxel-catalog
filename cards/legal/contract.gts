@@ -35,7 +35,11 @@ import { ContractStatusField, contractStatusLabel } from './contract-status';
 import { RiskRatingField } from './contract-risk';
 import { LegalPartyRoleField } from './legal-party-role-field';
 import { SignatureBlockField } from './signature-block-field';
-import { EffectivePeriodField } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import {
+  EffectivePeriodField,
+  daysUntil,
+  toDate,
+} from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { GoverningLawField } from './governing-law-field';
 import { SignatureBlockView } from './components/signature-block-view';
 
@@ -64,18 +68,6 @@ const CONTRACT_CLAUSE_REF = codeRef(
 );
 const OBLIGATION_REF = codeRef(here, './obligation', 'Obligation');
 
-const MS_PER_DAY = 86_400_000;
-
-/** Whole days from today to `date`; negative once the date has passed. */
-function daysUntil(date?: Date | string | null): number | undefined {
-  if (!date) return undefined;
-  let t = new Date(date);
-  if (!Number.isFinite(t.getTime())) return undefined;
-  let now = new Date();
-  let a = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  let b = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
-  return Math.round((b - a) / MS_PER_DAY);
-}
 
 /**
  * `YYYY-MM-DD` built from local calendar parts.
@@ -93,9 +85,8 @@ function calendarDay(d: Date): string {
 /**
  * What the e-signature provider last told us.
  *
- * A closed set even though this app cannot send a request — the values arrive
- * from outside, and the point of naming them here is that the app knows what
- * it is allowed to be told.
+ * A closed set: the values arrive from the provider, and naming them here
+ * means the card knows what it is allowed to be told.
  */
 export const SignatureStatusField = enumField(StringField, {
   options: [
@@ -111,8 +102,7 @@ export const SignatureStatusField = enumField(StringField, {
 class ContractIsolated extends Component<typeof Contract> {
   // Clauses and obligations link UP to their contract; there is no link array
   // on this card to read back (see the note on the field list). So the detail
-  // page asks the realm the reverse question instead — the same idiom
-  // carrier.gts uses to find the shipments pointing at it.
+  // page asks the realm the reverse question instead.
   private clauseQuery: ReturnType<getCards> | undefined;
   private obligationQuery: ReturnType<getCards> | undefined;
 
@@ -681,7 +671,7 @@ class ContractEdit extends Component<typeof Contract> {
               <@fields.effectivePeriod />
             </FieldContainer>
             <details class='legacy'>
-              <summary>Legacy term fields (read when no effective period is set)</summary>
+              <summary>Flat term fields (read when no effective period is set)</summary>
               <div class='row'>
                 <FieldContainer @label='Start date' @vertical={{true}}>
                   <@fields.startDate />
@@ -945,16 +935,16 @@ export class Contract extends CardDef {
   @field fullText = contains(MarkdownField);
 
   /**
-   * E-SIGNATURE SEAM — status tracked here, sending owned elsewhere.
+   * E-SIGNATURE STATE — what the provider last reported for the whole
+   * contract. Request Signature is the send path: it stamps these and marks
+   * one signature line `requested`; the provider's own delivery is outside
+   * the card. The per-line truth is `signatureBlocks[].lineStatus`; these three
+   * summarise it for list views and for contracts with no signature page.
    *
-   * BLOCKED, with evidence. The spec assigns the e-signature app to a
-   * colleague ("implementation details TBD"), so this app has nothing to call.
-   * What it CAN own honestly is the state: which request is outstanding, what
-   * came back, and where the executed copy landed.
-   *
-   * Deliberately no "Send for signature" button. A control that looks like it
-   * dispatches a signing request and does not is worse than no control, because
-   * the failure is silent and only discovered when nobody signs.
+   * Deliberately no "Send for signature" button on the card itself. A control
+   * that looks like it dispatches a signing request and does not is worse than
+   * no control, because the failure is silent and only discovered when nobody
+   * signs.
    */
   /**
    * Drives the spec's data-sensitivity approval rule:
@@ -1000,10 +990,9 @@ export class Contract extends CardDef {
     },
   });
 
-  // ---- Contract lifecycle management (app5) ------------------------------
-  // Additive only. Every field below is optional and every derived value is
-  // `computeVia`, so Contract instances written before this extension
-  // deserialize unchanged and the CRM-side consumers keep working.
+  // ---- Lifecycle -----------------------------------------------------------
+  // Every field below is optional and every derived value is `computeVia`, so
+  // a contract carrying only the core fields still deserializes.
 
   @field contractNumber = contains(StringField);
   @field contractType = contains(ContractTypeField);
@@ -1026,9 +1015,9 @@ export class Contract extends CardDef {
   /** Set on an amendment; the lineage is walked from here to the root. */
   @field parentContract = linksTo(() => Contract);
 
-  // ---- Contract Lifecycle Desk (additive) ---------------------------------
-  // Every field below is optional, so instances written before this extension
-  // deserialize unchanged and every existing consumer keeps working.
+  // ---- Parties, signatures and term ------------------------------------------
+  // Every field below is optional, so a contract without a signature page or
+  // a structured term still reads correctly.
   //
   // Who is bound, in what capacity — the clauses' "Supplier" and "Customer".
   @field parties = containsMany(LegalPartyRoleField);
@@ -1037,9 +1026,9 @@ export class Contract extends CardDef {
   // Execute Contract, which refuse while any line is unsigned or out of
   // authority. Nothing here is a contract status — that stays on `status`.
   @field signatureBlocks = containsMany(SignatureBlockField);
-  // Obligations window with the notice deadline computed. Coexists with the
-  // older flat startDate/endDate/autoRenews/renewalNoticeDays; when set, the
-  // structured period is the one that is read.
+  // Obligations window with the notice deadline computed. The flat
+  // startDate/endDate/autoRenews/renewalNoticeDays hold the same facts; when
+  // this is set, it is the one that is read.
   @field effectivePeriod = contains(EffectivePeriodField);
   @field governingLaw = contains(GoverningLawField);
 
@@ -1067,17 +1056,18 @@ export class Contract extends CardDef {
   @field noticeBy = contains(StringField, {
     computeVia: function (this: Contract) {
       // The structured Effective Period, when set, is the source of
-      // truth for the deadline; the flat fields below are the legacy path.
+      // truth for the deadline; otherwise the flat fields below are.
       let p = this.effectivePeriod;
       if (p?.endDate && p.autoRenews) {
         let d = p.noticeDeadline;
-        if (d) return calendarDay(new Date(d));
+        let day = toDate(d);
+        if (day) return calendarDay(day);
       }
       if (!this.endDate || !this.autoRenews) return undefined;
       let days = this.renewalNoticeDays;
       if (typeof days !== 'number' || !Number.isFinite(days)) return undefined;
-      let end = new Date(this.endDate);
-      if (!Number.isFinite(end.getTime())) return undefined;
+      let end = toDate(this.endDate);
+      if (!end) return undefined;
       return calendarDay(
         new Date(end.getFullYear(), end.getMonth(), end.getDate() - days),
       );

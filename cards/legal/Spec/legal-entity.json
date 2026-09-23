@@ -10,7 +10,7 @@
       "isCard": true,
       "isField": false,
       "isComponent": false,
-      "readMe": "## Legal Entity\n\nAn Account is who you sell to; a Legal Entity is who signs — registered name, entity form, jurisdiction, registration number, masked tax ID, and the authorized signatory.\n\n### Non-goals\n\nA Contract reaches its entities through `parties` (Legal Party Role) and its signature blocks, not through a field here. No KYC or verification workflow.",
+      "readMe": "## Legal Entity\n\nAn Account is who you sell to; a Legal Entity is who signs — registered name, entity form, jurisdiction, registration number, masked tax ID, and the authorized signatory.\n\n```ts\nimport { LegalEntity } from '@cardstack/catalog/cards/legal/legal-entity';\n\n@field entity = linksTo(() => LegalEntity);\n```\n\nLegal Party Role links an entity into a contract's `parties`, and a Signature Block links it for each signature line. The authorized signatory is stored as name, title and email rather than a link to Signatory: Signatory records **our** people and the authority we check, while an entity's signatory is often the counterparty's, whose authority is theirs to attest.\n\n### Non-goals\n\nA Contract reaches its entities through `parties` (Legal Party Role) and its signature blocks, not through a field here. No KYC or verification workflow.",
       "cardInfo": {
         "name": "Legal Entity",
         "summary": "The registered legal person who actually signs: form, jurisdiction, registration, signatory."

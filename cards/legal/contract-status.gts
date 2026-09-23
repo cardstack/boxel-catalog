@@ -14,14 +14,11 @@ import {
  * embedded, and the transition graph. All this module contributes is one
  * domain's vocabulary.
  *
- * WHY THESE EXACT SPELLINGS. `contract.gts` previously declared its status
- * with base `enumField` over five values — draft, out for signature, signed,
- * expired, terminated — with no transitions map, so nothing stopped a draft
- * being marked signed without ever having been reviewed. This closes that gap
- * WITHOUT renaming a single existing value: all five are carried over
- * byte-for-byte, spaces and all, and the three missing lifecycle stages are
- * added around them. Every Contract instance already on the realm keeps
- * deserializing, and no migration is needed.
+ * WHY THESE EXACT SPELLINGS. Five values — draft, out for signature, signed,
+ * expired, terminated — are stored strings in existing contracts, spaces and
+ * all, so they are kept byte-for-byte; negotiating, in review and approved sit
+ * around them. The transitions map is what stops a draft being marked signed
+ * without ever having been reviewed.
  *
  * The spaces are safe here because the factory colours through `StatePill`'s
  * `@hue` argument rather than interpolating the value into a class name — the

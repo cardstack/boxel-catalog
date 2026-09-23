@@ -467,13 +467,12 @@ export class Obligation extends CardDef {
   /**
    * REMINDER LADDER — configured here, NOT YET FIRING.
    *
-   * BLOCKED on two platform gaps: a card-reachable scheduler, and a
-   * notification identity to send as. Without them nothing can make a
-   * reminder arrive.
+   * Nothing sends them: the platform has no card-reachable scheduler and no
+   * notification identity to send as.
    *
    * The schema ships anyway, and the UI says plainly that it is not firing.
-   * The alternative — leaving the fields out — means every obligation already
-   * created has to be edited once the scheduler lands. The alternative that
+   * Leaving the fields out would mean editing every obligation once a
+   * scheduler exists. The alternative that
    * would be worse still is wiring a UI that looks like it sends reminders and
    * does not, which on a compliance deadline is an actively dangerous lie.
    *

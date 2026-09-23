@@ -21,6 +21,16 @@
         "links": {
           "self": "../Contract/acme-msa-2026"
         }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Contract/acme-expansion-order-form"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Contract/acme-co-marketing"
+        }
       }
     },
     "meta": {

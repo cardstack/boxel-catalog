@@ -10,7 +10,7 @@
       "isCard": true,
       "isField": false,
       "isComponent": false,
-      "readMe": "## Addendum\n\nAdds terms to an executed contract — new scope, an extra schedule — without touching existing text. Contrast with Amendment (changes terms) and a waiver (excuses one obligation): keeping them distinct IS the domain distinction.\n\n### Non-goals\n\nNo signature routing of its own — an addendum travels the contract’s existing review and execution road.",
+      "readMe": "## Addendum\n\nAdds terms to an executed contract — new scope, an extra schedule — without touching existing text. Contrast with Amendment (changes terms) and a waiver (excuses one obligation): keeping them distinct IS the domain distinction.\n\n```ts\nimport { Addendum } from '@cardstack/catalog/cards/legal/addendum';\n\n@field addendums = linksToMany(() => Addendum);\n```\n\nIt links the Contract it adds to through `contract = linksTo(() => Contract)`; the contract lists its addendums with a query on that link.\n\n### Non-goals\n\nNo signature routing of its own — an addendum travels the contract’s existing review and execution road.",
       "cardInfo": {
         "name": "Addendum",
         "summary": "Supplemental paper that ADDS terms to an executed contract without altering what was agreed."

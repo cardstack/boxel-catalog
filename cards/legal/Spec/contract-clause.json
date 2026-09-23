@@ -7,7 +7,7 @@
         "name": "ContractClause"
       },
       "specType": "card",
-      "readMe": "# Contract Clause\n\n## Summary\nWhat **this** contract says for one provision, next to what it was supposed to say: `contract`, `standardClause` (the library Clause), `clauseType`, `actualText` and `deviationSeverity` (standard / minor / major / bespoke) with `deviationNotes`. `isDeviation` and `riskLevel` are derived from the severity.\n\n## Why severity is stored\nA string diff against the standard text is not a judgement — reordering a sentence changes the string without changing the obligation, while \"shall\" → \"shall not\" reverses it — and a computed diff would flip to \"no deviation\" whenever the standard clause had not loaded yet. So the severity is a lawyer's call, recorded once, and everything else derives from it.\n\n## Usage\n```ts\nimport { ContractClause } from '@cardstack/catalog/cards/legal/contract-clause';\n\n@field clauses = linksToMany(() => ContractClause);\n```\n\nA Contract lists its clauses by querying Contract Clause on `contract`, and a Clause lists where it is used by querying on `standardClause`, so neither stores a back-link.\n\n## Non-goals\nNo redlining or text diff. No approval workflow for a deviation.",
+      "readMe": "# Contract Clause\n\n## Summary\nWhat **this** contract says for one provision, next to what it was supposed to say: `contract`, `standardClause` (the library Clause), `clauseType`, `actualText` and `deviationSeverity` (standard / minor / major / bespoke) with `deviationNotes`. `isDeviation` and `riskLevel` are derived from the severity.\n\n## Why severity is stored\nA string diff against the standard text is not a judgement — reordering a sentence changes the string without changing the obligation, while \"shall\" → \"shall not\" reverses it — and a computed diff would flip to \"no deviation\" whenever the standard clause had not loaded yet. So the severity is a lawyer's call, recorded once, and everything else derives from it.\n\n## Usage\n```ts\nimport { ContractClause } from '@cardstack/catalog/cards/legal/contract-clause';\nimport { Contract } from '@cardstack/catalog/cards/legal/contract';\n\n// on the Contract Clause itself:\n@field contract = linksTo(() => Contract);\n```\n\nA Contract lists its clauses by querying Contract Clause on `contract`, and a Clause lists where it is used by querying on `standardClause`, so neither stores a back-link.\n\n## Examples\nThe Acme MSA's four clauses: liability (a deviation from the library cap), auto-renewal, payment and sub-processors.\n\n## Non-goals\nNo redlining or text diff. No approval workflow for a deviation.",
       "cardTitle": "Contract Clause",
       "cardDescription": "What one contract actually says for a provision, beside the library Clause it should match, with a lawyer's deviation grade.",
       "cardInfo": {
@@ -21,6 +21,28 @@
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",
         "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../ContractClause/acme-liability"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../ContractClause/acme-auto-renewal"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../ContractClause/acme-payment"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../ContractClause/acme-sub-processors"
+        }
       }
     }
   }

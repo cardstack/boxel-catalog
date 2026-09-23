@@ -7,7 +7,7 @@
         "module": "../contract"
       },
       "specType": "card",
-      "readMe": "## Contract\n\nThe agreement a customer is billed under: `title`, linked Account, `status` enum (draft → out for signature → signed, plus expired and terminated), term dates, `value` (base `AmountWithCurrency`), `terms` as markdown, and `documentUrl` for the executed copy.\n\n```ts\nimport { Contract } from '@cardstack/catalog/cards/legal/contract';\n@field contract = linksTo(Contract);\n```\n\n`deal` links to **Opportunity**, not Deal, so a Deal — or any future subtype — is assignable. Same reason `owner` links to the CRM User.\n\nSigning is an event fact: `signedAt` is written once and `isSigned` computes from it, so a signature survives a later status change and can be reported on. `daysToExpiry` computes from `endDate` and reads 0 for a terminated agreement, which is what lets a renewal view sort by urgency without storing a countdown.\n\n**The document is referenced, not held.** Most teams sign in DocuSign or similar, so `documentUrl` points at the artifact. A `linksTo(FileDef)` is the better model once the executed file lives beside the card; an always-empty link is unexercised surface, so it is absent until there is a file to put in it.\n\n### What it unblocks\n\nA subscription or an order links the Contract it is billed under, so a closed deal can open its chain with a draft agreement: the agreement is prepared, the subscription is activated under it, and the first invoice is drafted.\n\nExamples cover a signed annual agreement governing a live subscription, one out for signature, and one that has expired.\n\n**Non-goals:** generating a document (that is the Recommend tool's flow), e-signature integration, renewal automation, clause libraries or redlining, and holding the executed file itself.",
+      "readMe": "## Contract\n\nThe agreement a customer is billed under. `title`, `contractNumber`, `contractType`, the linked CRM `account` and `deal` (an Opportunity), an HR Employee `owner`, `status` (Contract Status: draft → negotiating → in review → approved → out for signature → signed, plus expired and terminated, with an explicit transition map), `value` (base `AmountWithCurrency`), markdown `terms`, and an approval chain.\n\n```ts\nimport { Contract } from '@cardstack/catalog/cards/legal/contract';\n\n@field contract = linksTo(() => Contract);\n```\n\n### Parties and the signature ceremony\n\n`parties` (Legal Party Role) says who is bound and in what capacity. `signatureBlocks` (Signature Block) is the signature page: one line per signer in signing order, our side linked to a Signatory whose authority is checked. Request Signature, Verify Signature and Execute Contract (`cards/legal/commands/`) drive it: request one line at a time, verify order and authority, and move to `signed` only when every line is signed; the Signature Block View renders it.\n\n### Term and the notice deadline\n\n`effectivePeriod` (the Effective Period field) holds the term; `noticeBy` is the date notice must be served to stop an auto-renewal and `daysToNotice` counts down to it, because the expiry is common knowledge and the notice deadline is the date that quietly passes. `startDate`, `endDate`, `autoRenews` and `renewalNoticeDays` are the flat form of the same facts; when an Effective Period is set it is the one that is read.\n\n### Clauses and obligations\n\nContract Clause and Obligation each link **up** to their contract, and the contract's isolated view reads them back with a query on that link. There are deliberately no `clauses` or `obligations` arrays here: obligations are unbounded, and a back-link would put Contract in an import cycle with both modules.\n\n### Signing and the document\n\n`signedAt` is written once and `isSigned` computes from it, so a signature survives a later status change. `daysToExpiry` reads 0 for a terminated agreement, so a renewal view sorts by urgency without a stored countdown. The executed copy is referenced (`documentUrl`, `executedCopyUrl`), not held.\n\n### Examples\n\n`Contract/acme-msa-2026` is signed, with its clauses and obligations; `Contract/acme-expansion-order-form` is out for signature with line 1 signed and line 2 requested; `Contract/acme-co-marketing` has a declined line and a signatory over their ceiling; `Contract/brightleaf-pilot-terms` and `Contract/nadia-lapsed` have no signature page.\n\n**Non-goals:** generating the document text, a live e-signature integration (the commands record the provider's reference), and renewal automation.",
       "cardInfo": {
         "name": "Contract",
         "summary": "The agreement a customer is billed under: term, value, markdown terms, and a signed-at event fact. Governs subscriptions and orders, and completes the close-won chain.",
@@ -32,6 +32,16 @@
       "linkedExamples.2": {
         "links": {
           "self": "../Contract/nadia-lapsed"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../Contract/acme-expansion-order-form"
+        }
+      },
+      "linkedExamples.4": {
+        "links": {
+          "self": "../Contract/acme-co-marketing"
         }
       }
     },

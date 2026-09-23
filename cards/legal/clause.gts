@@ -23,7 +23,7 @@ import { tracked } from '@glimmer/tracking';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EditSectionNav } from '../../components/edit-section-nav';
-import { formatDay } from './format';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 /**
  * A pre-approved piece of contract language, owned by legal.

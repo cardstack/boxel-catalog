@@ -86,7 +86,7 @@ export default class ExecuteContractCommand extends Command<
       );
     }
 
-    // ---- Ceremony guard (desk spec) -----------------------------------------
+    // ---- Ceremony guard --------------------------------------------------------
     // When the contract carries signature blocks, execution is unavailable
     // until every line is signed AND the ceremony re-verifies clean against
     // the Signatory cards as they are NOW — a signer deactivated after the

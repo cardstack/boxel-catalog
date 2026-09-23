@@ -4,12 +4,11 @@ import enumField from '@cardstack/base/enum';
 /**
  * The seven contract types.
  *
- * WHY THIS IS ITS OWN MODULE. It started life inside `contract.gts`, which put
- * every consumer of the type vocabulary — `signatory.gts` in particular — into
- * an import cycle with the Contract card and everything Contract links to.
- * A `containsMany(ContractTypeField)` is not thunkable, so on the wrong load
- * order it resolved to `undefined` and the realm threw
- * "cardOrThunk was undefined. There might be a cyclic dependency."
+ * WHY THIS IS ITS OWN MODULE. Inside `contract.gts` it would put every
+ * consumer of the type vocabulary — `signatory.gts` in particular — into an
+ * import cycle with the Contract card and everything Contract links to. A
+ * `containsMany(ContractTypeField)` is not thunkable, so on the wrong load
+ * order it resolves to `undefined` ("cardOrThunk was undefined").
  *
  * A vocabulary has no dependencies of its own, so it belongs in a leaf module.
  * Anything can import it without dragging in a card.

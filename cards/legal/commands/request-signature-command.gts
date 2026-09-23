@@ -21,8 +21,8 @@ import {
 // contract may go out, because sending an unapproved draft to a counterparty
 // is the mistake the whole review pipeline exists to prevent. Stamps
 // signatureStatus `pending`, the request date, and which provider carries
-// it. Single-persona: no e-signature integration — this records that the
-// request went out, so the pipeline can hold the contract accountable.
+// it. The provider's own delivery is outside the command — this records that
+// the request went out, so the pipeline can hold the contract accountable.
 
 export class RequestSignatureInput extends CardDef {
   @field contract = linksTo(() => Contract, { searchable: true });
@@ -64,7 +64,7 @@ export default class RequestSignatureCommand extends Command<
         cardId: contract.id,
       })) as Contract;
     }
-    // ---- Ceremony path (desk spec) ------------------------------------------
+    // ---- Ceremony path ----------------------------------------------------------
     // When the contract carries signature blocks, the request goes out ONE
     // LINE AT A TIME in signing order: the first call (from `approved`) sends
     // line 1; each later call (from `out for signature`) sends the next line
@@ -120,7 +120,11 @@ export default class RequestSignatureCommand extends Command<
       }
 
       let now = new Date();
-      let serialised = sortedBlocks(blocks).map((b) => ({
+      // Stored order, not signing order: the lines' nested links
+      // (signatureBlocks.N.signatory, .party.entity) are keyed by array index,
+      // so reordering the attributes here would move a Signatory to another
+      // line.
+      let serialised = blocks.map((b) => ({
         party: {
           role: b.party?.role ?? null,
           definedTerm: b.party?.definedTerm ?? null,
