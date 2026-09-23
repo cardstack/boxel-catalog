@@ -4,6 +4,7 @@ import {
   contains,
   field,
   linksTo,
+  type BaseDefComponent,
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import NumberField from 'https://cardstack.com/base/number';
@@ -481,7 +482,10 @@ export class Opportunity extends CardDef {
     </template>
   };
 
-  static isolated = class Isolated extends Component<typeof Opportunity> {
+  // `BaseDefComponent` keeps a subclass's isolated view (Deal) assignable.
+  static isolated: BaseDefComponent = class Isolated extends Component<
+    typeof Opportunity
+  > {
     get valueDisplay() {
       return formatMoney(
         this.args.model?.value?.amount,

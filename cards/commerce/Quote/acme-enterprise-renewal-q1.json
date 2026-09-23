@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "version": 1,
+      "status": "sent",
+      "lineItems": [
+        {
+          "description": "Enterprise plan — annual",
+          "quantity": 1,
+          "unitPrice": {
+            "amount": 62000,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "supersedes": {
+        "links": {
+          "self": null
+        }
+      },
+      "deal": {
+        "links": {
+          "self": "../Deal/acme-enterprise-renewal"
+        }
+      },
+      "proposal": {
+        "links": {
+          "self": "../Proposal/acme-enterprise-renewal-proposal"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../quote",
+        "name": "Quote"
+      }
+    }
+  }
+}

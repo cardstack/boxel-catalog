@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Proposal\n\n`title`, `narrative` (MarkdownField) and `deal` (linksTo Deal). Kept deliberately separate from Quote: a Proposal sells the WHY, a Quote states the HOW MUCH. Conflating them forces every early-stage one-pager into a pricing document before the deal is qualified for one.\n\n```ts\nimport { Proposal } from '@cardstack/catalog/cards/commerce/proposal';\n\n@field proposal = linksTo(Proposal);\n```\n\n### Non-goals\nCarries no pricing; that is Quote, which links back to the Proposal it formalizes. No approval or e-signature tracking.\n\n### Example\n`Proposal/acme-enterprise-renewal-proposal`, written for the `Deal/acme-enterprise-renewal` deal.",
+      "ref": {
+        "module": "../proposal",
+        "name": "Proposal"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Proposal",
+      "cardDescription": "A narrative sales document (goals, scope, value proposition) sent before pricing is finalized, distinct from a Quote.",
+      "cardInfo": {
+        "name": "Proposal",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Proposal/acme-enterprise-renewal-proposal"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
