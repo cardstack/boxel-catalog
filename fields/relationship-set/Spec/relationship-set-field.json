@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "RelationshipSetField",
+        "module": "../relationship-set-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Relationship Set\n\n`containsMany` of typed relations (duplicate-of / caused-by / blocks / blocked-by / related-to / follows-up) with target id+title, note and attribution. The target is an id plus title rather than a link, so a relation list renders without loading every target; the id is what a query joins on. The type is data; nothing names a domain.\n\n```ts\nimport { RelationshipSetField } from '@cardstack/catalog/fields/relationship-set/relationship-set-field';\n\n@field relations = contains(RelationshipSetField);\n```\n\n### Non-goals\n\nNot bidirectional bookkeeping \u2014 the inverse edge is derived by query, never mirrored by hand. `containsMany`-of-links cannot be JSON-patched: writers mutate + SaveCard.",
+      "cardInfo": {
+        "name": "Relationship Set",
+        "summary": "Typed links between records \u2014 duplicate-of is a query, not an anecdote."
+      },
+      "containedExamples": [
+        {
+          "relations": [
+            {
+              "kind": "duplicate-of",
+              "targetId": "../../../cards/service-desk/Ticket/1288-invoice-download",
+              "targetTitle": "Invoice download fails silently",
+              "createdByName": "Dana Kim",
+              "createdAt": "2026-09-05T09:00:00.000Z"
+            }
+          ]
+        }
+      ],
+      "cardTitle": "Relationship Set Field",
+      "cardDescription": "Typed links from one record to others \u2014 duplicate of, caused by, blocks, related to \u2014 each with a note and who added it."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../relationship-set-field",
+              "name": "RelationshipSetField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
