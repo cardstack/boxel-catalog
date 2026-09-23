@@ -80,9 +80,14 @@ jobs:
             exit 0
           fi
           run=true
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            gh api "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}/files" \
-              --paginate --jq '.[].filename' > changed.txt
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              gh api "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}/files" \
+                --paginate --jq '.[].filename' > changed.txt
+            else
+              gh api "repos/$GITHUB_REPOSITORY/compare/${{ github.event.before }}...${{ github.sha }}" \
+                --jq '.files[].filename' > changed.txt
+            fi
             jq -r '.files[].path' "$manifest" > subset.txt
             if grep -qxFf subset.txt changed.txt; then
               echo "Touched subset files:"; grep -xFf subset.txt changed.txt
@@ -106,6 +111,9 @@ jobs:
       # definitions from it rather than from boxel's pin.
       SKIP_CATALOG_UPDATE: "1"
       CATALOG_TEST_SUBSET_SOURCE: packages/catalog/contents
+      # Serve only the subset, as boxel's own host CI does, rather than
+      # indexing the whole catalog.
+      CATALOG_SOURCE: test-subset
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
