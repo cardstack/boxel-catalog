@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Status Board",
+      "specType": "component",
+      "ref": {
+        "module": "../components/status-board",
+        "name": "StatusBoard"
+      },
+      "readMe": "# Status Board\n\n## Summary\nA board whose columns are a lifecycle. The catalog `Board` owns the kanban mechanics (drag, columns, selection) and the `statusField` factory owns the option set, colours and transition graph; this block is the join. Columns derive from `statusOptions` in declared order — a consumer never re-declares its lifecycle as column config — and each column header takes the option's hue through `stateColor`, so board and pills stay one colour system.\n\n## The rule it enforces\nA drag the transition graph forbids is refused inside the block (`canTransition`), before `@onMove` ever fires — no consumer forgets the check, and `@onRejected` lets one explain the refusal instead of silently snapping back.\n\n## Usage\n```gts\nimport { StatusBoard } from '@cardstack/catalog/components/status-board';\n\n<StatusBoard\n  @items={{this.tasks}}\n  @statusField={{TaskStatusField}}\n  @statusOf={{this.statusOf}}\n  @onMove={{this.transitionTask}}\n/>\n```\n`@statusOf` reads the record's current value; `@onMove` is the consumer's single status writer (a command). Cards render fitted by default, or supply the `card` block. `StatusBoardExample/campaign-tasks` lays out a campaign's tasks by the Task lifecycle, one in each status; dragging moves a task when the graph allows it and shows the refusal (for example Done back to Not Started) when it does not.\n\n## Non-goals\nFree-form columns (a pipeline of stages, a swimlane of owners) belong to Board directly — this block exists only where the columns ARE a statusField. It writes nothing itself: the move lands in `@onMove`, and whether the write is allowed to skip states was already the graph's decision.",
+      "cardInfo": {
+        "name": "Status Board",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A board whose columns are a statusField's options, which refuses any drag the field's transition graph forbids."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../components/example/StatusBoardExample/campaign-tasks"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -40,8 +40,8 @@ function statusOf(steps: ApprovalStepField[] | undefined): string {
 // Reusable sequential sign-off block. Renders as a linear stepper (an
 // ordered list) rather than a tree — every step here has exactly one
 // predecessor and one successor, which is a different shape from the
-// manager-hierarchy forest components/org-tree.gts builds, so this does not
-// reuse OrgNode/buildOrgTree.
+// manager-hierarchy forest utils/build-tree builds, so this does not
+// reuse TreeNode/buildTree.
 //
 // The embedded/isolated format here is READ-ONLY: it shows the sequence,
 // each approver, decision pill, decided-at date, and a bottleneck badge on

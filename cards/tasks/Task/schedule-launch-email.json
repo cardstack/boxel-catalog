@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Schedule the launch email",
+      "details": "Segment, subject line test and send time.",
+      "status": "Not Started",
+      "priority": "Low",
+      "dueDate": "2026-10-14",
+      "createdAt": "2026-09-15T09:00:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "assignee": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../task",
+        "name": "Task"
+      }
+    }
+  }
+}

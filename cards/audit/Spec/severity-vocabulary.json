@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../severity-vocabulary",
+        "name": "SEVERITY_HUE"
+      },
+      "specType": null,
+      "readMe": "# Severity Vocabulary\n\n## Summary\nThe single definition of severity that the Severity field and the Severity Badge both read: `SEVERITY_LEVELS` (minor, major, critical), `SEVERITY_RANK` (1–3), `SEVERITY_LABELS`, `SEVERITY_HUE` (amber, orange, red) and `certificateAtRisk(level)`, true for major and above. It lives apart from both so each can import it without importing the other.\n\n## Usage\n```ts\nimport {\n  SEVERITY_HUE,\n  certificateAtRisk,\n} from '@cardstack/catalog/cards/audit/severity-vocabulary';\n\nlet hue = SEVERITY_HUE[finding.severity.level];\n```\n\n## Non-goals\nNo field and no component: those are the Severity field and the Severity Badge.",
+      "cardTitle": "Severity Vocabulary",
+      "cardDescription": "The severity levels with their rank, label and hue, and whether a level puts a certificate at risk.",
+      "cardInfo": {
+        "name": "Severity Vocabulary",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

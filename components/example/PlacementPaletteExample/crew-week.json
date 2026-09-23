@@ -1,0 +1,80 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "items": [
+        {
+          "itemId": "amy",
+          "title": "Amy Chen",
+          "group": "Electrician",
+          "detail": "Level 3 licence"
+        },
+        {
+          "itemId": "ben",
+          "title": "Ben Ortiz",
+          "group": "Electrician",
+          "detail": "Apprentice"
+        },
+        {
+          "itemId": "cara",
+          "title": "Cara Singh",
+          "group": "Plumber",
+          "detail": "Gas certified"
+        },
+        {
+          "itemId": "dev",
+          "title": "Dev Patel",
+          "group": "Plumber",
+          "detail": null
+        },
+        {
+          "itemId": "eli",
+          "title": "Eli Brooks",
+          "group": "Labourer",
+          "detail": "Forklift ticket"
+        },
+        {
+          "itemId": "fay",
+          "title": "Fay Morgan",
+          "group": "Labourer",
+          "detail": null
+        }
+      ],
+      "placements": [
+        {
+          "itemId": "ben",
+          "zoneKey": "site-a",
+          "seq": 1,
+          "placedAt": "2026-09-22T08:00:00.000Z",
+          "note": null
+        },
+        {
+          "itemId": "dev",
+          "zoneKey": "site-b",
+          "seq": 1,
+          "placedAt": "2026-09-22T08:05:00.000Z",
+          "note": null
+        }
+      ],
+      "cardInfo": {
+        "name": "Crew placement, week 39",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../placement-palette-example",
+        "name": "PlacementPaletteExample"
+      }
+    }
+  }
+}

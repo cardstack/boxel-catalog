@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../utils/build-tree",
+        "name": "buildTree"
+      },
+      "specType": null,
+      "readMe": "# Tree Builder\n\n## Summary\n`buildTree(items, parentIdOf)` turns a flat list plus a parent edge into a forest of `TreeNode { item, children }`. Items whose parent is missing become roots, and a cycle is broken rather than looped, so a bad edge in the data cannot hang a render. The Tree component re-exports both and renders `TreeNode` as its node shape.\n\n## Usage\n```ts\nimport { buildTree } from '@cardstack/catalog/utils/build-tree';\n\nlet roots = buildTree(employees, (e) => e.manager?.id);\n```\n\n## Non-goals\nNo rendering, no sorting of siblings (input order is kept), no persistence of the tree.",
+      "cardTitle": "Tree Builder",
+      "cardDescription": "Builds a cycle-safe forest from a flat list and a parent edge, as the node shape the Tree component renders.",
+      "cardInfo": {
+        "name": "Tree Builder",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

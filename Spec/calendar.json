@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Calendar",
+        "module": "../components/calendar"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Calendar\n\nA month-grid scheduling surface. Hand-rolled, because npm calendar libraries are not loadable from realm modules — so every app that needs a month grid mounts this one rather than growing its own.\n\nIt is deliberately **domain-agnostic**: it knows about days, chips and drops, and nothing about meetings, work orders or content pieces. Every piece of vocabulary — what a `kind` means, what colour it takes, what happens on a drop — arrives as an arg from the host.\n\n### Shape\n\n```ts\ninterface CalendarEvent {\n  id?: string;\n  title: string;\n  date: Date;\n  kind?: string;   // host's vocabulary; maps to a colour via kindColors\n  seq?: number;    // explicit within-day position, when the host persists one\n}\n```\n\n```gts\nimport { Calendar } from '@cardstack/catalog/components/calendar';\n\n<Calendar @events={{this.events}} @kindColors={{MEETING_TYPE_COLORS}} @onSelectEvent={{this.open}} />\n```\n\n### Args\n\n| Arg | What it does |\n|---|---|\n| `events` | The solid, real chips. Required. |\n| `kindColors` | `kind` → `StateColor`. The map lives with the module that owns the kind enum (e.g. `cards/hr/meeting` exports `MEETING_TYPE_COLORS`), **not** here. |\n| `onSelectEvent` | Chip click. |\n| `onRescheduleEvent` | Chip dropped on a day cell → move across days. |\n| `onReorderEvent` | Chip dropped **on another chip** → place before it, within the day. This is the reorder a plain cell drop cannot express; dropping on cell background still means \"this day, at the end\". |\n| `onAddEvent` | Renders the per-day `+`; fires with that day's date. |\n| `onExternalDrop` | A drop that did **not** start on a chip in this calendar — a backlog item dragged in from elsewhere on the page. The host reads the payload off the `DragEvent`, since only it knows what it put there. |\n| `addingDate` | The day currently being created. Disables that day's `+` while in flight. |\n| `initialDate` | Which month to open on. Defaults to today. |\n| `projected` | Chips that are **expected, not booked** — rendered dashed and non-draggable. |\n| `isDisabledDate` | Host predicate for days that cannot receive a drop (weekends, holidays). The cell greys and the drop is refused; the chip snaps back and nothing is written. |\n| `density` | Tint each day by how much is on it, so the month's shape reads as load. |\n\n`:chip` block replaces a chip's content while keeping the chip chrome.\n\n### Behaviours worth knowing\n\n- **Chips are draggable only when a drag can mean something** — `draggable` is `true` iff `onRescheduleEvent` or `onReorderEvent` was supplied. A read-only calendar offers no drag affordance it cannot honour.\n- **Day run order** reads top-to-bottom as `seq` → chronology → incoming order. `sort` is stable, so events tying on both keys never shuffle between renders. Events without a `seq` sort after those that have one, so a host with no ordering concept gets chronological order.\n- **Overflow.** A day shows at most 3 chips plus a `+N more` toggle that expands that one day in place (`show less` collapses it).\n- **In-flight guard.** `addingDate` disables the day's `+` while a create is running — which is exactly how a calendar ends up with four cards all called \"New Meeting\".\n- **Chips are keyed by `id`.** `chipsFor`/`eventsOn` mint a brand-new array of new object literals on every call, so the stable key is what keeps each chip's DOM node — and its native tooltip — alive across an unrelated re-render.\n- **Chip drop targets stop propagation**, so the cell underneath does not also treat the drop as a plain \"move to this day\".\n- Chips carry `data-bx-popover-anchor`, so a host can anchor the shared catalog Popover to one without reaching into this module.\n\n### Theming\n\n`--cal-brand-text` mixes `--primary` 38% toward `--foreground`. `--primary` is a **surface**: on a light ground the app default computes 1.31:1, so it can fill and it can mark but it can never be text. Mixing toward `--foreground` keeps it legible in both themes, because `--foreground` flips and drags the mix with it. 38% is the highest hue share that still clears 4.5:1 for the palest hues boxel ships.\n\n### Helpers\n\nThe month arithmetic (`monthGrid`, `monthTitle`, `sameDay`, `CalendarDay`) is `@cardstack/catalog/utils/month-grid`; chip colours use `StateColor` from `components/state-pill`.\n\n### Example\n\n`CalendarExample/campaign-month` is a month of meetings, reviews and deadlines: one day holds five events so the overflow toggle shows, two projected check-ins render dashed, weekends refuse drops, density tints busy days, and chips drag to reschedule.\n\n### Non-goals\n\nNot a week or day view. Not a recurrence engine — hosts expand recurrence themselves and hand over concrete dates. Not a domain calendar: if you need status vocabulary, filters or a popover read, wrap this in your own component rather than adding kinds here.\n",
+      "cardInfo": {
+        "name": "Calendar",
+        "summary": "Domain-agnostic month grid: draggable event chips, within-day reorder, projected chips, day overflow, guarded create."
+      },
+      "containedExamples": [],
+      "cardTitle": "Calendar",
+      "cardDescription": "A domain-agnostic month grid: event chips coloured by the host's kinds, with drag to reschedule or reorder, projected and disabled days, and a per-day add."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../components/example/CalendarExample/campaign-month"
+        }
+      }
+    }
+  }
+}

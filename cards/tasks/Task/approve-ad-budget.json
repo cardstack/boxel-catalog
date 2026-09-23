@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Approve the ad budget",
+      "details": "Waiting on finance to confirm the quarter's paid-social ceiling.",
+      "status": "Blocked",
+      "priority": "Urgent",
+      "dueDate": "2026-10-05",
+      "createdAt": "2026-09-15T09:00:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "assignee": {
+        "links": {
+          "self": "../../crm/User/dana-whitfield"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../task",
+        "name": "Task"
+      }
+    }
+  }
+}
