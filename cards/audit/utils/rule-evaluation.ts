@@ -215,7 +215,9 @@ export function evaluateRule(
         let num = (v: unknown) =>
           typeof v === 'number'
             ? v
-            : typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v))
+            : typeof v === 'string' &&
+                v.trim() !== '' &&
+                !Number.isNaN(Number(v))
               ? Number(v)
               : undefined;
         let min = num((params as any).min);
