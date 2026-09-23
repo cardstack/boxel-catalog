@@ -49,13 +49,220 @@ function maskTail(value?: string | null): string {
   return v.length ? `••••${v.slice(-4)}` : '';
 }
 
+class LegalEntityEdit extends Component<typeof LegalEntity> {
+  // Left section nav: clicking anchors that section to the top of the
+  // form's own scroller (the root — never a nested
+  // scroller). Scoped through the event's own root so several open edit
+  // panels never cross-scroll each other.
+  @tracked activeSection = 'identity';
+
+  sections = [
+    { id: 'identity', label: 'Identity' },
+    { id: 'registration', label: 'Registration' },
+    { id: 'signatory', label: 'Signatory' },
+    { id: 'notes', label: 'Notes' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.entity-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='entity-edit'>
+      {{! the container element cannot be restyled by its own query — the responsive grid lives on
+          this inner wrapper instead }}
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "identity") "focused"}}'
+            data-sect='identity'
+          >
+            <h3>Entity Identity</h3>
+            <div class='row identity'>
+              <FieldContainer @label='Registered legal name' @vertical={{true}}>
+                <@fields.legalName />
+              </FieldContainer>
+              <FieldContainer @label='Entity type' @vertical={{true}}>
+                <@fields.entityType />
+              </FieldContainer>
+            </div>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "registration") "focused"}}'
+            data-sect='registration'
+          >
+            <h3>Registration &amp; Jurisdiction</h3>
+            <div class='row three'>
+              <FieldContainer @label='Jurisdiction' @vertical={{true}}>
+                <@fields.jurisdiction />
+              </FieldContainer>
+              <FieldContainer @label='Registration number' @vertical={{true}}>
+                <@fields.registrationNumber />
+              </FieldContainer>
+              <FieldContainer @label='Tax ID' @vertical={{true}}>
+                <@fields.taxId />
+              </FieldContainer>
+            </div>
+            <FieldContainer @label='Registered address' @vertical={{true}}>
+              <@fields.registeredAddress />
+            </FieldContainer>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "signatory") "focused"}}'
+            data-sect='signatory'
+          >
+            <h3>Authorized Signatory
+              <span class='sect-hint'>the person who signs contracts on this
+                entity's behalf</span></h3>
+            <div class='row three'>
+              <FieldContainer @label='Name' @vertical={{true}}>
+                <@fields.signatoryName />
+              </FieldContainer>
+              <FieldContainer @label='Title' @vertical={{true}}>
+                <@fields.signatoryTitle />
+              </FieldContainer>
+              <FieldContainer @label='Email' @vertical={{true}}>
+                <@fields.signatoryEmail />
+              </FieldContainer>
+            </div>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "notes") "focused"}}'
+            data-sect='notes'
+          >
+            <h3>Notes</h3>
+            <FieldContainer @label='Internal notes' @vertical={{true}}>
+              <@fields.notes />
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .entity-edit {
+        container-type: inline-size;
+        container-name: edit;
+        height: 100%;
+        overflow-y: auto;
+        padding: var(--boxel-sp);
+        background: var(--background, var(--boxel-light));
+        color: var(--foreground, var(--boxel-dark));
+        /* the legal family asserts no brand hue in CSS — the theme's own
+           foreground/background pair is the accent */
+        --le-ink: var(--foreground, var(--boxel-dark));
+        --le-ink-fg: var(--background, var(--boxel-light));
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 9.5rem minmax(0, 1fr);
+        align-items: start;
+        gap: var(--boxel-sp);
+      }
+      /* the root is the scroller, so sticky pins the nav to its top */
+      .sect-nav {
+        position: sticky;
+        top: 0;
+        /* hand the family ink pair to the rail's published knobs */
+        --edit-section-nav-ink: var(--le-ink);
+        --edit-section-nav-ink-fg: var(--le-ink-fg);
+      }
+      .sects {
+        display: grid;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        border: 1px solid var(--border, var(--boxel-200));
+        border-radius: var(--radius, var(--boxel-border-radius));
+        padding: var(--boxel-sp);
+        display: grid;
+        gap: var(--boxel-sp-sm);
+        transition:
+          outline-color 160ms ease,
+          box-shadow 160ms ease;
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+      }
+      /* the section the rail points at mirrors the rail's active state,
+         same ink, diluted for the halo */
+      .sect.focused {
+        outline-color: var(--le-ink);
+        box-shadow: 0 0 0 4px
+          color-mix(in oklch, var(--le-ink) 12%, transparent);
+      }
+      h3 {
+        margin: 0;
+        font-size: 0.8125rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+        flex-wrap: wrap;
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: normal;
+        font-size: 0.75rem;
+        font-weight: 400;
+        font-style: italic;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--boxel-sp-sm);
+        align-items: start;
+      }
+      .row.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .identity {
+        grid-template-columns: 2fr 1fr;
+      }
+      @container edit (width < 640px) {
+        .row,
+        .row.three,
+        .identity {
+          grid-template-columns: 1fr;
+        }
+        /* narrow panel: nav becomes a horizontal chip row above the form */
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+        /* narrow: the rail flips horizontal (consumer's scope attribute
+           rides ...attributes onto the component root, so these apply) */
+        .sect-nav {
+          position: static;
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .sect-nav::before {
+          display: none;
+        }
+      }
+    </style>
+  </template>
+}
+
 // The formal contracting party: the registered legal person behind a
 // commercial relationship. An Account is who you SELL to; a Legal Entity is
 // who actually signs — registered name, form, jurisdiction, registration
-// number, and the authorized signatory. Contracts today link Account;
-// pointing Contract at its party entities is deliberately left as additive
-// future wiring (see readMe non-goals) so this card ships without touching
-// the shared Contract block.
+// number, and the authorized signatory. A Contract reaches its entities
+// through its parties and signature blocks, not through a field here.
 export class LegalEntity extends CardDef {
   static displayName = 'Legal Entity';
   static headerColor = '#41337a';
@@ -89,9 +296,7 @@ export class LegalEntity extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     get typeLabel() {
-      return (
-        LEGAL_ENTITY_TYPE_LABELS[this.args.model?.entityType ?? ''] ?? '—'
-      );
+      return LEGAL_ENTITY_TYPE_LABELS[this.args.model?.entityType ?? ''] ?? '—';
     }
     <template>
       <article class='entity'>
@@ -101,7 +306,11 @@ export class LegalEntity extends CardDef {
             <h1>{{@model.legalName}}</h1>
             <p class='sub'>{{this.typeLabel}} · {{@model.jurisdiction}}</p>
           </div>
-          <StatePill @label={{this.typeLabel}} @hue='slate' @emphatic={{true}} />
+          <StatePill
+            @label={{this.typeLabel}}
+            @hue='slate'
+            @emphatic={{true}}
+          />
         </header>
         <div class='grid'>
           <section class='panel'>
@@ -110,7 +319,9 @@ export class LegalEntity extends CardDef {
               <div><dt>Reg. number</dt><dd
                   class='mono'
                 >{{@model.registrationNumber}}</dd></div>
-              <div><dt>Tax ID</dt><dd class='mono'>{{@model.maskedTaxId}}</dd></div>
+              <div><dt>Tax ID</dt><dd
+                  class='mono'
+                >{{@model.maskedTaxId}}</dd></div>
               <div><dt>Jurisdiction</dt><dd>{{@model.jurisdiction}}</dd></div>
               <div><dt>Registered at</dt><dd
                 >{{@model.registeredAddress.fullAddress}}</dd></div>
@@ -121,8 +332,9 @@ export class LegalEntity extends CardDef {
             <dl>
               <div><dt>Name</dt><dd>{{@model.signatoryName}}</dd></div>
               <div><dt>Title</dt><dd>{{@model.signatoryTitle}}</dd></div>
-              <div><dt>Email</dt><dd>{{#if @model.signatoryEmail}}<@fields.signatoryEmail
-                    />{{/if}}</dd></div>
+              <div><dt>Email</dt><dd>{{#if
+                    @model.signatoryEmail
+                  }}<@fields.signatoryEmail />{{/if}}</dd></div>
             </dl>
           </section>
           {{#if @model.notes}}
@@ -229,15 +441,14 @@ export class LegalEntity extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     get typeLabel() {
-      return (
-        LEGAL_ENTITY_TYPE_LABELS[this.args.model?.entityType ?? ''] ?? '—'
-      );
+      return LEGAL_ENTITY_TYPE_LABELS[this.args.model?.entityType ?? ''] ?? '—';
     }
     <template>
       <div class='row'>
         <div class='who'>
           <span class='name'>{{@model.legalName}}</span>
-          <span class='meta'>{{this.typeLabel}} ·
+          <span class='meta'>{{this.typeLabel}}
+            ·
             {{@model.jurisdiction}}</span>
         </div>
         <span class='reg mono'>{{@model.registrationNumber}}</span>
@@ -287,14 +498,13 @@ export class LegalEntity extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     get typeLabel() {
-      return (
-        LEGAL_ENTITY_TYPE_LABELS[this.args.model?.entityType ?? ''] ?? '—'
-      );
+      return LEGAL_ENTITY_TYPE_LABELS[this.args.model?.entityType ?? ''] ?? '—';
     }
     <template>
       <div class='fit'>
         <span class='fit-name'>{{@model.legalName}}</span>
-        <span class='fit-sub'>{{this.typeLabel}} ·
+        <span class='fit-sub'>{{this.typeLabel}}
+          ·
           {{@model.jurisdiction}}</span>
       </div>
       <style scoped>
@@ -340,213 +550,5 @@ export class LegalEntity extends CardDef {
   // where and how is it registered → who signs for it → anything else.
   // 4 real sections, so the EditSectionNav rail applies.
   // Computed fields (maskedTaxId, cardTitle) are deliberately excluded.
-  static edit = class Edit extends Component<typeof this> {
-    // Left section nav: clicking anchors that section to the top of the
-    // form's own scroller (the root — never a nested
-    // scroller). Scoped through the event's own root so several open edit
-    // panels never cross-scroll each other.
-    @tracked activeSection = 'identity';
-
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'registration', label: 'Registration' },
-      { id: 'signatory', label: 'Signatory' },
-      { id: 'notes', label: 'Notes' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.entity-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='entity-edit'>
-        {{! the container element cannot be restyled by its own query — the responsive grid lives on
-            this inner wrapper instead }}
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "identity") "focused"}}'
-              data-sect='identity'
-            >
-              <h3>Entity Identity</h3>
-              <div class='row identity'>
-                <FieldContainer @label='Registered legal name' @vertical={{true}}>
-                  <@fields.legalName />
-                </FieldContainer>
-                <FieldContainer @label='Entity type' @vertical={{true}}>
-                  <@fields.entityType />
-                </FieldContainer>
-              </div>
-            </section>
-
-            <section
-              class='sect
-                {{if (eq this.activeSection "registration") "focused"}}'
-              data-sect='registration'
-            >
-              <h3>Registration &amp; Jurisdiction</h3>
-              <div class='row three'>
-                <FieldContainer @label='Jurisdiction' @vertical={{true}}>
-                  <@fields.jurisdiction />
-                </FieldContainer>
-                <FieldContainer @label='Registration number' @vertical={{true}}>
-                  <@fields.registrationNumber />
-                </FieldContainer>
-                <FieldContainer @label='Tax ID' @vertical={{true}}>
-                  <@fields.taxId />
-                </FieldContainer>
-              </div>
-              <FieldContainer @label='Registered address' @vertical={{true}}>
-                <@fields.registeredAddress />
-              </FieldContainer>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "signatory") "focused"}}'
-              data-sect='signatory'
-            >
-              <h3>Authorized Signatory
-                <span class='sect-hint'>the person who signs contracts on
-                  this entity's behalf</span></h3>
-              <div class='row three'>
-                <FieldContainer @label='Name' @vertical={{true}}>
-                  <@fields.signatoryName />
-                </FieldContainer>
-                <FieldContainer @label='Title' @vertical={{true}}>
-                  <@fields.signatoryTitle />
-                </FieldContainer>
-                <FieldContainer @label='Email' @vertical={{true}}>
-                  <@fields.signatoryEmail />
-                </FieldContainer>
-              </div>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "notes") "focused"}}'
-              data-sect='notes'
-            >
-              <h3>Notes</h3>
-              <FieldContainer @label='Internal notes' @vertical={{true}}>
-                <@fields.notes />
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .entity-edit {
-          container-type: inline-size;
-          container-name: edit;
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          /* the legal family asserts no brand hue in CSS — the theme's own
-             foreground/background pair is the accent */
-          --le-ink: var(--foreground, var(--boxel-dark));
-          --le-ink-fg: var(--background, var(--boxel-light));
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 9.5rem minmax(0, 1fr);
-          align-items: start;
-          gap: var(--boxel-sp);
-        }
-        /* the root is the scroller, so sticky pins the nav to its top */
-        .sect-nav {
-          position: sticky;
-          top: 0;
-          /* hand the family ink pair to the rail's published knobs */
-          --edit-section-nav-ink: var(--le-ink);
-          --edit-section-nav-ink-fg: var(--le-ink-fg);
-        }
-        .sects {
-          display: grid;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          padding: var(--boxel-sp);
-          display: grid;
-          gap: var(--boxel-sp-sm);
-          transition:
-            outline-color 160ms ease,
-            box-shadow 160ms ease;
-          outline: 2px solid transparent;
-          outline-offset: 2px;
-        }
-        /* the section the rail points at mirrors the rail's active state,
-           same ink, diluted for the halo */
-        .sect.focused {
-          outline-color: var(--le-ink);
-          box-shadow: 0 0 0 4px
-            color-mix(in oklch, var(--le-ink) 12%, transparent);
-        }
-        h3 {
-          margin: 0;
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          flex-wrap: wrap;
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: normal;
-          font-size: 0.75rem;
-          font-weight: 400;
-          font-style: italic;
-        }
-        .row {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-        }
-        .row.three {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-        .identity {
-          grid-template-columns: 2fr 1fr;
-        }
-        @container edit (width < 640px) {
-          .row,
-          .row.three,
-          .identity {
-            grid-template-columns: 1fr;
-          }
-          /* narrow panel: nav becomes a horizontal chip row above the form */
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-          /* narrow: the rail flips horizontal (consumer's scope attribute
-             rides ...attributes onto the component root, so these apply) */
-          .sect-nav {
-            position: static;
-            flex-direction: row;
-            flex-wrap: wrap;
-          }
-          .sect-nav::before {
-            display: none;
-          }
-        }
-      </style>
-    </template>
-  };
+  static edit = LegalEntityEdit;
 }

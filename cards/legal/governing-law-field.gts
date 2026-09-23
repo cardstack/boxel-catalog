@@ -149,16 +149,27 @@ export class GoverningLawField extends FieldDef {
 }
 
 /** Edit — the two questions side by side, notes below; computed `label` hidden. */
-GoverningLawField.edit = class Edit extends Component<typeof GoverningLawField> {
+GoverningLawField.edit = class Edit extends Component<
+  typeof GoverningLawField
+> {
   <template>
     <div class='gl-edit'>
-      <FieldContainer @label='Governing law (whose law reads the words)' @vertical={{true}}>
+      <FieldContainer
+        @label='Governing law (whose law reads the words)'
+        @vertical={{true}}
+      >
         <@fields.jurisdiction />
       </FieldContainer>
-      <FieldContainer @label='Venue (where a dispute is heard)' @vertical={{true}}>
+      <FieldContainer
+        @label='Venue (where a dispute is heard)'
+        @vertical={{true}}
+      >
         <@fields.venue />
       </FieldContainer>
-      <FieldContainer @label='Dispute procedure, rules, language' @vertical={{true}}>
+      <FieldContainer
+        @label='Dispute procedure, rules, language'
+        @vertical={{true}}
+      >
         <@fields.notes />
       </FieldContainer>
     </div>

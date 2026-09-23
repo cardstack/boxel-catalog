@@ -1,6 +1,9 @@
 import ScaleIcon from '@cardstack/boxel-icons/scale';
 
-import { statusField, type StatusOption } from '@cardstack/catalog/fields/status/status';
+import {
+  statusField,
+  type StatusOption,
+} from '@cardstack/catalog/fields/status/status';
 
 /**
  * The contract lifecycle, as a status field that knows its own legal moves.

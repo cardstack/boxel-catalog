@@ -91,8 +91,7 @@ export default class RequestSignatureCommand extends Command<
       // before anything has been signed; what blocks a REQUEST is authority,
       // naming and structure.
       let authorityFindings = findings.filter(
-        (f) =>
-          !/out of signing order|no signature reference/i.test(f.message),
+        (f) => !/out of signing order|no signature reference/i.test(f.message),
       );
       if (authorityFindings.length) {
         throw new Error(
@@ -129,9 +128,8 @@ export default class RequestSignatureCommand extends Command<
         signerName: b.signerName ?? null,
         signerTitle: b.signerTitle ?? null,
         signingOrder: b.signingOrder ?? null,
-        lineStatus: b === next ? 'requested' : b.lineStatus ?? 'pending',
-        requestedAt:
-          b === next ? now.toISOString() : b.requestedAt ?? null,
+        lineStatus: b === next ? 'requested' : (b.lineStatus ?? 'pending'),
+        requestedAt: b === next ? now.toISOString() : (b.requestedAt ?? null),
         signedAt: b.signedAt ?? null,
         signatureRef: b.signatureRef ?? null,
       }));
@@ -157,7 +155,9 @@ export default class RequestSignatureCommand extends Command<
         message: `Line ${next.signingOrder} (${next.displayName}${
           next.entityName ? `, ${next.entityName}` : ''
         }) of "${contract.title ?? 'Contract'}" requested via ${
-          provider?.trim() || contract.signatureProvider || 'unspecified provider'
+          provider?.trim() ||
+          contract.signatureProvider ||
+          'unspecified provider'
         } — authority checks pass.`,
       });
     }

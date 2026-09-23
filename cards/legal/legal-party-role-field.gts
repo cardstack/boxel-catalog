@@ -125,16 +125,19 @@ export class LegalPartyRoleField extends FieldDef {
           <div class='lp-entity'>
             <span class='lp-name'>{{@model.entity.legalName}}</span>
             <span class='lp-meta'>
-              {{#if @model.entity.entityType}}{{@model.entity.entityType}}{{/if}}
-              {{#if @model.entity.jurisdiction}}· {{@model.entity.jurisdiction}}{{/if}}
+              {{#if
+                @model.entity.entityType
+              }}{{@model.entity.entityType}}{{/if}}
+              {{#if @model.entity.jurisdiction}}·
+                {{@model.entity.jurisdiction}}{{/if}}
             </span>
             {{#if @model.entity.registrationNumber}}
               <span class='lp-reg'>{{@model.entity.registrationNumber}}</span>
             {{/if}}
           </div>
         {{else}}
-          <p class='lp-missing'>No legal entity linked — the clauses have a
-            role with nobody behind it.</p>
+          <p class='lp-missing'>No legal entity linked — the clauses have a role
+            with nobody behind it.</p>
         {{/if}}
       </div>
       <style scoped>
@@ -202,7 +205,9 @@ export class LegalPartyRoleField extends FieldDef {
 
 /** Edit — capacity first, then who; the defined term as an aside. Computed
  *  `roleLabel` is not shown (the default edit would print it read-only). */
-LegalPartyRoleField.edit = class Edit extends Component<typeof LegalPartyRoleField> {
+LegalPartyRoleField.edit = class Edit extends Component<
+  typeof LegalPartyRoleField
+> {
   <template>
     <div class='lp-edit'>
       <FieldContainer @label='Capacity' @vertical={{true}}>
@@ -211,7 +216,10 @@ LegalPartyRoleField.edit = class Edit extends Component<typeof LegalPartyRoleFie
       <FieldContainer @label='Legal entity' @vertical={{true}}>
         <@fields.entity />
       </FieldContainer>
-      <FieldContainer @label='Defined term in the clauses (optional)' @vertical={{true}}>
+      <FieldContainer
+        @label='Defined term in the clauses (optional)'
+        @vertical={{true}}
+      >
         <@fields.definedTerm />
       </FieldContainer>
     </div>

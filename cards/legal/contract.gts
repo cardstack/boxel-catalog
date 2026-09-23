@@ -39,10 +39,7 @@ import { EffectivePeriodField } from '@cardstack/catalog/fields/effective-period
 import { GoverningLawField } from './governing-law-field';
 import { SignatureBlockView } from './components/signature-block-view';
 
-import {
-  ContractTypeField,
-  contractTypeLabel,
-} from './contract-type';
+import { ContractTypeField, contractTypeLabel } from './contract-type';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
@@ -60,7 +57,11 @@ const here: string = import.meta.url;
  * `codeRef` resolves './contract-clause' against this module's own URL, so the
  * query gets a real ref with no import edge at all.
  */
-const CONTRACT_CLAUSE_REF = codeRef(here, './contract-clause', 'ContractClause');
+const CONTRACT_CLAUSE_REF = codeRef(
+  here,
+  './contract-clause',
+  'ContractClause',
+);
 const OBLIGATION_REF = codeRef(here, './obligation', 'Obligation');
 
 const MS_PER_DAY = 86_400_000;
@@ -106,6 +107,802 @@ export const SignatureStatusField = enumField(StringField, {
   ],
   displayName: 'Signature Status',
 });
+
+class ContractIsolated extends Component<typeof Contract> {
+  // Clauses and obligations link UP to their contract; there is no link array
+  // on this card to read back (see the note on the field list). So the detail
+  // page asks the realm the reverse question instead — the same idiom
+  // carrier.gts uses to find the shipments pointing at it.
+  private clauseQuery: ReturnType<getCards> | undefined;
+  private obligationQuery: ReturnType<getCards> | undefined;
+
+  constructor(owner: Owner, args: any) {
+    super(owner, args);
+    let byContract = (ref: any) => () => {
+      let id = this.args.model?.id;
+      if (!id) return undefined;
+      return { filter: { on: ref, every: [{ eq: { 'contract.id': id } }] } };
+    };
+    this.clauseQuery = this.args.context?.getCards(
+      this,
+      byContract(CONTRACT_CLAUSE_REF),
+      () => this.realms,
+      { isLive: true },
+    );
+    this.obligationQuery = this.args.context?.getCards(
+      this,
+      byContract(OBLIGATION_REF),
+      () => this.realms,
+      { isLive: true },
+    );
+  }
+
+  private get realms(): string[] | undefined {
+    let url = (this.args.model as any)?.[realmURL];
+    return url ? [url.href] : undefined;
+  }
+
+  get clauses(): any[] {
+    return ((this.clauseQuery as any)?.instances ?? []).filter(Boolean);
+  }
+  get obligations(): any[] {
+    return ((this.obligationQuery as any)?.instances ?? []).filter(Boolean);
+  }
+
+  // A live query resolving after first paint is how a card comes to assert
+  // "no clauses" about data it has not received yet. Guarded on emptiness too,
+  // so a background refresh of a populated list does not flash a skeleton.
+  // A contract the CRM created has no clauses or obligations and never will,
+  // so it must not flash "Loading clauses and obligations…" on every page
+  // view. The CLM markers are what say this contract is managed here and is
+  // therefore worth waiting on.
+  get hasEffectivePeriod(): boolean {
+    let p = this.args.model?.effectivePeriod;
+    return Boolean(p?.effectiveDate || p?.endDate);
+  }
+
+  get isClmManaged(): boolean {
+    let m = this.args.model;
+    return Boolean(
+      m?.contractNumber || m?.riskGrade || m?.approvalChain?.steps?.length,
+    );
+  }
+
+  get isLoadingLinked() {
+    let c = this.clauseQuery as any;
+    let o = this.obligationQuery as any;
+    return (
+      (Boolean(c?.isLoading) || Boolean(o?.isLoading)) &&
+      !this.clauses.length &&
+      !this.obligations.length
+    );
+  }
+
+  // Without reading `errors` a failed query is indistinguishable from an empty
+  // realm, and the section would claim "there are none" when the truth is
+  // "we could not look".
+  get queryFailed(): boolean {
+    let e1 = (this.clauseQuery as any)?.errors as any[] | undefined;
+    let e2 = (this.obligationQuery as any)?.errors as any[] | undefined;
+    return Boolean(e1?.length || e2?.length);
+  }
+
+  get deviations(): any[] {
+    return this.clauses.filter((c) => c.isDeviation);
+  }
+  get deviationLabel(): string {
+    let n = this.deviations.length;
+    return `${n} deviation${n === 1 ? '' : 's'}`;
+  }
+  get overdue(): any[] {
+    return this.obligations.filter((o) => o.status === 'overdue');
+  }
+
+  @action openCard(card: any) {
+    (this.args as any).viewCard?.(card, 'isolated');
+  }
+
+  get valueDisplay() {
+    return formatMoney(
+      this.args.model?.value?.amount,
+      this.args.model?.value?.currency?.code,
+    );
+  }
+  get statusSlug() {
+    return (this.args.model?.status ?? '').replace(/\s+/g, '-');
+  }
+  <template>
+    <article class='contract-page'>
+      <header class='ch'>
+        <div class='ch-id'>
+          <p class='doc-kind'>Contract</p>
+          <h1>{{@model.cardTitle}}</h1>
+          {{#if @model.isSigned}}
+            <p class='status-line signed'>Signed
+              <@fields.signedAt /></p>
+          {{else}}
+            <p class='status-line'>{{if
+                @model.status
+                @model.status
+                'Not yet signed'
+              }}</p>
+          {{/if}}
+        </div>
+        {{#if this.valueDisplay}}
+          <p class='ch-value'>{{this.valueDisplay}}</p>
+        {{/if}}
+      </header>
+
+      <section class='panel'>
+        <h2>Agreement</h2>
+        <dl>
+          {{#if @model.contractNumber}}
+            <dt>Reference</dt>
+            <dd class='mono'>{{@model.contractNumber}}</dd>
+          {{/if}}
+          {{#if @model.contractType}}
+            <dt>Type</dt>
+            <dd><@fields.contractType @format='atom' /></dd>
+          {{/if}}
+          {{#if @model.account}}
+            <dt>Account</dt>
+            <dd><@fields.account @format='embedded' /></dd>
+          {{/if}}
+          {{#if @model.deal}}
+            <dt>Deal</dt>
+            <dd><@fields.deal @format='atom' /></dd>
+          {{/if}}
+          {{#if @model.startDate}}
+            <dt>Term begins</dt>
+            <dd><@fields.startDate /></dd>
+          {{/if}}
+          {{#if @model.endDate}}
+            <dt>Term ends</dt>
+            <dd><@fields.endDate />
+              {{#if @model.daysToExpiry}}
+                <span class='hint'>{{@model.daysToExpiry}} days left</span>
+              {{/if}}
+            </dd>
+          {{/if}}
+          {{#if @model.noticeBy}}
+            <dt>Notice by</dt>
+            <dd class='mono'>{{@model.noticeBy}}
+              {{#if @model.daysToNotice}}
+                <span class='hint'>{{@model.daysToNotice}} days to act</span>
+              {{/if}}
+            </dd>
+          {{/if}}
+          {{#if @model.owner}}
+            <dt>Owner</dt>
+            <dd><@fields.owner @format='atom' /></dd>
+          {{/if}}
+          {{#if @model.governingLaw.label}}
+            <dt>Governing law</dt>
+            <dd><@fields.governingLaw @format='atom' /></dd>
+          {{/if}}
+          {{#if @model.documentUrl}}
+            <dt>Executed copy</dt>
+            <dd><@fields.documentUrl /></dd>
+          {{/if}}
+        </dl>
+        {{#if this.hasEffectivePeriod}}
+          <div class='period'>
+            <@fields.effectivePeriod @format='embedded' />
+          </div>
+        {{/if}}
+      </section>
+
+      {{#if @model.parties.length}}
+        <section class='panel'>
+          <h2>Parties</h2>
+          <ul class='parties'>
+            {{#each @fields.parties as |Party|}}
+              <li><Party @format='embedded' /></li>
+            {{/each}}
+          </ul>
+        </section>
+      {{/if}}
+
+      {{#if @model.signatureBlocks.length}}
+        <SignatureBlockView
+          @blocks={{@model.signatureBlocks}}
+          @contractValue={{@model.value.amount}}
+          @contractCurrency={{@model.value.currency.code}}
+          @contractType={{@model.contractType}}
+        />
+      {{/if}}
+
+      {{#if @model.riskGrade}}
+        <section class='panel'>
+          <h2>Risk</h2>
+          <@fields.risk @format='embedded' />
+        </section>
+      {{/if}}
+
+      {{#if @model.approvalChain.steps.length}}
+        <section class='panel'>
+          <h2>Approval</h2>
+          <@fields.approvalChain @format='embedded' />
+        </section>
+      {{/if}}
+
+      {{#if this.queryFailed}}
+        <section class='panel'>
+          <p class='qnote' role='status'>Could not load this contract's clauses
+            and obligations. This is a failed lookup, not an empty record —
+            reload before concluding there are none.</p>
+        </section>
+      {{else if (and this.isClmManaged this.isLoadingLinked)}}
+        <section class='panel'>
+          <p class='qnote' role='status'>Loading clauses and obligations…</p>
+        </section>
+      {{else}}
+        {{#if this.clauses.length}}
+          <section class='panel'>
+            <h2>Clauses
+              {{#if this.deviations.length}}
+                <span class='count-warn'>{{this.deviationLabel}}</span>
+              {{/if}}
+            </h2>
+            <ul class='linked'>
+              {{#each this.clauses as |c|}}
+                <li>
+                  <button
+                    type='button'
+                    class='linked-row'
+                    {{on 'click' (fn this.openCard c)}}
+                  >{{c.cardTitle}}<span
+                      class='linked-meta'
+                    >{{c.cardDescription}}</span></button>
+                </li>
+              {{/each}}
+            </ul>
+          </section>
+        {{/if}}
+
+        {{#if this.obligations.length}}
+          <section class='panel'>
+            <h2>Obligations
+              {{#if this.overdue.length}}
+                <span class='count-warn'>{{this.overdue.length}}
+                  overdue</span>
+              {{/if}}
+            </h2>
+            <ul class='linked'>
+              {{#each this.obligations as |o|}}
+                <li>
+                  <button
+                    type='button'
+                    class='linked-row'
+                    {{on 'click' (fn this.openCard o)}}
+                  >{{o.cardTitle}}<span
+                      class='linked-meta'
+                    >{{o.cardDescription}}
+                      {{#if o.nextDueDate}}· due
+                        {{o.nextDueDate}}{{/if}}</span>
+                  </button>
+                </li>
+              {{/each}}
+            </ul>
+          </section>
+        {{/if}}
+      {{/if}}
+
+      {{#if @model.terms}}
+        <section class='panel'>
+          <h2>Terms</h2>
+          <div class='terms'><@fields.terms /></div>
+        </section>
+      {{/if}}
+    </article>
+    <style scoped>
+      .mono {
+        /* Status hues are DATA — red means overdue whatever the theme — so the hue is
+         declared here rather than pulled from a semantic token. These tokens were
+         REFERENCED but never declared, so their hex fallback was the only value that
+         ever rendered.
+         The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
+         a dark theme while its text darkens, and the pair silently fails. So the text
+         colour is pulled toward the theme's own --foreground, and the fill is then
+         diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
+        --state-positive-fg: color-mix(
+          in oklch,
+          oklch(0.55 0.13 152) 65%,
+          var(--foreground)
+        );
+        --state-positive-bg: color-mix(
+          in oklch,
+          var(--state-positive-fg) 12%,
+          var(--background)
+        );
+        font-family: var(--font-mono, ui-monospace, monospace);
+        font-variant-numeric: tabular-nums;
+      }
+      .qnote {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--muted-foreground, #666666);
+      }
+      .count-warn {
+        margin-left: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--destructive, #b3261e);
+      }
+      .linked {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .linked-row {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.1rem;
+        width: 100%;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        padding: 0.4rem 0.55rem;
+        border: 1px solid var(--border, #dddddd);
+        border-radius: 4px;
+        background: var(--card, #ffffff);
+        color: inherit;
+      }
+      .linked-row:hover {
+        border-color: var(--foreground, #111111);
+      }
+      .linked-meta {
+        font-size: 0.75rem;
+        color: var(--muted-foreground, #666666);
+      }
+      .contract-page {
+        /* An isolated card gets NO container from the host — every ancestor
+           up to the stack panel is `container-type: normal`, so an
+           `@container` rule here is inert until this declares its own.
+           `inline-size`, not `size`: the card scrolls, and `size` needs a
+           definite block size and would collapse the column. */
+        container-type: inline-size;
+        container-name: contract-page;
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        color: var(--foreground, #111111);
+      }
+      .ch {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        border-bottom: 2px solid var(--foreground, #111111);
+        padding-bottom: 1.25rem;
+      }
+      .doc-kind {
+        margin: 0 0 0.125rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--muted-foreground, #6b7280);
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.625rem;
+        font-family: var(--font-heading, inherit);
+      }
+      .status-line {
+        margin: 0.25rem 0 0;
+        font-size: 0.8125rem;
+        color: var(--muted-foreground, #6b7280);
+        text-transform: capitalize;
+      }
+      .status-line.signed {
+        color: var(--state-positive-fg);
+        font-weight: 600;
+      }
+      .ch-value {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        font-family: var(--font-heading, inherit);
+        white-space: nowrap;
+      }
+      .panel {
+        border: 1px solid var(--border, #e5e7eb);
+        border-radius: 8px;
+        padding: 1rem 1.125rem;
+        background: var(--card, #ffffff);
+      }
+      .period {
+        margin-top: 0.9rem;
+        padding-top: 0.9rem;
+        border-top: 1px solid var(--border, #e5e7eb);
+      }
+      .parties {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+      }
+      h2 {
+        margin: 0 0 0.75rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted-foreground, #6b7280);
+      }
+      dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 9rem 1fr;
+        gap: 0.5rem 1rem;
+        font-size: 0.875rem;
+      }
+      dt {
+        color: var(--muted-foreground, #6b7280);
+      }
+      dd {
+        margin: 0;
+      }
+      .hint {
+        margin-left: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--muted-foreground, #6b7280);
+      }
+      .terms {
+        font-size: 0.875rem;
+        line-height: 1.6;
+      }
+
+      /* Below this the two-up rows stop being side-by-side; the panel gets
+         narrow whenever a second card opens beside this one. */
+      @container contract-page (width < 620px) {
+        .panel dl {
+          grid-template-columns: 1fr;
+        }
+        .ch {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </template>
+}
+
+class ContractEdit extends Component<typeof Contract> {
+  @tracked activeSection = 'identity';
+
+  sections = [
+    { id: 'identity', label: 'Identity' },
+    { id: 'parties', label: 'Parties & Law' },
+    { id: 'term', label: 'Term' },
+    { id: 'value', label: 'Value & Risk' },
+    { id: 'signature', label: 'Signature' },
+    { id: 'approval', label: 'Approval' },
+    { id: 'text', label: 'Text' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.contract-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='contract-edit'>
+      {{! root is the container + only scroller; the responsive grid lives
+          on this inner wrapper }}
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "identity") "focused"}}'
+            data-sect='identity'
+          >
+            <h3>Identity</h3>
+            <FieldContainer @label='Title' @vertical={{true}}>
+              <@fields.title />
+            </FieldContainer>
+            <div class='row identity'>
+              <FieldContainer @label='Reference' @vertical={{true}}>
+                <@fields.contractNumber />
+              </FieldContainer>
+              <FieldContainer @label='Type' @vertical={{true}}>
+                <@fields.contractType />
+              </FieldContainer>
+              <FieldContainer @label='Status' @vertical={{true}}>
+                <@fields.status />
+                <p class='hint'>Request Signature and Execute Contract move
+                  this; edit only to correct.</p>
+              </FieldContainer>
+            </div>
+            <div class='row'>
+              <FieldContainer @label='Account' @vertical={{true}}>
+                <@fields.account />
+              </FieldContainer>
+              <FieldContainer @label='Deal' @vertical={{true}}>
+                <@fields.deal />
+              </FieldContainer>
+              <FieldContainer @label='Owner' @vertical={{true}}>
+                <@fields.owner />
+              </FieldContainer>
+            </div>
+            <FieldContainer
+              @label='Parent contract (for SOWs and renewals)'
+              @vertical={{true}}
+            >
+              <@fields.parentContract />
+            </FieldContainer>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "parties") "focused"}}'
+            data-sect='parties'
+          >
+            <h3>Parties &amp; Law
+              <span class='sect-hint'>the legal persons bound, and whose law
+                reads the words</span></h3>
+            <FieldContainer
+              @label='Parties (entity + capacity)'
+              @vertical={{true}}
+            >
+              <@fields.parties />
+            </FieldContainer>
+            <FieldContainer @label='Governing law and venue' @vertical={{true}}>
+              <@fields.governingLaw />
+            </FieldContainer>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "term") "focused"}}'
+            data-sect='term'
+          >
+            <h3>Term
+              <span class='sect-hint'>the notice deadline is computed from the
+                period — that is the date that matters</span></h3>
+            <FieldContainer @label='Effective period' @vertical={{true}}>
+              <@fields.effectivePeriod />
+            </FieldContainer>
+            <details class='legacy'>
+              <summary>Legacy term fields (read when no effective period is set)</summary>
+              <div class='row'>
+                <FieldContainer @label='Start date' @vertical={{true}}>
+                  <@fields.startDate />
+                </FieldContainer>
+                <FieldContainer @label='End date' @vertical={{true}}>
+                  <@fields.endDate />
+                </FieldContainer>
+                <FieldContainer
+                  @label='Renewal notice (days)'
+                  @vertical={{true}}
+                >
+                  <@fields.renewalNoticeDays />
+                </FieldContainer>
+              </div>
+              <FieldContainer @label='Auto-renews' @vertical={{true}}>
+                <@fields.autoRenews />
+              </FieldContainer>
+            </details>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "value") "focused"}}'
+            data-sect='value'
+          >
+            <h3>Value &amp; Risk</h3>
+            <div class='row value'>
+              <FieldContainer @label='Contract value' @vertical={{true}}>
+                <@fields.value />
+              </FieldContainer>
+              <FieldContainer
+                @label='Handles sensitive data'
+                @vertical={{true}}
+              >
+                <@fields.handlesSensitiveData />
+              </FieldContainer>
+            </div>
+            <FieldContainer @label='Risk assessment' @vertical={{true}}>
+              <@fields.risk />
+            </FieldContainer>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "signature") "focused"}}'
+            data-sect='signature'
+          >
+            <h3>Signature
+              <span class='sect-hint'>one block per signer, in signing order;
+                our side links a Signatory</span></h3>
+            <FieldContainer @label='Signature blocks' @vertical={{true}}>
+              <@fields.signatureBlocks />
+            </FieldContainer>
+            <div class='row'>
+              <FieldContainer @label='Envelope status' @vertical={{true}}>
+                <@fields.signatureStatus />
+                <p class='hint'>command-owned — Request / Execute write it</p>
+              </FieldContainer>
+              <FieldContainer @label='Provider' @vertical={{true}}>
+                <@fields.signatureProvider />
+              </FieldContainer>
+              <FieldContainer @label='Requested on' @vertical={{true}}>
+                <@fields.signatureRequestedAt />
+              </FieldContainer>
+            </div>
+            <div class='row'>
+              <FieldContainer @label='Signed on' @vertical={{true}}>
+                <@fields.signedAt />
+                <p class='hint'>stamped by Execute Contract</p>
+              </FieldContainer>
+              <FieldContainer @label='Executed copy URL' @vertical={{true}}>
+                <@fields.executedCopyUrl />
+              </FieldContainer>
+              <FieldContainer @label='Working document URL' @vertical={{true}}>
+                <@fields.documentUrl />
+              </FieldContainer>
+            </div>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "approval") "focused"}}'
+            data-sect='approval'
+          >
+            <h3>Approval
+              <span class='sect-hint'>built from the approval rules; decisions
+                are recorded on the app's Approvals tab</span></h3>
+            <FieldContainer @label='Approval chain' @vertical={{true}}>
+              <@fields.approvalChain />
+            </FieldContainer>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "text") "focused"}}'
+            data-sect='text'
+          >
+            <h3>Text</h3>
+            <FieldContainer @label='Key terms (summary)' @vertical={{true}}>
+              <@fields.terms />
+            </FieldContainer>
+            <FieldContainer @label='Full agreement text' @vertical={{true}}>
+              <@fields.fullText />
+              <p class='hint'>Generate Document assembles this from the clauses,
+                parties, term and signature blocks; edit only to correct.</p>
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .contract-edit {
+        container-type: inline-size;
+        container-name: edit;
+        height: 100%;
+        overflow-y: auto;
+        padding: var(--boxel-sp);
+        background: var(--background, var(--boxel-light));
+        color: var(--foreground, var(--boxel-dark));
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 9.5rem minmax(0, 1fr);
+        align-items: start;
+        gap: var(--boxel-sp);
+      }
+      /* the root is the scroller, so sticky pins the nav to its top; the
+         legal family asserts no brand ink, so the rail keeps its default
+         fg/bg inversion */
+      .sect-nav {
+        position: sticky;
+        top: 0;
+      }
+      .sects {
+        display: grid;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        border: 1px solid var(--border, var(--boxel-200));
+        border-radius: var(--radius, var(--boxel-border-radius));
+        padding: var(--boxel-sp);
+        display: grid;
+        gap: var(--boxel-sp-sm);
+        transition:
+          outline-color 160ms ease,
+          box-shadow 160ms ease;
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+      }
+      .sect.focused {
+        outline-color: var(--foreground, var(--boxel-dark));
+        box-shadow: 0 0 0 4px
+          color-mix(
+            in oklch,
+            var(--foreground, var(--boxel-dark)) 12%,
+            transparent
+          );
+      }
+      h3 {
+        margin: 0;
+        font-size: 0.8125rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+        flex-wrap: wrap;
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: normal;
+        font-size: 0.75rem;
+        font-weight: 400;
+        font-style: italic;
+      }
+      .hint {
+        margin: 0.25rem 0 0;
+        font-size: 0.75rem;
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--boxel-sp-sm);
+        align-items: start;
+      }
+      .row.value {
+        grid-template-columns: 2fr 1fr;
+      }
+      .legacy {
+        border-top: 1px dashed var(--border, var(--boxel-200));
+        padding-top: var(--boxel-sp-xs);
+      }
+      .legacy summary {
+        cursor: pointer;
+        font-size: 0.75rem;
+        color: var(--muted-foreground, var(--boxel-450));
+        margin-bottom: var(--boxel-sp-xs);
+      }
+      .legacy[open] summary {
+        margin-bottom: var(--boxel-sp-sm);
+      }
+      @container edit (width < 640px) {
+        .row,
+        .row.value,
+        .identity {
+          grid-template-columns: 1fr;
+        }
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+        .sect-nav {
+          position: static;
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .sect-nav::before {
+          display: none;
+        }
+      }
+    </style>
+  </template>
+}
 
 export class Contract extends CardDef {
   static displayName = 'Contract';
@@ -255,7 +1052,8 @@ export class Contract extends CardDef {
         return undefined;
       }
       let months =
-        (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+        (b.getFullYear() - a.getFullYear()) * 12 +
+        (b.getMonth() - a.getMonth());
       return months > 0 ? months : undefined;
     },
   });
@@ -308,7 +1106,10 @@ export class Contract extends CardDef {
 
   @field cardDescription = contains(StringField, {
     computeVia: function (this: Contract) {
-      return [contractTypeLabel(this.contractType), contractStatusLabel(this.status)]
+      return [
+        contractTypeLabel(this.contractType),
+        contractStatusLabel(this.status),
+      ]
         .filter(Boolean)
         .join(' \u00b7 ');
     },
@@ -324,313 +1125,7 @@ export class Contract extends CardDef {
    * editable here — to correct a record — but each carries a hint saying
    * which command normally writes it, so a hand edit is a deliberate act.
    */
-  static edit = class Edit extends Component<typeof Contract> {
-    @tracked activeSection = 'identity';
-
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'parties', label: 'Parties & Law' },
-      { id: 'term', label: 'Term' },
-      { id: 'value', label: 'Value & Risk' },
-      { id: 'signature', label: 'Signature' },
-      { id: 'approval', label: 'Approval' },
-      { id: 'text', label: 'Text' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.contract-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='contract-edit'>
-        {{! root is the container + only scroller; the responsive grid lives
-            on this inner wrapper }}
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "identity") "focused"}}'
-              data-sect='identity'
-            >
-              <h3>Identity</h3>
-              <FieldContainer @label='Title' @vertical={{true}}>
-                <@fields.title />
-              </FieldContainer>
-              <div class='row identity'>
-                <FieldContainer @label='Reference' @vertical={{true}}>
-                  <@fields.contractNumber />
-                </FieldContainer>
-                <FieldContainer @label='Type' @vertical={{true}}>
-                  <@fields.contractType />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Status'
-                  @vertical={{true}}
-                >
-                  <@fields.status />
-                  <p class='hint'>Request Signature and Execute Contract move
-                    this; edit only to correct.</p>
-                </FieldContainer>
-              </div>
-              <div class='row'>
-                <FieldContainer @label='Account' @vertical={{true}}>
-                  <@fields.account />
-                </FieldContainer>
-                <FieldContainer @label='Deal' @vertical={{true}}>
-                  <@fields.deal />
-                </FieldContainer>
-                <FieldContainer @label='Owner' @vertical={{true}}>
-                  <@fields.owner />
-                </FieldContainer>
-              </div>
-              <FieldContainer @label='Parent contract (for SOWs and renewals)' @vertical={{true}}>
-                <@fields.parentContract />
-              </FieldContainer>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "parties") "focused"}}'
-              data-sect='parties'
-            >
-              <h3>Parties &amp; Law
-                <span class='sect-hint'>the legal persons bound, and whose law reads the words</span></h3>
-              <FieldContainer @label='Parties (entity + capacity)' @vertical={{true}}>
-                <@fields.parties />
-              </FieldContainer>
-              <FieldContainer @label='Governing law and venue' @vertical={{true}}>
-                <@fields.governingLaw />
-              </FieldContainer>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "term") "focused"}}'
-              data-sect='term'
-            >
-              <h3>Term
-                <span class='sect-hint'>the notice deadline is computed from the period — that is the date that matters</span></h3>
-              <FieldContainer @label='Effective period' @vertical={{true}}>
-                <@fields.effectivePeriod />
-              </FieldContainer>
-              <details class='legacy'>
-                <summary>Legacy term fields (read when no effective period is set)</summary>
-                <div class='row'>
-                  <FieldContainer @label='Start date' @vertical={{true}}>
-                    <@fields.startDate />
-                  </FieldContainer>
-                  <FieldContainer @label='End date' @vertical={{true}}>
-                    <@fields.endDate />
-                  </FieldContainer>
-                  <FieldContainer @label='Renewal notice (days)' @vertical={{true}}>
-                    <@fields.renewalNoticeDays />
-                  </FieldContainer>
-                </div>
-                <FieldContainer @label='Auto-renews' @vertical={{true}}>
-                  <@fields.autoRenews />
-                </FieldContainer>
-              </details>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "value") "focused"}}'
-              data-sect='value'
-            >
-              <h3>Value &amp; Risk</h3>
-              <div class='row value'>
-                <FieldContainer @label='Contract value' @vertical={{true}}>
-                  <@fields.value />
-                </FieldContainer>
-                <FieldContainer @label='Handles sensitive data' @vertical={{true}}>
-                  <@fields.handlesSensitiveData />
-                </FieldContainer>
-              </div>
-              <FieldContainer @label='Risk assessment' @vertical={{true}}>
-                <@fields.risk />
-              </FieldContainer>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "signature") "focused"}}'
-              data-sect='signature'
-            >
-              <h3>Signature
-                <span class='sect-hint'>one block per signer, in signing order; our side links a Signatory</span></h3>
-              <FieldContainer @label='Signature blocks' @vertical={{true}}>
-                <@fields.signatureBlocks />
-              </FieldContainer>
-              <div class='row'>
-                <FieldContainer @label='Envelope status' @vertical={{true}}>
-                  <@fields.signatureStatus />
-                  <p class='hint'>command-owned — Request / Execute write it</p>
-                </FieldContainer>
-                <FieldContainer @label='Provider' @vertical={{true}}>
-                  <@fields.signatureProvider />
-                </FieldContainer>
-                <FieldContainer @label='Requested on' @vertical={{true}}>
-                  <@fields.signatureRequestedAt />
-                </FieldContainer>
-              </div>
-              <div class='row'>
-                <FieldContainer @label='Signed on' @vertical={{true}}>
-                  <@fields.signedAt />
-                  <p class='hint'>stamped by Execute Contract</p>
-                </FieldContainer>
-                <FieldContainer @label='Executed copy URL' @vertical={{true}}>
-                  <@fields.executedCopyUrl />
-                </FieldContainer>
-                <FieldContainer @label='Working document URL' @vertical={{true}}>
-                  <@fields.documentUrl />
-                </FieldContainer>
-              </div>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "approval") "focused"}}'
-              data-sect='approval'
-            >
-              <h3>Approval
-                <span class='sect-hint'>built from the approval rules; decisions are recorded on the app's Approvals tab</span></h3>
-              <FieldContainer @label='Approval chain' @vertical={{true}}>
-                <@fields.approvalChain />
-              </FieldContainer>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "text") "focused"}}'
-              data-sect='text'
-            >
-              <h3>Text</h3>
-              <FieldContainer @label='Key terms (summary)' @vertical={{true}}>
-                <@fields.terms />
-              </FieldContainer>
-              <FieldContainer @label='Full agreement text' @vertical={{true}}>
-                <@fields.fullText />
-                <p class='hint'>Generate Document assembles this from the clauses,
-                  parties, term and signature blocks; edit only to correct.</p>
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .contract-edit {
-          container-type: inline-size;
-          container-name: edit;
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 9.5rem minmax(0, 1fr);
-          align-items: start;
-          gap: var(--boxel-sp);
-        }
-        /* the root is the scroller, so sticky pins the nav to its top; the
-           legal family asserts no brand ink, so the rail keeps its default
-           fg/bg inversion */
-        .sect-nav {
-          position: sticky;
-          top: 0;
-        }
-        .sects {
-          display: grid;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          padding: var(--boxel-sp);
-          display: grid;
-          gap: var(--boxel-sp-sm);
-          transition:
-            outline-color 160ms ease,
-            box-shadow 160ms ease;
-          outline: 2px solid transparent;
-          outline-offset: 2px;
-        }
-        .sect.focused {
-          outline-color: var(--foreground, var(--boxel-dark));
-          box-shadow: 0 0 0 4px
-            color-mix(in oklch, var(--foreground, var(--boxel-dark)) 12%, transparent);
-        }
-        h3 {
-          margin: 0;
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          flex-wrap: wrap;
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: normal;
-          font-size: 0.75rem;
-          font-weight: 400;
-          font-style: italic;
-        }
-        .hint {
-          margin: 0.25rem 0 0;
-          font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .row {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-        }
-        .row.value {
-          grid-template-columns: 2fr 1fr;
-        }
-        .legacy {
-          border-top: 1px dashed var(--border, var(--boxel-200));
-          padding-top: var(--boxel-sp-xs);
-        }
-        .legacy summary {
-          cursor: pointer;
-          font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
-          margin-bottom: var(--boxel-sp-xs);
-        }
-        .legacy[open] summary {
-          margin-bottom: var(--boxel-sp-sm);
-        }
-        @container edit (width < 640px) {
-          .row,
-          .row.value,
-          .identity {
-            grid-template-columns: 1fr;
-          }
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-          .sect-nav {
-            position: static;
-            flex-direction: row;
-            flex-wrap: wrap;
-          }
-          .sect-nav::before {
-            display: none;
-          }
-        }
-      </style>
-    </template>
-  };
+  static edit = ContractEdit;
 
   static atom = class Atom extends Component<typeof Contract> {
     <template>
@@ -680,7 +1175,11 @@ export class Contract extends CardDef {
             <span class='meta'>{{@model.account.name}}</span>
           {{/if}}
         </div>
-        <span class='figure'>{{if this.valueDisplay this.valueDisplay '—'}}</span>
+        <span class='figure'>{{if
+            this.valueDisplay
+            this.valueDisplay
+            '—'
+          }}</span>
         {{#if @model.status}}
           <span
             class='status status-{{this.statusSlug}}'
@@ -689,7 +1188,7 @@ export class Contract extends CardDef {
       </div>
       <style scoped>
         .contract {
-        /* Status hues are DATA — red means overdue whatever the theme — so the hue is
+          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
            declared here rather than pulled from a semantic token. These tokens were
            REFERENCED but never declared, so their hex fallback was the only value that
            ever rendered.
@@ -697,12 +1196,36 @@ export class Contract extends CardDef {
            a dark theme while its text darkens, and the pair silently fails. So the text
            colour is pulled toward the theme's own --foreground, and the fill is then
            diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-        --state-overdue-fg: color-mix(in oklch, oklch(0.55 0.19 27) 65%, var(--foreground));
-        --state-overdue-bg: color-mix(in oklch, var(--state-overdue-fg) 12%, var(--background));
-        --state-partial-fg: color-mix(in oklch, oklch(0.60 0.14 60) 65%, var(--foreground));
-        --state-partial-bg: color-mix(in oklch, var(--state-partial-fg) 12%, var(--background));
-        --state-positive-fg: color-mix(in oklch, oklch(0.55 0.13 152) 65%, var(--foreground));
-        --state-positive-bg: color-mix(in oklch, var(--state-positive-fg) 12%, var(--background));
+          --state-overdue-fg: color-mix(
+            in oklch,
+            oklch(0.55 0.19 27) 65%,
+            var(--foreground)
+          );
+          --state-overdue-bg: color-mix(
+            in oklch,
+            var(--state-overdue-fg) 12%,
+            var(--background)
+          );
+          --state-partial-fg: color-mix(
+            in oklch,
+            oklch(0.6 0.14 60) 65%,
+            var(--foreground)
+          );
+          --state-partial-bg: color-mix(
+            in oklch,
+            var(--state-partial-fg) 12%,
+            var(--background)
+          );
+          --state-positive-fg: color-mix(
+            in oklch,
+            oklch(0.55 0.13 152) 65%,
+            var(--foreground)
+          );
+          --state-positive-bg: color-mix(
+            in oklch,
+            var(--state-positive-fg) 12%,
+            var(--background)
+          );
           display: flex;
           align-items: center;
           gap: 0.625rem;
@@ -817,7 +1340,7 @@ export class Contract extends CardDef {
       </div>
       <style scoped>
         .fitted {
-        /* Status hues are DATA — red means overdue whatever the theme — so the hue is
+          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
            declared here rather than pulled from a semantic token. These tokens were
            REFERENCED but never declared, so their hex fallback was the only value that
            ever rendered.
@@ -825,12 +1348,36 @@ export class Contract extends CardDef {
            a dark theme while its text darkens, and the pair silently fails. So the text
            colour is pulled toward the theme's own --foreground, and the fill is then
            diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-        --state-overdue-fg: color-mix(in oklch, oklch(0.55 0.19 27) 65%, var(--foreground));
-        --state-overdue-bg: color-mix(in oklch, var(--state-overdue-fg) 12%, var(--background));
-        --state-partial-fg: color-mix(in oklch, oklch(0.60 0.14 60) 65%, var(--foreground));
-        --state-partial-bg: color-mix(in oklch, var(--state-partial-fg) 12%, var(--background));
-        --state-positive-fg: color-mix(in oklch, oklch(0.55 0.13 152) 65%, var(--foreground));
-        --state-positive-bg: color-mix(in oklch, var(--state-positive-fg) 12%, var(--background));
+          --state-overdue-fg: color-mix(
+            in oklch,
+            oklch(0.55 0.19 27) 65%,
+            var(--foreground)
+          );
+          --state-overdue-bg: color-mix(
+            in oklch,
+            var(--state-overdue-fg) 12%,
+            var(--background)
+          );
+          --state-partial-fg: color-mix(
+            in oklch,
+            oklch(0.6 0.14 60) 65%,
+            var(--foreground)
+          );
+          --state-partial-bg: color-mix(
+            in oklch,
+            var(--state-partial-fg) 12%,
+            var(--background)
+          );
+          --state-positive-fg: color-mix(
+            in oklch,
+            oklch(0.55 0.13 152) 65%,
+            var(--foreground)
+          );
+          --state-positive-bg: color-mix(
+            in oklch,
+            var(--state-positive-fg) 12%,
+            var(--background)
+          );
           width: 100%;
           height: 100%;
           box-sizing: border-box;
@@ -981,461 +1528,5 @@ export class Contract extends CardDef {
     </template>
   };
 
-  static isolated = class Isolated extends Component<typeof Contract> {
-    // Clauses and obligations link UP to their contract; there is no link array
-    // on this card to read back (see the note on the field list). So the detail
-    // page asks the realm the reverse question instead — the same idiom
-    // carrier.gts uses to find the shipments pointing at it.
-    private clauseQuery: ReturnType<getCards> | undefined;
-    private obligationQuery: ReturnType<getCards> | undefined;
-
-    constructor(owner: Owner, args: any) {
-      super(owner, args);
-      let byContract = (ref: any) => () => {
-        let id = this.args.model?.id;
-        if (!id) return undefined;
-        return { filter: { on: ref, every: [{ eq: { 'contract.id': id } }] } };
-      };
-      this.clauseQuery = this.args.context?.getCards(
-        this,
-        byContract(CONTRACT_CLAUSE_REF),
-        () => this.realms,
-        { isLive: true },
-      );
-      this.obligationQuery = this.args.context?.getCards(
-        this,
-        byContract(OBLIGATION_REF),
-        () => this.realms,
-        { isLive: true },
-      );
-    }
-
-    private get realms(): string[] | undefined {
-      let url = (this.args.model as any)?.[realmURL];
-      return url ? [url.href] : undefined;
-    }
-
-    get clauses(): any[] {
-      return ((this.clauseQuery as any)?.instances ?? []).filter(Boolean);
-    }
-    get obligations(): any[] {
-      return ((this.obligationQuery as any)?.instances ?? []).filter(Boolean);
-    }
-
-    // A live query resolving after first paint is how a card comes to assert
-    // "no clauses" about data it has not received yet. Guarded on emptiness too,
-    // so a background refresh of a populated list does not flash a skeleton.
-    // A contract the CRM created has no clauses or obligations and never will,
-    // so it must not flash "Loading clauses and obligations…" on every page
-    // view. The CLM markers are what say this contract is managed here and is
-    // therefore worth waiting on.
-    get hasEffectivePeriod(): boolean {
-      let p = this.args.model?.effectivePeriod;
-      return Boolean(p?.effectiveDate || p?.endDate);
-    }
-
-    get isClmManaged(): boolean {
-      let m = this.args.model;
-      return Boolean(
-        m?.contractNumber || m?.riskGrade || m?.approvalChain?.steps?.length,
-      );
-    }
-
-    get isLoadingLinked() {
-      let c = this.clauseQuery as any;
-      let o = this.obligationQuery as any;
-      return (
-        (Boolean(c?.isLoading) || Boolean(o?.isLoading)) &&
-        !this.clauses.length &&
-        !this.obligations.length
-      );
-    }
-
-    // Without reading `errors` a failed query is indistinguishable from an empty
-    // realm, and the section would claim "there are none" when the truth is
-    // "we could not look".
-    get queryFailed(): boolean {
-      let e1 = (this.clauseQuery as any)?.errors as any[] | undefined;
-      let e2 = (this.obligationQuery as any)?.errors as any[] | undefined;
-      return Boolean(e1?.length || e2?.length);
-    }
-
-    get deviations(): any[] {
-      return this.clauses.filter((c) => c.isDeviation);
-    }
-    get deviationLabel(): string {
-      let n = this.deviations.length;
-      return `${n} deviation${n === 1 ? '' : 's'}`;
-    }
-    get overdue(): any[] {
-      return this.obligations.filter((o) => o.status === 'overdue');
-    }
-
-    @action openCard(card: any) {
-      (this.args as any).viewCard?.(card, 'isolated');
-    }
-
-    get valueDisplay() {
-      return formatMoney(
-        this.args.model?.value?.amount,
-        this.args.model?.value?.currency?.code,
-      );
-    }
-    get statusSlug() {
-      return (this.args.model?.status ?? '').replace(/\s+/g, '-');
-    }
-    <template>
-      <article class='contract-page'>
-        <header class='ch'>
-          <div class='ch-id'>
-            <p class='doc-kind'>Contract</p>
-            <h1>{{@model.cardTitle}}</h1>
-            {{#if @model.isSigned}}
-              <p class='status-line signed'>Signed
-                <@fields.signedAt /></p>
-            {{else}}
-              <p class='status-line'>{{if
-                  @model.status
-                  @model.status
-                  'Not yet signed'
-                }}</p>
-            {{/if}}
-          </div>
-          {{#if this.valueDisplay}}
-            <p class='ch-value'>{{this.valueDisplay}}</p>
-          {{/if}}
-        </header>
-
-        <section class='panel'>
-          <h2>Agreement</h2>
-          <dl>
-            {{#if @model.contractNumber}}
-              <dt>Reference</dt>
-              <dd class='mono'>{{@model.contractNumber}}</dd>
-            {{/if}}
-            {{#if @model.contractType}}
-              <dt>Type</dt>
-              <dd><@fields.contractType @format='atom' /></dd>
-            {{/if}}
-            {{#if @model.account}}
-              <dt>Account</dt>
-              <dd><@fields.account @format='embedded' /></dd>
-            {{/if}}
-            {{#if @model.deal}}
-              <dt>Deal</dt>
-              <dd><@fields.deal @format='atom' /></dd>
-            {{/if}}
-            {{#if @model.startDate}}
-              <dt>Term begins</dt>
-              <dd><@fields.startDate /></dd>
-            {{/if}}
-            {{#if @model.endDate}}
-              <dt>Term ends</dt>
-              <dd><@fields.endDate />
-                {{#if @model.daysToExpiry}}
-                  <span class='hint'>{{@model.daysToExpiry}} days left</span>
-                {{/if}}
-              </dd>
-            {{/if}}
-            {{#if @model.noticeBy}}
-              <dt>Notice by</dt>
-              <dd class='mono'>{{@model.noticeBy}}
-                {{#if @model.daysToNotice}}
-                  <span class='hint'>{{@model.daysToNotice}} days to act</span>
-                {{/if}}
-              </dd>
-            {{/if}}
-            {{#if @model.owner}}
-              <dt>Owner</dt>
-              <dd><@fields.owner @format='atom' /></dd>
-            {{/if}}
-            {{#if @model.governingLaw.label}}
-              <dt>Governing law</dt>
-              <dd><@fields.governingLaw @format='atom' /></dd>
-            {{/if}}
-            {{#if @model.documentUrl}}
-              <dt>Executed copy</dt>
-              <dd><@fields.documentUrl /></dd>
-            {{/if}}
-          </dl>
-          {{#if this.hasEffectivePeriod}}
-            <div class='period'>
-              <@fields.effectivePeriod @format='embedded' />
-            </div>
-          {{/if}}
-        </section>
-
-        {{#if @model.parties.length}}
-          <section class='panel'>
-            <h2>Parties</h2>
-            <ul class='parties'>
-              {{#each @fields.parties as |Party|}}
-                <li><Party @format='embedded' /></li>
-              {{/each}}
-            </ul>
-          </section>
-        {{/if}}
-
-        {{#if @model.signatureBlocks.length}}
-          <SignatureBlockView
-            @blocks={{@model.signatureBlocks}}
-            @contractValue={{@model.value.amount}}
-            @contractCurrency={{@model.value.currency.code}}
-            @contractType={{@model.contractType}}
-          />
-        {{/if}}
-
-        {{#if @model.riskGrade}}
-          <section class='panel'>
-            <h2>Risk</h2>
-            <@fields.risk @format='embedded' />
-          </section>
-        {{/if}}
-
-        {{#if @model.approvalChain.steps.length}}
-          <section class='panel'>
-            <h2>Approval</h2>
-            <@fields.approvalChain @format='embedded' />
-          </section>
-        {{/if}}
-
-        {{#if this.queryFailed}}
-          <section class='panel'>
-            <p class='qnote' role='status'>Could not load this contract's clauses
-              and obligations. This is a failed lookup, not an empty record —
-              reload before concluding there are none.</p>
-          </section>
-        {{else if (and this.isClmManaged this.isLoadingLinked)}}
-          <section class='panel'>
-            <p class='qnote' role='status'>Loading clauses and obligations…</p>
-          </section>
-        {{else}}
-          {{#if this.clauses.length}}
-            <section class='panel'>
-              <h2>Clauses
-                {{#if this.deviations.length}}
-                  <span class='count-warn'>{{this.deviationLabel}}</span>
-                {{/if}}
-              </h2>
-              <ul class='linked'>
-                {{#each this.clauses as |c|}}
-                  <li>
-                    <button
-                      type='button'
-                      class='linked-row'
-                      {{on 'click' (fn this.openCard c)}}
-                    >{{c.cardTitle}}<span class='linked-meta'
-                      >{{c.cardDescription}}</span></button>
-                  </li>
-                {{/each}}
-              </ul>
-            </section>
-          {{/if}}
-
-          {{#if this.obligations.length}}
-            <section class='panel'>
-              <h2>Obligations
-                {{#if this.overdue.length}}
-                  <span class='count-warn'>{{this.overdue.length}} overdue</span>
-                {{/if}}
-              </h2>
-              <ul class='linked'>
-                {{#each this.obligations as |o|}}
-                  <li>
-                    <button
-                      type='button'
-                      class='linked-row'
-                      {{on 'click' (fn this.openCard o)}}
-                    >{{o.cardTitle}}<span class='linked-meta'>{{o.cardDescription}}
-                        {{#if o.nextDueDate}}· due {{o.nextDueDate}}{{/if}}</span>
-                    </button>
-                  </li>
-                {{/each}}
-              </ul>
-            </section>
-          {{/if}}
-        {{/if}}
-
-        {{#if @model.terms}}
-          <section class='panel'>
-            <h2>Terms</h2>
-            <div class='terms'><@fields.terms /></div>
-          </section>
-        {{/if}}
-      </article>
-      <style scoped>
-        .mono {
-        /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered.
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-        --state-positive-fg: color-mix(in oklch, oklch(0.55 0.13 152) 65%, var(--foreground));
-        --state-positive-bg: color-mix(in oklch, var(--state-positive-fg) 12%, var(--background));
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
-        }
-        .qnote {
-          margin: 0;
-          font-size: 0.85rem;
-          color: var(--muted-foreground, #666666);
-        }
-        .count-warn {
-          margin-left: 0.5rem;
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--destructive, #b3261e);
-        }
-        .linked {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-        .linked-row {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 0.1rem;
-          width: 100%;
-          text-align: left;
-          font: inherit;
-          cursor: pointer;
-          padding: 0.4rem 0.55rem;
-          border: 1px solid var(--border, #dddddd);
-          border-radius: 4px;
-          background: var(--card, #ffffff);
-          color: inherit;
-        }
-        .linked-row:hover {
-          border-color: var(--foreground, #111111);
-        }
-        .linked-meta {
-          font-size: 0.75rem;
-          color: var(--muted-foreground, #666666);
-        }
-        .contract-page {
-          /* An isolated card gets NO container from the host — every ancestor
-             up to the stack panel is `container-type: normal`, so an
-             `@container` rule here is inert until this declares its own.
-             `inline-size`, not `size`: the card scrolls, and `size` needs a
-             definite block size and would collapse the column. */
-          container-type: inline-size;
-          container-name: contract-page;
-          max-width: 46rem;
-          margin: 0 auto;
-          padding: 2rem 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.25rem;
-          color: var(--foreground, #111111);
-        }
-        .ch {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
-          padding-bottom: 1.25rem;
-        }
-        .doc-kind {
-          margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
-        }
-        h1 {
-          margin: 0;
-          font-size: 1.625rem;
-          font-family: var(--font-heading, inherit);
-        }
-        .status-line {
-          margin: 0.25rem 0 0;
-          font-size: 0.8125rem;
-          color: var(--muted-foreground, #6b7280);
-          text-transform: capitalize;
-        }
-        .status-line.signed {
-          color: var(--state-positive-fg);
-          font-weight: 600;
-        }
-        .ch-value {
-          margin: 0;
-          font-size: 1.5rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          font-family: var(--font-heading, inherit);
-          white-space: nowrap;
-        }
-        .panel {
-          border: 1px solid var(--border, #e5e7eb);
-          border-radius: 8px;
-          padding: 1rem 1.125rem;
-          background: var(--card, #ffffff);
-        }
-        .period {
-          margin-top: 0.9rem;
-          padding-top: 0.9rem;
-          border-top: 1px solid var(--border, #e5e7eb);
-        }
-        .parties {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 1rem;
-        }
-        h2 {
-          margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
-        }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: 9rem 1fr;
-          gap: 0.5rem 1rem;
-          font-size: 0.875rem;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
-        }
-        .hint {
-          margin-left: 0.5rem;
-          font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .terms {
-          font-size: 0.875rem;
-          line-height: 1.6;
-        }
-      
-        /* Below this the two-up rows stop being side-by-side; the panel gets
-           narrow whenever a second card opens beside this one. */
-        @container contract-page (width < 620px) {
-          .panel dl {
-            grid-template-columns: 1fr;
-          }
-          .ch {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-        }
-</style>
-    </template>
-  };
+  static isolated = ContractIsolated;
 }

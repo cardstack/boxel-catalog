@@ -177,7 +177,9 @@ export class ClauseReferenceField extends FieldDef {
 
 /** Edit — section, clause, pin on one line; computed `isSuperseded`/`label` hidden,
  *  but the superseded state is stated as helper text so the editor sees it. */
-ClauseReferenceField.edit = class Edit extends Component<typeof ClauseReferenceField> {
+ClauseReferenceField.edit = class Edit extends Component<
+  typeof ClauseReferenceField
+> {
   <template>
     <div class='cr-edit'>
       <FieldContainer @label='Section' @vertical={{true}}>
@@ -190,8 +192,8 @@ ClauseReferenceField.edit = class Edit extends Component<typeof ClauseReferenceF
         <@fields.pinnedRevision />
       </FieldContainer>
       {{#if @model.isSuperseded}}
-        <p class='cr-warn'>The library clause has been re-reviewed since this pin
-          — re-read it before relying on this reference.</p>
+        <p class='cr-warn'>The library clause has been re-reviewed since this
+          pin — re-read it before relying on this reference.</p>
       {{/if}}
     </div>
     <style scoped>
@@ -206,7 +208,11 @@ ClauseReferenceField.edit = class Edit extends Component<typeof ClauseReferenceF
         grid-column: 1 / -1;
         margin: 0;
         font-size: 0.75rem;
-        color: color-mix(in oklch, var(--boxel-warning) 65%, var(--foreground, var(--boxel-dark)));
+        color: color-mix(
+          in oklch,
+          var(--boxel-warning) 65%,
+          var(--foreground, var(--boxel-dark))
+        );
       }
       @container (max-width: 480px) {
         .cr-edit {

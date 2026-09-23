@@ -59,7 +59,8 @@ class EditSectionNavExampleIsolated extends Component<
       <div class='form'>
         {{#each @model.sections as |section|}}
           <section
-            class='section {{if (eq section.sectionId this.currentId) "active"}}'
+            class='section
+              {{if (eq section.sectionId this.currentId) "active"}}'
             data-section={{section.sectionId}}
           >
             <h3>{{section.label}}</h3>

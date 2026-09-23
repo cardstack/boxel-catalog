@@ -43,6 +43,191 @@ export interface SigningVerdict {
   reason: string;
 }
 
+class SignatoryEdit extends Component<typeof Signatory> {
+  @tracked activeSection = 'who';
+
+  sections = [
+    { id: 'who', label: 'Who' },
+    { id: 'authority', label: 'Authority' },
+    { id: 'specimen', label: 'Specimen' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.signatory-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='signatory-edit'>
+      {{! root is the container + only scroller; the responsive grid lives
+          on this inner wrapper }}
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "who") "focused"}}'
+            data-sect='who'
+          >
+            <h3>Who</h3>
+            <div class='row cols-3'>
+              <FieldContainer @label='Person' @vertical={{true}}>
+                <@fields.person />
+              </FieldContainer>
+              <FieldContainer @label='Signing title' @vertical={{true}}>
+                <@fields.signingTitle />
+              </FieldContainer>
+              <FieldContainer @label='Active' @vertical={{true}}>
+                <@fields.isActive />
+              </FieldContainer>
+            </div>
+          </section>
+          <section
+            class='sect {{if (eq this.activeSection "authority") "focused"}}'
+            data-sect='authority'
+          >
+            <h3>Authority
+              <span class='sect-hint'>what Request Signature and Execute
+                Contract check</span></h3>
+            <FieldContainer
+              @label='May bind the company up to'
+              @vertical={{true}}
+            >
+              <@fields.signatureAuthority />
+            </FieldContainer>
+            <FieldContainer
+              @label='For contract types (empty = all)'
+              @vertical={{true}}
+            >
+              <@fields.contractTypes />
+            </FieldContainer>
+          </section>
+          <section
+            class='sect {{if (eq this.activeSection "specimen") "focused"}}'
+            data-sect='specimen'
+          >
+            <h3>Specimen</h3>
+            <FieldContainer @label='Specimen signature URL' @vertical={{true}}>
+              <@fields.specimenUrl />
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .signatory-edit {
+        container-type: inline-size;
+        container-name: edit;
+        height: 100%;
+        overflow-y: auto;
+        padding: var(--boxel-sp);
+        background: var(--background, var(--boxel-light));
+        color: var(--foreground, var(--boxel-dark));
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 9.5rem minmax(0, 1fr);
+        align-items: start;
+        gap: var(--boxel-sp);
+      }
+      /* root is the scroller, so sticky pins the rail; the legal family
+         asserts no brand ink, so the rail keeps its default fg/bg pair */
+      .sect-nav {
+        position: sticky;
+        top: 0;
+      }
+      .sects {
+        display: grid;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        border: 1px solid var(--border, var(--boxel-200));
+        border-radius: var(--radius, var(--boxel-border-radius));
+        padding: var(--boxel-sp);
+        display: grid;
+        gap: var(--boxel-sp-sm);
+        transition:
+          outline-color 160ms ease,
+          box-shadow 160ms ease;
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+      }
+      .sect.focused {
+        outline-color: var(--foreground, var(--boxel-dark));
+        box-shadow: 0 0 0 4px
+          color-mix(
+            in oklch,
+            var(--foreground, var(--boxel-dark)) 12%,
+            transparent
+          );
+      }
+      h3 {
+        margin: 0;
+        font-size: 0.8125rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+        flex-wrap: wrap;
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: normal;
+        font-size: 0.75rem;
+        font-weight: 400;
+        font-style: italic;
+      }
+      .hint {
+        margin: 0.25rem 0 0;
+        font-size: 0.75rem;
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .row {
+        display: grid;
+        gap: var(--boxel-sp-sm);
+        align-items: start;
+      }
+      .row.cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .row.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .row.cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      @container edit (width < 640px) {
+        .row.cols-2,
+        .row.cols-3,
+        .row.cols-4 {
+          grid-template-columns: 1fr;
+        }
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+        .sect-nav {
+          position: static;
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .sect-nav::before {
+          display: none;
+        }
+      }
+    </style>
+  </template>
+}
+
 export class Signatory extends CardDef {
   static displayName = 'Signatory';
   static icon = SignatureIcon;
@@ -127,7 +312,6 @@ export class Signatory extends CardDef {
     return { allowed: true, reason: `Within authority of ${cap}.` };
   }
 
-
   /**
    * Attribute-only by design: prerendered fitted does NOT resolve `linksTo`,
    * so reaching for `person` here is what makes the card render as
@@ -147,173 +331,7 @@ export class Signatory extends CardDef {
    * Grouped by task, not schema order; EditSectionNav is the table of
    * contents.
    */
-  static edit = class Edit extends Component<typeof Signatory> {
-    @tracked activeSection = 'who';
-
-    sections = [
-      { id: 'who', label: 'Who' },
-      { id: 'authority', label: 'Authority' },
-      { id: 'specimen', label: 'Specimen' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.signatory-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='signatory-edit'>
-        {{! root is the container + only scroller; the responsive grid lives
-            on this inner wrapper }}
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "who") "focused"}}'
-              data-sect='who'
-            >
-              <h3>Who</h3>
-              <div class='row cols-3'>
-                <FieldContainer @label='Person' @vertical={{true}}>
-                  <@fields.person />
-                </FieldContainer>
-                <FieldContainer @label='Signing title' @vertical={{true}}>
-                  <@fields.signingTitle />
-                </FieldContainer>
-                <FieldContainer @label='Active' @vertical={{true}}>
-                  <@fields.isActive />
-                </FieldContainer>
-              </div>
-            </section>
-            <section
-              class='sect {{if (eq this.activeSection "authority") "focused"}}'
-              data-sect='authority'
-            >
-              <h3>Authority
-                <span class='sect-hint'>what Request Signature and Execute Contract check</span></h3>
-              <FieldContainer @label='May bind the company up to' @vertical={{true}}>
-                <@fields.signatureAuthority />
-              </FieldContainer>
-              <FieldContainer @label='For contract types (empty = all)' @vertical={{true}}>
-                <@fields.contractTypes />
-              </FieldContainer>
-            </section>
-            <section
-              class='sect {{if (eq this.activeSection "specimen") "focused"}}'
-              data-sect='specimen'
-            >
-              <h3>Specimen</h3>
-              <FieldContainer @label='Specimen signature URL' @vertical={{true}}>
-                <@fields.specimenUrl />
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .signatory-edit {
-          container-type: inline-size;
-          container-name: edit;
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 9.5rem minmax(0, 1fr);
-          align-items: start;
-          gap: var(--boxel-sp);
-        }
-        /* root is the scroller, so sticky pins the rail; the legal family
-           asserts no brand ink, so the rail keeps its default fg/bg pair */
-        .sect-nav {
-          position: sticky;
-          top: 0;
-        }
-        .sects {
-          display: grid;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          padding: var(--boxel-sp);
-          display: grid;
-          gap: var(--boxel-sp-sm);
-          transition:
-            outline-color 160ms ease,
-            box-shadow 160ms ease;
-          outline: 2px solid transparent;
-          outline-offset: 2px;
-        }
-        .sect.focused {
-          outline-color: var(--foreground, var(--boxel-dark));
-          box-shadow: 0 0 0 4px
-            color-mix(in oklch, var(--foreground, var(--boxel-dark)) 12%, transparent);
-        }
-        h3 {
-          margin: 0;
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          flex-wrap: wrap;
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: normal;
-          font-size: 0.75rem;
-          font-weight: 400;
-          font-style: italic;
-        }
-        .hint {
-          margin: 0.25rem 0 0;
-          font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .row {
-          display: grid;
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-        }
-        .row.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .row.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .row.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-        @container edit (width < 640px) {
-          .row.cols-2,
-          .row.cols-3,
-          .row.cols-4 {
-            grid-template-columns: 1fr;
-          }
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-          .sect-nav {
-            position: static;
-            flex-direction: row;
-            flex-wrap: wrap;
-          }
-          .sect-nav::before {
-            display: none;
-          }
-        }
-      </style>
-    </template>
-  };
+  static edit = SignatoryEdit;
 
   static isolated = class Isolated extends Component<typeof Signatory> {
     get cap(): string {
@@ -339,10 +357,14 @@ export class Signatory extends CardDef {
       <article class='sg-page'>
         <header class='hero'>
           <div class='hero-id'>
-            <p class='kicker'><SignatureIcon role='presentation' />Signing authority</p>
+            <p class='kicker'><SignatureIcon role='presentation' />Signing
+              authority</p>
             <h1>{{@model.signingTitle}}</h1>
             {{#if @model.person}}
-              <div class='who'><@fields.person @format='atom' @displayContainer={{false}} /></div>
+              <div class='who'><@fields.person
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></div>
             {{/if}}
             {{#if this.inactive}}
               <StatePill @label='Inactive' @hue='red' @dot={{true}} />
@@ -376,7 +398,12 @@ export class Signatory extends CardDef {
         {{#if @model.specimenUrl}}
           <section class='panel'>
             <h2><UsersIcon role='presentation' />Specimen</h2>
-            <a class='specimen' href={{@model.specimenUrl}} target='_blank' rel='noopener noreferrer'>
+            <a
+              class='specimen'
+              href={{@model.specimenUrl}}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
               View specimen signature</a>
           </section>
         {{/if}}
@@ -386,7 +413,11 @@ export class Signatory extends CardDef {
         .sg-page {
           container-type: inline-size;
           container-name: sg-page;
-          --panel-bg: color-mix(in oklch, var(--foreground, #111) 3%, transparent);
+          --panel-bg: color-mix(
+            in oklch,
+            var(--foreground, #111) 3%,
+            transparent
+          );
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
           --panel-radius: var(--radius, 8px);
           height: 100%;
@@ -399,37 +430,68 @@ export class Signatory extends CardDef {
           font-family: var(--font-sans, inherit);
         }
         .hero {
-          display: flex; align-items: flex-start; justify-content: space-between;
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
           gap: var(--boxel-sp-lg);
           border-bottom: 2px solid var(--foreground, #111);
           padding-bottom: var(--boxel-sp);
         }
-        .hero-id { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-        .kicker {
-          margin: 0; display: flex; align-items: center; gap: 6px;
-          font-size: var(--boxel-font-size-xs); letter-spacing: 0.12em;
-          text-transform: uppercase; color: var(--muted-foreground, #6b7280);
+        .hero-id {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          min-width: 0;
         }
-        .kicker :deep(svg) { width: max(14px, 1em); height: max(14px, 1em); }
+        .kicker {
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: var(--boxel-font-size-xs);
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--muted-foreground, #6b7280);
+        }
+        .kicker :deep(svg) {
+          width: max(14px, 1em);
+          height: max(14px, 1em);
+        }
         /* The heading is the one shout. The figure on the right supports it
            and is deliberately smaller — a card is opened for the thing it IS,
            and the number qualifies that rather than replacing it. */
         .hero h1 {
-          margin: 0; font-size: var(--boxel-font-size-xl); font-weight: 700;
-          line-height: 1.15; letter-spacing: -0.015em;
+          margin: 0;
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 700;
+          line-height: 1.15;
+          letter-spacing: -0.015em;
         }
-        .who { font-size: var(--boxel-font-size-sm); }
-        .hero-figure { flex: none; text-align: right; line-height: 1; }
+        .who {
+          font-size: var(--boxel-font-size-sm);
+        }
+        .hero-figure {
+          flex: none;
+          text-align: right;
+          line-height: 1;
+        }
         /* Money keeps its minor units — a signing ceiling missing a digit is
            the difference between $250,000 and $25,000. */
         .fig-n {
-          display: block; font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums; font-size: 1.45rem; font-weight: 600;
-          letter-spacing: -0.03em; white-space: nowrap;
+          display: block;
+          font-family: var(--font-mono, ui-monospace, monospace);
+          font-variant-numeric: tabular-nums;
+          font-size: 1.45rem;
+          font-weight: 600;
+          letter-spacing: -0.03em;
+          white-space: nowrap;
         }
         .fig-u {
-          display: block; margin-top: 4px; font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase; letter-spacing: 0.1em;
+          display: block;
+          margin-top: 4px;
+          font-size: var(--boxel-font-size-xs);
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
           color: var(--muted-foreground, #6b7280);
         }
         .panel {
@@ -438,33 +500,60 @@ export class Signatory extends CardDef {
           background: var(--panel-bg);
         }
         .panel h2 {
-          display: flex; align-items: center; gap: 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm); font-weight: 700;
-          letter-spacing: 0.04em; text-transform: uppercase;
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
         }
         .panel h2 :deep(svg) {
-          width: max(14px, 1em); height: max(14px, 1em);
+          width: max(14px, 1em);
+          height: max(14px, 1em);
           color: var(--muted-foreground, #6b7280);
         }
         .scope {
-          list-style: none; margin: 0; padding: 0;
-          display: flex; flex-wrap: wrap; gap: 6px;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
         }
         .scope li {
-          font-size: var(--boxel-font-size-sm); font-weight: 600;
-          padding: 3px 10px; border-radius: 4px;
-          background: color-mix(in oklch, var(--foreground, #111) 7%, transparent);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
+          padding: 3px 10px;
+          border-radius: 4px;
+          background: color-mix(
+            in oklch,
+            var(--foreground, #111) 7%,
+            transparent
+          );
         }
         .guidance {
-          margin: 0; font-size: var(--boxel-font-size-sm);
-          line-height: 1.55; max-width: 68ch;
+          margin: 0;
+          font-size: var(--boxel-font-size-sm);
+          line-height: 1.55;
+          max-width: 68ch;
         }
-        .specimen { font-size: var(--boxel-font-size-sm); }
+        .specimen {
+          font-size: var(--boxel-font-size-sm);
+        }
         @container sg-page (width < 560px) {
-          .hero { flex-direction: column; align-items: flex-start; gap: var(--boxel-sp); }
-          .hero-figure { text-align: left; }
-          .fig-n { font-size: 2.1rem; }
+          .hero {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--boxel-sp);
+          }
+          .hero-figure {
+            text-align: left;
+          }
+          .fig-n {
+            font-size: 2.1rem;
+          }
         }
       </style>
     </template>
@@ -480,7 +569,9 @@ export class Signatory extends CardDef {
         <p class='sf-scope'>{{@model.cardDescription}}</p>
         <footer class='sf-foot'>
           {{#if @model.signatureAuthority.amount}}
-            <span class='sf-cap'><@fields.signatureAuthority @format='atom' /></span>
+            <span class='sf-cap'><@fields.signatureAuthority
+                @format='atom'
+              /></span>
           {{else}}
             <span class='sf-none'>No authority set</span>
           {{/if}}
@@ -543,14 +634,23 @@ export class Signatory extends CardDef {
         }
         /* Badge tier: the title alone still identifies the row. */
         @container fitted-card (height <= 50px) {
-          .sg-fit { grid-template-rows: auto; }
-          .sf-scope, .sf-foot { display: none; }
+          .sg-fit {
+            grid-template-rows: auto;
+          }
+          .sf-scope,
+          .sf-foot {
+            display: none;
+          }
         }
         @container fitted-card (50px < height <= 80px) {
-          .sf-scope { display: none; }
+          .sf-scope {
+            display: none;
+          }
         }
         @container fitted-card (width <= 150px) {
-          .sf-icon { display: none; }
+          .sf-icon {
+            display: none;
+          }
         }
       </style>
     </template>
@@ -615,12 +715,12 @@ export class Signatory extends CardDef {
       </article>
       <style scoped>
         .sg-row {
-        /* The host wraps a linked card in a CardContainer that draws a
+          /* The host wraps a linked card in a CardContainer that draws a
            boundary and deliberately adds NO padding (base/field-component.gts),
            because padding there would shift the container-query breakpoints the
            inner card reasons about. So the inset has to come from here, or the
            text sits flush against the pill the host draws. */
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           display: grid;
           grid-template-columns: minmax(0, 1fr) 108px;
           gap: var(--boxel-sp-xs);

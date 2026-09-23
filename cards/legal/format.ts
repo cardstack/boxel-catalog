@@ -9,7 +9,7 @@
  * NOT `toISOString()`: that converts to UTC first, so a local date renders a
  * day early or late depending on the offset. On a notice deadline or a needed-by
  * date, a day out is a missed obligation rather than a cosmetic slip.
- */ export function formatDay(v) {
+ */ export function formatDay(v: Date | string | null | undefined): string {
   if (!v) return '—';
   let d = new Date(v);
   if (Number.isNaN(d.getTime())) return String(v);
@@ -18,7 +18,7 @@
   return `${d.getFullYear()}-${m}-${day}`;
 }
 /** `2026-10-15 14:32`, for events where the time of day is part of the record. */
-export function formatStamp(v) {
+export function formatStamp(v: Date | string | null | undefined): string {
   if (!v) return '—';
   let d = new Date(v);
   if (Number.isNaN(d.getTime())) return String(v);
@@ -27,7 +27,7 @@ export function formatStamp(v) {
   return `${formatDay(v)} ${hh}:${mm}`;
 }
 /** `out_for_signature` -> `Out for signature`. */
-export function humanise(v) {
+export function humanise(v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
   let t = String(v).replace(/[_-]+/g, ' ').trim();
   return t.charAt(0).toUpperCase() + t.slice(1);
