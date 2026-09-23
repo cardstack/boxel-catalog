@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Audit Metadata Field",
+      "specType": "field",
+      "ref": {
+        "module": "../audit-metadata-field",
+        "name": "AuditMetadataField"
+      },
+      "readMe": "## Audit Metadata\n\nWho touched a record, when, and against which version of the rules: `createdBy`/`createdAt`, `lastChangedBy`/`lastChangedAt`, `changeCount`, `sourceVersion`.\n\n```ts\nimport { AuditMetadataField } from '@cardstack/catalog/cards/audit/audit-metadata-field';\n@field meta = contains(AuditMetadataField);\n```\n\n**`sourceVersion` is the part that is easy to omit and expensive to miss.** A result recorded in March was judged against March's rule, and a rule edited in June does not retroactively change what the auditor saw. Without it, re-reading an old report silently reinterprets it — the report says \"pass\" and the reader checks today's rule to find out what that meant.\n\n`changeCount` staying at zero is itself the claim worth making on an append-only record: nothing has been rewritten since.\n\n## Example\nThe contained example is the stamp on the FY26 H2 run — recorded 2026-09-07, unchanged since, rules at `supplier-controls v1`.\n\n## Non-goals\nNot the audit trail: a trail is a sequence of events on its own card (Audit Entry), this is a stamp on one record. Does not enforce immutability — it reports whether something changed, and the closing command decides what that means.",
+      "containedExamples": [
+        {
+          "createdAt": "2026-09-07T09:00:00.000Z",
+          "changeCount": 0,
+          "sourceVersion": "supplier-controls v1"
+        }
+      ],
+      "cardInfo": {
+        "name": "Audit Metadata",
+        "summary": "Who recorded this, when, and against which version of the rules.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Who recorded an audit record, when, and against which version of the rules."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../audit-metadata-field",
+              "name": "AuditMetadataField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

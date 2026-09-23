@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Auditor Bot",
+      "specType": "card",
+      "ref": {
+        "module": "../auditor-bot",
+        "name": "AuditorBot"
+      },
+      "readMe": "## Auditor Bot\n\nA configured evaluation: which rules, over which subjects, answerable to whom. Carries `name`, a regime-level `regime`, the `rules`, a `subjectQuery` (a Search Cards filter as JSON), `runsAs`, and `lastRunAt`.\n\n```ts\nimport { AuditorBot } from '@cardstack/catalog/cards/audit/auditor-bot';\n@field bot = linksTo(() => AuditorBot);\n```\n\n**It is configuration, not a process.** Nothing here runs on a timer, because the platform has no card-reachable scheduler. A \"quarterly review\" is a person or an assistant running this card's rules, and `lastRunAt` records that it happened. Naming it a bot and letting it never run itself would be the misleading kind of block; naming it and recording who ran it is honest.\n\n**`runsAs` is not decoration.** A bot never signs off a report: an automated result still needs a name against it, which every certification scheme states and most tools quietly drop. The isolated view says so in words when the field is empty.\n\n`brokenRuleCount` surfaces rules that cannot fire. A rule-set that silently contains three dead rules reports compliance it never tested.\n\n## Example\nThe linked example is `AuditorBot/contract-controls`: four contract-policy controls (executed copy on file, not past its end date, within the $250,000 signing limit with approval, an allowed governing law) whose `subjectQuery` selects every catalog Contract. Its linked Audit Results cover pass, fail, unproven and not-applicable.\n\n## Non-goals\nDoes not run, schedule, or write results — whatever runs the audit does that and stamps `lastRunAt`. Does not hold results or findings. Not a permission: who *may* run it is a segregation-of-duties decision outside this card.\n",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Auditor Bot",
+        "summary": "Which rules, over which subjects, answerable to whom — configuration, not a scheduler.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Which rules run over which subjects, answerable to whom: audit configuration that a person or an assistant invokes."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AuditorBot/contract-controls"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

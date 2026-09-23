@@ -1,0 +1,113 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rule": {
+        "ruleId": "CON-02",
+        "statement": "A contract in use has not passed its end date.",
+        "regime": {
+          "regime": "Contract Policy",
+          "version": "2026",
+          "clause": "§3.2",
+          "clauseTitle": "Term"
+        },
+        "kind": "expiry",
+        "fieldPath": "endDate",
+        "parameters": "{\"mustBeFuture\": true}",
+        "evidenceRequired": false,
+        "severityIfFailed": {
+          "level": "major"
+        }
+      },
+      "status": {
+        "status": "fail"
+      },
+      "observedValue": "2026-05-31",
+      "evaluatedAt": "2026-09-21T09:00:00.000Z",
+      "meta": {
+        "createdAt": "2026-09-21T09:00:00.000Z",
+        "changeCount": 0,
+        "sourceVersion": "contract-controls v1"
+      },
+      "cardInfo": {
+        "name": "CON-02 · nadia-lapsed",
+        "summary": "Expired 113 day(s) ago.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "finding": {
+        "findingId": "F-2026-022",
+        "rule": {
+          "ruleId": "CON-02",
+          "statement": "A contract in use has not passed its end date.",
+          "regime": {
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§3.2",
+            "clauseTitle": "Term"
+          },
+          "kind": "expiry",
+          "fieldPath": "endDate",
+          "parameters": "{\"mustBeFuture\": true}",
+          "evidenceRequired": false,
+          "severityIfFailed": {
+            "level": "major"
+          }
+        },
+        "severity": {
+          "level": "major"
+        },
+        "statement": "Nadia Rahman's contractor agreement ended on 31 May and work continued under it.",
+        "state": "closed",
+        "raisedAt": "2026-09-21T09:05:00.000Z",
+        "evidence": [],
+        "annotations": [],
+        "resolution": {
+          "code": "risk-accepted"
+        },
+        "closedAt": "2026-09-22T16:00:00.000Z",
+        "riskAcceptance": {
+          "decision": null
+        }
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../../legal/Contract/nadia-lapsed"
+        }
+      },
+      "audit": {
+        "links": {
+          "self": null
+        }
+      },
+      "evaluatedBy": {
+        "links": {
+          "self": null
+        }
+      },
+      "finding.subject": {
+        "links": {
+          "self": "../../legal/Contract/nadia-lapsed"
+        }
+      },
+      "finding.raisedBy": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "finding.closedBy": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-result",
+        "name": "AuditResult"
+      }
+    }
+  }
+}
