@@ -50,14 +50,14 @@
       "lotSizeSqft": null,
       "neighborhood": null,
       "features": [],
-      "mlsNumber": null,
+      "mlsNumber": "MLS-20418377",
       "hoaFee": {
         "amount": null,
         "currency": {
           "code": null
         }
       },
-      "heroIndex": 0,
+      "heroIndex": 1,
       "photoCaptions": [
         "",
         ""

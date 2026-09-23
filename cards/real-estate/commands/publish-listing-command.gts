@@ -57,8 +57,8 @@ export class PublishListingInput extends CardDef {
   // because syndication to the portals hangs off the MLS entry.
   @field channels = containsMany(StringField);
   // Optional deferred go-live. A realm has no background scheduler, so a
-  // future date records the intent and the command declines to publish —
-  // see the scheduled branch in `run`.
+  // future date is reported back and nothing is published or stored — see
+  // the scheduled branch in `run`.
   @field scheduledDate = contains(DateTimeField);
 }
 
@@ -128,7 +128,7 @@ export default class PublishListingCommand extends Command<
       ...new Set(['mls', ...(input.channels ?? []).filter(Boolean)]),
     ].filter((c) => PUBLISH_CHANNELS.includes(c));
 
-    // Deferred go-live: record the intent, publish nothing. A realm has no
+    // Deferred go-live: report the moment, publish nothing. A realm has no
     // scheduler to fire later, so the agent re-runs the command after the
     // moment passes — the listing itself is untouched (status and
     // publishedAt unchanged), so nothing needs unwinding if plans change.

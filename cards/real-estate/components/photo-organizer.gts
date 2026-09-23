@@ -32,8 +32,10 @@ interface Signature {
 export class PhotoOrganizer extends GlimmerComponent<Signature> {
   @tracked dragIndex: number | undefined;
 
-  get urls(): string[] {
-    return (this.args.model?.photos?.resolvedUrls ?? []).filter(Boolean);
+  // Unfiltered: moves and captions are applied by index to `photos.images`,
+  // so a photo whose URL has not resolved keeps its slot here too.
+  get urls(): (string | undefined)[] {
+    return this.args.model?.photos?.resolvedUrls ?? [];
   }
 
   get heroIndex(): number {
@@ -157,7 +159,11 @@ export class PhotoOrganizer extends GlimmerComponent<Signature> {
             {{on 'dragend' this.onDragEnd}}
           >
             <div class='thumb-wrap'>
-              <img src={{url}} alt='Photo {{index}}' loading='lazy' />
+              {{#if url}}
+                <img src={{url}} alt='Photo {{index}}' loading='lazy' />
+              {{else}}
+                <span class='no-url'>Photo {{index}} has no URL yet</span>
+              {{/if}}
               {{#if (eq index this.heroIndex)}}
                 <span class='hero-badge'>HERO</span>
               {{/if}}

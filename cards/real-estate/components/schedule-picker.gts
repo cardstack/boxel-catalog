@@ -1,6 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
+import { guidFor } from '@ember/object/internals';
 
 // Schedule Picker — "publish now" or "publish later". Render-only: the
 // consumer holds the chosen ISO string (or undefined for now) and gets it
@@ -20,6 +21,10 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
   @tracked mode: 'now' | 'later' = this.args.value ? 'later' : 'now';
   @tracked datePart = this.args.value ? toDatePart(this.args.value) : '';
   @tracked timePart = this.args.value ? toTimePart(this.args.value) : '';
+  @tracked pastWarning = false;
+
+  // One radio group per picker, so two open publish panels do not share it.
+  groupName = `schedule-mode-${guidFor(this)}`;
 
   chooseNow = () => {
     this.mode = 'now';
@@ -51,6 +56,13 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
     let [hh, mm] = (this.timePart || '09:00').split(':').map(Number);
     // Local calendar parts → a real Date → ISO for storage.
     let when = new Date(y, m - 1, d, hh, mm);
+    // A moment already past is not a schedule; report nothing rather than let
+    // it publish immediately under a "later" label.
+    this.pastWarning = !isNaN(when.getTime()) && when.getTime() <= Date.now();
+    if (this.pastWarning) {
+      this.args.onChange(undefined);
+      return;
+    }
     if (!isNaN(when.getTime())) {
       this.args.onChange(when.toISOString());
     }
@@ -62,7 +74,7 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
       <label class='option'>
         <input
           type='radio'
-          name='schedule-mode'
+          name={{this.groupName}}
           checked={{this.isNow}}
           {{on 'change' this.chooseNow}}
         />
@@ -71,7 +83,7 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
       <label class='option'>
         <input
           type='radio'
-          name='schedule-mode'
+          name={{this.groupName}}
           checked={{this.isLater}}
           {{on 'change' this.chooseLater}}
         />
@@ -89,6 +101,10 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
           {{on 'change' this.onTime}}
         />
       </label>
+      {{#if this.pastWarning}}
+        <p class='past' role='status'>That time has passed — choose a future
+          moment, or publish now.</p>
+      {{/if}}
     </fieldset>
     <style scoped>
       .schedule {
@@ -100,6 +116,10 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
         margin: 0;
         font-size: 0.8125rem;
         color: var(--foreground, var(--boxel-dark));
+      }
+      .past {
+        margin: 0;
+        color: var(--destructive, var(--boxel-danger));
       }
       .legend {
         font-size: 0.6875rem;

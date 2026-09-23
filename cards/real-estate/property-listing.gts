@@ -49,10 +49,9 @@ export const PropertyTypeField = enumField(StringField, {
   displayName: 'Property Type',
 });
 
-// Additive ladder (existing values never renamed — instances are
-// migrations): draft → prepared → published → under-offer → sold, with
-// withdrawn/expired as exits. The marketplace spec's Active/Pending map to
-// published/under-offer.
+// The ladder: draft → prepared → published → under-offer → sold, with
+// withdrawn/expired as exits. Values are never renamed once instances carry
+// them.
 export const PROPERTY_LISTING_STATUSES = [
   'draft',
   'prepared',
@@ -73,16 +72,6 @@ export const PROPERTY_LISTING_STATUS_LABELS: Record<string, string> = {
   expired: 'Expired',
 };
 
-export const PROPERTY_LISTING_STATUS_COLORS: Record<string, StateColor> = {
-  draft: stateColor('slate'),
-  prepared: stateColor('teal'),
-  published: stateColor('green'),
-  'under-offer': stateColor('amber'),
-  sold: stateColor('blue'),
-  withdrawn: stateColor('red'),
-  expired: stateColor('red'),
-};
-
 const STATUS_HUES: Record<
   string,
   'slate' | 'teal' | 'green' | 'amber' | 'blue' | 'red'
@@ -95,6 +84,11 @@ const STATUS_HUES: Record<
   withdrawn: 'red',
   expired: 'red',
 };
+
+export const PROPERTY_LISTING_STATUS_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(STATUS_HUES).map(([k, hue]) => [k, stateColor(hue)]),
+  );
 
 export const PropertyListingStatusField = enumField(StringField, {
   options: PROPERTY_LISTING_STATUSES.map((value) => ({
@@ -392,7 +386,9 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
   }
   get pricePerSqftLabel() {
     let p = this.args.model?.pricePerSqft;
-    return p != null ? `$${p.toLocaleString('en-US')}/sqft` : undefined;
+    return p != null
+      ? `${formatMoney(p, this.args.model?.askingPrice?.currency?.code)}/sqft`
+      : undefined;
   }
   get hoaLabel() {
     let h = this.args.model?.hoaFee;
@@ -449,8 +445,7 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
     this.publishOutcome = undefined;
     try {
       // Literal lazy import: the command imports PropertyListing back, so
-      // a static import here would be a module cycle (booking.gts
-      // precedent).
+      // a static import here would be a module cycle.
       let { default: PublishListingCommand } =
         await import('./commands/publish-listing-command.gts');
       let result: any = await new PublishListingCommand(context).execute({
@@ -897,6 +892,12 @@ export class PropertyListing extends CardDef {
   static isolated = PropertyListingIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
+    // The chosen hero fronts every face, not only the first photo.
+    get heroUrl() {
+      let urls = this.args.model?.photos?.resolvedUrls ?? [];
+      let hero = this.args.model?.heroIndex ?? 0;
+      return urls[hero] || this.args.model?.photos?.primaryUrl;
+    }
     get statusHue() {
       return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
     }
@@ -911,8 +912,8 @@ export class PropertyListing extends CardDef {
     }
     <template>
       <div class='row'>
-        {{#if @model.photos.primaryUrl}}
-          <img class='thumb' src={{@model.photos.primaryUrl}} alt='' />
+        {{#if this.heroUrl}}
+          <img class='thumb' src={{this.heroUrl}} alt='' />
         {{/if}}
         <div class='who'>
           <span class='name'>{{@model.cardTitle}}</span>
@@ -976,14 +977,20 @@ export class PropertyListing extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    // The chosen hero fronts every face, not only the first photo.
+    get heroUrl() {
+      let urls = this.args.model?.photos?.resolvedUrls ?? [];
+      let hero = this.args.model?.heroIndex ?? 0;
+      return urls[hero] || this.args.model?.photos?.primaryUrl;
+    }
     get priceLabel() {
       let p = this.args.model?.askingPrice;
       return p?.amount != null ? formatMoney(p.amount, p.currency?.code) : '—';
     }
     <template>
       <div class='fit'>
-        {{#if @model.photos.primaryUrl}}
-          <img class='fit-img' src={{@model.photos.primaryUrl}} alt='' />
+        {{#if this.heroUrl}}
+          <img class='fit-img' src={{this.heroUrl}} alt='' />
         {{/if}}
         <div class='fit-body'>
           <span class='fit-name'>{{@model.cardTitle}}</span>
