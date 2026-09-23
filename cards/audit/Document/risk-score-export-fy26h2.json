@@ -2,19 +2,19 @@
   "data": {
     "type": "card",
     "attributes": {
-      "title": "Supplier risk-score export",
+      "title": "Contract risk-score export",
       "kind": "evidence",
       "version": "2",
       "contentHash": "02987499e29475aeced03323e9265c6a9aea49c923e4c2821f5c4ee1b030b37f",
       "hashedAt": "2026-08-20T09:12:00.000Z",
       "info": {
-        "title": "Supplier risk-score export",
-        "author": "Score Vendor Risk",
-        "subject": "Supplier controls FY26 H2"
+        "title": "Contract risk-score export",
+        "author": "Contract risk scoring",
+        "subject": "Contract controls FY26 H2"
       },
       "cardInfo": {
-        "name": "Supplier risk-score export v2",
-        "summary": "The FY26 H2 export cited by finding F-2026-014; contentHash is the real SHA-256 of risk-score-export.md",
+        "name": "Contract risk-score export v2",
+        "summary": "The FY26 H2 export F-2026-023 cites; contentHash is its SHA-256.",
         "notes": null,
         "cardThumbnailURL": null
       }

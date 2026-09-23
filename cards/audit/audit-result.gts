@@ -125,7 +125,7 @@ export class AuditResult extends CardDef {
             <h2>Evidence</h2>
             <@fields.evidence />
           </section>
-        {{else}}
+        {{else if @model.rule.evidenceRequired}}
           <p class='empty'>No evidence attached. A rule that requires proof
             reads
             <strong>unproven</strong>

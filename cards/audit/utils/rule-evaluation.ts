@@ -1,6 +1,6 @@
 // The evaluation engine, kept apart from every card that uses it so the rule
-// field, both commands and the future Audit command share ONE definition of
-// what "pass" means. A second implementation is how a report and a badge end
+// field and whatever runs an audit share ONE definition of what "pass"
+// means. A second implementation is how a report and a badge end
 // up disagreeing about the same control.
 //
 // Nothing here names a domain concept. A rule points at a field by path and
@@ -87,10 +87,12 @@ export function parametersAreValid(raw?: string | null): boolean {
 /**
  * Read a dotted path off any card, defensively.
  *
- * A linked slot reads `undefined` while it loads and forever if it is broken,
- * so a missing value is never treated as a failure here — the caller maps it
- * to `not-applicable`. Guessing "absent means non-compliant" would fail every
- * subject whose links had not finished loading.
+ * A linked slot reads `undefined` while it loads and forever if it is broken.
+ * Every rule kind except `presence` maps a missing value to `not-applicable`
+ * rather than failing, because guessing "absent means non-compliant" would
+ * fail every subject whose links had not finished loading. `presence` exists
+ * to fail on absence, so a caller loads the subject's links before it runs a
+ * presence rule on a linked field.
  */
 export function readPath(subject: unknown, path?: string | null): unknown {
   let parts = (path ?? '')
@@ -202,14 +204,29 @@ export function evaluateRule(
       }
       case 'threshold': {
         let n = typeof raw === 'number' ? raw : Number(raw);
-        if (raw == null || Number.isNaN(n)) {
+        // Number('') is 0, so an empty string would otherwise read as zero.
+        if (raw == null || raw === '' || Number.isNaN(n)) {
           return {
             status: 'not-applicable',
             observed,
             reason: `${rule.fieldPath} holds no number to compare.`,
           };
         }
-        let { min, max } = params as { min?: number; max?: number };
+        let num = (v: unknown) =>
+          typeof v === 'number'
+            ? v
+            : typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v))
+              ? Number(v)
+              : undefined;
+        let min = num((params as any).min);
+        let max = num((params as any).max);
+        if (min === undefined && max === undefined) {
+          return {
+            status: 'pending',
+            observed,
+            reason: 'A threshold rule needs a numeric min or max.',
+          };
+        }
         let tooLow = typeof min === 'number' && n < min;
         let tooHigh = typeof max === 'number' && n > max;
         if (tooLow || tooHigh) {

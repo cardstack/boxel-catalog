@@ -19,9 +19,9 @@ import { SectionedEdit } from '../../components/sectioned-edit';
  * board, a professional institute. It owns three things a certificate needs
  * and a course does not: the signatory, the seal, and the number sequence.
  *
- * `lastSequence` is the one mutable fact: Issue Certificate increments it,
- * so the authority is the single writer of its own numbering. A realm has no
- * global counter; this is where the counter lives.
+ * `lastSequence` is the one mutable fact: whatever issues a certificate
+ * increments it, and the edit form shows it read-only. A realm has no global
+ * counter; this is where the counter lives.
  */
 export class CertificationAuthority extends CardDef {
   static displayName = 'Certification Authority';
@@ -306,7 +306,7 @@ export class CertificationAuthority extends CardDef {
         <e.Section
           @id='numbering'
           @title='Numbering'
-          @hint='last sequence is maintained by Issue Certificate'
+          @hint='the last sequence is written when a certificate is issued'
           @cols={{3}}
         >
           <FieldContainer
@@ -316,7 +316,7 @@ export class CertificationAuthority extends CardDef {
           <FieldContainer
             @label='Last sequence'
             @vertical={{true}}
-          ><@fields.lastSequence /></FieldContainer>
+          ><@fields.lastSequence @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Verification base URL'
             @vertical={{true}}

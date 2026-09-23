@@ -153,7 +153,7 @@ export class FindingField extends FieldDef {
   /** Closed with a code, and the code's own obligation met. */
   @field closureValid = contains(BooleanField, {
     computeVia: function (this: FindingField) {
-      return !this.closureBlocker;
+      return this.state === 'closed' && !this.closureBlocker;
     },
   });
 

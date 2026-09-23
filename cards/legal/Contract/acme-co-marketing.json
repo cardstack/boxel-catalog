@@ -24,9 +24,9 @@
         "summary": null,
         "cardThumbnailURL": null
       },
-      "signedAt": "2026-07-14",
+      "signedAt": null,
       "startDate": "2026-11-01",
-      "documentUrl": "https://example.com/contracts/acme-msa-2026.pdf",
+      "documentUrl": null,
       "contractNumber": "MSA-2026-0117",
       "contractType": "partnership",
       "autoRenews": true,

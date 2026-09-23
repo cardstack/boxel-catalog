@@ -2,16 +2,21 @@
   "data": {
     "type": "card",
     "attributes": {
-      "title": "Supplier risk-score export",
+      "title": "Contract risk-score export",
       "kind": "evidence",
       "version": "1",
       "contentHash": null,
       "hashedAt": null,
       "cardInfo": {
-        "name": "Supplier risk-score export v1",
-        "summary": "First-half export, superseded by the FY26 H2 run",
+        "name": "Contract risk-score export v1",
+        "summary": "The FY26 H1 export that v2 supersedes.",
         "notes": null,
         "cardThumbnailURL": null
+      },
+      "info": {
+        "title": "Contract risk-score export",
+        "author": "Contract risk scoring",
+        "subject": "Contract controls FY26 H1"
       }
     },
     "relationships": {

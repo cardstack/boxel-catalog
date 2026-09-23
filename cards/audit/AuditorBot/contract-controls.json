@@ -2,25 +2,25 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "Supplier controls (quarterly)",
+      "name": "Contract controls (quarterly)",
       "regime": {
-        "regime": "ISO 9001:2015",
-        "version": "2015",
+        "regime": "Contract Policy",
+        "version": "2026",
         "clause": null,
         "clauseTitle": null
       },
       "rules": [
         {
-          "ruleId": "SUP-01",
-          "statement": "A supplier's tax identifier is on file.",
+          "ruleId": "CON-01",
+          "statement": "A signed contract links its executed document.",
           "regime": {
-            "regime": "ISO 9001:2015",
-            "version": "2015",
-            "clause": "\u00a78.4.1",
-            "clauseTitle": "General"
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§2.1",
+            "clauseTitle": "Executed copies"
           },
           "kind": "presence",
-          "fieldPath": "taxId",
+          "fieldPath": "documentUrl",
           "parameters": "",
           "evidenceRequired": false,
           "severityIfFailed": {
@@ -28,16 +28,16 @@
           }
         },
         {
-          "ruleId": "SUP-02",
-          "statement": "The supplier's insurance has not lapsed.",
+          "ruleId": "CON-02",
+          "statement": "A contract in use has not passed its end date.",
           "regime": {
-            "regime": "ISO 9001:2015",
-            "version": "2015",
-            "clause": "\u00a78.4.2",
-            "clauseTitle": "Type and extent of control"
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§3.2",
+            "clauseTitle": "Term"
           },
           "kind": "expiry",
-          "fieldPath": "insuranceExpiry",
+          "fieldPath": "endDate",
           "parameters": "{\"mustBeFuture\": true}",
           "evidenceRequired": false,
           "severityIfFailed": {
@@ -45,45 +45,45 @@
           }
         },
         {
-          "ruleId": "SUP-03",
-          "statement": "Only an onboarded or active supplier may be used for production materials.",
+          "ruleId": "CON-03",
+          "statement": "A contract's value stays within the $250,000 signing limit, with the approval on file.",
           "regime": {
-            "regime": "ISO 9001:2015",
-            "version": "2015",
-            "clause": "\u00a78.4.2",
-            "clauseTitle": "Type and extent of control"
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§4.1",
+            "clauseTitle": "Signing limits"
           },
-          "kind": "predicate",
-          "fieldPath": "status",
-          "parameters": "{\"oneOf\": [\"onboarded\", \"active\"]}",
+          "kind": "threshold",
+          "fieldPath": "value.amount",
+          "parameters": "{\"max\": 250000}",
           "evidenceRequired": true,
-          "severityIfFailed": {
-            "level": "critical"
-          }
-        },
-        {
-          "ruleId": "SUP-04",
-          "statement": "Every supplier is reviewed at least once every 12 months.",
-          "regime": {
-            "regime": "ISO 9001:2015",
-            "version": "2015",
-            "clause": "\u00a78.4.1",
-            "clauseTitle": "General"
-          },
-          "kind": "expiry",
-          "fieldPath": "lifecycle.lastReviewedAt",
-          "parameters": "{\"maxAgeDays\": 365}",
-          "evidenceRequired": false,
           "severityIfFailed": {
             "level": "major"
           }
+        },
+        {
+          "ruleId": "CON-04",
+          "statement": "Contracts are governed by Delaware or English law.",
+          "regime": {
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§5.3",
+            "clauseTitle": "Governing law"
+          },
+          "kind": "predicate",
+          "fieldPath": "governingLaw.jurisdiction",
+          "parameters": "{\"oneOf\": [\"Delaware\", \"England & Wales\"]}",
+          "evidenceRequired": false,
+          "severityIfFailed": {
+            "level": "minor"
+          }
         }
       ],
-      "subjectQuery": "{\"filter\": {\"type\": {\"module\": \"https://realms-staging.stack.cards/richard.tan1/boxel-software-matrix-layer/vendor-profile\", \"name\": \"VendorProfile\"}}}",
+      "subjectQuery": "{\"filter\": {\"type\": {\"module\": \"@cardstack/catalog/cards/legal/contract\", \"name\": \"Contract\"}}}",
       "lastRunAt": null,
       "cardInfo": {
-        "name": "Supplier controls (quarterly)",
-        "summary": "Four ISO 9001 \u00a78.4 supplier controls over every Vendor Profile",
+        "name": "Contract controls (quarterly)",
+        "summary": "Four contract-policy controls over every Contract",
         "notes": null,
         "cardThumbnailURL": null
       }

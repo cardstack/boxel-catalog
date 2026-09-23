@@ -107,9 +107,6 @@ export class EditSection extends GlimmerComponent<SectionSignature> {
 interface Signature {
   Args: {
     sections: NavSection[];
-    /** Family ink for the rail and section halos; defaults to the theme foreground. */
-    ink?: string;
-    inkForeground?: string;
     ariaLabel?: string;
   };
   Blocks: {
