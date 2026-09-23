@@ -14,7 +14,6 @@ import UrlField from '@cardstack/base/url';
 import EmailField from '@cardstack/base/email';
 import BuildingIcon from '@cardstack/boxel-icons/building';
 
-
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
 import { durationInDays } from '@cardstack/catalog/cards/hr/duration-field';
@@ -89,7 +88,10 @@ export const VENDOR_CONTRACT_HUES: Record<string, Hue> = {
 
 export const VENDOR_CONTRACT_COLORS: Record<string, StateColor> =
   Object.fromEntries(
-    Object.entries(VENDOR_CONTRACT_HUES).map(([k, hue]) => [k, stateColor(hue)]),
+    Object.entries(VENDOR_CONTRACT_HUES).map(([k, hue]) => [
+      k,
+      stateColor(hue),
+    ]),
   );
 
 const RENEWAL_WINDOW_MONTHS = 6;
@@ -213,7 +215,6 @@ export class Vendor extends CardDef {
       let { end } = this.facts;
       return end ? end.toISOString().slice(0, 10) : undefined;
     }
-
 
     get ratingLabel() {
       let v = this.args.model?.performanceRating;
@@ -672,7 +673,6 @@ export class Vendor extends CardDef {
       let { start } = this.facts;
       return start ? start.toISOString().slice(0, 7) : undefined;
     }
-
 
     get ratingLabel() {
       let v = this.args.model?.performanceRating;
