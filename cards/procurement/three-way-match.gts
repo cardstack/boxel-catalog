@@ -82,11 +82,7 @@ function pairLines(
   });
   invoiceLines.forEach((_, invIndex) => {
     let poIndex = invPo[invIndex];
-    if (
-      poIndex == null &&
-      invIndex < poLines.length &&
-      !used.has(invIndex)
-    ) {
+    if (poIndex == null && invIndex < poLines.length && !used.has(invIndex)) {
       used.add(invIndex);
       poIndex = invIndex;
     }

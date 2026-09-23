@@ -84,9 +84,7 @@ export default class ResolveVarianceCommand extends Command<
         ).find((r) => r.lineNumber === lineNumber)
       : undefined;
     if (!row || row.state === 'clean') {
-      throw new Error(
-        `Line ${lineNumber} has no variance to resolve`,
-      );
+      throw new Error(`Line ${lineNumber} has no variance to resolve`);
     }
     let existing = (invoice.varianceResolutions ?? []).filter(Boolean);
     if (existing.some((r) => r.lineNumber === lineNumber)) {

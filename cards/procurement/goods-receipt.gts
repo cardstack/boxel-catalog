@@ -181,13 +181,12 @@ class GoodsReceiptEdit extends Component<typeof GoodsReceipt> {
           </section>
 
           <section
-            class='sect lines
-              {{if (eq this.activeSection "lines") "focused"}}'
+            class='sect lines {{if (eq this.activeSection "lines") "focused"}}'
             data-sect='lines'
           >
             <h3>Received Lines
-              <span class='sect-hint'>ordered qty is a snapshot at receipt
-                time — the audit trail keeps saying what was ordered then</span></h3>
+              <span class='sect-hint'>ordered qty is a snapshot at receipt time
+                — the audit trail keeps saying what was ordered then</span></h3>
             <FieldContainer
               @label='Lines (description, ordered, received, note)'
               @vertical={{true}}

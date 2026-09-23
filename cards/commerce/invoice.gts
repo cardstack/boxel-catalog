@@ -304,7 +304,10 @@ interface InvoiceLike {
     lineItems?: any[];
     receivedQuantities?: (number | undefined)[];
   } | null;
-  varianceResolutions?: ({ lineNumber?: number | null; action?: string | null } | undefined)[];
+  varianceResolutions?: (
+    | { lineNumber?: number | null; action?: string | null }
+    | undefined
+  )[];
 }
 
 /**
@@ -329,7 +332,8 @@ export function invoiceAmounts(invoice?: InvoiceLike | null) {
     for (let r of resolutions) {
       let row = rows.find((x) => x.lineNumber === r?.lineNumber);
       if (!row) continue;
-      if (r?.action === 'short-pay') adjustment += Math.max(row.varianceAmount, 0);
+      if (r?.action === 'short-pay')
+        adjustment += Math.max(row.varianceAmount, 0);
       if (r?.action === 'reject-line') adjustment += row.invTotal ?? 0;
     }
   }
@@ -338,7 +342,15 @@ export function invoiceAmounts(invoice?: InvoiceLike | null) {
     (acc, p) => acc + (p?.amount?.amount ?? 0),
     0,
   );
-  return { subtotal, tax, adjustment, total, paid, balance: Math.max(total - paid, 0), code };
+  return {
+    subtotal,
+    tax,
+    adjustment,
+    total,
+    paid,
+    balance: Math.max(total - paid, 0),
+    code,
+  };
 }
 
 export class Invoice extends CardDef {
