@@ -119,7 +119,8 @@ export class PhotoOrganizer extends GlimmerComponent<Signature> {
     }
   };
 
-  onDragOver = (event: DragEvent) => {
+  onDragOver = (e: Event) => {
+    let event = e as DragEvent;
     event.preventDefault();
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'move';

@@ -157,7 +157,8 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
       (this.selectedIndex - 1 + this.urls.length) % this.urls.length;
   };
 
-  onOverlayKeydown = (event: KeyboardEvent) => {
+  onOverlayKeydown = (e: Event) => {
+    let event = e as KeyboardEvent;
     if (event.key === 'ArrowRight') {
       event.preventDefault();
       event.stopPropagation();
@@ -220,7 +221,11 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
                   aria-label='Photo {{index}}'
                   {{on 'click' (fn this.selectFromGrid index)}}
                 >
-                  <img src={{url}} alt={{if @alt @alt 'Property photo'}} loading='lazy' />
+                  <img
+                    src={{url}}
+                    alt={{if @alt @alt 'Property photo'}}
+                    loading='lazy'
+                  />
                 </button>
                 {{#if (this.captionAt index)}}
                   <figcaption class='tile-caption'>{{this.captionAt
@@ -240,10 +245,12 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
               />
             {{/each}}
             {{#if this.selectedCaption}}
-              <figcaption class='hero-caption'>{{this.selectedCaption
-                }}</figcaption>
+              <figcaption
+                class='hero-caption'
+              >{{this.selectedCaption}}</figcaption>
             {{/if}}
-            <figcaption class='counter'>{{this.selectedIndexDisplay}} /
+            <figcaption class='counter'>{{this.selectedIndexDisplay}}
+              /
               {{this.urls.length}}</figcaption>
           </figure>
           {{#if this.hasMultiple}}
@@ -321,7 +328,8 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
                 {{#if this.selectedCaption}}
                   <span class='lb-caption-text'>{{this.selectedCaption}}</span>
                 {{/if}}
-                <span class='lb-counter'>{{this.selectedIndexDisplay}} /
+                <span class='lb-counter'>{{this.selectedIndexDisplay}}
+                  /
                   {{this.urls.length}}</span>
               </figcaption>
             </figure>
@@ -345,8 +353,7 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
       {{else}}
         <div class='empty'>
           <span class='empty-glyph' aria-hidden='true'>🏠</span>
-          <p>No photos yet — a listing without photos does not get
-            viewings.</p>
+          <p>No photos yet — a listing without photos does not get viewings.</p>
         </div>
       {{/if}}
     </div>
