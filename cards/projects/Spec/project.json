@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Project",
+      "cardDescription": "A project with lead, team, optional vendor, start date, and estimated effort",
+      "specType": "card",
+      "ref": {
+        "module": "../project",
+        "name": "Project"
+      },
+      "readMe": "# Project\n\n## Summary\nA project with `status` (planned | active | done), a `lead` (HR Employee), a `team` (HR Team), an optional external `vendor` (procurement Vendor), a `startDate` and an `estimatedEffort` Duration.\n\n## Import\n```ts\nimport { Project } from '@cardstack/catalog/cards/projects/project';\n\n@field project = linksTo(() => Project);\n```\n\n## Usage\n\n**1. As a delivery record spanning internal and external.** It links a lead, a team **and** a vendor, so \"who is actually doing this\" is answerable from one place; a project with no vendor says so (\"internal only\").\n\n**2. As a schedule.** `startDate` + `estimatedEffort` give the projected end date and the elapsed percentage, computed once and shared by isolated and fitted so the two cannot disagree about progress. They are computed on render; a fitted tile is prerendered when the card is indexed, so its \"% elapsed\" is as of that index.\n\n**3. As a status track.** `status` renders as a three-step track plus a plain-language trail (`planned ✓ → active → done`).\n\n**4. As what a vendor is engaged for.** A Vendor has no outbound links, so the projects that link a vendor are the record of what it is being paid to deliver; a consumer lists them by querying Project on `vendor`.\n\n**5. As a fitted tile.** `leadName`, `teamName` and `vendorName` are denormalized for the fitted view.\n\n## Template Usage\nAtom is an icon row. Embedded shows status, start, effort, lead and vendor. Fitted shows the title, lead · team, the status pill, the step track with % elapsed, the description, and from / estimate / until / vendor as width allows.\n\n## Examples\n`Project/platform-rebuild` is active and internal only; `Project/benefits-migration` is planned with PayLock as its vendor; `Project/payroll-cutover` is done.\n\n**Non-goals:** task or milestone breakdown and budgets; no catalog block owns those yet. It records who is delivering and when, not how the work is planned.",
+      "cardInfo": {
+        "name": "Project"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Project/platform-rebuild"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Project/benefits-migration"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Project/payroll-cutover"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
