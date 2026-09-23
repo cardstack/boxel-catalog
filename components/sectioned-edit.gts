@@ -1,8 +1,12 @@
 import GlimmerComponent from '@glimmer/component';
+import type { WithBoundArgs } from '@glint/template';
 import { tracked } from '@glimmer/tracking';
 import { hash } from '@ember/helper';
 
-import { EditSectionNav, type NavSection } from '@cardstack/catalog/components/edit-section-nav';
+import {
+  EditSectionNav,
+  type NavSection,
+} from '@cardstack/catalog/components/edit-section-nav';
 
 interface SectionSignature {
   Args: {
@@ -23,26 +27,38 @@ export class EditSection extends GlimmerComponent<SectionSignature> {
     return this.args.active === this.args.id;
   }
   <template>
-    <section class='sect {{if this.isFocused "focused"}}' data-sect={{@id}} ...attributes>
-      <h3>{{@title}}{{#if @hint}}<span class='sect-hint'>{{@hint}}</span>{{/if}}</h3>
+    <section
+      class='sect {{if this.isFocused "focused"}}'
+      data-sect={{@id}}
+      ...attributes
+    >
+      <h3>{{@title}}{{#if @hint}}<span
+            class='sect-hint'
+          >{{@hint}}</span>{{/if}}</h3>
       <div class='body cols-{{if @cols @cols 1}}'>{{yield}}</div>
     </section>
     <style scoped>
       .sect {
-        --se-ink: var(--edit-section-nav-ink, var(--foreground, var(--boxel-dark)));
+        --se-ink: var(
+          --edit-section-nav-ink,
+          var(--foreground, var(--boxel-dark))
+        );
         border: 1px solid var(--border, var(--boxel-200));
         border-radius: var(--radius, var(--boxel-border-radius));
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         background: var(--card, var(--boxel-light));
-        transition: outline-color 160ms ease, box-shadow 160ms ease;
+        transition:
+          outline-color 160ms ease,
+          box-shadow 160ms ease;
         outline: 2px solid transparent;
         outline-offset: 2px;
       }
       .sect.focused {
         outline-color: var(--se-ink);
-        box-shadow: 0 0 0 4px color-mix(in oklab, var(--se-ink) 12%, transparent);
+        box-shadow: 0 0 0 4px
+          color-mix(in oklab, var(--se-ink) 12%, transparent);
       }
       h3 {
         margin: 0;
@@ -97,7 +113,12 @@ interface Signature {
     ariaLabel?: string;
   };
   Blocks: {
-    default: [{ Section: typeof EditSection; active: string | undefined }];
+    default: [
+      {
+        Section: WithBoundArgs<typeof EditSection, 'active'>;
+        active: string | undefined;
+      },
+    ];
   };
   Element: HTMLElement;
 }
@@ -116,7 +137,9 @@ export class SectionedEdit extends GlimmerComponent<Signature> {
   goTo = (id: string, event: Event) => {
     this.active = id;
     let root = (event.currentTarget as HTMLElement).closest('.sectioned-edit');
-    root?.querySelector(`[data-sect='${id}']`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   };
 
   <template>
@@ -130,7 +153,12 @@ export class SectionedEdit extends GlimmerComponent<Signature> {
           class='sect-nav'
         />
         <div class='sects'>
-          {{yield (hash Section=(component EditSection active=this.active) active=this.active)}}
+          {{yield
+            (hash
+              Section=(component EditSection active=this.active)
+              active=this.active
+            )
+          }}
         </div>
       </div>
     </div>

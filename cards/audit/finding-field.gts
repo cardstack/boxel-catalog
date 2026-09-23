@@ -7,6 +7,7 @@ import {
   containsMany,
   linksTo,
   StringField,
+  type BaseDefComponent,
 } from '@cardstack/base/card-api';
 import TextAreaField from '@cardstack/base/text-area';
 import BooleanField from '@cardstack/base/boolean';
@@ -19,7 +20,10 @@ import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { Task } from '@cardstack/catalog/cards/tasks/task';
 import { ValidationRuleField } from './validation-rule-field';
 import { SeverityField } from '@cardstack/catalog/cards/audit/severity-field';
-import { ResolutionCodeField, RESOLUTION_CODES } from '@cardstack/catalog/fields/resolution-code/resolution-code-field';
+import {
+  ResolutionCodeField,
+  RESOLUTION_CODES,
+} from '@cardstack/catalog/fields/resolution-code/resolution-code-field';
 import { ApprovalStepField } from '@cardstack/catalog/cards/hr/approval-step-field';
 import { ProofField } from './proof-field';
 import { AnnotationField } from './annotation-field';
@@ -160,7 +164,11 @@ export class FindingField extends FieldDef {
     },
   });
 
-  static embedded = class Embedded extends Component<typeof this> {
+  // `BaseDefComponent` keeps a subclass's embedded view (Inspection Finding)
+  // assignable.
+  static embedded: BaseDefComponent = class Embedded extends Component<
+    typeof this
+  > {
     get stateLabel() {
       return FINDING_STATE_LABELS[this.args.model?.state ?? ''] ?? '';
     }

@@ -1,10 +1,16 @@
 import GlimmerComponent from '@glimmer/component';
-import type { ComponentLike } from '@glint/template';
+import type { BoxComponent, Format } from '@cardstack/base/card-api';
+import type { FileDef } from '@cardstack/base/file-api';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
 
 import FileDownloadLink from '@cardstack/catalog/cards/hr/components/file-download-link';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { integrityOf, shortHash, INTEGRITY_LABELS, type Integrity } from '../utils/evidence-hash';
+import {
+  integrityOf,
+  shortHash,
+  INTEGRITY_LABELS,
+  type Integrity,
+} from '../utils/evidence-hash';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 
 // Structural, not the Document class: importing the card here would close a
@@ -16,7 +22,7 @@ interface DocumentLike {
   version?: string | null;
   contentHash?: string | null;
   hashedAt?: Date | null;
-  file?: { name?: string | null; url?: string | null } | null;
+  file?: FileDef | null;
   supersedes?: DocumentLike | null;
 }
 
@@ -35,9 +41,9 @@ interface Signature {
      * already picks the family renderer, so this component never sniffs a
      * content type.
      */
-    fileField?: ComponentLike<{ Args: { format?: string } }> | null;
+    fileField?: BoxComponent | null;
     /** Passed through to the file's own format. */
-    format?: string;
+    format?: Format;
     /** Hide the provenance strip when a parent already shows it. */
     bare?: boolean;
   };

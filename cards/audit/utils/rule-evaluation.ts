@@ -76,7 +76,9 @@ export function parametersAreValid(raw?: string | null): boolean {
   }
   try {
     let parsed = JSON.parse(text);
-    return Boolean(parsed) && typeof parsed === 'object' && !Array.isArray(parsed);
+    return (
+      Boolean(parsed) && typeof parsed === 'object' && !Array.isArray(parsed)
+    );
   } catch {
     return false;
   }
@@ -266,7 +268,10 @@ export function evaluateRule(
             reason: `${rule.fieldPath} is empty.`,
           };
         }
-        let { equals, oneOf } = params as { equals?: unknown; oneOf?: unknown[] };
+        let { equals, oneOf } = params as {
+          equals?: unknown;
+          oneOf?: unknown[];
+        };
         let value = typeof raw === 'object' ? describeValue(raw) : raw;
         if (Array.isArray(oneOf)) {
           return oneOf.some((o) => String(o) === String(value))
@@ -302,7 +307,11 @@ export function evaluateRule(
   })();
 
   // A pass on paper with nothing to show for it is not a pass.
-  if (verdict.status === 'pass' && rule.evidenceRequired && !opts?.hasEvidence) {
+  if (
+    verdict.status === 'pass' &&
+    rule.evidenceRequired &&
+    !opts?.hasEvidence
+  ) {
     return {
       status: 'unproven',
       observed: verdict.observed,
@@ -365,9 +374,15 @@ export function rollup(counts: RollupCounts): RuleStatus {
 /** Rules that reached a conclusive verdict, over rules that applied. */
 export function coverage(counts: RollupCounts): number {
   let applicable =
-    counts.pass + counts.fail + counts.partial + counts.unproven + counts.pending;
+    counts.pass +
+    counts.fail +
+    counts.partial +
+    counts.unproven +
+    counts.pending;
   if (!applicable) {
     return 0;
   }
-  return Math.round(((counts.pass + counts.fail + counts.partial) / applicable) * 100);
+  return Math.round(
+    ((counts.pass + counts.fail + counts.partial) / applicable) * 100,
+  );
 }

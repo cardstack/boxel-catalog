@@ -10,7 +10,11 @@ import CoordinateField from '@cardstack/base/coordinate';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
 
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { FindingField, FINDING_STATE_LABELS, FINDING_STATE_HUE } from './finding-field';
+import {
+  FindingField,
+  FINDING_STATE_LABELS,
+  FINDING_STATE_HUE,
+} from './finding-field';
 import { ProofField } from './proof-field';
 import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';

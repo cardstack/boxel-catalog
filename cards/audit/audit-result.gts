@@ -13,7 +13,10 @@ import SquareFunctionIcon from '@cardstack/boxel-icons/square-function';
 
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { ValidationRuleField } from './validation-rule-field';
-import { EvaluationStatusField, EVALUATION_HUE } from '@cardstack/catalog/fields/evaluation-status/evaluation-status-field';
+import {
+  EvaluationStatusField,
+  EVALUATION_HUE,
+} from '@cardstack/catalog/fields/evaluation-status/evaluation-status-field';
 import { FindingField } from './finding-field';
 import { ProofField } from './proof-field';
 import { AuditMetadataField } from './audit-metadata-field';
@@ -87,7 +90,8 @@ export class AuditResult extends CardDef {
               <span class='meta'><@fields.evaluatedAt /></span>
             {{/if}}
             {{#if @model.evaluatedBy}}
-              <span class='meta'>by <@fields.evaluatedBy @format='atom' /></span>
+              <span class='meta'>by
+                <@fields.evaluatedBy @format='atom' /></span>
             {{/if}}
           </div>
         </header>
@@ -123,7 +127,9 @@ export class AuditResult extends CardDef {
           </section>
         {{else}}
           <p class='empty'>No evidence attached. A rule that requires proof
-            reads <strong>unproven</strong> rather than pass.</p>
+            reads
+            <strong>unproven</strong>
+            rather than pass.</p>
         {{/if}}
 
         {{#if @model.meta}}
@@ -220,7 +226,11 @@ export class AuditResult extends CardDef {
             @compact={{true}}
           />
         {{/if}}
-        <StatePill @label={{@model.status.label}} @hue={{this.hue}} @dot={{true}} />
+        <StatePill
+          @label={{@model.status.label}}
+          @hue={{this.hue}}
+          @dot={{true}}
+        />
       </div>
       <style scoped>
         .row {

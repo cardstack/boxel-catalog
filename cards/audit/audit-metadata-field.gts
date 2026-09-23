@@ -40,7 +40,8 @@ export class AuditMetadataField extends FieldDef {
       let when = this.createdAt
         ? this.createdAt.toISOString().slice(0, 10)
         : '';
-      let changed = (this.changeCount ?? 0) > 0 ? ` · ${this.changeCount} change(s)` : '';
+      let changed =
+        (this.changeCount ?? 0) > 0 ? ` · ${this.changeCount} change(s)` : '';
       return `${when}${changed}`.trim();
     },
   });

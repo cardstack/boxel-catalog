@@ -13,7 +13,12 @@ import { RegimeMetadataField } from './regime-metadata-field';
 import { SeverityField } from '@cardstack/catalog/cards/audit/severity-field';
 import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { RULE_KINDS, RULE_KIND_LABELS, RULE_KIND_HINTS, parametersAreValid } from './utils/rule-evaluation';
+import {
+  RULE_KINDS,
+  RULE_KIND_LABELS,
+  RULE_KIND_HINTS,
+  parametersAreValid,
+} from './utils/rule-evaluation';
 
 export const RuleKindField = enumField(StringField, {
   displayName: 'Rule Kind',

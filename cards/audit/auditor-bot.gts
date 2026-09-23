@@ -217,9 +217,10 @@ export class AuditorBot extends CardDef {
         <BotIcon class='ic' />
         <div class='what'>
           <span class='name'>{{@model.name}}</span>
-          <span class='sub'>{{@model.ruleCount}} rule(s){{#if
-              @model.regime.regime
-            }} · {{@model.regime.regime}}{{/if}}</span>
+          <span class='sub'>{{@model.ruleCount}}
+            rule(s){{#if @model.regime.regime}}
+              ·
+              {{@model.regime.regime}}{{/if}}</span>
         </div>
         {{#if @model.brokenRuleCount}}
           <StatePill @label='needs fixing' @hue='red' @dot={{true}} />

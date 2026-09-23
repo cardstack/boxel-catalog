@@ -15,7 +15,12 @@ import { Document } from './document';
 import { AttributionField } from './attribution-field';
 import { TrustMetadataField } from '@cardstack/catalog/fields/trust-metadata/trust-metadata-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { integrityOf, shortHash, INTEGRITY_LABELS, type Integrity } from './utils/evidence-hash';
+import {
+  integrityOf,
+  shortHash,
+  INTEGRITY_LABELS,
+  type Integrity,
+} from './utils/evidence-hash';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 
 export const PROOF_KINDS = [
