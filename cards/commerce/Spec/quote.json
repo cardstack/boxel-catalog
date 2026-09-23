@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Quote\n\n`version`, `status` (draft / sent / under-review / won / lost / expired), `supersedes` (linksTo the previous Quote), `deal` (linksTo Deal), an optional `proposal` link, and `lineItems` (containsMany LineItem). `total` is computed from the line items with `line-item-totals`.\n\n```ts\nimport { Quote } from '@cardstack/catalog/cards/commerce/quote';\n\n@field acceptedQuote = linksTo(Quote);\n```\n\nEach negotiation round is a new Quote that `supersedes` the last, so the history of what was offered stays intact and the latest version is the one that binds.\n\n### Non-goals\nDoes not become an invoice itself; converting a won quote is the consumer's command. Line items are a snapshot of description, quantity and price at negotiation time, not live links to a price list.\n\n### Example\n`Quote/acme-enterprise-renewal-q1`: version 1, status `won`, linked to `Deal/acme-enterprise-renewal` and its Proposal, with one line item matching the deal's $58,000 value.",
+      "ref": {
+        "module": "../quote",
+        "name": "Quote"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Quote",
+      "cardDescription": "A versioned, priced proposal — each negotiation round is a new immutable version, the latest one binding.",
+      "cardInfo": {
+        "name": "Quote",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Quote/acme-enterprise-renewal-q1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

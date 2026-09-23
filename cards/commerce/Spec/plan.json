@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Plan\n\nA named, recurring tier of the product: `name`, `description`, and `features` (containsMany StringField).\n\n```ts\nimport { Plan } from '@cardstack/catalog/cards/commerce/plan';\n\n@field plan = linksTo(Plan);\n```\n\nDeliberately has no price field of its own. A tier's price changes over time and differs by billing interval, so prices are separate cards that link to the Plan they price, and a Plan's current prices are a query over them rather than a stored back-link that every price change would have to rewrite.\n\n### Non-goals\nDoes not carry a billing interval or an amount; those belong to the price records that link here. Not a subscription: a customer's subscription links to the Plan it is on. Service is the sibling for one-time work.\n\n### Example\n`Plan/enterprise-tier`, the Enterprise tier with its feature list.",
+      "ref": {
+        "module": "../plan",
+        "name": "Plan"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Plan",
+      "cardDescription": "A named, recurring tier of the product (e.g. \"Pro\", \"Enterprise\").",
+      "cardInfo": {
+        "name": "Plan",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Plan/enterprise-tier"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../line-item-totals",
+        "name": "sumLineItems"
+      },
+      "specType": null,
+      "readMe": "# Line Item Totals\n\n## Summary\nThe arithmetic every priced document repeats, over the base `AmountWithCurrency` shape: `lineTotal(item)` is quantity times unit price; `sumLineItems(items)` totals a list and reports the first currency code it meets; `orderTotals(items, taxRate)` adds tax on top; `outstandingBalance(items, payments)` is what is still owed, never below zero. `formatMoney` is re-exported from the CRM utils so a consumer imports one module.\n\nThese are plain functions over structural types (`MoneyLike`, `LineItemLike`, `PaymentLike`), so a quote, an invoice or an order can call them on its own line items without adopting a shared card.\n\n## Usage\n```ts\nimport {\n  orderTotals,\n  formatMoney,\n} from '@cardstack/catalog/cards/commerce/line-item-totals';\n\nlet { total, code } = orderTotals(quote.lineItems, 8.25);\nformatMoney(total, code); // \"$12,400.00\"\n```\n\n## Non-goals\nNot a money type: storage is base `AmountWithCurrency`. No currency conversion: mixed-currency lines total in the first code seen, so a consumer that allows mixing converts first. No rounding policy beyond what `Intl.NumberFormat` applies at display.",
+      "cardTitle": "Line Item Totals",
+      "cardDescription": "Quantity-times-price, list totals, tax and outstanding balance over line items: the arithmetic every priced document repeats.",
+      "cardInfo": {
+        "name": "Line Item Totals",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

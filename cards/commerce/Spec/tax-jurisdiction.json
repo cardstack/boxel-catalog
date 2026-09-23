@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Tax Jurisdiction\n\n`country`, `region` and `rate` (PercentageField): a lookup table every priced document for that region reads, so a rate change is made once.\n\n```ts\nimport { TaxJurisdiction } from '@cardstack/catalog/cards/commerce/tax-jurisdiction';\n\n@field taxJurisdiction = linksTo(TaxJurisdiction);\n```\n\nA document links its jurisdiction rather than copying the rate, and `orderTotals(items, jurisdiction.rate)` from `line-item-totals` applies it.\n\n### Non-goals\nNot a tax engine: no product-category rules, no exemptions, no filing. One flat rate per region.\n\n### Example\n`TaxJurisdiction/california-us` at 7.25%.",
+      "ref": {
+        "module": "../tax-jurisdiction",
+        "name": "TaxJurisdiction"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Tax Jurisdiction",
+      "cardDescription": "A region with its own tax rate — a lookup table reused across every invoice for that region.",
+      "cardInfo": {
+        "name": "Tax Jurisdiction",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../TaxJurisdiction/california-us"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

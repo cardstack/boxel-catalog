@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Territory\n\nA named sales region or segment: `name`, `region` and `owner` (linksTo the CRM User). Deals and forecasts are scoped to a Territory rather than to an individual rep, so quota reporting survives a rep being reassigned.\n\n```ts\nimport { Territory } from '@cardstack/catalog/cards/commerce/territory';\n\n@field territory = linksTo(Territory);\n```\n\n### Non-goals\nDoes not carve boundaries itself: `region` is free text because geography, industry vertical and account tier are each a consumer's call. Does not compute quota attainment.\n\n### Example\n`Territory/west-coast-enterprise`, owned by `User/priya-shah`.",
+      "ref": {
+        "module": "../territory",
+        "name": "Territory"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Territory",
+      "cardDescription": "A named sales region or account segment with an owning rep, used to scope Deals and Forecasts.",
+      "cardInfo": {
+        "name": "Territory",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Territory/west-coast-enterprise"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
