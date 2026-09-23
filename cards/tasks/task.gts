@@ -206,9 +206,7 @@ export class Task extends CardDef {
                 /></span>
             {{/if}}
             {{#if @model.assignee}}
-              <span class='meta-item'><@fields.assignee
-                  @format='atom'
-                /></span>
+              <span class='meta-item'><@fields.assignee @format='atom' /></span>
             {{/if}}
             {{#if @model.createdAt}}
               <span class='meta-item muted'>created
@@ -345,9 +343,7 @@ export class Task extends CardDef {
         <div class='top'>
           <@fields.status @format='atom' />
           {{#if @model.priority}}
-            <span class='f-priority'><@fields.priority
-                @format='atom'
-              /></span>
+            <span class='f-priority'><@fields.priority @format='atom' /></span>
           {{/if}}
         </div>
         <span class='f-title'>{{@model.cardTitle}}</span>

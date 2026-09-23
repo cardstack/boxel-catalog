@@ -218,7 +218,7 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
     }
   };
 
-  dragOverDay = (e: DragEvent) => {
+  dragOverDay = (e: Event) => {
     e.preventDefault();
   };
 
@@ -254,7 +254,7 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
     return Boolean(event.id) && this.dropBeforeId === event.id;
   };
 
-  dropOnChip = (day: CalendarDay, target: CalendarEvent, e: DragEvent) => {
+  dropOnChip = (day: CalendarDay, target: CalendarEvent, e: Event) => {
     if (!this.canDropOnChip(target)) {
       return;
     }

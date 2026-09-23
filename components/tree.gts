@@ -72,7 +72,11 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
 
   get rows(): RenderRow<T>[] {
     let out: RenderRow<T>[] = [];
-    let walk = (nodes: (TreeNode<T> | null | undefined)[], prefix: string, depth: number) => {
+    let walk = (
+      nodes: (TreeNode<T> | null | undefined)[],
+      prefix: string,
+      depth: number,
+    ) => {
       nodes.filter(Boolean).forEach((node, index) => {
         let n = node as TreeNode<T>;
         let path = prefix ? `${prefix}.${index}` : String(index);

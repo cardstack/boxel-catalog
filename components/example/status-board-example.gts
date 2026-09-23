@@ -18,7 +18,9 @@ export class StatusBoardExample extends CardDef {
 
   @field records = linksToMany(() => Task);
 
-  static isolated = class Isolated extends Component<typeof StatusBoardExample> {
+  static isolated = class Isolated extends Component<
+    typeof StatusBoardExample
+  > {
     statusOf = (item: CardDef) => (item as Task).status;
 
     <template>

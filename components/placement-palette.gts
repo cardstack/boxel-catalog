@@ -6,7 +6,10 @@ import { gt, eq } from '@cardstack/boxel-ui/helpers';
 import { BoxelInput, Pill } from '@cardstack/boxel-ui/components';
 
 import type { PlacementField } from '../fields/placement/placement-vocabulary';
-import { placedItemIds, itemKey } from '../fields/placement/placement-vocabulary';
+import {
+  placedItemIds,
+  itemKey,
+} from '../fields/placement/placement-vocabulary';
 
 // One candidate the palette can offer. Deliberately a plain shape rather
 // than a CardDef: the Placement family works for things that are not cards
@@ -150,10 +153,17 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
   };
 
   <template>
-    <section class='palette' aria-label={{if @heading @heading 'Unplaced items'}} ...attributes>
+    <section
+      class='palette'
+      aria-label={{if @heading @heading 'Unplaced items'}}
+      ...attributes
+    >
       <header class='palette-head'>
         <h3 class='palette-title'>{{if @heading @heading 'To place'}}</h3>
-        <Pill class='palette-count' @kind='default'>{{this.available.length}}</Pill>
+        <Pill
+          class='palette-count'
+          @kind='default'
+        >{{this.available.length}}</Pill>
       </header>
 
       {{#if @searchable}}

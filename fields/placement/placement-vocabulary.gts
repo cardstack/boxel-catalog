@@ -142,10 +142,7 @@ export function placementsIn(
 }
 
 // The next free position at the end of a zone.
-export function nextSeq(
-  zoneKey: string,
-  placements: PlacementField[],
-): number {
+export function nextSeq(zoneKey: string, placements: PlacementField[]): number {
   let seqs = placementsIn(zoneKey, placements)
     .map((p) => p.seq)
     .filter((s): s is number => typeof s === 'number');
@@ -175,7 +172,10 @@ export function itemKey(id?: string | null): string {
   if (!id) {
     return '';
   }
-  let clean = id.trim().replace(/\.json$/i, '').replace(/\/+$/, '');
+  let clean = id
+    .trim()
+    .replace(/\.json$/i, '')
+    .replace(/\/+$/, '');
   let segments = clean.split('/').filter((s) => s && s !== '..' && s !== '.');
   return segments.slice(-2).join('/');
 }
