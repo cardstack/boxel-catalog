@@ -276,7 +276,7 @@ export class Activity extends CardDef {
         {{#if @model.about}}
           <section class='panel'>
             <h2>About</h2>
-            <dd class='about'><@fields.about @format='atom' /></dd>
+            <div class='about'><@fields.about @format='atom' /></div>
           </section>
         {{/if}}
       </article>

@@ -2,10 +2,10 @@
   "data": {
     "type": "card",
     "attributes": {
-      "activityType": "email",
-      "summary": "Sent the rollout proposal to Mei",
-      "body": "Attached the two-seat-tier proposal and asked for a decision before the end of the month.",
-      "occurredAt": "2026-08-20T14:20:00.000Z",
+      "activityType": "meeting",
+      "summary": "Quarterly business review with Brightleaf",
+      "body": null,
+      "occurredAt": "2026-09-24T10:00:00.000Z",
       "cardInfo": {
         "name": null,
         "summary": null,
@@ -27,7 +27,7 @@
       },
       "about": {
         "links": {
-          "self": "../Opportunity/brightleaf-workspace"
+          "self": "../Account/brightleaf-studio"
         }
       },
       "cardInfo.theme": {
