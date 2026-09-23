@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "LegalEntity",
+        "module": "../legal-entity"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Legal Entity\n\nAn Account is who you sell to; a Legal Entity is who signs — registered name, entity form, jurisdiction, registration number, masked tax ID, and the authorized signatory.\n\n### Non-goals\n\nA Contract reaches its entities through `parties` (Legal Party Role) and its signature blocks, not through a field here. No KYC or verification workflow.",
+      "cardInfo": {
+        "name": "Legal Entity",
+        "summary": "The registered legal person who actually signs: form, jurisdiction, registration, signatory."
+      },
+      "containedExamples": [],
+      "cardTitle": "Legal Entity",
+      "cardDescription": "The registered legal person who signs: registered name, form, jurisdiction, registration number and authorized signatory."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../LegalEntity/cardstack-inc"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

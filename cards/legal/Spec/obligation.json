@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../obligation",
+        "name": "Obligation"
+      },
+      "specType": "card",
+      "readMe": "# Obligation\n\n## Summary\nA promise a contract compels, with a date and an owner: `contract`, `obligationType` (payment, delivery, notification, compliance, insurance, audit), `description`, `consequence` (what a miss costs), `amount`, `recurrence` (the catalog Recurring Pattern field), `firstDueDate`, `completions`, `owner`, `escalatedTo` and reminder settings.\n\n## Why not a Task\nA task is work somebody chose to do; an obligation is work a signed agreement requires. Missing one is a breach, not a slipped plan, so lateness carries a consequence sentence and an escalation, which the catalog Task has no place for.\n\n## What is derived\n`status` and `nextDueDate` are computed from the recurrence and the completions, never stored — a stored status is the most drift-prone value in a compliance view, where a dashboard buckets by date while a pill reads the stored enum.\n\n## Usage\n```ts\nimport { Obligation } from '@cardstack/catalog/cards/legal/obligation';\n\n@field obligations = linksToMany(() => Obligation);\n```\n\nA Contract lists its obligations by querying Obligation on `contract`.\n\n## Non-goals\nNo reminder sending; the reminder fields record who should be told and when. No automatic completion.",
+      "cardTitle": "Obligation",
+      "cardDescription": "A promise a signed contract compels, with its type, consequence, recurrence, owner and completions; status and next due date are derived.",
+      "cardInfo": {
+        "name": "Obligation",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
