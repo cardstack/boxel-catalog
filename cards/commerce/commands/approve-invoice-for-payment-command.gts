@@ -96,12 +96,21 @@ export default class ApproveInvoiceForPaymentCommand extends Command<
       );
     }
 
-    await new PatchCardInstanceCommand(this.commandContext, {
-      cardType: Invoice,
-    }).execute({
-      cardId: invoice.id,
-      patch: { attributes: { status: 'approved-for-payment' } },
-    });
+    // Walk the status graph rather than jumping to the end of it.
+    let path =
+      status === 'exception'
+        ? ['matching', 'matched', 'approved-for-payment']
+        : status === 'matching'
+          ? ['matched', 'approved-for-payment']
+          : ['approved-for-payment'];
+    for (let next of path) {
+      await new PatchCardInstanceCommand(this.commandContext, {
+        cardType: Invoice,
+      }).execute({
+        cardId: invoice.id,
+        patch: { attributes: { status: next } },
+      });
+    }
 
     let resolvedCount = resolved.size;
     return new ApproveInvoiceForPaymentResult({
