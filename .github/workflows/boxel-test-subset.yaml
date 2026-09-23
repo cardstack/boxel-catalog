@@ -1,0 +1,220 @@
+name: Boxel Test Subset
+
+# The boxel monorepo pins a subset of this repo's system-level definitions
+# (packages/catalog/test-subset.json there) and tests the platform against it.
+# The deployed catalog realm serves this repo's main, so a change to one of
+# those files has to keep boxel's tests passing before it merges. This
+# workflow runs the boxel tests the manifest names against this checkout
+# whenever a change touches a subset file.
+#
+# A pull request is tested against the boxel branch of the same name when one
+# exists, so a catalog change and the boxel change that depends on it can be
+# validated together before either merges; otherwise against boxel main.
+# A manual run can name any boxel ref.
+#
+# It is a no-op when the boxel checkout has no manifest, and for pull
+# requests that touch no subset file.
+
+on:
+  workflow_dispatch:
+    inputs:
+      boxel_ref:
+        description: boxel ref to test against (branch, tag or sha)
+        required: false
+        default: main
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: boxel-test-subset-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  scope:
+    name: Decide whether the boxel test subset is touched
+    runs-on: ubuntu-latest
+    outputs:
+      boxel_ref: ${{ steps.ref.outputs.boxel_ref }}
+      run: ${{ steps.scope.outputs.run }}
+      host_filters: ${{ steps.scope.outputs.host_filters }}
+      realm_server_files: ${{ steps.scope.outputs.realm_server_files }}
+    steps:
+      - name: Pick the boxel ref
+        id: ref
+        env:
+          REQUESTED: ${{ inputs.boxel_ref }}
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          ref="$REQUESTED"
+          if [ -z "$ref" ]; then
+            if git ls-remote --exit-code --heads https://github.com/cardstack/boxel.git "$BRANCH" >/dev/null; then
+              ref="$BRANCH"
+            else
+              ref=main
+            fi
+          fi
+          echo "Testing against boxel@$ref"
+          echo "boxel_ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          repository: cardstack/boxel
+          ref: ${{ steps.ref.outputs.boxel_ref }}
+          sparse-checkout: packages/catalog
+          path: boxel
+
+      - name: Decide scope
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          manifest=boxel/packages/catalog/test-subset.json
+          if [ ! -f "$manifest" ]; then
+            echo "::notice::boxel@${{ steps.ref.outputs.boxel_ref }} has no catalog test subset; nothing to run"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          run=true
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            gh api "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}/files" \
+              --paginate --jq '.[].filename' > changed.txt
+            jq -r '.files[].path' "$manifest" > subset.txt
+            if grep -qxFf subset.txt changed.txt; then
+              echo "Touched subset files:"; grep -xFf subset.txt changed.txt
+            else
+              echo "No subset file touched"
+              run=false
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "host_filters=$(jq -c '.tests.host // []' "$manifest")" >> "$GITHUB_OUTPUT"
+          echo "realm_server_files=$(jq -r '.tests.realmServer // [] | join(",")' "$manifest")" >> "$GITHUB_OUTPUT"
+
+  host:
+    name: Boxel host tests against this catalog
+    needs: scope
+    if: needs.scope.outputs.run == 'true' && needs.scope.outputs.host_filters != '[]'
+    runs-on: ubuntu-latest
+    env:
+      # The checkout below is the exact commit under test; keep
+      # catalog-update.sh from pulling it elsewhere, and serve the subset
+      # definitions from it rather than from boxel's pin.
+      SKIP_CATALOG_UPDATE: "1"
+      CATALOG_TEST_SUBSET_SOURCE: packages/catalog/contents
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          repository: cardstack/boxel
+          ref: ${{ needs.scope.outputs.boxel_ref }}
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          path: packages/catalog/contents
+
+      - uses: ./.github/actions/init
+
+      - name: Build common dependencies
+        run: pnpm run build-common-deps
+
+      - name: Build Host for tests
+        run: NODE_OPTIONS='--max-old-space-size=8192' pnpm build
+        working-directory: packages/host
+
+      - name: Disable TCP/UDP network offloading
+        run: sudo ethtool -K eth0 tx off rx off
+
+      - name: Install D-Bus helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dbus-x11 upower
+          sudo service dbus restart
+          sudo service upower restart
+
+      - name: Start test services
+        run: mise run test-services:host | tee -a /tmp/server.log &
+
+      - name: Create realm users
+        run: pnpm register-realm-users
+        working-directory: packages/matrix
+
+      - name: Wait for the stack
+        run: |
+          for url in \
+            'https://localhost:4201/base/_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson' \
+            'https://localhost:4201/catalog/_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson' \
+            'https://localhost:4202/test/_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson' \
+            'http://localhost:8008'; do
+            timeout 900 bash -c "until curl -skf '$url' >/dev/null; do sleep 5; done"
+          done
+
+      - name: Host tests the subset feeds
+        working-directory: packages/host
+        env:
+          DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/dbus/system_bus_socket
+          HOST_FILTERS: ${{ needs.scope.outputs.host_filters }}
+        run: |
+          status=0
+          while IFS= read -r filter; do
+            echo "::group::ember test --filter \"$filter\""
+            dbus-run-session -- pnpm exec ember test --path ./dist --filter "$filter" || status=1
+            echo "::endgroup::"
+          done < <(jq -r '.[]' <<<"$HOST_FILTERS")
+          exit $status
+
+      - name: Print realm server logs
+        if: ${{ !cancelled() }}
+        run: cat /tmp/server.log
+
+  realm-server:
+    name: Boxel realm-server tests against this catalog
+    needs: scope
+    if: needs.scope.outputs.run == 'true' && needs.scope.outputs.realm_server_files != ''
+    runs-on: ubuntu-latest
+    env:
+      SKIP_CATALOG_UPDATE: "1"
+      CATALOG_TEST_SUBSET_SOURCE: packages/catalog/contents
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          repository: cardstack/boxel
+          ref: ${{ needs.scope.outputs.boxel_ref }}
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          path: packages/catalog/contents
+
+      - uses: ./.github/actions/init
+
+      - name: Build common dependencies
+        run: pnpm run build-common-deps
+
+      - name: Build Host for the prerenderer
+        run: NODE_OPTIONS='--max-old-space-size=8192' pnpm build
+        working-directory: packages/host
+
+      - name: Warm test Docker images
+        uses: ./.github/actions/warm-test-images
+
+      # test-services:realm-server serves the subset as the catalog realm;
+      # CATALOG_TEST_SUBSET_SOURCE makes the subset this checkout's copy.
+      - name: Start test services
+        run: mise run test-services:realm-server | tee -a /tmp/server.log &
+
+      - name: Create realm users
+        run: pnpm register-realm-users
+        working-directory: packages/matrix
+
+      - name: Realm-server tests the subset feeds
+        run: pnpm test:wait-for-servers
+        working-directory: packages/realm-server
+        env:
+          TEST_FILES: ${{ needs.scope.outputs.realm_server_files }}
+
+      - name: Print realm server logs
+        if: ${{ !cancelled() }}
+        run: cat /tmp/server.log
