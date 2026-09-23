@@ -10,7 +10,7 @@ import BooleanField from '@cardstack/base/boolean';
 import enumField from '@cardstack/base/enum';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 
-import { SeverityBadge } from '../../components/severity-badge';
+import { SeverityBadge } from './components/severity-badge';
 import {
   SEVERITY_LEVELS,
   SEVERITY_LABELS,

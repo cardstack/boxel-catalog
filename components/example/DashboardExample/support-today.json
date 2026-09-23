@@ -19,13 +19,15 @@
           "label": "Near SLA breach",
           "value": "5",
           "intent": "amber",
-          "detail": "under 30 minutes left"
+          "detail": "under 30 minutes left",
+          "opensTo": "the 5 tickets under 30 minutes from breach"
         },
         {
           "label": "Breached",
           "value": "3",
           "intent": "red",
-          "detail": "oldest 4h over"
+          "detail": "oldest 4h over",
+          "opensTo": "the 3 breached tickets"
         }
       ],
       "cardInfo": {

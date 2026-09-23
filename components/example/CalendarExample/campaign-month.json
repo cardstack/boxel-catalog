@@ -32,6 +32,21 @@
           "title": "Launch retro",
           "date": "2026-10-22",
           "kind": "meeting"
+        },
+        {
+          "title": "Pricing page review",
+          "date": "2026-10-07",
+          "kind": "review"
+        },
+        {
+          "title": "Legal sign-off",
+          "date": "2026-10-07",
+          "kind": "deadline"
+        },
+        {
+          "title": "Agency stand-up",
+          "date": "2026-10-07",
+          "kind": "meeting"
         }
       ],
       "cardInfo": {
@@ -39,7 +54,19 @@
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
-      }
+      },
+      "projected": [
+        {
+          "title": "Weekly check-in",
+          "date": "2026-10-19",
+          "kind": "meeting"
+        },
+        {
+          "title": "Weekly check-in",
+          "date": "2026-10-26",
+          "kind": "meeting"
+        }
+      ]
     },
     "relationships": {
       "cardInfo.theme": {

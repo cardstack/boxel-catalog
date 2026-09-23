@@ -6,7 +6,7 @@ import {
   SEVERITY_HUE,
   SEVERITY_LABELS,
   SEVERITY_RANK,
-} from '../fields/severity/severity-vocabulary';
+} from '../severity-vocabulary';
 
 interface Signature {
   Args: {
@@ -19,7 +19,7 @@ interface Signature {
   Element: HTMLElement;
 }
 
-// Severity is read from across a room, so it is the one place this app
+// Severity is read from across a room, so it is the one place an audit view
 // spends saturated colour — and the three-segment meter carries the rank
 // on its own, so the badge still reads when colour does not.
 export class SeverityBadge extends GlimmerComponent<Signature> {

@@ -6,13 +6,13 @@ import { htmlSafe } from '@ember/template';
 import type { SafeString } from '@ember/template';
 import type { CardDef } from '@cardstack/base/card-api';
 
-import { type OrgNode } from '../utils/org-tree';
+import { type TreeNode } from '../utils/build-tree';
 
-/** The generic node shape — same as utils' OrgNode; build one with buildTree. */
-export type TreeNode<T> = OrgNode<T>;
+/** The generic node shape; build one with buildTree. */
+export type { TreeNode };
 
 /** The forest builder, re-exported under the generic name. Cycle-safe. */
-export { buildOrgTree as buildTree } from '../utils/org-tree';
+export { buildTree } from '../utils/build-tree';
 
 export interface TreeRowMeta {
   depth: number;

@@ -7,8 +7,8 @@ import {
 } from '@cardstack/base/card-api';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 
-import { SeverityBadge } from '../severity-badge';
-import { SeverityField } from '../../fields/severity/severity-field';
+import { SeverityBadge } from '../components/severity-badge';
+import { SeverityField } from '../severity-field';
 
 // Usage page for the Severity Badge block: every level in every mode, plus
 // one real Severity field so the embedded and atom renders are exercised.

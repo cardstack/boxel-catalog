@@ -351,11 +351,9 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
                   </div>
                   <div class='day-events'>
                     {{! Keyed by id — chipsFor/eventsOn mint a brand-new
-                      array of new object literals on every call, so without
-                      a stable key Glimmer tears down and rebuilds every chip
-                      on any unrelated re-render. That kills the hovered DOM
-                      node mid-hover, which is why the native title tooltip
-                      was flickering. }}
+                      array of new object literals on every call, so the key
+                      is what keeps a chip's DOM node, and its native title
+                      tooltip, alive across an unrelated re-render. }}
                     {{#each (this.chipsFor day) key='id' as |event|}}
                       <button
                         type='button'
