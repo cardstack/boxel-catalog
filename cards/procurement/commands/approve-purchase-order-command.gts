@@ -9,14 +9,18 @@ import { Command } from '@cardstack/runtime-common';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
-import { PurchaseOrder, PO_ROUTE_STEP_ROLES } from '../purchase-order';
+import {
+  PurchaseOrder,
+  PO_ROUTE_STEP_ROLES,
+  poApprovalRouteFor,
+} from '../purchase-order';
 import { ProcurementBudget } from '../procurement-budget';
 import { ApprovalDecisionField } from '@cardstack/catalog/cards/hr/approval-step-field';
 import { ApproveChainStepCommand } from '@cardstack/catalog/cards/hr/commands/approve-chain-step-command';
 
 // Approve Purchase Order — decides the current step of a PO's
 // threshold-routed approval chain, reusing the shared
-// ApproveChainStepCommand (Legal's block, second real consumer) for the
+// ApproveChainStepCommand (from cards/hr) for the
 // step mutation itself. What this command adds is the procurement
 // consequence: when the chain completes, the PO flips to `approved` and its
 // total is COMMITTED against the linked budget (commitment accounting);
@@ -72,11 +76,19 @@ export default class ApprovePurchaseOrderCommand extends Command<
       throw new Error(`This approval chain is already ${chain.status}`);
     }
 
+    let route = poApprovalRouteFor(po.totalAmount ?? 0);
+    if (po.approvalRoute !== route) {
+      throw new Error(
+        `This PO's total needs the ${route} route, but it stores "${po.approvalRoute ?? 'none'}" — reissue it before deciding`,
+      );
+    }
+    let roles = PO_ROUTE_STEP_ROLES[route];
+    if ((chain.steps ?? []).length !== roles.length) {
+      throw new Error(
+        `The ${route} route has ${roles.length} step(s), but this chain has ${(chain.steps ?? []).length}`,
+      );
+    }
     let stepIndex = chain.currentStepIndex ?? 0;
-    let roles =
-      PO_ROUTE_STEP_ROLES[
-        (po.approvalRoute as keyof typeof PO_ROUTE_STEP_ROLES) ?? 'manager'
-      ] ?? [];
     let roleLabel = roles[stepIndex] ?? `Step ${stepIndex + 1}`;
 
     // The step mutation itself is the shared block's job.

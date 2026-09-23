@@ -34,7 +34,10 @@ import {
 import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 // ---- AP (buy-side) leg.
 import { PurchaseOrder } from '../procurement/purchase-order';
-import { VarianceResolutionField } from '../procurement/three-way-match';
+import {
+  VarianceResolutionField,
+  matchLines,
+} from '../procurement/three-way-match';
 import { ThreeWayMatchPanel } from '../procurement/components/three-way-match-panel';
 
 // The due-date pill states calendar facts it cannot square with the invoice's
@@ -153,8 +156,8 @@ class InvoiceEdit extends Component<typeof Invoice> {
             <FieldContainer @label='Tax breakdown' @vertical={{true}}>
               <@fields.taxBreakdown />
             </FieldContainer>
-            <p class='sect-note'>Tax is normally written by the Calculate Tax
-              command — edit here only to correct it.</p>
+            <p class='sect-note'>Tax is added to the total; record the
+              calculated amount here.</p>
           </section>
 
           <section
@@ -293,6 +296,51 @@ class InvoiceEdit extends Component<typeof Invoice> {
   </template>
 }
 
+interface InvoiceLike {
+  lineItems?: any[];
+  taxBreakdown?: { taxAmount?: number | null } | null;
+  payments?: ({ amount?: { amount?: number | null } | null } | undefined)[];
+  purchaseOrder?: {
+    lineItems?: any[];
+    receivedQuantities?: (number | undefined)[];
+  } | null;
+  varianceResolutions?: ({ lineNumber?: number | null; action?: string | null } | undefined)[];
+}
+
+/**
+ * What an invoice is for and what is still owed, in one place for every view
+ * and the overdue check. Tax is added from the Tax Breakdown. On a vendor
+ * invoice, a `short-pay` resolution pays the PO price (the line's variance is
+ * not owed) and a `reject-line` resolution drops the line.
+ */
+export function invoiceAmounts(invoice?: InvoiceLike | null) {
+  let { total: subtotal, code } = sumLineItems(invoice?.lineItems);
+  let tax = invoice?.taxBreakdown?.taxAmount ?? 0;
+  let adjustment = 0;
+  let resolutions = (invoice?.varianceResolutions ?? []).filter(Boolean);
+  let po = invoice?.purchaseOrder;
+  if (po && resolutions.length) {
+    let rows = matchLines(
+      po.lineItems ?? [],
+      po.receivedQuantities ?? [],
+      invoice?.lineItems ?? [],
+      new Set(),
+    );
+    for (let r of resolutions) {
+      let row = rows.find((x) => x.lineNumber === r?.lineNumber);
+      if (!row) continue;
+      if (r?.action === 'short-pay') adjustment += Math.max(row.varianceAmount, 0);
+      if (r?.action === 'reject-line') adjustment += row.invTotal ?? 0;
+    }
+  }
+  let total = subtotal + tax - adjustment;
+  let paid = (invoice?.payments ?? []).reduce(
+    (acc, p) => acc + (p?.amount?.amount ?? 0),
+    0,
+  );
+  return { subtotal, tax, adjustment, total, paid, balance: Math.max(total - paid, 0), code };
+}
+
 export class Invoice extends CardDef {
   static displayName = 'Invoice';
   static icon = FileInvoiceIcon;
@@ -313,15 +361,16 @@ export class Invoice extends CardDef {
   // empty.
   @field purchaseOrder = linksTo(() => PurchaseOrder);
   @field varianceResolutions = containsMany(VarianceResolutionField);
-  // ADDED (Revenue Ops Console build) — written by calculate-tax-command.ts
-  // via convert-quote-to-invoice-command.ts, optional (not every invoice is
-  // taxed).
+  // Optional (not every invoice is taxed); its `taxAmount` is added to the
+  // total by `invoiceAmounts`.
   @field taxBreakdown = contains(TaxBreakdownField);
 
   @field daysOverdue = contains(NumberField, {
     computeVia: function (this: Invoice) {
       if (!this.dueDate) return 0;
       if (['paid', 'void'].includes(this.status ?? '')) return 0;
+      // Paid in full is not overdue, whatever the stored status says.
+      if (invoiceAmounts(this as any).balance <= 0) return 0;
       let days = Math.floor(
         (Date.now() - new Date(this.dueDate).getTime()) / 86400000,
       );
@@ -353,7 +402,7 @@ export class Invoice extends CardDef {
 
   static embedded = class Embedded extends Component<typeof Invoice> {
     get total() {
-      const { total, code } = sumLineItems(this.args.model?.lineItems);
+      const { total, code } = invoiceAmounts(this.args.model as any);
       return formatMoney(total, code);
     }
     <template>
@@ -445,7 +494,7 @@ export class Invoice extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Invoice> {
     get total() {
-      const { total, code } = sumLineItems(this.args.model?.lineItems);
+      const { total, code } = invoiceAmounts(this.args.model as any);
       return formatMoney(total, code) || '—';
     }
     get itemCount() {
@@ -669,7 +718,7 @@ export class Invoice extends CardDef {
       }));
     }
     get total() {
-      const { total, code } = sumLineItems(this.args.model?.lineItems);
+      const { total, code } = invoiceAmounts(this.args.model as any);
       return formatMoney(total, code) || '\u2014';
     }
     get number() {
@@ -689,7 +738,7 @@ export class Invoice extends CardDef {
       return sum ? formatMoney(sum, code) : '';
     }
     get balance() {
-      const { total, code } = sumLineItems(this.args.model?.lineItems);
+      const { total, code } = invoiceAmounts(this.args.model as any);
       let due = total - this.paidSum.sum;
       return formatMoney(due > 0 ? due : 0, this.paidSum.code ?? code);
     }

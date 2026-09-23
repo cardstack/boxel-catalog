@@ -221,9 +221,9 @@ class VendorQuoteEdit extends Component<typeof VendorQuote> {
 // A vendor's priced response to an RFQ, recorded by the BUYER (single-persona
 // rule: vendors do not log in — the procurement manager transcribes inbound
 // quotes from email/PDF). Lines reuse LineItem so quote totals and PO lines
-// speak the same shape. `vendorProfile` is optional but recommended: linking
-// it lets the comparison board surface the compliance gate; AwardRfqCommand
-// enforces the same gate server-side regardless.
+// speak the same shape. `vendorProfile` carries the compliance gate: the
+// comparison board surfaces it and AwardRfqCommand refuses a quote without
+// one.
 export class VendorQuote extends CardDef {
   static displayName = 'Vendor Quote';
   static headerColor = '#3e4e88';

@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "poNumber": "PO-2026-0029",
+      "status": "received",
+      "approvalRoute": "manager",
+      "lineItems": [
+        {
+          "description": "Ergonomic task chair",
+          "quantity": 12,
+          "unitPrice": {
+            "amount": 400,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "receivedQuantities": [12],
+      "approvalChain": {
+        "startedAt": "2026-06-09T15:00:00.000Z",
+        "steps": [
+          {
+            "decision": "approved",
+            "decidedAt": "2026-06-10T09:05:00.000Z",
+            "comment": "Facilities request.",
+            "openedAt": "2026-06-09T15:00:00.000Z"
+          }
+        ]
+      },
+      "expectedDelivery": "2026-06-24",
+      "cardInfo": {
+        "name": "PO-2026-0029"
+      }
+    },
+    "relationships": {
+      "vendor": {
+        "links": {
+          "self": "../Vendor/acme-supply"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../purchase-order",
+        "name": "PurchaseOrder"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Payment Status\n\nExtracted from `invoice.gts`'s private `InvoiceStatusField` (plain enumField). Built on the shared `statusField` utility with a transition graph. `overdue` is deliberately NOT a stored option — it stays a derived field on Invoice (`isOverdue`/`displayStatus`), because overdue is what \"unpaid past the due date\" looks like, not a state anyone sets. Storing it would let the stored value and the dates drift apart.\n\n### Non-goals\nDoes not implement dunning/reminder automation (a Could-Have, deferred). Does not calculate the amount owed (that's `Invoice`'s own line items).\n\n### Example\n`linkedExamples` points at the real, already-existing `Invoice/inv-2026-052` instance (`status: 'paid'`) — an in-use example, since Payment Status is a field, not a standalone card.",
+      "readMe": "## Payment Status\n\nThe Invoice's status, built on the shared `statusField` utility with a transition graph covering both the sell side and the buy-side match flow. `overdue` is deliberately NOT a stored option — it stays a derived field on Invoice (`isOverdue`/`displayStatus`), because overdue is what \"unpaid past the due date\" looks like, not a state anyone sets. Storing it would let the stored value and the dates drift apart.\n\n### Non-goals\nDoes not implement dunning/reminder automation (a Could-Have, deferred). Does not calculate the amount owed (Invoice's `invoiceAmounts` does).\n\n### Example\n`linkedExamples` points at `Invoice/inv-2026-052` (`status: 'paid'`) — an in-use example, since Payment Status is a field, not a standalone card.",
       "ref": {
         "module": "../payment-status-field",
         "name": "PaymentStatusField"

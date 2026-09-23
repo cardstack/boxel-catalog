@@ -78,11 +78,10 @@ export default class AwardRfqCommand extends Command<
       })) as VendorQuote;
     }
 
-    if (rfq.status === 'awarded') {
-      throw new Error('This RFQ has already been awarded');
-    }
-    if (rfq.status === 'cancelled') {
-      throw new Error('A cancelled RFQ cannot be awarded');
+    if (rfq.status !== 'sent' && rfq.status !== 'comparing') {
+      throw new Error(
+        `Only a sent or comparing RFQ can be awarded (this one is "${rfq.status ?? 'draft'}")`,
+      );
     }
     if (quote.rfq?.id && rfq.id && quote.rfq.id !== rfq.id) {
       throw new Error('That quote belongs to a different RFQ');
@@ -93,7 +92,12 @@ export default class AwardRfqCommand extends Command<
       );
     }
     let profile = quote.vendorProfile as VendorProfile | undefined;
-    if (profile && !profile.complianceOk) {
+    if (!profile) {
+      throw new Error(
+        'Link the vendor profile on this quote first — award checks its compliance',
+      );
+    }
+    if (!profile.complianceOk) {
       throw new Error(
         `${quote.vendor?.name ?? 'This vendor'} has expired insurance or certifications — refresh compliance before awarding`,
       );

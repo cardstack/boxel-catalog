@@ -27,7 +27,7 @@
       "leadTimeDays": 14,
       "validUntil": "2026-09-28",
       "cardInfo": {
-        "name": "Quote \u2014 TechSource"
+        "name": "Quote — TechSource"
       }
     },
     "relationships": {
@@ -39,6 +39,11 @@
       "vendor": {
         "links": {
           "self": "../Vendor/techsource"
+        }
+      },
+      "vendorProfile": {
+        "links": {
+          "self": "../VendorProfile/techsource"
         }
       }
     },

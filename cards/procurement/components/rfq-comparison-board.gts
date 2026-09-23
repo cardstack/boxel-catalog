@@ -94,12 +94,14 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
         // linked profile not loaded — treat as unknown
       }
       let stale = Boolean(quote.isStale);
-      let blocked = stale || (complianceKnown && !complianceOk);
+      let blocked = stale || !complianceKnown || !complianceOk;
       let blockedReason = stale
         ? 'quote expired'
-        : complianceKnown && !complianceOk
-          ? 'compliance lapsed'
-          : '';
+        : !complianceKnown
+          ? 'no vendor profile'
+          : !complianceOk
+            ? 'compliance lapsed'
+            : '';
       return {
         quote,
         vendorName,

@@ -11,7 +11,11 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
 import { Invoice } from '../../commerce/invoice';
-import { VarianceActionField, VARIANCE_ACTIONS } from '../three-way-match';
+import {
+  VarianceActionField,
+  VARIANCE_ACTIONS,
+  matchLines,
+} from '../three-way-match';
 
 // Resolve Variance — records one human decision about one failing match
 // line, on the invoice, permanently. Reason is REQUIRED: the resolution IS
@@ -63,6 +67,26 @@ export default class ResolveVarianceCommand extends Command<
       invoice = (await new GetCardCommand(this.commandContext).execute({
         cardId: invoice.id,
       })) as Invoice;
+    }
+    let status = invoice.status ?? '';
+    if (!['matching', 'exception'].includes(status)) {
+      throw new Error(
+        `A "${status || 'unset'}" invoice has no open match to resolve — only one in matching or exception`,
+      );
+    }
+    let po = invoice.purchaseOrder;
+    let row = po
+      ? matchLines(
+          po.lineItems ?? [],
+          po.receivedQuantities ?? [],
+          invoice.lineItems ?? [],
+          new Set(),
+        ).find((r) => r.lineNumber === lineNumber)
+      : undefined;
+    if (!row || row.state === 'clean') {
+      throw new Error(
+        `Line ${lineNumber} has no variance to resolve`,
+      );
     }
     let existing = (invoice.varianceResolutions ?? []).filter(Boolean);
     if (existing.some((r) => r.lineNumber === lineNumber)) {

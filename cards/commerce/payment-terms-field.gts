@@ -99,4 +99,3 @@ export class PaymentTermsField extends FieldDef {
 }
 
 export default PaymentTermsField;
-// touched for re-index

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Tax Breakdown\n\nCompound field: `jurisdiction` (linksTo TaxJurisdiction, kept for traceability), `taxableAmount`, `taxAmount`, `rateApplied`. `rateApplied` IS A SNAPSHOT, NOT A LIVE JOIN to `TaxJurisdiction.rate` — same principle as Order (\"fees are snapshots, not rates\"): a later change to the jurisdiction's rate must never rewrite a past invoice's tax line.\n\n### Non-goals\nDoes not calculate itself — that's `calculate-tax-command.ts`'s job; this field only stores the result.\n\n### Example\n`linkedExamples` points at `Invoice/acme-enterprise-renewal-inv`, a new instance carrying a real Tax Breakdown value (calculated at 7.25% against `TaxJurisdiction/california-us`) — the natural in-use example, since Tax Breakdown is a compound field, not a standalone card.",
+      "readMe": "## Tax Breakdown\n\nCompound field: `jurisdiction` (linksTo TaxJurisdiction, kept for traceability), `taxableAmount`, `taxAmount`, `rateApplied`. `rateApplied` IS A SNAPSHOT, NOT A LIVE JOIN to `TaxJurisdiction.rate` — same principle as Order (\"fees are snapshots, not rates\"): a later change to the jurisdiction's rate must never rewrite a past invoice's tax line.\n\n### Non-goals\nDoes not calculate itself; this field only stores a result written by whatever computed it.\n\n### Example\n`linkedExamples` points at `Invoice/acme-enterprise-renewal-inv`, carrying a real Tax Breakdown value (calculated at 7.25% against `TaxJurisdiction/california-us`) — the natural in-use example, since Tax Breakdown is a compound field, not a standalone card.",
       "ref": {
         "module": "../tax-breakdown-field",
         "name": "TaxBreakdownField"

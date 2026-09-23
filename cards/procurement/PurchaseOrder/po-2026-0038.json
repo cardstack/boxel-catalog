@@ -4,7 +4,7 @@
     "attributes": {
       "poNumber": "PO-2026-0038",
       "status": "received",
-      "approvalRoute": "manager",
+      "approvalRoute": "finance-vp",
       "lineItems": [
         {
           "description": "27\" Monitor",
@@ -17,9 +17,7 @@
           }
         }
       ],
-      "receivedQuantities": [
-        55
-      ],
+      "receivedQuantities": [55],
       "approvalChain": {
         "startedAt": "2026-07-14T10:00:00.000Z",
         "steps": [
@@ -28,6 +26,12 @@
             "decidedAt": "2026-07-15T08:20:00.000Z",
             "comment": "Approved for onboarding cohort.",
             "openedAt": "2026-07-14T10:00:00.000Z"
+          },
+          {
+            "decision": "approved",
+            "decidedAt": "2026-07-15T16:05:00.000Z",
+            "comment": "Within the Q1 hardware envelope.",
+            "openedAt": "2026-07-15T08:20:00.000Z"
           }
         ]
       },

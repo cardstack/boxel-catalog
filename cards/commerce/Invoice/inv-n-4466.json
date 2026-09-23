@@ -1,0 +1,47 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "invoiceNumber": "N-4466",
+      "issueDate": "2026-06-26",
+      "dueDate": "2026-07-26",
+      "status": "approved-for-payment",
+      "lineItems": [
+        {
+          "description": "Ergonomic task chair",
+          "quantity": 12,
+          "unitPrice": {
+            "amount": 425,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "varianceResolutions": [
+        {
+          "lineNumber": 1,
+          "action": "short-pay",
+          "reason": "Billed $425 against the $400 PO price; paying the PO price.",
+          "resolvedAt": "2026-06-30T13:20:00.000Z"
+        }
+      ],
+      "cardInfo": {
+        "name": "INV N-4466 — Acme Supply"
+      }
+    },
+    "relationships": {
+      "purchaseOrder": {
+        "links": {
+          "self": "../../procurement/PurchaseOrder/po-2026-0029"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../invoice",
+        "name": "Invoice"
+      }
+    }
+  }
+}

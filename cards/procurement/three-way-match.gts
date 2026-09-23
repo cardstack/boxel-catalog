@@ -55,19 +55,64 @@ interface LineItemish {
   } | null;
 }
 
+function lineKey(line?: LineItemish) {
+  return (line?.description ?? '').trim().toLowerCase();
+}
+
+// Pairs each invoice line with the PO line of the same description, falling
+// back to the same position, so a vendor that reorders lines still matches.
+// Invoice lines are numbered first, in invoice order; PO lines left unbilled
+// follow.
+function pairLines(
+  poLines: (LineItemish | undefined)[],
+  invoiceLines: (LineItemish | undefined)[],
+) {
+  let used = new Set<number>();
+  let pairs: { poIndex?: number; invIndex?: number }[] = [];
+  let invPo = invoiceLines.map((inv) => {
+    let key = lineKey(inv);
+    let match = key
+      ? poLines.findIndex((po, i) => !used.has(i) && lineKey(po) === key)
+      : -1;
+    if (match >= 0) {
+      used.add(match);
+      return match;
+    }
+    return undefined;
+  });
+  invoiceLines.forEach((_, invIndex) => {
+    let poIndex = invPo[invIndex];
+    if (
+      poIndex == null &&
+      invIndex < poLines.length &&
+      !used.has(invIndex)
+    ) {
+      used.add(invIndex);
+      poIndex = invIndex;
+    }
+    pairs.push({ poIndex, invIndex });
+  });
+  poLines.forEach((_, poIndex) => {
+    if (!used.has(poIndex)) {
+      pairs.push({ poIndex });
+    }
+  });
+  return pairs;
+}
+
 export function matchLines(
   poLines: (LineItemish | undefined)[],
   receivedQuantities: (number | undefined)[],
   invoiceLines: (LineItemish | undefined)[],
   resolvedLineNumbers: Set<number>,
 ): LineMatch[] {
-  let count = Math.max(poLines.length, invoiceLines.length);
+  let pairs = pairLines(poLines, invoiceLines);
   let rows: LineMatch[] = [];
-  for (let i = 0; i < count; i++) {
-    let po = poLines[i];
-    let inv = invoiceLines[i];
-    let received = receivedQuantities[i] ?? 0;
-    let lineNumber = i + 1;
+  for (let [index, { poIndex, invIndex }] of pairs.entries()) {
+    let po = poIndex == null ? undefined : poLines[poIndex];
+    let inv = invIndex == null ? undefined : invoiceLines[invIndex];
+    let received = poIndex == null ? 0 : (receivedQuantities[poIndex] ?? 0);
+    let lineNumber = index + 1;
     let poUnit = po?.unitPrice?.amount ?? undefined;
     let invUnit = inv?.unitPrice?.amount ?? undefined;
     let row: LineMatch = {
@@ -93,7 +138,14 @@ export function matchLines(
       row.detail = 'not invoiced';
     } else if (po && inv) {
       let invQty = inv.quantity ?? 0;
-      if (invQty > received) {
+      let poQty = po.quantity ?? undefined;
+      if (poQty != null && invQty > poQty) {
+        // Over the ordered quantity is a variance even when it was received:
+        // the extra was never approved.
+        row.state = 'qty-variance';
+        row.varianceAmount = (invQty - poQty) * (invUnit ?? 0);
+        row.detail = `invoiced ${invQty}, ordered ${poQty}`;
+      } else if (invQty > received) {
         row.state = 'qty-variance';
         row.varianceAmount = (invQty - received) * (invUnit ?? 0);
         row.detail = `invoiced ${invQty}, received ${received}`;

@@ -10,7 +10,7 @@
       "isCard": false,
       "isField": false,
       "isComponent": false,
-      "readMe": "## Resolve Variance\n\nStores one decision about one failing line on the invoice's varianceResolutions — reason REQUIRED (the resolution IS the audit line), one resolution per line (a change of mind is a new record, not an edit), and the invoice moves to 'matching' so the ladder shows it is being worked. Resolving computes nothing: the panel re-derives the match and treats resolved lines as non-blocking.\n\n### Example\n\nNatural target: the linked INV N-4471's freight line ('invoiced, not on PO').\n\n### Non-goals\n\nNo un-resolve. No actor identity: cards have no current user, so the decision's attribution is whatever the caller passes.",
+      "readMe": "## Resolve Variance\n\nStores one decision about one failing line on the invoice's varianceResolutions — reason REQUIRED (the resolution IS the audit line), one resolution per line (a change of mind is a new record, not an edit), and the invoice moves to 'matching' so the ladder shows it is being worked. Resolving computes nothing: the panel re-derives the match and treats resolved lines as non-blocking.\n\n### Example\n\nNatural target: the linked INV N-4471's freight line ('invoiced, not on PO'). INV N-4466 shows a stored short-pay resolution.\n\n### Non-goals\n\nNo un-resolve. No actor identity: cards have no current user, so the decision's attribution is whatever the caller passes.",
       "cardInfo": {
         "name": "Resolve Variance",
         "summary": "Records one reasoned human decision (accept / short-pay / reject-line) about one failing match line, permanently, on the invoice."
@@ -29,6 +29,11 @@
       "linkedExamples.0": {
         "links": {
           "self": "../../commerce/Invoice/inv-n-4471"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../../commerce/Invoice/inv-n-4466"
         }
       }
     }

@@ -19,9 +19,8 @@ import {
 // there is NO path to payment around an open variance. The command re-runs
 // the match itself (never trusting the panel's display) and refuses unless
 // every failing line carries a stored resolution. On success the invoice
-// moves to `approved-for-payment`; from there the EXISTING payment flow
-// (Record Payment / Process Payment) takes over — no parallel payment
-// model.
+// moves to `approved-for-payment`, and is paid through linked Payment
+// records — no parallel payment model.
 
 export class ApproveInvoiceForPaymentInput extends CardDef {
   @field invoice = linksTo(() => Invoice, { searchable: true });
@@ -60,10 +59,14 @@ export default class ApproveInvoiceForPaymentCommand extends Command<
         'This invoice names no purchase order — a vendor invoice cannot be approved without the match',
       );
     }
-    if (
-      ['approved-for-payment', 'partial', 'paid'].includes(invoice.status ?? '')
-    ) {
-      throw new Error(`This invoice is already "${invoice.status}"`);
+    // Only a vendor invoice in the match flow can be approved: the status
+    // graph moves matching / exception → matched → approved-for-payment, and
+    // a draft, sent, paid or void invoice has no path there.
+    let status = invoice.status ?? '';
+    if (!['matching', 'exception', 'matched'].includes(status)) {
+      throw new Error(
+        `A "${status || 'unset'}" invoice cannot be approved for payment — only one in matching, exception or matched`,
+      );
     }
 
     // Re-run the match here — the guard trusts the documents, not the UI.
@@ -79,13 +82,15 @@ export default class ApproveInvoiceForPaymentCommand extends Command<
       resolved,
     );
     let open = openVarianceCount(rows);
-    if (open > 0) {
+    if (open > 0 && status === 'matching') {
       await new PatchCardInstanceCommand(this.commandContext, {
         cardType: Invoice,
       }).execute({
         cardId: invoice.id,
         patch: { attributes: { status: 'exception' } },
       });
+    }
+    if (open > 0) {
       throw new Error(
         `${open} open variance${open === 1 ? '' : 's'} — resolve each line (with a reason) before payment can be approved`,
       );

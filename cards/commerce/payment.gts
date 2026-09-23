@@ -581,4 +581,3 @@ export class Payment extends CardDef {
   // sections don't need wayfinding.
   static edit = PaymentEdit;
 }
-// touched for re-index
