@@ -14,7 +14,6 @@ import UrlField from '@cardstack/base/url';
 import EmailField from '@cardstack/base/email';
 import BuildingIcon from '@cardstack/boxel-icons/building';
 
-import { htmlSafe } from '@ember/template';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
@@ -22,8 +21,9 @@ import { durationInDays } from '@cardstack/catalog/cards/hr/duration-field';
 import { formatMoney } from '@cardstack/catalog/cards/hr/utils';
 import { initialsOf } from '@cardstack/catalog/cards/people/person-base';
 import {
+  StatePill,
   stateColor,
-  stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 
@@ -80,12 +80,17 @@ export class RateCardEntryField extends FieldDef {
 // when its computed end date falls inside the renewal window — so the palette
 // keys on that derivation rather than on a persisted status field.
 // Token-first with literal fallbacks so a themeless realm still reads right.
-export const VENDOR_CONTRACT_COLORS: Record<string, StateColor> = {
-  upcoming: stateColor('slate'),
-  active: stateColor('teal'),
-  expiring: stateColor('amber'),
-  expired: stateColor('red'),
+export const VENDOR_CONTRACT_HUES: Record<string, Hue> = {
+  upcoming: 'slate',
+  active: 'teal',
+  expiring: 'amber',
+  expired: 'red',
 };
+
+export const VENDOR_CONTRACT_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(VENDOR_CONTRACT_HUES).map(([k, hue]) => [k, stateColor(hue)]),
+  );
 
 const RENEWAL_WINDOW_MONTHS = 6;
 const MAX_STARS = 5;
@@ -111,18 +116,20 @@ function contractFacts(model: ContractShape) {
     end = new Date(start.getTime());
     end.setDate(end.getDate() + Math.round(days));
   }
-  let monthsLeft: number | undefined;
-  if (end) {
-    monthsLeft = Math.round(
-      (end.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30),
-    );
-  }
+  // Classify on the unrounded difference and round only for display: a
+  // contract that ended days ago rounds to -0 months, which is not < 0.
+  let rawMonths = end
+    ? (end.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30)
+    : undefined;
+  let monthsLeft = rawMonths == null ? undefined : Math.round(rawMonths);
   let state = 'upcoming';
-  if (monthsLeft != null) {
+  if (start && start.getTime() > Date.now()) {
+    state = 'upcoming';
+  } else if (rawMonths != null) {
     state =
-      monthsLeft < 0
+      rawMonths < 0
         ? 'expired'
-        : monthsLeft <= RENEWAL_WINDOW_MONTHS
+        : rawMonths <= RENEWAL_WINDOW_MONTHS
           ? 'expiring'
           : 'active';
   } else if (start) {
@@ -168,13 +175,8 @@ export class Vendor extends CardDef {
       return contractFacts(this.args.model ?? {});
     }
 
-    get contractColor() {
-      return stateColorOf(VENDOR_CONTRACT_COLORS, this.facts.state);
-    }
-
-    get contractPillStyle() {
-      let c = this.contractColor;
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get contractHue(): Hue {
+      return VENDOR_CONTRACT_HUES[this.facts.state] ?? 'slate';
     }
 
     get contractStateLabel() {
@@ -193,12 +195,13 @@ export class Vendor extends CardDef {
     // Second pill: the countdown. Only shown when there is an end date to
     // count toward, so an open-ended contract renders one pill, not a blank.
     get expiryLabel() {
-      let { monthsLeft } = this.facts;
+      let { monthsLeft, state } = this.facts;
       if (monthsLeft == null) {
         return undefined;
       }
-      if (monthsLeft < 0) {
-        return `Ended ${Math.abs(monthsLeft)} mo ago`;
+      if (state === 'expired') {
+        let ago = Math.abs(monthsLeft);
+        return ago === 0 ? 'Ended this month' : `Ended ${ago} mo ago`;
       }
       if (monthsLeft === 0) {
         return 'Ends this month';
@@ -211,12 +214,6 @@ export class Vendor extends CardDef {
       return end ? end.toISOString().slice(0, 10) : undefined;
     }
 
-    // Star row is shape + number, never colour alone (grayscale-safe).
-    get stars() {
-      let v = this.args.model?.performanceRating;
-      let filled = typeof v === 'number' ? Math.round(v) : 0;
-      return Array.from({ length: MAX_STARS }, (_, i) => i < filled);
-    }
 
     get ratingLabel() {
       let v = this.args.model?.performanceRating;
@@ -259,23 +256,23 @@ export class Vendor extends CardDef {
               {{/if}}
             </p>
             <div class='pill-row'>
-              <span class='pill' style={{this.contractPillStyle}}>
-                <span class='pill-dot'></span>{{this.contractStateLabel}}
-              </span>
+              <StatePill
+                @label={{this.contractStateLabel}}
+                @hue={{this.contractHue}}
+                @dot={{true}}
+              />
               {{#if this.expiryLabel}}
-                <span class='pill' style={{this.contractPillStyle}}>
-                  <span class='pill-dot'></span>{{this.expiryLabel}}
-                </span>
+                <StatePill
+                  @label={{this.expiryLabel}}
+                  @hue={{this.contractHue}}
+                  @dot={{true}}
+                />
               {{/if}}
             </div>
           </div>
           {{#if this.ratingLabel}}
             <div class='hero-rating'>
-              <span class='stars' aria-hidden='true'>
-                {{#each this.stars as |on|}}
-                  <span class='star {{if on "on"}}'>&#9733;</span>
-                {{/each}}
-              </span>
+              <@fields.performanceRating />
               <span class='rating-num'>Performance {{this.ratingLabel}}</span>
             </div>
           {{/if}}
@@ -423,37 +420,9 @@ export class Vendor extends CardDef {
           gap: var(--boxel-sp-5xs);
           margin-top: var(--boxel-sp-xs);
         }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
-        }
         .hero-rating {
           flex: none;
           text-align: right;
-        }
-        .stars {
-          font-size: 1.25rem;
-          letter-spacing: 0.04em;
-          color: var(--vendor-strong);
-        }
-        .star {
-          opacity: 0.28;
-        }
-        .star.on {
-          opacity: 1;
         }
         .rating-num {
           display: block;
@@ -674,9 +643,8 @@ export class Vendor extends CardDef {
       return contractFacts(this.args.model ?? {});
     }
 
-    get contractPillStyle() {
-      let c = stateColorOf(VENDOR_CONTRACT_COLORS, this.facts.state);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get contractHue(): Hue {
+      return VENDOR_CONTRACT_HUES[this.facts.state] ?? 'slate';
     }
 
     // Shortest truthful wording — this pill survives to the smallest tier, so
@@ -689,8 +657,8 @@ export class Vendor extends CardDef {
       if (state === 'upcoming') {
         return 'Not started';
       }
-      if (monthsLeft != null && monthsLeft <= RENEWAL_WINDOW_MONTHS) {
-        return `${monthsLeft} mo left`;
+      if (state === 'expiring' && monthsLeft != null) {
+        return monthsLeft > 0 ? `${monthsLeft} mo left` : 'Ends soon';
       }
       return 'Active';
     }
@@ -705,11 +673,6 @@ export class Vendor extends CardDef {
       return start ? start.toISOString().slice(0, 7) : undefined;
     }
 
-    get stars() {
-      let v = this.args.model?.performanceRating;
-      let filled = typeof v === 'number' ? Math.round(v) : 0;
-      return Array.from({ length: MAX_STARS }, (_, i) => i < filled);
-    }
 
     get ratingLabel() {
       let v = this.args.model?.performanceRating;
@@ -727,18 +690,17 @@ export class Vendor extends CardDef {
             {{/if}}
           </div>
           {{! Status pill is the last thing to be dropped — never hidden. }}
-          <span class='fit-pill' style={{this.contractPillStyle}}>
-            <span class='pill-dot'></span>{{this.contractPillLabel}}
-          </span>
+          <StatePill
+            class='fit-pill'
+            @label={{this.contractPillLabel}}
+            @hue={{this.contractHue}}
+            @dot={{true}}
+          />
         </div>
 
         {{#if this.ratingLabel}}
           <div class='fit-rating'>
-            <span class='stars' aria-hidden='true'>
-              {{#each this.stars as |on|}}
-                <span class='star {{if on "on"}}'>&#9733;</span>
-              {{/each}}
-            </span>
+            <@fields.performanceRating />
             <span class='rating-text'>{{this.ratingLabel}}
               {{#if @model.contractLength.label}}
                 &middot;
@@ -840,22 +802,7 @@ export class Vendor extends CardDef {
         }
         .fit-pill {
           flex: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
           align-self: flex-start;
-        }
-        .pill-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         /* --- rating: tier 3 --- */
         .fit-rating {
@@ -864,18 +811,6 @@ export class Vendor extends CardDef {
           align-items: baseline;
           gap: 0.3rem;
           flex-wrap: wrap;
-        }
-        .stars {
-          font-size: calc(var(--fit-name) * 1.05);
-          letter-spacing: 0.03em;
-          color: var(--vendor-strong);
-          white-space: nowrap;
-        }
-        .star {
-          opacity: 0.28;
-        }
-        .star.on {
-          opacity: 1;
         }
         .rating-text {
           font-size: var(--fit-small);

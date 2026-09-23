@@ -10,7 +10,6 @@ import DateField from '@cardstack/base/date';
 import enumField from '@cardstack/base/enum';
 import FolderKanbanIcon from '@cardstack/boxel-icons/folder-kanban';
 import { or } from '@cardstack/boxel-ui/helpers';
-import { htmlSafe } from '@ember/template';
 
 import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
@@ -18,8 +17,9 @@ import { Team } from '@cardstack/catalog/cards/hr/team';
 import { Vendor } from '../procurement/vendor';
 import { durationInDays } from '@cardstack/catalog/cards/hr/duration-field';
 import {
+  StatePill,
   stateColor,
-  stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 
@@ -58,13 +58,22 @@ function scheduleFacts(model: ScheduleShape) {
 
 export const PROJECT_STATUSES = ['planned', 'active', 'done'];
 
-// Harmonized with the Ledger identity: active shares the forest-green
-// primary; planned/done stay in the muted stone/slate register.
-export const PROJECT_STATUS_COLORS: Record<string, StateColor> = {
-  planned: stateColor('amber'),
-  active: stateColor('green'),
-  done: stateColor('blue'),
+// Only active reads as "go"; planned is amber because it is not yet
+// happening, and done is blue so it reads as finished rather than healthy.
+export const PROJECT_STATUS_HUES: Record<string, Hue> = {
+  planned: 'amber',
+  active: 'green',
+  done: 'blue',
 };
+
+export const PROJECT_STATUS_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(PROJECT_STATUS_HUES).map(([k, hue]) => [k, stateColor(hue)]),
+  );
+
+function statusHueOf(status?: string | null): Hue {
+  return (status && PROJECT_STATUS_HUES[status]) || 'slate';
+}
 
 export const ProjectStatusField = enumField(StringField, {
   options: PROJECT_STATUSES.map((status) => ({ value: status, label: status })),
@@ -124,9 +133,8 @@ export class Project extends CardDef {
       }));
     }
 
-    get statusPillStyle() {
-      let c = stateColorOf(PROJECT_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get statusHue() {
+      return statusHueOf(this.args.model?.status);
     }
 
     get endLabel() {
@@ -162,9 +170,11 @@ export class Project extends CardDef {
             </p>
             <div class='pill-row'>
               {{#if @model.status}}
-                <span class='pill' style={{this.statusPillStyle}}>
-                  <span class='pill-dot'></span>{{@model.status}}
-                </span>
+                <StatePill
+                  @label={{@model.status}}
+                  @hue={{this.statusHue}}
+                  @dot={{true}}
+                />
               {{/if}}
               {{#if @model.teamName}}
                 <span class='pill neutral'>{{@model.teamName}}</span>
@@ -300,13 +310,6 @@ export class Project extends CardDef {
           background: var(--muted, var(--boxel-100));
           color: var(--muted-foreground, var(--boxel-450));
         }
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
-        }
         .hero-track {
           flex: none;
           width: 12rem;
@@ -416,14 +419,8 @@ export class Project extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(PROJECT_STATUS_COLORS, this.args.model?.status);
-    }
-
-    get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
+    get statusHue() {
+      return statusHueOf(this.args.model?.status);
     }
 
     <template>
@@ -431,9 +428,7 @@ export class Project extends CardDef {
         <header>
           <h3>{{@model.title}}</h3>
           {{#if @model.status}}
-            <span class='status' style={{this.statusPillStyle}}>
-              {{@model.status}}
-            </span>
+            <StatePill @label={{@model.status}} @hue={{this.statusHue}} />
           {{/if}}
         </header>
         {{#if @model.description}}
@@ -473,14 +468,6 @@ export class Project extends CardDef {
         h3 {
           margin: 0;
           font-size: var(--boxel-font-size);
-        }
-        .status {
-          padding: 2px var(--boxel-sp-4xs);
-          border-radius: 999px;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-          text-transform: capitalize;
-          white-space: nowrap;
         }
         .description {
           margin: var(--boxel-sp-xs) 0 0;
@@ -546,9 +533,8 @@ export class Project extends CardDef {
       return scheduleFacts(this.args.model ?? {});
     }
 
-    get statusPillStyle() {
-      let c = stateColorOf(PROJECT_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get statusHue() {
+      return statusHueOf(this.args.model?.status);
     }
 
     get steps() {
@@ -588,9 +574,12 @@ export class Project extends CardDef {
           </div>
           {{! Status is the last thing dropped — never hidden at any tier. }}
           {{#if @model.status}}
-            <span class='fit-pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
+            <StatePill
+              class='fit-pill'
+              @label={{@model.status}}
+              @hue={{this.statusHue}}
+              @dot={{true}}
+            />
           {{/if}}
         </div>
 
@@ -682,21 +671,6 @@ export class Project extends CardDef {
         .fit-pill {
           flex: none;
           align-self: flex-start;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .fit-track {
           flex: none;
@@ -780,7 +754,7 @@ export class Project extends CardDef {
             display: -webkit-box;
           }
         }
-        /* TIER 4 — width-driven facts. Previously absent entirely. */
+        /* TIER 4 — width-driven facts. */
         @container fitted-card (height > 150px) and (width > 180px) {
           .fit-add {
             display: grid;

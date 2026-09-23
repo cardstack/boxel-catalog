@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Payroll Cutover",
+      "description": "Moved payroll onto PayLock and retired the spreadsheet run.",
+      "status": "done",
+      "startDate": "2026-03-02",
+      "estimatedEffort": {
+        "value": 8,
+        "unit": "weeks"
+      },
+      "cardInfo": {
+        "name": null
+      }
+    },
+    "relationships": {
+      "lead": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "team": {
+        "links": {
+          "self": "../../hr/Team/people-ops"
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../../procurement/Vendor/paylock-payroll"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../project",
+        "name": "Project"
+      }
+    }
+  }
+}
