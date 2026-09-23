@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../contract-type",
+        "name": "ContractTypeField"
+      },
+      "specType": "field",
+      "readMe": "# Contract Type\n\n## Summary\nThe kinds of agreement the legal cards distinguish — `CONTRACT_TYPES`, their labels in `CONTRACT_TYPE_LABELS`, the `ContractTypeField` enum, and `contractTypeLabel(value)`. A Contract records its type with it, and a Signatory's `contractTypes` lists which kinds that person may sign, so the two read one vocabulary.\n\n## Usage\n```ts\nimport {\n  ContractTypeField,\n  contractTypeLabel,\n} from '@cardstack/catalog/cards/legal/contract-type';\n\n@field contractType = contains(ContractTypeField);\n```\n\n## Non-goals\nNo per-type templates or approval rules; those belong to the cards that use the type.",
+      "cardTitle": "Contract Type Field",
+      "cardDescription": "The kinds of agreement the legal cards distinguish, with labels, shared by Contract and Signatory.",
+      "cardInfo": {
+        "name": "Contract Type",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

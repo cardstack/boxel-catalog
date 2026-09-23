@@ -1,0 +1,121 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Contract",
+        "module": "../contract"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "terms": "## Pilot\n\nThree months from 15 August 2026. Either party may end the pilot with 14 days' notice.\n\n## Fees\n\nUSD 6,800 for the pilot period, invoiced on signature.",
+      "title": "Brightleaf Studio \u2014 Pilot Terms",
+      "value": {
+        "amount": 6800,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "status": "signed",
+      "endDate": "2026-11-14",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "signedAt": "2026-09-03",
+      "startDate": "2026-08-15",
+      "documentUrl": null,
+      "contractNumber": "PILOT-2026-0042",
+      "contractType": "customer",
+      "autoRenews": false,
+      "risk": {
+        "criteria": [
+          {
+            "name": "Value",
+            "score": 1,
+            "notes": "Pilot, nominal fee."
+          },
+          {
+            "name": "Term",
+            "score": 1,
+            "notes": "Three months, no renewal."
+          },
+          {
+            "name": "Liability",
+            "score": 2,
+            "notes": "Capped at fees paid."
+          },
+          {
+            "name": "Data",
+            "score": 2,
+            "notes": "Limited contact data only."
+          },
+          {
+            "name": "Deviation",
+            "score": 1,
+            "notes": "Standard language throughout."
+          }
+        ],
+        "notes": "Low across the board \u2014 the shape a pilot should have."
+      },
+      "fullText": null,
+      "handlesSensitiveData": false,
+      "signatureStatus": "signed",
+      "signatureRequestedAt": null,
+      "signatureProvider": null,
+      "executedCopyUrl": null,
+      "renewalNoticeDays": null,
+      "approvalChain": {
+        "steps": [
+          {
+            "decision": "approved",
+            "decidedAt": "2026-09-02T17:41:21.862Z",
+            "comment": "Approved after insurance certificate received.",
+            "openedAt": "2026-08-19T16:34:35.922Z",
+            "holdReason": null,
+            "conditions": null
+          }
+        ],
+        "startedAt": "2026-08-19T16:34:35.922Z"
+      },
+      "parties": [],
+      "signatureBlocks": [],
+      "effectivePeriod": {
+        "effectiveDate": null,
+        "endDate": null,
+        "autoRenews": false,
+        "renewalTermMonths": null,
+        "noticeDays": null
+      },
+      "governingLaw": {
+        "jurisdiction": null,
+        "venue": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "deal": {
+        "links": {
+          "self": "../../crm/Opportunity/brightleaf-workspace"
+        }
+      },
+      "account": {
+        "links": {
+          "self": "../../crm/Account/brightleaf-studio"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "approvalChain.steps.0.approver": {
+        "links": {
+          "self": "../../hr/Employee/leo-park"
+        }
+      }
+    }
+  }
+}
