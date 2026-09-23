@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Annotation Field",
+      "specType": "field",
+      "ref": {
+        "module": "../annotation-field",
+        "name": "AnnotationField"
+      },
+      "readMe": "## Annotation\n\nA remark pinned to a location in something else: `anchor`, `text`, `kind` (`note` / `concern` / `question`), `author`, `createdAt`.\n\n```ts\nimport { AnnotationField } from '@cardstack/catalog/cards/audit/annotation-field';\n@field annotations = containsMany(AnnotationField);\n```\n\n**`anchor` is a plain string on purpose.** One field then serves every surface a reader can point at: a PDF page (`p.2 ¶3`), a card field path (`severity.level`), a spreadsheet cell, a source line. Typing it per surface would fork the field per consumer, which is the opposite of what this row is for — it comes from the BSL v0 design records, where the annotated thing is a card.\n\nThe `kind` is what makes annotations scannable. A concern raised in the margin of evidence is a finding in waiting; a note is context. Same shape, and the reader must tell them apart without reading every one.\n\n## Example\nThe contained example is a `concern` anchored at `p.2 ¶3` — the timezone remark that turns into finding F-2026-014's observation.\n\n## Non-goals\nNot a finding: an annotation is a remark, a Finding is a recorded gap with a severity and a resolution. Not a comment thread — no replies, no participants (Thread owns that shape). Does not resolve or close.",
+      "containedExamples": [
+        {
+          "anchor": "p.2 ¶3",
+          "kind": "concern",
+          "text": "The export's timestamps are UTC; the control window is local time, so the 2026-08-20 row may fall outside the period.",
+          "createdAt": "2026-08-22T10:05:00.000Z"
+        }
+      ],
+      "cardInfo": {
+        "name": "Annotation",
+        "summary": "A remark pinned to a location — note, concern or question, anchored by a plain string.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A remark pinned to a location — note, concern or question — anchored by a plain string."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../annotation-field",
+              "name": "AnnotationField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

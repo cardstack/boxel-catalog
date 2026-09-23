@@ -1,0 +1,52 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Inspection Finding Field",
+      "specType": "field",
+      "ref": {
+        "module": "../inspection-finding-field",
+        "name": "InspectionFindingField"
+      },
+      "readMe": "## Inspection Finding\n\nA finding raised in the physical world: on a site, at an asset, by a person who was standing there. Extends **Finding** with `location`, `coordinate`, `inspector` and `photos`.\n\n```ts\nimport { InspectionFindingField } from '@cardstack/catalog/cards/audit/inspection-finding-field';\n@field finding = contains(InspectionFindingField);\n```\n\n**It extends rather than restates.** A report can hold desk findings and inspection findings side by side, and every consumer that reads `severity`, `state` or `closureValid` keeps working unchanged. What it adds is only what a desk audit has no use for.\n\n`photos` is a second evidence list rather than a flag on the first. A physical inspection's proof is almost always images and they are read as a set, so keeping them apart lets a consumer show a strip without filtering documents out of it. Both lists are Proof, so both carry the same hash and trust machinery.\n\n## Example\nThe contained example is a fire-door inspection: a blocked escape route at Loading Bay 2, major, open — the shape a site audit produces and a desk audit never does.\n\n## Non-goals\nAdds no new lifecycle: state, resolution and closure are Finding's and are not re-specified here. Does not do mapping or routing — `coordinate` records where, it does not draw it.",
+      "containedExamples": [
+        {
+          "findingId": "F-2026-021",
+          "severity": {
+            "level": "major"
+          },
+          "statement": "Fire escape route at Loading Bay 2 obstructed by stacked pallets at the time of inspection.",
+          "state": "open",
+          "raisedAt": "2026-09-04T11:20:00.000Z",
+          "location": "Loading Bay 2",
+          "evidence": [],
+          "annotations": [],
+          "photos": []
+        }
+      ],
+      "cardInfo": {
+        "name": "Inspection Finding",
+        "summary": "A finding raised on site: where it was, who saw it, and the photographs.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A finding raised on site: where it was, who saw it, and the photographs."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../inspection-finding-field",
+              "name": "InspectionFindingField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rule": {
+        "ruleId": "SUP-03",
+        "statement": "Only an onboarded or active supplier may be used for production materials.",
+        "regime": {
+          "regime": "ISO 9001:2015",
+          "version": "2015",
+          "clause": "\u00a78.4.2",
+          "clauseTitle": "Type and extent of control"
+        },
+        "kind": "predicate",
+        "fieldPath": "status",
+        "parameters": "{\"oneOf\": [\"onboarded\", \"active\"]}",
+        "evidenceRequired": true,
+        "severityIfFailed": {
+          "level": "critical"
+        }
+      },
+      "status": {
+        "status": "fail"
+      },
+      "observedValue": "approved",
+      "evaluatedAt": "2026-09-07T09:00:00.000Z",
+      "meta": {
+        "createdAt": "2026-09-07T09:00:00.000Z",
+        "changeCount": 0,
+        "sourceVersion": "supplier-controls v1"
+      },
+      "cardInfo": {
+        "name": "SUP-03 \u00b7 norvik-ltd",
+        "summary": "approved is not one of onboarded, active.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "finding": {
+        "findingId": "F-2026-014",
+        "rule": {
+          "ruleId": "SUP-03",
+          "statement": "Only an onboarded or active supplier may be used for production materials.",
+          "regime": {
+            "regime": "ISO 9001:2015",
+            "version": "2015",
+            "clause": "\u00a78.4.2",
+            "clauseTitle": "Type and extent of control"
+          },
+          "kind": "predicate",
+          "fieldPath": "status",
+          "parameters": "{\"oneOf\": [\"onboarded\", \"active\"]}",
+          "evidenceRequired": true,
+          "severityIfFailed": {
+            "level": "critical"
+          }
+        },
+        "severity": {
+          "level": "critical"
+        },
+        "statement": "Norvik Ltd is recorded as approved, not onboarded or active, and was used for production materials in the period.",
+        "state": "open",
+        "raisedAt": "2026-09-07T09:05:00.000Z",
+        "evidence": [],
+        "annotations": []
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": null
+        }
+      },
+      "audit": {
+        "links": {
+          "self": null
+        }
+      },
+      "evaluatedBy": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-result",
+        "name": "AuditResult"
+      }
+    }
+  }
+}

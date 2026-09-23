@@ -1,0 +1,63 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rule": {
+        "ruleId": "SUP-03",
+        "statement": "Only an onboarded or active supplier may be used for production materials.",
+        "regime": {
+          "regime": "ISO 9001:2015",
+          "version": "2015",
+          "clause": "\u00a78.4.2",
+          "clauseTitle": "Type and extent of control"
+        },
+        "kind": "predicate",
+        "fieldPath": "status",
+        "parameters": "{\"oneOf\": [\"onboarded\", \"active\"]}",
+        "evidenceRequired": true,
+        "severityIfFailed": {
+          "level": "critical"
+        }
+      },
+      "status": {
+        "status": "unproven"
+      },
+      "observedValue": "onboarded",
+      "evaluatedAt": "2026-09-07T09:00:00.000Z",
+      "meta": {
+        "createdAt": "2026-09-07T09:00:00.000Z",
+        "changeCount": 0,
+        "sourceVersion": "supplier-controls v1"
+      },
+      "cardInfo": {
+        "name": "SUP-03 \u00b7 acme-supply",
+        "summary": "onboarded is allowed. No evidence attached.",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../../procurement/Vendor/acme-supply"
+        }
+      },
+      "audit": {
+        "links": {
+          "self": null
+        }
+      },
+      "evaluatedBy": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-result",
+        "name": "AuditResult"
+      }
+    }
+  }
+}

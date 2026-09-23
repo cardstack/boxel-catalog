@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Attribution Field",
+      "specType": "field",
+      "ref": {
+        "module": "../attribution-field",
+        "name": "AttributionField"
+      },
+      "readMe": "## Attribution\n\nWho produced an artefact and where it came from: `author` linked to an Employee, a free-text `source`, `capturedAt`, and an optional `license` for material from outside the organisation. `summary` joins source and author for list rows.\n\n```ts\nimport { AttributionField } from '@cardstack/catalog/cards/audit/attribution-field';\n@field attribution = contains(AttributionField);\n```\n\n**Deliberately separate from Trust Metadata.** Attribution is provenance; trust is how far to rely on it. The same screenshot can be attributed to a named analyst and still be `self-asserted` — collapsing the two would make \"we know who took this\" read as \"we believe it\", which is the mistake that lets weak evidence pass review.\n\n`source` is free text on purpose: it names a system (\"exported from the IdP\"), a person, or a place (\"photographed on site\"). An enum would push every consumer into an `other` bucket by its third audit.\n\n## Example\nThe contained example attributes a log export to the Score Vendor Risk command, captured 2026-08-20. The `author` link is left unset — a system-generated artefact has a source, not a person, and the field must render correctly in exactly that case.\n\n## Non-goals\nDoes not weigh the evidence (Trust Metadata). Does not hold the artefact (Proof Field). No chain of custody beyond one capture event — a transfer history would be its own append-only record, like Audit Entry.",
+      "containedExamples": [
+        {
+          "source": "Score Vendor Risk",
+          "capturedAt": "2026-08-20T09:12:00.000Z"
+        }
+      ],
+      "cardInfo": {
+        "name": "Attribution",
+        "summary": "Who produced an artefact and where it came from — provenance, not trust.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Who produced an artefact and where it came from: provenance, kept separate from how far it can be trusted."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../attribution-field",
+              "name": "AttributionField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

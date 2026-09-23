@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Certification Authority",
+      "specType": "card",
+      "ref": {
+        "module": "../certification-authority",
+        "name": "CertificationAuthority"
+      },
+      "readMe": "# Certification Authority\n\n## Summary\nThe certifying body: name, signatory, seal, verification base URL, number prefix and the sequence counter Issue Certificate increments.\n\n## Usage\n```ts\nimport { CertificationAuthority } from '@cardstack/catalog/cards/audit/certification-authority';\n\n@field authority = linksTo(() => CertificationAuthority);\n```\n\nA certificate card links the authority that issued it.\n\n## Non-goals\nNot an organisation directory entry.",
+      "cardInfo": {
+        "name": "Certification Authority",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "The certifying body behind issued certificates: name, signatory, seal, verification URL, numbering prefix and sequence."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../CertificationAuthority/northwind-academy"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

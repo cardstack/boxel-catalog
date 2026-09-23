@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../utils/rule-evaluation",
+        "name": "parametersAreValid"
+      },
+      "specType": null,
+      "readMe": "# Rule Evaluation\n\n## Summary\nThe vocabulary a Validation Rule tests with: `RULE_KINDS` with `RULE_KIND_LABELS` and `RULE_KIND_HINTS`. `parametersAreValid(raw)` says whether a rule's parameters text is empty or a JSON object, so the rule's edit view can flag a rule that could not run before anyone runs it. The field reader treats a value that has not loaded as missing, never as a failure, so a broken link maps to `not-applicable` rather than failing every subject.\n\n## Usage\n```ts\nimport { parametersAreValid, RULE_KIND_LABELS } from '@cardstack/catalog/cards/audit/utils/rule-evaluation';\n\nif (!parametersAreValid(rule.parameters)) { /* flag the rule */ }\n```\n\n## Non-goals\nDoes not decide a verdict for a subject; that is the audit run's job.",
+      "cardTitle": "Rule Evaluation",
+      "cardDescription": "The kinds of test a validation rule applies, with labels and hints, a parameter check, and defensive reading of a card's field.",
+      "cardInfo": {
+        "name": "Rule Evaluation",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

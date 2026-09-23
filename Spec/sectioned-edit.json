@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Sectioned Edit",
+      "specType": "component",
+      "ref": {
+        "module": "../components/sectioned-edit",
+        "name": "SectionedEdit"
+      },
+      "readMe": "# Sectioned Edit\n\n## Summary\nThe grouped-edit scaffold: the root is the scroller and the `edit` container, the shared **Edit Section Nav** sits sticky on the left, and each yielded `Section` carries its own `data-sect` anchor, focused halo and a 1–4 column field grid. Consumers decide only the grouping.\n\n## Usage\n```gts\nimport { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';\n\n<SectionedEdit @sections={{this.sections}} as |e|>\n  <e.Section @id='identity' @title='Identity' @cols={{3}}>\n    <FieldContainer @label='Title' @vertical={{true}}><@fields.title /></FieldContainer>\n  </e.Section>\n</SectionedEdit>\n```\nCertification Authority's edit form is built on it; open `CertificationAuthority/northwind-academy` in edit to see the sections and the rail.\n\n## Non-goals\nDoes not decide grouping, validation or save behaviour; does not replace Edit Section Nav (it consumes it).",
+      "cardInfo": {
+        "name": "Sectioned Edit",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "The grouped-edit scaffold: Edit Section Nav on the left and yielded sections with anchors, focus halo and a column grid."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../cards/audit/CertificationAuthority/northwind-academy"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

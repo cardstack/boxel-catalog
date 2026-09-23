@@ -1,0 +1,134 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Supplier controls (quarterly)",
+      "regime": {
+        "regime": "ISO 9001:2015",
+        "version": "2015",
+        "clause": null,
+        "clauseTitle": null
+      },
+      "rules": [
+        {
+          "ruleId": "SUP-01",
+          "statement": "A supplier's tax identifier is on file.",
+          "regime": {
+            "regime": "ISO 9001:2015",
+            "version": "2015",
+            "clause": "\u00a78.4.1",
+            "clauseTitle": "General"
+          },
+          "kind": "presence",
+          "fieldPath": "taxId",
+          "parameters": "",
+          "evidenceRequired": false,
+          "severityIfFailed": {
+            "level": "minor"
+          }
+        },
+        {
+          "ruleId": "SUP-02",
+          "statement": "The supplier's insurance has not lapsed.",
+          "regime": {
+            "regime": "ISO 9001:2015",
+            "version": "2015",
+            "clause": "\u00a78.4.2",
+            "clauseTitle": "Type and extent of control"
+          },
+          "kind": "expiry",
+          "fieldPath": "insuranceExpiry",
+          "parameters": "{\"mustBeFuture\": true}",
+          "evidenceRequired": false,
+          "severityIfFailed": {
+            "level": "major"
+          }
+        },
+        {
+          "ruleId": "SUP-03",
+          "statement": "Only an onboarded or active supplier may be used for production materials.",
+          "regime": {
+            "regime": "ISO 9001:2015",
+            "version": "2015",
+            "clause": "\u00a78.4.2",
+            "clauseTitle": "Type and extent of control"
+          },
+          "kind": "predicate",
+          "fieldPath": "status",
+          "parameters": "{\"oneOf\": [\"onboarded\", \"active\"]}",
+          "evidenceRequired": true,
+          "severityIfFailed": {
+            "level": "critical"
+          }
+        },
+        {
+          "ruleId": "SUP-04",
+          "statement": "Every supplier is reviewed at least once every 12 months.",
+          "regime": {
+            "regime": "ISO 9001:2015",
+            "version": "2015",
+            "clause": "\u00a78.4.1",
+            "clauseTitle": "General"
+          },
+          "kind": "expiry",
+          "fieldPath": "lifecycle.lastReviewedAt",
+          "parameters": "{\"maxAgeDays\": 365}",
+          "evidenceRequired": false,
+          "severityIfFailed": {
+            "level": "major"
+          }
+        }
+      ],
+      "subjectQuery": "{\"filter\": {\"type\": {\"module\": \"https://realms-staging.stack.cards/richard.tan1/boxel-software-matrix-layer/vendor-profile\", \"name\": \"VendorProfile\"}}}",
+      "lastRunAt": null,
+      "cardInfo": {
+        "name": "Supplier controls (quarterly)",
+        "summary": "Four ISO 9001 \u00a78.4 supplier controls over every Vendor Profile",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "runsAs": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../auditor-bot",
+        "name": "AuditorBot"
+      },
+      "fields": {
+        "rules": [
+          {
+            "adoptsFrom": {
+              "module": "../validation-rule-field",
+              "name": "ValidationRuleField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../validation-rule-field",
+              "name": "ValidationRuleField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../validation-rule-field",
+              "name": "ValidationRuleField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../validation-rule-field",
+              "name": "ValidationRuleField"
+            }
+          }
+        ]
+      },
+      "_touched": 1788749957541
+    }
+  }
+}

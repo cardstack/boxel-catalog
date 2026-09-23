@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Finding Field",
+      "specType": "field",
+      "ref": {
+        "module": "../finding-field",
+        "name": "FindingField"
+      },
+      "readMe": "## Finding\n\nA recorded gap between a rule and reality — where the risk lives, and the point of running an audit at all. Carries `findingId`, the `rule` that raised it, the `subject`, `severity`, the observed `statement`, `evidence`, `annotations`, a `state` (open / in-remediation / closed), a `resolution` code, a `correctiveAction`, and `recurrenceOfId`.\n\n```ts\nimport { FindingField } from '@cardstack/catalog/cards/audit/finding-field';\n@field finding = contains(FindingField);\n```\n\n**The rule is kept by value, not by reference.** A rule edited next quarter must not silently rewrite what last quarter's finding said was wrong. A finding is a statement about a moment and has to stay readable as one.\n\n**`recurrenceOfId` is a string, not a link.** A finding is a FieldDef and has no identity of its own to link to — the result card carrying it does. Naming the prior id keeps the chain readable without a module cycle between this field and that card. Recurrence is the signal that matters most in a mature programme: the same rule failing the same subject two periods running is a systemic gap, not an incident.\n\n**`closureValid` is the honest gate.** A finding cannot be closed without a resolution code, and `remediated` additionally needs its corrective action linked. The field reports the gap; the closing command refuses on it.\n\n## Example\nThe contained example is F-2026-014 — Norvik Ltd recorded as `approved` rather than onboarded or active, critical, open. It is the finding the FY26 H2 run actually raised, and it is carried on `AuditResult/sup-03-norvik-ltd`.\n\n## Non-goals\nDoes not evaluate anything (Condition does) and does not close itself. Not an Audit Result: a result exists for every rule × subject pair including the passes, a finding only where there is a gap. Not a task — the corrective action is a linked Task, because work belongs in the tracker people already read.",
+      "containedExamples": [
+        {
+          "findingId": "F-2026-014",
+          "severity": {
+            "level": "critical"
+          },
+          "statement": "Norvik Ltd is recorded as approved, not onboarded or active, and was used for production materials in the period.",
+          "state": "open",
+          "raisedAt": "2026-09-07T09:05:00.000Z",
+          "evidence": [],
+          "annotations": []
+        }
+      ],
+      "cardInfo": {
+        "name": "Finding",
+        "summary": "A recorded gap between a rule and reality, with its severity, evidence and closure code.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A recorded gap between a rule and reality, with its severity, evidence, corrective task and closure code."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../finding-field",
+              "name": "FindingField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
