@@ -21,10 +21,10 @@ function currencyFormat(code: string): Intl.NumberFormat | undefined {
 
 /** The currency's minor-unit digits as Intl reports them: 0 for JPY, 3 for KWD. */
 export function decimalsFor(code?: string | null): number {
-  return (
-    (code && currencyFormat(code)?.resolvedOptions().maximumFractionDigits) ??
-    2
-  );
+  if (!code) {
+    return 2;
+  }
+  return currencyFormat(code)?.resolvedOptions().maximumFractionDigits ?? 2;
 }
 
 export function formatMoneyDisplay(
