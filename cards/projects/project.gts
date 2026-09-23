@@ -15,7 +15,7 @@ import { htmlSafe } from '@ember/template';
 import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { Team } from '@cardstack/catalog/cards/hr/team';
-import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
+import { Vendor } from '../procurement/vendor';
 import { durationInDays } from '@cardstack/catalog/cards/hr/duration-field';
 import {
   stateColor,
