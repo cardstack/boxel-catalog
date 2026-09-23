@@ -334,9 +334,8 @@ export class Case extends CardDef {
   @field openedOn = contains(DateField);
   @field resolvedOn = contains(DateField);
   @field relatedTickets = linksToMany(() => Ticket);
-  // ── Support Ops additive extend (2026-09-07): the record-operations layer.
-  // Nothing below renames or removes an existing field; instances predating
-  // it simply leave these empty.
+  // ── Record operations: identity, ownership, relationships, references and
+  // the workflow position. All optional, so a case without them still reads.
   @field caseId = contains(RecordIdentifierField);
   @field ownership = contains(RecordOwnerField);
   @field relationships = contains(RelationshipSetField);

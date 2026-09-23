@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromLevel": {
+        "key": "L1"
+      },
+      "toLevel": {
+        "key": "L2",
+        "targetRoleName": "L2 Support",
+        "ackTargetMinutes": 15
+      },
+      "reason": "sla-risk",
+      "note": "75% consumed via policy",
+      "raisedByName": "policy “P1 auto-escalate”",
+      "raisedAt": "2026-09-19T09:30:00.000Z",
+      "acknowledgedByName": "Dana Kim",
+      "acknowledgedAt": null,
+      "status": "cancelled",
+      "cardInfo": {
+        "name": "Escalation L1→L2 · CASE-2026-0142"
+      },
+      "cancelledReason": "Raised against the wrong case; the customer's issue was already resolved under CASE-2026-0131."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../escalation",
+        "name": "Escalation"
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../Case/case-2026-0160"
+        }
+      }
+    }
+  }
+}

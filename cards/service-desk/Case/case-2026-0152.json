@@ -14,7 +14,7 @@
       },
       "ownership": {
         "teamName": "Platform",
-        "ownerId": "https://localhost:4201/experiments/Employee/dana-kim",
+        "ownerId": "../../hr/Employee/dana-kim",
         "ownerName": "Dana Kim",
         "since": "2026-09-07T12:29:36.067Z",
         "how": "assigned",

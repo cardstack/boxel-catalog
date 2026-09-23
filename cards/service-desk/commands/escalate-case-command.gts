@@ -24,8 +24,11 @@ import AssignOwnerCommand from './assign-owner-command';
 
 export class EscalateCaseInput extends CardDef {
   @field subject = linksTo(CardDef, { searchable: true });
+  /** The subject's latest Escalation; the current rung is read from it. */
+  @field current = linksTo(() => Escalation);
   @field fromLevelKey = contains(StringField, {
-    description: 'Current rung: L1 | L2 | L3 | exec.',
+    description:
+      'Current rung when there is no earlier Escalation: L1 | L2 | L3 | exec.',
   });
   @field toLevelKey = contains(StringField);
   @field reason = contains(StringField, {
@@ -87,7 +90,18 @@ export default class EscalateCaseCommand extends Command<
     if (!subject) {
       throw new Error('subject is required');
     }
-    let from = input.fromLevelKey || 'L1';
+    // The rung comes from the record, not the caller: with an earlier
+    // Escalation, its `toLevel` is where the subject is now, so a caller cannot
+    // claim a higher starting rung to skip one.
+    let current = input.current
+      ? await loaded(this.commandContext, input.current)
+      : undefined;
+    let from = current?.toLevel?.key || input.fromLevelKey || 'L1';
+    if (current && input.fromLevelKey && input.fromLevelKey !== from) {
+      throw new Error(
+        `The subject is at ${from} (its latest escalation), not ${input.fromLevelKey}.`,
+      );
+    }
     let to = input.toLevelKey;
     if (!to || !ESCALATION_LEVELS.includes(to as any)) {
       throw new Error(

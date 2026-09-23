@@ -10,7 +10,7 @@
       "isCard": false,
       "isField": false,
       "isComponent": false,
-      "readMe": "## Assign Owner\n\nWrites Record Owner (owner, team, since, how, previousOwner) on ANY card carrying an `ownership` field; a card without one is refused by name. Round-robin takes a CALLER-LOADED candidate pool (commands cannot search the realm) and cycles it; durable cross-session fairness would need a counter card — recorded as a known limit.\n\n```ts\nimport AssignOwnerCommand from '@cardstack/catalog/cards/service-desk/commands/assign-owner-command';\n\nawait new AssignOwnerCommand(commandContext).execute(input);\n```\n\n### Non-goals\n\nNo auto-selection of owners, no org lookup — who is eligible is the caller's knowledge.",
+      "readMe": "## Assign Owner\n\nWrites Record Owner (owner, team, since, how, previousOwner) on ANY card carrying an `ownership` field; a card without one is refused by name. A card that also declares an `owner` link gets it set in the same save. Round-robin takes a CALLER-LOADED candidate pool (commands cannot search the realm) and cycles it; durable cross-session fairness would need a counter card — recorded as a known limit.\n\n```ts\nimport AssignOwnerCommand from '@cardstack/catalog/cards/service-desk/commands/assign-owner-command';\n\nawait new AssignOwnerCommand(commandContext).execute({\n  card: kase,\n  owner: danaKim,\n  teamName: 'Payments',\n  strategy: 'assigned',\n});\n```\n\n### Non-goals\n\nNo auto-selection of owners, no org lookup — who is eligible is the caller's knowledge.",
       "cardInfo": {
         "name": "Assign Owner",
         "summary": "The single writer of ownership — with provenance and one hop of trail."

@@ -87,8 +87,10 @@ export default class ResolveCaseCommand extends Command<
       );
     }
 
+    // Only this case's replies count: an outbound reply on another case does
+    // not mean this customer was answered.
     let outbound = (input.replies ?? []).some(
-      (r) => r?.direction === 'outbound',
+      (r) => r?.direction === 'outbound' && r?.case?.id === kase.id,
     );
     if (!outbound) {
       throw new Error(

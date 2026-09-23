@@ -99,6 +99,16 @@ export default class RunWorkflowCommand extends Command<
         message: `${displayTitle(card, 'Record')} is already in ${toKey}.`,
       });
     }
+    // A record with no state yet enters the workflow at an initial state only;
+    // otherwise an empty state would bypass every transition and guard.
+    if (!fromKey && toState.kind !== 'initial') {
+      let initial = states.filter((st) => st?.kind === 'initial').map((st) => st?.key);
+      throw new Error(
+        `${displayTitle(card, 'This record')} has no workflow state yet, so it can only enter ${
+          initial.join(' or ') || 'an initial state'
+        } — not ${toKey}.`,
+      );
+    }
     let transition = fromKey
       ? transitions.find((t) => t?.from === fromKey && t?.to === toKey)
       : undefined;

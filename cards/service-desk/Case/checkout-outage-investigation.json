@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "subject": "Recurring checkout failures \u2014 root cause investigation",
+      "subject": "Recurring checkout failures — root cause investigation",
       "status": "investigating",
       "severity": "high",
       "openedOn": "2026-08-25",
@@ -33,9 +33,9 @@
       },
       "externalRefs": [],
       "workflowState": {
-        "key": null,
-        "label": null,
-        "kind": null,
+        "key": "new",
+        "label": "New",
+        "kind": "initial",
         "pausesSlaClock": false
       },
       "resolution": null

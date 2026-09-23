@@ -5,7 +5,7 @@ import { GetCardCommand } from '@cardstack/boxel-host/commands/get-card';
  * traversal rule. A caller may hand over a card whose linked fields were never
  * loaded (a queue row, a search result, a card across a command boundary);
  * reading a link off it yields `undefined` and the command quietly does the
- * wrong thing. One copy of the helper, shared by every command.
+ * wrong thing. Shared by the case-management commands.
  */
 export async function loaded(context: any, card: any): Promise<any> {
   if (!card?.id) {

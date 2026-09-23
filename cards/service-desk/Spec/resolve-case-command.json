@@ -10,7 +10,7 @@
       "isCard": false,
       "isField": false,
       "isComponent": false,
-      "readMe": "## Resolve Case\n\nTHE GATE: at least one outbound Customer Reply must exist among the caller-loaded replies or the command refuses, naming the rule and the fixing action. Writes the Case vocabulary (`resolved`), stamps resolvedOn, and stops every running clock on the linked SLA. duplicate-of requires its target.\n\n```ts\nimport ResolveCaseCommand from '@cardstack/catalog/cards/service-desk/commands/resolve-case-command';\n\nawait new ResolveCaseCommand(commandContext).execute(input);\n```\n\n### Non-goals\n\nNo search (commands cannot see the realm — the caller loads the replies); closing≠archiving (Archive is separate, and only on terminal records).",
+      "readMe": "## Resolve Case\n\nTHE GATE: at least one outbound Customer Reply linked to this case must exist among the caller-loaded replies or the command refuses, naming the rule and the fixing action. Writes the Case vocabulary (`resolved`), stamps resolvedOn, and stops every running clock on the linked SLA. duplicate-of requires its target.\n\n```ts\nimport ResolveCaseCommand from '@cardstack/catalog/cards/service-desk/commands/resolve-case-command';\n\nawait new ResolveCaseCommand(commandContext).execute({\n  case: kase,\n  resolutionKind: 'solved',\n  resolutionNote: 'Renderer falls back to the system font.',\n  replies: caseReplies,\n  sla,\n});\n```\n\n### Non-goals\n\nNo search (commands cannot see the realm — the caller loads the replies); closing≠archiving (Archive is separate, and only on terminal records).",
       "cardInfo": {
         "name": "Resolve Case",
         "summary": "The professional ending, enforced: no outbound reply, no resolution."

@@ -35,6 +35,16 @@
         "links": {
           "self": "../Escalation/esc-0142-l2"
         }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Escalation/esc-0131-l2-resolved"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../Escalation/esc-0160-l2-cancelled"
+        }
       }
     }
   }

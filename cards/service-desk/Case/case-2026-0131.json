@@ -2,13 +2,13 @@
   "data": {
     "type": "card",
     "attributes": {
-      "subject": "Checkout intermittently 502s",
-      "status": "investigating",
+      "subject": "Invoice PDFs render blank in Safari",
+      "status": "resolved",
       "severity": "critical",
-      "openedOn": "2026-09-04",
+      "openedOn": "2026-09-02",
       "problemStatement": "Customers report intermittent 502s at checkout; correlates with the 13:50-14:00 window.",
       "caseId": {
-        "value": "CASE-2026-0142",
+        "value": "CASE-2026-0131",
         "pattern": "CASE-{yyyy}-{seq4}",
         "issuedAt": "2026-09-04T08:00:00.000Z"
       },
@@ -59,13 +59,13 @@
         }
       ],
       "workflowState": {
-        "key": "working",
-        "label": "Working",
-        "kind": "working",
+        "key": "resolved",
+        "label": "Resolved",
+        "kind": "terminal",
         "pausesSlaClock": false
       },
-      "resolvedOn": null,
-      "resolution": null,
+      "resolvedOn": "2026-09-12",
+      "resolution": "Font subsetting failed for one embedded typeface; the renderer now falls back to the system font. Customer confirmed the fix.",
       "cardInfo": {
         "name": "CASE-2026-0142",
         "summary": null,

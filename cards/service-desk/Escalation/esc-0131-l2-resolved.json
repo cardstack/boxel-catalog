@@ -1,0 +1,38 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromLevel": {
+        "key": "L1"
+      },
+      "toLevel": {
+        "key": "L2",
+        "targetRoleName": "L2 Support",
+        "ackTargetMinutes": 15
+      },
+      "reason": "sla-risk",
+      "note": "75% consumed via policy",
+      "raisedByName": "policy “P1 auto-escalate”",
+      "raisedAt": "2026-09-05T06:02:00.000Z",
+      "acknowledgedByName": "Dana Kim",
+      "acknowledgedAt": "2026-09-05T06:09:00.000Z",
+      "status": "resolved",
+      "cardInfo": {
+        "name": "Escalation L1→L2 · CASE-2026-0142"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../escalation",
+        "name": "Escalation"
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../Case/case-2026-0131"
+        }
+      }
+    }
+  }
+}

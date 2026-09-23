@@ -5,6 +5,7 @@ import {
   linksTo,
   linksToMany,
   StringField,
+  getFields,
 } from '@cardstack/base/card-api';
 import { Command } from '@cardstack/runtime-common';
 import { loaded } from '../record-helpers';
@@ -124,6 +125,11 @@ export default class AssignOwnerCommand extends Command<
     ownership.teamName = (input.team?.name as string) ?? ownership.teamName;
     ownership.since = new Date();
     ownership.how = strategy;
+    // A card that also links its owner (Case) gets the link in the same save,
+    // so the view's owner and the ownership record cannot disagree.
+    if ('owner' in getFields(card)) {
+      (card as any).owner = owner;
+    }
 
     await new SaveCardCommand(this.commandContext).execute({ card } as any);
 

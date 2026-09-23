@@ -2,13 +2,13 @@
   "data": {
     "type": "card",
     "attributes": {
-      "subject": "Checkout intermittently 502s",
-      "status": "investigating",
+      "subject": "Refund not received after cancellation",
+      "status": "waiting-on-customer",
       "severity": "critical",
-      "openedOn": "2026-09-04",
+      "openedOn": "2026-09-18",
       "problemStatement": "Customers report intermittent 502s at checkout; correlates with the 13:50-14:00 window.",
       "caseId": {
-        "value": "CASE-2026-0142",
+        "value": "CASE-2026-0160",
         "pattern": "CASE-{yyyy}-{seq4}",
         "issuedAt": "2026-09-04T08:00:00.000Z"
       },
@@ -59,10 +59,10 @@
         }
       ],
       "workflowState": {
-        "key": "working",
-        "label": "Working",
-        "kind": "working",
-        "pausesSlaClock": false
+        "key": "waiting",
+        "label": "Waiting on customer",
+        "kind": "waiting",
+        "pausesSlaClock": true
       },
       "resolvedOn": null,
       "resolution": null,
