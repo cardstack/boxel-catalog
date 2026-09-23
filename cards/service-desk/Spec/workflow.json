@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Workflow",
+        "module": "../workflow"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Workflow\n\nOrdered WorkflowStates + transitions with guards (none / requires-note / requires-role). An ops lead adds a waiting-on-legal state without an engineer; Run Workflow is the single writer that enforces it. Changing states after instances run on them is a migration: bump `version`, never rename keys.\n\n```ts\nimport { Workflow } from '@cardstack/catalog/cards/service-desk/workflow';\n\n@field workflow = linksTo(() => Workflow);\n```\n\n### Non-goals\n\nNo automation triggers (Automation Policy + commands own application); a `requires-role` guard compares role names the caller supplies; it is not an ACL.",
+      "cardInfo": {
+        "name": "Workflow",
+        "summary": "The desk's process as an editable card: states, guarded transitions, versioned."
+      },
+      "containedExamples": [],
+      "cardTitle": "Workflow",
+      "cardDescription": "A team's process as an editable card: ordered states and guarded transitions, versioned, enforced by Run Workflow."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Workflow/support-case-flow"
+        }
+      }
+    }
+  }
+}

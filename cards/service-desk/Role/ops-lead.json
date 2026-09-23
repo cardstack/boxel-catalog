@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Ops Lead",
+      "permissions": [
+        "close-finding",
+        "sign-off",
+        "resolve-case"
+      ],
+      "cardInfo": {
+        "name": "Ops Lead"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../role",
+        "name": "Role"
+      }
+    },
+    "relationships": {
+      "members.0": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
+        }
+      },
+      "onDuty": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
+        }
+      }
+    }
+  }
+}

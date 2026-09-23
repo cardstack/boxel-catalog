@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromLevel": {
+        "key": "L2"
+      },
+      "toLevel": {
+        "key": "L3",
+        "targetRoleName": "L3 Engineering",
+        "ackTargetMinutes": 10
+      },
+      "reason": "breach",
+      "note": "First-response clock breached at 06:40; webhook backlog still growing.",
+      "raisedByName": "policy \u201cP1 auto-escalate\u201d",
+      "raisedAt": "2026-09-07T06:41:00.000Z",
+      "status": "open",
+      "cardInfo": {
+        "name": "Escalation L2\u2192L3 \u00b7 CASE-2026-0152"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../escalation",
+        "name": "Escalation"
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../Case/case-2026-0152"
+        }
+      }
+    }
+  }
+}
