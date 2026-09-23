@@ -13,7 +13,10 @@ import TrendingUpIcon from '@cardstack/boxel-icons/trending-up';
 
 import { eq } from '@cardstack/boxel-ui/helpers';
 
-import { EscalationLevelField, levelColor } from '@cardstack/catalog/fields/escalation-level/escalation-level-field';
+import {
+  EscalationLevelField,
+  levelColor,
+} from '@cardstack/catalog/fields/escalation-level/escalation-level-field';
 import {
   stateColor,
   stateColorOf,
@@ -68,6 +71,136 @@ export function escalationStatusHue(status?: string | null): Hue {
   return ESCALATION_STATUS_HUES[status ?? 'open'] ?? 'slate';
 }
 
+class EscalationEdit extends Component<typeof Escalation> {
+  @tracked activeSection = 'ladder';
+
+  sections = [
+    { id: 'ladder', label: 'Ladder' },
+    { id: 'facts', label: 'Facts' },
+    { id: 'lifecycle', label: 'Lifecycle' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.esc-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='esc-edit'>
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "ladder") "focused"}}'
+            data-sect='ladder'
+          >
+            <h3>Ladder
+              <span class='sect-hint'>levels are set when the escalation is
+                raised</span></h3>
+            <FieldContainer @label='From level' @vertical={{true}}>
+              <@fields.fromLevel />
+            </FieldContainer>
+            <FieldContainer @label='To level' @vertical={{true}}>
+              <@fields.toLevel />
+            </FieldContainer>
+          </section>
+          <section
+            class='sect {{if (eq this.activeSection "facts") "focused"}}'
+            data-sect='facts'
+          >
+            <h3>Facts</h3>
+            <FieldContainer @label='Reason' @vertical={{true}}>
+              <@fields.reason />
+            </FieldContainer>
+            <FieldContainer @label='Note' @vertical={{true}}>
+              <@fields.note />
+            </FieldContainer>
+            <FieldContainer @label='Raised by' @vertical={{true}}>
+              <@fields.raisedByName />
+            </FieldContainer>
+          </section>
+          <section
+            class='sect {{if (eq this.activeSection "lifecycle") "focused"}}'
+            data-sect='lifecycle'
+          >
+            <h3>Lifecycle
+              <span class='sect-hint'>acknowledge from My Desk; cancel via the
+                Cancel action so the reason is recorded</span></h3>
+            <FieldContainer @label='Status' @vertical={{true}}>
+              <@fields.status />
+            </FieldContainer>
+            <FieldContainer @label='Acknowledged by' @vertical={{true}}>
+              <@fields.acknowledgedByName />
+            </FieldContainer>
+            <FieldContainer @label='Cancelled reason' @vertical={{true}}>
+              <@fields.cancelledReason />
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .esc-edit {
+        container-type: inline-size;
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 10rem 1fr;
+        gap: var(--boxel-sp);
+        align-items: start;
+      }
+      @container (width < 34rem) {
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+      }
+      .sects {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        border: 1px solid var(--border, var(--boxel-border-color));
+        border-radius: var(--boxel-border-radius);
+        background: var(--card, var(--boxel-light));
+        padding: var(--boxel-sp-sm);
+        scroll-margin-top: var(--boxel-sp);
+      }
+      .sect.focused {
+        border-color: var(--primary, var(--boxel-highlight));
+      }
+      .sect h3 {
+        margin: 0;
+        font-size: var(--boxel-font-size-xs);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs);
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+        font-style: italic;
+      }
+    </style>
+  </template>
+}
+
 /**
  * One rung-climb on the ladder, as a RECORD — "escalated twice last quarter"
  * must be a query, not an anecdote.
@@ -94,7 +227,7 @@ export class Escalation extends CardDef {
   });
   @field subjectTitle = contains(StringField, {
     computeVia: function (this: Escalation) {
-      return (this.subject as any)?.cardTitle ?? this.subject?.title;
+      return (this.subject as any)?.cardTitle ?? (this.subject as any)?.title;
     },
   });
   @field fromLevel = contains(EscalationLevelField);
@@ -442,135 +575,7 @@ export class Escalation extends CardDef {
       </style>
     </template>
   };
-  static edit = class Edit extends Component<typeof this> {
-    @tracked activeSection = 'ladder';
-
-    sections = [
-      { id: 'ladder', label: 'Ladder' },
-      { id: 'facts', label: 'Facts' },
-      { id: 'lifecycle', label: 'Lifecycle' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.esc-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='esc-edit'>
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "ladder") "focused"}}'
-              data-sect='ladder'
-            >
-              <h3>Ladder
-                <span class='sect-hint'>levels are set when the escalation is
-                  raised</span></h3>
-              <FieldContainer @label='From level' @vertical={{true}}>
-                <@fields.fromLevel />
-              </FieldContainer>
-              <FieldContainer @label='To level' @vertical={{true}}>
-                <@fields.toLevel />
-              </FieldContainer>
-            </section>
-            <section
-              class='sect {{if (eq this.activeSection "facts") "focused"}}'
-              data-sect='facts'
-            >
-              <h3>Facts</h3>
-              <FieldContainer @label='Reason' @vertical={{true}}>
-                <@fields.reason />
-              </FieldContainer>
-              <FieldContainer @label='Note' @vertical={{true}}>
-                <@fields.note />
-              </FieldContainer>
-              <FieldContainer @label='Raised by' @vertical={{true}}>
-                <@fields.raisedByName />
-              </FieldContainer>
-            </section>
-            <section
-              class='sect {{if (eq this.activeSection "lifecycle") "focused"}}'
-              data-sect='lifecycle'
-            >
-              <h3>Lifecycle
-                <span class='sect-hint'>acknowledge from My Desk; cancel via the
-                  Cancel action so the reason is recorded</span></h3>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-              </FieldContainer>
-              <FieldContainer @label='Acknowledged by' @vertical={{true}}>
-                <@fields.acknowledgedByName />
-              </FieldContainer>
-              <FieldContainer @label='Cancelled reason' @vertical={{true}}>
-                <@fields.cancelledReason />
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .esc-edit {
-          container-type: inline-size;
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 10rem 1fr;
-          gap: var(--boxel-sp);
-          align-items: start;
-        }
-        @container (width < 34rem) {
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-        }
-        .sects {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
-          border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          padding: var(--boxel-sp-sm);
-          scroll-margin-top: var(--boxel-sp);
-        }
-        .sect.focused {
-          border-color: var(--primary, var(--boxel-highlight));
-        }
-        .sect h3 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: 0;
-          font-weight: 400;
-          font-style: italic;
-        }
-      </style>
-    </template>
-  };
+  static edit = EscalationEdit;
 }
 
 export default Escalation;

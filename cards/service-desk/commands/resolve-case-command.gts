@@ -103,8 +103,8 @@ export default class ResolveCaseCommand extends Command<
     (kase as any).resolvedOn = new Date();
     let note = [
       `Resolved as ${kind}`,
-      input.duplicateOf?.title
-        ? `duplicate of ${input.duplicateOf.title}`
+      input.duplicateOf?.cardTitle
+        ? `duplicate of ${input.duplicateOf.cardTitle}`
         : null,
       input.resolutionNote || null,
     ]

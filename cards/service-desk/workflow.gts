@@ -10,7 +10,10 @@ import {
 import enumField from '@cardstack/base/enum';
 import RouteIcon from '@cardstack/boxel-icons/route';
 
-import { WorkflowStateField, workflowKindColor } from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
+import {
+  WorkflowStateField,
+  workflowKindColor,
+} from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
 import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
@@ -58,6 +61,119 @@ export class TransitionField extends FieldDef {
   };
 }
 
+class WorkflowEdit extends Component<typeof Workflow> {
+  @tracked activeSection = 'identity';
+
+  sections = [
+    { id: 'identity', label: 'Workflow' },
+    { id: 'process', label: 'States & transitions' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.wf-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='wf-edit'>
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "identity") "focused"}}'
+            data-sect='identity'
+          >
+            <h3>Workflow
+              <span class='sect-hint'>bump the version when states change — keys
+                are never renamed</span></h3>
+            <FieldContainer @label='Name' @vertical={{true}}>
+              <@fields.name />
+            </FieldContainer>
+            <FieldContainer @label='Applies to' @vertical={{true}}>
+              <@fields.appliesTo />
+            </FieldContainer>
+            <FieldContainer @label='Version' @vertical={{true}}>
+              <@fields.version />
+            </FieldContainer>
+          </section>
+          <section
+            class='sect {{if (eq this.activeSection "process") "focused"}}'
+            data-sect='process'
+          >
+            <h3>States & transitions
+              <span class='sect-hint'>waiting-kind states pause SLA clocks</span></h3>
+            <FieldContainer @label='States (in order)' @vertical={{true}}>
+              <@fields.states />
+            </FieldContainer>
+            <FieldContainer @label='Transitions' @vertical={{true}}>
+              <@fields.transitions />
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .wf-edit {
+        container-type: inline-size;
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 10rem 1fr;
+        gap: var(--boxel-sp);
+        align-items: start;
+      }
+      @container (width < 34rem) {
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+      }
+      .sects {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        border: 1px solid var(--border, var(--boxel-border-color));
+        border-radius: var(--boxel-border-radius);
+        background: var(--card, var(--boxel-light));
+        padding: var(--boxel-sp-sm);
+        scroll-margin-top: var(--boxel-sp);
+      }
+      .sect.focused {
+        border-color: var(--primary, var(--boxel-highlight));
+      }
+      .sect h3 {
+        margin: 0;
+        font-size: var(--boxel-font-size-xs);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs);
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+        font-style: italic;
+      }
+    </style>
+  </template>
+}
+
 /**
  * A team's PROCESS as an editable card: ordered states, guarded
  * transitions. An ops lead adds a "waiting-on-legal" state without an
@@ -81,15 +197,15 @@ export class Workflow extends CardDef {
 
   @field title = contains(StringField, {
     computeVia: function (this: Workflow) {
-      return this.version ? `${this.name ?? 'Workflow'} ${this.version}` : (this.name ?? 'Workflow');
+      return this.version
+        ? `${this.name ?? 'Workflow'} ${this.version}`
+        : (this.name ?? 'Workflow');
     },
   });
 
   /** Is `from → to` allowed, and behind which guard? */
   findTransition(from?: string | null, to?: string | null) {
-    return (this.transitions ?? []).find(
-      (t) => t.from === from && t.to === to,
-    );
+    return (this.transitions ?? []).find((t) => t.from === from && t.to === to);
   }
 
   stateByKey(key?: string | null) {
@@ -118,7 +234,8 @@ export class Workflow extends CardDef {
               {{/each}}
             </ul>
           {{else}}
-            <p class='wf-none'>No transitions defined — every move will be refused until some are.</p>
+            <p class='wf-none'>No transitions defined — every move will be
+              refused until some are.</p>
           {{/if}}
         </section>
       </article>
@@ -182,7 +299,10 @@ export class Workflow extends CardDef {
     <template>
       <div class='wf-embedded'>
         <span class='wf-name'>{{@model.title}}</span>
-        <span class='wf-meta'>{{@model.states.length}} states · {{@model.transitions.length}} transitions</span>
+        <span class='wf-meta'>{{@model.states.length}}
+          states ·
+          {{@model.transitions.length}}
+          transitions</span>
       </div>
       <style scoped>
         .wf-embedded {
@@ -223,7 +343,10 @@ export class Workflow extends CardDef {
         <RouteIcon class='wf-icon' aria-hidden='true' />
         <div class='wf-fitted-body'>
           <span class='wf-fitted-title'>{{@model.title}}</span>
-          <span class='wf-fitted-meta'>{{@model.states.length}} states · {{@model.transitions.length}} transitions</span>
+          <span class='wf-fitted-meta'>{{@model.states.length}}
+            states ·
+            {{@model.transitions.length}}
+            transitions</span>
           <div class='wf-fitted-states'><@fields.states /></div>
         </div>
       </div>
@@ -284,118 +407,7 @@ export class Workflow extends CardDef {
       </style>
     </template>
   };
-  static edit = class Edit extends Component<typeof this> {
-    @tracked activeSection = 'identity';
-
-    sections = [
-      { id: 'identity', label: 'Workflow' },
-      { id: 'process', label: 'States & transitions' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.wf-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='wf-edit'>
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "identity") "focused"}}'
-              data-sect='identity'
-            >
-              <h3>Workflow
-                <span class='sect-hint'>bump the version when states change — keys are never renamed</span></h3>
-              <FieldContainer @label='Name' @vertical={{true}}>
-                <@fields.name />
-              </FieldContainer>
-              <FieldContainer @label='Applies to' @vertical={{true}}>
-                <@fields.appliesTo />
-              </FieldContainer>
-              <FieldContainer @label='Version' @vertical={{true}}>
-                <@fields.version />
-              </FieldContainer>
-            </section>
-            <section
-              class='sect {{if (eq this.activeSection "process") "focused"}}'
-              data-sect='process'
-            >
-              <h3>States & transitions
-                <span class='sect-hint'>waiting-kind states pause SLA clocks</span></h3>
-              <FieldContainer @label='States (in order)' @vertical={{true}}>
-                <@fields.states />
-              </FieldContainer>
-              <FieldContainer @label='Transitions' @vertical={{true}}>
-                <@fields.transitions />
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .wf-edit {
-          container-type: inline-size;
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 10rem 1fr;
-          gap: var(--boxel-sp);
-          align-items: start;
-        }
-        @container (width < 34rem) {
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-        }
-        .sects {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
-          border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          padding: var(--boxel-sp-sm);
-          scroll-margin-top: var(--boxel-sp);
-        }
-        .sect.focused {
-          border-color: var(--primary, var(--boxel-highlight));
-        }
-        .sect h3 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: 0;
-          font-weight: 400;
-          font-style: italic;
-        }
-      </style>
-    </template>
-  };
-
+  static edit = WorkflowEdit;
 }
 
 export default Workflow;

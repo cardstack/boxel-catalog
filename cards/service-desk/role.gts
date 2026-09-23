@@ -17,6 +17,117 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 
+class RoleEdit extends Component<typeof Role> {
+  @tracked activeSection = 'identity';
+
+  sections = [
+    { id: 'identity', label: 'Role' },
+    { id: 'grants', label: 'Members & grants' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.role-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='role-edit'>
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "identity") "focused"}}'
+            data-sect='identity'
+          >
+            <h3>Role
+              <span class='sect-hint'>on-duty is hand-set — the platform has no
+                scheduler</span></h3>
+            <FieldContainer @label='Name' @vertical={{true}}>
+              <@fields.name />
+            </FieldContainer>
+            <FieldContainer @label='On duty' @vertical={{true}}>
+              <@fields.onDuty />
+            </FieldContainer>
+          </section>
+          <section
+            class='sect {{if (eq this.activeSection "grants") "focused"}}'
+            data-sect='grants'
+          >
+            <h3>Members & grants
+              <span class='sect-hint'>grants are data read by workflow guards,
+                not an ACL</span></h3>
+            <FieldContainer @label='Members' @vertical={{true}}>
+              <@fields.members />
+            </FieldContainer>
+            <FieldContainer @label='Grants' @vertical={{true}}>
+              <@fields.permissions />
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .role-edit {
+        container-type: inline-size;
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 10rem 1fr;
+        gap: var(--boxel-sp);
+        align-items: start;
+      }
+      @container (width < 34rem) {
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+      }
+      .sects {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        border: 1px solid var(--border, var(--boxel-border-color));
+        border-radius: var(--boxel-border-radius);
+        background: var(--card, var(--boxel-light));
+        padding: var(--boxel-sp-sm);
+        scroll-margin-top: var(--boxel-sp);
+      }
+      .sect.focused {
+        border-color: var(--primary, var(--boxel-highlight));
+      }
+      .sect h3 {
+        margin: 0;
+        font-size: var(--boxel-font-size-xs);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs);
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+        font-style: italic;
+      }
+    </style>
+  </template>
+}
+
 /**
  * A named duty — "L2 Support", "Ops Lead" — with its members and who is on
  * duty right now.
@@ -235,116 +346,7 @@ export class Role extends CardDef {
       </style>
     </template>
   };
-  static edit = class Edit extends Component<typeof this> {
-    @tracked activeSection = 'identity';
-
-    sections = [
-      { id: 'identity', label: 'Role' },
-      { id: 'grants', label: 'Members & grants' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.role-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='role-edit'>
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "identity") "focused"}}'
-              data-sect='identity'
-            >
-              <h3>Role
-                <span class='sect-hint'>on-duty is hand-set — the platform has
-                  no scheduler</span></h3>
-              <FieldContainer @label='Name' @vertical={{true}}>
-                <@fields.name />
-              </FieldContainer>
-              <FieldContainer @label='On duty' @vertical={{true}}>
-                <@fields.onDuty />
-              </FieldContainer>
-            </section>
-            <section
-              class='sect {{if (eq this.activeSection "grants") "focused"}}'
-              data-sect='grants'
-            >
-              <h3>Members & grants
-                <span class='sect-hint'>grants are data read by workflow guards,
-                  not an ACL</span></h3>
-              <FieldContainer @label='Members' @vertical={{true}}>
-                <@fields.members />
-              </FieldContainer>
-              <FieldContainer @label='Grants' @vertical={{true}}>
-                <@fields.permissions />
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .role-edit {
-          container-type: inline-size;
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 10rem 1fr;
-          gap: var(--boxel-sp);
-          align-items: start;
-        }
-        @container (width < 34rem) {
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-        }
-        .sects {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
-          border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          padding: var(--boxel-sp-sm);
-          scroll-margin-top: var(--boxel-sp);
-        }
-        .sect.focused {
-          border-color: var(--primary, var(--boxel-highlight));
-        }
-        .sect h3 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: 0;
-          font-weight: 400;
-          font-style: italic;
-        }
-      </style>
-    </template>
-  };
+  static edit = RoleEdit;
 }
 
 export default Role;

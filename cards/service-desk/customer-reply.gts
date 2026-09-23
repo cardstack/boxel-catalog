@@ -38,6 +38,118 @@ export const ReplyChannelField = enumField(StringField, {
   options: REPLY_CHANNELS as unknown as string[],
 });
 
+class CustomerReplyEdit extends Component<typeof CustomerReply> {
+  @tracked activeSection = 'message';
+
+  sections = [
+    { id: 'message', label: 'Message' },
+    { id: 'provenance', label: 'Provenance' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.reply-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='reply-edit'>
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "message") "focused"}}'
+            data-sect='message'
+          >
+            <h3>Message</h3>
+            <FieldContainer @label='Direction' @vertical={{true}}>
+              <@fields.direction />
+            </FieldContainer>
+            <FieldContainer @label='Channel' @vertical={{true}}>
+              <@fields.channel />
+            </FieldContainer>
+            <FieldContainer @label='Body' @vertical={{true}}>
+              <@fields.body />
+            </FieldContainer>
+          </section>
+          <section
+            class='sect {{if (eq this.activeSection "provenance") "focused"}}'
+            data-sect='provenance'
+          >
+            <h3>Provenance
+              <span class='sect-hint'>outbound replies are attributed to their
+                author</span></h3>
+            <FieldContainer @label='From address (inbound)' @vertical={{true}}>
+              <@fields.fromAddress />
+            </FieldContainer>
+            <FieldContainer @label='Sent at' @vertical={{true}}>
+              <@fields.sentAt />
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .reply-edit {
+        container-type: inline-size;
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 10rem 1fr;
+        gap: var(--boxel-sp);
+        align-items: start;
+      }
+      @container (width < 34rem) {
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+      }
+      .sects {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        border: 1px solid var(--border, var(--boxel-border-color));
+        border-radius: var(--boxel-border-radius);
+        background: var(--card, var(--boxel-light));
+        padding: var(--boxel-sp-sm);
+        scroll-margin-top: var(--boxel-sp);
+      }
+      .sect.focused {
+        border-color: var(--primary, var(--boxel-highlight));
+      }
+      .sect h3 {
+        margin: 0;
+        font-size: var(--boxel-font-size-xs);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs);
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+        font-style: italic;
+      }
+    </style>
+  </template>
+}
+
 /**
  * The RECORD of one customer communication — not the transport. No inbound
  * webhook or mail runtime exists on the platform, so replies are recorded by
@@ -89,7 +201,11 @@ export class CustomerReply extends CardDef {
       <article class='reply-page'>
         <header class='reply-head'>
           <h1><@fields.title /></h1>
-          <span class='reply-meta'>{{@model.channel}} · {{this.sentLabel}} · on <@fields.case @format='atom' /></span>
+          <span class='reply-meta'>{{@model.channel}}
+            ·
+            {{this.sentLabel}}
+            · on
+            <@fields.case @format='atom' /></span>
         </header>
         <div class='reply-body'><@fields.body /></div>
       </article>
@@ -129,13 +245,19 @@ export class CustomerReply extends CardDef {
     <template>
       <div class='reply {{if (eqDir @model.direction) "reply-out"}}'>
         <span class='reply-line'>
-          <span class='reply-dir'>{{if (eqDir @model.direction) '↑ out' '↓ in'}}</span>
+          <span class='reply-dir'>{{if
+              (eqDir @model.direction)
+              '↑ out'
+              '↓ in'
+            }}</span>
           <span class='reply-who'>{{if
               (eqDir @model.direction)
               @model.author.title
               @model.fromAddress
             }}</span>
-          <span class='reply-when'>{{this.sentLabel}} · {{@model.channel}}</span>
+          <span class='reply-when'>{{this.sentLabel}}
+            ·
+            {{@model.channel}}</span>
         </span>
         <div class='reply-excerpt'><@fields.body /></div>
       </div>
@@ -251,117 +373,7 @@ export class CustomerReply extends CardDef {
       </style>
     </template>
   };
-  static edit = class Edit extends Component<typeof this> {
-    @tracked activeSection = 'message';
-
-    sections = [
-      { id: 'message', label: 'Message' },
-      { id: 'provenance', label: 'Provenance' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.reply-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='reply-edit'>
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "message") "focused"}}'
-              data-sect='message'
-            >
-              <h3>Message</h3>
-              <FieldContainer @label='Direction' @vertical={{true}}>
-                <@fields.direction />
-              </FieldContainer>
-              <FieldContainer @label='Channel' @vertical={{true}}>
-                <@fields.channel />
-              </FieldContainer>
-              <FieldContainer @label='Body' @vertical={{true}}>
-                <@fields.body />
-              </FieldContainer>
-            </section>
-            <section
-              class='sect {{if (eq this.activeSection "provenance") "focused"}}'
-              data-sect='provenance'
-            >
-              <h3>Provenance
-                <span class='sect-hint'>outbound replies are attributed to their author</span></h3>
-              <FieldContainer @label='From address (inbound)' @vertical={{true}}>
-                <@fields.fromAddress />
-              </FieldContainer>
-              <FieldContainer @label='Sent at' @vertical={{true}}>
-                <@fields.sentAt />
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .reply-edit {
-          container-type: inline-size;
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 10rem 1fr;
-          gap: var(--boxel-sp);
-          align-items: start;
-        }
-        @container (width < 34rem) {
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-        }
-        .sects {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
-          border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          padding: var(--boxel-sp-sm);
-          scroll-margin-top: var(--boxel-sp);
-        }
-        .sect.focused {
-          border-color: var(--primary, var(--boxel-highlight));
-        }
-        .sect h3 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: 0;
-          font-weight: 400;
-          font-style: italic;
-        }
-      </style>
-    </template>
-  };
-
+  static edit = CustomerReplyEdit;
 }
 
 function eqDir(direction?: string | null) {

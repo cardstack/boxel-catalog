@@ -16,7 +16,10 @@ import { SlaPolicy } from '@cardstack/catalog/cards/service-desk/sla-policy';
 import { SlaTimerField } from '@cardstack/catalog/cards/service-desk/sla-timer-field';
 import { SlaWindowField } from '@cardstack/catalog/fields/sla-window/sla-window-field';
 import { SlaTimerBadge } from '@cardstack/catalog/cards/service-desk/components/sla-timer-badge';
-import { timerSnapshot, sortByUrgency } from '@cardstack/catalog/cards/service-desk/utils/sla';
+import {
+  timerSnapshot,
+  sortByUrgency,
+} from '@cardstack/catalog/cards/service-desk/utils/sla';
 import { relativeStamp } from '@cardstack/catalog/fields/created-at/created-at';
 import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
@@ -48,7 +51,8 @@ export class PauseIntervalField extends FieldDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <span class='pause'>⏸ {{@model.title}}{{#if @model.reason}} · {{@model.reason}}{{/if}}</span>
+      <span class='pause'>⏸
+        {{@model.title}}{{#if @model.reason}} · {{@model.reason}}{{/if}}</span>
       <style scoped>
         .pause {
           font-size: var(--boxel-font-size-xs);
@@ -57,6 +61,113 @@ export class PauseIntervalField extends FieldDef {
       </style>
     </template>
   };
+}
+
+class SlaEdit extends Component<typeof Sla> {
+  @tracked activeSection = 'promise';
+
+  sections = [
+    { id: 'promise', label: 'Promise' },
+    { id: 'clocks', label: 'Clocks' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.sla-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='sla-edit'>
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "promise") "focused"}}'
+            data-sect='promise'
+          >
+            <h3>Promise
+              <span class='sect-hint'>the policy and the frozen window</span></h3>
+            <FieldContainer @label='Window' @vertical={{true}}>
+              <@fields.window />
+            </FieldContainer>
+          </section>
+          <section
+            class='sect {{if (eq this.activeSection "clocks") "focused"}}'
+            data-sect='clocks'
+          >
+            <h3>Clocks
+              <span class='sect-hint'>deadlines are written by commands, never
+                by hand</span></h3>
+            <FieldContainer @label='Timers' @vertical={{true}}>
+              <@fields.timers />
+            </FieldContainer>
+            <FieldContainer @label='Pauses' @vertical={{true}}>
+              <@fields.pauses />
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .sla-edit {
+        container-type: inline-size;
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 10rem 1fr;
+        gap: var(--boxel-sp);
+        align-items: start;
+      }
+      @container (width < 34rem) {
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+      }
+      .sects {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        border: 1px solid var(--border, var(--boxel-border-color));
+        border-radius: var(--boxel-border-radius);
+        background: var(--card, var(--boxel-light));
+        padding: var(--boxel-sp-sm);
+        scroll-margin-top: var(--boxel-sp);
+      }
+      .sect.focused {
+        border-color: var(--primary, var(--boxel-highlight));
+      }
+      .sect h3 {
+        margin: 0;
+        font-size: var(--boxel-font-size-xs);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs);
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+        font-style: italic;
+      }
+    </style>
+  </template>
 }
 
 /**
@@ -90,7 +201,7 @@ export class Sla extends CardDef {
   });
   @field subjectTitle = contains(StringField, {
     computeVia: function (this: Sla) {
-      return (this.subject as any)?.cardTitle ?? this.subject?.title;
+      return (this.subject as any)?.cardTitle ?? (this.subject as any)?.title;
     },
   });
   @field window = contains(SlaWindowField);
@@ -126,9 +237,14 @@ export class Sla extends CardDef {
     computeVia: function (this: Sla) {
       let total = 0;
       for (let p of this.pauses ?? []) {
-        let from = p.pausedAt ? new Date(p.pausedAt as unknown as string) : null;
-        let to = p.resumedAt ? new Date(p.resumedAt as unknown as string) : null;
-        if (from && to) total += Math.round((to.getTime() - from.getTime()) / 60000);
+        let from = p.pausedAt
+          ? new Date(p.pausedAt as unknown as string)
+          : null;
+        let to = p.resumedAt
+          ? new Date(p.resumedAt as unknown as string)
+          : null;
+        if (from && to)
+          total += Math.round((to.getTime() - from.getTime()) / 60000);
       }
       return total;
     },
@@ -151,9 +267,15 @@ export class Sla extends CardDef {
         <section class='sla-clocks'>
           <h2>Clocks</h2>
           {{#each @model.timers as |timer|}}
-            <SlaTimerBadge @facts={{timer}} @caption={{timer.kind}} @live={{true}} @showBar={{true}} />
+            <SlaTimerBadge
+              @facts={{timer}}
+              @caption={{timer.kind}}
+              @live={{true}}
+              @showBar={{true}}
+            />
           {{else}}
-            <p class='sla-none'>No clocks running — apply a policy to start them.</p>
+            <p class='sla-none'>No clocks running — apply a policy to start
+              them.</p>
           {{/each}}
         </section>
         <section class='sla-meta'>
@@ -169,7 +291,8 @@ export class Sla extends CardDef {
             <h3>Pauses</h3>
             {{#if @model.pauses.length}}
               <@fields.pauses @format='embedded' />
-              <p class='sla-paused-total'>{{@model.pausedMinutesTotal}} min paused in total — excluded from every consumed figure.</p>
+              <p class='sla-paused-total'>{{@model.pausedMinutesTotal}}
+                min paused in total — excluded from every consumed figure.</p>
             {{else}}
               <p class='sla-none'>Never paused.</p>
             {{/if}}
@@ -200,7 +323,8 @@ export class Sla extends CardDef {
           color: var(--muted-foreground, var(--boxel-450));
           font-size: var(--boxel-font-size-sm);
         }
-        h2, h3 {
+        h2,
+        h3 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.1em;
@@ -242,7 +366,12 @@ export class Sla extends CardDef {
     <template>
       <div class='sla-embedded'>
         {{#each @model.timers as |timer|}}
-          <SlaTimerBadge @facts={{timer}} @caption={{timer.kind}} @live={{true}} @showBar={{true}} />
+          <SlaTimerBadge
+            @facts={{timer}}
+            @caption={{timer.kind}}
+            @live={{true}}
+            @showBar={{true}}
+          />
         {{else}}
           <span class='sla-none'>No clocks</span>
         {{/each}}
@@ -292,10 +421,17 @@ export class Sla extends CardDef {
           {{/if}}
           <div class='sla-fitted-more'>
             {{#each @model.timers as |timer|}}
-              <SlaTimerBadge @facts={{timer}} @caption={{timer.kind}} @live={{false}} @showBar={{true}} />
+              <SlaTimerBadge
+                @facts={{timer}}
+                @caption={{timer.kind}}
+                @live={{false}}
+                @showBar={{true}}
+              />
             {{/each}}
             {{#if @model.pauses.length}}
-              <span class='sla-fitted-note'>{{@model.pauses.length}} pause(s) · {{@model.pausedMinutesTotal}}m excluded</span>
+              <span class='sla-fitted-note'>{{@model.pauses.length}}
+                pause(s) ·
+                {{@model.pausedMinutesTotal}}m excluded</span>
             {{/if}}
             <span class='sla-fitted-note'>{{@model.window.title}}</span>
           </div>
@@ -353,112 +489,7 @@ export class Sla extends CardDef {
       </style>
     </template>
   };
-  static edit = class Edit extends Component<typeof this> {
-    @tracked activeSection = 'promise';
-
-    sections = [
-      { id: 'promise', label: 'Promise' },
-      { id: 'clocks', label: 'Clocks' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.sla-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='sla-edit'>
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "promise") "focused"}}'
-              data-sect='promise'
-            >
-              <h3>Promise
-                <span class='sect-hint'>the policy and the frozen window</span></h3>
-              <FieldContainer @label='Window' @vertical={{true}}>
-                <@fields.window />
-              </FieldContainer>
-            </section>
-            <section
-              class='sect {{if (eq this.activeSection "clocks") "focused"}}'
-              data-sect='clocks'
-            >
-              <h3>Clocks
-                <span class='sect-hint'>deadlines are written by commands, never by hand</span></h3>
-              <FieldContainer @label='Timers' @vertical={{true}}>
-                <@fields.timers />
-              </FieldContainer>
-              <FieldContainer @label='Pauses' @vertical={{true}}>
-                <@fields.pauses />
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .sla-edit {
-          container-type: inline-size;
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 10rem 1fr;
-          gap: var(--boxel-sp);
-          align-items: start;
-        }
-        @container (width < 34rem) {
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-        }
-        .sects {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
-          border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          padding: var(--boxel-sp-sm);
-          scroll-margin-top: var(--boxel-sp);
-        }
-        .sect.focused {
-          border-color: var(--primary, var(--boxel-highlight));
-        }
-        .sect h3 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: 0;
-          font-weight: 400;
-          font-style: italic;
-        }
-      </style>
-    </template>
-  };
-
+  static edit = SlaEdit;
 }
 
 export default Sla;
