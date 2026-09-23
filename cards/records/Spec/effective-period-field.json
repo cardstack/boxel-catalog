@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "EffectivePeriodField",
+        "module": "../effective-period-field"
+      },
+      "specType": "field",
+      "readMe": "## Effective Period (EP)\n\nThe obligations window of an agreement \u2014 `effectiveDate`, `endDate`, `autoRenews`, `renewalTermMonths`, `noticeDays` \u2014 with the one date that matters computed from them: **`noticeDeadline` = endDate \u2212 noticeDays**. A renewal \"nobody chose\" was missed on the notice deadline, not the end date, so the deadline is a first-class value here rather than something read off a calendar.\n\nAlso computes `daysToNotice`, `daysToEnd`, `termMonths` (a 15 Jul \u2013 14 Jul term reads as 12 months, not 11) and `periodState` (not started / in force / notice window / notice passed / ended). Wall-clock values are fresh on render and only as fresh as the last reindex in a query \u2014 sort a loaded board by them, never filter the index on them. All dates are calendar days built from local parts; `toISOString()` is deliberately never used because it shifts a deadline a day early east of UTC.\n\n### Formats\n\n- **atom** \u2014 `15 Jul 2026 \u2013 14 Jul 2027` plus a `notice by \u2026` pill coloured by state.\n- **embedded** \u2014 effective / ends / term / state on one row, the notice deadline on the next, turning amber inside the 30-day window and red once passed.\n- **edit** \u2014 the five stored inputs; computed values are never editable.\n\n### Example\n\nCarried by Contract \u2014 Acme Industries MSA 2026 (`effectivePeriod`), auto-renewing annually with 60 days' notice; the inline example below is the same period.\n\n### Consumers\n\nContract (`effectivePeriod`). Legal Home ranks its Notice Deadlines panel by `noticeDeadline`. Any lease, licence or policy card is the second consumer.\n\n### Non-goals\n\nNot a status \u2014 the document's lifecycle stays on its own `statusField`. Not an Obligation: the notice itself, once due, is an Obligation card owned by someone. No renewal history \u2014 each roll of the term is a new ContractVersion.",
+      "cardInfo": {
+        "name": "Effective Period",
+        "summary": "Obligations window with the notice deadline computed (endDate \u2212 noticeDays) \u2014 the date a contracts manager is actually judged on."
+      },
+      "containedExamples": [
+        {
+          "effectiveDate": "2026-07-15",
+          "endDate": "2027-07-14",
+          "autoRenews": true,
+          "renewalTermMonths": 12,
+          "noticeDays": 60
+        }
+      ],
+      "cardTitle": "Effective Period Field",
+      "cardDescription": "An agreement's effective and end dates, renewal terms and notice period, with the notice deadline computed as a first-class date."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../effective-period-field",
+              "name": "EffectivePeriodField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

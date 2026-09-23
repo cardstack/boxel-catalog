@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Trust Metadata Field",
+      "specType": "field",
+      "ref": {
+        "module": "../trust-metadata-field",
+        "name": "TrustMetadataField"
+      },
+      "readMe": "## Trust Metadata (TM)\n\nHow far an artefact can be relied on, and on what basis: `level` (`self-asserted` \u2192 `attested` \u2192 `system-generated` \u2192 `independently-verified`), `attestedBy`/`attestedAt`, `verifiedBy` for an outside party, and a one-line `basis`. `weight` (1\u20134) is derived, because the order is the useful part \u2014 a self-asserted statement and a system export are both evidence and are not worth the same.\n\n```ts\nimport { TrustMetadataField, TRUST_WEIGHT } from '@cardstack/catalog/cards/records/trust-metadata-field';\n@field trust = contains(TrustMetadataField);\n```\n\n`isComplete` is the honest gate: an `attested` level with nobody named and no date is a claim about a claim, and the field reports that gap rather than refusing the value \u2014 half-recorded evidence is a real state during fieldwork. What must never happen is it reading as fully attested.\n\nOnly the top level earns a colour; `self-asserted` is deliberately dull rather than alarming, because it is a normal and acceptable kind of evidence for a low-risk control.\n\n## Example\nThe contained example is a `system-generated` export with its basis stated. `attestedBy` is unset, which is correct for that level and is the case the `isComplete` rule has to get right.\n\n## Non-goals\nDoes not verify anything \u2014 it records a judgment someone made. Not a hash: tamper evidence is Proof Field's `sha256` pair. Not a permission or a confidentiality level.",
+      "containedExamples": [
+        {
+          "level": "system-generated",
+          "basis": "command output, exported at scoring time"
+        }
+      ],
+      "cardInfo": {
+        "name": "Trust Metadata",
+        "summary": "How far to believe an artefact: self-asserted \u2192 attested \u2192 system-generated \u2192 independently verified.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "How far an artefact can be relied on \u2014 self-asserted through independently verified \u2014 with who attested it and on what basis."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../trust-metadata-field",
+              "name": "TrustMetadataField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

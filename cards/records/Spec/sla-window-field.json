@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "SlaWindowField",
+        "module": "../sla-window-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## SLA Window (SW)\n\nTimezone + working windows (REUSES `@cardstack/catalog/cards/service-desk/schedule`'s DayWindowField, so the shapes never drift) + holidays. Pure calendar data; all arithmetic is `@cardstack/catalog/cards/service-desk/utils/sla`. Why a field when the Schedule CARD exists: an applied SLA must keep the window it was promised under, frozen at apply time \u2014 a later edit to the shared Schedule must not rewrite history.\n\n### Non-goals\n\nNo math here (the service-desk SLA utilities own it). Empty windows mean always-on 24/7.",
+      "cardInfo": {
+        "name": "SLA Window",
+        "summary": "The business hours an SLA clock runs in \u2014 frozen onto the applied SLA."
+      },
+      "containedExamples": [
+        {
+          "timeZone": "Asia/Kuala_Lumpur",
+          "windows": [
+            {
+              "day": "Monday",
+              "opensAt": "09:00",
+              "closesAt": "17:30"
+            }
+          ],
+          "holidays": ["2026-09-16"]
+        }
+      ],
+      "cardTitle": "SLA Window Field",
+      "cardDescription": "A timezone, working-hour windows and holidays, frozen onto an applied SLA so a later schedule edit cannot rewrite its deadlines."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../sla-window-field",
+              "name": "SlaWindowField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

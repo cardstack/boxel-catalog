@@ -1,0 +1,42 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Resolution Code Field",
+      "specType": "field",
+      "ref": {
+        "module": "../resolution-code-field",
+        "name": "ResolutionCodeField"
+      },
+      "readMe": "## Resolution Code (RC)\n\nHow a finding was closed: `remediated`, `risk-accepted`, `false-positive`, `duplicate`, `superseded` or `out-of-scope`. \"Closed\" alone hides whether anything was fixed; the code says so, and two codes carry obligations the closing command enforces \u2014 `requiresAction` (remediated: the corrective task must be done) and `requiresApproval` (risk-accepted: someone senior said so).\n\n```ts\nimport { ResolutionCodeField } from '@cardstack/catalog/cards/records/resolution-code-field';\n@field resolution = contains(ResolutionCodeField);\n```\n\nEmbedded shows the code as a pill with the obligation it carries; atom is the pill alone.\n\n## Example\nThe contained example is `risk-accepted` \u2014 the code that needs an approval.\n\n## Non-goals\nDoes not perform the closure or check the obligations \u2014 the Finding's close command reads `requiresAction` / `requiresApproval` and refuses when they are unmet. Not a status (a finding is open, in remediation or closed; the code qualifies *closed*). Not a root cause taxonomy.",
+      "containedExamples": [
+        {
+          "code": "risk-accepted"
+        }
+      ],
+      "cardInfo": {
+        "name": "Resolution Code",
+        "summary": "How a finding was closed, and whether that closure needs an action done or an approval given.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "How a finding was closed \u2014 remediated, risk accepted, false positive, duplicate, superseded or out of scope \u2014 and what each code obliges."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../resolution-code-field",
+              "name": "ResolutionCodeField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AutomationPolicyField",
+        "module": "../automation-policy-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Automation Policy (AP)\n\n\"Escalate P1s to L2 at 75%\": when-clause + action + params, stored as data. THE HONEST LIMIT: the platform has no scheduler, so policies apply when a command runs, and every application is stamped (`lastAppliedAt`, `applyCount`) and attributed on the record's timeline as \"by policy <name>\" \u2014 automation never reads as a ghost.\n\n### Non-goals\n\nNo daemon, no cron, no notification on fire (platform-blocked; the command center is the surface).",
+      "cardInfo": {
+        "name": "Automation Policy",
+        "summary": "A when-predicate plus one action \u2014 applied on invocation, never on a timer."
+      },
+      "containedExamples": [
+        {
+          "name": "P1 auto-escalate",
+          "whenField": "severity",
+          "whenOp": "is",
+          "whenValue": "critical",
+          "action": "escalate-to-level",
+          "actionParam": "L2",
+          "enabled": true,
+          "applyCount": 1
+        }
+      ],
+      "cardTitle": "Automation Policy Field",
+      "cardDescription": "A when-clause, action and parameters stored as data, stamped each time a command applies it so automated changes are attributed on the record."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../automation-policy-field",
+              "name": "AutomationPolicyField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "IntegrationReferenceField",
+        "module": "../external-reference-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Integration Reference (IR)\n\nThe named system \u2014 \"Zendesk\", \"Jira\" \u2014 with kind, base URL and an id display hint. Lives on a desk's App Configuration; External Reference embeds a copy of what it needs.\n\n### Non-goals\n\nNo credentials, no API config \u2014 naming, not connecting. UrlField note: store the bare origin (query strings are dropped by UrlField).",
+      "cardInfo": {
+        "name": "Integration Reference",
+        "summary": "A named external system, so a pasted reference outlives the browser tab."
+      },
+      "containedExamples": [
+        {
+          "name": "Zendesk",
+          "kind": "ticketing",
+          "idPattern": "#88123"
+        }
+      ],
+      "cardTitle": "Integration Reference Field",
+      "cardDescription": "A named external system with its kind, base URL and id display hint, so pasted references stay meaningful."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../external-reference-field",
+              "name": "IntegrationReferenceField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "RecordOwnerField",
+        "module": "../record-owner-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Record Owner (RO)\n\nOwner (id+name), team, since, provenance (assigned / claimed / round-robin / escalation) and one hop of trail. Written ONLY by the Assign Owner command so reassignment always leaves a trace. FieldDefs cannot `linksTo`, so the owner is stored as id+display and the command resolves.\n\n### Non-goals\n\nNot an ACL and not a full history \u2014 the timeline owns the trail beyond one hop.",
+      "cardInfo": {
+        "name": "Record Owner",
+        "summary": "Who is accountable right now, since when, and how they got it."
+      },
+      "containedExamples": [
+        {
+          "ownerId": "../Employee/dana-kim",
+          "ownerName": "Dana Kim",
+          "teamName": "Payments",
+          "since": "2026-09-05T06:02:00.000Z",
+          "how": "escalation",
+          "previousOwnerName": "Leo Park"
+        }
+      ],
+      "cardTitle": "Record Owner Field",
+      "cardDescription": "Who owns a record, on which team, since when and how they got it, with one hop of previous owner."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../record-owner-field",
+              "name": "RecordOwnerField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
