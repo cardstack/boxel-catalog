@@ -163,6 +163,19 @@ export class ConsentGrantField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
+    // 0 is "today", not falsy; a past date reads "expired" rather than a
+    // negative count, whatever the stored status still says.
+    get expiryLabel(): string | undefined {
+      let days = this.args.model?.daysUntilExpiry;
+      if (days === undefined || days === null) {
+        return undefined;
+      }
+      if (days < 0) {
+        return 'expired';
+      }
+      return days === 0 ? 'expires today' : `${days}d left`;
+    }
+
     <template>
       <div class='grant'>
         <span class='purpose {{if @model.isActive "on" "off"}}'>
@@ -171,9 +184,9 @@ export class ConsentGrantField extends FieldDef {
         <span class='meta'>
           {{@model.status}}
           {{#if @model.lawfulBasis}} · {{@model.lawfulBasis}}{{/if}}
-          {{#if @model.daysUntilExpiry}}
+          {{#if this.expiryLabel}}
             ·
-            {{@model.daysUntilExpiry}}d left
+            {{this.expiryLabel}}
           {{/if}}
         </span>
         {{#if @model.needsEvidence}}

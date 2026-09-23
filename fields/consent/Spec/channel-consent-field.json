@@ -7,7 +7,7 @@
         "module": "../consent-vocabulary"
       },
       "specType": "field",
-      "readMe": "## Channel Consent\n\nWhether a channel may be used to reach someone — email, SMS, phone, post, push, in-app.\n\n```ts\nimport { ChannelConsentField } from '@cardstack/catalog/fields/consent/consent-vocabulary';\n\n@field channels = containsMany(ChannelConsentField);\n```\n\n### Separate from Consent Grant because the two fail independently\n\nPermission to market to someone (the **purpose**) says nothing about whether their email address still works (the **channel**). An address that hard-bounced is unusable no matter what they agreed to, and someone who withdrew marketing consent may still have a perfectly good address for service messages.\n\nThis is the modelling error the whole family is built to avoid.\n\n### Suppression is not withdrawal\n\nThe distinction that matters most here.\n\n| | What it means | Can it be fixed? |\n|---|---|---|\n| **Withdrawal** | the person said no | only by them saying yes again |\n| **Suppression** | delivery failed or was blocked | often — a new address, a delisting |\n\n`SuppressionReasonField`: hard bounce · spam complaint · do-not-contact list · invalid address · manual.\n\nCollapsing suppression into withdrawal does two kinds of damage: it **loses the ability to re-engage** someone who simply changed their address, and it **overstates how many people opted out** — a metric organisations make decisions on.\n\n### Double opt-in is recorded, not assumed\n\n`doubleOptInConfirmedAt` is separate from `optedInAt`. **A signup that was never confirmed is pending, not consented.** Systems that treat the two as the same send to addresses nobody ever confirmed owning — which is how a typo'd address receives someone else's mail.\n\n`requiresDoubleOptIn` is per-channel because the requirement varies by channel and jurisdiction; `isConfirmed` reads it rather than assuming.\n\n### `blockedReason` orders the causes by what the reader can act on\n\nSuppression first — it is the one they cannot fix by asking again.\n\n### Non-goals\n\nDoes not store the address itself. Does not send anything. Does not decide whether a send is allowed; the consumer's send path reads this field and Consent Grant together.",
+      "readMe": "## Channel Consent\n\nWhether a channel may be used to reach someone — email, SMS, phone, post, push, in-app.\n\n```ts\nimport { ChannelConsentField } from '@cardstack/catalog/fields/consent/consent-vocabulary';\n\n@field channels = containsMany(ChannelConsentField);\n```\n\n### Separate from Consent Grant because the two fail independently\n\nPermission to market to someone (the **purpose**) says nothing about whether their email address still works (the **channel**). An address that hard-bounced is unusable no matter what they agreed to, and someone who withdrew marketing consent may still have a perfectly good address for service messages.\n\nThis is the modelling error the whole family is built to avoid.\n\n### Suppression is not withdrawal\n\nThe distinction that matters most here.\n\n| | What it means | Can it be fixed? |\n|---|---|---|\n| **Withdrawal** | the person said no | only by them saying yes again |\n| **Suppression** | delivery failed or was blocked | often — a new address, a delisting |\n\n`SuppressionReasonField`: hard bounce · spam complaint · do-not-contact list · invalid address · manual.\n\nCollapsing suppression into withdrawal does two kinds of damage: it **loses the ability to re-engage** someone who simply changed their address, and it **overstates how many people opted out** — a metric organisations make decisions on.\n\n### Double opt-in is recorded, not assumed\n\n`doubleOptInConfirmedAt` is separate from `optedInAt`. **A signup that was never confirmed is pending, not consented.** Systems that treat the two as the same send to addresses nobody ever confirmed owning — which is how a typo'd address receives someone else's mail.\n\n`requiresDoubleOptIn` is per-channel because the requirement varies by channel and jurisdiction; `isConfirmed` reads it rather than assuming.\n\n### `blockedReason` orders the causes by what the reader can act on\n\nSuppression first — it is the one they cannot fix by asking again.\n\n### Non-goals\n\nDoes not store the address itself; the contact record that carries this field owns it. Does not send anything. Does not decide a send on its own: the consumer's send path requires both checks —\n\n```ts\nlet allowed = grant.isActive && channel.isContactable;\n```\n\n— and no catalog block owns that path.\n\n### Examples\n\nA confirmed email; an SMS channel suppressed after a hard bounce; an email still awaiting its double opt-in confirmation; and a push channel the person opted out of.",
       "cardInfo": {
         "name": "Channel Consent",
         "summary": "Per-channel contactability, keeping suppression (delivery failed) strictly apart from withdrawal (they said no)."
@@ -26,6 +26,18 @@
           "optedInAt": "2026-05-02T09:14:00.000Z",
           "suppressionReason": "hard-bounce",
           "suppressedAt": "2026-08-19T02:10:00.000Z"
+        },
+        {
+          "channel": "email",
+          "status": "granted",
+          "optedInAt": "2026-09-20T18:02:00.000Z",
+          "requiresDoubleOptIn": true
+        },
+        {
+          "channel": "push",
+          "status": "granted",
+          "optedInAt": "2026-02-11T07:00:00.000Z",
+          "optedOutAt": "2026-08-30T21:15:00.000Z"
         }
       ],
       "cardTitle": "Channel Consent Field",
