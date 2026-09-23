@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "activityType": "email",
+      "summary": "Sent the workspace proposal to Mei",
+      "body": "Attached the two-seat-tier proposal and asked for a decision by the 30th.",
+      "occurredAt": "2026-09-18T14:20:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../activity",
+        "name": "Activity"
+      }
+    },
+    "relationships": {
+      "author": {
+        "links": {
+          "self": "../User/priya-shah"
+        }
+      },
+      "about": {
+        "links": {
+          "self": "../Opportunity/brightleaf-workspace"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

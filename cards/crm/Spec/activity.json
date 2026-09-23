@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Activity",
+        "module": "../activity"
+      },
+      "specType": "card",
+      "readMe": "## Activity\n\nOne timeline entry: `activityType` (note / call / email / meeting / status change, each with its own icon), `summary`, a markdown `body`, `occurredAt`, `author = linksTo(User)` and `about = linksTo(CardDef)`, so an activity can attach to any record — a deal, an opportunity, an account.\n\n```ts\nimport { Activity } from '@cardstack/catalog/cards/crm/activity';\n\n@field lastActivity = linksTo(() => Activity);\n```\n\nThe record holds no list of its activities. A timeline is a reverse-chronological query for `Activity` where `about` is that record, so logging an activity never has to write back to what it is about. The embedded format is the timeline row.\n\n### Examples\nTwo entries on `Deal/acme-enterprise-renewal` (a call and a stage change), an email about `Opportunity/brightleaf-workspace`, and a note on `Account/acme-industries`.\n\n**Non-goals:** reminders and scheduling, automatic capture from email or calendar sync, threaded comments.",
+      "cardInfo": {
+        "name": "Activity",
+        "summary": "Timeline entry: typed (note/call/email/meeting/status change), authored, timestamped, attachable to any record via about=linksTo(CardDef).",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Activity",
+      "cardDescription": "One timeline entry — a note, call, email, meeting or status change — by a User about any record."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Activity/acme-renewal-call"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Activity/acme-stage-change"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Activity/brightleaf-proposal-email"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../Activity/acme-account-note"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
