@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/button",
+        "name": "Button"
+      },
+      "specType": "component",
+      "readMe": "# Button\n\n## Summary\nThe kit's action primitive: a native `<button>` with a two-axis treatment system and a built-in busy state. Everything that performs an action is this, or wraps it — **IconButton**, **CopyButton**, **ButtonGroup**, **FormFooter** and **ApprovalFooter** all render Buttons. If the thing navigates rather than acts, use an anchor; a Button that only changes the URL lies to assistive tech. If you need a set of mutually exclusive choices styled as buttons, that is **SegmentedControl** (a selection, not an action).\n\n## API\n```\n@tone?      'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'attention'\n@appearance? 'accent' | 'filled' | 'outlined' | 'filled-outlined' | 'plain'\n@size?      'xs' | 's' | 'm' | 'l' | 'xl'   (default 'm')\n@busy?, @disabled?\n@variant?   single-axis alias resolved onto @tone × @appearance:\n            primary|secondary|ghost|destructive|default|outline|outlined|subtle|filled|link\n```\n\n## Usage\n```gts\nimport { Button } from '@cardstack/pretui/components/button';\n\n<Button @tone='primary' @appearance='accent'>Save</Button>\n<Button @tone='danger' @appearance='outlined' @busy={{this.saving}}>Delete</Button>\n```\n\nServed from the Pret UI realm. The component's full write-up, with prior art, accessibility and theming notes, lives beside its source at `@cardstack/pretui/components/button.md`.\n",
+      "cardTitle": "Button",
+      "cardDescription": "The two-axis action: tone × appearance × size, with a built-in busy state.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Button",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

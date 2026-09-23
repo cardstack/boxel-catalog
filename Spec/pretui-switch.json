@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/switch",
+        "name": "Switch"
+      },
+      "specType": "component",
+      "readMe": "# Switch\n\n## Summary\nAn immediate on/off. The distinction from **Checkbox** is not shape, it is _when the change lands_: a Switch takes effect the moment it is flipped, a Checkbox is a value collected and submitted. If your Switch sits above a Save button, it should have been a Checkbox. For one-of-many use **RadioGroup**; for a pressed/unpressed _action_ use a **Button** with `aria-pressed`.\n\n## API\n```\n@checked?, @defaultChecked?, @disabled?, @controlId?\n@onCheckedChange?(checked: boolean)\nElement: HTMLButtonElement\n```\n\n## Usage\n```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n\n<Switch @controlId='notify' @checked={{@model.notify}} @onCheckedChange={{this.setNotify}} />\n<label for='notify'>Notifications</label>\n```\n\nServed from the Pret UI realm. The component's full write-up, with prior art, accessibility and theming notes, lives beside its source at `@cardstack/pretui/components/switch.md`.\n",
+      "cardTitle": "Switch",
+      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Switch",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

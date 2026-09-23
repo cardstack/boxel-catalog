@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/checkbox",
+        "name": "Checkbox"
+      },
+      "specType": "component",
+      "readMe": "# Checkbox\n\n## Summary\nA single binary choice, rendered as a label-wrapped native checkbox with a custom face. Use it for opt-ins, \"select this row\", and any independent on/off that is _submitted with a form_ or read as part of a set. If the toggle takes effect immediately with no save step, use **Switch** — that is the real distinction between the two, not shape. For one-of-many use **RadioGroup**; for many-of-many from a list use **MultiSelect** or **DuelingPicklist**; for filter chips use **FilterChips**.\n\n## API\n```\n@label?, @checked?, @defaultChecked?, @disabled?\n@onCheckedChange?(checked: boolean)\nElement: HTMLLabelElement\n```\n\n## Usage\n```gts\nimport { Checkbox } from '@cardstack/pretui/components/checkbox';\n\n<Checkbox @label='Remember me' @checked={{this.remember}} @onCheckedChange={{this.setRemember}} />\n```\n\nServed from the Pret UI realm. The component's full write-up, with prior art, accessibility and theming notes, lives beside its source at `@cardstack/pretui/components/checkbox.md`.\n",
+      "cardTitle": "Checkbox",
+      "cardDescription": "A binary choice with its own label, collected and submitted with a form.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Checkbox",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
