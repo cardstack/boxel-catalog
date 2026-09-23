@@ -68,7 +68,6 @@ const CONTRACT_CLAUSE_REF = codeRef(
 );
 const OBLIGATION_REF = codeRef(here, './obligation', 'Obligation');
 
-
 /**
  * `YYYY-MM-DD` built from local calendar parts.
  *
