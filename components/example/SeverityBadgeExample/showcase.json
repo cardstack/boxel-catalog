@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "severity": {
+        "level": "major"
+      },
+      "cardInfo": {
+        "name": "Severity Badge — every state",
+        "summary": "Usage page for the Severity Badge block",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../severity-badge-example",
+        "name": "SeverityBadgeExample"
+      },
+      "_touched": 1788429719144
+    }
+  }
+}

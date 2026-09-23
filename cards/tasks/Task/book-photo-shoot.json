@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Book the product photo shoot",
+      "details": "Studio, photographer and the eight hero products.",
+      "status": "In Progress",
+      "priority": "High",
+      "dueDate": "2026-10-08",
+      "createdAt": "2026-09-15T09:00:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "assignee": {
+        "links": {
+          "self": "../../crm/User/priya-shah"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../task",
+        "name": "Task"
+      }
+    }
+  }
+}

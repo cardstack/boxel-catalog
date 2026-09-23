@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Severity Badge",
+      "specType": "component",
+      "ref": {
+        "module": "../components/severity-badge",
+        "name": "SeverityBadge"
+      },
+      "readMe": "## Severity Badge\n\nRenders a severity level as a pill with a three-segment meter and the label; `critical` is solid. The meter carries the rank on its own, so minor / major / critical stay distinguishable when colour does not — a legibility requirement, not decoration.\n\n```hbs\n<SeverityBadge @level={{finding.severity.level}} />\n<SeverityBadge @level='major' @count={{3}} />\n<SeverityBadge @level='critical' @compact={{true}} />\n```\n\nArgs: `@level` (minor / major / critical; anything else renders nothing), `@count` (trailing tally, for roll-ups), `@compact` (meter and count only, for table cells and fitted tiles). Colour comes from `SEVERITY_HUE` through `stateColor`, so a linked theme moves fill and text together. Built on boxel-ui's `Pill`; only the meter and the hue mapping are this block's.\n\n## Example\n`SeverityBadgeExample/showcase` shows every level in every mode, plus a real Severity field rendered embedded and atom.\n\n## Non-goals\nDoes not decide severity or read the record it sits on — it is handed a level. Not a generic state pill (see State Pill); the meter is severity-specific. No click behaviour.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Severity Badge",
+        "summary": "Severity as a pill with a three-segment rank meter — legible without colour; the app's one saturated element.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A severity pill with a three-segment meter, so minor, major and critical stay distinguishable without colour."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../components/example/SeverityBadgeExample/showcase"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

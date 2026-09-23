@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Draft the landing page copy",
+      "details": "Headline, three benefit blocks and the pricing callout.",
+      "status": "Done",
+      "priority": "High",
+      "dueDate": "2026-10-01",
+      "createdAt": "2026-09-15T09:00:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "assignee": {
+        "links": {
+          "self": "../../crm/User/dana-whitfield"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../task",
+        "name": "Task"
+      }
+    }
+  }
+}

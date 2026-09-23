@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../placement-vocabulary",
+        "name": "PlacementField"
+      },
+      "specType": "field",
+      "readMe": "# Placement\n\n## Summary\nThe shared vocabulary for placing things into zones — a seat, a shelf slot, a room, a shift. `PlacementZoneField` is one place things can go (`key`, `label`, `capacity`, `hue`); `PlacementField` is one item put there (`itemId`, `zoneKey`, `seq`, `placedAt`, `note`). The pure functions beside them decide the rest: `occupancyOf` and `overCapacityZones` for capacity, `placementsIn` and `nextSeq` for order, `placedItemIds` for what has left the pool.\n\n## Usage\n```ts\nimport {\n  PlacementField,\n  PlacementZoneField,\n  overCapacityZones,\n} from '@cardstack/catalog/fields/placement/placement-vocabulary';\n\n@field zones = containsMany(PlacementZoneField);\n@field placements = containsMany(PlacementField);\n```\n\nA zone's `key` never changes once placements reference it; `label` can. Placements store the item's id, not a link, so the same vocabulary places cards, seat numbers or SKUs. The Placement Palette reads `placements` to decide what to hide.\n\n## Non-goals\nNo rendering of zones: the board that holds them draws them. No enforcement of capacity on write; `overCapacityZones` reports it and the writer decides.",
+      "cardTitle": "Placement Field",
+      "cardDescription": "One item put in one zone: the item id, the zone key, its position within the zone and when it was placed.",
+      "cardInfo": {
+        "name": "Placement",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "containedExamples": [
+        {
+          "itemId": "amy",
+          "zoneKey": "site-a",
+          "seq": 1,
+          "placedAt": "2026-09-22T08:00:00.000Z",
+          "note": "Lead electrician"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

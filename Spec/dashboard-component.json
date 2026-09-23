@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Dashboard",
+        "module": "../components/dashboard"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Dashboard\n\nA grid of metric tiles: each tile has a `label`, a `value`, an optional `detail` line and an `intent` (`neutral` or a State Pill hue). The grid auto-fits to a minimum tile width. A tile given `onOpen` renders as a real button with an open cue and hover and focus states, because every tile that reports a set should be a door into that set.\n\n```gts\nimport { Dashboard, type DashboardTile } from '@cardstack/catalog/components/dashboard';\n\n<Dashboard @tiles={{this.tiles}} @tileMin='10rem' />\n```\n\nIntent hues are semantic state and stay separate from the theme's accent, so a breach reads red whatever the brand colour is. The component knows no domain: the host decides what each tile counts and what opening it does.\n\n### Example\n`DashboardExample/support-today` shows one tile per intent: neutral, healthy, warning and breach.\n\n### Non-goals\nNot a chart library: no series, axes or sparklines. Not a page layout; it is one grid to place inside the host's own layout.",
+      "cardInfo": {
+        "name": "Dashboard",
+        "summary": "The generic metric-grid primitive every desk composes."
+      },
+      "containedExamples": [],
+      "cardTitle": "Dashboard",
+      "cardDescription": "An auto-fit grid of metric tiles with a semantic intent colour each; a tile with onOpen becomes a button into the set it counts."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../components/example/DashboardExample/support-today"
+        }
+      }
+    }
+  }
+}
