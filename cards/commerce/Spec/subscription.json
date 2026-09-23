@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Subscription",
+        "module": "../subscription"
+      },
+      "specType": "card",
+      "readMe": "## Subscription\n\nRecurring commercial agreement: linked Account, plan name, price (base `AmountWithCurrency`), `billingCycle` enum (monthly / yearly), start date, and `status` enum (trial / active / paused / canceled). `renewalDate` is computed — the next cycle boundary after today — and is empty unless the subscription is `trial` or `active`, so a canceled record never advertises a future renewal.\n\n```ts\nimport { Subscription } from '@cardstack/catalog/cards/commerce/subscription';\n@field subscription = linksTo(Subscription);\n```\n\nA closed deal's subscription is pointed at by the invoices it generates. Examples cover active, trial at $0, and canceled.\n\n`canceledAt` is written whenever status becomes `canceled`. It exists so history is recomputable: reading only today's status erases a churned subscription from the months it was actually live, which makes any MRR series structurally incapable of declining — the one thing such a series exists to show. An undated cancellation is treated as unknowable rather than guessed, so missing data understates history instead of inventing it.\n\n**Non-goals:** a Plan catalog card (plan stays a string until a Plan block exists), proration, a `contract` link (absent until a Contract block exists), and automatic invoice generation — that is a command's job, not the record's.",
+      "cardInfo": {
+        "name": "Subscription",
+        "summary": "Recurring agreement: customer, plan, price, cycle, lifecycle status. Plan stays a string until a Plan block exists.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Subscription",
+      "cardDescription": "Recurring agreement: customer, plan, price, cycle, lifecycle status. Plan stays a string until a Plan block exists."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Subscription/acme-workspace-pro"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Subscription/brightleaf-trial"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Subscription/acme-data-addon"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
