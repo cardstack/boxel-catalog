@@ -170,7 +170,9 @@ export class Subscription extends CardDef {
           <RefreshIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
           {{#if @model.status}}
-            <span class='status status-{{@model.status}}'>{{@model.status}}</span>
+            <span
+              class='status status-{{@model.status}}'
+            >{{@model.status}}</span>
           {{/if}}
         </div>
         <div class='fmt strip'>
@@ -373,7 +375,9 @@ export class Subscription extends CardDef {
             <h1>{{@model.cardTitle}}</h1>
           </div>
           {{#if @model.status}}
-            <span class='status status-{{@model.status}}'>{{@model.status}}</span>
+            <span
+              class='status status-{{@model.status}}'
+            >{{@model.status}}</span>
           {{/if}}
         </header>
 

@@ -1,4 +1,8 @@
-import { statusField, canTransition, nextStatuses } from '@cardstack/catalog/fields/status/status';
+import {
+  statusField,
+  canTransition,
+  nextStatuses,
+} from '@cardstack/catalog/fields/status/status';
 
 // Payment Status — where an invoice's money stands, built on the catalog's
 // `statusField` so the graph below says which moves are legal. Invoice also

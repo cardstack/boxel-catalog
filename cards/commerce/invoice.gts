@@ -26,7 +26,11 @@ import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
 import { Order } from './order';
 import { Subscription } from './subscription';
 import { Payment } from './payment';
-import { formatMoney, lineTotal, sumLineItems } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import {
+  formatMoney,
+  lineTotal,
+  sumLineItems,
+} from '@cardstack/catalog/cards/commerce/line-item-totals';
 import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 // ---- AP (buy-side) leg.
 import { PurchaseOrder } from '../procurement/purchase-order';
@@ -57,6 +61,237 @@ function isTerminal(status: string | null | undefined): boolean {
 // legs: the sell-side ladder and the AP match flow (Received → Matching →
 // Matched / Exception → Approved for Payment → Paid).
 export { PaymentStatusField as InvoiceStatusField } from './payment-status-field';
+
+class InvoiceEdit extends Component<typeof Invoice> {
+  @tracked activeSection = 'identity';
+
+  sections = [
+    { id: 'identity', label: 'Invoice' },
+    { id: 'parties', label: 'Parties' },
+    { id: 'items', label: 'Line items' },
+    { id: 'matching', label: 'Matching' },
+    { id: 'payment', label: 'Payment' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.invoice-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='invoice-edit'>
+      {{! the container element cannot be restyled by its own query —
+          the responsive grid lives on this inner wrapper instead }}
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "identity") "focused"}}'
+            data-sect='identity'
+          >
+            <h3>Invoice</h3>
+            <div class='row identity'>
+              <FieldContainer @label='Invoice number' @vertical={{true}}>
+                <@fields.invoiceNumber />
+              </FieldContainer>
+              <FieldContainer @label='Status' @vertical={{true}}>
+                <@fields.status />
+              </FieldContainer>
+            </div>
+            <div class='row'>
+              <FieldContainer @label='Issued' @vertical={{true}}>
+                <@fields.issueDate />
+              </FieldContainer>
+              <FieldContainer @label='Sent' @vertical={{true}}>
+                <@fields.sentDate />
+              </FieldContainer>
+              <FieldContainer @label='Due' @vertical={{true}}>
+                <@fields.dueDate />
+              </FieldContainer>
+            </div>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "parties") "focused"}}'
+            data-sect='parties'
+          >
+            <h3>Parties</h3>
+            <div class='row'>
+              <FieldContainer @label='Account (billed to)' @vertical={{true}}>
+                <@fields.account />
+              </FieldContainer>
+              <FieldContainer @label='Owner' @vertical={{true}}>
+                <@fields.owner />
+              </FieldContainer>
+            </div>
+            <div class='row'>
+              <FieldContainer @label='Order' @vertical={{true}}>
+                <@fields.order />
+              </FieldContainer>
+              <FieldContainer @label='Subscription' @vertical={{true}}>
+                <@fields.subscription />
+              </FieldContainer>
+            </div>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "items") "focused"}}'
+            data-sect='items'
+          >
+            <h3>Line items</h3>
+            <FieldContainer @label='Items' @vertical={{true}}>
+              <@fields.lineItems />
+            </FieldContainer>
+            <FieldContainer @label='Tax breakdown' @vertical={{true}}>
+              <@fields.taxBreakdown />
+            </FieldContainer>
+            <p class='sect-note'>Tax is normally written by the Calculate Tax
+              command — edit here only to correct it.</p>
+          </section>
+
+          <section
+            class='sect matching
+              {{if (eq this.activeSection "matching") "focused"}}'
+            data-sect='matching'
+          >
+            <h3>Matching
+              <span class='sect-hint'>the three-way match reads these</span></h3>
+            <FieldContainer @label='Purchase order' @vertical={{true}}>
+              <@fields.purchaseOrder />
+            </FieldContainer>
+            <FieldContainer @label='Variance resolutions' @vertical={{true}}>
+              <@fields.varianceResolutions />
+            </FieldContainer>
+            <p class='sect-note'>Resolutions are normally written by the Resolve
+              Variance command — edit here only for corrections.</p>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "payment") "focused"}}'
+            data-sect='payment'
+          >
+            <h3>Payment</h3>
+            <FieldContainer @label='Payments applied' @vertical={{true}}>
+              <@fields.payments />
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .invoice-edit {
+        container-type: inline-size;
+        container-name: edit;
+        height: 100%;
+        overflow-y: auto;
+        padding: var(--boxel-sp);
+        background: var(--background, var(--boxel-light));
+        color: var(--foreground, var(--boxel-dark));
+        /* family ink, declared ONCE — a linked Theme overrides via
+           --procurement-ink */
+        --inv-ink: var(--procurement-ink, #27306b);
+        --inv-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 9.5rem minmax(0, 1fr);
+        align-items: start;
+        gap: var(--boxel-sp);
+      }
+      /* the root is the scroller, so sticky pins the nav to its top */
+      .sect-nav {
+        position: sticky;
+        top: 0;
+        --edit-section-nav-ink: var(--inv-ink);
+        --edit-section-nav-ink-fg: var(--inv-ink-fg);
+      }
+      .sects {
+        display: grid;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        border: 1px solid var(--border, var(--boxel-200));
+        border-radius: var(--radius, var(--boxel-border-radius));
+        padding: var(--boxel-sp);
+        display: grid;
+        gap: var(--boxel-sp-sm);
+        transition:
+          outline-color 160ms ease,
+          box-shadow 160ms ease;
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+      }
+      .sect.focused {
+        outline-color: var(--inv-ink);
+        box-shadow: 0 0 0 4px
+          color-mix(in oklch, var(--inv-ink) 12%, transparent);
+      }
+      .sect.matching {
+        border-left: 3px solid var(--inv-ink);
+      }
+      h3 {
+        margin: 0;
+        font-size: 0.8125rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+        flex-wrap: wrap;
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: normal;
+        font-size: 0.75rem;
+        font-weight: 400;
+        font-style: italic;
+      }
+      .sect-note {
+        margin: 0;
+        font-size: 0.75rem;
+        font-style: italic;
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--boxel-sp-sm);
+        align-items: start;
+      }
+      .identity {
+        grid-template-columns: 2fr 1fr;
+      }
+      @container edit (width < 640px) {
+        .row,
+        .identity {
+          grid-template-columns: 1fr;
+        }
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+        /* narrow: the rail flips horizontal */
+        .sect-nav {
+          position: static;
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .sect-nav::before {
+          display: none;
+        }
+      }
+    </style>
+  </template>
+}
 
 export class Invoice extends CardDef {
   static displayName = 'Invoice';
@@ -125,7 +360,9 @@ export class Invoice extends CardDef {
       <div class='invoice-row'>
         <FileInvoiceIcon class='icon' />
         <span class='number'>{{@model.cardTitle}}</span>
-        <span class='status status-{{@model.displayStatus}}'>{{@model.displayStatus}}</span>
+        <span
+          class='status status-{{@model.displayStatus}}'
+        >{{@model.displayStatus}}</span>
         <span class='total'>{{this.total}}</span>
       </div>
       <style scoped>
@@ -223,7 +460,9 @@ export class Invoice extends CardDef {
           <FileInvoiceIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
           {{#if @model.displayStatus}}
-            <span class='status status-{{@model.displayStatus}}'>{{@model.displayStatus}}</span>
+            <span
+              class='status status-{{@model.displayStatus}}'
+            >{{@model.displayStatus}}</span>
           {{/if}}
         </div>
         <div class='fmt strip'>
@@ -462,7 +701,9 @@ export class Invoice extends CardDef {
             <h1>{{this.number}}</h1>
           </div>
           {{#if @model.displayStatus}}
-            <span class='status status-{{@model.displayStatus}}'>{{@model.displayStatus}}</span>
+            <span
+              class='status status-{{@model.displayStatus}}'
+            >{{@model.displayStatus}}</span>
           {{/if}}
         </header>
 
@@ -718,240 +959,5 @@ export class Invoice extends CardDef {
   // AP/AR document form grouped by how the clerk works the invoice: identify
   // the document → who it involves → what's on it → does it match the PO →
   // how it got paid. Never schema order.
-  static edit = class Edit extends Component<typeof this> {
-    @tracked activeSection = 'identity';
-
-    sections = [
-      { id: 'identity', label: 'Invoice' },
-      { id: 'parties', label: 'Parties' },
-      { id: 'items', label: 'Line items' },
-      { id: 'matching', label: 'Matching' },
-      { id: 'payment', label: 'Payment' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.invoice-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='invoice-edit'>
-        {{! the container element cannot be restyled by its own query —
-            the responsive grid lives on this inner wrapper instead }}
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "identity") "focused"}}'
-              data-sect='identity'
-            >
-              <h3>Invoice</h3>
-              <div class='row identity'>
-                <FieldContainer @label='Invoice number' @vertical={{true}}>
-                  <@fields.invoiceNumber />
-                </FieldContainer>
-                <FieldContainer @label='Status' @vertical={{true}}>
-                  <@fields.status />
-                </FieldContainer>
-              </div>
-              <div class='row'>
-                <FieldContainer @label='Issued' @vertical={{true}}>
-                  <@fields.issueDate />
-                </FieldContainer>
-                <FieldContainer @label='Sent' @vertical={{true}}>
-                  <@fields.sentDate />
-                </FieldContainer>
-                <FieldContainer @label='Due' @vertical={{true}}>
-                  <@fields.dueDate />
-                </FieldContainer>
-              </div>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "parties") "focused"}}'
-              data-sect='parties'
-            >
-              <h3>Parties</h3>
-              <div class='row'>
-                <FieldContainer @label='Account (billed to)' @vertical={{true}}>
-                  <@fields.account />
-                </FieldContainer>
-                <FieldContainer @label='Owner' @vertical={{true}}>
-                  <@fields.owner />
-                </FieldContainer>
-              </div>
-              <div class='row'>
-                <FieldContainer @label='Order' @vertical={{true}}>
-                  <@fields.order />
-                </FieldContainer>
-                <FieldContainer @label='Subscription' @vertical={{true}}>
-                  <@fields.subscription />
-                </FieldContainer>
-              </div>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "items") "focused"}}'
-              data-sect='items'
-            >
-              <h3>Line items</h3>
-              <FieldContainer @label='Items' @vertical={{true}}>
-                <@fields.lineItems />
-              </FieldContainer>
-              <FieldContainer
-                @label='Tax breakdown'
-                @vertical={{true}}
-              >
-                <@fields.taxBreakdown />
-              </FieldContainer>
-              <p class='sect-note'>Tax is normally written by the Calculate Tax
-                command — edit here only to correct it.</p>
-            </section>
-
-            <section
-              class='sect matching
-                {{if (eq this.activeSection "matching") "focused"}}'
-              data-sect='matching'
-            >
-              <h3>Matching
-                <span class='sect-hint'>the three-way match reads these</span></h3>
-              <FieldContainer @label='Purchase order' @vertical={{true}}>
-                <@fields.purchaseOrder />
-              </FieldContainer>
-              <FieldContainer
-                @label='Variance resolutions'
-                @vertical={{true}}
-              >
-                <@fields.varianceResolutions />
-              </FieldContainer>
-              <p class='sect-note'>Resolutions are normally written by the
-                Resolve Variance command — edit here only for corrections.</p>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "payment") "focused"}}'
-              data-sect='payment'
-            >
-              <h3>Payment</h3>
-              <FieldContainer @label='Payments applied' @vertical={{true}}>
-                <@fields.payments />
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .invoice-edit {
-          container-type: inline-size;
-          container-name: edit;
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          /* family ink, declared ONCE — a linked Theme overrides via
-             --procurement-ink */
-          --inv-ink: var(--procurement-ink, #27306b);
-          --inv-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 9.5rem minmax(0, 1fr);
-          align-items: start;
-          gap: var(--boxel-sp);
-        }
-        /* the root is the scroller, so sticky pins the nav to its top */
-        .sect-nav {
-          position: sticky;
-          top: 0;
-          --edit-section-nav-ink: var(--inv-ink);
-          --edit-section-nav-ink-fg: var(--inv-ink-fg);
-        }
-        .sects {
-          display: grid;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          padding: var(--boxel-sp);
-          display: grid;
-          gap: var(--boxel-sp-sm);
-          transition:
-            outline-color 160ms ease,
-            box-shadow 160ms ease;
-          outline: 2px solid transparent;
-          outline-offset: 2px;
-        }
-        .sect.focused {
-          outline-color: var(--inv-ink);
-          box-shadow: 0 0 0 4px
-            color-mix(in oklch, var(--inv-ink) 12%, transparent);
-        }
-        .sect.matching {
-          border-left: 3px solid var(--inv-ink);
-        }
-        h3 {
-          margin: 0;
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          flex-wrap: wrap;
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: normal;
-          font-size: 0.75rem;
-          font-weight: 400;
-          font-style: italic;
-        }
-        .sect-note {
-          margin: 0;
-          font-size: 0.75rem;
-          font-style: italic;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .row {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-        }
-        .identity {
-          grid-template-columns: 2fr 1fr;
-        }
-        @container edit (width < 640px) {
-          .row,
-          .identity {
-            grid-template-columns: 1fr;
-          }
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-          /* narrow: the rail flips horizontal */
-          .sect-nav {
-            position: static;
-            flex-direction: row;
-            flex-wrap: wrap;
-          }
-          .sect-nav::before {
-            display: none;
-          }
-        }
-      </style>
-    </template>
-  };
+  static edit = InvoiceEdit;
 }

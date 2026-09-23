@@ -34,7 +34,8 @@ export class TaxBreakdownField extends FieldDef {
     <template>
       {{#if @model.taxAmount}}
         <span class='tax-breakdown'>
-          Tax ({{@model.rateApplied}}%): {{this.taxDisplay}}
+          Tax ({{@model.rateApplied}}%):
+          {{this.taxDisplay}}
         </span>
       {{/if}}
       <style scoped>

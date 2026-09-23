@@ -188,7 +188,8 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
           @hue={{if this.openCount 'red' 'green'}}
           @emphatic={{true}}
         />
-        <span class='strip-note'>{{this.openCount}} open ·
+        <span class='strip-note'>{{this.openCount}}
+          open ·
           {{this.toleranceLabel}}</span>
         {{#unless this.approved}}
           <Button
@@ -325,7 +326,10 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
         <div class='res-history'>
           <span class='rh-title'>Resolution history</span>
           {{#each this.resolutions as |r|}}
-            <div class='rh-row'>line {{r.lineNumber}} — {{r.action}}:
+            <div class='rh-row'>line
+              {{r.lineNumber}}
+              —
+              {{r.action}}:
               {{r.reason}}</div>
           {{/each}}
         </div>

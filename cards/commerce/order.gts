@@ -15,7 +15,11 @@ import PercentageField from '@cardstack/base/percentage';
 import { Account } from '@cardstack/catalog/cards/crm/account';
 import { Contract } from '@cardstack/catalog/cards/legal/contract';
 import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
-import { formatMoney, lineTotal, orderTotals, sumLineItems } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import {
+  formatMoney,
+  lineTotal,
+  orderTotals,
+} from '@cardstack/catalog/cards/commerce/line-item-totals';
 
 const OrderStatusField = enumField(StringField, {
   options: ['pending', 'paid', 'shipped', 'delivered', 'canceled'],
@@ -151,7 +155,9 @@ export class Order extends CardDef {
           <PackageIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
           {{#if @model.status}}
-            <span class='status status-{{@model.status}}'>{{@model.status}}</span>
+            <span
+              class='status status-{{@model.status}}'
+            >{{@model.status}}</span>
           {{/if}}
         </div>
         <div class='fmt strip'>
@@ -337,9 +343,7 @@ export class Order extends CardDef {
   static isolated = class Isolated extends Component<typeof Order> {
     fulfilmentSteps = ['pending', 'paid', 'shipped', 'delivered'];
     get steps() {
-      let current = this.fulfilmentSteps.indexOf(
-        this.args.model?.status ?? '',
-      );
+      let current = this.fulfilmentSteps.indexOf(this.args.model?.status ?? '');
       return this.fulfilmentSteps.map((label, i) => ({
         label,
         state:

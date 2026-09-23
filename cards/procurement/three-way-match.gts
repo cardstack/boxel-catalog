@@ -19,7 +19,7 @@ import { lineTotal } from '@cardstack/catalog/cards/commerce/line-item-totals';
 // stored (on the invoice), because a resolution is a human decision, not a
 // derivation.
 
-// Tolerance defaults, from the merged spec: a per-line price variance
+// Tolerance defaults: a per-line price variance
 // within ±2% or ±$25 (whichever is larger) passes without a human.
 export const PRICE_TOLERANCE_PCT = 2;
 export const PRICE_TOLERANCE_ABS = 25;
@@ -49,7 +49,10 @@ export interface LineMatch {
 interface LineItemish {
   description?: string | null;
   quantity?: number | null;
-  unitPrice?: { amount?: number | null; currency?: { code?: string | null } } | null;
+  unitPrice?: {
+    amount?: number | null;
+    currency?: { code?: string | null };
+  } | null;
 }
 
 export function matchLines(
@@ -117,7 +120,10 @@ export function matchLines(
 
 export function openVarianceCount(rows: LineMatch[]): number {
   return rows.filter(
-    (r) => r.state !== 'clean' && r.state !== 'resolved' && r.detail !== 'not invoiced',
+    (r) =>
+      r.state !== 'clean' &&
+      r.state !== 'resolved' &&
+      r.detail !== 'not invoiced',
   ).length;
 }
 

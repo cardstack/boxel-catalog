@@ -137,9 +137,13 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
   get spend(): string {
     let total = this.pos
       .filter((po) =>
-        ['approved', 'sent', 'partially-received', 'received', 'closed'].includes(
-          po.status ?? '',
-        ),
+        [
+          'approved',
+          'sent',
+          'partially-received',
+          'received',
+          'closed',
+        ].includes(po.status ?? ''),
       )
       .reduce((sum, po) => sum + (po.totalAmount ?? 0), 0);
     return formatMoney(total, 'USD');

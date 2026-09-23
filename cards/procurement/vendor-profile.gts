@@ -17,7 +17,6 @@ import BooleanField from '@cardstack/base/boolean';
 import { realmURL } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
 import { gt, eq } from '@cardstack/boxel-ui/helpers';
 import { Button, FieldContainer } from '@cardstack/boxel-ui/components';
 
@@ -31,7 +30,6 @@ import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import {
   stateColor,
-  stateColorOf,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 
@@ -254,6 +252,574 @@ export const VendorProfileStatusField = statusField({
   displayName: 'Vendor Profile Status',
 });
 
+class VendorProfileEdit extends Component<typeof VendorProfile> {
+  // Left section nav: clicking anchors that section to the top of the
+  // form's own scroller (the root — never a nested
+  // scroller). Scoped through the event's own root so several open edit
+  // panels never cross-scroll each other.
+  @tracked activeSection = 'identity';
+
+  sections = [
+    { id: 'identity', label: 'Identity' },
+    { id: 'contact', label: 'Contact' },
+    { id: 'compliance', label: 'Compliance' },
+    { id: 'remittance', label: 'Tax & Remittance' },
+    { id: 'notes', label: 'Notes' },
+  ];
+
+  goTo = (id: string, event: Event) => {
+    this.activeSection = id;
+    let root = (event.currentTarget as HTMLElement).closest('.profile-edit');
+    root
+      ?.querySelector(`[data-sect='${id}']`)
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
+  <template>
+    <div class='profile-edit'>
+      {{! the container element cannot be restyled by its own query — the responsive grid lives on
+          this inner wrapper instead }}
+      <div class='edit-body'>
+        <EditSectionNav
+          @sections={{this.sections}}
+          @activeId={{this.activeSection}}
+          @onSelect={{this.goTo}}
+          class='sect-nav'
+        />
+        <div class='sects'>
+          <section
+            class='sect {{if (eq this.activeSection "identity") "focused"}}'
+            data-sect='identity'
+          >
+            <h3>Identity</h3>
+            <div class='row identity'>
+              <FieldContainer @label='Company' @vertical={{true}}>
+                <@fields.companyName />
+              </FieldContainer>
+              <FieldContainer @label='Category' @vertical={{true}}>
+                <@fields.serviceCategory />
+              </FieldContainer>
+              <FieldContainer @label='Status' @vertical={{true}}>
+                <@fields.status />
+              </FieldContainer>
+            </div>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "contact") "focused"}}'
+            data-sect='contact'
+          >
+            <h3>Contact</h3>
+            <div class='row'>
+              <FieldContainer @label='Contact name' @vertical={{true}}>
+                <@fields.contactName />
+              </FieldContainer>
+              <FieldContainer @label='Email' @vertical={{true}}>
+                <@fields.email />
+              </FieldContainer>
+              <FieldContainer @label='Phone' @vertical={{true}}>
+                <@fields.phone />
+              </FieldContainer>
+            </div>
+            <FieldContainer @label='Address' @vertical={{true}}>
+              <@fields.address />
+            </FieldContainer>
+          </section>
+
+          <section
+            class='sect compliance
+              {{if (eq this.activeSection "compliance") "focused"}}'
+            data-sect='compliance'
+          >
+            <h3>Compliance
+              <span class='sect-hint'>expired credentials block RFQ awards</span></h3>
+            <div class='row'>
+              <FieldContainer @label='Insurance valid until' @vertical={{true}}>
+                <@fields.insuranceExpiry />
+              </FieldContainer>
+            </div>
+            <FieldContainer
+              @label='Certifications (name, issuer, dates)'
+              @vertical={{true}}
+            >
+              <@fields.certifications />
+            </FieldContainer>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "remittance") "focused"}}'
+            data-sect='remittance'
+          >
+            <h3>Tax &amp; Remittance
+              <span class='sect-hint'>shown masked everywhere except here</span></h3>
+            <div class='row'>
+              <FieldContainer @label='Tax ID' @vertical={{true}}>
+                <@fields.taxId />
+              </FieldContainer>
+            </div>
+            <FieldContainer @label='Bank details' @vertical={{true}}>
+              <@fields.bankDetails />
+            </FieldContainer>
+            <FieldContainer @label='Payment terms' @vertical={{true}}>
+              <@fields.paymentTerms />
+            </FieldContainer>
+          </section>
+
+          <section
+            class='sect {{if (eq this.activeSection "notes") "focused"}}'
+            data-sect='notes'
+          >
+            <h3>Notes</h3>
+            <FieldContainer @label='Internal notes' @vertical={{true}}>
+              <@fields.notes />
+            </FieldContainer>
+            <FieldContainer @label='Active vendor record' @vertical={{true}}>
+              <@fields.linkedVendor />
+            </FieldContainer>
+          </section>
+        </div>
+      </div>
+    </div>
+    <style scoped>
+      .profile-edit {
+        container-type: inline-size;
+        container-name: edit;
+        height: 100%;
+        overflow-y: auto;
+        padding: var(--boxel-sp);
+        background: var(--background, var(--boxel-light));
+        color: var(--foreground, var(--boxel-dark));
+        /* the procurement family's brand ink, declared once — a linked
+           Theme overrides it via --procurement-ink */
+        --vp-ink: var(--procurement-ink, #27306b);
+        --vp-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+      }
+      .edit-body {
+        display: grid;
+        grid-template-columns: 9.5rem minmax(0, 1fr);
+        align-items: start;
+        gap: var(--boxel-sp);
+      }
+      /* the root is the scroller, so sticky pins the nav to its top */
+      .sect-nav {
+        position: sticky;
+        top: 0;
+        /* hand the family ink pair to the rail's published knobs */
+        --edit-section-nav-ink: var(--vp-ink);
+        --edit-section-nav-ink-fg: var(--vp-ink-fg);
+      }
+      .sects {
+        display: grid;
+        gap: var(--boxel-sp);
+        min-width: 0;
+      }
+      .sect {
+        border: 1px solid var(--border, var(--boxel-200));
+        border-radius: var(--radius, var(--boxel-border-radius));
+        padding: var(--boxel-sp);
+        display: grid;
+        gap: var(--boxel-sp-sm);
+        transition:
+          outline-color 160ms ease,
+          box-shadow 160ms ease;
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+      }
+      /* the section the rail points at mirrors the rail's active state:
+         same pinned brand ink, diluted for the halo */
+      .sect.focused {
+        outline-color: var(--vp-ink);
+        box-shadow: 0 0 0 4px
+          color-mix(in oklch, var(--vp-ink) 12%, transparent);
+      }
+      .sect.compliance {
+        border-left: 3px solid var(--vp-ink);
+      }
+      h3 {
+        margin: 0;
+        font-size: 0.8125rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+        flex-wrap: wrap;
+      }
+      .sect-hint {
+        text-transform: none;
+        letter-spacing: normal;
+        font-size: 0.75rem;
+        font-weight: 400;
+        font-style: italic;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--boxel-sp-sm);
+        align-items: start;
+      }
+      .identity {
+        grid-template-columns: 2fr 1fr 1fr;
+      }
+      @container edit (width < 640px) {
+        .row,
+        .identity {
+          grid-template-columns: 1fr;
+        }
+        /* narrow panel: nav becomes a horizontal chip row above the form */
+        .edit-body {
+          grid-template-columns: 1fr;
+        }
+        /* narrow: the rail flips horizontal (consumer's scope attribute
+           rides ...attributes onto the component root, so these apply) */
+        .sect-nav {
+          position: static;
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .sect-nav::before {
+          display: none;
+        }
+      }
+    </style>
+  </template>
+}
+
+class VendorProfileIsolated extends Component<typeof VendorProfile> {
+  @tracked busy = false;
+  @tracked error: string | undefined;
+  @tracked message: string | undefined;
+
+  get canOnboard() {
+    return (
+      this.args.model?.status === 'approved' &&
+      this.args.model?.complianceOk &&
+      !this.args.model?.linkedVendor
+    );
+  }
+
+  onboard = async () => {
+    let model = this.args.model;
+    if (!model) {
+      return;
+    }
+    let commandContext = this.args.context?.commandContext;
+    if (!commandContext) {
+      this.error = 'Commands are unavailable in this mode';
+      return;
+    }
+    let realm = (model as any)?.[realmURL]?.href;
+    if (!realm) {
+      this.error = 'Could not determine the realm for the new vendor';
+      return;
+    }
+    this.error = undefined;
+    this.message = undefined;
+    this.busy = true;
+    try {
+      let result = await new OnboardVendorCommand(commandContext).execute({
+        profile: model,
+        realm,
+      } as any);
+      this.message = (result as any)?.message;
+    } catch (error: any) {
+      this.error = error?.message ?? String(error);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  get statusHue() {
+    return STATUS_HUES[this.args.model?.status ?? 'intake'] ?? 'slate';
+  }
+  get statusLabel() {
+    return (
+      VENDOR_PROFILE_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Intake'
+    );
+  }
+  get insuranceExpired() {
+    return isPastDay(this.args.model?.insuranceExpiry);
+  }
+  get complianceLabel() {
+    return this.args.model?.complianceOk
+      ? 'Compliance current'
+      : 'Compliance lapsed — award blocked';
+  }
+  get insuranceDateLabel() {
+    let d = this.args.model?.insuranceExpiry;
+    return d
+      ? d.toLocaleDateString('en-US', {
+          month: 'short',
+          year: 'numeric',
+        })
+      : '';
+  }
+
+  // The live-query workspace mounts only in interactive contexts —
+  // prerender gets the static sections. Known Glimmer backtracking
+  // assertion fires when getCards-backed components mount during
+  // prerender (see app-factory notes); CRUD-function presence is the
+  // documented gate.
+  get isInteractive() {
+    return Boolean((this.args as any).viewCard);
+  }
+  <template>
+    <article class='profile'>
+      <header class='head'>
+        <div>
+          <p class='kicker'>Vendor Profile</p>
+          <h1>{{@model.companyName}}</h1>
+          <p class='sub'>{{@model.serviceCategory}}</p>
+        </div>
+        <div class='head-pills'>
+          <StatePill
+            @label={{this.statusLabel}}
+            @hue={{this.statusHue}}
+            @emphatic={{true}}
+          />
+          <StatePill
+            @label={{this.complianceLabel}}
+            @hue={{if @model.complianceOk 'green' 'red'}}
+            @dot={{true}}
+          />
+          {{#if this.canOnboard}}
+            <Button
+              @kind='primary'
+              @size='small'
+              @disabled={{this.busy}}
+              {{on 'click' this.onboard}}
+            >Onboard as Vendor</Button>
+          {{/if}}
+        </div>
+      </header>
+
+      {{#if this.error}}<div class='flash error'>{{this.error}}</div>{{/if}}
+      {{#if this.message}}<div class='flash ok'>{{this.message}}</div>{{/if}}
+
+      <div class='grid'>
+        <section class='panel'>
+          <h2>Contact</h2>
+          <dl>
+            <div><dt>Contact</dt><dd>{{@model.contactName}}</dd></div>
+            <div><dt>Email</dt><dd>{{#if @model.email}}<@fields.email
+                  />{{/if}}</dd></div>
+            <div><dt>Phone</dt><dd>{{#if @model.phone}}<@fields.phone
+                    @format='atom'
+                  />{{/if}}</dd></div>
+            <div><dt>Address</dt><dd>{{@model.address.fullAddress}}</dd></div>
+          </dl>
+        </section>
+
+        <section class='panel'>
+          <h2>Tax &amp; Remittance</h2>
+          <dl>
+            <div><dt>Tax ID</dt><dd
+                class='mono'
+              >{{@model.maskedTaxId}}</dd></div>
+            <div><dt>Bank</dt><dd><@fields.bankDetails /></dd></div>
+            <div><dt>Terms</dt><dd>{{#if @model.paymentTerms.shorthand}}
+                  <@fields.paymentTerms @format='embedded' />
+                {{else}}not negotiated yet{{/if}}</dd></div>
+            <div><dt>Lifecycle</dt><dd><@fields.lifecycle
+                  @format='embedded'
+                /></dd></div>
+          </dl>
+        </section>
+
+        <section class='panel span'>
+          <h2>Compliance</h2>
+          <dl>
+            <div>
+              <dt>Insurance</dt>
+              <dd>
+                {{#if @model.insuranceExpiry}}
+                  <StatePill
+                    @label='{{if
+                      this.insuranceExpired
+                      "expired"
+                      "valid to"
+                    }} {{this.insuranceDateLabel}}'
+                    @hue={{if this.insuranceExpired 'red' 'green'}}
+                    @dot={{true}}
+                  />
+                {{else}}
+                  <StatePill @label='not on file' @hue='amber' @dot={{true}} />
+                {{/if}}
+              </dd>
+            </div>
+          </dl>
+          <div class='certs'>
+            {{#each @fields.certifications as |Cert|}}
+              <Cert />
+            {{else}}
+              <p class='empty'>No certifications recorded yet.</p>
+            {{/each}}
+          </div>
+        </section>
+
+        {{#if @model.notes}}
+          <section class='panel span'>
+            <h2>Notes</h2>
+            <p class='notes'>{{@model.notes}}</p>
+          </section>
+        {{/if}}
+
+        {{#if @model.linkedVendor}}
+          <section class='panel span'>
+            <h2>Active Vendor Record</h2>
+            <@fields.linkedVendor @format='embedded' />
+          </section>
+          {{#if this.isInteractive}}
+            <section class='panel span'>
+              <h2>Vendor Workspace</h2>
+              <VendorWorkspace
+                @vendor={{@model.linkedVendor}}
+                @context={{@context}}
+              />
+            </section>
+          {{/if}}
+        {{/if}}
+      </div>
+    </article>
+    <style scoped>
+      .profile {
+        container-type: inline-size;
+        padding: var(--boxel-sp-lg);
+        background: var(--background, var(--boxel-light));
+        color: var(--foreground, var(--boxel-dark));
+        font-family: var(--font-sans, inherit);
+      }
+      .head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: var(--boxel-sp);
+        border-bottom: 1px solid var(--border, var(--boxel-200));
+        padding-bottom: var(--boxel-sp);
+        margin-bottom: var(--boxel-sp-lg);
+      }
+      .kicker {
+        margin: 0;
+        font-size: 0.6875rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      h1 {
+        margin: var(--boxel-sp-5xs) 0 var(--boxel-sp-5xs);
+        font-family: var(--font-heading, inherit);
+        font-size: 1.75rem;
+        line-height: 1.15;
+      }
+      .sub {
+        margin: 0;
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .head-pills {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: var(--boxel-sp-xxs);
+      }
+      .flash {
+        border-radius: var(--radius, var(--boxel-border-radius));
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        margin-bottom: var(--boxel-sp);
+        font-size: 0.875rem;
+      }
+      .flash.error {
+        background: color-mix(
+          in oklch,
+          var(--state-red-fg, #b91c1c) 10%,
+          transparent
+        );
+        color: var(--state-red-fg, #b91c1c);
+      }
+      .flash.ok {
+        background: color-mix(
+          in oklch,
+          var(--state-green-fg, #15803d) 10%,
+          transparent
+        );
+        color: var(--state-green-fg, #15803d);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--boxel-sp);
+      }
+      .panel {
+        border: 1px solid var(--border, var(--boxel-200));
+        border-radius: var(--radius, var(--boxel-border-radius));
+        padding: var(--boxel-sp);
+        background: var(--card, transparent);
+      }
+      .panel.span {
+        grid-column: 1 / -1;
+      }
+      h2 {
+        margin: 0 0 var(--boxel-sp-xs);
+        font-size: 0.8125rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      dl {
+        margin: 0;
+        display: grid;
+        gap: var(--boxel-sp-xxs);
+      }
+      dl > div {
+        display: grid;
+        grid-template-columns: 7rem 1fr;
+        gap: var(--boxel-sp-xs);
+        align-items: baseline;
+      }
+      dt {
+        color: var(--muted-foreground, var(--boxel-450));
+        font-size: 0.8125rem;
+      }
+      dd {
+        margin: 0;
+        font-size: 0.875rem;
+      }
+      .mono {
+        font-family: var(--font-mono, ui-monospace, monospace);
+        font-variant-numeric: tabular-nums;
+      }
+      .certs {
+        margin-top: var(--boxel-sp-xs);
+        display: grid;
+        gap: var(--boxel-sp-5xs);
+      }
+      .empty {
+        margin: 0;
+        color: var(--muted-foreground, var(--boxel-450));
+        font-size: 0.875rem;
+        font-style: italic;
+      }
+      .notes {
+        margin: 0;
+        font-size: 0.875rem;
+        white-space: pre-wrap;
+      }
+      @container (max-width: 560px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .head {
+          flex-direction: column;
+        }
+        .head-pills {
+          align-items: flex-start;
+          flex-direction: row;
+        }
+      }
+    </style>
+  </template>
+}
+
 // The buyer-recorded intake dossier for a would-be vendor: identity, tax and
 // remittance details, and dated compliance credentials. Single-persona rule:
 // there is no vendor-facing submission flow — the procurement manager
@@ -320,343 +886,7 @@ export class VendorProfile extends CardDef {
     },
   });
 
-  static isolated = class Isolated extends Component<typeof this> {
-    @tracked busy = false;
-    @tracked error: string | undefined;
-    @tracked message: string | undefined;
-
-    get canOnboard() {
-      return (
-        this.args.model?.status === 'approved' &&
-        this.args.model?.complianceOk &&
-        !this.args.model?.linkedVendor
-      );
-    }
-
-    onboard = async () => {
-      let model = this.args.model;
-      if (!model) {
-        return;
-      }
-      let commandContext = this.args.context?.commandContext;
-      if (!commandContext) {
-        this.error = 'Commands are unavailable in this mode';
-        return;
-      }
-      let realm = (model as any)?.[realmURL]?.href;
-      if (!realm) {
-        this.error = 'Could not determine the realm for the new vendor';
-        return;
-      }
-      this.error = undefined;
-      this.message = undefined;
-      this.busy = true;
-      try {
-        let result = await new OnboardVendorCommand(commandContext).execute({
-          profile: model,
-          realm,
-        } as any);
-        this.message = (result as any)?.message;
-      } catch (error: any) {
-        this.error = error?.message ?? String(error);
-      } finally {
-        this.busy = false;
-      }
-    };
-
-    get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'intake'] ?? 'slate';
-    }
-    get statusLabel() {
-      return (
-        VENDOR_PROFILE_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Intake'
-      );
-    }
-    get insuranceExpired() {
-      return isPastDay(this.args.model?.insuranceExpiry);
-    }
-    get complianceLabel() {
-      return this.args.model?.complianceOk
-        ? 'Compliance current'
-        : 'Compliance lapsed — award blocked';
-    }
-    get insuranceDateLabel() {
-      let d = this.args.model?.insuranceExpiry;
-      return d
-        ? d.toLocaleDateString('en-US', {
-            month: 'short',
-            year: 'numeric',
-          })
-        : '';
-    }
-
-    // The live-query workspace mounts only in interactive contexts —
-    // prerender gets the static sections. Known Glimmer backtracking
-    // assertion fires when getCards-backed components mount during
-    // prerender (see app-factory notes); CRUD-function presence is the
-    // documented gate.
-    get isInteractive() {
-      return Boolean((this.args as any).viewCard);
-    }
-    <template>
-      <article class='profile'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Vendor Profile</p>
-            <h1>{{@model.companyName}}</h1>
-            <p class='sub'>{{@model.serviceCategory}}</p>
-          </div>
-          <div class='head-pills'>
-            <StatePill
-              @label={{this.statusLabel}}
-              @hue={{this.statusHue}}
-              @emphatic={{true}}
-            />
-            <StatePill
-              @label={{this.complianceLabel}}
-              @hue={{if @model.complianceOk 'green' 'red'}}
-              @dot={{true}}
-            />
-            {{#if this.canOnboard}}
-              <Button
-                @kind='primary'
-                @size='small'
-                @disabled={{this.busy}}
-                {{on 'click' this.onboard}}
-              >Onboard as Vendor</Button>
-            {{/if}}
-          </div>
-        </header>
-
-        {{#if this.error}}<div class='flash error'>{{this.error}}</div>{{/if}}
-        {{#if this.message}}<div class='flash ok'>{{this.message}}</div>{{/if}}
-
-        <div class='grid'>
-          <section class='panel'>
-            <h2>Contact</h2>
-            <dl>
-              <div><dt>Contact</dt><dd>{{@model.contactName}}</dd></div>
-              <div><dt>Email</dt><dd>{{#if @model.email}}<@fields.email
-                    />{{/if}}</dd></div>
-              <div><dt>Phone</dt><dd>{{#if @model.phone}}<@fields.phone
-                      @format='atom'
-                    />{{/if}}</dd></div>
-              <div><dt>Address</dt><dd>{{@model.address.fullAddress}}</dd></div>
-            </dl>
-          </section>
-
-          <section class='panel'>
-            <h2>Tax &amp; Remittance</h2>
-            <dl>
-              <div><dt>Tax ID</dt><dd
-                  class='mono'
-                >{{@model.maskedTaxId}}</dd></div>
-              <div><dt>Bank</dt><dd><@fields.bankDetails /></dd></div>
-              <div><dt>Terms</dt><dd>{{#if @model.paymentTerms.shorthand}}
-                    <@fields.paymentTerms @format='embedded' />
-                  {{else}}not negotiated yet{{/if}}</dd></div>
-              <div><dt>Lifecycle</dt><dd><@fields.lifecycle
-                    @format='embedded'
-                  /></dd></div>
-            </dl>
-          </section>
-
-          <section class='panel span'>
-            <h2>Compliance</h2>
-            <dl>
-              <div>
-                <dt>Insurance</dt>
-                <dd>
-                  {{#if @model.insuranceExpiry}}
-                    <StatePill
-                      @label='{{if
-                        this.insuranceExpired
-                        "expired"
-                        "valid to"
-                      }} {{this.insuranceDateLabel}}'
-                      @hue={{if this.insuranceExpired 'red' 'green'}}
-                      @dot={{true}}
-                    />
-                  {{else}}
-                    <StatePill
-                      @label='not on file'
-                      @hue='amber'
-                      @dot={{true}}
-                    />
-                  {{/if}}
-                </dd>
-              </div>
-            </dl>
-            <div class='certs'>
-              {{#each @fields.certifications as |Cert|}}
-                <Cert />
-              {{else}}
-                <p class='empty'>No certifications recorded yet.</p>
-              {{/each}}
-            </div>
-          </section>
-
-          {{#if @model.notes}}
-            <section class='panel span'>
-              <h2>Notes</h2>
-              <p class='notes'>{{@model.notes}}</p>
-            </section>
-          {{/if}}
-
-          {{#if @model.linkedVendor}}
-            <section class='panel span'>
-              <h2>Active Vendor Record</h2>
-              <@fields.linkedVendor @format='embedded' />
-            </section>
-            {{#if this.isInteractive}}
-              <section class='panel span'>
-                <h2>Vendor Workspace</h2>
-                <VendorWorkspace
-                  @vendor={{@model.linkedVendor}}
-                  @context={{@context}}
-                />
-              </section>
-            {{/if}}
-          {{/if}}
-        </div>
-      </article>
-      <style scoped>
-        .profile {
-          container-type: inline-size;
-          padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
-        }
-        .head {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-          padding-bottom: var(--boxel-sp);
-          margin-bottom: var(--boxel-sp-lg);
-        }
-        .kicker {
-          margin: 0;
-          font-size: 0.6875rem;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        h1 {
-          margin: var(--boxel-sp-5xs) 0 var(--boxel-sp-5xs);
-          font-family: var(--font-heading, inherit);
-          font-size: 1.75rem;
-          line-height: 1.15;
-        }
-        .sub {
-          margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .head-pills {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: var(--boxel-sp-xxs);
-        }
-        .flash {
-          border-radius: var(--radius, var(--boxel-border-radius));
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          margin-bottom: var(--boxel-sp);
-          font-size: 0.875rem;
-        }
-        .flash.error {
-          background: color-mix(
-            in oklch,
-            var(--state-red-fg, #b91c1c) 10%,
-            transparent
-          );
-          color: var(--state-red-fg, #b91c1c);
-        }
-        .flash.ok {
-          background: color-mix(
-            in oklch,
-            var(--state-green-fg, #15803d) 10%,
-            transparent
-          );
-          color: var(--state-green-fg, #15803d);
-        }
-        .grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: var(--boxel-sp);
-        }
-        .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          padding: var(--boxel-sp);
-          background: var(--card, transparent);
-        }
-        .panel.span {
-          grid-column: 1 / -1;
-        }
-        h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dl {
-          margin: 0;
-          display: grid;
-          gap: var(--boxel-sp-xxs);
-        }
-        dl > div {
-          display: grid;
-          grid-template-columns: 7rem 1fr;
-          gap: var(--boxel-sp-xs);
-          align-items: baseline;
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: 0.8125rem;
-        }
-        dd {
-          margin: 0;
-          font-size: 0.875rem;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
-        }
-        .certs {
-          margin-top: var(--boxel-sp-xs);
-          display: grid;
-          gap: var(--boxel-sp-5xs);
-        }
-        .empty {
-          margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: 0.875rem;
-          font-style: italic;
-        }
-        .notes {
-          margin: 0;
-          font-size: 0.875rem;
-          white-space: pre-wrap;
-        }
-        @container (max-width: 560px) {
-          .grid {
-            grid-template-columns: 1fr;
-          }
-          .head {
-            flex-direction: column;
-          }
-          .head-pills {
-            align-items: flex-start;
-            flex-direction: row;
-          }
-        }
-      </style>
-    </template>
-  };
+  static isolated = VendorProfileIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
     get statusHue() {
@@ -922,240 +1152,5 @@ export class VendorProfile extends CardDef {
   // A form someone fills in during a call with the vendor — grouped by how
   // the conversation actually goes (who are you → how do we reach you → are
   // you compliant → how do we pay you), not by schema declaration order.
-  static edit = class Edit extends Component<typeof this> {
-    // Left section nav: clicking anchors that section to the top of the
-    // form's own scroller (the root — never a nested
-    // scroller). Scoped through the event's own root so several open edit
-    // panels never cross-scroll each other.
-    @tracked activeSection = 'identity';
-
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'contact', label: 'Contact' },
-      { id: 'compliance', label: 'Compliance' },
-      { id: 'remittance', label: 'Tax & Remittance' },
-      { id: 'notes', label: 'Notes' },
-    ];
-
-    goTo = (id: string, event: Event) => {
-      this.activeSection = id;
-      let root = (event.currentTarget as HTMLElement).closest('.profile-edit');
-      root
-        ?.querySelector(`[data-sect='${id}']`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-
-    <template>
-      <div class='profile-edit'>
-        {{! the container element cannot be restyled by its own query — the responsive grid lives on
-            this inner wrapper instead }}
-        <div class='edit-body'>
-          <EditSectionNav
-            @sections={{this.sections}}
-            @activeId={{this.activeSection}}
-            @onSelect={{this.goTo}}
-            class='sect-nav'
-          />
-          <div class='sects'>
-            <section
-              class='sect {{if (eq this.activeSection "identity") "focused"}}'
-              data-sect='identity'
-            >
-              <h3>Identity</h3>
-              <div class='row identity'>
-                <FieldContainer @label='Company' @vertical={{true}}>
-                  <@fields.companyName />
-                </FieldContainer>
-                <FieldContainer @label='Category' @vertical={{true}}>
-                  <@fields.serviceCategory />
-                </FieldContainer>
-                <FieldContainer @label='Status' @vertical={{true}}>
-                  <@fields.status />
-                </FieldContainer>
-              </div>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "contact") "focused"}}'
-              data-sect='contact'
-            >
-              <h3>Contact</h3>
-              <div class='row'>
-                <FieldContainer @label='Contact name' @vertical={{true}}>
-                  <@fields.contactName />
-                </FieldContainer>
-                <FieldContainer @label='Email' @vertical={{true}}>
-                  <@fields.email />
-                </FieldContainer>
-                <FieldContainer @label='Phone' @vertical={{true}}>
-                  <@fields.phone />
-                </FieldContainer>
-              </div>
-              <FieldContainer @label='Address' @vertical={{true}}>
-                <@fields.address />
-              </FieldContainer>
-            </section>
-
-            <section
-              class='sect compliance
-                {{if (eq this.activeSection "compliance") "focused"}}'
-              data-sect='compliance'
-            >
-              <h3>Compliance
-                <span class='sect-hint'>expired credentials block RFQ awards</span></h3>
-              <div class='row'>
-                <FieldContainer
-                  @label='Insurance valid until'
-                  @vertical={{true}}
-                >
-                  <@fields.insuranceExpiry />
-                </FieldContainer>
-              </div>
-              <FieldContainer
-                @label='Certifications (name, issuer, dates)'
-                @vertical={{true}}
-              >
-                <@fields.certifications />
-              </FieldContainer>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "remittance") "focused"}}'
-              data-sect='remittance'
-            >
-              <h3>Tax &amp; Remittance
-                <span class='sect-hint'>shown masked everywhere except here</span></h3>
-              <div class='row'>
-                <FieldContainer @label='Tax ID' @vertical={{true}}>
-                  <@fields.taxId />
-                </FieldContainer>
-              </div>
-              <FieldContainer @label='Bank details' @vertical={{true}}>
-                <@fields.bankDetails />
-              </FieldContainer>
-              <FieldContainer @label='Payment terms' @vertical={{true}}>
-                <@fields.paymentTerms />
-              </FieldContainer>
-            </section>
-
-            <section
-              class='sect {{if (eq this.activeSection "notes") "focused"}}'
-              data-sect='notes'
-            >
-              <h3>Notes</h3>
-              <FieldContainer @label='Internal notes' @vertical={{true}}>
-                <@fields.notes />
-              </FieldContainer>
-              <FieldContainer @label='Active vendor record' @vertical={{true}}>
-                <@fields.linkedVendor />
-              </FieldContainer>
-            </section>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .profile-edit {
-          container-type: inline-size;
-          container-name: edit;
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          /* the procurement family's brand ink, declared once — a linked
-             Theme overrides it via --procurement-ink */
-          --vp-ink: var(--procurement-ink, #27306b);
-          --vp-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
-        }
-        .edit-body {
-          display: grid;
-          grid-template-columns: 9.5rem minmax(0, 1fr);
-          align-items: start;
-          gap: var(--boxel-sp);
-        }
-        /* the root is the scroller, so sticky pins the nav to its top */
-        .sect-nav {
-          position: sticky;
-          top: 0;
-          /* hand the family ink pair to the rail's published knobs */
-          --edit-section-nav-ink: var(--vp-ink);
-          --edit-section-nav-ink-fg: var(--vp-ink-fg);
-        }
-        .sects {
-          display: grid;
-          gap: var(--boxel-sp);
-          min-width: 0;
-        }
-        .sect {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          padding: var(--boxel-sp);
-          display: grid;
-          gap: var(--boxel-sp-sm);
-          transition:
-            outline-color 160ms ease,
-            box-shadow 160ms ease;
-          outline: 2px solid transparent;
-          outline-offset: 2px;
-        }
-        /* the section the rail points at mirrors the rail's active state:
-           same pinned brand ink, diluted for the halo */
-        .sect.focused {
-          outline-color: var(--vp-ink);
-          box-shadow: 0 0 0 4px
-            color-mix(in oklch, var(--vp-ink) 12%, transparent);
-        }
-        .sect.compliance {
-          border-left: 3px solid var(--vp-ink);
-        }
-        h3 {
-          margin: 0;
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          flex-wrap: wrap;
-        }
-        .sect-hint {
-          text-transform: none;
-          letter-spacing: normal;
-          font-size: 0.75rem;
-          font-weight: 400;
-          font-style: italic;
-        }
-        .row {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-        }
-        .identity {
-          grid-template-columns: 2fr 1fr 1fr;
-        }
-        @container edit (width < 640px) {
-          .row,
-          .identity {
-            grid-template-columns: 1fr;
-          }
-          /* narrow panel: nav becomes a horizontal chip row above the form */
-          .edit-body {
-            grid-template-columns: 1fr;
-          }
-          /* narrow: the rail flips horizontal (consumer's scope attribute
-             rides ...attributes onto the component root, so these apply) */
-          .sect-nav {
-            position: static;
-            flex-direction: row;
-            flex-wrap: wrap;
-          }
-          .sect-nav::before {
-            display: none;
-          }
-        }
-      </style>
-    </template>
-  };
+  static edit = VendorProfileEdit;
 }

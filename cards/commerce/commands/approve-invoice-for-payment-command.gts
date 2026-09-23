@@ -10,7 +10,10 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
 import { Invoice } from '../invoice';
-import { matchLines, openVarianceCount } from '../../procurement/three-way-match';
+import {
+  matchLines,
+  openVarianceCount,
+} from '../../procurement/three-way-match';
 
 // Approve Invoice for Payment — the control accounts payable exists for:
 // there is NO path to payment around an open variance. The command re-runs

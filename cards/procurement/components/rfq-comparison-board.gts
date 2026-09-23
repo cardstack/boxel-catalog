@@ -4,7 +4,10 @@ import { fn } from '@ember/helper';
 import { Button } from '@cardstack/boxel-ui/components';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { formatMoney, lineTotal } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import {
+  formatMoney,
+  lineTotal,
+} from '@cardstack/catalog/cards/commerce/line-item-totals';
 import type { VendorQuote } from '../vendor-quote';
 
 // The RFQ Comparison Board — the app's signature element. One column per
@@ -196,7 +199,9 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
     );
     let byLead = [...cols]
       .filter((c) => c.quote.leadTimeDays != null)
-      .sort((a, b) => (a.quote.leadTimeDays ?? 0) - (b.quote.leadTimeDays ?? 0));
+      .sort(
+        (a, b) => (a.quote.leadTimeDays ?? 0) - (b.quote.leadTimeDays ?? 0),
+      );
     let cheapest = byTotal[0];
     let fastest = byLead[0];
     if (!cheapest || !fastest) {
@@ -211,7 +216,6 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       (byLead[1]?.quote.leadTimeDays ?? 0) - (fastest.quote.leadTimeDays ?? 0);
     return `${cheapest.vendorName} saves ${formatMoney(saving, 'USD')}; ${fastest.vendorName} delivers ${daysFaster} days sooner. That is the decision.`;
   }
-
 
   <template>
     <div class='board' ...attributes>
@@ -310,7 +314,10 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
                             @hue={{if col.complianceOk 'green' 'red'}}
                             @dot={{true}}
                           />
-                          <span class='compliance-arrow' aria-hidden='true'>→</span>
+                          <span
+                            class='compliance-arrow'
+                            aria-hidden='true'
+                          >→</span>
                         </button>
                       {{else}}
                         <StatePill
@@ -356,16 +363,22 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
           <p class='board-empty-title'>The comparison starts with the first
             quote</p>
           <p class='board-empty-sub'>Record each vendor's inbound quote and
-            they'll line up here, column against column, best value
-            highlighted.</p>
+            they'll line up here, column against column, best value highlighted.</p>
         </div>
       {{/if}}
     </div>
     <style scoped>
       .board {
         /* command-console adapter: structure navy, action mint, signal amber/red */
-        --console-ink: var(--procurement-ink, var(--primary, var(--boxel-dark)));
-        --console-ink-soft: color-mix(in oklch, var(--console-ink) 72%, transparent);
+        --console-ink: var(
+          --procurement-ink,
+          var(--primary, var(--boxel-dark))
+        );
+        --console-ink-soft: color-mix(
+          in oklch,
+          var(--console-ink) 72%,
+          transparent
+        );
         overflow: hidden;
       }
       .insight {
@@ -538,12 +551,24 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
         tbody .data-row {
           animation: board-slide-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
-        tbody .data-row:nth-child(1) { animation-delay: 110ms; }
-        tbody .data-row:nth-child(2) { animation-delay: 160ms; }
-        tbody .data-row:nth-child(3) { animation-delay: 210ms; }
-        tbody .data-row:nth-child(4) { animation-delay: 260ms; }
-        tbody .data-row:nth-child(5) { animation-delay: 310ms; }
-        tbody .data-row:nth-child(6) { animation-delay: 360ms; }
+        tbody .data-row:nth-child(1) {
+          animation-delay: 110ms;
+        }
+        tbody .data-row:nth-child(2) {
+          animation-delay: 160ms;
+        }
+        tbody .data-row:nth-child(3) {
+          animation-delay: 210ms;
+        }
+        tbody .data-row:nth-child(4) {
+          animation-delay: 260ms;
+        }
+        tbody .data-row:nth-child(5) {
+          animation-delay: 310ms;
+        }
+        tbody .data-row:nth-child(6) {
+          animation-delay: 360ms;
+        }
         .action-row {
           animation: board-slide-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
           animation-delay: 430ms;

@@ -50,7 +50,8 @@ export class PaymentTermsField extends FieldDef {
     <template>
       <div class='terms'>
         <span class='shorthand'>{{@model.shorthand}}</span>
-        {{#if @model.method}}<span class='method'>· {{@model.method}}</span>{{/if}}
+        {{#if @model.method}}<span class='method'>·
+            {{@model.method}}</span>{{/if}}
         {{#if @model.notes}}<span class='notes'>{{@model.notes}}</span>{{/if}}
       </div>
       <style scoped>
@@ -92,10 +93,7 @@ export class PaymentTermsField extends FieldDef {
 
   static edit = class Edit extends Component<typeof this> {
     <template>
-      <PaymentTermsEditor
-        @fields={{@fields}}
-        @shorthand={{@model.shorthand}}
-      />
+      <PaymentTermsEditor @fields={{@fields}} @shorthand={{@model.shorthand}} />
     </template>
   };
 }

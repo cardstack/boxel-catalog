@@ -3,8 +3,8 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "name": "PaymentMethodField",
-        "module": "../payment"
+        "module": "../payment-method-field",
+        "name": "PaymentMethodField"
       },
       "specType": "field",
       "isCard": false,
