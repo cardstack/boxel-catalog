@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../record-helpers",
+        "name": "loaded"
+      },
+      "specType": null,
+      "readMe": "# Record Helpers\n\n## Summary\nThree helpers the service-desk commands share. `loaded(context, card)` re-fetches a card before a command reads through its links, because a card handed across a command boundary (a queue row, a search result) may have links that were never loaded, and reading one yields `undefined` and the command quietly does the wrong thing. `loadedById(context, id)` does the same from an id. `displayTitle(card, fallback)` is the one title fallback chain (`cardTitle`, then `title`) for command messages and row labels.\n\n## Usage\n```ts\nimport { loaded, displayTitle } from '@cardstack/catalog/cards/service-desk/record-helpers';\n\nlet fresh = await loaded(this.commandContext, input.case);\nreturn `Resolved ${displayTitle(fresh)}`;\n```\n\n## Non-goals\nNo caching: every call re-fetches.",
+      "cardTitle": "Record Helpers",
+      "cardDescription": "Re-fetch a card before reading its links, and one title fallback, shared by the service-desk commands.",
+      "cardInfo": {
+        "name": "Record Helpers",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

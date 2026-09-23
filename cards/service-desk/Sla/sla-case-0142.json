@@ -1,0 +1,117 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "window": {
+        "timeZone": "Asia/Kuala_Lumpur",
+        "windows": [
+          {
+            "day": "Monday",
+            "opensAt": {
+              "value": null
+            },
+            "closesAt": {
+              "value": null
+            }
+          },
+          {
+            "day": "Tuesday",
+            "opensAt": {
+              "value": null
+            },
+            "closesAt": {
+              "value": null
+            }
+          },
+          {
+            "day": "Wednesday",
+            "opensAt": {
+              "value": null
+            },
+            "closesAt": {
+              "value": null
+            }
+          },
+          {
+            "day": "Thursday",
+            "opensAt": {
+              "value": null
+            },
+            "closesAt": {
+              "value": null
+            }
+          },
+          {
+            "day": "Friday",
+            "opensAt": {
+              "value": null
+            },
+            "closesAt": {
+              "value": null
+            }
+          }
+        ],
+        "holidays": [
+          "2026-09-16"
+        ]
+      },
+      "startedAt": "2026-09-04T02:12:00.000Z",
+      "timers": [
+        {
+          "kind": "First response",
+          "targetMinutes": 60,
+          "startedAt": "2026-09-04T02:12:00.000Z",
+          "deadlineAt": "2026-09-04T03:12:00.000Z",
+          "satisfiedAt": "2026-09-04T02:34:00.000Z",
+          "pausedSince": null,
+          "breachedAt": null
+        },
+        {
+          "kind": "Resolution",
+          "targetMinutes": 480,
+          "startedAt": "2026-09-04T02:12:00.000Z",
+          "deadlineAt": "2026-09-11T06:42:01.107Z",
+          "satisfiedAt": null,
+          "pausedSince": null,
+          "breachedAt": null
+        }
+      ],
+      "pauses": [
+        {
+          "pausedAt": "2026-09-04T08:00:00.000Z",
+          "resumedAt": "2026-09-05T01:15:00.000Z",
+          "reason": "waiting"
+        },
+        {
+          "pausedAt": "2026-09-07T12:29:24.624Z",
+          "resumedAt": "2026-09-07T12:29:25.731Z",
+          "reason": "waiting"
+        }
+      ],
+      "cardInfo": {
+        "name": "SLA \u00b7 CASE-2026-0142",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../sla",
+        "name": "Sla"
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../Case/case-2026-0142"
+        }
+      },
+      "policy": {
+        "links": {
+          "self": "../SlaPolicy/standard-support"
+        }
+      }
+    }
+  }
+}

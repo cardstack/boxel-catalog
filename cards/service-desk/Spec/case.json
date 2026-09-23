@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Case",
+        "module": "../case"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Case\n\nTickets are units of conversation; a Case is the unit of accountability — one customer problem spanning tickets, days, and owners, with severity, findings, and a resolution record. It LINKS the related tickets (reusing the existing Ticket block) rather than replacing them.\n\n```ts\nimport { Case } from '@cardstack/catalog/cards/service-desk/case';\n\n@field case = linksTo(() => Case);\n```\n\n### Non-goals\n\nNo SLA machinery (Ticket already owns SLA; a case is judged by resolution quality, not clock). No customer-visible portal view.",
+      "cardInfo": {
+        "name": "Case",
+        "summary": "The longer-running investigation a Ticket is not: one accountable record linking related tickets."
+      },
+      "containedExamples": [],
+      "cardTitle": "Case",
+      "cardDescription": "One customer problem that spans tickets, days and owners, with severity, findings and a resolution record; it links the related Tickets."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Case/checkout-outage-investigation"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

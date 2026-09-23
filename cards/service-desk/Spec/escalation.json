@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Escalation",
+        "module": "../escalation"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Escalation\n\nFrom-level, to-level, reason, attribution (a policy firing still names itself), ack clock, and a coded end (resolved / CANCELLED with a required reason — never deleted). \"Escalated twice last quarter\" is a query. DIVISION OF LABOUR with the service desk's Escalate Ticket command: that one moves a Ticket's priority; this record and the Escalate Case command own the LADDER.\n\n```ts\nimport { Escalation } from '@cardstack/catalog/cards/service-desk/escalation';\n\n@field escalation = linksTo(() => Escalation);\n```\n\n### Non-goals\n\nNo notification on raise (platform-blocked); ownership moves through Assign Owner, not here.",
+      "cardInfo": {
+        "name": "Escalation",
+        "summary": "One rung-climb as a record, with its own acknowledgement clock."
+      },
+      "containedExamples": [],
+      "cardTitle": "Escalation",
+      "cardDescription": "One climb up the escalation ladder as a record, with its reason, attribution, acknowledgement clock and a coded end."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Escalation/esc-0152-l3"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Escalation/esc-0142-l2"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Role",
+        "module": "../role"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Role\n\nMembers, onDuty, permission strings. TWO HONEST LIMITS, stated: `onDuty` is hand-set (no platform scheduler — rotation is a human act), and `permissions` is DATA read by workflow guards, not an ACL (realm permissions are the enforcement layer).\n\n```ts\nimport { Role } from '@cardstack/catalog/cards/service-desk/role';\n\n@field role = linksTo(() => Role);\n```\n\n### Non-goals\n\nNo duty rotation schedule; no identity — cards have no current-user concept, so actors are passed explicitly.",
+      "cardInfo": {
+        "name": "Role",
+        "summary": "A named duty with members and who is on duty right now."
+      },
+      "containedExamples": [],
+      "cardTitle": "Role",
+      "cardDescription": "A named duty with its members, who is on duty now, and the permission strings workflow guards read."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Role/l2-support"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Role/ops-lead"
+        }
+      }
+    }
+  }
+}
