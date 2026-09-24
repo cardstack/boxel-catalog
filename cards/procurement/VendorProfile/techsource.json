@@ -1,0 +1,70 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "companyName": "TechSource",
+      "contactName": "Priya Natarajan",
+      "email": "priya@techsource.example",
+      "phone": "+14085550191",
+      "serviceCategory": "IT Hardware",
+      "taxId": "77-4410982",
+      "bankDetails": {
+        "bankName": "Silicon Valley Credit",
+        "accountName": "TechSource Inc",
+        "accountNumber": "118402257",
+        "routingNumber": "121140399"
+      },
+      "certifications": [
+        {
+          "name": "ISO 9001",
+          "issuer": "BSI",
+          "issuedOn": "2023-03-01",
+          "expiresOn": "2026-03-01"
+        }
+      ],
+      "insuranceExpiry": "2026-08-31",
+      "status": "onboarded",
+      "notes": "Monitor supplier. Insurance certificate lapsed at the end of August; renewal requested.",
+      "cardInfo": {
+        "name": "TechSource — Profile"
+      },
+      "address": {
+        "addressLine1": "480 Oakmead Pkwy",
+        "addressLine2": null,
+        "city": "Sunnyvale",
+        "state": "CA",
+        "postalCode": "94085",
+        "poBoxNumber": null,
+        "country": {
+          "name": "United States",
+          "code": null
+        }
+      },
+      "paymentTerms": {
+        "netDays": 45,
+        "discountPct": null,
+        "discountDays": null,
+        "method": "bank transfer",
+        "notes": "Net-45, no early-pay discount."
+      },
+      "lifecycle": {
+        "createdAt": "2025-11-02T10:00:00.000Z",
+        "activatedAt": "2025-11-10T09:00:00.000Z",
+        "lastReviewedAt": "2026-06-20T14:00:00.000Z"
+      }
+    },
+    "relationships": {
+      "linkedVendor": {
+        "links": {
+          "self": "../Vendor/techsource"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../vendor-profile",
+        "name": "VendorProfile"
+      }
+    }
+  }
+}
