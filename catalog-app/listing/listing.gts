@@ -278,8 +278,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
             {{#if this.actions.preview}}
               <BoxelButton
                 @kind='secondary-light'
-                @size='extra-small'
-                class='top-preview-button'
+                @size='base'
                 data-test-listing-top-preview-button
                 {{on 'click' this.preview}}
               >
@@ -289,7 +288,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
             {{#if this.remix}}
               <ChooseRealmAction
                 @name='Remix'
-                @size='extra-small'
+                @size='base'
                 @writableRealms={{this.writableRealms}}
                 @onAction={{this.remix}}
                 @hide={{not this.isRemixableRealm}}
@@ -596,13 +595,6 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         justify-content: flex-end;
         gap: 0.5rem;
         margin-left: auto;
-      }
-      .top-preview-button {
-        flex: 0 0 auto;
-        line-height: 1;
-        --boxel-button-font: 600 var(--boxel-font-sm);
-        --boxel-button-padding: var(--boxel-sp-xs) var(--boxel-sp);
-        --boxel-button-gap: var(--boxel-sp);
       }
       .lede {
         margin: 0;
