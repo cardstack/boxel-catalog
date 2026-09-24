@@ -15,6 +15,13 @@
         "module": "../dataset",
         "name": "Dataset"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/night-wall"
+        }
+      }
     }
   }
 }

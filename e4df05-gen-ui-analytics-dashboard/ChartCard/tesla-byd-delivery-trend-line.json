@@ -27,6 +27,11 @@
         "links": {
           "self": "../Dataset/tesla-byd-deliveries"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/night-wall"
+        }
       }
     },
     "meta": {

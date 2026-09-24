@@ -7,7 +7,6 @@ import {
   realmURL,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
-import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
@@ -15,7 +14,13 @@ import { fn } from '@ember/helper';
 import { restartableTask } from 'ember-concurrency';
 import { modifier } from 'ember-modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
+import {
+  BoxelInput,
+  Button,
+  IconButton,
+  Pill,
+} from '@cardstack/boxel-ui/components';
+import { IconX } from '@cardstack/boxel-ui/icons';
 import { htmlSafe } from '@ember/template';
 import type { SafeString } from '@ember/template';
 import UseAiAssistantCommand from '@cardstack/boxel-host/commands/ai-assistant';
@@ -28,10 +33,30 @@ import SunIcon from '@cardstack/boxel-icons/sun';
 import MoonIcon from '@cardstack/boxel-icons/moon';
 import ArrowBackUpIcon from '@cardstack/boxel-icons/arrow-back-up';
 import ArrowForwardUpIcon from '@cardstack/boxel-icons/arrow-forward-up';
-import type { BaseDef, BoxComponent } from '@cardstack/base/card-api';
 
-import { ChartCard, DimensionField, MeasureField } from './chart-card';
+import { ChartCard } from './chart-card';
+import Tile from './components/tile';
 import { Dataset, parseRows } from './dataset';
+import { DimensionField, MeasureField } from './fields';
+import {
+  SUGGESTIONS,
+  EXTRACT_PROMPT,
+  WEB_MODEL,
+  WEB_PROMPT,
+  MAX_ROWS_JSON_BYTES,
+  stripJsonFences,
+  humanizeError,
+  compressImage,
+} from './utils/ingest';
+import {
+  RESIZE_DIRS,
+  MIN_TILE_W,
+  MIN_TILE_H,
+  isChart,
+  snap,
+  defaultRect,
+  type TileRect,
+} from './utils/layout';
 import { parseCsv, suggestChart } from './utils/parse-csv';
 
 // ---------------------------------------------------------------------------
@@ -42,169 +67,46 @@ import { parseCsv, suggestChart } from './utils/parse-csv';
 // created CRM records directly; any card embeds.
 // ---------------------------------------------------------------------------
 
-function getComponent(
-  cardOrField: BaseDef | undefined | null,
-): BoxComponent | undefined {
-  if (!cardOrField) {
-    return;
+const SCHEME_STORAGE_KEY = 'gen-ui-dashboard:color-scheme';
+
+// The dashboard is an app shell, so it may own a light/dark toggle: it stamps
+// data-theme on its root and the linked theme's darkModeVariables take over
+// for the whole wall, tiles included. The scheme is the viewer's saved choice
+// (localStorage), else their OS preference. A prerender is neither viewer:
+// it renders the fixed dark default, the Night Wall identity, so the
+// rendering machine's own preference is never baked into the HTML.
+function initialScheme(): 'light' | 'dark' {
+  if ((globalThis as any).__boxelRenderContext) {
+    return 'dark';
   }
-  let constructor = cardOrField.constructor as typeof BaseDef | undefined;
-  if (typeof constructor?.getComponent !== 'function') {
-    return;
-  }
-  return constructor.getComponent(cardOrField);
-}
-
-const RESIZE_DIRS = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
-
-interface TileRect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-// resize/data controls only make sense on our own ChartCards; any other
-// linked card is just rendered
-function isChart(card: any): boolean {
-  return typeof card?.chartKind === 'string';
-}
-
-const SUGGESTIONS = [
-  'How have Tesla and BYD deliveries trended over the last five years?',
-  'What share of the global EV market do Tesla, BYD and the rest hold?',
-  'Compare Tesla and BYD sales in 2025',
-];
-
-const EXTRACT_PROMPT = `You read tables out of images (screenshots, whiteboard photos, paper reports) or raw CSV/JSON text. Extract the tabular data and answer with ONE JSON object only — no prose, no markdown fences:
-{
-  "title": "<short name for this dataset>",
-  "columns": [{ "name": "<column>", "type": "string|number|date" }],
-  "rows": [{ "<column>": <value> }],
-  "suggestedChart": {
-    "chartKind": "line|bar|stacked-bar|pie|donut|scatter|kpi",
-    "x": "<dimension column>",
-    "xBucket": "none|month|quarter|year",
-    "y": { "field": "<numeric column>", "aggregate": "sum|count|avg" },
-    "title": "<chart title>"
-  }
-}
-Rules: numeric columns come back as numbers (strip currency symbols and thousands separators); dates as ISO strings; keep column names short, no spaces preferred (camelCase). Pick the suggestedChart per: time series → line, category comparison → bar, part-of-whole (≤6 cats) → pie/donut, single figure → kpi. If the x column is already an aggregated label (e.g. "Q2 2025"), use xBucket "none".`;
-
-// live-web questions go to a search-grounded model (Perplexity Sonar): it
-// searches the web at answer time and cites its sources, so the dataset is
-// current instead of model-memory
-const WEB_MODEL = 'perplexity/sonar';
-
-const WEB_PROMPT = `You answer data questions using CURRENT web information. Search for the latest figures, then answer with ONE JSON object only — no prose, no markdown fences:
-{
-  "title": "<short name for this dataset>",
-  "columns": [{ "name": "<column>", "type": "string|number|date" }],
-  "rows": [{ "<column>": <value> }],
-  "suggestedChart": {
-    "chartKind": "line|bar|stacked-bar|pie|donut|scatter|kpi",
-    "x": "<dimension column>",
-    "xBucket": "none|month|quarter|year",
-    "y": { "field": "<numeric column>", "aggregate": "sum|count|avg" },
-    "title": "<chart title>"
-  },
-  "sources": ["<url>", "<url>"]
-}
-Rules: numeric columns come back as numbers (strip currency symbols and thousands separators); dates as ISO strings; keep column names short, camelCase. sources lists the actual web pages the figures came from. Pick the suggestedChart per: time series → line, category comparison → bar, part-of-whole (≤6 cats) → pie/donut, single figure → kpi. If the x column is already an aggregated label (e.g. "Q2 2025"), use xBucket "none".
-
-QUESTION: `;
-
-function stripJsonFences(text: string): string {
-  return text
-    .trim()
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/, '');
-}
-
-// realm cards cap at 512KB; leave room for columns/meta around the rows
-const MAX_ROWS_JSON_BYTES = 380_000;
-
-// error objects often arrive as a JSON blob with a stack — pull out the one
-// human sentence and drop the rest
-function humanizeError(e: any): string {
-  let msg: string = e?.message ?? String(e);
-  if (msg.includes('exceeds maximum allowed size')) {
-    return 'the extracted table is too large for one card — try a smaller file';
-  }
-  let jsonStart = msg.indexOf('{');
-  if (jsonStart !== -1) {
-    try {
-      let parsed = JSON.parse(msg.slice(jsonStart));
-      msg = parsed.title ?? parsed.message ?? msg.slice(0, jsonStart).trim();
-      if (msg.includes('exceeds maximum allowed size')) {
-        return 'the extracted table is too large for one card — try a smaller file';
-      }
-    } catch {
-      msg = msg.slice(0, jsonStart).trim() || msg;
-    }
-  }
-  return msg.length > 180 ? `${msg.slice(0, 180)}…` : msg;
-}
-
-const MAX_IMAGE_DIM = 1600;
-
-async function compressImage(file: File): Promise<string> {
-  let bitmap = await createImageBitmap(file);
   try {
-    let scale = Math.min(
-      1,
-      MAX_IMAGE_DIM / Math.max(bitmap.width, bitmap.height),
-    );
-    let canvas = document.createElement('canvas');
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    let ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('Could not read the image');
+    let saved = globalThis.localStorage?.getItem(SCHEME_STORAGE_KEY);
+    if (saved === 'light' || saved === 'dark') {
+      return saved;
     }
-    // white backdrop so transparent PNGs stay readable as JPEG
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.82);
-  } finally {
-    bitmap.close();
+  } catch {
+    // storage blocked: fall through to the OS preference
   }
-}
-
-interface TileSignature {
-  Args: {
-    card: any;
-  };
-  Element: HTMLElement;
-}
-
-// one dashboard tile: renders the linked card's embedded format
-class Tile extends GlimmerComponent<TileSignature> {
-  get component(): BoxComponent | undefined {
-    return getComponent(this.args.card);
-  }
-
-  <template>
-    {{#if this.component}}
-      {{#let this.component as |CardComponent|}}
-        <CardComponent @format='embedded' />
-      {{/let}}
-    {{/if}}
-  </template>
+  let prefersLight = globalThis.matchMedia?.(
+    '(prefers-color-scheme: light)',
+  ).matches;
+  return prefersLight ? 'light' : 'dark';
 }
 
 class Isolated extends Component<typeof GenUiDashboard> {
-  get hasLinkedTheme(): boolean {
-    return Boolean(this.args.model?.cardInfo?.theme);
+  @tracked colorScheme: 'light' | 'dark' = initialScheme();
+
+  get isDark(): boolean {
+    return this.colorScheme === 'dark';
   }
 
-  // night/light toggle, ai-image-generator pattern: data-theme drives the
-  // pin class variant; a linked theme ignores it (dark comes from .dark)
-  @tracked colorScheme: 'light' | 'dark' = 'dark';
-
   @action toggleColorScheme() {
-    this.colorScheme = this.colorScheme === 'dark' ? 'light' : 'dark';
+    this.colorScheme = this.isDark ? 'light' : 'dark';
+    try {
+      globalThis.localStorage?.setItem(SCHEME_STORAGE_KEY, this.colorScheme);
+    } catch {
+      // the toggle still works for this session
+    }
   }
   @tracked promptDraft = '';
   @tracked isDragging = false;
@@ -239,8 +141,10 @@ class Isolated extends Component<typeof GenUiDashboard> {
     this.promptDraft = (event.target as HTMLInputElement).value;
   }
 
-  @action onPromptKeydown(event: Event) {
-    if ((event as KeyboardEvent).key === 'Enter' && this.promptDraft.trim()) {
+  // the prompt is a form: Enter and the send button both submit it
+  @action onPromptSubmit(event: Event) {
+    event.preventDefault();
+    if (this.promptDraft.trim() && !this.isAsking) {
       this.ask(this.promptDraft.trim());
     }
   }
@@ -332,10 +236,27 @@ class Isolated extends Component<typeof GenUiDashboard> {
     this.persistLayout();
   }
 
-  shortcuts = modifier(() => {
+  // ⌘Z / ⇧⌘Z undo this wall's layout changes, but only while the viewer is
+  // working in this dashboard: the last pointer press or the focus is inside
+  // it, and focus is not in something with its own undo (a field, a
+  // contenteditable). Another card in the stack keeps its own ⌘Z.
+  shortcuts = modifier((element: HTMLElement) => {
+    let engaged = false;
+    let onPointerDown = (e: PointerEvent) => {
+      engaged = element.contains(e.target as Node);
+    };
     let onKey = (e: KeyboardEvent) => {
       let el = document.activeElement as HTMLElement | null;
-      if (el && /^(INPUT|TEXTAREA)$/.test(el.tagName)) {
+      if (
+        el &&
+        (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)
+      ) {
+        return;
+      }
+      let focusInside = Boolean(
+        el && el !== document.body && element.contains(el),
+      );
+      if (!focusInside && !engaged) {
         return;
       }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
@@ -347,8 +268,12 @@ class Isolated extends Component<typeof GenUiDashboard> {
         }
       }
     };
+    window.addEventListener('pointerdown', onPointerDown, true);
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true);
+      window.removeEventListener('keydown', onKey);
+    };
   });
 
   // which tile is mid-drag (drives the lifted visual)
@@ -383,7 +308,10 @@ class Isolated extends Component<typeof GenUiDashboard> {
       return;
     }
     let key = this.layoutKey(removed, index);
-    let entry = this.liveLayout?.[key];
+    // outside a drag the geometry lives in storedLayout (persistLayout clears
+    // liveLayout), so read both or undo would restore the tile to a default
+    // slot on top of another one
+    let entry = this.liveLayout?.[key] ?? this.storedLayout[key];
     let restoreAt = (this.args.model?.cards ?? []).indexOf(removed);
     if (restoreAt === -1) {
       return;
@@ -439,7 +367,7 @@ class Isolated extends Component<typeof GenUiDashboard> {
   }
 
   // ------------------------------------------------------------------
-  // Canvas layout (Figma-style free placement, always snapped to 16px)
+  // Canvas layout (Figma-style free placement, always snapped to the grid)
   // ------------------------------------------------------------------
 
   // during a drag/resize the pending geometry lives here (one autosave on
@@ -467,16 +395,7 @@ class Isolated extends Component<typeof GenUiDashboard> {
   entryFor(card: any, index: number): TileRect {
     let key = this.layoutKey(card, index);
     let entry = this.liveLayout?.[key] ?? this.storedLayout[key];
-    if (entry) {
-      return entry;
-    }
-    // unplaced card (e.g. AI just linked one): flow into a 2-per-row default
-    return {
-      x: 16 + (index % 2) * 452,
-      y: 16 + Math.floor(index / 2) * 356,
-      w: 436,
-      h: 340,
-    };
+    return entry ?? defaultRect(index);
   }
 
   tileStyleFor = (card: any, index: number): SafeString => {
@@ -495,10 +414,6 @@ class Isolated extends Component<typeof GenUiDashboard> {
     return htmlSafe(
       `min-height:${bottom + 160}px; min-width:${right + 160}px;`,
     );
-  }
-
-  snap(value: number): number {
-    return Math.round(value / 16) * 16;
   }
 
   persistLayout() {
@@ -581,13 +496,17 @@ class Isolated extends Component<typeof GenUiDashboard> {
     tile.addEventListener('click', suppressClick, true);
 
     let onMove = (e: PointerEvent) => {
-      let x = Math.max(0, this.snap(e.clientX - boardRect.left - offsetX));
-      let y = Math.max(0, this.snap(e.clientY - boardRect.top - offsetY));
+      let x = Math.max(0, snap(e.clientX - boardRect.left - offsetX));
+      let y = Math.max(0, snap(e.clientY - boardRect.top - offsetY));
       this.liveLayout = { ...this.liveLayout, [key]: { ...base, x, y } };
     };
+    // pointercancel (the browser taking a touch over for scrolling) ends the
+    // gesture exactly like pointerup; without it the listeners stay bound and
+    // the next touch anywhere teleports the tile
     let onUp = () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
       this.movingIndex = undefined;
       setTimeout(
         () => tile.removeEventListener('click', suppressClick, true),
@@ -605,10 +524,11 @@ class Isolated extends Component<typeof GenUiDashboard> {
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
   }
 
   // drag-resize from any edge or corner (Figma-style 8 handles): pixel-based,
-  // snapped to 16px, persisted in the dashboard's layoutJson. One save on
+  // snapped to the grid, persisted in the dashboard's layoutJson. One save on
   // release. West/north drags move the origin while keeping the opposite
   // edge pinned.
   @action startResize(card: any, index: number, dir: string, rawEvent: Event) {
@@ -620,27 +540,28 @@ class Isolated extends Component<typeof GenUiDashboard> {
     let startY = event.clientY;
     let key = this.layoutKey(card, index);
     let base = this.entryFor(card, index);
-    const MIN_W = 240;
-    const MIN_H = 180;
+    const MIN_W = MIN_TILE_W;
+    const MIN_H = MIN_TILE_H;
+    (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
 
     let onMove = (e: PointerEvent) => {
       let dx = e.clientX - startX;
       let dy = e.clientY - startY;
       let { x, y, w, h } = base;
       if (dir.includes('e')) {
-        w = Math.max(MIN_W, this.snap(base.w + dx));
+        w = Math.max(MIN_W, snap(base.w + dx));
       }
       if (dir.includes('w')) {
         let maxX = base.x + base.w - MIN_W;
-        x = Math.min(maxX, Math.max(0, this.snap(base.x + dx)));
+        x = Math.min(maxX, Math.max(0, snap(base.x + dx)));
         w = base.w + (base.x - x);
       }
       if (dir.includes('s')) {
-        h = Math.max(MIN_H, this.snap(base.h + dy));
+        h = Math.max(MIN_H, snap(base.h + dy));
       }
       if (dir.includes('n')) {
         let maxY = base.y + base.h - MIN_H;
-        y = Math.min(maxY, Math.max(0, this.snap(base.y + dy)));
+        y = Math.min(maxY, Math.max(0, snap(base.y + dy)));
         h = base.h + (base.y - y);
       }
       this.liveLayout = { ...this.liveLayout, [key]: { x, y, w, h } };
@@ -648,6 +569,7 @@ class Isolated extends Component<typeof GenUiDashboard> {
     let onUp = () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
       this.resizingIndex = undefined;
       let after = this.liveLayout?.[key];
       if (
@@ -666,6 +588,7 @@ class Isolated extends Component<typeof GenUiDashboard> {
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
   }
 
   previewRows = (card: any): any[] =>
@@ -915,17 +838,30 @@ class Isolated extends Component<typeof GenUiDashboard> {
 
     let suggested = extracted.suggestedChart ?? {};
     let chartTitle = suggested.title ?? extracted.title ?? opts.fallbackTitle;
+    let chartKind = suggested.chartKind ?? 'bar';
+    // Nothing in the prompt guarantees the model names an x or a y.field, and
+    // a chart minted without them fails validateChartSpec and renders its
+    // fix-list over good data. Fall back to the first non-numeric column (or
+    // the first column) for x, and to counting rows when no measure is named.
+    let columns: { name: string; type?: string }[] = Array.isArray(
+      extracted.columns,
+    )
+      ? extracted.columns
+      : [];
+    let fallbackX =
+      columns.find((c) => c.type !== 'number')?.name ?? columns[0]?.name;
+    let measurePath: string | undefined = suggested.y?.field;
     let chart = new ChartCard({
       title: chartTitle,
-      chartKind: suggested.chartKind ?? 'bar',
+      chartKind,
       dataset,
       dimension: new DimensionField({
-        path: suggested.x,
+        path: suggested.x ?? (chartKind === 'kpi' ? undefined : fallbackX),
         bucket: suggested.xBucket ?? 'none',
       }),
       measure: new MeasureField({
-        path: suggested.y?.field,
-        aggregate: suggested.y?.aggregate ?? 'sum',
+        path: measurePath,
+        aggregate: measurePath ? (suggested.y?.aggregate ?? 'sum') : 'count',
       }),
       span: 2,
     });
@@ -1000,10 +936,9 @@ class Isolated extends Component<typeof GenUiDashboard> {
 
   <template>
     <section
-      class='dashboard
-        {{if this.isDragging "dragging"}}
-        {{unless this.hasLinkedTheme "gu-default-theme"}}'
+      class='dashboard {{if this.isDragging "dragging"}}'
       data-theme={{this.colorScheme}}
+      aria-label={{if @model.title @model.title 'Gen UI Analytics'}}
       {{this.shortcuts}}
       {{on 'dragenter' this.onDragEnter}}
       {{on 'dragover' this.onDragOver}}
@@ -1013,52 +948,61 @@ class Isolated extends Component<typeof GenUiDashboard> {
       {{#if this.isDragging}}
         <div class='drop-veil'>Drop a screenshot or CSV — I'll chart it</div>
       {{/if}}
-      {{#if this.extractDataset.isRunning}}
-        <div class='extract-banner'>Reading the table out of your file{{this.extractProgress}}…</div>
-      {{/if}}
-      {{#if this.webAsk.isRunning}}
-        <div class='extract-banner'>Searching the live web for current figures…</div>
-      {{/if}}
-      {{#if this.extractError}}
-        <div class='extract-banner error'>
-          <span>{{this.extractError}}</span>
-          <button
-            class='banner-dismiss'
-            type='button'
-            aria-label='Dismiss error'
-            {{on 'click' this.dismissError}}
-          >×</button>
-        </div>
-      {{/if}}
-      {{#if this.extractNotice}}
-        <div class='extract-banner notice'>
-          <span>{{this.extractNotice}}</span>
-          <button
-            class='banner-dismiss'
-            type='button'
-            aria-label='Dismiss notice'
-            {{on 'click' this.dismissNotice}}
-          >×</button>
-        </div>
-      {{/if}}
+      <div class='banners' aria-live='polite'>
+        {{#if this.extractDataset.isRunning}}
+          <p class='extract-banner working'>Reading the table out of your file{{this.extractProgress}}…</p>
+        {{/if}}
+        {{#if this.webAsk.isRunning}}
+          <p class='extract-banner working'>Searching the live web for current
+            figures…</p>
+        {{/if}}
+        {{#if this.extractError}}
+          <div class='extract-banner error' role='alert'>
+            <span>{{this.extractError}}</span>
+            <IconButton
+              class='banner-dismiss'
+              @icon={{IconX}}
+              @width='12'
+              @height='12'
+              @size='extra-small'
+              aria-label='Dismiss error'
+              {{on 'click' this.dismissError}}
+            />
+          </div>
+        {{/if}}
+        {{#if this.extractNotice}}
+          <div class='extract-banner notice'>
+            <span>{{this.extractNotice}}</span>
+            <IconButton
+              class='banner-dismiss'
+              @icon={{IconX}}
+              @width='12'
+              @height='12'
+              @size='extra-small'
+              aria-label='Dismiss notice'
+              {{on 'click' this.dismissNotice}}
+            />
+          </div>
+        {{/if}}
+      </div>
       {{#if this.cards.length}}
         <header class='dashboard-header'>
           <div class='heading'>
             <h1>{{if @model.title @model.title 'Gen UI Analytics'}}</h1>
             <p class='tagline'>Ask for a view — the dashboard builds itself.</p>
           </div>
-          <div class='prompt-bar'>
+          <form class='prompt-bar' {{on 'submit' this.onPromptSubmit}}>
             <BoxelInput
               class='prompt-input'
               @value={{this.promptDraft}}
               placeholder='Ask anything about your data…'
               aria-label='Ask the AI to build a view'
               {{on 'input' this.updateDraft}}
-              {{on 'keydown' this.onPromptKeydown}}
             />
             <Button
-              class='live-toggle {{if this.useLiveWeb "on"}}'
-              @kind='secondary'
+              class='live-toggle'
+              @kind={{if this.useLiveWeb 'secondary' 'muted'}}
+              @size='small'
               title='Answer from live web search with cited sources'
               aria-pressed='{{this.useLiveWeb}}'
               {{on 'click' this.toggleLiveWeb}}
@@ -1067,89 +1011,109 @@ class Isolated extends Component<typeof GenUiDashboard> {
             </Button>
             <Button
               class='prompt-send'
+              type='submit'
               @kind='primary'
+              @size='small'
               @disabled={{this.askDisabled}}
               title={{this.askTitle}}
-              {{on 'click' (fn this.suggest this.promptDraft)}}
             >
               {{this.askLabel}}
             </Button>
-            <button
-              type='button'
+            <IconButton
               class='scheme-toggle'
+              @icon={{if this.isDark SunIcon MoonIcon}}
+              @width='16'
+              @height='16'
+              @round={{true}}
               aria-label={{if
-                (eq this.colorScheme 'dark')
+                this.isDark
                 'Switch to light mode'
                 'Switch to dark mode'
               }}
               title={{if
-                (eq this.colorScheme 'dark')
+                this.isDark
                 'Switch to light mode'
                 'Switch to dark mode'
               }}
               {{on 'click' this.toggleColorScheme}}
-            >
-              {{#if (eq this.colorScheme 'dark')}}
-                <SunIcon width='16' height='16' />
-              {{else}}
-                <MoonIcon width='16' height='16' />
-              {{/if}}
-            </button>
-          </div>
+            />
+          </form>
         </header>
 
         <div class='canvas-wrap'>
-          <div class='gd-history'>
-            <button
-              type='button'
+          <div class='gd-history' role='toolbar' aria-label='Layout history'>
+            <IconButton
               class='gd-hist-btn'
+              @icon={{ArrowBackUpIcon}}
+              @width='15'
+              @height='15'
+              @round={{true}}
+              @disabled={{eq this.undoDepth 0}}
               title='Undo (⌘Z)'
               aria-label='Undo'
-              disabled={{eq this.undoDepth 0}}
               {{on 'click' this.undo}}
-            ><ArrowBackUpIcon width='15' height='15' /></button>
-            <span class='gd-hist-div'></span>
-            <button
-              type='button'
+            />
+            <span class='gd-hist-div' aria-hidden='true'></span>
+            <IconButton
               class='gd-hist-btn'
+              @icon={{ArrowForwardUpIcon}}
+              @width='15'
+              @height='15'
+              @round={{true}}
+              @disabled={{eq this.redoDepth 0}}
               title='Redo (⇧⌘Z)'
               aria-label='Redo'
-              disabled={{eq this.redoDepth 0}}
               {{on 'click' this.redo}}
-            ><ArrowForwardUpIcon width='15' height='15' /></button>
+            />
           </div>
           <div class='canvas-scroll'>
-            <div class='canvas-board' style={{this.boardStyle}}>
+            <ul class='canvas-board' style={{this.boardStyle}}>
               {{#each this.cards as |card index|}}
                 {{! long-press anywhere on the tile lifts it (Figma-style) }}
                 {{! template-lint-disable no-pointer-down-event-binding }}
-                <article
-                  class='tile canvas-tile
+                <li
+                  class='tile
                     {{if (eq this.resizingIndex index) "resizing"}}
                     {{if (eq this.movingIndex index) "lifting"}}'
                   style={{this.tileStyleFor card index}}
                   data-test-tile={{index}}
                   {{on 'pointerdown' (fn this.armTilePress card index)}}
                 >
-                  <div class='tile-toolbar'>
+                  <div
+                    class='tile-toolbar'
+                    role='toolbar'
+                    aria-label='Tile actions'
+                  >
                     {{#if (isChart card)}}
-                      <button
+                      <Button
                         class='tool'
-                        type='button'
+                        @kind='text-only'
+                        @size='extra-small'
+                        aria-pressed={{if
+                          (eq this.dataPreviewIndex index)
+                          'true'
+                          'false'
+                        }}
                         title='Preview the data behind this chart'
                         {{on 'click' (fn this.toggleDataPreview index)}}
-                      >Data</button>
+                      >Data</Button>
                     {{/if}}
-                    <button
+                    <Button
                       class='tool'
-                      type='button'
+                      @kind='text-only'
+                      @size='extra-small'
                       title='Open in its own stack'
+                      aria-label='Open in its own stack'
                       {{on 'click' (fn this.openCard card)}}
-                    >⤢</button>
-                    <button
-                      class='tool remove
-                        {{if (eq this.confirmRemoveIndex index) "confirming"}}'
-                      type='button'
+                    >⤢</Button>
+                    <Button
+                      class='tool remove'
+                      @kind={{if
+                        (eq this.confirmRemoveIndex index)
+                        'destructive'
+                        'text-only'
+                      }}
+                      @size='extra-small'
                       aria-label={{if
                         (eq this.confirmRemoveIndex index)
                         'Click again to remove'
@@ -1165,26 +1129,29 @@ class Isolated extends Component<typeof GenUiDashboard> {
                         (eq this.confirmRemoveIndex index)
                         'Remove?'
                         '×'
-                      }}</button>
+                      }}</Button>
                   </div>
                   {{#if (eq this.dataPreviewIndex index)}}
-                    <div class='data-preview'>
+                    <section
+                      class='data-preview'
+                      aria-label='Data behind this chart'
+                    >
                       <div class='data-preview-head'>
-                        <strong>{{if
+                        <h2>{{if
                             card.dataset.title
                             card.dataset.title
                             'Dataset'
-                          }}</strong>
-                        <span
+                          }}</h2>
+                        <p
                           class='data-preview-note'
-                        >{{card.dataset.sourceNote}}</span>
+                        >{{card.dataset.sourceNote}}</p>
                       </div>
                       <div class='data-preview-scroll'>
                         <table>
                           <thead>
                             <tr>
                               {{#each (this.previewColumns card) as |col|}}
-                                <th>{{col}}</th>
+                                <th scope='col'>{{col}}</th>
                               {{/each}}
                             </tr>
                           </thead>
@@ -1201,21 +1168,23 @@ class Isolated extends Component<typeof GenUiDashboard> {
                       </div>
                       <div class='data-preview-foot'>
                         <Button
-                          class='preview-open'
                           @kind='secondary'
+                          @size='extra-small'
                           {{on 'click' (fn this.openDataset card)}}
                         >Open full dataset ⤢</Button>
                         <Button
-                          class='preview-close'
                           @kind='text-only'
+                          @size='extra-small'
                           {{on 'click' (fn this.toggleDataPreview index)}}
                         >Close</Button>
                       </div>
-                    </div>
+                    </section>
                   {{/if}}
                   <Tile @card={{card}} />
                   {{#each RESIZE_DIRS as |dir|}}
-                    {{! a drag interaction must start on pointerdown }}
+                    {{! Resize handles stay native buttons: they are invisible
+                        edge/corner hit zones that start a drag on pointerdown,
+                        not controls BoxelUI has a component for. }}
                     {{! template-lint-disable no-pointer-down-event-binding }}
                     <button
                       class='rz rz-{{dir}}'
@@ -1224,13 +1193,33 @@ class Isolated extends Component<typeof GenUiDashboard> {
                       {{on 'pointerdown' (fn this.startResize card index dir)}}
                     ></button>
                   {{/each}}
-                </article>
+                </li>
               {{/each}}
-            </div>
+            </ul>
           </div>
         </div>
+        <p class='page-hint grid-hint'>Ask another question, or drop a
+          screenshot / CSV to add more data</p>
       {{else}}
         <div class='hero'>
+          <IconButton
+            class='scheme-toggle hero-scheme-toggle'
+            @icon={{if this.isDark SunIcon MoonIcon}}
+            @width='16'
+            @height='16'
+            @round={{true}}
+            aria-label={{if
+              this.isDark
+              'Switch to light mode'
+              'Switch to dark mode'
+            }}
+            title={{if
+              this.isDark
+              'Switch to light mode'
+              'Switch to dark mode'
+            }}
+            {{on 'click' this.toggleColorScheme}}
+          />
           <h1 class='hero-title'>{{if
               @model.title
               @model.title
@@ -1238,18 +1227,17 @@ class Isolated extends Component<typeof GenUiDashboard> {
             }}</h1>
           <p class='hero-tagline'>Ask a question in plain English — get the
             chart that answers it.</p>
-          <div class='hero-prompt'>
+          <form class='hero-prompt' {{on 'submit' this.onPromptSubmit}}>
             <BoxelInput
               class='hero-input'
               @value={{this.promptDraft}}
               placeholder='Ask anything about your data…'
               aria-label='Ask the AI to build a view'
               {{on 'input' this.updateDraft}}
-              {{on 'keydown' this.onPromptKeydown}}
             />
             <Button
-              class='live-toggle hero-live-toggle {{if this.useLiveWeb "on"}}'
-              @kind='secondary'
+              class='live-toggle'
+              @kind={{if this.useLiveWeb 'secondary' 'muted'}}
               title='Answer from live web search with cited sources'
               aria-pressed='{{this.useLiveWeb}}'
               {{on 'click' this.toggleLiveWeb}}
@@ -1258,222 +1246,99 @@ class Isolated extends Component<typeof GenUiDashboard> {
             </Button>
             <Button
               class='hero-send'
+              type='submit'
               @kind='primary'
               @disabled={{this.askDisabled}}
               title={{this.askTitle}}
-              {{on 'click' (fn this.suggest this.promptDraft)}}
             >
               {{this.askLabel}}
             </Button>
-          </div>
-          <button
-            type='button'
-            class='scheme-toggle hero-scheme-toggle'
-            aria-label={{if
-              (eq this.colorScheme 'dark')
-              'Switch to light mode'
-              'Switch to dark mode'
-            }}
-            title={{if
-              (eq this.colorScheme 'dark')
-              'Switch to light mode'
-              'Switch to dark mode'
-            }}
-            {{on 'click' this.toggleColorScheme}}
-          >
-            {{#if (eq this.colorScheme 'dark')}}
-              <SunIcon width='16' height='16' />
-            {{else}}
-              <MoonIcon width='16' height='16' />
-            {{/if}}
-          </button>
-          <div class='suggestions'>
+          </form>
+          <ul class='suggestions' aria-label='Example questions'>
             {{#each SUGGESTIONS as |suggestion|}}
-              <Button
-                class='suggestion'
-                @kind='text-only'
-                {{on 'click' (fn this.suggest suggestion)}}
-              >
-                {{suggestion}}
-              </Button>
+              <li>
+                <Pill
+                  @kind='button'
+                  @variant='muted'
+                  class='suggestion'
+                  {{on 'click' (fn this.suggest suggestion)}}
+                >
+                  {{suggestion}}
+                </Pill>
+              </li>
             {{/each}}
-          </div>
+          </ul>
           <p class='page-hint'>…or drop a screenshot / CSV with data in it</p>
         </div>
       {{/if}}
-      {{#if this.cards.length}}
-        <p class='page-hint grid-hint'>Ask another question, or drop a
-          screenshot / CSV to add more data</p>
-      {{/if}}
     </section>
     <style scoped>
-      /* ai-image-generator pin pattern (boxel-theming-ui rule 4): dark is
-         the identity default; the scheme toggle stamps data-theme and the
-         [data-theme='light'] variant below flips the semantic set. A linked
-         theme removes the pin, so the toggle is inert there by design. */
-      .gu-default-theme {
-        --background: #0f1217;
-        --foreground: #e8ecf1;
-        --card: #171c24;
-        --card-foreground: #e8ecf1;
-        --primary: #5b8ff9;
-        --primary-foreground: #0f1217;
-        --secondary: #7ed9a6;
-        --secondary-foreground: #0f1217;
-        --accent: #f2cf7e;
-        --accent-foreground: #0f1217;
-        --muted: #1c2330;
-        --muted-foreground: #93a0b4;
-        --destructive: #c25668;
-        --destructive-foreground: #0f1217;
-        --border: rgba(255, 255, 255, 0.09);
-        --input: rgba(255, 255, 255, 0.09);
-        --ring: #5b8ff9;
-      }
-      .gu-default-theme[data-theme='light'] {
-        --background: #f2f5f9;
-        --foreground: #1c2733;
-        --card: #ffffff;
-        --card-foreground: #1c2733;
-        --primary: #3b6fe0;
-        --primary-foreground: #f5f8ff;
-        --secondary: #1a7f4e;
-        --secondary-foreground: #f2fbf6;
-        --accent: #b3690f;
-        --accent-foreground: #fff8ec;
-        --muted: #e7ecf2;
-        --muted-foreground: #5a6878;
-        --destructive: #b3403a;
-        --destructive-foreground: #fff5f4;
-        --border: rgba(15, 23, 42, 0.12);
-        --input: rgba(15, 23, 42, 0.12);
-        --ring: #3b6fe0;
-        --gd-dot: rgba(15, 23, 42, 0.08);
-      }
-      .scheme-toggle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 34px;
-        height: 34px;
-        flex-shrink: 0;
-        border: 1px solid var(--gd-border);
-        border-radius: 999px;
-        background: transparent;
-        color: var(--gd-muted);
-        cursor: pointer;
-      }
-      .scheme-toggle:hover {
-        color: var(--gd-accent);
-        border-color: var(--gd-accent);
-      }
-
+      /* The wall reads only contract tokens: its colours come from the linked
+         theme (Night Wall), light or dark per the data-theme on the root. */
       .dashboard {
-        --gd-bg: var(--gen-ui-bg, var(--background, #0f1217));
-        --gd-surface: var(--gen-ui-surface, var(--card, #171c24));
-        --gd-border: var(
-          --gen-ui-border,
-          var(--border, rgba(255, 255, 255, 0.08))
-        );
-        --gd-text: var(--gen-ui-ink, var(--foreground, #e8ecf1));
-        --gd-muted: var(--gen-ui-muted, var(--muted-foreground, #93a0b4));
-        --gd-accent: var(--gen-ui-accent, var(--primary, #5b8ff9));
-        --gd-accent-text: var(
-          --gen-ui-accent-fg,
-          var(--primary-foreground, #0b1020)
-        );
-        --gd-radius: var(--gen-ui-radius, var(--radius, 12px));
-        --gd-danger: var(--gen-ui-danger, var(--destructive, #c25668));
-        --gd-dot: rgba(255, 255, 255, 0.07);
         position: relative;
         height: 100%;
         display: flex;
         flex-direction: column;
         overflow: auto;
-        background: var(--gd-bg);
-        color: var(--gd-text);
-        padding: clamp(16px, 3cqi, 32px);
+        background-color: var(--canvas);
+        color: var(--foreground);
+        padding: clamp(1rem, 3cqi, 2rem);
         container-type: inline-size;
-        font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
       }
       /* with a populated wall the section itself never scrolls — the canvas
          viewport does, and the header stays put (Figma-style) */
       .dashboard:has(.canvas-wrap) {
         overflow: hidden;
       }
-      .canvas-wrap {
-        position: relative;
-        flex: 1;
-        min-height: 0;
-        display: flex;
-      }
-      .canvas-scroll {
-        flex: 1;
-        min-width: 0;
-        overflow: auto;
-        border-radius: var(--gd-radius);
-      }
       .dashboard.dragging {
-        outline: 2px dashed var(--gd-accent);
-        outline-offset: -8px;
+        outline: 2px dashed var(--ring);
+        outline-offset: -0.5rem;
       }
       .drop-veil {
         position: absolute;
-        inset: 12px;
+        inset: var(--boxel-sp-sm);
         z-index: 5;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: var(--gd-radius);
-        background: color-mix(
-          in srgb,
-          var(--gd-accent) 14%,
-          rgba(15, 18, 23, 0.85)
-        );
-        border: 2px dashed var(--gd-accent);
-        font-size: 1rem;
+        border-radius: var(--boxel-border-radius-lg);
+        background-color: var(--overlay);
+        color: var(--tooltip-foreground);
+        border: 2px dashed var(--ring);
         font-weight: 550;
         pointer-events: none;
+      }
+      .banners:empty {
+        display: none;
       }
       .extract-banner {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        padding: 10px 14px;
-        margin-bottom: 12px;
-        border-radius: var(--gd-radius);
-        background: var(--gd-surface);
-        border: 1px solid var(--gd-border);
-        font-size: 0.8125rem;
-        color: var(--gd-muted);
+        gap: var(--boxel-sp-sm);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        margin: 0 0 var(--boxel-sp-sm);
+        border-radius: var(--boxel-border-radius);
+        background-color: var(--card);
+        color: var(--muted-foreground);
+        border: 1px solid var(--border);
+        font-size: var(--boxel-font-size-sm);
+      }
+      .extract-banner.working {
         animation: extract-pulse 1.4s ease-in-out infinite;
+      }
+      .extract-banner.notice {
+        color: var(--warning-ink);
+        border-color: color-mix(in oklch, var(--warning) 35%, transparent);
+      }
+      .extract-banner.error {
+        color: var(--destructive-ink);
+        border-color: color-mix(in oklch, var(--destructive) 40%, transparent);
       }
       .banner-dismiss {
         flex-shrink: 0;
-        background: none;
-        border: none;
-        color: inherit;
-        font-size: 1.05rem;
-        line-height: 1;
-        cursor: pointer;
-        padding: 2px 6px;
-        border-radius: 6px;
-        opacity: 0.7;
-      }
-      .banner-dismiss:hover {
-        opacity: 1;
-        background: var(--gd-border);
-      }
-      .extract-banner.notice {
-        animation: none;
-        color: #f2cf7e;
-        border-color: rgba(242, 207, 126, 0.35);
-      }
-      .extract-banner.error {
-        animation: none;
-        color: #ff9a9a;
-        border-color: rgba(255, 120, 120, 0.4);
+        --boxel-icon-button-color: currentColor;
       }
       @keyframes extract-pulse {
         0%,
@@ -1485,17 +1350,17 @@ class Isolated extends Component<typeof GenUiDashboard> {
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .extract-banner {
+        .extract-banner.working {
           animation: none;
         }
       }
       .dashboard-header {
         display: flex;
         flex-wrap: wrap;
-        gap: 16px;
+        gap: var(--boxel-sp);
         align-items: flex-end;
         justify-content: space-between;
-        margin-bottom: 20px;
+        margin-bottom: var(--boxel-sp-lg);
       }
       .heading h1 {
         margin: 0;
@@ -1503,135 +1368,117 @@ class Isolated extends Component<typeof GenUiDashboard> {
         letter-spacing: -0.01em;
       }
       .tagline {
-        margin: 4px 0 0;
-        color: var(--gd-muted);
-        font-size: 0.8125rem;
+        margin: var(--boxel-sp-4xs) 0 0;
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-sm);
       }
       .prompt-bar {
         display: flex;
-        gap: 8px;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
         flex: 1;
-        min-width: 260px;
-        max-width: 560px;
+        min-width: 16.25rem;
+        max-width: 35rem;
+        margin: 0;
       }
       .prompt-input {
         flex: 1;
-        background: var(--gd-surface);
-        border: 1px solid var(--gd-border);
-        border-radius: var(--gd-radius);
-        color: var(--gd-text);
-        padding: 10px 14px;
-        font-size: 0.875rem;
       }
-      .prompt-input::placeholder {
-        color: var(--gd-muted);
-      }
-      .prompt-send {
-        flex-shrink: 0;
-        --boxel-button-primary-background: var(--gd-accent);
-        --boxel-button-primary-foreground: var(--gd-accent-text);
-        --boxel-button-primary-active-background: var(--gd-accent);
-        --boxel-button-padding: 10px 18px;
-        --boxel-button-min-height: 0;
-        --boxel-button-border-radius: var(--gd-radius);
-        --boxel-button-border: none;
-        font-weight: 600;
-        font-size: 0.875rem;
-        white-space: nowrap;
-      }
-      .prompt-send:disabled {
-        --boxel-button-disabled-background: var(--gd-accent);
-        --boxel-button-disabled-foreground: var(--gd-accent-text);
-        opacity: 0.6;
-        pointer-events: auto;
-        cursor: not-allowed;
-      }
+      .prompt-send,
       .live-toggle {
         flex-shrink: 0;
-        --boxel-button-secondary-background: transparent;
-        --boxel-button-secondary-foreground: var(--gd-muted);
-        --boxel-button-secondary-border: var(--gd-border);
-        --boxel-button-padding: 8px 14px;
-        --boxel-button-min-height: 0;
-        --boxel-button-border-radius: 999px;
-        font-size: 0.8125rem;
-        font-weight: 550;
         white-space: nowrap;
       }
-      .live-toggle:hover {
-        --boxel-button-secondary-border: var(--gd-accent);
+      .scheme-toggle {
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+        --boxel-icon-button-width: 2.125rem;
+        --boxel-icon-button-height: 2.125rem;
+        --boxel-icon-button-color: var(--muted-foreground);
       }
-      .live-toggle.on {
-        --boxel-button-secondary-foreground: var(--gd-accent);
-        --boxel-button-secondary-border: var(--gd-accent);
-        --boxel-button-secondary-background: color-mix(
-          in srgb,
-          var(--gd-accent) 14%,
-          transparent
-        );
+      .scheme-toggle:hover {
+        --boxel-icon-button-color: var(--foreground);
+        border-color: var(--ring);
       }
       .hero-scheme-toggle {
         position: absolute;
-        top: 18px;
-        right: 18px;
+        top: var(--boxel-sp);
+        right: var(--boxel-sp);
+      }
+      .canvas-wrap {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+      }
+      .canvas-scroll {
+        flex: 1;
+        min-width: 0;
+        overflow: auto;
+        border-radius: var(--boxel-border-radius-lg);
       }
       .canvas-board {
         position: relative;
         min-height: 100%;
-        border-radius: var(--gd-radius);
-        border: 1px dashed var(--gd-border);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-radius: var(--boxel-border-radius-lg);
+        border: 1px dashed var(--border);
+        background-color: var(--inset);
+        /* the 16px dot grid the tiles snap to; the grid is layout geometry,
+           so it stays in px with the tile rects */
         background-image: radial-gradient(
           circle,
-          var(--gd-dot) 1px,
+          var(--border-strong) 1px,
           transparent 1px
         );
         background-size: 16px 16px;
       }
       .gd-history {
         position: absolute;
-        top: 12px;
-        right: 12px;
+        top: var(--boxel-sp-sm);
+        right: var(--boxel-sp-sm);
         z-index: 6;
         display: flex;
         align-items: center;
-        gap: 2px;
-        padding: 4px;
-        border: 1px solid var(--gd-border);
-        border-radius: 999px;
-        background: color-mix(in srgb, var(--gd-surface) 88%, transparent);
-        backdrop-filter: blur(6px);
-        box-shadow:
-          0 10px 28px rgba(0, 0, 0, 0.45),
-          0 2px 6px rgba(0, 0, 0, 0.3);
+        gap: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-5xs);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-2xl);
+        background-color: var(--popover);
+        color: var(--popover-foreground);
+        box-shadow: var(--shadow-lg);
       }
       .gd-hist-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        border: none;
-        border-radius: 999px;
-        background: transparent;
-        color: var(--gd-text);
-        cursor: pointer;
+        --boxel-icon-button-width: 2rem;
+        --boxel-icon-button-height: 2rem;
+        --boxel-icon-button-color: var(--popover-foreground);
       }
       .gd-hist-btn:hover:not(:disabled) {
-        color: var(--gd-accent);
-        background: color-mix(in srgb, var(--gd-accent) 14%, transparent);
+        background-color: var(--hover);
       }
       .gd-hist-btn:disabled {
-        color: var(--gd-muted);
+        --boxel-icon-button-color: var(--muted-foreground);
         opacity: 0.4;
-        cursor: default;
       }
       .gd-hist-div {
         width: 1px;
-        height: 16px;
-        background: var(--gd-border);
+        height: 1rem;
+        background-color: var(--border);
       }
-      .tile.canvas-tile:hover {
-        outline: 1px solid color-mix(in srgb, var(--gd-accent) 55%, transparent);
+      .tile {
+        position: absolute;
+        margin: 0;
+        overflow: hidden;
+        border-radius: var(--boxel-border-radius-lg);
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        box-shadow: var(--shadow-sm);
+      }
+      .tile:hover {
+        outline: 1px solid var(--ring);
         outline-offset: 1px;
       }
       .tile.lifting,
@@ -1639,28 +1486,25 @@ class Isolated extends Component<typeof GenUiDashboard> {
         cursor: grabbing !important;
       }
       .tile.lifting {
-        cursor: grabbing;
-        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
-        outline: 1px solid var(--gd-accent);
+        box-shadow: var(--shadow-xl);
+        outline: 1px solid var(--ring);
         user-select: none;
-      }
-      .tile.canvas-tile {
-        position: absolute;
-        margin: 0;
+        /* while lifted, the pointer belongs to the drag, not page scroll */
+        touch-action: none;
       }
       .tile-toolbar {
         position: absolute;
-        top: 8px;
-        right: 8px;
+        top: var(--boxel-sp-xs);
+        right: var(--boxel-sp-xs);
         z-index: 3;
         display: flex;
         align-items: center;
-        gap: 4px;
-        padding: 3px;
-        border-radius: 999px;
-        background: color-mix(in srgb, var(--gd-bg) 80%, transparent);
-        border: 1px solid var(--gd-border);
-        backdrop-filter: blur(6px);
+        gap: var(--boxel-sp-5xs);
+        padding: var(--boxel-sp-6xs);
+        border-radius: var(--boxel-border-radius-2xl);
+        background-color: var(--popover);
+        color: var(--popover-foreground);
+        border: 1px solid var(--border);
         opacity: 0;
         transition: opacity 0.15s ease;
       }
@@ -1669,56 +1513,35 @@ class Isolated extends Component<typeof GenUiDashboard> {
         opacity: 1;
       }
       .tool {
-        background: none;
-        border: none;
-        color: var(--gd-muted);
-        font-size: 0.72rem;
+        --boxel-button-min-width: 0;
+        --boxel-button-min-height: 1.5rem;
+        --boxel-button-padding: 0 var(--boxel-sp-xs);
+        --boxel-button-border-radius: var(--boxel-border-radius-2xl);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        line-height: 1;
-        cursor: pointer;
-        padding: 5px 8px;
-        border-radius: 999px;
-      }
-      .tool:hover {
-        background: var(--gd-border);
-        color: var(--gd-text);
-      }
-      .tool.active {
-        background: color-mix(in srgb, var(--gd-accent) 22%, transparent);
-        color: var(--gd-accent);
-      }
-      .tool.remove:hover {
-        color: #ff9a9a;
-      }
-      .tool.remove.confirming,
-      .tool.remove.confirming:hover {
-        background: var(--gd-danger, #c25668);
-        border-color: var(--gd-danger, #c25668);
-        color: var(--destructive-foreground, #0f1217);
-        font-weight: 650;
       }
       /* 8 resize handles: 4 edge strips + 4 corner squares. Invisible hit
          zones; the corners show a dot on tile hover. */
       .rz {
         position: absolute;
         z-index: 3;
-        background: none;
+        background-color: transparent;
         border: none;
         padding: 0;
         touch-action: none;
       }
       .rz-n,
       .rz-s {
-        left: 12px;
-        right: 12px;
-        height: 8px;
+        left: var(--boxel-sp-sm);
+        right: var(--boxel-sp-sm);
+        height: 0.5rem;
         cursor: ns-resize;
       }
       .rz-e,
       .rz-w {
-        top: 12px;
-        bottom: 12px;
-        width: 8px;
+        top: var(--boxel-sp-sm);
+        bottom: var(--boxel-sp-sm);
+        width: 0.5rem;
         cursor: ew-resize;
       }
       .rz-n {
@@ -1737,8 +1560,8 @@ class Isolated extends Component<typeof GenUiDashboard> {
       .rz-nw,
       .rz-se,
       .rz-sw {
-        width: 14px;
-        height: 14px;
+        width: 0.875rem;
+        height: 0.875rem;
       }
       .rz-ne {
         top: 0;
@@ -1766,9 +1589,9 @@ class Isolated extends Component<typeof GenUiDashboard> {
       .rz-sw::after {
         content: '';
         position: absolute;
-        inset: 3px;
-        border-radius: 3px;
-        background: var(--gd-accent);
+        inset: var(--boxel-sp-6xs);
+        border-radius: var(--boxel-border-radius-2xs);
+        background-color: var(--primary);
         opacity: 0;
         transition: opacity 0.15s ease;
       }
@@ -1780,190 +1603,139 @@ class Isolated extends Component<typeof GenUiDashboard> {
         opacity: 0.7;
       }
       .tile.resizing {
-        border-color: var(--gd-accent);
-        box-shadow: 0 0 0 1px var(--gd-accent);
+        border-color: var(--ring);
+        box-shadow: 0 0 0 1px var(--ring);
         transition: none;
         user-select: none;
       }
       .data-preview {
         position: absolute;
-        inset: 8px;
+        inset: var(--boxel-sp-xs);
         z-index: 2;
         display: flex;
         flex-direction: column;
-        border-radius: calc(var(--gd-radius) - 4px);
-        background: color-mix(in srgb, var(--gd-bg) 92%, transparent);
-        border: 1px solid var(--gd-border);
-        backdrop-filter: blur(4px);
-        padding: 12px;
-        gap: 8px;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-sm);
+        border-radius: var(--boxel-border-radius);
+        background-color: var(--popover);
+        color: var(--popover-foreground);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
       }
       .data-preview-head {
         display: flex;
         flex-direction: column;
-        gap: 2px;
-        padding-right: 140px;
-        font-size: 0.8125rem;
+        gap: var(--boxel-sp-6xs);
+        padding-right: 8.75rem;
+      }
+      .data-preview-head h2 {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
       }
       .data-preview-note {
-        color: var(--gd-muted);
-        font-size: 0.6875rem;
+        margin: 0;
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-2xs);
       }
       .data-preview-scroll {
         flex: 1;
         overflow: auto;
-        border-radius: 8px;
-        border: 1px solid var(--gd-border);
+        border-radius: var(--boxel-border-radius-sm);
+        border: 1px solid var(--border);
       }
       .data-preview table {
         border-collapse: collapse;
         width: 100%;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .data-preview th,
       .data-preview td {
         text-align: left;
-        padding: 5px 10px;
-        border-bottom: 1px solid var(--gd-border);
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+        border-bottom: 1px solid var(--border);
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
       }
       .data-preview th {
         position: sticky;
         top: 0;
-        background: var(--gd-surface);
-        font-size: 0.6875rem;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-2xs);
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: var(--gd-muted);
       }
       .data-preview-foot {
         display: flex;
         justify-content: space-between;
-        gap: 8px;
-      }
-      .preview-open,
-      .preview-close {
-        background: none;
-        border: 1px solid var(--gd-border);
-        border-radius: 999px;
-        color: var(--gd-text);
-        font-size: 0.75rem;
-        padding: 6px 12px;
-        cursor: pointer;
-      }
-      .preview-open:hover {
-        border-color: var(--gd-accent);
-        color: var(--gd-accent);
-      }
-      .preview-close:hover {
-        background: var(--gd-border);
+        gap: var(--boxel-sp-xs);
       }
       .hero {
-        min-height: calc(100% - 32px);
+        position: relative;
+        min-height: calc(100% - 2rem);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
-        gap: 0;
         padding-bottom: 8vh;
       }
       .hero-title {
-        margin: 0 0 8px;
+        margin: 0 0 var(--boxel-sp-xs);
         font-size: clamp(1.75rem, 5cqi, 2.75rem);
         letter-spacing: -0.02em;
         font-weight: 650;
       }
       .hero-tagline {
-        margin: 0 0 32px;
-        color: var(--gd-muted);
-        font-size: 0.9375rem;
+        margin: 0 0 var(--boxel-sp-xl);
+        color: var(--muted-foreground);
       }
       .hero-prompt {
         display: flex;
         align-items: center;
-        gap: 10px;
-        width: min(720px, 92%);
+        gap: var(--boxel-sp-xs);
+        width: min(45rem, 92%);
         max-width: 100%;
-        margin-bottom: 26px;
-      }
-      .hero-prompt > :first-child {
-        flex: 1;
-        min-width: 0;
+        margin: 0 0 var(--boxel-sp-xl);
       }
       .hero-input {
         flex: 1;
-        background: var(--gd-surface);
-        border: 1px solid var(--gd-border);
-        border-radius: 999px;
-        color: var(--gd-text);
-        padding: 16px 24px;
-        font-size: 1rem;
-        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-      }
-      .hero-input::placeholder {
-        color: var(--gd-muted);
-      }
-      .hero-input:focus {
-        outline: none;
-        border-color: var(--gd-accent);
+        min-width: 0;
+        --boxel-input-height: 3.25rem;
+        --boxel-form-control-border-radius: var(--boxel-border-radius-2xl);
+        box-shadow: var(--shadow-md);
       }
       .hero-send {
         flex-shrink: 0;
-        /* re-skin through the component's own knobs — the app defines
-           --boxel-button-primary-* globally, so plain background/color
-           declarations lose to kind-primary (boxel-theming-ui rule 2) */
-        --boxel-button-primary-background: var(--gd-accent);
-        --boxel-button-primary-foreground: var(--gd-accent-text);
-        --boxel-button-primary-active-background: var(--gd-accent);
-        --boxel-button-padding: 16px 28px;
-        --boxel-button-min-height: 0;
-        --boxel-button-border-radius: 999px;
-        --boxel-button-border: none;
-        font-weight: 600;
-        font-size: 1rem;
         white-space: nowrap;
-      }
-      .hero-send:disabled {
-        --boxel-button-disabled-background: var(--gd-accent);
-        --boxel-button-disabled-foreground: var(--gd-accent-text);
-        opacity: 0.6;
-        pointer-events: auto;
-        cursor: not-allowed;
       }
       .page-hint {
         position: absolute;
         left: 0;
         right: 0;
-        bottom: 20px;
+        bottom: var(--boxel-sp-lg);
         margin: 0;
         text-align: center;
-        color: var(--gd-muted);
-        font-size: 0.8125rem;
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-sm);
         pointer-events: none;
       }
       .grid-hint {
         position: static;
-        padding: 20px 0 4px;
+        padding: var(--boxel-sp-lg) 0 var(--boxel-sp-5xs);
       }
       .suggestions {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: var(--boxel-sp-xs);
         justify-content: center;
+        margin: 0;
+        padding: 0;
+        list-style: none;
       }
       .suggestion {
-        background: var(--gd-surface);
-        color: var(--gd-text);
-        border: 1px solid var(--gd-border);
-        border-radius: 999px;
-        padding: 8px 16px;
-        font-size: 0.8125rem;
-        cursor: pointer;
-      }
-      .suggestion:hover {
-        border-color: var(--gd-accent);
+        font-size: var(--boxel-font-size-sm);
       }
     </style>
   </template>
@@ -1983,17 +1755,14 @@ export class GenUiDashboard extends CardDef {
 
   static isolated = Isolated;
 
-  // hand-rolled "Night Wall" fitted: a miniature of the dashboard itself —
-  // dark canvas, glyph tiles, real card count in the KPI tile
+  // "Night Wall" fitted: a miniature of the dashboard itself — dotted
+  // canvas, glyph tiles, real card count in the KPI tile
   static fitted = class Fitted extends Component<typeof GenUiDashboard> {
-    get hasLinkedTheme(): boolean {
-      return Boolean(this.args.model?.cardInfo?.theme);
-    }
     get cardCount(): number {
       return this.args.model?.cards?.length ?? 0;
     }
     <template>
-      <article class='fit {{unless this.hasLinkedTheme "gu-default-theme"}}'>
+      <article class='fit'>
         <div class='r-head'>
           <p class='eyebrow'>Gen UI Dashboard</p>
           <h3 class='title'>{{if @model.title @model.title 'My Analytics'}}</h3>
@@ -2033,62 +1802,33 @@ export class GenUiDashboard extends CardDef {
         </div>
       </article>
       <style scoped>
-        .gu-default-theme {
-          --background: #0f1217;
-          --foreground: #e8ecf1;
-          --card: #171c24;
-          --card-foreground: #e8ecf1;
-          --primary: #5b8ff9;
-          --primary-foreground: #0f1217;
-          --secondary: #7ed9a6;
-          --secondary-foreground: #0f1217;
-          --accent: #f2cf7e;
-          --accent-foreground: #0f1217;
-          --muted: #1c2330;
-          --muted-foreground: #93a0b4;
-          --destructive: #c25668;
-          --destructive-foreground: #0f1217;
-          --border: rgba(255, 255, 255, 0.09);
-          --input: rgba(255, 255, 255, 0.09);
-          --ring: #5b8ff9;
-        }
         .fit {
-          /* Night Wall palette — same identity as the isolated canvas */
-          --gu-bg: var(--gen-ui-bg, var(--background, #0f1217));
-          --gu-surface: var(--gen-ui-surface, var(--card, #171c24));
-          --gu-border: var(
-            --gen-ui-border,
-            var(--border, rgba(255, 255, 255, 0.09))
-          );
-          --gu-text: var(--gen-ui-ink, var(--foreground, #e8ecf1));
-          --gu-muted: var(--gen-ui-muted, var(--muted-foreground, #93a0b4));
-          --gu-accent: var(--gen-ui-accent, var(--primary, #5b8ff9));
-          --gu-green: var(--gen-ui-green, var(--secondary, #7ed9a6));
-          --gu-amber: var(--gen-ui-amber, var(--accent, #f2cf7e));
-
           /* pow() type hierarchy (container-query-fitted-layout.md) */
           --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
           --type-ratio: 1.25;
           --type-base: clamp(
-            10px,
-            calc(3px + 2.2cqi + 1cqb - 0.6 * var(--ar)),
-            18px
+            0.625rem,
+            calc(0.1875rem + 2.2cqi + 1cqb - 0.6 * var(--ar)),
+            1.125rem
           );
-          --fit-meta-size: max(8px, calc(var(--type-base) / var(--type-ratio)));
+          --fit-meta-size: max(
+            0.5rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
           --fit-eyebrow-size: max(
-            7px,
+            0.4375rem,
             calc(var(--type-base) / pow(var(--type-ratio), 2))
           );
           --fit-headline-size: max(
-            11px,
+            0.6875rem,
             calc(var(--type-base) * pow(var(--type-ratio), 1.5))
           );
           --fit-kpi-size: max(
-            13px,
+            0.8125rem,
             calc(var(--type-base) * pow(var(--type-ratio), 2.5))
           );
-          --fit-pad: clamp(6px, calc(2px + 2cqi), 16px);
-          --fit-gap: clamp(3px, calc(1px + 1.2cqi), 10px);
+          --fit-pad: clamp(0.375rem, calc(0.125rem + 2cqi), 1rem);
+          --fit-gap: clamp(0.1875rem, calc(0.0625rem + 1.2cqi), 0.625rem);
 
           width: 100%;
           height: 100%;
@@ -2097,11 +1837,10 @@ export class GenUiDashboard extends CardDef {
           grid-template-areas: 'head' 'wall' 'meta';
           gap: var(--fit-gap);
           padding: var(--fit-pad);
-          background:
-            radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0
-              0 / 14px 14px,
-            var(--gu-bg);
-          color: var(--gu-text);
+          background-color: var(--canvas);
+          color: var(--foreground);
+          background-image: radial-gradient(var(--border) 1px, transparent 1px);
+          background-size: 0.875rem 0.875rem;
         }
         .r-head,
         .r-wall,
@@ -2118,13 +1857,13 @@ export class GenUiDashboard extends CardDef {
           font-weight: 700;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--gu-accent);
+          color: var(--primary-ink);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .title {
-          margin: 2px 0 0;
+          margin: var(--boxel-sp-6xs) 0 0;
           font-size: var(--fit-headline-size);
           font-weight: 700;
           letter-spacing: -0.015em;
@@ -2141,9 +1880,10 @@ export class GenUiDashboard extends CardDef {
           gap: calc(var(--fit-gap) * 0.8);
         }
         .tile {
-          background: var(--gu-surface);
-          border: 1px solid var(--gu-border);
-          border-radius: 6px;
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius-sm);
           padding: calc(var(--fit-pad) * 0.5);
           display: flex;
           flex-direction: column;
@@ -2161,36 +1901,36 @@ export class GenUiDashboard extends CardDef {
           font-size: var(--fit-eyebrow-size);
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--gu-muted);
-          margin-top: 2px;
+          color: var(--muted-foreground);
+          margin-top: var(--boxel-sp-6xs);
         }
         .bars {
           display: flex;
           align-items: flex-end;
-          gap: 3px;
+          gap: var(--boxel-sp-6xs);
           height: 100%;
         }
         .bars i {
           flex: 1;
-          border-radius: 2px;
-          background: var(--gu-accent);
+          border-radius: var(--boxel-border-radius-2xs);
+          background-color: var(--chart-1);
         }
         .bars .b1 {
           height: 85%;
         }
         .bars .b2 {
           height: 55%;
-          background: var(--gu-green);
+          background-color: var(--chart-2);
         }
         .bars .b3 {
           height: 32%;
         }
         .bars .b4 {
           height: 68%;
-          background: var(--gu-amber);
+          background-color: var(--chart-3);
         }
         .t-line polyline {
-          stroke: var(--gu-green);
+          stroke: var(--chart-2);
         }
         .t-line svg {
           width: 100%;
@@ -2203,11 +1943,11 @@ export class GenUiDashboard extends CardDef {
           justify-content: space-between;
           gap: var(--fit-gap);
           font-size: var(--fit-meta-size);
-          color: var(--gu-muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .ask {
-          color: var(--gu-accent);
+          color: var(--primary-ink);
           font-weight: 650;
         }
 
@@ -2264,7 +2004,7 @@ export class GenUiDashboard extends CardDef {
         /* wide strips (h65/h105 at width > 260px): wall becomes a left sidebar */
         @container fitted-card (width > 260px) and (50px < height <= 130px) {
           .fit {
-            grid-template-columns: minmax(56px, 18cqw) minmax(0, 1fr);
+            grid-template-columns: minmax(3.5rem, 18cqw) minmax(0, 1fr);
             grid-template-rows: minmax(0, 1fr) auto;
             grid-template-areas: 'wall head' 'wall meta';
             column-gap: calc(var(--fit-gap) * 1.5);
@@ -2313,16 +2053,15 @@ export class GenUiDashboard extends CardDef {
       </div>
       <style scoped>
         .dash-embedded {
-          padding: 12px 16px;
+          padding: var(--boxel-sp-sm) var(--boxel-sp);
         }
         .dash-embedded h3 {
-          margin: 0 0 4px;
-          font-size: 1rem;
+          margin: 0 0 var(--boxel-sp-5xs);
         }
         .dash-embedded p {
           margin: 0;
-          font-size: 0.8125rem;
-          opacity: 0.6;
+          font-size: var(--boxel-font-size-sm);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

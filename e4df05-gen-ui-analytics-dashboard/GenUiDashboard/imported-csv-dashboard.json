@@ -16,6 +16,11 @@
         "links": {
           "self": "../ChartCard/sales-by-product-line-bar"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/night-wall"
+        }
       }
     },
     "meta": {

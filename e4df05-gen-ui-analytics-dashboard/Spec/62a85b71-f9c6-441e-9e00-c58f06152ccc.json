@@ -19,11 +19,6 @@
       }
     },
     "relationships": {
-      "linkedExamples": {
-        "links": {
-          "self": null
-        }
-      },
       "cardInfo.cardThumbnail": {
         "links": {
           "self": null
@@ -31,7 +26,22 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/night-wall"
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../GenUiDashboard/tesla-2025-analytics"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../GenUiDashboard/imported-csv-dashboard"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../GenUiDashboard/fresh-dashboard"
         }
       }
     },

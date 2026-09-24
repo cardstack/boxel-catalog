@@ -223,54 +223,85 @@ export function aggregate(rows: any[], spec: ChartSpec): AggregatedData {
   return { categories, series, total };
 }
 
-// themeless default palette; the renderer may substitute theme tokens
-export const DEFAULT_PALETTE = [
-  '#5b8ff9',
-  '#61ddaa',
-  '#f6bd16',
-  '#7262fd',
-  '#78d3f8',
-  '#f08bb4',
-  '#65789b',
-];
+// The colours and font a chart paints with. ECharts draws to a canvas, so it
+// cannot read CSS custom properties itself: the renderer resolves the theme's
+// tokens (--chart-1..7, --foreground, --muted-foreground, --border, the body
+// font) off the chart element and hands them in here. Without a theme the
+// option leaves colours unset and ECharts falls back to its own defaults.
+export interface ChartTheme {
+  palette: string[];
+  ink: string;
+  muted: string;
+  border: string;
+  fontFamily: string;
+}
+
+function isRound(kind: ChartKind) {
+  return kind === 'pie' || kind === 'donut';
+}
 
 export function compileToECharts(
   spec: ChartSpec,
   agg: AggregatedData,
-  palette: string[] = DEFAULT_PALETTE,
+  theme?: ChartTheme,
 ): Record<string, any> {
+  let text = theme
+    ? { color: theme.ink, fontFamily: theme.fontFamily }
+    : undefined;
+  let mutedText = theme
+    ? { color: theme.muted, fontFamily: theme.fontFamily }
+    : undefined;
+  let axisLine = theme ? { lineStyle: { color: theme.border } } : undefined;
+  let splitLine = theme ? { lineStyle: { color: theme.border } } : undefined;
   let base: Record<string, any> = {
-    color: palette,
+    ...(theme ? { color: theme.palette, textStyle: text } : {}),
     animationDuration: 400,
-    tooltip: { trigger: spec.chartKind === 'pie' ? 'item' : 'axis' },
-    textStyle: { fontFamily: 'inherit' },
+    // pie and donut are both drawn as `type: 'pie'` with no cartesian axis, so
+    // an axis trigger would never fire on their slices
+    tooltip: { trigger: isRound(spec.chartKind) ? 'item' : 'axis' },
   };
+  let categoryAxis = {
+    type: 'category',
+    data: agg.categories,
+    axisLabel: mutedText,
+    axisLine,
+  };
+  let valueAxis = { type: 'value', axisLabel: mutedText, splitLine };
 
-  if (spec.chartKind === 'pie' || spec.chartKind === 'donut') {
+  if (isRound(spec.chartKind)) {
     // one slice per category, first series' data
     let data = agg.categories.map((cat, i) => ({
       name: cat,
       value: agg.series[0]?.data[i] ?? 0,
     }));
+    // the legend already names every slice, so slice labels stay off: in a
+    // dashboard-sized tile they collide with the legend and each other
     return {
       ...base,
-      legend: { bottom: 0, textStyle: { color: 'inherit' } },
+      legend: { type: 'scroll', bottom: 0, textStyle: mutedText },
       series: [
         {
           type: 'pie',
-          radius: spec.chartKind === 'donut' ? ['45%', '72%'] : '72%',
+          center: ['50%', '45%'],
+          radius: spec.chartKind === 'donut' ? ['42%', '66%'] : '66%',
           data,
-          label: { color: 'inherit' },
+          label: { show: false },
+          emphasis: { label: { show: true, ...text, fontWeight: 600 } },
         },
       ],
     };
   }
 
+  // containLabel grows the left margin to fit the widest y-axis label, so
+  // seven-digit values are not clipped to ",800,000"
+  let grid = { left: 16, right: 16, top: 32, bottom: 48, containLabel: true };
+
   if (spec.chartKind === 'scatter') {
     return {
       ...base,
-      xAxis: { type: 'category', data: agg.categories },
-      yAxis: { type: 'value' },
+      grid,
+      xAxis: categoryAxis,
+      yAxis: valueAxis,
       series: agg.series.map((s) => ({
         name: s.name,
         type: 'scatter',
@@ -283,13 +314,11 @@ export function compileToECharts(
   let type = spec.chartKind === 'line' ? 'line' : 'bar';
   return {
     ...base,
-    grid: { left: 48, right: 16, top: 32, bottom: 48 },
+    grid,
     legend:
-      agg.series.length > 1
-        ? { bottom: 0, textStyle: { color: 'inherit' } }
-        : undefined,
-    xAxis: { type: 'category', data: agg.categories },
-    yAxis: { type: 'value' },
+      agg.series.length > 1 ? { bottom: 0, textStyle: mutedText } : undefined,
+    xAxis: categoryAxis,
+    yAxis: valueAxis,
     series: agg.series.map((s) => ({
       name: s.name,
       type,

@@ -4,6 +4,7 @@ import { parseColumns, parseRows, provenanceKind } from './dataset';
 import {
   aggregate,
   bucketDate,
+  compileToECharts,
   validateChartSpec,
   type ChartSpec,
 } from './utils/chart-spec';
@@ -265,6 +266,73 @@ export function runTests() {
         spec.y?.field,
         'revenue',
         'the measure is the numeric column that is not the dimension',
+      );
+    });
+
+    test('slash dates with a trailing time still type as dates', function (assert) {
+      // spreadsheet exports write "2/24/2003 0:00"
+      let parsed = parseCsv(
+        'orderDate,sales\n2/24/2003 0:00,10\n5/7/2003 0:00,12\n',
+      )!;
+      assert.strictEqual(parsed.columns[0].type, 'date');
+      assert.strictEqual(suggestChart(parsed, 't').chartKind, 'line');
+    });
+
+    test('suggestChart never measures an identifier column', function (assert) {
+      let rows = Array.from(
+        { length: 12 },
+        (_, i) =>
+          `${10100 + i},${i + 1},${(i + 1) * 95.5},2/${i + 1}/2003 0:00`,
+      );
+      let parsed = parseCsv(
+        ['ORDERNUMBER,QUANTITYORDERED,SALES,ORDERDATE', ...rows].join('\n'),
+      )!;
+      let spec = suggestChart(parsed, 't');
+      assert.strictEqual(spec.x, 'ORDERDATE', 'the date is the dimension');
+      assert.strictEqual(
+        spec.y?.field,
+        'SALES',
+        'a value-named column wins over the order number and the quantity',
+      );
+    });
+
+    test('compileToECharts: donut tooltips, unclipped axes, theme colours', function (assert) {
+      let agg = {
+        categories: ['a', 'b'],
+        series: [{ name: 'value', data: [1, 2] }],
+        total: 3,
+      };
+      let donut = compileToECharts(
+        { chartKind: 'donut', source: { datasetId: 'd' }, x: 'k' },
+        agg,
+      );
+      assert.strictEqual(
+        donut.tooltip.trigger,
+        'item',
+        'a donut has no cartesian axis, so it triggers per item',
+      );
+      let theme = {
+        palette: ['rgb(1, 2, 3)'],
+        ink: 'rgb(9, 9, 9)',
+        muted: 'rgb(5, 5, 5)',
+        border: 'rgb(7, 7, 7)',
+        fontFamily: 'Inter',
+      };
+      let bar = compileToECharts(
+        { chartKind: 'bar', source: { datasetId: 'd' }, x: 'k' },
+        agg,
+        theme,
+      );
+      assert.true(bar.grid.containLabel, 'wide y labels grow the margin');
+      assert.deepEqual(
+        bar.color,
+        theme.palette,
+        'series use the theme palette',
+      );
+      assert.strictEqual(bar.yAxis.axisLabel.color, theme.muted);
+      assert.notOk(
+        JSON.stringify(bar).includes('inherit'),
+        'no canvas-invalid inherit values',
       );
     });
   });

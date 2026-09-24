@@ -75,8 +75,10 @@ function detectDelimiter(text: string): string {
 }
 
 const NUMBER_RE = /^-?\$?[\d,]+(\.\d+)?%?$/;
+// both branches allow a trailing time, so spreadsheet exports such as
+// "2/24/2003 0:00" still type as dates
 const DATE_RE =
-  /^\d{4}-\d{2}(-\d{2})?([T ].*)?$|^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/;
+  /^\d{4}-\d{2}(-\d{2})?([T ].*)?$|^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}([T ].*)?$/;
 
 function toNumber(value: string): number {
   return Number(value.replace(/[$,%]/g, ''));
@@ -127,16 +129,55 @@ export function parseCsv(text: string): ParsedCsv | undefined {
 
 // the skill's selection table, mechanized: date → line, few categories →
 // donut, categories → bar, single numeric row → kpi
+// Identifier-like numeric columns (ORDERNUMBER, QTR_ID, POSTALCODE, PHONE)
+// type as numbers but summing them means nothing.
+const ID_NAME_RE = /(id|number|num|no|code|key|phone|zip|postal)$/i;
+// names that usually carry the value a person wants charted, most telling
+// first: money, then volume
+const MEASURE_NAME_RES = [
+  /sales|revenue|amount|total|profit/i,
+  /value|deliveries|units|quantity|qty|count/i,
+  /price|cost/i,
+];
+
+function isIdLike(column: DatasetColumn, rows: ParsedCsv['rows']): boolean {
+  if (ID_NAME_RE.test(column.name.replace(/[\s_-]+/g, ''))) {
+    return true;
+  }
+  // near-unique integers across a real table are row keys, not measures
+  let values = rows.map((r) => r[column.name]);
+  return (
+    rows.length >= 10 &&
+    values.every((v) => Number.isInteger(v)) &&
+    new Set(values).size >= rows.length * 0.95
+  );
+}
+
+// the skill's selection table, mechanized: date → line, few categories →
+// donut, categories → bar, single numeric row → kpi
 export function suggestChart(parsed: ParsedCsv, name: string): SuggestedChart {
   let { columns, rows } = parsed;
   let date = columns.find((c) => c.type === 'date');
   let category = columns.find((c) => c.type === 'string');
-  // The measure is the first numeric column that ISN'T the dimension. A leading
-  // `year` column types as `number` (2020 matches NUMBER_RE before DATE_RE), so
-  // taking the first numeric outright would chart sum(year) by year and never
-  // touch the real measure.
-  let measureFor = (dimension?: string) =>
-    columns.find((c) => c.type === 'number' && c.name !== dimension);
+  // The measure is a numeric column that isn't the dimension and isn't an
+  // identifier, preferring one whose name reads as a value (SALES over
+  // QUANTITYORDERED) and otherwise the last candidate, since exports tend to
+  // lead with keys. A leading `year` column types as `number` (2020 matches
+  // NUMBER_RE before DATE_RE), so the dimension is always excluded.
+  let measureFor = (dimension?: string) => {
+    let candidates = columns.filter(
+      (c) => c.type === 'number' && c.name !== dimension,
+    );
+    let meaningful = candidates.filter((c) => !isIdLike(c, rows));
+    let pool = meaningful.length ? meaningful : candidates;
+    for (let re of MEASURE_NAME_RES) {
+      let named = pool.find((c) => re.test(c.name));
+      if (named) {
+        return named;
+      }
+    }
+    return pool[pool.length - 1];
+  };
   let numeric = measureFor();
 
   if (!numeric) {

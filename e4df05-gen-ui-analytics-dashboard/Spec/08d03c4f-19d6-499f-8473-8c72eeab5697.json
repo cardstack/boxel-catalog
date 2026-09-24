@@ -1,0 +1,70 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# MeasureField\n\n## Summary\n\nThe y axis of a `ChartCard`: which numeric column is measured and how its values combine per category. `path` is a dot-path into each row; `aggregate` is one of `sum`, `count`, `avg` from `AGGREGATES` in `../utils/chart-spec`. `count` needs no `path` (it counts rows), while `sum` and `avg` require one: `validateChartSpec` reports a missing `path` as a readable fix instead of drawing an empty chart. When the dashboard mints a chart from a dropped file or a web answer and no measure was named, it falls back to `count` so the new tile always renders.\n\nEdit mode shows `path` as text and `aggregate` as a row of pills; embedded shows `aggregate path`.\n\n## Import\n\n```js\nimport { MeasureField } from '../fields';\n```\n\n## Usage\n\n```js\nnew ChartCard({\n  measure: new MeasureField({ path: 'deliveries', aggregate: 'sum' }),\n});\n```\n",
+      "ref": {
+        "module": "../fields",
+        "name": "MeasureField"
+      },
+      "specType": "field",
+      "containedExamples": [
+        {
+          "path": "deliveries",
+          "aggregate": "sum"
+        },
+        {
+          "path": null,
+          "aggregate": "count"
+        }
+      ],
+      "cardTitle": "MeasureField",
+      "cardDescription": "The y axis of a chart: a numeric column plus how values combine",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/night-wall"
+        }
+      }
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../fields",
+              "name": "MeasureField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../fields",
+              "name": "MeasureField"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

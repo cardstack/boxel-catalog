@@ -1,0 +1,70 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# DimensionField\n\n## Summary\n\nThe x axis of a `ChartCard`: which column of the linked Dataset the chart groups by, and how date values bucket. `path` is a dot-path into each row (`quarter`, `orderDate`, `region.name`); `bucket` is one of `none`, `month`, `quarter`, `year` from `BUCKETS` in `../utils/chart-spec`. Bucketed axes sort chronologically; `none` keeps the order the rows arrived in, so pre-aggregated labels like \"Q2 2025\" never run backwards. Date-only strings are read as local dates, so a period boundary never slips one bucket early for viewers west of UTC.\n\nEdit mode shows `path` as text and `bucket` as a row of pills; embedded shows `path by bucket`.\n\n## Import\n\n```js\nimport { DimensionField } from '../fields';\n```\n\n## Usage\n\n```js\nnew ChartCard({\n  dimension: new DimensionField({ path: 'orderDate', bucket: 'month' }),\n});\n```\n",
+      "ref": {
+        "module": "../fields",
+        "name": "DimensionField"
+      },
+      "specType": "field",
+      "containedExamples": [
+        {
+          "path": "quarter",
+          "bucket": "none"
+        },
+        {
+          "path": "orderDate",
+          "bucket": "month"
+        }
+      ],
+      "cardTitle": "DimensionField",
+      "cardDescription": "The x axis of a chart: a dataset column plus how dates bucket",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/night-wall"
+        }
+      }
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../fields",
+              "name": "DimensionField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../fields",
+              "name": "DimensionField"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

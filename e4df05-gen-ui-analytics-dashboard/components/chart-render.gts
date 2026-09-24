@@ -3,6 +3,13 @@ import Modifier, { type NamedArgs } from 'ember-modifier';
 import { tracked } from '@glimmer/tracking';
 import { registerDestructor } from '@ember/destroyable';
 
+import {
+  compileToECharts,
+  type AggregatedData,
+  type ChartSpec,
+  type ChartTheme,
+} from '../utils/chart-spec';
+
 // ---------------------------------------------------------------------------
 // ECharts loads once per session from the CDN as a UMD bundle. The code runs
 // through new Function('module','exports', ...) — NOT eval — because eval
@@ -40,10 +47,37 @@ function loadECharts(): Promise<void> {
   return echartsLoaded;
 }
 
+// ECharts paints to a canvas, which cannot read CSS custom properties, so the
+// theme's tokens are resolved here, off the chart element itself. A probe
+// element turns whatever the token holds (a hex, oklch(), color-mix()) into
+// the rgb() string canvas understands.
+const PALETTE_TOKENS = [1, 2, 3, 4, 5, 6, 7].map((n) => `--chart-${n}`);
+
+function resolveColor(element: HTMLElement, token: string): string {
+  let probe = document.createElement('span');
+  probe.style.display = 'none';
+  probe.style.color = `var(${token})`;
+  element.appendChild(probe);
+  let color = getComputedStyle(probe).color;
+  probe.remove();
+  return color;
+}
+
+function readChartTheme(element: HTMLElement): ChartTheme {
+  return {
+    palette: PALETTE_TOKENS.map((token) => resolveColor(element, token)),
+    ink: resolveColor(element, '--foreground'),
+    muted: resolveColor(element, '--muted-foreground'),
+    border: resolveColor(element, '--border'),
+    fontFamily: getComputedStyle(element).fontFamily,
+  };
+}
+
 interface RenderChartSignature {
   Args: {
     Named: {
-      option: Record<string, any> | undefined;
+      spec: ChartSpec | undefined;
+      data: AggregatedData | undefined;
       onReady?: () => void;
     };
     Positional: [];
@@ -54,16 +88,32 @@ interface RenderChartSignature {
 class RenderChart extends Modifier<RenderChartSignature> {
   chart: any;
   resizeObserver: ResizeObserver | undefined;
+  schemeObserver: MutationObserver | undefined;
   element: HTMLElement | undefined;
+  spec: ChartSpec | undefined;
+  data: AggregatedData | undefined;
   isDestroyed = false;
+
+  paint() {
+    if (!this.chart || !this.element || !this.spec || !this.data) {
+      return;
+    }
+    // notMerge so a re-generated spec fully replaces the previous chart
+    this.chart.setOption(
+      compileToECharts(this.spec, this.data, readChartTheme(this.element)),
+      { notMerge: true },
+    );
+  }
 
   async modify(
     element: HTMLElement,
     _positional: [],
-    { option, onReady }: NamedArgs<RenderChartSignature>,
+    { spec, data, onReady }: NamedArgs<RenderChartSignature>,
   ) {
     this.element = element;
-    if (!globalThis.document || !option) {
+    this.spec = spec;
+    this.data = data;
+    if (!globalThis.document || !spec || !data) {
       return;
     }
     try {
@@ -79,22 +129,33 @@ class RenderChart extends Modifier<RenderChartSignature> {
       this.chart = echarts.init(this.element);
       this.resizeObserver = new ResizeObserver(() => this.chart?.resize());
       this.resizeObserver.observe(this.element);
+      // a light/dark switch above the chart changes every token it painted
+      // with; repaint when the nearest scheme wrapper flips
+      let schemeRoot = this.element.closest('[data-theme]');
+      if (schemeRoot) {
+        this.schemeObserver = new MutationObserver(() => this.paint());
+        this.schemeObserver.observe(schemeRoot, {
+          attributes: true,
+          attributeFilter: ['data-theme'],
+        });
+      }
       registerDestructor(this, () => {
         this.isDestroyed = true;
         this.resizeObserver?.disconnect();
+        this.schemeObserver?.disconnect();
         this.chart?.dispose();
         this.chart = undefined;
       });
     }
-    // notMerge so a re-generated spec fully replaces the previous chart
-    this.chart.setOption(option, { notMerge: true });
+    this.paint();
     onReady?.();
   }
 }
 
 interface ChartRenderSignature {
   Args: {
-    option: Record<string, any> | undefined;
+    spec: ChartSpec | undefined;
+    data: AggregatedData | undefined;
   };
   Element: HTMLElement;
 }
@@ -121,7 +182,7 @@ export default class ChartRender extends GlimmerComponent<ChartRenderSignature> 
       {{/unless}}
       <div
         class='chart-canvas'
-        {{RenderChart option=@option onReady=this.markReady}}
+        {{RenderChart spec=@spec data=@data onReady=this.markReady}}
       />
     </div>
     <style scoped>
@@ -129,7 +190,7 @@ export default class ChartRender extends GlimmerComponent<ChartRenderSignature> 
         position: relative;
         width: 100%;
         height: 100%;
-        min-height: 180px;
+        min-height: 11.25rem;
       }
       .chart-canvas {
         position: absolute;
@@ -141,13 +202,13 @@ export default class ChartRender extends GlimmerComponent<ChartRenderSignature> 
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: var(--boxel-sp-2xs);
       }
       .chart-loading-dot {
-        width: 8px;
-        height: 8px;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
-        background: currentColor;
+        background-color: var(--muted-foreground);
         opacity: 0.35;
         animation: chart-pulse 1.2s ease-in-out infinite;
       }

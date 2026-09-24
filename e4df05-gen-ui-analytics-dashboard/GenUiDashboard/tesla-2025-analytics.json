@@ -41,6 +41,11 @@
         "links": {
           "self": "../ChartCard/tesla-malaysia-sales-bar"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/night-wall"
+        }
       }
     },
     "meta": {

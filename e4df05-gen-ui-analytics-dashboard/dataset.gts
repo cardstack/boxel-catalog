@@ -72,10 +72,11 @@ function isNumberCol(col: DatasetColumn): boolean {
   return col.type === 'number';
 }
 
+// Provenance maps onto the status hues: web-sourced reads as info, AI-recalled
+// as a warning (check it), extracted-from-file as success. Each format sets
+// --prov / --prov-ink from the kind class and consumes them diluted.
+
 class DatasetIsolated extends Component<typeof Dataset> {
-  get hasLinkedTheme(): boolean {
-    return Boolean(this.args.model?.cardInfo?.theme);
-  }
   get columns(): DatasetColumn[] {
     return parseColumns(this.args.model?.columnsJson);
   }
@@ -90,19 +91,17 @@ class DatasetIsolated extends Component<typeof Dataset> {
   }
 
   <template>
-    <article
-      class='dataset-isolated {{unless this.hasLinkedTheme "gu-default-theme"}}'
-    >
-      <div class='ds-header'>
+    <article class='dataset-isolated'>
+      <header class='ds-header'>
         <div class='ds-heading'>
           <h1>{{if @model.title @model.title 'Untitled Dataset'}}</h1>
-          <div class='ds-meta-row'>
+          <p class='ds-meta-row'>
             <span
-              class='ds-badge {{this.provenance}}'
+              class='ds-badge prov-{{this.provenance}}'
             >{{this.provenanceLabel}}</span>
             <span class='ds-stat'>{{this.rows.length}} rows</span>
             <span class='ds-stat'>{{this.columns.length}} columns</span>
-          </div>
+          </p>
         </div>
         {{#if @model.sourceFileUrl}}
           <a
@@ -112,19 +111,19 @@ class DatasetIsolated extends Component<typeof Dataset> {
             rel='noopener noreferrer'
           >View source ⤢</a>
         {{/if}}
-      </div>
+      </header>
       {{#if @model.sourceNote}}
         <p class='ds-note'>{{@model.sourceNote}}</p>
       {{/if}}
 
-      <div class='ds-columns'>
+      <ul class='ds-columns' aria-label='Columns'>
         {{#each this.columns as |col|}}
-          <span class='ds-col-chip'>
+          <li class='ds-col-chip'>
             {{col.name}}
             <em>{{col.type}}</em>
-          </span>
+          </li>
         {{/each}}
-      </div>
+      </ul>
 
       {{#if this.rows.length}}
         <div class='ds-table-scroll'>
@@ -132,7 +131,10 @@ class DatasetIsolated extends Component<typeof Dataset> {
             <thead>
               <tr>
                 {{#each this.columns as |col|}}
-                  <th class={{if (isNumberCol col) 'num'}}>{{col.name}}</th>
+                  <th
+                    scope='col'
+                    class={{if (isNumberCol col) 'num'}}
+                  >{{col.name}}</th>
                 {{/each}}
               </tr>
             </thead>
@@ -155,166 +157,133 @@ class DatasetIsolated extends Component<typeof Dataset> {
       {{/if}}
     </article>
     <style scoped>
-      /* the ai-image-generator pin pattern (boxel-theming-ui rule 4), minus
-         its [data-theme='dark'] variant: Night Wall is a committed single
-         dark identity with no scheme toggle, so a dark variant would be
-         dead code — the linked-theme path handles dark via .dark blocks */
-      .gu-default-theme {
-        --background: #0f1217;
-        --foreground: #e8ecf1;
-        --card: #171c24;
-        --card-foreground: #e8ecf1;
-        --primary: #5b8ff9;
-        --primary-foreground: #0f1217;
-        --secondary: #7ed9a6;
-        --secondary-foreground: #0f1217;
-        --accent: #f2cf7e;
-        --accent-foreground: #0f1217;
-        --muted: #1c2330;
-        --muted-foreground: #93a0b4;
-        --destructive: #c25668;
-        --destructive-foreground: #0f1217;
-        --border: rgba(255, 255, 255, 0.09);
-        --input: rgba(255, 255, 255, 0.09);
-        --ring: #5b8ff9;
-      }
       .dataset-isolated {
-        --ds-bg: var(--gen-ui-bg, var(--background, #0f1217));
-        --ds-surface: var(--gen-ui-surface, var(--card, #171c24));
-        --ds-border: var(
-          --gen-ui-border,
-          var(--border, rgba(255, 255, 255, 0.08))
-        );
-        --ds-text: var(--gen-ui-ink, var(--foreground, #e8ecf1));
-        --ds-muted: var(--gen-ui-muted, var(--muted-foreground, #93a0b4));
-        --ds-accent: var(--gen-ui-accent, var(--primary, #5b8ff9));
         height: 100%;
         display: flex;
         flex-direction: column;
-        gap: 14px;
-        padding: clamp(16px, 3cqi, 32px);
-        background: var(--ds-bg);
-        color: var(--ds-text);
+        gap: var(--boxel-sp-sm);
+        padding: clamp(1rem, 3cqi, 2rem);
         container-type: inline-size;
-        font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
         overflow: auto;
       }
       .ds-header {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 16px;
+        gap: var(--boxel-sp);
         flex-wrap: wrap;
       }
       .ds-heading h1 {
-        margin: 0 0 8px;
-        font-size: clamp(1.15rem, 2.6cqi, 1.6rem);
-        letter-spacing: -0.015em;
+        margin: 0 0 var(--boxel-sp-xs);
       }
       .ds-meta-row {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: var(--boxel-sp-xs);
         flex-wrap: wrap;
       }
+      .prov-web {
+        --prov: var(--info);
+        --prov-ink: var(--info-ink);
+      }
+      .prov-ai {
+        --prov: var(--warning);
+        --prov-ink: var(--warning-ink);
+      }
+      .prov-file {
+        --prov: var(--success);
+        --prov-ink: var(--success-ink);
+      }
+      .prov-none {
+        --prov: var(--muted-foreground);
+        --prov-ink: var(--muted-foreground);
+      }
       .ds-badge {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 650;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        padding: 3px 10px;
-        border-radius: 999px;
-        border: 1px solid;
-      }
-      .ds-badge.web {
-        color: #7db4ff;
-        border-color: rgba(125, 180, 255, 0.4);
-        background: rgba(125, 180, 255, 0.1);
-      }
-      .ds-badge.ai {
-        color: #f2cf7e;
-        border-color: rgba(242, 207, 126, 0.4);
-        background: rgba(242, 207, 126, 0.08);
-      }
-      .ds-badge.file {
-        color: #7ed9a6;
-        border-color: rgba(126, 217, 166, 0.4);
-        background: rgba(126, 217, 166, 0.08);
-      }
-      .ds-badge.none {
-        color: var(--ds-muted);
-        border-color: var(--ds-border);
+        padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
+        border-radius: var(--boxel-border-radius-2xl);
+        color: var(--prov-ink);
+        background-color: color-mix(in oklch, var(--prov) 12%, transparent);
+        border: 1px solid color-mix(in oklch, var(--prov) 35%, transparent);
       }
       .ds-stat {
-        font-size: 0.75rem;
-        color: var(--ds-muted);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .ds-source-link {
         flex-shrink: 0;
-        font-size: 0.8125rem;
-        color: var(--ds-accent);
+        font-size: var(--boxel-font-size-sm);
+        color: var(--primary-ink);
         text-decoration: none;
-        border: 1px solid var(--ds-border);
-        border-radius: 999px;
-        padding: 7px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-2xl);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-sm);
       }
       .ds-source-link:hover {
-        border-color: var(--ds-accent);
+        border-color: var(--ring);
       }
       .ds-note {
         margin: 0;
-        font-size: 0.8125rem;
-        color: var(--ds-muted);
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
       }
       .ds-columns {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: var(--boxel-sp-2xs);
+        margin: 0;
+        padding: 0;
+        list-style: none;
       }
       .ds-col-chip {
-        font-size: 0.75rem;
-        background: var(--ds-surface);
-        border: 1px solid var(--ds-border);
-        border-radius: 999px;
-        padding: 4px 12px;
+        font-size: var(--boxel-font-size-xs);
+        background-color: var(--muted);
+        color: var(--foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-2xl);
+        padding: var(--boxel-sp-5xs) var(--boxel-sp-sm);
       }
       .ds-col-chip em {
         font-style: normal;
-        color: var(--ds-muted);
-        font-size: 0.6875rem;
-        margin-left: 5px;
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-2xs);
+        margin-left: var(--boxel-sp-4xs);
       }
       .ds-table-scroll {
         flex: 1;
         min-height: 0;
         overflow: auto;
-        border: 1px solid var(--ds-border);
-        border-radius: 12px;
-        background: var(--ds-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-lg);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       table {
         border-collapse: collapse;
         width: 100%;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
       }
       th,
       td {
         text-align: left;
-        padding: 8px 14px;
-        border-bottom: 1px solid var(--ds-border);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-bottom: 1px solid var(--border);
         white-space: nowrap;
       }
       th {
         position: sticky;
         top: 0;
         z-index: 1;
-        background: var(--ds-surface);
+        background-color: var(--card);
         font-weight: 600;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: var(--ds-muted);
+        color: var(--muted-foreground);
       }
       td {
         font-variant-numeric: tabular-nums;
@@ -324,13 +293,13 @@ class DatasetIsolated extends Component<typeof Dataset> {
         text-align: right;
       }
       tbody tr:nth-child(even) {
-        background: rgba(255, 255, 255, 0.02);
+        background-color: var(--stripe);
       }
       tbody tr:hover {
-        background: rgba(91, 143, 249, 0.07);
+        background-color: var(--hover);
       }
       .ds-empty {
-        color: var(--ds-muted);
+        color: var(--muted-foreground);
       }
     </style>
   </template>
@@ -358,9 +327,9 @@ class DatasetEmbedded extends Component<typeof Dataset> {
 
   <template>
     <div class='dataset-embedded'>
-      <div class='dse-meta'>
+      <p class='dse-meta'>
         <span
-          class='dse-badge {{this.provenance}}'
+          class='dse-badge prov-{{this.provenance}}'
         >{{this.provenanceLabel}}</span>
         <span class='dse-count'>{{this.rows.length}} rows</span>
         {{#if @model.sourceFileUrl}}
@@ -371,14 +340,17 @@ class DatasetEmbedded extends Component<typeof Dataset> {
             rel='noopener noreferrer'
           >source ⤢</a>
         {{/if}}
-      </div>
+      </p>
       {{#if this.rows.length}}
         <div class='dse-scroll'>
           <table>
             <thead>
               <tr>
                 {{#each this.columns as |col|}}
-                  <th class={{if (isNumberCol col) 'num'}}>{{col.name}}</th>
+                  <th
+                    scope='col'
+                    class={{if (isNumberCol col) 'num'}}
+                  >{{col.name}}</th>
                 {{/each}}
               </tr>
             </thead>
@@ -407,54 +379,53 @@ class DatasetEmbedded extends Component<typeof Dataset> {
     </div>
     <style scoped>
       .dataset-embedded {
-        padding: 12px 16px;
-        font-size: 0.8125rem;
+        padding: var(--boxel-sp-sm) var(--boxel-sp);
+        font-size: var(--boxel-font-size-sm);
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: var(--boxel-sp-xs);
         height: 100%;
       }
       .dse-meta {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: var(--boxel-sp-xs);
         flex-wrap: wrap;
       }
+      .prov-web {
+        --prov: var(--info);
+        --prov-ink: var(--info-ink);
+      }
+      .prov-ai {
+        --prov: var(--warning);
+        --prov-ink: var(--warning-ink);
+      }
+      .prov-file {
+        --prov: var(--success);
+        --prov-ink: var(--success-ink);
+      }
+      .prov-none {
+        --prov: var(--muted-foreground);
+        --prov-ink: var(--muted-foreground);
+      }
       .dse-badge {
-        font-size: 0.625rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 650;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        padding: 2px 8px;
-        border-radius: 999px;
-        border: 1px solid;
-      }
-      .dse-badge.web {
-        color: #4d82d6;
-        border-color: rgba(77, 130, 214, 0.45);
-      }
-      .dse-badge.ai {
-        color: #b08a2e;
-        border-color: rgba(176, 138, 46, 0.45);
-      }
-      .dse-badge.file {
-        color: #3e9e6b;
-        border-color: rgba(62, 158, 107, 0.45);
-      }
-      .dse-badge.none {
-        color: inherit;
-        opacity: 0.55;
-        border-color: currentColor;
+        padding: var(--boxel-sp-6xs) var(--boxel-sp-xs);
+        border-radius: var(--boxel-border-radius-2xl);
+        color: var(--prov-ink);
+        border: 1px solid color-mix(in oklch, var(--prov) 45%, transparent);
       }
       .dse-count {
-        opacity: 0.65;
-        font-size: 0.75rem;
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
       }
       .dse-source {
-        font-size: 0.75rem;
-        color: inherit;
-        opacity: 0.75;
+        font-size: var(--boxel-font-size-xs);
+        color: var(--primary-ink);
       }
       .dse-scroll {
         overflow: auto;
@@ -467,16 +438,16 @@ class DatasetEmbedded extends Component<typeof Dataset> {
       th,
       td {
         text-align: left;
-        padding: 5px 10px;
-        border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+        border-bottom: 1px solid var(--border);
         white-space: nowrap;
       }
       th {
         font-weight: 600;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         text-transform: uppercase;
         letter-spacing: 0.03em;
-        opacity: 0.7;
+        color: var(--muted-foreground);
       }
       td {
         font-variant-numeric: tabular-nums;
@@ -487,11 +458,11 @@ class DatasetEmbedded extends Component<typeof Dataset> {
       }
       .dse-more {
         margin: 0;
-        font-size: 0.6875rem;
-        opacity: 0.55;
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
       }
       .dse-empty {
-        opacity: 0.55;
+        color: var(--muted-foreground);
       }
     </style>
   </template>
@@ -515,14 +486,15 @@ export class Dataset extends CardDef {
   // "Night Wall" fitted: a miniature table — real column chips over skeleton
   // rows, provenance carried by the eyebrow color
   static fitted = class Fitted extends Component<typeof Dataset> {
-    get hasLinkedTheme(): boolean {
-      return Boolean(this.args.model?.cardInfo?.theme);
-    }
     get rows(): any[] {
       return parseRows(this.args.model?.rowsJson);
     }
+    get allColumns(): DatasetColumn[] {
+      return parseColumns(this.args.model?.columnsJson);
+    }
+    // the chip strip only has room for three; the count reports them all
     get columns(): DatasetColumn[] {
-      return parseColumns(this.args.model?.columnsJson).slice(0, 3);
+      return this.allColumns.slice(0, 3);
     }
     get provenance(): string {
       return provenanceKind(this.args.model?.sourceNote);
@@ -531,9 +503,11 @@ export class Dataset extends CardDef {
       return PROVENANCE_LABELS[this.provenance];
     }
     <template>
-      <article class='fit {{unless this.hasLinkedTheme "gu-default-theme"}}'>
+      <article class='fit'>
         <div class='r-head'>
-          <p class='eyebrow {{this.provenance}}'>{{this.provenanceLabel}}</p>
+          <p
+            class='eyebrow prov-{{this.provenance}}'
+          >{{this.provenanceLabel}}</p>
           <h3 class='title'>{{if
               @model.title
               @model.title
@@ -556,57 +530,32 @@ export class Dataset extends CardDef {
         <div class='r-meta'>
           <span>{{this.rows.length}} rows</span>
           <span>·</span>
-          <span>{{this.columns.length}} columns</span>
+          <span>{{this.allColumns.length}} columns</span>
         </div>
       </article>
       <style scoped>
-        .gu-default-theme {
-          --background: #0f1217;
-          --foreground: #e8ecf1;
-          --card: #171c24;
-          --card-foreground: #e8ecf1;
-          --primary: #5b8ff9;
-          --primary-foreground: #0f1217;
-          --secondary: #7ed9a6;
-          --secondary-foreground: #0f1217;
-          --accent: #f2cf7e;
-          --accent-foreground: #0f1217;
-          --muted: #1c2330;
-          --muted-foreground: #93a0b4;
-          --destructive: #c25668;
-          --destructive-foreground: #0f1217;
-          --border: rgba(255, 255, 255, 0.09);
-          --input: rgba(255, 255, 255, 0.09);
-          --ring: #5b8ff9;
-        }
         .fit {
-          --gu-bg: var(--gen-ui-bg, var(--background, #0f1217));
-          --gu-surface: var(--gen-ui-surface, var(--card, #171c24));
-          --gu-border: var(
-            --gen-ui-border,
-            var(--border, rgba(255, 255, 255, 0.09))
-          );
-          --gu-text: var(--gen-ui-ink, var(--foreground, #e8ecf1));
-          --gu-muted: var(--gen-ui-muted, var(--muted-foreground, #93a0b4));
-
           --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
           --type-ratio: 1.25;
           --type-base: clamp(
-            10px,
-            calc(3px + 2.2cqi + 1cqb - 0.6 * var(--ar)),
-            18px
+            0.625rem,
+            calc(0.1875rem + 2.2cqi + 1cqb - 0.6 * var(--ar)),
+            1.125rem
           );
-          --fit-meta-size: max(8px, calc(var(--type-base) / var(--type-ratio)));
+          --fit-meta-size: max(
+            0.5rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
           --fit-eyebrow-size: max(
-            7px,
+            0.4375rem,
             calc(var(--type-base) / pow(var(--type-ratio), 2))
           );
           --fit-headline-size: max(
-            11px,
+            0.6875rem,
             calc(var(--type-base) * pow(var(--type-ratio), 1.5))
           );
-          --fit-pad: clamp(6px, calc(2px + 2cqi), 16px);
-          --fit-gap: clamp(3px, calc(1px + 1.2cqi), 10px);
+          --fit-pad: clamp(0.375rem, calc(0.125rem + 2cqi), 1rem);
+          --fit-gap: clamp(0.1875rem, calc(0.0625rem + 1.2cqi), 0.625rem);
 
           width: 100%;
           height: 100%;
@@ -615,8 +564,6 @@ export class Dataset extends CardDef {
           grid-template-areas: 'head' 'table' 'meta';
           gap: var(--fit-gap);
           padding: var(--fit-pad);
-          background: var(--gu-bg);
-          color: var(--gu-text);
         }
         .r-head,
         .r-table,
@@ -633,19 +580,19 @@ export class Dataset extends CardDef {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          color: var(--gu-muted);
+          color: var(--muted-foreground);
         }
-        .eyebrow.web {
-          color: #7db4ff;
+        .eyebrow.prov-web {
+          color: var(--info-ink);
         }
-        .eyebrow.ai {
-          color: #f2cf7e;
+        .eyebrow.prov-ai {
+          color: var(--warning-ink);
         }
-        .eyebrow.file {
-          color: #7ed9a6;
+        .eyebrow.prov-file {
+          color: var(--success-ink);
         }
         .title {
-          margin: 2px 0 0;
+          margin: var(--boxel-sp-6xs) 0 0;
           font-size: var(--fit-headline-size);
           font-weight: 700;
           letter-spacing: -0.015em;
@@ -659,9 +606,10 @@ export class Dataset extends CardDef {
           display: flex;
           flex-direction: column;
           gap: calc(var(--fit-gap) * 0.7);
-          background: var(--gu-surface);
-          border: 1px solid var(--gu-border);
-          border-radius: 6px;
+          background-color: var(--inset);
+          color: var(--foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius-sm);
           padding: calc(var(--fit-pad) * 0.55);
         }
         .cols {
@@ -675,9 +623,9 @@ export class Dataset extends CardDef {
           font-weight: 650;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: var(--gu-muted);
-          border-bottom: 1px solid var(--gu-border);
-          padding-bottom: 3px;
+          color: var(--muted-foreground);
+          border-bottom: 1px solid var(--border);
+          padding-bottom: var(--boxel-sp-6xs);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -689,7 +637,7 @@ export class Dataset extends CardDef {
           display: flex;
           flex-direction: column;
           justify-content: space-evenly;
-          gap: 3px;
+          gap: var(--boxel-sp-6xs);
           overflow: hidden;
         }
         .rows .w1 {
@@ -705,17 +653,17 @@ export class Dataset extends CardDef {
           width: 58%;
         }
         .rows i {
-          height: max(3px, 6cqb);
-          max-height: 8px;
-          border-radius: 2px;
-          background: rgba(255, 255, 255, 0.08);
+          height: max(0.1875rem, 6cqb);
+          max-height: 0.5rem;
+          border-radius: var(--boxel-border-radius-2xs);
+          background-color: var(--muted);
           flex-shrink: 0;
         }
         .r-meta {
           display: flex;
-          gap: 5px;
+          gap: var(--boxel-sp-4xs);
           font-size: var(--fit-meta-size);
-          color: var(--gu-muted);
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -768,7 +716,7 @@ export class Dataset extends CardDef {
         /* wide + short: mini table docks right */
         @container fitted-card (width > 260px) and (50px < height <= 130px) {
           .fit {
-            grid-template-columns: minmax(0, 1fr) minmax(64px, 24cqw);
+            grid-template-columns: minmax(0, 1fr) minmax(4rem, 24cqw);
             grid-template-rows: minmax(0, 1fr) auto;
             grid-template-areas: 'head table' 'meta table';
             column-gap: calc(var(--fit-gap) * 1.5);

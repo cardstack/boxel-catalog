@@ -19,11 +19,6 @@
       }
     },
     "relationships": {
-      "linkedExamples": {
-        "links": {
-          "self": null
-        }
-      },
       "cardInfo.cardThumbnail": {
         "links": {
           "self": null
@@ -31,7 +26,17 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/night-wall"
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Dataset/tesla-byd-deliveries"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Dataset/sales-by-product-line"
         }
       }
     },
