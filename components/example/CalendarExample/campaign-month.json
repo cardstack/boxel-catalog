@@ -1,0 +1,85 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "events": [
+        {
+          "title": "Campaign kickoff",
+          "date": "2026-10-05",
+          "kind": "meeting"
+        },
+        {
+          "title": "Landing page review",
+          "date": "2026-10-07",
+          "kind": "review"
+        },
+        {
+          "title": "Ad budget sign-off",
+          "date": "2026-10-07",
+          "kind": "deadline"
+        },
+        {
+          "title": "Photo shoot",
+          "date": "2026-10-12",
+          "kind": "meeting"
+        },
+        {
+          "title": "Copy freeze",
+          "date": "2026-10-14",
+          "kind": "deadline"
+        },
+        {
+          "title": "Launch retro",
+          "date": "2026-10-22",
+          "kind": "meeting"
+        },
+        {
+          "title": "Pricing page review",
+          "date": "2026-10-07",
+          "kind": "review"
+        },
+        {
+          "title": "Legal sign-off",
+          "date": "2026-10-07",
+          "kind": "deadline"
+        },
+        {
+          "title": "Agency stand-up",
+          "date": "2026-10-07",
+          "kind": "meeting"
+        }
+      ],
+      "cardInfo": {
+        "name": "October campaign calendar",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "projected": [
+        {
+          "title": "Weekly check-in",
+          "date": "2026-10-19",
+          "kind": "meeting"
+        },
+        {
+          "title": "Weekly check-in",
+          "date": "2026-10-26",
+          "kind": "meeting"
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../calendar-example",
+        "name": "CalendarExample"
+      }
+    }
+  }
+}

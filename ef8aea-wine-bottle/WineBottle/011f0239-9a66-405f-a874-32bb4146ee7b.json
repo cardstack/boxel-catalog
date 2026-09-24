@@ -6,11 +6,26 @@
       "varietal": "Champagne (Chardonnay/Pinot Noir)",
       "region": "Champagne, France",
       "wineType": "sparkling",
-      "vintage": { "value": 2013 },
+      "vintage": {
+        "value": 2013
+      },
       "purchaseDate": "2019-12-21",
-      "drinkingWindow": { "start": "2024-01-01", "end": "2038-12-31" },
-      "purchasePrice": { "amount": 220, "currency": { "code": "USD" } },
-      "currentValue": { "amount": 280, "currency": { "code": "USD" } },
+      "drinkingWindow": {
+        "start": "2024-01-01",
+        "end": "2038-12-31"
+      },
+      "purchasePrice": {
+        "amount": 220,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "currentValue": {
+        "amount": 280,
+        "currency": {
+          "code": "USD"
+        }
+      },
       "score": 96,
       "bottlesRemaining": 5,
       "liquidColor": "#E8C547",
@@ -21,8 +36,22 @@
       }
     },
     "relationships": {
-      "label": { "links": { "self": null } }
+      "label": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/cellar"
+        }
+      }
     },
-    "meta": { "adoptsFrom": { "module": "../wine-bottle", "name": "WineBottle" } }
+    "meta": {
+      "adoptsFrom": {
+        "module": "../wine-bottle",
+        "name": "WineBottle"
+      }
+    }
   }
 }

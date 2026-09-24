@@ -82,11 +82,11 @@ export class EditableField extends Component<Sig> {
         outline-offset: 2px;
       }
       .editable-field:hover {
-        background-color: rgba(123, 97, 255, 0.04);
-        outline-color: rgba(123, 97, 255, 0.3);
+        background-color: color-mix(in oklch, var(--primary) 4%, transparent);
+        outline-color: color-mix(in oklch, var(--primary) 30%, transparent);
       }
       .editable-field:focus-visible {
-        outline: 2px solid var(--boxel-highlight, #7b61ff);
+        outline: 2px solid var(--primary);
       }
     </style>
   </template>

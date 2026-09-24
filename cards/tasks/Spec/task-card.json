@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Task",
+      "specType": "card",
+      "ref": {
+        "module": "../task",
+        "name": "default"
+      },
+      "readMe": "# Task\n\n## Summary\nThe generic actionable item, composed from the catalog's field blocks rather than its own compounds: `status` is a `statusField` configuration (Not Started → In Progress → Blocked / Done, with re-open), `priority` is the Priority field, `dueDate` the Due Date field and `createdAt` the Created At field. `assignee` links a CRM User; `tags` link base Tags.\n\n## Nesting\nSubtasks are `linksToMany(Task)` on the parent: the set is bounded, the \"3 of 5 done\" roll-up belongs on the card, and one editor maintains the list. There is no parent back-pointer, because two stored sources of one fact drift. Any depth works because each task carries its own subtasks.\n\n## Usage\n```ts\nimport Task, { TaskStatusField } from '@cardstack/catalog/cards/tasks/task';\n\nexport class ReviewTask extends Task {\n  static displayName = 'Review Task';\n  @field document = linksTo(() => Document);\n}\n```\nExtend Task additively and keep its lifecycle; a task that needs a different lifecycle is a different card. `TaskStatusField` is exported for boards and filters that group by status (see Status Board).\n\n## Examples\n`Task/spring-campaign-launch` is a parent with four subtasks, one in each status; `Task/approve-ad-budget` is the blocked one on its own.\n\n## Non-goals\nNo time tracking (a work-log card links the task, not the reverse). No recurrence. No ordering field: display order is the consumer's list concern. Completion is whatever the person doing it says it is; the block never second-guesses a Done.",
+      "cardInfo": {
+        "name": "Task",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A generic task with a status lifecycle, priority, due date, assignee, tags and nested subtasks, built from the catalog's field blocks."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Task/spring-campaign-launch"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Task/approve-ad-budget"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

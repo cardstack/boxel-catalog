@@ -25,9 +25,9 @@ export default class GeoSearchRecentSearchesAddon extends GlimmerComponent<GeoSe
             <Pill
               class='search-pill'
               @kind='button'
-              @pillBackgroundColor='var(--boxel-100)'
-              @pillFontColor='var(--boxel-dark-green)'
-              @pillBorderColor='var(--boxel-200)'
+              @pillBackgroundColor='var(--muted)'
+              @pillFontColor='var(--primary-ink)'
+              @pillBorderColor='var(--border)'
               title={{query}}
               {{on 'click' (fn @onSelectSearch query)}}
             >
@@ -47,7 +47,7 @@ export default class GeoSearchRecentSearchesAddon extends GlimmerComponent<GeoSe
 
       .section-title {
         font: 600 var(--boxel-font-sm);
-        color: var(--boxel-dark);
+        color: var(--foreground);
         margin: 0;
       }
 
@@ -59,9 +59,9 @@ export default class GeoSearchRecentSearchesAddon extends GlimmerComponent<GeoSe
 
       .search-pill {
         --boxel-pill-padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-        --boxel-pill-border-radius: 9999px;
+        --boxel-pill-border-radius: 624.9375rem;
         --boxel-pill-font: 500 var(--boxel-font-xs);
-        max-width: 150px;
+        max-width: 9.375rem;
         cursor: pointer;
       }
 
@@ -72,7 +72,7 @@ export default class GeoSearchRecentSearchesAddon extends GlimmerComponent<GeoSe
       }
 
       .search-pill:hover {
-        --boxel-pill-border-color: var(--boxel-dark-green);
+        --boxel-pill-border-color: var(--primary);
       }
     </style>
   </template>

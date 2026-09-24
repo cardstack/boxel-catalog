@@ -1,11 +1,6 @@
-import {
-  CardDef,
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import enumField from 'https://cardstack.com/base/enum';
+import { CardDef, Component, field, contains } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import enumField from '@cardstack/base/enum';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 
 // How much of the body is visible in a model photo, detected once when the
@@ -59,11 +54,14 @@ export class Model extends CardDef {
           bottom: 0;
           left: 0;
           right: 0;
-          background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+          background: linear-gradient(
+            transparent,
+            color-mix(in oklch, var(--tooltip) 50%, transparent)
+          );
           padding: var(--boxel-sp-xs);
         }
         .name {
-          color: white;
+          color: var(--tooltip-foreground);
           font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }
@@ -90,8 +88,8 @@ export class Model extends CardDef {
           gap: var(--boxel-sp-sm);
         }
         .avatar {
-          width: 48px;
-          height: 48px;
+          width: 3rem;
+          height: 3rem;
           object-fit: cover;
           object-position: top;
           border-radius: 50%;

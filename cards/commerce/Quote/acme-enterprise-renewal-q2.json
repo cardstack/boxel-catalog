@@ -1,0 +1,60 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "version": 2,
+      "status": "won",
+      "lineItems": [
+        {
+          "description": "Enterprise plan — annual",
+          "quantity": 1,
+          "unitPrice": {
+            "amount": 54500,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        },
+        {
+          "description": "Onboarding package",
+          "quantity": 1,
+          "unitPrice": {
+            "amount": 3500,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "supersedes": {
+        "links": {
+          "self": "./acme-enterprise-renewal-q1"
+        }
+      },
+      "deal": {
+        "links": {
+          "self": "../Deal/acme-enterprise-renewal"
+        }
+      },
+      "proposal": {
+        "links": {
+          "self": "../Proposal/acme-enterprise-renewal-proposal"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../quote",
+        "name": "Quote"
+      }
+    }
+  }
+}

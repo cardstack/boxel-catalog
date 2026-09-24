@@ -242,90 +242,73 @@ export default class SetupWizard extends Component<Signature> {
         /* Rail highlights in gold — the Stepper's default accent chain
            follows --primary (navy here); the wizard wants the accent
            pair instead, with a cream ✓ on the gold fills. */
-        --stepper-accent: var(--tsp-accent, var(--accent, #c5a35c));
-        --stepper-accent-fg: var(
-          --tsp-primary-foreground,
-          var(--primary-foreground, #f3ead6)
-        );
-        --stepper-heading-font: var(
-          --font-serif,
-          'Cormorant Garamond',
-          Georgia,
-          serif
-        );
-        --stepper-kicker-color: var(--tsp-accent-deep, #a5854a);
-        --stepper-scrim-bg: color-mix(
-          in srgb,
-          var(--tsp-primary, var(--primary, #141b33)) 28%,
-          transparent
-        );
+        --stepper-accent: var(--accent);
+        --stepper-accent-fg: var(--primary-foreground);
+        --stepper-heading-font: var(--font-serif);
+        --stepper-kicker-color: var(--accent);
+        --stepper-scrim-bg: var(--muted);
       }
       .wz-corner {
         position: absolute;
-        top: -22px;
-        right: -22px;
-        width: 170px;
-        height: 170px;
-        color: var(--tsp-accent, var(--accent, #a5854a));
+        top: -1.375rem;
+        right: -1.375rem;
+        width: 10.625rem;
+        height: 10.625rem;
+        color: var(--accent-ink);
         opacity: 0.05;
         pointer-events: none;
       }
       .wz-form {
         display: flex;
         flex-direction: column;
-        gap: 14px;
-        margin-top: 20px;
-        max-width: 460px;
+        gap: 0.875rem;
+        margin-top: 1.25rem;
+        max-width: 28.75rem;
       }
       .wz-field {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        font-size: 12px;
+        gap: 0.25rem;
+        font-size: 0.75rem;
         letter-spacing: 0.04em;
-        color: var(--tsp-muted-foreground, var(--muted-foreground, #6b6656));
+        color: var(--muted-foreground);
       }
       .wz-field input {
         min-height: 0;
-        padding: 10px 12px;
-        border: 1px solid
-          var(--tsp-border, var(--border, rgba(34, 40, 63, 0.18)));
-        border-radius: 10px;
-        font-family: var(
-          --tsp-font-sans,
-          var(--font-sans, 'Jost', system-ui, sans-serif)
-        );
-        font-size: 14px;
-        color: var(--tsp-foreground, var(--foreground, #22283f));
-        background: var(--tsp-input, var(--input, #fffdf8));
+        padding: 0.625rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.625rem;
+        font-family: var(--font-sans);
+        font-size: 0.875rem;
+        color: var(--foreground);
+        background-color: var(--input);
       }
       .wz-field input:focus {
         outline: none;
-        border-color: var(--tsp-ring, var(--ring, #a5854a));
+        border-color: var(--ring);
       }
       .wz-panel {
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        margin-top: 20px;
-        padding: 16px;
+        margin-top: 1.25rem;
+        padding: 1rem;
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        border: 1.5px dashed
-          var(--tsp-border, var(--border, rgba(34, 40, 63, 0.2)));
-        border-radius: 16px;
+        gap: 0.625rem;
+        border: 1.5px dashed var(--border);
+        border-radius: 1rem;
       }
       .wz-people-panel {
         flex: none;
         max-height: 100%;
-        gap: 12px;
+        gap: 0.75rem;
       }
       .wz-people-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: 0.75rem;
       }
       /* Newly added people render as fitted cards. The linksToMany
          plural component stacks items vertically; re-lay its wrapper as
@@ -336,44 +319,41 @@ export default class SetupWizard extends Component<Signature> {
       }
       .wz-cards :deep(.linksToMany-field.fitted-effectiveFormat) {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+        gap: 0.5rem;
       }
       .wz-cards :deep(.linksToMany-itemContainer + .linksToMany-itemContainer) {
         margin-top: 0;
       }
       .wz-guest-count {
-        font-size: 14px;
-        color: var(--tsp-muted-foreground, var(--muted-foreground, #6b6656));
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
       }
       .wz-opt {
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        gap: 14px;
-        padding: 12px 14px;
+        gap: 0.875rem;
+        padding: 0.75rem 0.875rem;
         border: 1px solid transparent;
-        border-radius: 12px;
-        background: color-mix(
-          in srgb,
-          var(--tsp-accent, var(--accent, #a5854a)) 9%,
-          transparent
-        );
+        border-radius: 0.75rem;
+        background-color: color-mix(in oklch, var(--accent) 9%, transparent);
         cursor: pointer;
         text-align: left;
       }
       .wz-opt:hover {
-        border-color: var(--tsp-accent, var(--accent, #a5854a));
+        border-color: var(--accent);
       }
       .wz-opt-preview {
         flex: none;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 108px;
-        height: 62px;
-        border-radius: 8px;
-        background: var(--tsp-card, var(--card, #ffffff));
+        width: 6.75rem;
+        height: 3.875rem;
+        border-radius: 0.5rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         overflow: hidden;
       }
       .wz-opt-preview :deep(svg) {
@@ -387,39 +367,35 @@ export default class SetupWizard extends Component<Signature> {
         min-width: 0;
       }
       .wz-opt-name {
-        font-family: var(
-          --tsp-font-serif,
-          var(--font-serif, 'Cormorant Garamond', Georgia, serif)
-        );
-        font-size: 18px;
+        font-family: var(--font-serif);
+        font-size: 1.125rem;
         font-weight: 600;
       }
       .wz-opt-meta {
-        font-size: 11px;
+        font-size: 0.6875rem;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--tsp-accent-deep, #a5854a);
+        color: var(--accent-ink);
       }
       .wz-empty {
         margin: auto;
         text-align: center;
-        font-size: 13px;
+        font-size: 0.8125rem;
         opacity: 0.65;
       }
       /* Boxel <Button> re-skin for the panel actions */
       .wz-secondary {
         --boxel-button-secondary-background: transparent;
         --boxel-button-secondary-border: color-mix(
-          in srgb,
-          var(--tsp-accent, var(--accent, #a5854a)) 55%,
+          in oklch,
+          var(--accent) 55%,
           transparent
         );
-        --boxel-button-secondary-foreground: var(--tsp-accent-deep, #a5854a);
-        --boxel-button-font: 500 13px
-          var(--tsp-font-sans, var(--font-sans, 'Jost', system-ui, sans-serif));
+        --boxel-button-secondary-foreground: var(--accent-ink);
+        --boxel-button-font: 500 0.8125rem var(--font-sans);
         --boxel-button-letter-spacing: 0.04em;
-        --boxel-button-padding: 11px 22px;
-        --boxel-button-border-radius: 999px;
+        --boxel-button-padding: 0.6875rem 1.375rem;
+        --boxel-button-border-radius: 62.4375rem;
       }
     </style>
   </template>

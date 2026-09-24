@@ -4,9 +4,9 @@ import {
   field,
   contains,
   linksTo,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import ImageDef from 'https://cardstack.com/base/image-file-def';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import ImageDef from '@cardstack/base/image-file-def';
 import { Command } from '@cardstack/runtime-common';
 import SendRequestViaProxyCommand from '@cardstack/boxel-host/commands/send-request-via-proxy';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';

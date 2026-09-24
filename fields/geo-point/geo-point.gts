@@ -1,10 +1,5 @@
-import {
-  Component,
-  contains,
-  FieldDef,
-  field,
-} from 'https://cardstack.com/base/card-api';
-import NumberField from 'https://cardstack.com/base/number';
+import { Component, contains, FieldDef, field } from '@cardstack/base/card-api';
+import NumberField from '@cardstack/base/number';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 
 import GeoPointEditField from './components/geo-point-edit-field';
@@ -99,10 +94,10 @@ export class GeoPointAtom extends Component<typeof GeoPointField> {
       }
 
       .pin-icon {
-        width: 14px;
-        height: 14px;
+        width: 0.875rem;
+        height: 0.875rem;
         flex-shrink: 0;
-        color: var(--boxel-red);
+        color: var(--primary-ink);
       }
     </style>
   </template>

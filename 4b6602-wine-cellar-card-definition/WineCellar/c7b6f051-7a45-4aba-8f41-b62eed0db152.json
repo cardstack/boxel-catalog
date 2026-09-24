@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "WineCellar",
-        "module": "../wine-cellar"
+        "module": "@cardstack/catalog/4b6602-wine-cellar-card-definition/wine-cellar"
       }
     },
     "type": "card",
@@ -52,7 +52,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/cellar"
         }
       },
       "cardInfo.cardThumbnail": {

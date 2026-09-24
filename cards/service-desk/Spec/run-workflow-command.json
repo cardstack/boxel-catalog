@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/run-workflow-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Run Workflow\n\nValidates the move against the Workflow card, enforces the guard (requires-note / requires-role — actor roles are caller-supplied, since cards have no current user), writes the state, and keeps the linked SLA honest across the pause boundary: entering a waiting state stamps pausedSince + opens a pause interval; leaving pushes every running deadline out by the pause. A record with no state yet may only enter an initial state. Refusals name the rule AND the fixing action.\n\n```ts\nimport RunWorkflowCommand from '@cardstack/catalog/cards/service-desk/commands/run-workflow-command';\n\nawait new RunWorkflowCommand(commandContext).execute({\n  card: kase,\n  workflow: supportCaseFlow,\n  toStateKey: 'qa-review',\n  note: 'Fix deployed; waiting on QA sign-off.',\n  actorRoleNames: 'L2 Support',\n  sla,\n});\n```\n\n### Non-goals\n\nFor Ticket subjects the status write belongs to transition-ticket-status; this command is for workflow-as-data records.",
+      "cardInfo": {
+        "name": "Run Workflow",
+        "summary": "The single writer of workflow state, guards enforced, SLA kept honest."
+      },
+      "containedExamples": [],
+      "cardTitle": "Run Workflow",
+      "cardDescription": "Moves a record to another workflow state after checking the Workflow's guards, and pauses or resumes its SLA across waiting states."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Workflow/support-case-flow"
+        }
+      }
+    }
+  }
+}

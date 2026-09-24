@@ -1,9 +1,10 @@
-import { Component, realmURL } from 'https://cardstack.com/base/card-api';
+import { Component, realmURL } from '@cardstack/base/card-api';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
+import { Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import type { Survey } from '../survey';
@@ -256,20 +257,22 @@ export class SurveyIsolated extends Component<typeof Survey> {
         <div class='survey-head-top'>
           <p class='survey-eyebrow'>Survey</p>
           <div class='survey-modes' role='tablist'>
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               role='tab'
               class='survey-mode {{if (eq this.mode "fill") "is-active"}}'
               aria-selected={{if (eq this.mode 'fill') 'true' 'false'}}
               {{on 'click' (fn this.setMode 'fill')}}
-            >Fill</button>
-            <button
-              type='button'
+            >Fill</Button>
+            <Button
+              @kind='text-only'
+              @size='auto'
               role='tab'
               class='survey-mode {{if (eq this.mode "results") "is-active"}}'
               aria-selected={{if (eq this.mode 'results') 'true' 'false'}}
               {{on 'click' (fn this.setMode 'results')}}
-            >Results</button>
+            >Results</Button>
           </div>
         </div>
         <h1 class='survey-title'>
@@ -327,13 +330,14 @@ export class SurveyIsolated extends Component<typeof Survey> {
               </div>
             {{/each}}
           </dl>
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='survey-restart'
             {{on 'click' this.restart}}
           >
             Start over
-          </button>
+          </Button>
         </div>
       {{else}}
         <FormWizard
@@ -352,8 +356,9 @@ export class SurveyIsolated extends Component<typeof Survey> {
                   an answer.</p>
               {{/unless}}
               {{#each this.questions as |question index|}}
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='survey-review-row
                     {{if (this.isInvalid question index) "is-invalid"}}'
                   {{on 'click' (fn this.editAnswer index)}}
@@ -368,7 +373,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
                       index
                     }}</span>
                   <span class='survey-review-edit'>Edit</span>
-                </button>
+                </Button>
               {{/each}}
             </div>
           {{else}}
@@ -411,22 +416,16 @@ export class SurveyIsolated extends Component<typeof Survey> {
 
     <style scoped>
       .survey {
-        --survey-accent: var(--primary, #2563eb);
         container-type: inline-size;
         max-width: 52rem;
         margin: 0 auto;
-        padding: var(--boxel-sp-lg, 1.5rem);
+        padding: var(--boxel-sp-lg);
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp-lg, 1.5rem);
-        color: var(--foreground, #0f172a);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          -apple-system,
-          BlinkMacSystemFont,
-          sans-serif
-        );
+        gap: var(--boxel-sp-lg);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        background-color: var(--canvas);
       }
       .survey-header {
         display: flex;
@@ -443,24 +442,26 @@ export class SurveyIsolated extends Component<typeof Survey> {
         display: inline-flex;
         padding: 0.15rem;
         gap: 0.15rem;
-        background: var(--muted, #f1f5f9);
-        border-radius: 999px;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border-radius: 62.4375rem;
       }
       .survey-mode {
         padding: 0.3rem 0.85rem;
         font: inherit;
         font-size: 0.8125rem;
         font-weight: 600;
-        color: var(--muted-foreground, #64748b);
-        background: transparent;
+        color: var(--muted-foreground);
+        background-color: transparent;
         border: none;
-        border-radius: 999px;
+        border-radius: 62.4375rem;
         cursor: pointer;
       }
       .survey-mode.is-active {
-        background: var(--card, #ffffff);
-        color: var(--survey-accent);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        background-color: var(--card);
+        color: var(--primary-ink);
+        box-shadow: 0 1px 2px
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
       }
       .survey-eyebrow {
         margin: 0;
@@ -468,7 +469,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.12em;
-        color: var(--survey-accent);
+        color: var(--primary-ink);
       }
       .survey-title {
         margin: 0;
@@ -477,7 +478,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         letter-spacing: -0.02em;
       }
       .survey-desc {
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
         font-size: 0.95rem;
       }
       .survey-progress {
@@ -489,34 +490,37 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .survey-progress-track {
         flex: 1;
         height: 0.5rem;
-        background: var(--muted, #f1f5f9);
-        border-radius: 999px;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border-radius: 62.4375rem;
         overflow: hidden;
       }
       .survey-progress-fill {
         height: 100%;
-        background: var(--survey-accent);
-        border-radius: 999px;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        border-radius: 62.4375rem;
         transition: width 0.25s ease;
       }
       .survey-progress-label {
         font-size: 0.75rem;
         font-weight: 600;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
 
       .survey-questions {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp, 1rem);
+        gap: var(--boxel-sp);
       }
       .survey-question {
         margin: 0;
-        padding: var(--boxel-sp, 1rem);
-        border: 1px solid var(--border, #e2e8f0);
+        padding: var(--boxel-sp);
+        border: 1px solid var(--border);
         border-radius: 0.75rem;
-        background: var(--card, #ffffff);
+        background-color: var(--card);
+        color: var(--card-foreground);
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
@@ -526,7 +530,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--survey-accent);
+        color: var(--primary-ink);
       }
       .survey-q-prompt {
         padding: 0;
@@ -534,19 +538,19 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-weight: 600;
       }
       .survey-q-req {
-        color: #dc2626;
+        color: var(--destructive-ink);
         margin-left: 0.15rem;
       }
       .survey-q-help {
         margin: 0;
         font-size: 0.8125rem;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
       .survey-q-error {
         margin: 0;
         font-size: 0.75rem;
         font-weight: 600;
-        color: #dc2626;
+        color: var(--destructive-ink);
       }
 
       .survey-review {
@@ -563,18 +567,19 @@ export class SurveyIsolated extends Component<typeof Survey> {
         margin: 0 0 0.25rem;
         font-size: 0.8125rem;
         font-weight: 600;
-        color: #b45309;
+        color: var(--warning-ink);
       }
       .survey-review-row {
         display: grid;
         grid-template-columns: 1fr auto auto;
         align-items: center;
-        gap: var(--boxel-sp, 1rem);
+        gap: var(--boxel-sp);
         width: 100%;
         padding: 0.6rem 0.75rem;
-        border: 1px solid var(--border, #e2e8f0);
+        border: 1px solid var(--border);
         border-radius: 0.5rem;
-        background: var(--card, #ffffff);
+        background-color: var(--card);
+        color: var(--card-foreground);
         font: inherit;
         text-align: left;
         cursor: pointer;
@@ -583,18 +588,18 @@ export class SurveyIsolated extends Component<typeof Survey> {
           background 0.15s ease;
       }
       .survey-review-row:hover {
-        border-color: var(--survey-accent);
-        background: color-mix(in srgb, var(--survey-accent) 6%, transparent);
+        border-color: var(--primary);
+        background-color: color-mix(in oklch, var(--primary) 6%, transparent);
       }
       .survey-review-row.is-invalid {
-        border-color: #dc2626;
+        border-color: var(--destructive);
       }
       .survey-review-q {
         font-weight: 600;
         min-width: 0;
       }
       .survey-review-a {
-        color: var(--survey-accent);
+        color: var(--primary-ink);
         font-weight: 600;
         text-align: right;
       }
@@ -603,12 +608,12 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
 
       .survey-done {
         text-align: center;
-        padding: var(--boxel-sp-xl, 2.5rem) var(--boxel-sp);
+        padding: var(--boxel-sp-xl) var(--boxel-sp);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -623,8 +628,8 @@ export class SurveyIsolated extends Component<typeof Survey> {
         justify-content: center;
         font-size: 1.75rem;
         font-weight: 800;
-        color: #ffffff;
-        background: #16a34a;
+        color: var(--success-foreground);
+        background-color: var(--success);
         margin-bottom: 0.5rem;
       }
       .survey-done h2 {
@@ -632,12 +637,12 @@ export class SurveyIsolated extends Component<typeof Survey> {
       }
       .survey-done-sub {
         margin: 0;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
       .survey-done-note {
         margin: 0;
         font-size: 0.8125rem;
-        color: #b45309;
+        color: var(--warning-ink);
       }
       .survey-done-list {
         margin: 0.75rem 0 0;
@@ -650,9 +655,9 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .survey-done-row {
         display: grid;
         grid-template-columns: 1fr auto;
-        gap: var(--boxel-sp, 1rem);
+        gap: var(--boxel-sp);
         padding: 0.5rem 0.75rem;
-        border: 1px solid var(--border, #e2e8f0);
+        border: 1px solid var(--border);
         border-radius: 0.5rem;
       }
       .survey-done-row dt {
@@ -662,7 +667,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .survey-done-row dd {
         margin: 0;
         font-weight: 600;
-        color: var(--survey-accent);
+        color: var(--primary-ink);
         text-align: right;
       }
       .survey-restart {
@@ -670,9 +675,9 @@ export class SurveyIsolated extends Component<typeof Survey> {
         padding: 0.5rem 1.1rem;
         font: inherit;
         font-weight: 600;
-        color: var(--survey-accent);
-        background: transparent;
-        border: 1px solid var(--survey-accent);
+        color: var(--primary-ink);
+        background-color: transparent;
+        border: 1px solid var(--primary);
         border-radius: 0.5rem;
         cursor: pointer;
       }

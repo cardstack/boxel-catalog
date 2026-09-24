@@ -1,0 +1,66 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Pilot tasks, as a table and a board",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "records.0": {
+        "links": {
+          "self": "../../../fields/status/example/TaskRecordExample/ship-status-block"
+        }
+      },
+      "records.1": {
+        "links": {
+          "self": "../../../fields/status/example/TaskRecordExample/move-table-and-board"
+        }
+      },
+      "records.2": {
+        "links": {
+          "self": "../../../fields/status/example/TaskRecordExample/fix-lead-examples"
+        }
+      },
+      "records.3": {
+        "links": {
+          "self": "../../../fields/status/example/TaskRecordExample/write-helper-specs"
+        }
+      },
+      "records.4": {
+        "links": {
+          "self": "../../../fields/status/example/TaskRecordExample/repoint-matrix-imports"
+        }
+      },
+      "records.5": {
+        "links": {
+          "self": "../../../fields/status/example/TaskRecordExample/state-pill-readme"
+        }
+      },
+      "records.6": {
+        "links": {
+          "self": "../../../fields/status/example/TaskRecordExample/storefront-specs-view"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../record-views-example",
+        "name": "RecordViewsExample"
+      }
+    }
+  }
+}

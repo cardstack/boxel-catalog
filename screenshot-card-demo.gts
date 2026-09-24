@@ -4,9 +4,9 @@ import {
   contains,
   field,
   linksToMany,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import enumField from 'https://cardstack.com/base/enum';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import enumField from '@cardstack/base/enum';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
@@ -19,7 +19,7 @@ type ScreenshotFormat = 'isolated' | 'embedded';
 interface ScreenshotResult {
   id: string;
   title: string;
-  imageDefUrl?: string;
+  imageUrl?: string;
   error?: string;
 }
 
@@ -95,7 +95,7 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
         });
         collected = [
           ...collected,
-          { id: card.id, title, imageDefUrl: result.imageDefUrl },
+          { id: card.id, title, imageUrl: result.captures[0]?.url },
         ];
       } catch (error) {
         collected = [
@@ -150,9 +150,9 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
           {{#each this.results as |result|}}
             <div class='result'>
               <p class='result-title'>{{result.title}}</p>
-              {{#if result.imageDefUrl}}
-                <code class='url'>{{result.imageDefUrl}}</code>
-                <img src={{result.imageDefUrl}} alt='Card screenshot' />
+              {{#if result.imageUrl}}
+                <code class='url'>{{result.imageUrl}}</code>
+                <img src={{result.imageUrl}} alt='Card screenshot' />
               {{else}}
                 <p class='status status--error'>{{result.error}}</p>
               {{/if}}
@@ -201,7 +201,7 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
         padding: var(--boxel-sp);
         border: 1px solid var(--boxel-200);
         border-radius: var(--boxel-border-radius-lg);
-        background: var(--boxel-50);
+        background-color: var(--boxel-50);
       }
       .result-title {
         margin: 0;
@@ -222,7 +222,11 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
         border-radius: var(--boxel-border-radius);
       }
       .status--error {
-        background: color-mix(in srgb, var(--boxel-error-100) 12%, white);
+        background-color: color-mix(
+          in oklch,
+          var(--boxel-error-100) 12%,
+          var(--card)
+        );
         color: var(--boxel-error-100);
       }
     </style>

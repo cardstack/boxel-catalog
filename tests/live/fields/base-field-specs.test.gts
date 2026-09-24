@@ -25,7 +25,7 @@ export function runTests() {
         body: JSON.stringify({
           filter: {
             'item.on': {
-              module: 'https://cardstack.com/base/spec',
+              module: '@cardstack/base/spec',
               name: 'Spec',
             },
             every: [{ eq: { 'item.specType': 'field' } }],

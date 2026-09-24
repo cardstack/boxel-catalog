@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "EmployeeStatusField",
+        "module": "../employee"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Employment Status\n\n**Consume, don’t rebuild.** The shared `employee.gts` already exports `EmployeeStatusField` (onboarding / active / offboarded) with its color map, plus the sibling `EmployeeEmploymentTypeField` (full-time / part-time / contract / internship). This Spec registers the existing block against the taxonomy row rather than shipping a duplicate enum. A primitive enum cannot carry containedExamples — see the linked Employee (status: active).\n\n### Usage\n\n```ts\nimport { EmployeeStatusField } from '@cardstack/catalog/cards/hr/employee';\n\n@field status = contains(EmployeeStatusField);\n```\n\n`EMPLOYEE_STATUS_COLORS`, exported from the same module, maps each status onto the `StateColor` the pill renders with.\n\n### Non-goals\n\nNo new statuses — widening a stored enum forces every consumer’s switch to grow a case; propose additions on the Employee block itself.",
+      "cardInfo": {
+        "name": "Employment Status",
+        "summary": "CONSUME, DON'T REBUILD: the exported EmployeeStatusField on the shared Employee block already is this concept."
+      },
+      "cardTitle": "Employment Status Field",
+      "cardDescription": "Onboarding, active or offboarded, with its colour map — the shared status every HR card reads from employee.gts."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Employee/mara-lindqvist"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

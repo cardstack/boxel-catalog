@@ -6,11 +6,26 @@
       "varietal": "Grange (Shiraz)",
       "region": "South Australia",
       "wineType": "red",
-      "vintage": { "value": 2017 },
+      "vintage": {
+        "value": 2017
+      },
       "purchaseDate": "2021-09-30",
-      "drinkingWindow": { "start": "2027-01-01", "end": "2050-12-31" },
-      "purchasePrice": { "amount": 750, "currency": { "code": "AUD" } },
-      "currentValue": { "amount": 950, "currency": { "code": "AUD" } },
+      "drinkingWindow": {
+        "start": "2027-01-01",
+        "end": "2050-12-31"
+      },
+      "purchasePrice": {
+        "amount": 750,
+        "currency": {
+          "code": "AUD"
+        }
+      },
+      "currentValue": {
+        "amount": 950,
+        "currency": {
+          "code": "AUD"
+        }
+      },
       "score": 97,
       "bottlesRemaining": 3,
       "liquidColor": "#3A0810",
@@ -21,8 +36,22 @@
       }
     },
     "relationships": {
-      "label": { "links": { "self": null } }
+      "label": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/cellar"
+        }
+      }
     },
-    "meta": { "adoptsFrom": { "module": "../wine-bottle", "name": "WineBottle" } }
+    "meta": {
+      "adoptsFrom": {
+        "module": "../wine-bottle",
+        "name": "WineBottle"
+      }
+    }
   }
 }

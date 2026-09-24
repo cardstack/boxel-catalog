@@ -6,11 +6,26 @@
       "varietal": "Ribolla Gialla",
       "region": "Friuli-Venezia Giulia, Italy",
       "wineType": "orange",
-      "vintage": { "value": 2019 },
+      "vintage": {
+        "value": 2019
+      },
       "purchaseDate": "2022-06-11",
-      "drinkingWindow": { "start": "2024-01-01", "end": "2032-12-31" },
-      "purchasePrice": { "amount": 65, "currency": { "code": "EUR" } },
-      "currentValue": { "amount": 95, "currency": { "code": "EUR" } },
+      "drinkingWindow": {
+        "start": "2024-01-01",
+        "end": "2032-12-31"
+      },
+      "purchasePrice": {
+        "amount": 65,
+        "currency": {
+          "code": "EUR"
+        }
+      },
+      "currentValue": {
+        "amount": 95,
+        "currency": {
+          "code": "EUR"
+        }
+      },
       "score": 94,
       "bottlesRemaining": 4,
       "liquidColor": "#C8853A",
@@ -21,8 +36,22 @@
       }
     },
     "relationships": {
-      "label": { "links": { "self": null } }
+      "label": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/cellar"
+        }
+      }
     },
-    "meta": { "adoptsFrom": { "module": "../wine-bottle", "name": "WineBottle" } }
+    "meta": {
+      "adoptsFrom": {
+        "module": "../wine-bottle",
+        "name": "WineBottle"
+      }
+    }
   }
 }

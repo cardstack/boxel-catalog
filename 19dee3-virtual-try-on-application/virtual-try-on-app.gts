@@ -1,9 +1,4 @@
-import {
-  CardDef,
-  Component,
-  field,
-  linksTo,
-} from 'https://cardstack.com/base/card-api';
+import { CardDef, Component, field, linksTo } from '@cardstack/base/card-api';
 import {
   codeRef,
   realmURL,
@@ -21,7 +16,12 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { task, timeout } from 'ember-concurrency';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { BoxelSelect } from '@cardstack/boxel-ui/components';
+import {
+  BoxelSelect,
+  BoxelInput,
+  Button,
+  LoadingIndicator,
+} from '@cardstack/boxel-ui/components';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
 import SparklesIcon from '@cardstack/boxel-icons/sparkles';
 import { GenerateTryOnCommand } from './commands/generate-try-on-command';
@@ -721,9 +721,9 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
     this.newItemCategory = '';
   }
 
-  @action onSlugInput(event: Event): void {
+  @action onSlugInput(value: string): void {
     // Keep the raw, human-readable name in the field; the slug is derived.
-    this.newItemName = (event.target as HTMLInputElement).value;
+    this.newItemName = value;
   }
 
   @action setCategory(cat: string | null): void {
@@ -1213,10 +1213,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         {{#if this.hasUsableModel}}
           <div class='model-scroll'>
             <div class='model-thumb-wrap'>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='model-thumb model-thumb--active'
-                disabled={{this.isLocked}}
+                @disabled={{this.isLocked}}
               >
                 {{#if this.activeModel.photo.resolvedUrl}}
                   <img
@@ -1227,43 +1228,50 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 {{else}}
                   <div class='model-thumb-empty'>?</div>
                 {{/if}}
-              </button>
-              <button
-                type='button'
+              </Button>
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='model-unlink'
                 title='Unlink model'
                 aria-label='Unlink model'
-                disabled={{this.isLocked}}
+                @disabled={{this.isLocked}}
                 {{on 'click' this.unlinkModel}}
-              >✕</button>
+              >✕</Button>
             </div>
           </div>
         {{/if}}
 
         {{! Add model button }}
-        <button
-          type='button'
+        <Button
+          @kind='text-only'
+          @size='auto'
           class='add-model-btn'
           data-bx-popover-anchor='vto-model'
-          disabled={{this.isLocked}}
+          @disabled={{this.isLocked}}
           {{on 'click' this.toggleModelMenu}}
-        >+ Add Model</button>
+        >+ Add Model</Button>
 
         {{! Try On / Go back CTA — lives in the strip so it never overlaps }}
         <div class='gen-action'>
           {{#if (eq this.generationStatus 'ready')}}
-            <button type='button' class='gen-btn' {{on 'click' this.restart}}>←
-              Go back</button>
+            <Button
+              @kind='text-only'
+              @size='auto'
+              class='gen-btn'
+              {{on 'click' this.restart}}
+            >← Go back</Button>
           {{else}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
+              @loading={{this.isGenerating}}
               class='gen-btn {{if this.isGenerating "gen-btn--busy" ""}}'
-              disabled={{if this.canGenerate false true}}
+              @disabled={{if this.canGenerate false true}}
               {{on 'click' this.generateOutfit.perform}}
             >
-              {{#if this.isGenerating}}<span class='gen-spin'></span>{{/if}}
               {{#if this.isGenerating}}Generating…{{else}}✦ Try On Outfit{{/if}}
-            </button>
+            </Button>
           {{/if}}
         </div>
 
@@ -1280,12 +1288,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
 
           <div class='filter-row'>
             {{#each this.filterOptions as |cat|}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='filter-pill
                   {{if (eq cat this.filterCategory) "filter-pill--on" ""}}'
                 {{on 'click' (fn this.setFilter cat)}}
-              >{{cat}}</button>
+              >{{cat}}</Button>
             {{/each}}
           </div>
 
@@ -1295,30 +1304,33 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 <div class='gsection-head'>
                   <h3 class='gsection-title'>{{section.label}}</h3>
                   {{#if (eq this.filterCategory 'all')}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='view-all'
                       {{on 'click' (fn this.setFilter section.key)}}
-                    >View all</button>
+                    >View all</Button>
                   {{else}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='view-all'
                       {{on 'click' (fn this.setFilter 'all')}}
-                    >Back</button>
+                    >Back</Button>
                   {{/if}}
                 </div>
                 <div class='gsection-grid'>
                   {{! Add placeholder — opens the popover with this category preset }}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='garment-add'
-                    disabled={{this.isLocked}}
+                    @disabled={{this.isLocked}}
                     {{on 'click' (fn this.openGarmentModal section.key)}}
                   >
                     <span class='garment-add-ico'>+</span>
                     <span class='garment-add-lbl'>Add</span>
-                  </button>
+                  </Button>
                   {{! Prerendered garment entries — no instances held; a real
                       Garment is hydrated only when one is picked / dropped. }}
                   <@context.searchResultsComponent
@@ -1375,13 +1387,14 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 {{on 'click' this.toggleModelMenu}}
               >
                 {{#if this.activeModel.photo.resolvedUrl}}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='sq-badge sq-badge--remove'
                     title='Remove model'
                     aria-label='Remove model'
                     {{on 'click' this.unlinkModel}}
-                  >✕</button>
+                  >✕</Button>
                 {{else}}
                   <span class='sq-badge'>+</span>
                 {{/if}}
@@ -1550,12 +1563,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                     {{/if}}
                   </div>
                   {{#if slot.garment}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='sq-remove'
                       aria-label='Remove garment'
                       {{on 'click' (fn this.removeSlot slot.key)}}
-                    >✕</button>
+                    >✕</Button>
                   {{/if}}
                   <span
                     class='sq-lbl'
@@ -1594,7 +1608,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
 
                 {{#if this.showGeneratingPlaceholder}}
                   <div class='result-placeholder'>
-                    <div class='big-spin'></div>
+                    <LoadingIndicator @size='32px' class='big-spin' />
                     <span>Generating front view…</span>
                   </div>
                 {{else if this.frontImageUrl}}
@@ -1620,7 +1634,10 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                           {{else}}
                             <div class='slide-empty'>
                               {{#if this.generateAngles.isRunning}}
-                                <div class='slide-spin'></div><span>Generating
+                                <LoadingIndicator
+                                  @size='20px'
+                                  class='slide-spin'
+                                /><span>Generating
                                   {{slide.label}}…</span>
                               {{else}}
                                 <span
@@ -1651,11 +1668,12 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 {{! View switcher — right-side overlay on the preview }}
                 <div class='view-overlay'>
                   {{#each this.viewOptions as |v|}}
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='vo-btn
                         {{if (eq this.carouselIndex v.index) "vo-btn--on" ""}}'
-                      disabled={{if
+                      @disabled={{if
                         (eq v.index 0)
                         false
                         (if this.frontImageUrl false true)
@@ -1710,33 +1728,36 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                         </svg>
                       {{/if}}
                       <span class='vo-lbl'>{{v.label}}</span>
-                    </button>
+                    </Button>
                   {{/each}}
                 </div>
 
                 {{#if (eq this.generationStatus 'ready')}}
                   <div class='stage-tools'>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='tool-btn'
                       title='Start over'
                       aria-label='Start over'
                       {{on 'click' this.regenerate}}
-                    >↻</button>
-                    <button
-                      type='button'
+                    >↻</Button>
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='tool-btn'
                       title='Open full size'
                       aria-label='Open full size'
                       {{on 'click' this.saveLook}}
-                    >⤢</button>
-                    <button
-                      type='button'
+                    >⤢</Button>
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='tool-btn'
                       title='Download image'
                       aria-label='Download image'
                       {{on 'click' this.downloadCurrent.perform}}
-                    >⤓</button>
+                    >⤓</Button>
                   </div>
                 {{/if}}
 
@@ -1757,33 +1778,37 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           {{! Bottom action bar }}
           <div class='action-bar'>
             {{#if (eq this.generationStatus 'ready')}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='act-btn act-btn--primary'
                 {{on 'click' this.restart}}
-              >← Go back</button>
-              <button
-                type='button'
+              >← Go back</Button>
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='act-btn act-btn--ghost'
-                disabled={{if this.canSaveLook false true}}
+                @disabled={{if this.canSaveLook false true}}
                 {{on 'click' this.saveLook}}
-              ><span class='act-ico'>⌑</span> Save Look</button>
+              ><span class='act-ico'>⌑</span> Save Look</Button>
             {{else}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
+                @loading={{this.isGenerating}}
                 class='act-btn act-btn--primary
                   {{if this.isGenerating "act-btn--busy" ""}}'
-                disabled={{if this.canGenerate false true}}
+                @disabled={{if this.canGenerate false true}}
                 {{on 'click' this.generateOutfit.perform}}
               >
-                {{#if this.isGenerating}}<span class='gen-spin'></span>{{/if}}
                 {{#if this.isGenerating}}Generating…{{else}}✦ Try On Outfit{{/if}}
-              </button>
-              <button
-                type='button'
+              </Button>
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='act-btn act-btn--ghost'
                 disabled
-              ><span class='act-ico'>⌑</span> Save Look</button>
+              ><span class='act-ico'>⌑</span> Save Look</Button>
             {{/if}}
           </div>
 
@@ -1808,18 +1833,20 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
             <div class='modal-head'>
               <h2 id='vto-upload-title' class='modal-title'>Add
                 {{if (eq this.uploadMode 'garment') 'Garment' 'Model'}}</h2>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='modal-close'
                 aria-label='Close'
                 {{on 'click' this.closeUpload}}
-              >✕</button>
+              >✕</Button>
             </div>
 
             <div class='details-pane'>
               {{! Image insert — click to pick from the library }}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='img-drop
                   {{if this.capturedDataUrl "img-drop--filled" ""}}'
                 {{on 'click' (fn this.openLibraryUpload this.uploadMode)}}
@@ -1835,16 +1862,15 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                   <span class='img-drop-ico'>↑</span>
                   <span class='img-drop-lbl'>Upload from library</span>
                 {{/if}}
-              </button>
+              </Button>
               <div class='field-group'>
                 <label class='field-lbl'>Name
                   <span class='field-lbl-hint'>(words joined by -)</span></label>
-                <input
-                  type='text'
+                <BoxelInput
                   class='field-input'
-                  value={{this.newItemName}}
-                  placeholder='e.g. Red Silk Blouse'
-                  {{on 'input' this.onSlugInput}}
+                  @value={{this.newItemName}}
+                  @placeholder='e.g. Red Silk Blouse'
+                  @onInput={{this.onSlugInput}}
                 />
                 {{#if this.newItemSlug}}
                   <span class='field-hint'>Saved as:
@@ -1868,15 +1894,16 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
               {{#if this.uploadError}}
                 <p class='upload-err'>{{this.uploadError}}</p>
               {{/if}}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='save-btn
                   {{if this.saveUpload.isRunning "save-btn--busy" ""}}'
-                disabled={{if this.canSaveUpload false true}}
+                @disabled={{if this.canSaveUpload false true}}
                 {{on 'click' this.saveUpload.perform}}
               >{{#if
                   this.saveUpload.isRunning
-                }}Saving…{{else}}Save{{/if}}</button>
+                }}Saving…{{else}}Save{{/if}}</Button>
             </div>
           </div>
         </:tools>
@@ -1891,12 +1918,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           aria-label='Full-size try-on result'
           {{on 'click' this.closeLightbox}}
         >
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='lightbox-close'
             aria-label='Close'
             {{on 'click' this.closeLightbox}}
-          >✕</button>
+          >✕</Button>
           <img
             src={{this.lightboxUrl}}
             alt='Full-size try-on result'
@@ -1926,18 +1954,20 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 <span class='mpm-eyebrow'>Virtual Try-On</span>
                 <h2 id='vto-mpm-title' class='mpm-title'>Choose your model</h2>
               </div>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='mpm-close'
                 aria-label='Close'
                 {{on 'click' this.closeModelMenu}}
-              >✕</button>
+              >✕</Button>
             </div>
             <div class='mpm-body'>
 
               {{! Upload card }}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='mpm-card mpm-card--upload'
                 {{on 'click' this.uploadModel}}
               >
@@ -1965,11 +1995,12 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                     detect your body, we'll generate a standard body pose</span>
                   <span class='mpm-card-cta'>↑ Choose file</span>
                 </div>
-              </button>
+              </Button>
 
               {{! Link existing card }}
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='mpm-card mpm-card--link'
                 {{on 'click' this.linkExistingModel}}
               >
@@ -1995,7 +2026,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                     already created in this realm</span>
                   <span class='mpm-card-cta'>Browse models →</span>
                 </div>
-              </button>
+              </Button>
 
             </div>
           </div>
@@ -2023,12 +2054,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 <h2 id='vto-chooser-title' class='chooser-title'>Choose
                   {{this.chooserLabel}}</h2>
               </div>
-              <button
-                type='button'
+              <Button
+                @kind='text-only'
+                @size='auto'
                 class='chooser-close'
                 aria-label='Close'
                 {{on 'click' this.closeChooser}}
-              >✕</button>
+              >✕</Button>
             </div>
             <@context.searchResultsComponent
               @query={{this.chooserQuery}}
@@ -2040,22 +2072,24 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
                 {{! Upload-new is always present so an empty category can still
                     be filled straight from the chooser. Styled like the sidebar
                     Add tile — a dashed box with the + and label inside. }}
-                <button
-                  type='button'
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='chooser-add'
                   {{on 'click' this.uploadForChooser}}
                 >
                   <span class='chooser-add-ico'>+</span>
                   <span class='chooser-add-lbl'>Upload New</span>
-                </button>
+                </Button>
                 {{#each results.entries key='id' as |entry|}}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='chooser-item'
                     {{on 'click' (fn this.chooseGarment entry.id)}}
                   >
                     <span class='chooser-thumb'><entry.component /></span>
-                  </button>
+                  </Button>
                 {{/each}}
               </div>
               {{#unless results.entries.length}}
@@ -2086,40 +2120,35 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
 
       .app {
         /* ── Surfaces (warm cream → white, low-contrast neutrals) ── */
-        --bg: #f6f4f0;
-        --surface: #ffffff;
-        --surface2: #f1efea;
-        --border: #e4e1d9;
-        --border-soft: rgba(20, 18, 14, 0.08);
+        --bg: var(--card);
+        --border-soft: color-mix(
+          in oklch,
+          var(--border-strong) 8%,
+          transparent
+        );
 
         /* ── Text (near-black primary, warm-gray secondary) ── */
-        --text: #1a1a1c;
-        --muted: #8c887d;
-        --text-2: #6b675e;
 
         /* ── Gold = the PRIMARY / hero action color ── */
-        --gold: #c19a4b;
-        --gold-deep: #a9762b;
-        --gold-soft: color-mix(in srgb, var(--gold) 14%, #fff);
-        --primary-grad: linear-gradient(135deg, #cba85a, var(--gold-deep));
+        --gold: var(--accent);
+        --gold-soft: color-mix(in oklch, var(--gold) 14%, var(--card));
+        --primary-grad: linear-gradient(
+          135deg,
+          var(--accent),
+          color-mix(in oklch, var(--accent) 82%, var(--shadow-color))
+        );
 
         /* ── Near-black = neutral/secondary contrast (e.g. "All" pill) ── */
-        --accent: #1a1a1c;
-        --accent-2: #3a3a40;
-        --accent-dim: rgba(20, 20, 22, 0.06);
-        --danger: #d4452f;
+        --accent-dim: var(--hover);
 
         /* ── Type scale (matches mockup: bold display, letter-spaced labels) ── */
-        --t-display: 700 22px/1.15
-          var(--boxel-font-family, system-ui, sans-serif);
-        --t-heading: 800 15px/1.2
-          var(--boxel-font-family, system-ui, sans-serif);
-        --t-label: 700 11px/1 var(--boxel-font-family, system-ui, sans-serif);
+        --t-display: 700 1.375rem/1.15 var(--boxel-font-family);
+        --t-heading: 800 0.9375rem/1.2 var(--boxel-font-family);
+        --t-label: 700 0.6875rem/1 var(--boxel-font-family);
         --t-label-ls: 0.12em;
 
-        --r: 14px;
-        --rs: 10px;
-        --shadow: 0 10px 34px rgba(30, 27, 20, 0.12);
+        --r: 0.875rem;
+        --rs: 0.625rem;
         display: flex;
         flex-direction: column;
         /* Height that works for both host layouts:
@@ -2132,16 +2161,10 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
            this base rule is the single source of truth for the app height.) */
         height: 100dvh;
         max-height: 100%;
-        background:
-          radial-gradient(
-            130% 90% at 85% -10%,
-            rgba(184, 137, 59, 0.1),
-            transparent 55%
-          ),
-          linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
-        color: var(--text);
-        font-family: var(--boxel-font-family, system-ui, sans-serif);
-        font-size: 13px;
+        background-color: var(--canvas);
+        color: var(--foreground);
+        font-family: var(--boxel-font-family);
+        font-size: 0.8125rem;
         -webkit-font-smoothing: antialiased;
         container-type: size;
         container-name: app;
@@ -2154,9 +2177,10 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .model-strip {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 12px 18px;
-        background: rgba(255, 255, 255, 0.7);
+        gap: 0.625rem;
+        padding: 0.75rem 1.125rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         backdrop-filter: blur(8px);
         border-bottom: 1px solid var(--border-soft);
         flex-shrink: 0;
@@ -2167,19 +2191,19 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .brand {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
         flex-shrink: 0;
       }
       .brand-mark {
         color: var(--gold);
-        font-size: 16px;
+        font-size: 1rem;
         line-height: 1;
       }
       .brand-name {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 800;
         letter-spacing: 0.01em;
-        color: var(--text);
+        color: var(--foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -2187,11 +2211,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .model-scroll {
         display: flex;
-        gap: 10px;
+        gap: 0.625rem;
         overflow-x: auto;
         flex: 0 1 auto;
         scrollbar-width: none;
-        padding: 4px;
+        padding: 0.25rem;
       }
       .model-scroll::-webkit-scrollbar {
         display: none;
@@ -2202,22 +2226,23 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .model-unlink {
         position: absolute;
-        top: -3px;
-        right: -3px;
-        width: 18px;
-        height: 18px;
+        top: -0.1875rem;
+        right: -0.1875rem;
+        width: 1.125rem;
+        height: 1.125rem;
         border-radius: 50%;
-        background: var(--surface);
+        background-color: var(--card);
         border: 1px solid var(--border);
-        color: #555;
-        font-size: 9px;
+        color: var(--muted-foreground);
+        font-size: 0.5625rem;
         line-height: 1;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 0;
-        box-shadow: 0 2px 6px rgba(30, 27, 20, 0.22);
+        box-shadow: 0 2px 6px
+          color-mix(in oklch, var(--shadow-color) 22%, transparent);
         transition:
           background 0.12s,
           color 0.12s,
@@ -2225,9 +2250,9 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         z-index: 3;
       }
       .model-unlink:hover {
-        background: var(--danger);
-        color: #fff;
-        border-color: var(--danger);
+        background-color: var(--destructive);
+        color: var(--destructive-foreground);
+        border-color: var(--destructive);
         transform: scale(1.1);
       }
       /* Add-model: a circular trigger that opens a text popover */
@@ -2240,13 +2265,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         margin-left: auto;
       }
       .model-add-circle {
-        width: 46px;
-        height: 46px;
+        width: 2.875rem;
+        height: 2.875rem;
         border-radius: 50%;
         border: 1.5px dashed var(--border);
-        background: var(--surface);
-        color: var(--muted);
-        font-size: 22px;
+        background-color: var(--card);
+        color: var(--muted-foreground);
+        font-size: 1.375rem;
         font-weight: 300;
         line-height: 1;
         cursor: pointer;
@@ -2263,8 +2288,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .model-add-circle:hover:not(:disabled),
       .model-add-circle.is-open {
         border-color: var(--accent);
-        color: var(--accent);
-        background: var(--accent-dim);
+        color: var(--accent-ink);
+        background-color: var(--accent-dim);
         transform: scale(1.06);
       }
       .model-add-circle:disabled {
@@ -2274,7 +2299,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .menu-backdrop {
         position: fixed;
         inset: 0;
-        background: transparent;
+        background-color: transparent;
         border: none;
         padding: 0;
         cursor: default;
@@ -2282,14 +2307,15 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .model-menu {
         position: absolute;
-        top: calc(100% + 10px);
+        top: calc(100% + 0.625rem);
         right: 0;
-        min-width: 200px;
-        background: var(--surface);
+        min-width: 12.5rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: 1px solid var(--border-soft);
         border-radius: var(--rs);
         box-shadow: var(--shadow);
-        padding: 8px;
+        padding: 0.5rem;
         display: flex;
         flex-direction: column;
         gap: 2px;
@@ -2304,22 +2330,22 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         }
       }
       .model-menu-title {
-        font-size: 9px;
+        font-size: 0.5625rem;
         font-weight: 800;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--muted);
-        padding: 6px 10px 4px;
+        color: var(--muted-foreground);
+        padding: 0.375rem 0.625rem 0.25rem;
       }
       .model-menu-item {
         text-align: left;
         background: none;
         border: none;
-        border-radius: 8px;
-        padding: 10px 10px;
-        font-size: 13px;
+        border-radius: 0.5rem;
+        padding: 0.625rem 0.625rem;
+        font-size: 0.8125rem;
         font-weight: 600;
-        color: var(--text);
+        color: var(--foreground);
         cursor: pointer;
         transition:
           background 0.12s,
@@ -2327,20 +2353,21 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           padding-left 0.12s;
       }
       .model-menu-item:hover {
-        background: var(--accent-dim);
+        background-color: var(--accent-dim);
         color: var(--gold);
-        padding-left: 14px;
+        padding-left: 0.875rem;
       }
       .model-thumb {
         flex-shrink: 0;
-        width: 46px;
-        height: 46px;
+        width: 2.875rem;
+        height: 2.875rem;
         border-radius: 50%;
         overflow: hidden;
         border: 2px solid var(--border);
         cursor: pointer;
         padding: 0;
-        background: var(--surface2);
+        background-color: var(--card);
+        color: var(--card-foreground);
         transition:
           border-color 0.2s,
           transform 0.2s,
@@ -2371,7 +2398,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--muted);
+        color: var(--muted-foreground);
         font-size: 1.1rem;
       }
 
@@ -2380,18 +2407,19 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        font-size: 11px;
+        gap: 0.375rem;
+        font-size: 0.6875rem;
         font-weight: 700;
         letter-spacing: 0.04em;
-        color: var(--text);
-        background: var(--surface);
+        color: var(--foreground);
+        background-color: var(--card);
         border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 7px 14px;
+        border-radius: 62.4375rem;
+        padding: 0.4375rem 0.875rem;
         cursor: pointer;
         white-space: nowrap;
-        box-shadow: 0 1px 3px rgba(30, 27, 20, 0.06);
+        box-shadow: 0 1px 3px
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
         transition:
           background 0.18s,
           color 0.18s,
@@ -2399,13 +2427,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           transform 0.12s;
       }
       .add-btn:hover {
-        background: var(--accent);
+        background-color: var(--accent);
         border-color: var(--accent);
-        color: #fff;
+        color: var(--accent-foreground);
         transform: translateY(-1px);
       }
       .add-btn-ico {
-        font-size: 13px;
+        font-size: 0.8125rem;
         line-height: 1;
       }
 
@@ -2426,71 +2454,82 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex-direction: column;
         overflow: hidden;
         flex-shrink: 0;
-        background: rgba(255, 255, 255, 0.5);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .sidebar-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 16px 16px 10px;
+        padding: 1rem 1rem 0.625rem;
         flex-shrink: 0;
       }
       .sidebar-title {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.18em;
-        color: var(--text);
+        color: var(--foreground);
       }
       .filter-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 5px;
-        padding: 0 14px 12px;
+        gap: 0.3125rem;
+        padding: 0 0.875rem 0.75rem;
         flex-shrink: 0;
       }
       .filter-pill {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        padding: 5px 11px;
-        border-radius: 999px;
+        padding: 0.3125rem 0.6875rem;
+        border-radius: 62.4375rem;
         border: 1px solid var(--border);
         background: none;
-        color: #6b675e;
+        color: var(--muted-foreground);
         cursor: pointer;
         transition: all 0.15s;
       }
       .filter-pill:hover {
         border-color: var(--accent);
-        background: var(--surface2);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .filter-pill--on {
-        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        background: linear-gradient(
+            135deg,
+            var(--accent),
+            color-mix(in oklch, var(--accent) 82%, var(--foreground))
+          )
+          padding-box;
         border-color: transparent;
-        color: #fff;
-        box-shadow: 0 2px 10px rgba(20, 20, 22, 0.2);
+        color: var(--accent-foreground);
       }
-      /* Keep the active pill's gradient + white text on hover — the base
-         :hover rule would otherwise out-specify and recolor it. */
+      /* Keep the active pill's gradient + text on hover — the base :hover
+         rule would otherwise out-specify and recolor it. */
       .filter-pill--on:hover {
-        background: linear-gradient(135deg, var(--accent), var(--accent-2));
-        color: #fff;
+        background: linear-gradient(
+            135deg,
+            var(--accent),
+            color-mix(in oklch, var(--accent) 82%, var(--foreground))
+          )
+          padding-box;
+        color: var(--accent-foreground);
       }
       /* Categorised garment sections */
       .garment-sections {
         flex: 1;
         overflow-y: auto;
-        padding: 4px 16px 18px;
+        padding: 0.25rem 1rem 1.125rem;
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 1.25rem;
       }
       .gsection {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 0.625rem;
       }
       .gsection-head {
         display: flex;
@@ -2498,36 +2537,37 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         justify-content: space-between;
       }
       .gsection-title {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.14em;
-        color: var(--text);
+        color: var(--foreground);
       }
       .view-all {
         background: none;
         border: none;
         padding: 0;
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         letter-spacing: 0.02em;
-        color: var(--muted);
+        color: var(--muted-foreground);
         cursor: pointer;
         transition: color 0.15s;
       }
       .view-all:hover {
-        color: var(--accent);
+        color: var(--accent-ink);
       }
       .gsection-grid {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
-        gap: 10px;
+        gap: 0.625rem;
       }
       .garment-item {
         position: relative;
-        background: var(--surface2);
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: 1.5px solid transparent;
-        border-radius: 14px;
+        border-radius: 0.875rem;
         overflow: hidden;
         cursor: pointer;
         aspect-ratio: 1;
@@ -2560,11 +2600,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 4px;
-        background: var(--surface2);
+        gap: 0.25rem;
+        background-color: var(--card);
         border: 1.5px dashed var(--border);
-        border-radius: 14px;
-        color: var(--muted);
+        border-radius: 0.875rem;
+        color: var(--muted-foreground);
         cursor: pointer;
         transition:
           transform 0.18s,
@@ -2576,19 +2616,19 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         transform: translateY(-2px);
         border-color: var(--gold);
         color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 6%, var(--surface2));
+        background-color: color-mix(in oklch, var(--gold) 6%, var(--card));
       }
       .garment-add:disabled {
         opacity: 0.4;
         cursor: not-allowed;
       }
       .garment-add-ico {
-        font-size: 22px;
+        font-size: 1.375rem;
         font-weight: 300;
         line-height: 1;
       }
       .garment-add-lbl {
-        font-size: 9px;
+        font-size: 0.5625rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
@@ -2596,12 +2636,12 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       /* Per-category loading skeleton — shimmer tile matching garment-item */
       .garment-skeleton {
         aspect-ratio: 1;
-        border-radius: 14px;
+        border-radius: 0.875rem;
         background: linear-gradient(
           100deg,
-          var(--surface2) 30%,
-          rgba(255, 255, 255, 0.6) 50%,
-          var(--surface2) 70%
+          var(--card) 30%,
+          color-mix(in oklch, var(--card) 60%, transparent) 50%,
+          var(--card) 70%
         );
         background-size: 200% 100%;
         animation: garment-shimmer 1.2s ease-in-out infinite;
@@ -2620,7 +2660,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding: 16px;
+        padding: 1rem;
         overflow: visible;
         min-width: 0;
       }
@@ -2630,7 +2670,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         /* nowrap so the preview sizes to the allotted height, not the tall
            image's intrinsic height (wrap let it overflow and get clipped). */
         flex-wrap: nowrap;
-        gap: 16px;
+        gap: 1rem;
         min-height: 0;
         overflow: hidden;
       }
@@ -2649,42 +2689,45 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .side-col {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 1rem;
         overflow-y: auto;
       }
       .side-card {
-        background: var(--surface);
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: 1px solid var(--border-soft);
-        border-radius: 16px;
-        padding: 16px;
+        border-radius: 1rem;
+        padding: 1rem;
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        box-shadow: 0 4px 16px rgba(30, 27, 20, 0.05);
+        gap: 0.75rem;
+        box-shadow: 0 4px 16px
+          color-mix(in oklch, var(--shadow-color) 5%, transparent);
       }
       .side-card-title {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.16em;
-        color: var(--muted);
+        color: var(--muted-foreground);
       }
       .view-seg {
         display: flex;
-        gap: 4px;
-        background: var(--surface2);
-        border-radius: 999px;
-        padding: 4px;
+        gap: 0.25rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-radius: 62.4375rem;
+        padding: 0.25rem;
       }
       .view-seg-btn {
         flex: 1;
-        padding: 8px 0;
+        padding: 0.5rem 0;
         border: none;
         background: none;
-        border-radius: 999px;
-        font-size: 11px;
+        border-radius: 62.4375rem;
+        font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--muted);
+        color: var(--muted-foreground);
         cursor: pointer;
         transition:
           background 0.15s,
@@ -2695,46 +2738,48 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         cursor: default;
       }
       .view-seg-btn--on {
-        background: color-mix(in srgb, var(--gold) 22%, #fff);
+        background-color: color-mix(in oklch, var(--gold) 22%, var(--card));
         color: var(--gold);
-        box-shadow: 0 1px 4px rgba(184, 137, 59, 0.25);
+        box-shadow: 0 1px 4px
+          color-mix(in oklch, var(--accent) 25%, transparent);
       }
       /* Before a result exists, Front is the active view — don't gray it out */
       .view-seg-btn:first-child:not(:disabled) {
-        color: var(--text);
+        color: var(--foreground);
       }
       .side-tip {
         margin: 0;
-        font-size: 12px;
+        font-size: 0.75rem;
         line-height: 1.5;
-        color: #6b675e;
+        color: var(--muted-foreground);
       }
 
       /* View angle overlay (right side of preview) */
       .view-overlay {
         position: absolute;
         top: 50%;
-        right: 14px;
+        right: 0.875rem;
         transform: translateY(-50%);
         z-index: 5;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 0.375rem;
       }
       .vo-btn {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 4px;
-        padding: 10px 10px 8px;
-        border-radius: 14px;
+        gap: 0.25rem;
+        padding: 0.625rem 0.625rem 0.5rem;
+        border-radius: 0.875rem;
         border: 1px solid var(--border-soft);
-        background: rgba(255, 255, 255, 0.88);
+        background-color: var(--card);
         backdrop-filter: blur(6px);
-        color: var(--muted);
+        color: var(--muted-foreground);
         cursor: pointer;
-        min-width: 52px;
-        box-shadow: 0 2px 10px rgba(30, 27, 20, 0.1);
+        min-width: 3.25rem;
+        box-shadow: 0 2px 10px
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
         transition:
           background 0.15s,
           color 0.15s,
@@ -2745,43 +2790,44 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         cursor: not-allowed;
       }
       .vo-btn--on {
-        background: color-mix(in srgb, var(--gold) 16%, #fff);
-        border-color: color-mix(in srgb, var(--gold) 40%, transparent);
+        background-color: color-mix(in oklch, var(--gold) 16%, var(--card));
+        border-color: color-mix(in oklch, var(--gold) 40%, transparent);
         color: var(--gold);
-        box-shadow: 0 2px 12px rgba(184, 137, 59, 0.2);
+        box-shadow: 0 2px 12px
+          color-mix(in oklch, var(--accent) 20%, transparent);
       }
       .vo-icon {
-        width: 22px;
-        height: 22px;
+        width: 1.375rem;
+        height: 1.375rem;
         flex-shrink: 0;
       }
       .vo-lbl {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         letter-spacing: 0.04em;
       }
       .preview-hint {
         position: absolute;
-        bottom: 14px;
+        bottom: 0.875rem;
         left: 50%;
         transform: translateX(-50%);
         z-index: 5;
         display: flex;
         align-items: center;
-        gap: 7px;
-        padding: 9px 18px;
-        background: rgba(22, 21, 26, 0.72);
+        gap: 0.4375rem;
+        padding: 0.5625rem 1.125rem;
+        background-color: var(--tooltip);
+        color: var(--tooltip-foreground);
         backdrop-filter: blur(6px);
-        border-radius: 999px;
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 11px;
+        border-radius: 62.4375rem;
+        font-size: 0.6875rem;
         font-weight: 600;
         white-space: nowrap;
         pointer-events: none;
       }
       .preview-hint-ico {
         color: var(--gold);
-        font-size: 12px;
+        font-size: 0.75rem;
       }
       .sq-body--photo {
         border-radius: 50% !important;
@@ -2793,23 +2839,24 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .sq-slot--model:not(.sq-slot--off):hover .sq-body {
         border-color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 6%, #fff);
+        background-color: color-mix(in oklch, var(--gold) 6%, var(--card));
       }
       .sq-model-menu {
         position: absolute;
-        top: calc(100% + 8px);
+        top: calc(100% + 0.5rem);
         left: 50%;
         transform: translateX(-50%);
         z-index: 60;
-        background: var(--surface);
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: 1px solid var(--border-soft);
         border-radius: var(--rs);
         box-shadow: var(--shadow);
-        padding: 6px;
+        padding: 0.375rem;
         display: flex;
         flex-direction: column;
         gap: 2px;
-        min-width: 160px;
+        min-width: 10rem;
         animation: menu-pop 0.14s ease-out;
         transform-origin: top center;
       }
@@ -2817,24 +2864,24 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         text-align: left;
         background: none;
         border: none;
-        border-radius: 7px;
-        padding: 9px 10px;
-        font-size: 12px;
+        border-radius: 0.4375rem;
+        padding: 0.5625rem 0.625rem;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--text);
+        color: var(--foreground);
         cursor: pointer;
         white-space: nowrap;
         transition: background 0.12s;
       }
       .sq-model-item:hover {
-        background: var(--accent-dim);
+        background-color: var(--accent-dim);
         color: var(--gold);
       }
       .sq-divider {
         width: 1px;
-        background: var(--border-soft);
+        background-color: var(--border-soft);
         align-self: stretch;
-        margin: 0 14px;
+        margin: 0 0.875rem;
         flex-shrink: 0;
       }
       /* Bottom action bar */
@@ -2843,18 +2890,18 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 14px;
-        padding: 18px 24px 24px;
+        gap: 0.875rem;
+        padding: 1.125rem 1.5rem 1.5rem;
       }
       .act-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        min-width: 200px;
-        padding: 15px 28px;
-        border-radius: 999px;
-        font-size: 12px;
+        gap: 0.5rem;
+        min-width: 12.5rem;
+        padding: 0.9375rem 1.75rem;
+        border-radius: 62.4375rem;
+        font-size: 0.75rem;
         font-weight: 800;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -2866,21 +2913,21 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .act-btn--primary {
         background: var(--primary-grad);
-        color: #fff;
+        color: var(--card-foreground);
         border: none;
         box-shadow:
-          0 8px 22px rgba(184, 137, 59, 0.34),
-          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+          0 8px 22px color-mix(in oklch, var(--accent) 34%, transparent),
+          inset 0 1px 0 color-mix(in oklch, var(--card) 22%, transparent);
       }
       .act-btn--primary:hover:not(:disabled) {
         transform: translateY(-1px);
         box-shadow:
-          0 12px 30px rgba(184, 137, 59, 0.44),
-          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+          0 12px 30px color-mix(in oklch, var(--accent) 44%, transparent),
+          inset 0 1px 0 color-mix(in oklch, var(--card) 22%, transparent);
       }
       .act-btn--ghost {
-        background: var(--surface);
-        color: var(--text);
+        background-color: var(--card);
+        color: var(--foreground);
         border: 1px solid var(--border);
         min-width: 0;
       }
@@ -2896,39 +2943,41 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         cursor: wait;
       }
       .act-ico {
-        font-size: 14px;
+        font-size: 0.875rem;
         line-height: 1;
       }
 
       /* Stage tools */
       .stage-tools {
         position: absolute;
-        top: 16px;
-        right: 16px;
+        top: 1rem;
+        right: 1rem;
         z-index: 6;
         display: flex;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .tool-btn {
-        width: 38px;
-        height: 38px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.92);
+        width: 2.375rem;
+        height: 2.375rem;
+        border-radius: 0.75rem;
+        background-color: var(--card);
         border: 1px solid var(--border-soft);
-        color: var(--text);
-        font-size: 16px;
+        color: var(--foreground);
+        font-size: 1rem;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 8px rgba(30, 27, 20, 0.12);
+        box-shadow: 0 2px 8px
+          color-mix(in oklch, var(--shadow-color) 12%, transparent);
         transition:
           background 0.15s,
           transform 0.12s;
       }
       .tool-btn:hover {
         transform: translateY(-1px);
-        background: #fff;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
 
       /* ── Slots bar (horizontal card of garment tiles with icons) ── */
@@ -2936,7 +2985,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 20px 24px 16px;
+        padding: 1.25rem 1.5rem 1rem;
         flex-shrink: 0;
       }
       .body-hint {
@@ -2944,20 +2993,25 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
            notice is always visible, regardless of the Tips column. */
         display: flex;
         position: absolute;
-        left: 16px;
-        bottom: 16px;
+        left: 1rem;
+        bottom: 1rem;
         z-index: 5;
         align-items: flex-start;
-        gap: 8px;
-        max-width: min(360px, calc(100% - 32px));
-        padding: 8px 14px;
-        border-radius: 12px;
-        background: color-mix(in srgb, var(--gold-soft) 92%, transparent);
+        gap: 0.5rem;
+        max-width: min(22.5rem, calc(100% - 2rem));
+        padding: 0.5rem 0.875rem;
+        border-radius: 0.75rem;
+        background-color: color-mix(
+          in oklch,
+          var(--gold-soft) 92%,
+          transparent
+        );
         backdrop-filter: blur(8px);
-        border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
-        box-shadow: 0 6px 20px rgba(30, 27, 20, 0.12);
-        color: var(--gold-deep);
-        font-size: 12px;
+        border: 1px solid color-mix(in oklch, var(--gold) 30%, transparent);
+        box-shadow: 0 6px 20px
+          color-mix(in oklch, var(--shadow-color) 12%, transparent);
+        color: var(--accent-ink);
+        font-size: 0.75rem;
         line-height: 1.45;
         pointer-events: none;
       }
@@ -2968,15 +3022,17 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .slots-row {
         display: flex;
         align-items: flex-start;
-        gap: 12px;
+        gap: 0.75rem;
         min-width: 0;
         overflow-x: auto;
         scrollbar-width: none;
-        padding: 16px 20px;
-        background: var(--surface);
+        padding: 1rem 1.25rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
         border: 1px solid var(--border-soft);
-        border-radius: 22px;
-        box-shadow: 0 8px 26px rgba(30, 27, 20, 0.06);
+        border-radius: 1.375rem;
+        box-shadow: 0 8px 26px
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
       }
       .slots-row::-webkit-scrollbar {
         display: none;
@@ -2985,19 +3041,17 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       /* Square slot tiles */
       .sq-slot {
         /* Garment slots are the chooser Popover's anchor. The Popover bridges
-           these onto its portaled root so the surface stays transparent (the
-           .chooser-pop box paints the card). 'floating' elevation doubles
-           --bx-popover-radius, so 10px → a 20px root matching .chooser-pop. */
+           this onto its portaled root so the surface stays transparent (the
+           .chooser-pop box paints the card). */
         --bx-popover-bg: transparent;
-        --bx-popover-radius: 6px;
         position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
         cursor: pointer;
         transition: transform 0.12s;
-        width: 88px;
+        width: 5.5rem;
         flex-shrink: 0;
       }
       .sq-slot:not(.sq-slot--off):hover {
@@ -3006,15 +3060,15 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       /* "+" badge top-right */
       .sq-badge {
         position: absolute;
-        top: 6px;
-        right: 6px;
-        width: 20px;
-        height: 20px;
+        top: 0.375rem;
+        right: 0.375rem;
+        width: 1.25rem;
+        height: 1.25rem;
         border-radius: 50%;
-        background: var(--surface);
+        background-color: var(--card);
         border: 1px solid var(--border);
-        color: var(--muted);
-        font-size: 14px;
+        color: var(--muted-foreground);
+        font-size: 0.875rem;
         font-weight: 300;
         line-height: 1;
         display: flex;
@@ -3022,7 +3076,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         justify-content: center;
         z-index: 3;
         pointer-events: none;
-        box-shadow: 0 1px 4px rgba(30, 27, 20, 0.1);
+        box-shadow: 0 1px 4px
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
       }
       /* Hide the "+" badge once filled (the ✕ remove button takes its place) */
       .sq-slot--filled .sq-badge {
@@ -3031,15 +3086,15 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .sq-badge--remove {
         pointer-events: auto;
         cursor: pointer;
-        font-size: 11px;
+        font-size: 0.6875rem;
         padding: 0;
         transition:
           color 0.15s,
           border-color 0.15s;
       }
       .sq-badge--remove:hover:not(:disabled) {
-        color: var(--danger);
-        border-color: var(--danger);
+        color: var(--destructive-ink);
+        border-color: var(--destructive);
       }
       .sq-badge--remove:disabled {
         cursor: not-allowed;
@@ -3047,24 +3102,25 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       /* Category icon */
       .sq-icon {
-        width: 40px;
-        height: 40px;
-        color: var(--text);
+        width: 2.5rem;
+        height: 2.5rem;
+        color: var(--foreground);
         flex-shrink: 0;
       }
       .sq-item-name {
-        font-size: 9px;
+        font-size: 0.5625rem;
         font-weight: 600;
-        color: var(--muted);
+        color: var(--muted-foreground);
         text-align: center;
-        padding: 4px;
+        padding: 0.25rem;
       }
       .sq-body {
-        width: 88px;
-        height: 88px;
-        border-radius: 18px;
+        width: 5.5rem;
+        height: 5.5rem;
+        border-radius: 1.125rem;
         border: 1.5px solid var(--border);
-        background: var(--surface);
+        background-color: var(--card);
+        color: var(--card-foreground);
         position: relative;
         overflow: hidden;
         display: flex;
@@ -3075,32 +3131,34 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           box-shadow 0.18s,
           background 0.15s;
         flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(30, 27, 20, 0.06);
+        box-shadow: 0 2px 8px
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
       }
       .sq-slot:not(.sq-slot--filled):not(.sq-slot--off):hover .sq-body {
         border-color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 5%, #fff);
+        background-color: color-mix(in oklch, var(--gold) 5%, var(--card));
       }
       .sq-slot--filled .sq-body {
         border-color: var(--gold);
         border-width: 2px;
-        background: #fff;
+        background-color: var(--card);
+        color: var(--card-foreground);
         box-shadow:
-          0 3px 10px rgba(30, 27, 20, 0.14),
-          0 0 0 3px color-mix(in srgb, var(--gold) 14%, transparent);
+          0 3px 10px color-mix(in oklch, var(--shadow-color) 14%, transparent),
+          0 0 0 3px color-mix(in oklch, var(--gold) 14%, transparent);
       }
       /* Active slot: gold border (last tapped to open chooser) */
       .sq-slot--active .sq-body {
         border-color: var(--gold);
         border-width: 2px;
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 16%, transparent);
+        box-shadow: 0 0 0 3px color-mix(in oklch, var(--gold) 16%, transparent);
       }
       .sq-slot--over .sq-body {
         border-color: var(--accent);
         box-shadow:
           0 0 0 3px var(--accent-dim),
           inset 0 0 12px var(--accent-dim);
-        background: var(--accent-dim);
+        background-color: var(--accent-dim);
       }
       .sq-slot--off {
         opacity: 0.45;
@@ -3117,49 +3175,51 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         height: 100%;
         object-fit: cover;
         padding: 0;
-        background: #fff;
+        background-color: var(--card);
+        color: var(--card-foreground);
         display: block;
       }
       .sq-remove {
         position: absolute;
-        top: -6px;
-        right: -6px;
-        width: 22px;
-        height: 22px;
+        top: -0.375rem;
+        right: -0.375rem;
+        width: 1.375rem;
+        height: 1.375rem;
         border-radius: 50%;
-        background: #fff;
+        background-color: var(--card);
         border: 1px solid var(--border-soft);
-        color: #444;
-        font-size: 10px;
+        color: var(--foreground);
+        font-size: 0.625rem;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         line-height: 1;
         z-index: 4;
-        box-shadow: 0 2px 6px rgba(30, 27, 20, 0.18);
+        box-shadow: 0 2px 6px
+          color-mix(in oklch, var(--shadow-color) 18%, transparent);
         transition:
           background 0.12s,
           color 0.12s;
       }
       .sq-remove:hover {
-        background: var(--danger);
-        color: #fff;
-        border-color: var(--danger);
+        background-color: var(--destructive);
+        color: var(--destructive-foreground);
+        border-color: var(--destructive);
       }
       .sq-lbl {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.12em;
-        color: #6b675e;
+        color: var(--muted-foreground);
         max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .sq-slot--filled .sq-lbl {
-        color: var(--text);
+        color: var(--foreground);
       }
       .sq-slot--active .sq-lbl {
         color: var(--gold);
@@ -3173,13 +3233,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .gen-btn {
         flex-shrink: 0;
-        min-width: 180px;
-        padding: 13px 28px;
+        min-width: 11.25rem;
+        padding: 0.8125rem 1.75rem;
         background: var(--primary-grad);
-        color: #fff;
+        color: var(--card-foreground);
         border: none;
-        border-radius: 999px;
-        font-size: 11px;
+        border-radius: 62.4375rem;
+        font-size: 0.6875rem;
         font-weight: 800;
         letter-spacing: 0.1em;
         text-transform: uppercase;
@@ -3187,11 +3247,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: 0.375rem;
         white-space: nowrap;
         box-shadow:
-          0 6px 18px rgba(184, 137, 59, 0.32),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+          0 6px 18px color-mix(in oklch, var(--accent) 32%, transparent),
+          inset 0 1px 0 color-mix(in oklch, var(--card) 20%, transparent);
         transition:
           transform 0.15s,
           box-shadow 0.2s,
@@ -3200,8 +3260,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .gen-btn:hover:not(:disabled) {
         transform: translateY(-1px);
         box-shadow:
-          0 9px 26px rgba(184, 137, 59, 0.42),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+          0 9px 26px color-mix(in oklch, var(--accent) 42%, transparent),
+          inset 0 1px 0 color-mix(in oklch, var(--card) 20%, transparent);
       }
       .gen-btn:disabled {
         opacity: 0.3;
@@ -3212,21 +3272,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         cursor: wait;
       }
       .gen-btn--done {
-        background: #2d7455;
-        color: #fff;
-      }
-      .gen-spin {
-        width: 12px;
-        height: 12px;
-        border: 2px solid rgba(255, 255, 255, 0.35);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.65s linear infinite;
+        background-color: var(--success);
+        color: var(--success-foreground);
       }
       .err-msg {
-        font-size: 11px;
-        color: var(--danger);
-        padding: 8px 12px;
+        font-size: 0.6875rem;
+        color: var(--destructive-ink);
+        padding: 0.5rem 0.75rem;
         flex-shrink: 0;
       }
 
@@ -3242,16 +3294,16 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 0 26px 26px;
-        padding: 20px;
-        border-radius: 24px;
+        margin: 0 0 1.625rem 1.625rem;
+        padding: 1.25rem;
+        border-radius: 1.5rem;
         background:
           radial-gradient(
             80% 60% at 50% 18%,
-            rgba(184, 137, 59, 0.06),
+            color-mix(in oklch, var(--card) 6%, transparent),
             transparent 70%
           ),
-          var(--surface2);
+          var(--card);
       }
 
       /* ── Generation progress pill ── */
@@ -3259,27 +3311,28 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
          (right) while side/back views generate after the front is ready. */
       .gen-pill {
         position: absolute;
-        top: 16px;
-        left: 16px;
+        top: 1rem;
+        left: 1rem;
         z-index: 5;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 7px 12px;
-        background: rgba(20, 20, 22, 0.82);
-        color: #fff;
-        border-radius: 999px;
-        font-size: 10px;
+        gap: 0.5rem;
+        padding: 0.4375rem 0.75rem;
+        background-color: var(--tooltip);
+        color: var(--tooltip-foreground);
+        border-radius: 62.4375rem;
+        font-size: 0.625rem;
         font-weight: 700;
         letter-spacing: 0.04em;
         backdrop-filter: blur(6px);
-        box-shadow: 0 4px 14px rgba(20, 20, 22, 0.25);
+        box-shadow: 0 4px 14px
+          color-mix(in oklch, var(--shadow-color) 25%, transparent);
       }
       .gen-pill-dot {
-        width: 7px;
-        height: 7px;
+        width: 0.4375rem;
+        height: 0.4375rem;
         border-radius: 50%;
-        background: var(--gold);
+        background-color: var(--gold);
         animation: pill-pulse 1s ease-in-out infinite;
       }
       @keyframes pill-pulse {
@@ -3296,10 +3349,10 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 12px;
+        gap: 0.75rem;
         width: 100%;
-        color: var(--muted);
-        font-size: 12px;
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
       }
       .result-empty-ico {
         font-size: 2rem;
@@ -3325,24 +3378,27 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         left: 0;
         right: 0;
         bottom: 0;
-        padding: 14px 14px 12px;
+        padding: 0.875rem 0.875rem 0.75rem;
         text-align: center;
-        font-size: 11px;
-        color: #fff;
-        background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+        font-size: 0.6875rem;
+        color: var(--card-foreground);
+        background: linear-gradient(
+          transparent,
+          color-mix(in oklch, var(--foreground) 72%, transparent)
+        );
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 0.25rem;
       }
       .result-model-note {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 500;
         line-height: 1.35;
         opacity: 0.8;
       }
       .result-note {
-        max-width: 280px;
-        font-size: 10px;
+        max-width: 17.5rem;
+        font-size: 0.625rem;
         line-height: 1.4;
         opacity: 0.7;
       }
@@ -3351,18 +3407,18 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 14px;
+        gap: 0.875rem;
         width: 100%;
         height: 100%;
         flex-shrink: 0;
-        color: var(--muted);
-        font-size: 12px;
-        border-radius: 18px;
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
+        border-radius: 1.125rem;
         background: linear-gradient(
           100deg,
-          var(--surface) 30%,
-          #e9e6df 50%,
-          var(--surface) 70%
+          var(--card) 30%,
+          var(--inset) 50%,
+          var(--card) 70%
         );
         background-size: 200% 100%;
         animation: skeleton 1.4s ease-in-out infinite;
@@ -3376,12 +3432,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         }
       }
       .big-spin {
-        width: 32px;
-        height: 32px;
-        border: 3px solid var(--border);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+        --boxel-loading-indicator-color: var(--accent);
       }
 
       /* ── Carousel ── */
@@ -3391,7 +3442,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         width: 100%;
         height: 100%;
         flex-shrink: 0;
-        border-radius: 18px;
+        border-radius: 1.125rem;
         cursor: grab;
         touch-action: pan-y;
         user-select: none;
@@ -3421,55 +3472,50 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .slide-empty {
         width: 100%;
         height: 100%;
-        min-height: 200px;
-        background: var(--surface2);
+        min-height: 12.5rem;
+        background-color: var(--card);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        color: var(--muted);
-        font-size: 11px;
+        gap: 0.625rem;
+        color: var(--muted-foreground);
+        font-size: 0.6875rem;
       }
       .slide-empty-lbl {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         opacity: 0.4;
       }
       .slide-spin {
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--border);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
+        --boxel-loading-indicator-color: var(--accent);
       }
       .slide-badge {
         position: absolute;
-        bottom: 10px;
-        left: 12px;
-        font-size: 9px;
+        bottom: 0.625rem;
+        left: 0.75rem;
+        font-size: 0.5625rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.12em;
-        color: rgba(255, 255, 255, 0.85);
-        background: rgba(0, 0, 0, 0.5);
-        padding: 2px 8px;
-        border-radius: 999px;
+        color: color-mix(in oklch, var(--card-foreground) 85%, transparent);
+        background-color: color-mix(in oklch, var(--tooltip) 50%, transparent);
+        padding: 2px 0.5rem;
+        border-radius: 62.4375rem;
         backdrop-filter: blur(4px);
       }
       .c-arrow {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        background: rgba(0, 0, 0, 0.5);
+        background-color: var(--overlay);
         border: none;
-        color: #fff;
-        font-size: 22px;
-        width: 34px;
-        height: 34px;
+        color: var(--tooltip-foreground);
+        font-size: 1.375rem;
+        width: 2.125rem;
+        height: 2.125rem;
         border-radius: 50%;
         cursor: pointer;
         display: flex;
@@ -3480,31 +3526,33 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         transition: background 0.15s;
       }
       .c-arrow:hover:not(:disabled) {
-        background: rgba(0, 0, 0, 0.72);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .c-arrow:disabled {
         opacity: 0.2;
         cursor: default;
       }
       .c-arrow--l {
-        left: 10px;
+        left: 0.625rem;
       }
       .c-arrow--r {
-        right: 10px;
+        right: 0.625rem;
       }
       .c-dots {
         position: absolute;
-        bottom: 10px;
+        bottom: 0.625rem;
         left: 50%;
         transform: translateX(-50%);
         display: flex;
-        gap: 5px;
+        gap: 0.3125rem;
       }
       .c-dot {
-        width: 6px;
-        height: 6px;
+        width: 0.375rem;
+        height: 0.375rem;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.3);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border: none;
         cursor: pointer;
         padding: 0;
@@ -3513,39 +3561,41 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           transform 0.2s;
       }
       .c-dot--on {
-        background: #fff;
+        background-color: var(--card);
+        color: var(--card-foreground);
         transform: scale(1.35);
       }
 
       /* ── Desktop styling studio ── */
       @container app (width >= 640px) {
         .sidebar {
-          width: 340px;
-          flex: 0 0 340px;
-          background: rgba(255, 255, 255, 0.62);
+          width: 21.25rem;
+          flex: 0 0 21.25rem;
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .slots-row {
-          gap: 16px;
+          gap: 1rem;
         }
         /* Smaller slot tiles + less top margin on desktop so the preview
            section is the visual focus. */
         .slots-bar {
-          padding: 8px 24px 14px;
+          padding: 0.5rem 1.5rem 0.875rem;
         }
         .sq-slot {
-          width: 62px;
+          width: 3.875rem;
         }
         .sq-body {
-          width: 62px;
-          height: 62px;
-          border-radius: 14px;
+          width: 3.875rem;
+          height: 3.875rem;
+          border-radius: 0.875rem;
         }
         .sq-icon {
-          width: 26px;
-          height: 26px;
+          width: 1.625rem;
+          height: 1.625rem;
         }
         .sq-lbl {
-          font-size: 9px;
+          font-size: 0.5625rem;
         }
         /* The slots bar stays pinned at the top; the stage body below it is the
            scroll area (overflow-y:auto). slots-bar is a sibling ABOVE
@@ -3555,8 +3605,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 26px;
-          padding: 0 26px 26px;
+          gap: 1.625rem;
+          padding: 0 1.625rem 1.625rem;
           overflow-y: auto;
         }
         .preview {
@@ -3565,7 +3615,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
              window is short the stage body scrolls — the slots bar stays. */
           flex: 0 0 auto;
           width: 100%;
-          max-width: 560px;
+          max-width: 35rem;
           aspect-ratio: 1;
           margin-inline: auto;
           min-height: 0;
@@ -3607,11 +3657,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         .preview {
           overflow: hidden;
           flex: 1 1 auto;
-          max-width: 560px;
+          max-width: 35rem;
           margin-inline: 0;
         }
         .side-col {
-          flex: 0 0 240px;
+          flex: 0 0 15rem;
           overflow-y: auto;
         }
       }
@@ -3619,8 +3669,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       /* Wider desktop — roomier sidebar */
       @container app (width >= 1100px) {
         .sidebar {
-          width: 380px;
-          flex: 0 0 380px;
+          width: 23.75rem;
+          flex: 0 0 23.75rem;
         }
       }
 
@@ -3646,11 +3696,12 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .lightbox-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(20, 18, 14, 0.82);
+        background-color: var(--card);
+        color: var(--card-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 40px;
+        padding: 2.5rem;
         z-index: 200;
         backdrop-filter: blur(8px);
       }
@@ -3658,22 +3709,23 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
-        border-radius: 12px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        border-radius: 0.75rem;
+        box-shadow: 0 20px 60px
+          color-mix(in oklch, var(--shadow-color) 45%, transparent);
       }
       /* Same circular control as the other modals (see .modal-close); only
          the absolute placement over the lightbox image is specific here. */
       .lightbox-close {
         position: absolute;
-        top: 16px;
-        right: 16px;
-        width: 34px;
-        height: 34px;
+        top: 1rem;
+        right: 1rem;
+        width: 2.125rem;
+        height: 2.125rem;
         border-radius: 50%;
         border: none;
-        background: var(--surface2);
-        color: var(--muted);
-        font-size: 15px;
+        background-color: var(--card);
+        color: var(--muted-foreground);
+        font-size: 0.9375rem;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -3684,8 +3736,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           color 0.15s;
       }
       .lightbox-close:hover {
-        background: var(--border);
-        color: var(--text);
+        background-color: var(--border);
+        color: var(--foreground);
       }
 
       /* ── Modal ── */
@@ -3693,27 +3745,23 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
          to the host). Re-declare the app tokens it uses since they live on
          .app, out of reach once portaled. */
       .modal-pop {
-        --surface: #ffffff;
-        --surface2: #f1efea;
-        --border: #e4e1d9;
-        --border-soft: rgba(20, 18, 14, 0.08);
-        --text: #1a1a1c;
-        --muted: #8c887d;
-        --gold: #c19a4b;
-        --gold-deep: #a9762b;
-        --accent: #1a1a1c;
-        --accent-2: #3a3a40;
-        --danger: #d4452f;
-        --r: 14px;
-        --rs: 10px;
-        width: min(440px, 92vw);
-        max-height: min(88dvh, 680px);
-        background: var(--surface);
-        border-radius: 12px;
+        --border-soft: color-mix(
+          in oklch,
+          var(--border-strong) 8%,
+          transparent
+        );
+        --gold: var(--accent);
+        --r: 0.875rem;
+        --rs: 0.625rem;
+        width: min(27.5rem, 92vw);
+        max-height: min(88dvh, 42.5rem);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-radius: 0.75rem;
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        padding: 18px 16px;
+        gap: 1rem;
+        padding: 1.125rem 1rem;
         overflow-y: auto;
       }
       .modal-head {
@@ -3722,22 +3770,22 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         justify-content: space-between;
       }
       .modal-title {
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.12em;
-        color: var(--text);
+        color: var(--foreground);
       }
       /* Circular close button — shared with .chooser-close / .mpm-close /
          .lightbox-close so every modal dismisses through the same control. */
       .modal-close {
-        background: var(--surface2);
+        background-color: var(--card);
         border: none;
-        color: var(--muted);
+        color: var(--muted-foreground);
         cursor: pointer;
-        font-size: 15px;
-        width: 34px;
-        height: 34px;
+        font-size: 0.9375rem;
+        width: 2.125rem;
+        height: 2.125rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -3748,34 +3796,35 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           color 0.15s;
       }
       .modal-close:hover {
-        background: var(--border);
-        color: var(--text);
+        background-color: var(--border);
+        color: var(--foreground);
       }
 
       /* Details */
       .details-pane {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 0.875rem;
       }
       .preview-img {
         width: 100%;
-        max-height: 220px;
+        max-height: 13.75rem;
         object-fit: contain;
         border-radius: var(--rs);
-        background: var(--surface2);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .field-group {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 0.375rem;
       }
       .field-lbl {
-        font-size: 9px;
+        font-size: 0.5625rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: var(--muted);
+        color: var(--muted-foreground);
       }
       .field-lbl-hint {
         font-weight: 400;
@@ -3784,12 +3833,12 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         opacity: 0.7;
       }
       .field-input {
-        background: var(--surface2);
+        background-color: var(--card);
         border: 1px solid var(--border);
         border-radius: var(--rs);
-        padding: 9px 12px;
-        color: var(--text);
-        font-size: 13px;
+        padding: 0.5625rem 0.75rem;
+        color: var(--foreground);
+        font-size: 0.8125rem;
         outline: none;
         transition: border-color 0.15s;
       }
@@ -3797,26 +3846,26 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         border-color: var(--accent);
       }
       .field-hint {
-        font-size: 10px;
-        color: var(--muted);
+        font-size: 0.625rem;
+        color: var(--muted-foreground);
       }
       .field-hint strong {
-        color: var(--text);
+        color: var(--foreground);
       }
       /* Click-to-upload image dropzone inside the Add popover */
       .img-drop {
         width: 100%;
-        min-height: 160px;
+        min-height: 10rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 16px;
+        gap: 0.5rem;
+        padding: 1rem;
         border: 1.5px dashed var(--border);
         border-radius: var(--rs);
-        background: var(--surface2);
-        color: var(--muted);
+        background-color: var(--card);
+        color: var(--muted-foreground);
         cursor: pointer;
         position: relative;
         transition:
@@ -3827,7 +3876,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       .img-drop:hover {
         border-color: var(--gold);
         color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 5%, var(--surface2));
+        background-color: color-mix(in oklch, var(--gold) 5%, var(--card));
       }
       .img-drop--filled {
         border-style: solid;
@@ -3835,46 +3884,46 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         overflow: hidden;
       }
       .img-drop-ico {
-        font-size: 26px;
+        font-size: 1.625rem;
         font-weight: 300;
         line-height: 1;
       }
       .img-drop-lbl {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
       }
       .img-drop-hint {
         position: absolute;
-        bottom: 8px;
-        right: 8px;
-        font-size: 9px;
+        bottom: 0.5rem;
+        right: 0.5rem;
+        font-size: 0.5625rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #fff;
-        background: rgba(20, 20, 22, 0.7);
-        padding: 4px 8px;
-        border-radius: 999px;
+        color: var(--card-foreground);
+        background-color: var(--card);
+        padding: 0.25rem 0.5rem;
+        border-radius: 62.4375rem;
       }
       .cat-option {
         text-transform: capitalize;
-        font-size: 13px;
+        font-size: 0.8125rem;
         padding: 2px 0;
       }
       .upload-err {
-        font-size: 11px;
-        color: var(--danger);
+        font-size: 0.6875rem;
+        color: var(--destructive-ink);
       }
       .save-btn {
         width: 100%;
-        padding: 13px;
-        background: linear-gradient(135deg, var(--accent), var(--accent-2));
-        color: #fff;
+        padding: 0.8125rem;
+        background-color: var(--accent);
+        color: var(--accent-foreground);
         border: none;
         border-radius: var(--r);
-        font-size: 12px;
+        font-size: 0.75rem;
         font-weight: 800;
         letter-spacing: 0.1em;
         text-transform: uppercase;
@@ -3897,91 +3946,87 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
          Sized via dvh here is safe: the popover is fixed to the host viewport,
          not clipped by .app. */
       .chooser-pop {
-        --surface: #ffffff;
-        --surface2: #f1efea;
-        --border: #e4e1d9;
-        --border-soft: rgba(20, 18, 14, 0.08);
-        --text: #1a1a1c;
-        --muted: #8c887d;
-        --gold: #c19a4b;
-        --gold-deep: #a9762b;
-        --accent: #1a1a1c;
-        --accent-2: #3a3a40;
-        --danger: #d4452f;
-        --r: 14px;
-        --rs: 10px;
+        --border-soft: color-mix(
+          in oklch,
+          var(--border-strong) 8%,
+          transparent
+        );
+        --gold: var(--accent);
+        --r: 0.875rem;
+        --rs: 0.625rem;
         container: chooser-pop / inline-size;
-        width: min(680px, 92vw);
-        max-height: min(80dvh, 640px);
-        background: var(--surface);
-        border-radius: 12px;
+        width: min(42.5rem, 92vw);
+        max-height: min(80dvh, 40rem);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-radius: 0.75rem;
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        padding: 20px;
+        gap: 1rem;
+        padding: 1.25rem;
         overflow: hidden;
       }
       .chooser-head {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 10px;
+        gap: 0.625rem;
         flex-shrink: 0;
-        padding-bottom: 16px;
+        padding-bottom: 1rem;
         border-bottom: 1px solid var(--border-soft);
       }
       .chooser-head-left {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 0.25rem;
       }
       .chooser-eyebrow {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         letter-spacing: 0.18em;
         text-transform: uppercase;
         color: var(--gold);
       }
       .chooser-title {
-        font-size: 22px;
+        font-size: 1.375rem;
         font-weight: 800;
         letter-spacing: -0.01em;
-        color: var(--text);
+        color: var(--foreground);
       }
       .chooser-head-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .chooser-upload {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        font-size: 11px;
+        gap: 0.3125rem;
+        font-size: 0.6875rem;
         font-weight: 700;
-        color: var(--text);
-        background: var(--surface);
+        color: var(--foreground);
+        background-color: var(--card);
         border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 6px 12px;
+        border-radius: 62.4375rem;
+        padding: 0.375rem 0.75rem;
         cursor: pointer;
         transition:
           background 0.15s,
           color 0.15s;
       }
       .chooser-upload:hover {
-        background: var(--accent);
+        background-color: var(--accent);
         border-color: var(--accent);
-        color: #fff;
+        color: var(--accent-foreground);
       }
       .chooser-close {
-        background: var(--surface2);
+        background-color: var(--card);
         border: none;
-        color: var(--muted);
+        color: var(--muted-foreground);
         cursor: pointer;
-        font-size: 15px;
-        width: 34px;
-        height: 34px;
+        font-size: 0.9375rem;
+        width: 2.125rem;
+        height: 2.125rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -3992,23 +4037,23 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           color 0.15s;
       }
       .chooser-close:hover {
-        background: var(--border);
-        color: var(--text);
+        background-color: var(--border);
+        color: var(--foreground);
       }
       .chooser-grid {
         flex: 1;
         min-height: 0;
         overflow-y: auto;
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+        gap: 0.875rem;
         align-content: start;
         padding: 2px;
       }
       .chooser-item {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0.5rem;
         border: none;
         background: none;
         padding: 0;
@@ -4020,11 +4065,13 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         border: 1px solid var(--border-soft);
         border-radius: var(--rs);
         overflow: hidden;
-        background: var(--surface2);
+        background-color: var(--card);
+        color: var(--card-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 10px rgba(30, 27, 20, 0.08);
+        box-shadow: 0 2px 10px
+          color-mix(in oklch, var(--shadow-color) 8%, transparent);
         transition:
           transform 0.15s,
           box-shadow 0.18s,
@@ -4035,7 +4082,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         border-color: var(--accent);
         box-shadow:
           inset 0 0 0 2px var(--accent),
-          0 12px 26px rgba(30, 27, 20, 0.18);
+          0 12px 26px color-mix(in oklch, var(--shadow-color) 18%, transparent);
       }
       /* Upload tile — matches the sidebar Add tile (dashed gray box with the
          + and label centered inside). Sized 3/4 so it lines up with the
@@ -4046,11 +4093,11 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 4px;
-        background: var(--surface2);
+        gap: 0.25rem;
+        background-color: var(--card);
         border: 1.5px dashed var(--border);
         border-radius: var(--rs);
-        color: var(--muted);
+        color: var(--muted-foreground);
         cursor: pointer;
         transition:
           transform 0.18s,
@@ -4062,15 +4109,15 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         transform: translateY(-3px);
         border-color: var(--gold);
         color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 6%, var(--surface2));
+        background-color: color-mix(in oklch, var(--gold) 6%, var(--card));
       }
       .chooser-add-ico {
-        font-size: 26px;
+        font-size: 1.625rem;
         font-weight: 300;
         line-height: 1;
       }
       .chooser-add-lbl {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
@@ -4084,10 +4131,10 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 12px;
-        padding: 28px 16px;
-        color: var(--muted);
-        font-size: 12px;
+        gap: 0.75rem;
+        padding: 1.75rem 1rem;
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
       }
 
       /* ── Model Picker Modal (mpm) ── */
@@ -4098,23 +4145,19 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
          rules now that the .app container is no longer an ancestor. Position,
          dim backdrop, shadow + enter animation are the Popover's job. */
       .mpm-pop {
-        --surface: #ffffff;
-        --surface2: #f1efea;
-        --border: #e4e1d9;
-        --border-soft: rgba(20, 18, 14, 0.08);
-        --text: #1a1a1c;
-        --muted: #8c887d;
-        --gold: #c19a4b;
-        --gold-deep: #a9762b;
-        --accent: #1a1a1c;
-        --accent-2: #3a3a40;
-        --danger: #d4452f;
-        --r: 14px;
+        --border-soft: color-mix(
+          in oklch,
+          var(--border-strong) 8%,
+          transparent
+        );
+        --gold: var(--accent);
+        --r: 0.875rem;
         container: mpm-pop / inline-size;
-        width: min(720px, 92vw);
-        max-height: min(80dvh, 560px);
-        background: var(--surface);
-        border-radius: 12px;
+        width: min(45rem, 92vw);
+        max-height: min(80dvh, 35rem);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-radius: 0.75rem;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -4123,36 +4166,36 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        padding: 28px 32px 20px;
+        padding: 1.75rem 2rem 1.25rem;
         flex-shrink: 0;
         border-bottom: 1px solid var(--border-soft);
       }
       .mpm-head-left {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 0.25rem;
       }
       .mpm-eyebrow {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         letter-spacing: 0.18em;
         text-transform: uppercase;
         color: var(--gold);
       }
       .mpm-title {
-        font-size: 22px;
+        font-size: 1.375rem;
         font-weight: 800;
         letter-spacing: -0.01em;
-        color: var(--text);
+        color: var(--foreground);
       }
       .mpm-close {
-        background: var(--surface2);
+        background-color: var(--card);
         border: none;
-        color: var(--muted);
+        color: var(--muted-foreground);
         cursor: pointer;
-        font-size: 15px;
-        width: 34px;
-        height: 34px;
+        font-size: 0.9375rem;
+        width: 2.125rem;
+        height: 2.125rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -4163,21 +4206,21 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           color 0.15s;
       }
       .mpm-close:hover {
-        background: var(--border);
-        color: var(--text);
+        background-color: var(--border);
+        color: var(--foreground);
       }
       .mpm-body {
         flex: 1;
         display: flex;
-        gap: 20px;
-        padding: 28px 32px 32px;
+        gap: 1.25rem;
+        padding: 1.75rem 2rem 2rem;
         min-height: 0;
       }
       .mpm-card {
         flex: 1;
         display: flex;
         flex-direction: column;
-        border-radius: 16px;
+        border-radius: 1rem;
         overflow: hidden;
         cursor: pointer;
         border: 1.5px solid var(--border-soft);
@@ -4190,7 +4233,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .mpm-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 20px 52px rgba(30, 27, 20, 0.14);
+        box-shadow: 0 20px 52px
+          color-mix(in oklch, var(--shadow-color) 14%, transparent);
         border-color: var(--border);
       }
       .mpm-visual {
@@ -4206,89 +4250,90 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         background:
           radial-gradient(
             ellipse 80% 60% at 50% 40%,
-            rgba(184, 137, 59, 0.15),
+            color-mix(in oklch, var(--accent) 15%, transparent),
             transparent 65%
           ),
-          linear-gradient(160deg, #f6f1e9 0%, #ede4d0 100%);
+          linear-gradient(160deg, var(--card) 0%, var(--inset) 100%);
       }
       .mpm-visual--link {
         background:
           radial-gradient(
             ellipse 80% 60% at 50% 40%,
-            rgba(26, 26, 28, 0.05),
+            color-mix(in oklch, var(--card) 5%, transparent),
             transparent 65%
           ),
-          linear-gradient(160deg, #f2f2f0 0%, #e9e6e0 100%);
+          linear-gradient(160deg, var(--card) 0%, var(--inset) 100%);
       }
       .mpm-visual-icon {
-        width: 84px;
-        height: 84px;
-        color: rgba(30, 27, 20, 0.4);
+        width: 5.25rem;
+        height: 5.25rem;
+        color: var(--subtle-foreground);
         flex-shrink: 0;
       }
       .mpm-visual--upload .mpm-visual-icon {
-        color: var(--gold-deep);
+        color: var(--accent-ink);
         opacity: 0.72;
       }
       .mpm-card-content {
         flex-shrink: 0;
-        background: var(--surface);
-        padding: 20px 22px 24px;
+        background-color: var(--card);
+        color: var(--card-foreground);
+        padding: 1.25rem 1.375rem 1.5rem;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 0.375rem;
         border-top: 1px solid var(--border-soft);
       }
       .mpm-card-title {
-        font-size: 16px;
+        font-size: 1rem;
         font-weight: 800;
-        color: var(--text);
+        color: var(--foreground);
         letter-spacing: -0.01em;
       }
       .mpm-card-desc {
-        font-size: 12px;
-        color: var(--muted);
+        font-size: 0.75rem;
+        color: var(--muted-foreground);
         line-height: 1.55;
       }
       .mpm-card-cta {
-        margin-top: 12px;
+        margin-top: 0.75rem;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        font-size: 11px;
+        gap: 0.375rem;
+        font-size: 0.6875rem;
         font-weight: 800;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--accent);
-        padding: 10px 18px;
-        background: var(--surface2);
-        border-radius: 999px;
+        color: var(--accent-ink);
+        padding: 0.625rem 1.125rem;
+        background-color: var(--card);
+        border-radius: 62.4375rem;
         width: fit-content;
         transition:
           background 0.18s,
           color 0.18s;
       }
       .mpm-card--upload:hover .mpm-card-cta {
-        background: var(--gold);
-        color: #fff;
+        background-color: var(--gold);
+        color: var(--card-foreground);
       }
       .mpm-card--link:hover .mpm-card-cta {
-        background: var(--accent);
-        color: #fff;
+        background-color: var(--accent);
+        color: var(--accent-foreground);
       }
 
       /* Phone: stack the two model cards and let the picker scroll. Keyed to
          the picker's own container (it's portaled out of .app). */
       @container mpm-pop (width < 640px) {
         .mpm-head {
-          padding: 22px 22px 16px;
+          padding: 1.375rem 1.375rem 1rem;
         }
         .mpm-body {
           flex-direction: column;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
-          gap: 14px;
-          padding: 20px 22px 24px;
+          gap: 0.875rem;
+          padding: 1.25rem 1.375rem 1.5rem;
         }
         /* Let cards keep their natural height so the body scrolls instead of
            squashing the visuals/CTA out of view. */
@@ -4296,30 +4341,30 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           flex: 0 0 auto;
         }
         .mpm-visual {
-          min-height: 120px;
+          min-height: 7.5rem;
         }
       }
 
       /* Compact phones: scale the picker's titles + padding down. */
       @container mpm-pop (width < 480px) {
         .mpm-head {
-          padding: 18px 18px 14px;
+          padding: 1.125rem 1.125rem 0.875rem;
         }
         .mpm-title {
-          font-size: 18px;
+          font-size: 1.125rem;
         }
         .mpm-body {
-          padding: 16px 18px 20px;
+          padding: 1rem 1.125rem 1.25rem;
         }
         .mpm-card-content {
-          padding: 16px 18px 18px;
+          padding: 1rem 1.125rem 1.125rem;
         }
         .mpm-card-title {
-          font-size: 15px;
+          font-size: 0.9375rem;
         }
         .mpm-visual-icon {
-          width: 64px;
-          height: 64px;
+          width: 4rem;
+          height: 4rem;
         }
       }
 
@@ -4328,43 +4373,39 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       @container app (width < 480px) {
         /* Lightbox */
         .lightbox-overlay {
-          padding: 20px;
+          padding: 1.25rem;
         }
       }
 
       /* Narrow chooser (phone) — denser garment grid. */
       @container chooser-pop (width < 380px) {
         .chooser-title {
-          font-size: 18px;
+          font-size: 1.125rem;
         }
         .chooser-grid {
-          grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-          gap: 10px;
+          grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+          gap: 0.625rem;
         }
       }
 
       /* Add Model button in the header strip */
       .add-model-btn {
         /* This button is the model picker Popover's anchor. The Popover
-           bridges these tokens onto its portaled root, so the root surface
-           stays transparent (the .mpm-pop box paints the visible card) and
-           its shadow follows a matching radius. NB: the 'floating' elevation
-           doubles --bx-popover-radius, so 10px → a 20px root that matches
-           .mpm-pop's 20px (set it to half the panel radius). */
+           bridges this onto its portaled root, so the root surface stays
+           transparent (the .mpm-pop box paints the visible card). */
         --bx-popover-bg: transparent;
-        --bx-popover-radius: 6px;
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        font-size: 11px;
+        gap: 0.3125rem;
+        font-size: 0.6875rem;
         font-weight: 700;
         letter-spacing: 0.04em;
-        color: var(--muted);
+        color: var(--muted-foreground);
         background: none;
         border: 1.5px dashed var(--border);
-        border-radius: 999px;
-        padding: 6px 14px;
+        border-radius: 62.4375rem;
+        padding: 0.375rem 0.875rem;
         cursor: pointer;
         white-space: nowrap;
         transition:
@@ -4373,7 +4414,7 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
       }
       .add-model-btn:hover:not(:disabled) {
         border-color: var(--accent);
-        color: var(--accent);
+        color: var(--accent-ink);
       }
       .add-model-btn:disabled {
         opacity: 0.3;
@@ -4384,8 +4425,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
          container (it's portaled out of .app via the Popover). */
       @container chooser-pop (width >= 480px) {
         .chooser-grid {
-          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
+          gap: 1rem;
         }
       }
 
@@ -4398,6 +4439,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         .app {
           height: 100%;
           max-height: none;
+          background-color: var(--canvas);
+          color: var(--foreground);
         }
       }
 
@@ -4410,6 +4453,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
            restyle its own container.) */
         .app {
           font-size: 14px;
+          background-color: var(--canvas);
+          color: var(--foreground);
         }
 
         /* Header is hidden on mobile — the model slot and footer bar cover it */
@@ -4420,8 +4465,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           margin-left: auto;
         }
         .model-thumb {
-          width: 42px;
-          height: 42px;
+          width: 2.625rem;
+          height: 2.625rem;
         }
 
         /* Hide the header (gold) Try On on mobile — the footer bar handles it */
@@ -4481,8 +4526,8 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
           overflow: hidden;
         }
         .result-area {
-          margin: 0 12px;
-          padding: 14px;
+          margin: 0 0.75rem;
+          padding: 0.875rem;
           box-sizing: border-box;
           flex: 1;
           width: auto;
@@ -4493,72 +4538,69 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         .slots-bar {
           order: 2;
           flex-shrink: 0;
-          padding: 10px 12px;
+          padding: 0.625rem 0.75rem;
         }
         .slots-row {
           overflow-x: auto;
           max-width: 100%;
-          padding: 10px 12px;
-          border-radius: 18px;
+          padding: 0.625rem 0.75rem;
+          border-radius: 1.125rem;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .sq-divider {
-          margin: 0 10px;
+          margin: 0 0.625rem;
         }
         .sq-slot {
-          width: 72px;
+          width: 4.5rem;
         }
         .sq-body {
-          width: 72px;
-          height: 72px;
-          border-radius: 16px;
+          width: 4.5rem;
+          height: 4.5rem;
+          border-radius: 1rem;
         }
         .sq-icon {
-          width: 34px;
-          height: 34px;
+          width: 2.125rem;
+          height: 2.125rem;
         }
         /* View overlay smaller on mobile */
         .view-overlay {
-          right: 10px;
-          gap: 5px;
+          right: 0.625rem;
+          gap: 0.3125rem;
         }
         .vo-btn {
-          padding: 8px 8px 6px;
-          min-width: 44px;
-          border-radius: 12px;
+          padding: 0.5rem 0.5rem 0.375rem;
+          min-width: 2.75rem;
+          border-radius: 0.75rem;
         }
         .vo-icon {
-          width: 18px;
-          height: 18px;
+          width: 1.125rem;
+          height: 1.125rem;
         }
         .vo-lbl {
-          font-size: 9px;
+          font-size: 0.5625rem;
         }
         /* Action bar becomes the bottom footer */
         .action-bar {
           order: 3;
           flex-shrink: 0;
-          gap: 10px;
-          padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
-          background: rgba(255, 255, 255, 0.94);
+          gap: 0.625rem;
+          padding: 0.75rem 0.875rem
+            calc(0.75rem + env(safe-area-inset-bottom, 0px));
+          background-color: var(--card);
+          color: var(--card-foreground);
           backdrop-filter: blur(10px);
           border-top: 1px solid var(--border-soft);
-          box-shadow: 0 -8px 24px rgba(30, 27, 20, 0.12);
+          box-shadow: 0 -8px 24px
+            color-mix(in oklch, var(--shadow-color) 12%, transparent);
         }
         .act-btn--primary {
           flex: 1;
           min-width: 0;
-          padding: 15px;
+          padding: 0.9375rem;
         }
         .act-btn--ghost {
           display: none;
-        }
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
         }
       }
     </style>
@@ -4673,19 +4715,19 @@ export class VirtualTryOnApp extends CardDef {
       <style scoped>
         .fit {
           /* Same warm cream/gold language as the isolated template. */
-          --bg: #f6f4f0;
-          --surface: #ffffff;
-          --surface2: #f1efea;
-          --border: #e4e1d9;
-          --border-soft: rgba(20, 18, 14, 0.08);
-          --text: #1a1a1c;
-          --muted: #8c887d;
-          --text-2: #6b675e;
-          --gold: #c19a4b;
-          --gold-deep: #a9762b;
-          --gold-soft: color-mix(in srgb, var(--gold) 14%, #fff);
-          --primary-grad: linear-gradient(135deg, #cba85a, var(--gold-deep));
-          --shadow: 0 10px 34px rgba(30, 27, 20, 0.12);
+          --bg: var(--card);
+          --border-soft: color-mix(
+            in oklch,
+            var(--border-strong) 8%,
+            transparent
+          );
+          --gold: var(--accent);
+          --gold-soft: color-mix(in oklch, var(--gold) 14%, var(--card));
+          --primary-grad: linear-gradient(
+            135deg,
+            var(--accent),
+            color-mix(in oklch, var(--accent) 82%, var(--shadow-color))
+          );
 
           position: relative;
           width: 100%;
@@ -4693,12 +4735,12 @@ export class VirtualTryOnApp extends CardDef {
           background:
             radial-gradient(
               130% 90% at 85% -10%,
-              rgba(184, 137, 59, 0.1),
+              color-mix(in oklch, var(--card) 10%, transparent),
               transparent 55%
             ),
-            linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
-          color: var(--text);
-          font-family: var(--boxel-font-family, system-ui, sans-serif);
+            linear-gradient(180deg, var(--card) 0%, var(--bg) 100%);
+          color: var(--foreground);
+          font-family: var(--boxel-font-family);
           overflow: hidden;
           isolation: isolate;
         }
@@ -4711,11 +4753,9 @@ export class VirtualTryOnApp extends CardDef {
           z-index: 3;
           background: linear-gradient(
             90deg,
-            transparent,
-            var(--gold-deep),
-            #e6c878,
-            var(--gold-deep),
-            transparent
+            var(--accent) 0%,
+            color-mix(in oklch, var(--accent) 88%, var(--shadow-color)) 50%,
+            color-mix(in oklch, var(--accent) 74%, var(--shadow-color)) 100%
           );
           background-size: 200% 100%;
           animation: sheen 6s linear infinite;
@@ -4745,10 +4785,10 @@ export class VirtualTryOnApp extends CardDef {
         /* Oversized faint sparkle that decorates the card text panel. */
         .watermark {
           position: absolute;
-          right: -18px;
-          bottom: -22px;
-          width: 150px;
-          height: 150px;
+          right: -1.125rem;
+          bottom: -1.375rem;
+          width: 9.375rem;
+          height: 9.375rem;
           color: var(--gold);
           opacity: 0.08;
           pointer-events: none;
@@ -4761,29 +4801,29 @@ export class VirtualTryOnApp extends CardDef {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          padding: 12px;
+          padding: 0.75rem;
           border-radius: 50%;
           background: radial-gradient(
             circle at center,
-            color-mix(in srgb, var(--gold) 22%, transparent),
+            color-mix(in oklch, var(--gold) 22%, transparent),
             transparent 70%
           );
         }
         .mark-halo--sm {
-          padding: 8px;
+          padding: 0.5rem;
         }
         .mark {
           flex-shrink: 0;
-          width: 22px;
-          height: 22px;
-          color: var(--gold-deep);
+          width: 1.375rem;
+          height: 1.375rem;
+          color: var(--accent-ink);
           filter: drop-shadow(
-            0 1px 4px color-mix(in srgb, var(--gold) 45%, transparent)
+            0 1px 4px color-mix(in oklch, var(--gold) 45%, transparent)
           );
         }
         .mark--lg {
-          width: 38px;
-          height: 38px;
+          width: 2.375rem;
+          height: 2.375rem;
         }
 
         /* Gold "eyebrow" pill that reads as a product label. */
@@ -4791,57 +4831,58 @@ export class VirtualTryOnApp extends CardDef {
           align-self: flex-start;
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 5px 11px;
+          gap: 0.375rem;
+          padding: 0.3125rem 0.6875rem;
           font-weight: 800;
-          font-size: 10.5px;
+          font-size: 0.6562rem;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--gold-deep);
-          background: var(--gold-soft);
-          border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
-          border-radius: 999px;
+          color: var(--accent-ink);
+          background-color: var(--gold-soft);
+          border: 1px solid color-mix(in oklch, var(--gold) 32%, transparent);
+          border-radius: 62.4375rem;
         }
         .eyebrow--mini {
-          padding: 2px 7px;
-          font-size: 8.5px;
+          padding: 2px 0.4375rem;
+          font-size: 0.5312rem;
           letter-spacing: 0.1em;
         }
         .eyebrow-ico {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           color: var(--gold);
         }
 
         /* Floating gold "AI" chip pinned to the artwork. */
         .ai-chip {
           position: absolute;
-          top: 8px;
-          left: 8px;
+          top: 0.5rem;
+          left: 0.5rem;
           z-index: 2;
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          padding: 3px 9px 3px 6px;
+          gap: 0.25rem;
+          padding: 0.1875rem 0.5625rem 0.1875rem 0.375rem;
           font-weight: 800;
-          font-size: 10px;
+          font-size: 0.625rem;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: #fff;
+          color: var(--card-foreground);
           background: var(--primary-grad);
-          border-radius: 999px;
-          box-shadow: 0 2px 8px rgba(169, 118, 43, 0.35);
+          border-radius: 62.4375rem;
+          box-shadow: 0 2px 8px
+            color-mix(in oklch, var(--accent) 35%, transparent);
         }
         .chip-ico {
-          width: 11px;
-          height: 11px;
+          width: 0.6875rem;
+          height: 0.6875rem;
         }
 
         /* Short gold gradient flourish under the title. */
         .deco-rule {
-          width: 44px;
-          height: 3px;
-          border-radius: 3px;
+          width: 2.75rem;
+          height: 0.1875rem;
+          border-radius: 0.1875rem;
           background: var(--primary-grad);
         }
 
@@ -4849,21 +4890,21 @@ export class VirtualTryOnApp extends CardDef {
         .cta {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           margin-top: 2px;
           font-weight: 700;
-          font-size: 12px;
-          color: var(--gold-deep);
+          font-size: 0.75rem;
+          color: var(--accent-ink);
         }
         .cta-arrow {
-          font-size: 14px;
+          font-size: 0.875rem;
           line-height: 1;
         }
 
         .title {
           font-weight: 800;
           line-height: 1.2;
-          color: var(--text);
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -4875,7 +4916,7 @@ export class VirtualTryOnApp extends CardDef {
           -webkit-box-orient: vertical;
         }
         .tagline {
-          color: var(--text-2);
+          color: var(--muted-foreground);
           line-height: 1.3;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -4893,7 +4934,11 @@ export class VirtualTryOnApp extends CardDef {
           position: relative;
           flex-shrink: 0;
           overflow: hidden;
-          background: linear-gradient(135deg, var(--surface), var(--surface2));
+          background: linear-gradient(
+            135deg,
+            var(--card) 0%,
+            color-mix(in oklch, var(--card) 84%, var(--shadow-color)) 100%
+          );
           display: flex;
           align-items: center;
           justify-content: center;
@@ -4911,7 +4956,7 @@ export class VirtualTryOnApp extends CardDef {
           pointer-events: none;
           background: linear-gradient(
             to top,
-            rgba(26, 26, 28, 0.28),
+            color-mix(in oklch, var(--card) 28%, transparent),
             transparent 45%
           );
         }
@@ -4923,17 +4968,17 @@ export class VirtualTryOnApp extends CardDef {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: 8px;
+            gap: 0.25rem;
+            padding: 0.5rem;
           }
           .badge .title {
-            font-size: 11px;
+            font-size: 0.6875rem;
             max-width: 100%;
           }
         }
         @container fitted-card (max-width: 150px) and (max-height: 80px) {
           .badge .title {
-            font-size: 9px;
+            font-size: 0.5625rem;
           }
         }
 
@@ -4943,27 +4988,27 @@ export class VirtualTryOnApp extends CardDef {
             display: flex;
             flex-direction: row;
             align-items: flex-start;
-            gap: 10px;
-            padding: 10px 12px;
+            gap: 0.625rem;
+            padding: 0.625rem 0.75rem;
           }
           .thumb {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
             border: 1px solid var(--border);
           }
           .strip-text {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 3px;
+            gap: 0.1875rem;
             min-width: 0;
           }
           .strip .title {
-            font-size: 13px;
+            font-size: 0.8125rem;
           }
           .strip .tagline {
-            font-size: 11px;
+            font-size: 0.6875rem;
           }
         }
         @container fitted-card (min-width: 151px) and (max-height: 80px) {
@@ -4971,9 +5016,9 @@ export class VirtualTryOnApp extends CardDef {
             align-items: center;
           }
           .thumb {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 0.625rem;
           }
           .strip .eyebrow,
           .strip .tagline {
@@ -4996,19 +5041,20 @@ export class VirtualTryOnApp extends CardDef {
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            padding: 10px 13px 12px;
-            background: var(--surface);
+            gap: 0.25rem;
+            padding: 0.625rem 0.8125rem 0.75rem;
+            background-color: var(--card);
+            color: var(--card-foreground);
             border-top: 1px solid var(--border-soft);
           }
           .tile .eyebrow--mini {
             margin-bottom: 1px;
           }
           .tile .title {
-            font-size: 14px;
+            font-size: 0.875rem;
           }
           .tile .tagline {
-            font-size: 11px;
+            font-size: 0.6875rem;
           }
         }
 
@@ -5023,7 +5069,7 @@ export class VirtualTryOnApp extends CardDef {
           }
           .card .media {
             width: 42%;
-            max-width: 240px;
+            max-width: 15rem;
             height: 100%;
             border-right: 1px solid var(--border);
           }
@@ -5035,14 +5081,14 @@ export class VirtualTryOnApp extends CardDef {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 7px;
-            padding: 18px 20px;
+            gap: 0.4375rem;
+            padding: 1.125rem 1.25rem;
           }
           .card .title--lg {
-            font-size: 21px;
+            font-size: 1.3125rem;
           }
           .card .tagline {
-            font-size: 13px;
+            font-size: 0.8125rem;
           }
         }
       </style>

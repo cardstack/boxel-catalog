@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "BeatPatternCard",
-        "module": "../beat-maker"
+        "module": "../fields"
       }
     },
     "type": "card",

@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Boxel Brand Guide",
+      "summary": "A high-density design system based on the 'Boxel' unit. Optimized for complex UI and information architecture while retaining a tactile, accessible feel. Link it to any card to apply the full Boxel identity — palette, type stack, spacing, and shadows.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../Theme/boxel-brand-guide"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/brand-guide"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../Tag/theme"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../Category/ui-components-design"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "ThemeListing"
+      }
+    }
+  }
+}

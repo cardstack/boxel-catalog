@@ -1,0 +1,57 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Launch the spring campaign",
+      "details": "Everything that has to land before the campaign goes live on the 15th.",
+      "status": "In Progress",
+      "priority": "Normal",
+      "dueDate": "2026-10-15",
+      "createdAt": "2026-09-14T09:00:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "assignee": {
+        "links": {
+          "self": "../../crm/User/priya-shah"
+        }
+      },
+      "subtasks.0": {
+        "links": {
+          "self": "./draft-landing-page-copy"
+        }
+      },
+      "subtasks.1": {
+        "links": {
+          "self": "./book-photo-shoot"
+        }
+      },
+      "subtasks.2": {
+        "links": {
+          "self": "./approve-ad-budget"
+        }
+      },
+      "subtasks.3": {
+        "links": {
+          "self": "./schedule-launch-email"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../task",
+        "name": "Task"
+      }
+    }
+  }
+}

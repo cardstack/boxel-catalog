@@ -2,13 +2,14 @@ import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
-import { type CardContext } from 'https://cardstack.com/base/card-api';
+import { type CardContext } from '@cardstack/base/card-api';
 import {
   type Query,
   type SearchEntryWireQuery,
   searchEntryWireQueryFromQuery,
 } from '@cardstack/runtime-common';
 
+import { BoxelButton } from '@cardstack/boxel-ui/components';
 import { cn } from '@cardstack/boxel-ui/helpers';
 import { PILL_TYPE_KEYS, typeMetaForKey } from '../listing/listing-type-meta';
 
@@ -108,8 +109,9 @@ export default class TypeFilterPills extends GlimmerComponent<PillsSignature> {
   <template>
     <div class='type-pills' data-test-type-pills ...attributes>
       {{#each this.pills key='key' as |pill|}}
-        <button
-          type='button'
+        <BoxelButton
+          @kind='text-only'
+          @size='auto'
           class={{cn 'pill' is-active=(this.isActive pill.key)}}
           data-test-type-pill={{pill.key}}
           {{on 'click' (fn @onSelect pill.key)}}
@@ -121,7 +123,7 @@ export default class TypeFilterPills extends GlimmerComponent<PillsSignature> {
             @realms={{@realms}}
             @context={{@context}}
           />
-        </button>
+        </BoxelButton>
       {{/each}}
     </div>
 

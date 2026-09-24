@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Soft Pop",
+      "summary": "A cheerful candy-colored theme from tweakcn — indigo, teal, and amber pops behind black outlines on tinted white, with big 1rem rounding. Link it to any card for a playful, Memphis-flavored look.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../Theme/soft-pop"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/theme"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "../Tag/theme"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../Category/ui-components-design"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "ThemeListing"
+      }
+    }
+  }
+}

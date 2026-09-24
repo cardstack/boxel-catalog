@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Certification Authority",
+      "specType": "card",
+      "ref": {
+        "module": "../certification-authority",
+        "name": "CertificationAuthority"
+      },
+      "readMe": "# Certification Authority\n\n## Summary\nThe body whose name stands behind a certificate: `name`, the signatory who signs (`signatoryName`, `signatoryTitle`), the `seal` image, a verification base URL, a certificate `numberPrefix` and the `lastSequence` counter. Domain-neutral: an academy, a safety regulator and an ISO certification body carry the same shape.\n\n```ts\nimport { CertificationAuthority } from '@cardstack/catalog/cards/audit/certification-authority';\n\n@field authority = linksTo(() => CertificationAuthority);\n```\n\nA certificate card links the authority that issued it and takes its number from the prefix and the next sequence.\n\n**`lastSequence` is the one mutable fact.** A realm has no global counter, so the authority holds its own; whatever issues a certificate increments it, and the edit form shows it read-only so it is not hand-edited out of order. Its edit form is built on the shared Sectioned Edit.\n\n## Example\n`CertificationAuthority/northwind-academy`.\n\n## Non-goals\nNot an organisation directory entry, and it does not issue certificates itself.",
+      "cardInfo": {
+        "name": "Certification Authority",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "The certifying body behind issued certificates: name, signatory, seal, verification URL, numbering prefix and sequence."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../CertificationAuthority/northwind-academy"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

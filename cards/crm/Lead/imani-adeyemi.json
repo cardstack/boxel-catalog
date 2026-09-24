@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Imani Adeyemi",
+      "company": "Adeyemi Logistics Group",
+      "email": "imani@adeyemi-logistics.example",
+      "phone": "+2348012345678",
+      "source": "event",
+      "status": "contacted",
+      "score": 61,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "campaign": {
+        "links": {
+          "self": "../Campaign/logistics-expo-2026"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lead",
+        "name": "Lead"
+      }
+    }
+  }
+}

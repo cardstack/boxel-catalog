@@ -8,16 +8,17 @@ import {
   getComponent,
   linksToMany,
   realmURL,
-} from 'https://cardstack.com/base/card-api';
-import type { PartialBaseInstanceType } from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import NumberField from 'https://cardstack.com/base/number';
+} from '@cardstack/base/card-api';
+import type { PartialBaseInstanceType } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import NumberField from '@cardstack/base/number';
 
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
+import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { restartableTask } from 'ember-concurrency';
 
@@ -227,8 +228,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
     return [0, 1, 2, 3, 4, 5];
   }
 
-  setGenPrompt = (event: Event): void => {
-    this.genPrompt = (event.target as HTMLInputElement).value;
+  setGenPrompt = (value: string): void => {
+    this.genPrompt = value;
   };
   runGenerate = (): void => {
     this.generateTask.perform();
@@ -557,8 +558,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
   get titleValue(): string {
     return this.args.model.title ?? '';
   }
-  setTitle = (event: Event): void => {
-    this.args.model.title = (event.target as HTMLInputElement).value;
+  setTitle = (value: string): void => {
+    this.args.model.title = value;
   };
 
   // The name filter only earns its place once the pool is big enough to scan.
@@ -566,8 +567,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
     return this.pool.length > 20;
   }
 
-  setFilter = (event: Event): void => {
-    this.filter = (event.target as HTMLInputElement).value;
+  setFilter = (value: string): void => {
+    this.filter = value;
   };
 
   resetAll = (): void => {
@@ -603,9 +604,9 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
     );
   };
 
-  renameTier = (tier: Tier, event: Event): void => {
+  renameTier = (tier: Tier, value: string): void => {
     this.ensureOwnTiers();
-    tier.label = (event.target as HTMLInputElement).value;
+    tier.label = value;
     this.args.model.tiers = [...(this.args.model.tiers ?? [])];
   };
 
@@ -628,12 +629,12 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         {{#if this.editing}}
           <div class='title-edit'>
             <label class='title-label'>Name</label>
-            <input
+            <BoxelInput
               class='title-input'
               aria-label='Tier list name'
               placeholder='Name this tier list…'
-              value={{this.titleValue}}
-              {{on 'input' this.setTitle}}
+              @value={{this.titleValue}}
+              @onInput={{this.setTitle}}
             />
           </div>
         {{else}}
@@ -641,55 +642,63 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         {{/if}}
         <div class='controls'>
           {{#if this.showFilter}}
-            <input
+            <BoxelInput
               class='ctl-input'
               aria-label='Filter unranked items'
               placeholder='Filter…'
-              value={{this.filter}}
-              {{on 'input' this.setFilter}}
+              @value={{this.filter}}
+              @onInput={{this.setFilter}}
             />
           {{/if}}
           {{#if this.editing}}
-            <button type='button' class='btn' {{on 'click' this.addTier}}>
+            <Button
+              @kind='text-only'
+              @size='auto'
+              class='btn'
+              {{on 'click' this.addTier}}
+            >
               Add tier
-            </button>
+            </Button>
           {{/if}}
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='btn ghost-btn'
             {{on 'click' this.resetAll}}
           >
             Reset
-          </button>
+          </Button>
         </div>
       </header>
 
       {{#if this.editing}}
         <div class='gen'>
-          <input
+          <BoxelInput
             class='gen-input'
             aria-label='Describe the pool to generate with AI'
             placeholder='Describe a pool — e.g. “Studio Ghibli films”'
-            value={{this.genPrompt}}
-            disabled={{this.genBusy}}
-            {{on 'input' this.setGenPrompt}}
+            @value={{this.genPrompt}}
+            @disabled={{this.genBusy}}
+            @onInput={{this.setGenPrompt}}
           />
           {{#if this.genBusy}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='gen-btn gen-cancel'
               {{on 'click' this.cancelGenerate}}
             >
               Cancel
-            </button>
+            </Button>
           {{else}}
-            <button
-              type='button'
+            <Button
+              @kind='text-only'
+              @size='auto'
               class='gen-btn'
               {{on 'click' this.runGenerate}}
             >
               Generate with AI
-            </button>
+            </Button>
           {{/if}}
           {{! The linksToMany editor's "Add" button opens the card chooser (any
               card type). We hide its re-rendered list of links via CSS since the
@@ -745,11 +754,11 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
             <div class='tier-row'>
               <div class='tier-label' style={{styleColor tier.color}}>
                 {{#if this.editing}}
-                  <input
+                  <BoxelInput
                     class='tier-name'
                     aria-label='Tier label'
-                    value={{tier.label}}
-                    {{on 'input' (fn this.renameTier tier)}}
+                    @value={{tier.label}}
+                    @onInput={{fn this.renameTier tier}}
                   />
                   <div class='tier-tools'>
                     <input
@@ -759,11 +768,12 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
                       value={{tier.color}}
                       {{on 'input' (fn this.recolorTier tier)}}
                     />
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       class='tier-del'
                       {{on 'click' (fn this.removeTier tier)}}
-                    >×</button>
+                    >×</Button>
                   </div>
                 {{else}}
                   <span class='tier-name-ro'>{{tier.label}}</span>
@@ -787,13 +797,14 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
                       {{/let}}
                     </div>
                     {{#if this.editing}}
-                      <button
-                        type='button'
+                      <Button
+                        @kind='text-only'
+                        @size='auto'
                         class='tile-remove'
                         aria-label='Remove from pool'
                         {{on 'pointerdown' this.stopEvent}}
                         {{on 'click' (fn this.removeItem item)}}
-                      >×</button>
+                      >×</Button>
                     {{/if}}
                   </div>
                 {{/each}}
@@ -822,13 +833,14 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
                   {{/let}}
                 </div>
                 {{#if this.editing}}
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='tile-remove'
                     aria-label='Remove from pool'
                     {{on 'pointerdown' this.stopEvent}}
                     {{on 'click' (fn this.removeItem item)}}
-                  >×</button>
+                  >×</Button>
                 {{/if}}
               </div>
             {{else}}
@@ -868,9 +880,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         min-height: 100%;
         display: flex;
         flex-direction: column;
-        background: var(--background, #15161a);
-        color: var(--foreground, #f4f5f7);
-        font-family: var(--font-sans, system-ui, sans-serif);
+        background-color: var(--canvas);
+        color: var(--foreground);
       }
       .gen {
         display: flex;
@@ -878,7 +889,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         flex-wrap: wrap;
         gap: 0.375rem;
         padding: 0.5rem 1rem;
-        border-bottom: 1px solid var(--border, #2c2e36);
+        border-bottom: 1px solid var(--border);
       }
       .gen-input {
         flex: 1 1 14rem;
@@ -886,13 +897,13 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         padding: 0.3125rem 0.5rem;
         font: inherit;
         font-size: 0.8125rem;
-        color: var(--foreground, #f4f5f7);
-        background: var(--background, #15161a);
-        border: 1px solid var(--border, #2c2e36);
-        border-radius: var(--radius, 0.375rem);
+        color: var(--foreground);
+        background-color: var(--background);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
       }
       .gen-input::placeholder {
-        color: var(--muted-foreground, #9aa0ad);
+        color: var(--muted-foreground);
       }
       .gen-input:disabled {
         opacity: 0.6;
@@ -904,19 +915,19 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font-size: 0.8125rem;
         font-weight: 600;
         cursor: pointer;
-        color: var(--primary-foreground, #15161a);
-        background: var(--primary, #f4f5f7);
+        color: var(--primary-foreground);
+        background-color: var(--primary);
         border: 1px solid transparent;
-        border-radius: var(--radius, 0.375rem);
+        border-radius: var(--radius);
       }
       .gen-btn:disabled {
         cursor: default;
         opacity: 0.6;
       }
       .gen-cancel {
-        color: var(--foreground, #f4f5f7);
-        background: transparent;
-        border-color: var(--border, #2c2e36);
+        color: var(--foreground);
+        background-color: transparent;
+        border-color: var(--border);
       }
       /* "Add a card" = the linksToMany editor's Add button only; the editor's
          re-rendered list of links is hidden since the pool shows in the tray. */
@@ -941,24 +952,25 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
       .bar {
         position: relative;
         flex: 1 1 auto;
-        height: 6px;
-        border-radius: 999px;
+        height: 0.375rem;
+        border-radius: 62.4375rem;
         overflow: hidden;
-        background: var(--border, #2c2e36);
+        background-color: var(--border);
       }
       .bar-fill {
         display: block;
         height: 100%;
         border-radius: inherit;
-        background: var(--primary, #f4f5f7);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         transition: width 0.3s ease;
       }
       .bar--indeterminate {
         background: linear-gradient(
           90deg,
-          var(--border, #2c2e36) 0%,
-          var(--primary, #f4f5f7) 50%,
-          var(--border, #2c2e36) 100%
+          var(--border) 0%,
+          var(--primary) 50%,
+          var(--border) 100%
         );
         background-size: 200% 100%;
         animation: tier-indeterminate 1.1s linear infinite;
@@ -968,11 +980,11 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
       }
       .gen-note {
         font-size: 0.75rem;
-        color: var(--muted-foreground, #9aa0ad);
+        color: var(--muted-foreground);
       }
       .gen-err {
         font-size: 0.75rem;
-        color: var(--destructive, #e5484d);
+        color: var(--destructive-ink);
       }
       .gen-preview {
         display: flex;
@@ -987,8 +999,9 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         flex-wrap: wrap;
         gap: 0.75rem;
         padding: 0.875rem 1rem;
-        border-bottom: 1px solid var(--border, #2c2e36);
-        background: var(--card, #1c1e24);
+        border-bottom: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       h1 {
         margin: 0;
@@ -1007,7 +1020,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font-weight: 700;
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--muted-foreground, #9aa0ad);
+        color: var(--muted-foreground);
       }
       .title-input {
         width: 100%;
@@ -1015,13 +1028,13 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font: inherit;
         font-size: 1.0625rem;
         font-weight: 700;
-        color: var(--foreground, #f4f5f7);
-        background: var(--background, #15161a);
-        border: 1px solid var(--border, #2c2e36);
-        border-radius: var(--radius, 0.375rem);
+        color: var(--foreground);
+        background-color: var(--background);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
       }
       .title-input::placeholder {
-        color: var(--muted-foreground, #9aa0ad);
+        color: var(--muted-foreground);
       }
       .controls {
         display: flex;
@@ -1033,13 +1046,13 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         padding: 0.3125rem 0.5rem;
         font: inherit;
         font-size: 0.8125rem;
-        color: var(--foreground, #f4f5f7);
-        background: var(--background, #15161a);
-        border: 1px solid var(--border, #2c2e36);
-        border-radius: var(--radius, 0.375rem);
+        color: var(--foreground);
+        background-color: var(--background);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
       }
       .ctl-input::placeholder {
-        color: var(--muted-foreground, #9aa0ad);
+        color: var(--muted-foreground);
       }
       .btn {
         padding: 0.3125rem 0.625rem;
@@ -1047,15 +1060,15 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font-size: 0.8125rem;
         font-weight: 600;
         cursor: pointer;
-        color: var(--primary-foreground, #15161a);
-        background: var(--primary, #f4f5f7);
+        color: var(--primary-foreground);
+        background-color: var(--primary);
         border: 1px solid transparent;
-        border-radius: var(--radius, 0.375rem);
+        border-radius: var(--radius);
       }
       .btn.ghost-btn {
-        color: var(--foreground, #f4f5f7);
-        background: transparent;
-        border-color: var(--border, #2c2e36);
+        color: var(--foreground);
+        background-color: transparent;
+        border-color: var(--border);
       }
       .tiers {
         flex: 0 0 auto;
@@ -1077,8 +1090,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         justify-content: center;
         gap: 0.25rem;
         padding: 0.375rem;
-        border-radius: var(--radius, 0.375rem);
-        color: #111;
+        border-radius: var(--radius);
+        color: var(--foreground);
       }
       .tier-name {
         width: 100%;
@@ -1087,17 +1100,17 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font-weight: 800;
         font-size: 1rem;
         text-align: center;
-        color: #111;
+        color: var(--foreground);
         /* near-opaque so the input reads clearly over any band color */
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(0, 0, 0, 0.25);
+        background-color: var(--card);
+        border: 1px solid var(--border);
         border-radius: 0.25rem;
       }
       .tier-name-ro {
         font-weight: 800;
         font-size: 1.125rem;
         text-align: center;
-        color: #111;
+        color: var(--foreground);
       }
       .tier-tools {
         display: flex;
@@ -1110,8 +1123,9 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         flex: 1 1 auto;
         height: 1.5rem;
         padding: 0;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(0, 0, 0, 0.35);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
         border-radius: 0.25rem;
         cursor: pointer;
       }
@@ -1129,9 +1143,9 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         line-height: 1;
         font-size: 1rem;
         cursor: pointer;
-        color: #111;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(0, 0, 0, 0.25);
+        color: var(--foreground);
+        background-color: var(--card);
+        border: 1px solid var(--border);
         border-radius: 0.25rem;
       }
       .strip {
@@ -1140,12 +1154,13 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         align-content: flex-start;
         gap: 0.25rem;
         padding: 0.25rem;
-        background: var(--card, #1c1e24);
-        border: 1px solid var(--border, #2c2e36);
-        border-radius: var(--radius, 0.375rem);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
       }
       .strip.drop-active {
-        outline: 2px dashed var(--primary, #f4f5f7);
+        outline: 2px dashed var(--primary);
         outline-offset: -2px;
       }
       /* Pin the unranked tray to the bottom of the scroll host so it stays a
@@ -1156,8 +1171,9 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         bottom: 0;
         z-index: 2;
         margin-top: auto;
-        border-top: 1px solid var(--border, #2c2e36);
-        background: var(--card, #1c1e24);
+        border-top: 1px solid var(--border);
+        background-color: var(--inset);
+        color: var(--foreground);
         padding: 0.5rem;
       }
       .tray-label {
@@ -1166,7 +1182,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--muted-foreground, #9aa0ad);
+        color: var(--muted-foreground);
       }
       .tray {
         min-height: 4rem;
@@ -1176,7 +1192,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
       .tray-empty {
         padding: 0.75rem;
         font-size: 0.8125rem;
-        color: var(--muted-foreground, #9aa0ad);
+        color: var(--muted-foreground);
       }
       .no-items {
         flex: 1 1 auto;
@@ -1184,7 +1200,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         place-items: center;
         padding: 2rem;
         text-align: center;
-        color: var(--muted-foreground, #9aa0ad);
+        color: var(--muted-foreground);
       }
       .tile {
         position: relative;
@@ -1197,9 +1213,10 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         touch-action: none;
         user-select: none;
         overflow: hidden;
-        background: var(--background, #15161a);
-        border: 1px solid var(--border, #2c2e36);
+        background-color: var(--card);
+        border: 1px solid var(--border);
         border-radius: 0.25rem;
+        color: var(--card-foreground);
       }
       .tile.is-dragging {
         opacity: 0.3;
@@ -1223,8 +1240,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        color: #fff;
-        background: rgba(0, 0, 0, 0.6);
+        color: var(--card-foreground);
+        background-color: var(--card);
         border: none;
         border-radius: 0.25rem;
       }
@@ -1250,8 +1267,8 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         padding: 0.0625rem 0.125rem;
         font-size: 0.5625rem;
         text-align: center;
-        color: #fff;
-        background: rgba(0, 0, 0, 0.6);
+        color: var(--card-foreground);
+        background-color: var(--card);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1287,7 +1304,7 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         background: linear-gradient(
           90deg,
           transparent,
-          rgba(255, 255, 255, 0.14),
+          color-mix(in oklch, var(--card) 14%, transparent),
           transparent
         );
         animation: tier-shimmer 1.2s ease-in-out infinite;
@@ -1316,10 +1333,11 @@ class TierBoard extends GlimmerComponent<TierBoardSignature> {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--background, #15161a);
-        border: 1px solid var(--primary, #f4f5f7);
+        background-color: var(--background);
+        border: 1px solid var(--primary);
         border-radius: 0.25rem;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+        box-shadow: 0 8px 20px
+          color-mix(in oklch, var(--shadow-color) 45%, transparent);
       }
     </style>
   </template>
@@ -1401,9 +1419,6 @@ export class TierList extends CardDef {
       <style scoped>
         .emb {
           padding: 0.75rem;
-          background: var(--background, #15161a);
-          color: var(--foreground, #f4f5f7);
-          font-family: var(--font-sans, system-ui, sans-serif);
         }
         h3 {
           margin: 0 0 0.5rem;
@@ -1425,12 +1440,12 @@ export class TierList extends CardDef {
           font-weight: 800;
           font-size: 0.8125rem;
           text-align: center;
-          color: #111;
+          color: var(--foreground);
           border-radius: 0.1875rem;
         }
         .emb-count {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #9aa0ad);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -1478,16 +1493,19 @@ export class TierList extends CardDef {
           --type-ratio: 1.25;
           --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
           --type-base: clamp(
-            10px,
-            calc(3px + 2.2cqi + 1cqb - 0.6 * var(--ar)),
-            18px
+            0.625rem,
+            calc(0.1875rem + 2.2cqi + 1cqb - 0.6 * var(--ar)),
+            1.125rem
           );
-          --fit-meta-size: max(8px, calc(var(--type-base) / var(--type-ratio)));
+          --fit-meta-size: max(
+            0.5rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
           --fit-headline-size: max(
-            11px,
+            0.6875rem,
             calc(var(--type-base) * pow(var(--type-ratio), 2))
           );
-          --fit-pad: clamp(5px, calc(2px + 1.8cqi), 14px);
+          --fit-pad: clamp(0.3125rem, calc(2px + 1.8cqi), 0.875rem);
           width: 100%;
           height: 100%;
           display: grid;
@@ -1496,9 +1514,6 @@ export class TierList extends CardDef {
           padding: var(--fit-pad);
           box-sizing: border-box;
           overflow: hidden;
-          background: var(--background, #15161a);
-          color: var(--foreground, #f4f5f7);
-          font-family: var(--font-sans, system-ui, sans-serif);
         }
         .r-head,
         .r-body,
@@ -1508,7 +1523,7 @@ export class TierList extends CardDef {
         }
         .headline {
           margin: 0;
-          font-size: var(--fit-headline-size, 14px);
+          font-size: var(--fit-headline-size);
           line-height: 1.18;
           font-weight: 700;
           display: -webkit-box;
@@ -1525,16 +1540,16 @@ export class TierList extends CardDef {
         .sw {
           min-width: 1.25rem;
           padding: 0 0.25rem;
-          font-size: var(--fit-meta-size, 9px);
+          font-size: var(--fit-meta-size);
           font-weight: 800;
           text-align: center;
-          color: #111;
+          color: var(--foreground);
           border-radius: 2px;
         }
         .r-meta {
           align-self: end;
-          font-size: var(--fit-meta-size, 9px);
-          color: var(--muted-foreground, #9aa0ad);
+          font-size: var(--fit-meta-size);
+          color: var(--muted-foreground);
         }
         @container card (height <= 80px) {
           .r-body {

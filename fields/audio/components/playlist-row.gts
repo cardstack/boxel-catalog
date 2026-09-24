@@ -68,9 +68,10 @@ export class PlaylistRow extends GlimmerComponent<PlaylistRowSignature> {
         align-items: center;
         gap: 0.75rem;
         padding: 0.5rem;
-        border-radius: var(--radius, 0.5rem);
+        border-radius: var(--radius);
         transition: background 0.2s;
-        background: var(--boxel-light, #ffffff);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
 
       .playlist-play-btn {
@@ -89,16 +90,12 @@ export class PlaylistRow extends GlimmerComponent<PlaylistRowSignature> {
       .playlist-cover {
         width: 3rem;
         height: 3rem;
-        background: linear-gradient(
-          135deg,
-          var(--primary, #3b82f6),
-          var(--accent, #60a5fa)
-        );
-        border-radius: var(--boxel-border-radius-sm, 0.25rem);
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        border-radius: var(--boxel-border-radius-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
+        color: var(--primary-foreground);
         flex-shrink: 0;
       }
 
@@ -115,7 +112,7 @@ export class PlaylistRow extends GlimmerComponent<PlaylistRowSignature> {
       .playlist-title {
         font-weight: 500;
         font-size: 0.875rem;
-        color: var(--foreground, #1f2937);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
@@ -124,12 +121,12 @@ export class PlaylistRow extends GlimmerComponent<PlaylistRowSignature> {
       }
 
       .playlist-title.playing {
-        color: var(--primary, #3b82f6);
+        color: var(--primary-ink);
       }
 
       .playlist-artist {
         font-size: 0.75rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         margin-top: 0.125rem;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -138,7 +135,7 @@ export class PlaylistRow extends GlimmerComponent<PlaylistRowSignature> {
 
       .playlist-duration {
         font-size: 0.875rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         flex-shrink: 0;
       }
     </style>

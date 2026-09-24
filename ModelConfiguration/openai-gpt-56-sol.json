@@ -2,6 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
+      "reasoningEffort": "medium",
       "cardInfo": {
         "name": "OpenAI: GPT-5.6 Sol",
         "summary": null,

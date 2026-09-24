@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "memberNumber": "NBF-2026-00007215",
+      "tier": "Bronze",
+      "tierSince": "2026-08-09",
+      "memberSince": "2026-08-09",
+      "status": "Active",
+      "pointsBalance": 100,
+      "lifetimePoints": 100,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "holder": {
+        "links": {
+          "self": "../../crm/Contact/mei-fong"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../loyalty-account",
+        "name": "LoyaltyAccount"
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "RiskRatingField",
+        "module": "../contract-risk"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Risk Rating\n\n`RiskRatingField` is a scored-criteria scorecard: containsMany criteria → computed score → grade low / medium / high / critical with a shared colour map. Nothing in it is contract-specific: a contract's risk is one consumer, and a vendor risk score populates the same criteria and reads the same grade.\n\n### Example\n\nA compound field of another module cannot be a containedExample here — see the linked Contract (MSA — Northwind), whose risk field renders the scorecard live.\n\n### Non-goals\n\nNo new grades or criteria taxonomy in this Spec — additions happen on the owning module with both consumers checked.",
+      "cardInfo": {
+        "name": "Risk Rating",
+        "summary": "CONSUME/EXTEND: the shipping scored-criteria field from contract-risk.gts, specced as the generic risk block."
+      },
+      "containedExamples": [],
+      "cardTitle": "Risk Rating Field",
+      "cardDescription": "A scored-criteria scorecard: criteria scored individually, a computed score, and a low to critical grade with a shared colour map."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Contract/msa-northwind"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

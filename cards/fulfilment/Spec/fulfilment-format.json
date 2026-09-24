@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../fulfilment-format",
+        "name": "money"
+      },
+      "specType": null,
+      "readMe": "# Fulfilment Format\n\n## Summary\nOne money formatter and one timestamp formatter for the whole fulfilment family, so a board aggregate that is a plain number and an `AmountWithCurrency` atom on a card never print the same fact two ways.\n\n## API\n- `money(amount, code = 'GBP')` — `Intl.NumberFormat` currency style; `—` for an absent amount; falls back to the raw number if the code is unknown\n- `stamp(value)` — medium date + short time; `—` for an absent value. Day and minute both matter: \"did it land inside the promised window\" is a question about the time.\n\n## Usage\n```ts\nimport { money, stamp } from '@cardstack/catalog/cards/fulfilment/fulfilment-format';\n\nmoney(order.total?.amount, order.currencyCode); // £34.39\nstamp(shipment.deliveredAt); // 5 Aug 2026, 11:20\n```\nUsed by Order, Shipment, Product, Vendor and the line-item field; consumers extending those cards should format through it too.\n\n## Non-goals\nNo arithmetic and no currency conversion — it renders a number it is given. Money values on cards stay in the base `AmountWithCurrency` field; this only formats them.",
+      "cardTitle": "Fulfilment Format",
+      "cardDescription": "One money formatter and one timestamp formatter for the whole fulfilment family, so aggregates and field atoms never print the same fact two ways.",
+      "cardInfo": {
+        "name": "Fulfilment Format",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

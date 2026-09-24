@@ -1,0 +1,54 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "tiles": [
+        {
+          "label": "Open tickets",
+          "value": "42",
+          "intent": "neutral",
+          "detail": "across all queues"
+        },
+        {
+          "label": "Resolved today",
+          "value": "18",
+          "intent": "green",
+          "detail": "up from 11 yesterday"
+        },
+        {
+          "label": "Near SLA breach",
+          "value": "5",
+          "intent": "amber",
+          "detail": "under 30 minutes left",
+          "opensTo": "the 5 tickets under 30 minutes from breach"
+        },
+        {
+          "label": "Breached",
+          "value": "3",
+          "intent": "red",
+          "detail": "oldest 4h over",
+          "opensTo": "the 3 breached tickets"
+        }
+      ],
+      "cardInfo": {
+        "name": "Support desk today",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../dashboard-example",
+        "name": "DashboardExample"
+      }
+    }
+  }
+}

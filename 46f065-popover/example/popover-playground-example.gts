@@ -1,15 +1,14 @@
-import {
-  CardDef,
-  field,
-  contains,
-  Component,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { CardDef, field, contains, Component } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import { tracked } from '@glimmer/tracking';
 
 import { on } from '@ember/modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { BoxelSelect } from '@cardstack/boxel-ui/components';
+import {
+  Button,
+  BoxelSelect,
+  BoxelInput,
+} from '@cardstack/boxel-ui/components';
 import type { Placement } from '@floating-ui/dom';
 
 import Popover from '../popover';
@@ -101,8 +100,8 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     if (index >= 0) this.pickIndex = index;
   };
 
-  setEditNote = (event: Event): void => {
-    this.editNote = (event.target as HTMLInputElement).value;
+  setEditNote = (value: string): void => {
+    this.editNote = value;
   };
 
   // ── extra knobs beyond the 6 type unions: the beside-positioning
@@ -328,22 +327,25 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
             {{@model.cardTheme.cardTitle}}
           </span>
         {{/if}}
-        <button
-          type='button'
+        <Button
+          @kind='text-only'
+          @size='auto'
+          @rectangular={{true}}
           class='pp-open'
           data-anchor='pp-hover'
           {{on 'mouseenter' this.openHover}}
         >
           Hover to open ▾
-        </button>
-        <button
-          type='button'
+        </Button>
+        <Button
+          @kind='text-only'
+          @size='auto'
           class='pp-open {{if (eq this.openFrom "click") "pp-open--active"}}'
           data-anchor='pp-click'
           {{on 'click' this.openClick}}
         >
           Click to open ▾
-        </button>
+        </Button>
 
         {{#if this.open}}
           <Popover
@@ -384,11 +386,11 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                 </label>
                 <label class='pp-field'>
                   <span class='pp-field-label'>Note</span>
-                  <input
+                  <BoxelInput
                     class='pp-input'
                     placeholder='Add a note…'
-                    value={{this.editNote}}
-                    {{on 'input' this.setEditNote}}
+                    @value={{this.editNote}}
+                    @onInput={{this.setEditNote}}
                   />
                 </label>
               </div>
@@ -404,21 +406,25 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                   aria-label='Popover tools'
                 >
                   <li role='none'>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       role='menuitem'
+                      @rectangular={{true}}
                       class='pp-tool'
                       {{on 'click' this.cyclePlacement}}
                     >
                       <span class='pp-tool-glyph'>⤢</span>
                       <span class='pp-tool-text'>Cycle placement</span>
                       <span class='pp-tool-meta'>{{this.placement}}</span>
-                    </button>
+                    </Button>
                   </li>
                   <li role='none'>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       role='menuitem'
+                      @rectangular={{true}}
                       class='pp-tool'
                       {{on 'click' this.toggleArrow}}
                     >
@@ -429,18 +435,20 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
                           'on'
                           'off'
                         }}</span>
-                    </button>
+                    </Button>
                   </li>
                   <li role='none'>
-                    <button
-                      type='button'
+                    <Button
+                      @kind='text-only'
+                      @size='auto'
                       role='menuitem'
+                      @rectangular={{true}}
                       class='pp-tool'
                       {{on 'click' this.close}}
                     >
                       <span class='pp-tool-glyph'>✕</span>
                       <span class='pp-tool-text'>Dismiss popover</span>
-                    </button>
+                    </Button>
                   </li>
                 </ul>
               </div>
@@ -842,65 +850,66 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
     <style scoped>
       .pp {
         display: grid;
-        gap: 16px;
-        padding: 24px;
-        max-width: 760px;
+        gap: 1rem;
+        padding: 1.5rem;
+        max-width: 47.5rem;
         font:
-          14px/1.4 system-ui,
+          0.875rem/1.4 system-ui,
           sans-serif;
       }
       .pp-section {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #6b7280;
+        color: var(--muted-foreground);
       }
       .pp-axes {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(9.375rem, 1fr));
+        gap: 0.75rem;
       }
       .pp-axis {
         display: grid;
-        gap: 6px;
+        gap: 0.375rem;
         align-content: start;
       }
       .pp-label {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 600;
-        color: #4338ca;
+        color: var(--primary-ink);
       }
       .pp-typeline {
         font-family: ui-monospace, monospace;
-        font-size: 10px;
-        color: #9ca3af;
+        font-size: 0.625rem;
+        color: var(--subtle-foreground);
         white-space: normal;
         word-break: break-word;
       }
       .pp-desc {
-        font-size: 11px;
+        font-size: 0.6875rem;
         line-height: 1.5;
-        color: #6b7280;
+        color: var(--muted-foreground);
       }
       .pp-desc code {
         font-family: ui-monospace, monospace;
-        font-size: 10px;
-        color: #4338ca;
-        background: #eef2ff;
-        padding: 1px 4px;
-        border-radius: 3px;
+        font-size: 0.625rem;
+        color: var(--primary-ink);
+        background-color: var(--card);
+        padding: 1px 0.25rem;
+        border-radius: 0.1875rem;
       }
       .pp-stage {
         position: relative;
-        height: 250px;
+        height: 15.625rem;
         width: 100%;
-        background: #333333;
-        border-radius: 10px;
+        background-color: var(--inset);
+        color: var(--foreground);
+        border-radius: 0.625rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 12px;
+        gap: 0.75rem;
         overflow: hidden;
         contain: layout size;
       }
@@ -908,103 +917,106 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
        * (cardInfo.theme) — the popovers below follow that theme. */
       .pp-theme-chip {
         position: absolute;
-        top: 8px;
-        right: 10px;
-        padding: 3px 9px;
-        border-radius: 999px;
-        font-size: 11px;
+        top: 0.5rem;
+        right: 0.625rem;
+        padding: 0.1875rem 0.5625rem;
+        border-radius: 62.4375rem;
+        font-size: 0.6875rem;
         font-weight: 600;
         letter-spacing: 0.02em;
-        background: color-mix(in srgb, var(--primary, #fff) 22%, transparent);
-        color: #fff;
+        background-color: color-mix(in oklch, var(--primary) 22%, transparent);
+        color: var(--primary-foreground);
       }
       .pp-open {
-        padding: 8px 18px;
-        border: 1.5px solid #d1d5db;
-        border-radius: 8px;
-        background: #fff;
+        padding: 0.5rem 1.125rem;
+        border: 1.5px solid var(--border);
+        border-radius: 0.5rem;
+        background-color: var(--card);
         cursor: pointer;
         font: inherit;
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 500;
-        color: #374151;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        color: var(--foreground);
+        box-shadow: 0 1px 3px
+          color-mix(in oklch, var(--shadow-color) 6%, transparent);
         transition:
           background 80ms,
           border-color 80ms,
           box-shadow 80ms;
       }
       .pp-open:hover {
-        background: #f9fafb;
-        border-color: #9ca3af;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.09);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-color: var(--border);
+        box-shadow: 0 2px 6px
+          color-mix(in oklch, var(--shadow-color) 9%, transparent);
       }
       .pp-open--active {
-        background: #eef2ff;
-        border-color: #6366f1;
-        color: #4338ca;
+        background-color: var(--card);
+        border-color: var(--primary);
+        color: var(--primary-ink);
       }
       .pp-body {
-        padding: 10px 12px;
+        padding: 0.625rem 0.75rem;
         display: grid;
-        gap: 6px;
+        gap: 0.375rem;
       }
       .pp-eyebrow {
-        font-size: 11px;
+        font-size: 0.6875rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
       .pp-detail-title {
-        font-size: 15px;
+        font-size: 0.9375rem;
         font-weight: 600;
-        color: var(--popover-foreground, #111827);
+        color: var(--popover-foreground);
       }
       .pp-detail-list {
         margin: 0;
         display: grid;
-        gap: 4px;
+        gap: 0.25rem;
       }
       .pp-detail-row {
         display: grid;
-        grid-template-columns: 84px 1fr;
-        gap: 8px;
-        font-size: 12px;
+        grid-template-columns: 5.25rem 1fr;
+        gap: 0.5rem;
+        font-size: 0.75rem;
       }
       .pp-detail-row dt {
-        color: var(--muted-foreground, #9ca3af);
+        color: var(--muted-foreground);
       }
       .pp-detail-row dd {
         margin: 0;
-        color: var(--popover-foreground, #374151);
+        color: var(--popover-foreground);
         font-weight: 500;
       }
       .pp-detail-note {
         margin: 0;
-        font-size: 11px;
+        font-size: 0.6875rem;
         line-height: 1.5;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
       .pp-input {
-        padding: 6px 8px;
-        border: 1px solid var(--border, #d1d5db);
-        border-radius: 4px;
+        padding: 0.375rem 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
         font: inherit;
         width: 100%;
-        background: var(--background, #fff);
+        background-color: var(--background);
       }
       /* EDIT view — form fields on the popover's yellow editor surface. */
       .pp-edit {
-        gap: 10px;
+        gap: 0.625rem;
       }
       .pp-field {
         display: grid;
-        gap: 4px;
+        gap: 0.25rem;
       }
       .pp-field-label {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 600;
-        color: #92710c;
+        color: var(--warning-ink);
       }
       /* TOOLS view — light controls for the popover's dark tools surface. */
       .pp-tools-menu {
@@ -1017,58 +1029,58 @@ class PopoverPlaygroundIsolated extends Component<typeof PopoverPlayground> {
       .pp-tool {
         width: 100%;
         display: grid;
-        grid-template-columns: 18px 1fr auto;
+        grid-template-columns: 1.125rem 1fr auto;
         align-items: center;
-        gap: 8px;
-        padding: 6px 8px;
+        gap: 0.5rem;
+        padding: 0.375rem 0.5rem;
         border: none;
-        border-radius: 5px;
-        background: transparent;
+        border-radius: 0.3125rem;
+        background-color: transparent;
         color: inherit;
         font: inherit;
-        font-size: 12px;
+        font-size: 0.75rem;
         text-align: left;
         cursor: pointer;
         transition: background 80ms;
       }
       .pp-tool:hover,
       .pp-tool:focus-visible {
-        background: rgba(255, 255, 255, 0.12);
+        background-color: var(--hover);
         outline: none;
       }
       .pp-tool-glyph {
-        font-size: 13px;
+        font-size: 0.8125rem;
         opacity: 0.8;
       }
       .pp-tool-meta {
-        font-size: 11px;
+        font-size: 0.6875rem;
         opacity: 0.55;
         font-variant-numeric: tabular-nums;
       }
       .pp-args {
         margin: 0;
         display: grid;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .pp-arg {
         display: grid;
-        grid-template-columns: 200px 1fr;
-        gap: 12px;
+        grid-template-columns: 12.5rem 1fr;
+        gap: 0.75rem;
         align-items: baseline;
-        font-size: 12px;
+        font-size: 0.75rem;
       }
       .pp-arg code {
         font-family: ui-monospace, monospace;
-        font-size: 11px;
-        color: #4338ca;
+        font-size: 0.6875rem;
+        color: var(--primary-ink);
       }
       .pp-arg span {
-        color: #4b5563;
+        color: var(--muted-foreground);
       }
       .pp-arg em {
         font-style: normal;
         font-family: ui-monospace, monospace;
-        color: #6b7280;
+        color: var(--muted-foreground);
       }
       @media (max-width: 520px) {
         .pp-arg {

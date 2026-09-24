@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../utils/month-grid",
+        "name": "monthGrid"
+      },
+      "specType": null,
+      "readMe": "# Month Grid\n\n## Summary\nPure month arithmetic for a calendar view. `monthGrid(cursor)` returns the weeks to draw for the month containing `cursor`, always six weeks of seven `CalendarDay`s (`date`, `dayNumber`, whether it is in the month, whether it is today), padded with the neighbouring months' days so every month draws at the same height. `monthTitle(cursor)` is the heading (\"October 2026\"); `sameDay(a, b)` compares calendar days, not instants.\n\n## Usage\n```ts\nimport { monthGrid, monthTitle, sameDay } from '@cardstack/catalog/utils/month-grid';\n\nlet weeks = monthGrid(new Date(2026, 9, 1));\n```\n\nThe Calendar component draws its grid from these.\n\n## Non-goals\nNo events and no rendering. Weeks start on Sunday; there is no locale setting.",
+      "cardTitle": "Month Grid",
+      "cardDescription": "Six weeks of days to draw for a calendar month, with the month's title and a same-day test.",
+      "cardInfo": {
+        "name": "Month Grid",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

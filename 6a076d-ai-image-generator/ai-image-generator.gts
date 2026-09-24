@@ -3,7 +3,7 @@ import {
   field,
   contains,
   linksToMany,
-} from 'https://cardstack.com/base/card-api';
+} from '@cardstack/base/card-api';
 import AspectRatioField from '@cardstack/catalog/fields/aspect-ratio/aspect-ratio';
 import SparklesIcon from '@cardstack/boxel-icons/sparkles';
 import { AiImage, AiImageModelField } from './ai-image';

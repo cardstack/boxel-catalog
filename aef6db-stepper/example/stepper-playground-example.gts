@@ -1,15 +1,14 @@
-import {
-  CardDef,
-  field,
-  contains,
-  Component,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { CardDef, field, contains, Component } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import { tracked } from '@glimmer/tracking';
 
 import { on } from '@ember/modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { BoxelSelect } from '@cardstack/boxel-ui/components';
+import {
+  BoxelSelect,
+  BoxelInput,
+  Button,
+} from '@cardstack/boxel-ui/components';
 import UserIcon from '@cardstack/boxel-icons/user';
 import SettingsIcon from '@cardstack/boxel-icons/settings';
 import UsersIcon from '@cardstack/boxel-icons/users';
@@ -64,8 +63,8 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
 
   workspaceOptions = ['Personal', 'Team', 'Enterprise'];
 
-  setName = (event: Event): void => {
-    this.name = (event.target as HTMLInputElement).value;
+  setName = (value: string): void => {
+    this.name = value;
   };
   setWorkspace = (value: string | null): void => {
     this.workspace = value ?? undefined;
@@ -163,11 +162,12 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
         <span class='sp-event'>last event: {{this.lastEvent}}</span></div>
       <div class='sp-stage'>
         {{#if this.dismissed}}
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='sp-reopen'
             {{on 'click' this.reopen}}
-          >Wizard closed — click to reopen</button>
+          >Wizard closed — click to reopen</Button>
         {{else}}
           <Stepper
             @modal={{this.modalOn}}
@@ -183,11 +183,11 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
             <:step as |step|>
               {{#if (eq step.id 'details')}}
                 <label class='sp-field'>Name
-                  <input
-                    type='text'
-                    value={{this.name}}
-                    placeholder='e.g. Ada Lovelace'
-                    {{on 'input' this.setName}}
+                  <BoxelInput
+                    @type='text'
+                    @value={{this.name}}
+                    @placeholder='e.g. Ada Lovelace'
+                    @onInput={{this.setName}}
                   />
                 </label>
               {{else if (eq step.id 'workspace')}}
@@ -205,11 +205,12 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
               {{else if (eq step.id 'team')}}
                 <div class='sp-invite'>
                   <span>{{this.invited}} teammate(s) invited</span>
-                  <button
-                    type='button'
+                  <Button
+                    @kind='text-only'
+                    @size='auto'
                     class='sp-invite-btn'
                     {{on 'click' this.invite}}
-                  >+ Invite</button>
+                  >+ Invite</Button>
                 </div>
               {{else}}
                 <p class='sp-done'>Everything's set{{if this.name ', '}}
@@ -386,144 +387,144 @@ class StepperPlaygroundIsolated extends Component<typeof StepperPlayground> {
     <style scoped>
       .sp {
         display: grid;
-        gap: 16px;
-        padding: 24px;
-        max-width: 900px;
+        gap: 1rem;
+        padding: 1.5rem;
+        max-width: 56.25rem;
         font:
-          14px/1.4 system-ui,
+          0.875rem/1.4 system-ui,
           sans-serif;
       }
       .sp-section {
         display: flex;
         align-items: baseline;
-        gap: 12px;
-        font-size: 11px;
+        gap: 0.75rem;
+        font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #6b7280;
+        color: var(--muted-foreground);
       }
       .sp-event {
         font-weight: 500;
         text-transform: none;
         letter-spacing: normal;
         font-family: ui-monospace, monospace;
-        font-size: 11px;
-        color: #4338ca;
+        font-size: 0.6875rem;
+        color: var(--primary-ink);
       }
       .sp-axes {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(11.25rem, 1fr));
+        gap: 0.75rem;
       }
       .sp-axis {
         display: grid;
-        gap: 6px;
+        gap: 0.375rem;
         align-content: start;
       }
       .sp-label {
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 600;
-        color: #4338ca;
+        color: var(--primary-ink);
       }
       .sp-desc {
-        font-size: 11px;
+        font-size: 0.6875rem;
         line-height: 1.5;
-        color: #6b7280;
+        color: var(--muted-foreground);
       }
       .sp-desc code,
       .sp-arg code {
         font-family: ui-monospace, monospace;
-        font-size: 10px;
-        color: #4338ca;
-        background: #eef2ff;
-        padding: 1px 4px;
-        border-radius: 3px;
+        font-size: 0.625rem;
+        color: var(--primary-ink);
+        background-color: var(--card);
+        padding: 1px 0.25rem;
+        border-radius: 0.1875rem;
       }
       .sp-stage {
         position: relative;
-        height: 480px;
+        height: 30rem;
         width: 100%;
-        background: #e5e7eb;
-        border-radius: 10px;
+        background-color: var(--inset);
+        border-radius: 0.625rem;
         overflow: hidden;
         contain: layout size;
         display: grid;
         place-items: center;
-        padding: 16px;
+        padding: 1rem;
       }
       .sp-reopen {
-        padding: 10px 20px;
-        border: 1.5px dashed #9ca3af;
-        border-radius: 8px;
-        background: #fff;
+        padding: 0.625rem 1.25rem;
+        border: 1.5px dashed var(--border);
+        border-radius: 0.5rem;
+        background-color: var(--card);
         cursor: pointer;
         font: inherit;
-        font-size: 13px;
-        color: #374151;
+        font-size: 0.8125rem;
+        color: var(--foreground);
       }
       /* demo step content */
       .sp-field {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        margin-top: 20px;
-        max-width: 380px;
-        font-size: 12px;
-        color: rgba(0, 0, 0, 0.65);
+        gap: 0.25rem;
+        margin-top: 1.25rem;
+        max-width: 23.75rem;
+        font-size: 0.75rem;
+        color: var(--muted-foreground);
       }
       .sp-field input {
-        padding: 10px 12px;
-        border: 1px solid rgba(0, 0, 0, 0.18);
-        border-radius: 10px;
+        padding: 0.625rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.625rem;
         font: inherit;
-        font-size: 14px;
+        font-size: 0.875rem;
       }
       .sp-pick {
-        margin-top: 20px;
-        max-width: 380px;
+        margin-top: 1.25rem;
+        max-width: 23.75rem;
       }
       .sp-invite {
-        margin-top: 20px;
-        padding: 16px;
+        margin-top: 1.25rem;
+        padding: 1rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        max-width: 380px;
-        border: 1.5px dashed rgba(0, 0, 0, 0.2);
-        border-radius: 16px;
-        font-size: 14px;
-        color: rgba(0, 0, 0, 0.7);
+        max-width: 23.75rem;
+        border: 1.5px dashed var(--border);
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
       }
       .sp-invite-btn {
-        padding: 8px 16px;
-        border: 1px solid rgba(0, 0, 0, 0.25);
-        border-radius: 999px;
-        background: transparent;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 62.4375rem;
+        background-color: transparent;
         cursor: pointer;
         font: inherit;
-        font-size: 13px;
+        font-size: 0.8125rem;
       }
       .sp-done {
-        margin: 20px 0 0;
-        font-size: 14px;
-        color: rgba(0, 0, 0, 0.7);
+        margin: 1.25rem 0 0;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
         max-width: 48ch;
       }
       .sp-args {
         margin: 0;
         display: grid;
-        gap: 8px;
+        gap: 0.5rem;
       }
       .sp-arg {
         display: grid;
-        grid-template-columns: 220px 1fr;
-        gap: 12px;
+        grid-template-columns: 13.75rem 1fr;
+        gap: 0.75rem;
         align-items: baseline;
-        font-size: 12px;
+        font-size: 0.75rem;
       }
       .sp-arg span {
-        color: #4b5563;
+        color: var(--muted-foreground);
       }
       @media (max-width: 520px) {
         .sp-arg {

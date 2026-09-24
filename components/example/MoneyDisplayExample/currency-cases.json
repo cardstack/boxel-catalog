@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rows": [
+        { "label": "Consulting fee", "amount": 12400, "currency": "USD", "baseAmount": null, "baseCurrency": null, "emphatic": false },
+        { "label": "Tokyo licence (no minor unit)", "amount": 1250000, "currency": "JPY", "baseAmount": null, "baseCurrency": null, "emphatic": false },
+        { "label": "Kuwait retainer (three decimals)", "amount": 1840.5, "currency": "KWD", "baseAmount": null, "baseCurrency": null, "emphatic": false },
+        { "label": "Credit note", "amount": -350, "currency": "USD", "baseAmount": null, "baseCurrency": null, "emphatic": false },
+        { "label": "Berlin invoice, with its USD equivalent", "amount": 9800, "currency": "EUR", "baseAmount": 10640, "baseCurrency": "USD", "emphatic": false },
+        { "label": "Missing amount", "amount": null, "currency": "USD", "baseAmount": null, "baseCurrency": null, "emphatic": false },
+        { "label": "Quarter total", "amount": 58000, "currency": "USD", "baseAmount": null, "baseCurrency": null, "emphatic": true }
+      ],
+      "cardInfo": {
+        "name": "Money Display across currencies and signs",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": { "links": { "self": null } }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../money-display-example",
+        "name": "MoneyDisplayExample"
+      }
+    }
+  }
+}

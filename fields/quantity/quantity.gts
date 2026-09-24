@@ -1,20 +1,18 @@
 // External dependencies
-import { Component } from 'https://cardstack.com/base/card-api';
+import { Component } from '@cardstack/base/card-api';
 import { on } from '@ember/modifier';
 import { lte, gte, not } from '@cardstack/boxel-ui/helpers';
+import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
 
 import NumberField, {
   deserializeForUI,
   serializeForUI,
-} from 'https://cardstack.com/base/number';
-import { TextInputValidator } from 'https://cardstack.com/base/text-input-validator';
+} from '@cardstack/base/number';
+import { TextInputValidator } from '@cardstack/base/text-input-validator';
 import { NumberSerializer } from '@cardstack/runtime-common';
 import Grid2x2Icon from '@cardstack/boxel-icons/grid-2x2';
 
-import {
-  getNumericValue,
-  clamp,
-} from 'https://cardstack.com/base/number/util/index';
+import { getNumericValue, clamp } from '@cardstack/base/number/util/index';
 
 // Options interface for quantity field
 export interface QuantityOptions {
@@ -60,9 +58,7 @@ export default class QuantityField extends NumberField {
       this.args.set(clamp(this.numericValue - 1, this.minValue, this.maxValue));
     };
 
-    handleInput = (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      const value = target.value;
+    handleInput = (value: string) => {
       const num = parseFloat(value);
       if (!isNaN(num)) {
         this.args.set(clamp(num, this.minValue, this.maxValue));
@@ -74,38 +70,40 @@ export default class QuantityField extends NumberField {
     <template>
       <div class='quantity-field-edit' data-test-quantity-edit>
         <label for='quantity-input' class='sr-only'>Quantity</label>
-        <button
-          type='button'
+        <Button
+          @kind='text-only'
+          @size='auto'
           class='qty-btn'
           data-test-quantity-decrement
           {{on 'click' this.decrement}}
-          disabled={{if
+          @disabled={{if
             (not @canEdit)
             true
             (if (lte this.numericValue this.minValue) true)
           }}
-        >−</button>
-        <input
+        >−</Button>
+        <BoxelInput
           id='quantity-input'
-          type='number'
+          @type='number'
           class='qty-input'
-          value={{this.numericValue}}
-          min={{this.minValue}}
-          max={{this.maxValue}}
-          disabled={{not @canEdit}}
-          {{on 'input' this.handleInput}}
+          @value={{this.numericValue}}
+          @min={{this.minValue}}
+          @max={{this.maxValue}}
+          @disabled={{not @canEdit}}
+          @onInput={{this.handleInput}}
         />
-        <button
-          type='button'
+        <Button
+          @kind='text-only'
+          @size='auto'
           class='qty-btn'
           data-test-quantity-increment
           {{on 'click' this.increment}}
-          disabled={{if
+          @disabled={{if
             (not @canEdit)
             true
             (if (gte this.numericValue this.maxValue) true)
           }}
-        >+</button>
+        >+</Button>
       </div>
 
       <style scoped>
@@ -121,26 +119,33 @@ export default class QuantityField extends NumberField {
         }
         .quantity-field-edit {
           display: flex;
+          width: fit-content;
           align-items: center;
-          gap: var(--boxel-sp-xs, 0.5rem);
+          gap: var(--boxel-sp-xs);
+        }
+        /* No search/validation icon is ever shown here, so collapse
+           BoxelInput's reserved icon columns via its own --boxel-input-icon-size
+           knob rather than leaving dead space on both sides of the input. */
+        .quantity-field-edit :deep(.input-container) {
+          --boxel-input-icon-size: 0px;
         }
         .qty-btn {
           width: 2.5rem;
           height: 2.5rem;
           border-radius: 50%;
-          border: 2px solid var(--border, var(--boxel-200, #e0e0e0));
-          background: var(--background, var(--boxel-light, #ffffff));
+          border: 2px solid var(--border);
+          background-color: var(--background);
           font-size: 1.25rem;
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s;
-          color: var(--foreground, var(--boxel-dark, #1a1a1a));
+          color: var(--foreground);
           flex-shrink: 0;
         }
         .qty-btn:hover:not(:disabled) {
-          background: var(--primary, var(--boxel-purple, #6638ff));
-          color: var(--primary-foreground, var(--boxel-light, #ffffff));
-          border-color: var(--primary, var(--boxel-purple, #6638ff));
+          background-color: var(--primary);
+          color: var(--primary-foreground);
+          border-color: var(--primary);
         }
         .qty-btn:disabled {
           opacity: 0.4;
@@ -153,15 +158,15 @@ export default class QuantityField extends NumberField {
           font-size: 1.125rem;
           font-weight: 700;
           padding: 0;
-          border: 2px solid var(--border, var(--boxel-200, #e0e0e0));
-          border-radius: var(--boxel-border-radius-xs, 0.25rem);
-          background: var(--background, var(--boxel-light, #ffffff));
-          color: var(--foreground, var(--boxel-dark, #1a1a1a));
+          border: 2px solid var(--border);
+          border-radius: var(--boxel-border-radius-xs);
+          background-color: var(--background);
+          color: var(--foreground);
           outline: none;
           transition: border-color 0.2s;
         }
         .qty-input:focus {
-          border-color: var(--primary, var(--boxel-purple, #6638ff));
+          border-color: var(--primary);
         }
         .qty-input::-webkit-inner-spin-button,
         .qty-input::-webkit-outer-spin-button {
@@ -209,25 +214,25 @@ export default class QuantityField extends NumberField {
         .quantity-field-embedded {
           display: inline-flex;
           align-items: center;
-          gap: calc(var(--spacing, 0.25rem) * 2);
-          padding: calc(var(--spacing, 0.25rem) * 2)
-            calc(var(--spacing, 0.25rem) * 3);
-          background: var(--muted, #f1f5f9);
-          border-radius: var(--radius, 0.5rem);
-          border: 1px solid var(--border, #e2e8f0);
+          gap: calc(var(--spacing) * 2);
+          padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
+          border-radius: var(--radius);
+          border: 1px solid var(--border);
         }
 
         .qty-icon {
           width: 1.25rem;
           height: 1.25rem;
-          color: var(--muted-foreground, #64748b);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
 
         .qty-value {
           font-size: 1.125rem;
           font-weight: 700;
-          color: var(--foreground, #0f172a);
+          color: var(--foreground);
           line-height: 1;
         }
       </style>
@@ -255,7 +260,7 @@ export default class QuantityField extends NumberField {
         .quantity-atom {
           font-size: 0.6875rem;
           font-weight: 600;
-          color: var(--foreground, #0f172a);
+          color: var(--foreground);
           text-transform: uppercase;
           letter-spacing: 0.01em;
         }

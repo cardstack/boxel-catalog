@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# maxChroma\n\n## Summary\n\nThe reachable chroma ceiling at hue `h` (fraction in `[0, 1)`) and value `v` (0\u201310). Each principal hue peaks at its own chroma (`C_PEAK`) at its own value level (`V_PEAK`) \u2014 yellow crowns near value 8.5, purple-blue near value 3 \u2014 and falls off quadratically away from that peak. This lopsided canopy is what makes the Munsell solid a tree rather than a sphere.\n\n## Import\n\n```javascript\nimport { maxChroma } from '../utils/munsell';\n```\n\n## Usage\n\n```javascript\nlet ceiling = maxChroma(0.2, 8); // how chromatic can 5Y get at value 8?\n```",
+      "ref": {
+        "module": "../utils/munsell",
+        "name": "maxChroma"
+      },
+      "specType": null,
+      "containedExamples": [],
+      "cardTitle": "maxChroma",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

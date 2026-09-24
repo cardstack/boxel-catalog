@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../fulfilment-status-chip",
+        "name": "StatusChip"
+      },
+      "specType": "component",
+      "readMe": "# Fulfilment Status Chip\n\n## Summary\nThe one place the fulfilment blocks decide how a lifecycle hue renders: fill, border and text are all mixed `in oklch` from a single hue toward the theme's own tokens, so the chip stays legible on light and dark grounds and the three can never come apart.\n\n## API\n- `StatusChip` — template-only component; args `@label`, `@hue` (any CSS colour; the option tables pass hex), optional `@size` (`'small' | 'base'`)\n- `StatusStyle` — `{ value, label, hue }`, the option-table row shape `Order Status` and `Shipment Status` export for each value\n\n## Usage\n```ts\nimport { StatusChip } from '@cardstack/catalog/cards/fulfilment/fulfilment-status-chip';\nimport { orderStatusStyle } from '@cardstack/catalog/cards/fulfilment/order-status';\n\n{{#let (orderStatusStyle @model.status) as |style|}}\n  <StatusChip @label={{style.label}} @hue={{style.hue}} />\n{{/let}}\n```\n\n## Non-goals\nNot a status field: it renders a hue it is handed. Vocabularies and transitions live in the status fields that consume it.\n\nThis chip is internal to the fulfilment cluster: its vocabularies (`Order Status`, `Shipment Status`) carry literal hex hues, which is what it accepts. For new work use the catalog `Status` field (`fields/status`) with `StatePill` (`components/state-pill`) — they take a named hue vocabulary and do the contrast-checked mixing. Converging the fulfilment vocabularies onto them is tracked separately.",
+      "cardTitle": "Fulfilment Status Chip",
+      "cardDescription": "Renders a fulfilment lifecycle hue as a chip (label + hue); internal to the fulfilment vocabularies — new work should use Status + StatePill.",
+      "cardInfo": {
+        "name": "Fulfilment Status Chip",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

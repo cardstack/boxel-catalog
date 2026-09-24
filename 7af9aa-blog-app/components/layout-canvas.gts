@@ -388,12 +388,12 @@ export class LayoutCanvas extends Component<Sig> {
 
       /* Ghost slot — preview where the dragged block will land */
       .slot-ghost {
-        min-height: 80px;
+        min-height: 5rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(123, 97, 255, 0.08);
-        border: 2px dashed var(--boxel-highlight, #7b61ff);
+        background-color: color-mix(in oklch, var(--primary) 8%, transparent);
+        border: 2px dashed var(--primary);
         border-radius: var(--boxel-border-radius);
         animation: ghost-appear 0.18s ease-out;
       }
@@ -401,7 +401,7 @@ export class LayoutCanvas extends Component<Sig> {
         pointer-events: none;
       }
       .ghost-content {
-        color: var(--boxel-highlight, #7b61ff);
+        color: var(--primary-ink);
         font: 500 var(--boxel-font-sm);
         letter-spacing: var(--boxel-lsp-xs);
         text-align: center;
@@ -433,20 +433,21 @@ export class LayoutCanvas extends Component<Sig> {
         }
       }
       .row-gap {
-        height: 4px;
+        height: 0.25rem;
         transition:
           height 0.15s,
           background-color 0.15s;
         border-radius: var(--boxel-border-radius-sm);
       }
       .layout-canvas.is-dragging .row-gap {
-        height: 18px;
-        background-color: rgba(0, 0, 0, 0.04);
-        margin: 4px 0;
+        height: 1.125rem;
+        background-color: var(--hover);
+        margin: 0.25rem 0;
       }
       .layout-canvas.is-dragging .row-gap.drag-over {
-        height: 28px;
-        background-color: var(--boxel-highlight, #7b61ff);
+        height: 1.75rem;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         opacity: 0.4;
       }
     </style>

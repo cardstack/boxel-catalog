@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "Designed edit format: board name, read-only facts, per-echo removal, and a guarded erase — the raw ink/viewport JSON internals are never exposed.",
+      "ref": {
+        "module": "../components/edit",
+        "name": "EchoPadEdit"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "EchoPadEdit",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

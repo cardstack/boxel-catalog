@@ -103,11 +103,13 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
         align-items: center;
         column-gap: var(--boxel-sp);
         row-gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp) var(--boxel-sp-lg) calc(var(--boxel-sp) + 4px);
-        background: var(--boxel-light, #ffffff);
-        border: 1px solid var(--boxel-border-color, #e5e7eb);
-        border-radius: var(--boxel-border-radius, 0.5rem);
-        min-height: 60px;
+        padding: var(--boxel-sp) var(--boxel-sp-lg)
+          calc(var(--boxel-sp) + 0.25rem);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius);
+        min-height: 3.75rem;
       }
 
       .mini-play-btn {
@@ -122,12 +124,12 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: var(--primary, #3b82f6) !important;
-        color: white !important;
+        background-color: var(--primary) !important;
+        color: var(--primary-foreground) !important;
       }
 
       .mini-play-btn:hover {
-        background: var(--accent, #60a5fa) !important;
+        background-color: var(--accent) !important;
       }
 
       .mini-info {
@@ -138,7 +140,7 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
       .mini-title {
         font-weight: 600;
         font-size: 0.875rem;
-        color: var(--foreground, #1f2937);
+        color: var(--foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -146,7 +148,7 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
 
       .mini-artist {
         font-size: 0.75rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         margin-top: 0.125rem;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -172,7 +174,7 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
         gap: 0.125rem;
         font-size: 0.625rem;
         font-weight: 600;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
 
       .skip-btn svg {
@@ -181,14 +183,14 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
       }
 
       .skip-btn:hover {
-        color: var(--foreground, #1f2937);
-        background: var(--muted, #f3f4f6);
+        color: var(--foreground);
+        background-color: var(--muted);
       }
 
       .mini-time {
         grid-area: time;
         font-size: 0.75rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         flex-shrink: 0;
@@ -235,15 +237,17 @@ export class MiniPlayer extends GlimmerComponent<MiniPlayerSignature> {
         bottom: 0;
         left: 0;
         right: 0;
-        height: 3px;
-        background: var(--muted, #e5e7eb);
-        border-radius: 0 0 var(--radius, 0.5rem) var(--radius, 0.5rem);
+        height: 0.1875rem;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border-radius: 0 0 var(--radius) var(--radius);
         overflow: hidden;
       }
 
       .mini-progress-bar {
         height: 100%;
-        background: var(--primary, #3b82f6);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         transition: width 0.1s linear;
       }
     </style>

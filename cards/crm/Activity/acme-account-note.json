@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "activityType": "note",
+      "summary": "Procurement contact changes in October",
+      "body": "Farah hands procurement to Jason from 1 October; renewals go to him after that.",
+      "occurredAt": "2026-09-20T09:05:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../activity",
+        "name": "Activity"
+      }
+    },
+    "relationships": {
+      "author": {
+        "links": {
+          "self": "../User/dana-whitfield"
+        }
+      },
+      "about": {
+        "links": {
+          "self": "../Account/acme-industries"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -82,7 +82,7 @@ export class SortMenu extends GlimmerComponent<SortMenuSignature> {
 
       .sort-trigger {
         --boxel-button-border-color: var(--boxel-450);
-        width: 190px;
+        width: 11.875rem;
         justify-content: space-between;
         gap: var(--boxel-sp-xs);
         padding-right: var(--boxel-sp-xs);
@@ -103,7 +103,7 @@ export class SortMenu extends GlimmerComponent<SortMenuSignature> {
 
       .sort-menu {
         --boxel-menu-item-content-padding: var(--boxel-sp-xs);
-        width: 190px;
+        width: 11.875rem;
       }
     </style>
   </template>

@@ -46,43 +46,34 @@ class ReviewStateBadge extends GlimmerComponent<ReviewStateBadgeSignature> {
       .review-state-badge {
         display: inline-flex;
         align-self: center;
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 600;
         border-radius: 2em;
-        padding: 2px 10px;
+        padding: 2px 0.625rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         flex-shrink: 0;
       }
       .review-state-badge--changes {
-        background: color-mix(
-          in srgb,
-          var(--destructive, #d73a49) 10%,
-          var(--card, #ffffff)
+        background-color: color-mix(
+          in oklch,
+          var(--destructive) 10%,
+          var(--card)
         );
-        color: var(--destructive, #d73a49);
+        color: var(--destructive-ink);
         border: 1px solid
-          color-mix(
-            in srgb,
-            var(--destructive, #d73a49) 30%,
-            var(--card, #ffffff)
-          );
+          color-mix(in oklch, var(--destructive) 30%, var(--card));
       }
       .review-state-badge--approved {
-        background: color-mix(
-          in srgb,
-          var(--chart-1, #28a745) 10%,
-          var(--card, #ffffff)
-        );
-        color: var(--chart-1, #28a745);
-        border: 1px solid
-          color-mix(in srgb, var(--chart-1, #28a745) 35%, var(--card, #ffffff));
+        background-color: color-mix(in oklch, var(--chart-1) 10%, var(--card));
+        color: var(--chart-1);
+        border: 1px solid color-mix(in oklch, var(--chart-1) 35%, var(--card));
       }
       .review-state-badge--pending {
-        background: color-mix(in srgb, #9a6700 10%, var(--card, #ffffff));
-        color: #9a6700;
-        border: 1px solid color-mix(in srgb, #9a6700 30%, var(--card, #ffffff));
+        background-color: color-mix(in oklch, var(--warning) 10%, var(--card));
+        color: var(--warning-ink);
+        border: 1px solid color-mix(in oklch, var(--warning) 30%, var(--card));
       }
     </style>
   </template>
@@ -165,11 +156,11 @@ export class ReviewSection extends GlimmerComponent<ReviewSectionSignature> {
         overflow-y: auto;
       }
       .section-heading {
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--foreground, #1f2328);
+        color: var(--foreground);
         margin: 0;
       }
       .review-heading-row {
@@ -187,9 +178,10 @@ export class ReviewSection extends GlimmerComponent<ReviewSectionSignature> {
         gap: var(--boxel-sp-sm);
       }
       .review-item {
-        background: var(--muted, #f6f8fa);
-        border: 1px solid var(--border, var(--boxel-border-color));
-        border-radius: var(--radius, 6px);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         display: flex;
         flex-direction: column;
@@ -203,11 +195,11 @@ export class ReviewSection extends GlimmerComponent<ReviewSectionSignature> {
       .review-author {
         font-size: var(--boxel-font-sm);
         font-weight: 500;
-        color: var(--foreground, #1f2328);
+        color: var(--foreground);
       }
       .review-github-link {
         margin-left: auto;
-        color: var(--muted-foreground, #656d76);
+        color: var(--muted-foreground);
         text-decoration: none;
         display: inline-flex;
         align-items: center;
@@ -215,23 +207,23 @@ export class ReviewSection extends GlimmerComponent<ReviewSectionSignature> {
         flex-shrink: 0;
       }
       .review-github-link:hover {
-        color: var(--primary, #0969da);
+        color: var(--primary-ink);
       }
       .review-github-link-icon {
-        width: 13px;
-        height: 13px;
+        width: 0.8125rem;
+        height: 0.8125rem;
       }
       .review-comment {
         margin-block: 0;
         margin-inline: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         font-size: var(--boxel-font-sm);
-        color: var(--card-foreground, #1f2328);
-        border-left: 3px solid var(--border, var(--boxel-border-color));
+        color: var(--card-foreground);
+        border-left: 3px solid var(--border);
         font-style: normal;
         line-height: 1.6;
-        background: var(--card, #ffffff);
-        border-radius: 0 var(--radius, 6px) var(--radius, 6px) 0;
+        background-color: var(--card);
+        border-radius: 0 var(--radius) var(--radius) 0;
         transition:
           border-left-color 0.15s ease,
           background 0.15s ease;
@@ -240,11 +232,11 @@ export class ReviewSection extends GlimmerComponent<ReviewSectionSignature> {
         overflow-wrap: anywhere;
       }
       .review-comment:hover {
-        border-left-color: var(--destructive, #d73a49);
-        background: color-mix(
-          in srgb,
-          var(--destructive, #d73a49) 5%,
-          var(--card, #ffffff)
+        border-left-color: var(--destructive);
+        background-color: color-mix(
+          in oklch,
+          var(--destructive) 5%,
+          var(--card)
         );
       }
       .empty-state {
@@ -252,60 +244,45 @@ export class ReviewSection extends GlimmerComponent<ReviewSectionSignature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        background: var(--muted, #f6f8fa);
-        border: 1px solid var(--border, var(--boxel-border-color));
-        border-radius: var(--radius, 6px);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
       }
       .empty-state-icon {
-        width: 13px;
-        height: 13px;
+        width: 0.8125rem;
+        height: 0.8125rem;
         border-radius: 50%;
-        border: 2px solid var(--chart-4, #dbab09);
+        border: 2px solid var(--chart-4);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
       }
       .empty-state-dot {
-        width: 4px;
-        height: 4px;
+        width: 0.25rem;
+        height: 0.25rem;
         border-radius: 50%;
-        background: var(--chart-4, #dbab09);
+        background-color: var(--chart-4);
       }
       .empty-state-text {
         font-size: var(--boxel-font-xs);
-        color: var(--muted-foreground, #656d76);
+        color: var(--muted-foreground);
       }
       .review-item--changes {
-        background: color-mix(
-          in srgb,
-          var(--destructive, #d73a49) 10%,
-          var(--card, #ffffff)
-        );
-        border-color: color-mix(
-          in srgb,
-          var(--destructive, #d73a49) 30%,
-          var(--card, #ffffff)
-        );
+        background-color: color-mix(in oklch, var(--card) 10%, var(--card));
+        border-color: color-mix(in oklch, var(--border) 30%, var(--card));
       }
       .review-item--approved {
-        background: color-mix(
-          in srgb,
-          var(--chart-1, #28a745) 10%,
-          var(--card, #ffffff)
-        );
-        border-color: color-mix(
-          in srgb,
-          var(--chart-1, #28a745) 35%,
-          var(--card, #ffffff)
-        );
+        background-color: color-mix(in oklch, var(--chart-1) 10%, var(--card));
+        border-color: color-mix(in oklch, var(--chart-1) 35%, var(--card));
       }
       .review-item--pending {
-        background: color-mix(in srgb, #9a6700 8%, var(--card, #ffffff));
-        border-color: color-mix(in srgb, #9a6700 25%, var(--card, #ffffff));
+        background-color: color-mix(in oklch, var(--card) 8%, var(--card));
+        border-color: color-mix(in oklch, var(--border) 25%, var(--card));
       }
       .review-item--pending .empty-state-text {
-        color: #9a6700;
+        color: var(--warning-ink);
         font-weight: 600;
       }
     </style>

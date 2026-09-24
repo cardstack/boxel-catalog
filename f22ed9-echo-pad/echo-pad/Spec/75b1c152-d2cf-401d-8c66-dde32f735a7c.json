@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "An accepted response from the marker: mode, red-pen text, board position, plus optional `sketchJson` ({polylines, labels} in world coordinates) and a validated `sceneJson` manim spec.",
+      "ref": {
+        "module": "../fields/echo-note",
+        "name": "EchoNoteField"
+      },
+      "specType": "field",
+      "containedExamples": [],
+      "cardTitle": "EchoNoteField",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

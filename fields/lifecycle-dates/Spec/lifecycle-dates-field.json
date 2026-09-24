@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "LifecycleDatesField",
+        "module": "../lifecycle-dates-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Lifecycle Dates\n\nThe lifecycle stamps any record card carries, as one reusable block. Each stamp is an event fact written once by whichever command owns that transition; `latestTransition` derives the list-row one-liner (\"activated Aug 12\") so consumers never re-derive recency. Deliberately domain-neutral \u2014 nothing here knows what record it sits on.\n\n```ts\nimport { LifecycleDatesField } from '@cardstack/catalog/fields/lifecycle-dates/lifecycle-dates-field';\n\n@field lifecycle = contains(LifecycleDatesField);\n```\n\n### Non-goals\n\nNot an audit log (no actor, no reason \u2014 those belong to the commands and their records). No status enum \u2014 statuses are the consumer\u2019s statusField; these are just the WHEN. Archiving is not a stamp here: whether a record is archived is Record Status's fact, written by Archive Record.",
+      "cardInfo": {
+        "name": "Lifecycle Dates",
+        "summary": "Generic record-lifecycle stamps (created/activated/suspended/archived/reviewed) with a computed latest-transition label."
+      },
+      "containedExamples": [
+        {
+          "createdAt": "2026-01-08T10:00:00.000Z",
+          "activatedAt": "2026-01-15T09:30:00.000Z"
+        }
+      ],
+      "cardTitle": "Lifecycle Dates Field",
+      "cardDescription": "The lifecycle stamps a record carries, each written once by the command that owns that transition, with the latest one derived for list rows."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../lifecycle-dates-field",
+              "name": "LifecycleDatesField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

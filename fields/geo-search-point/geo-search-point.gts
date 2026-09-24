@@ -1,9 +1,5 @@
-import {
-  Component,
-  contains,
-  field,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
+import { Component, contains, field } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 import GeoPointField from '../geo-point/geo-point';
 import GeoSearchPointEditField from './components/geo-search-point-edit-field';
@@ -102,10 +98,10 @@ export class GeoSearchPointEmbedded extends Component<
       }
 
       .pin-icon {
-        width: 14px;
-        height: 14px;
+        width: 0.875rem;
+        height: 0.875rem;
         flex-shrink: 0;
-        color: var(--boxel-red);
+        color: var(--primary-ink);
       }
 
       .content {
@@ -117,7 +113,7 @@ export class GeoSearchPointEmbedded extends Component<
       .display-name {
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
-        color: var(--boxel-dark);
+        color: var(--foreground);
       }
     </style>
   </template>
@@ -145,10 +141,10 @@ export class GeoSearchPointAtom extends Component<typeof GeoSearchPointField> {
       }
 
       .pin-icon {
-        width: 14px;
-        height: 14px;
+        width: 0.875rem;
+        height: 0.875rem;
         flex-shrink: 0;
-        color: var(--boxel-red);
+        color: var(--primary-ink);
       }
     </style>
   </template>

@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "activityType": "meeting",
+      "summary": "Quarterly business review with Brightleaf",
+      "body": null,
+      "occurredAt": "2026-09-24T10:00:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../activity",
+        "name": "Activity"
+      }
+    },
+    "relationships": {
+      "author": {
+        "links": {
+          "self": "../User/dana-whitfield"
+        }
+      },
+      "about": {
+        "links": {
+          "self": "../Account/brightleaf-studio"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

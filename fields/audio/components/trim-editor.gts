@@ -145,9 +145,10 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
 
     <style scoped>
       .trim-editor {
-        background: var(--boxel-light, #ffffff);
-        border: 1px solid var(--boxel-border-color, #e5e7eb);
-        border-radius: var(--boxel-border-radius, 0.5rem);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius);
         padding: var(--boxel-sp-lg);
         display: flex;
         flex-direction: column;
@@ -163,13 +164,13 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
       .trim-title h4 {
         font-size: 1.125rem;
         font-weight: 600;
-        color: var(--foreground, #1f2937);
+        color: var(--foreground);
         margin: 0;
       }
 
       .trim-subtitle {
         font-size: 0.875rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
 
       .trim-info-bar {
@@ -177,8 +178,9 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
         padding: 1rem;
-        background: var(--muted, #f3f4f6);
-        border-radius: var(--radius, 0.5rem);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border-radius: var(--radius);
       }
 
       .trim-stat {
@@ -191,7 +193,7 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
       .stat-label {
         font-size: 0.75rem;
         font-weight: 500;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -199,7 +201,7 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
       .stat-value {
         font-size: 1rem;
         font-weight: 600;
-        color: var(--foreground, #1f2937);
+        color: var(--foreground);
         font-variant-numeric: tabular-nums;
       }
 
@@ -222,19 +224,20 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         align-items: center;
         font-size: 0.875rem;
         font-weight: 500;
-        color: var(--foreground, #1f2937);
+        color: var(--foreground);
       }
 
       .slider-value {
         font-variant-numeric: tabular-nums;
-        color: var(--primary, #3b82f6);
+        color: var(--primary-ink);
         font-weight: 600;
       }
 
       .trim-slider {
         width: 100%;
         height: 0.5rem;
-        background: var(--muted, #e5e7eb);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         border-radius: 0.25rem;
         appearance: none;
         cursor: pointer;
@@ -244,15 +247,18 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         appearance: none;
         width: 1.25rem;
         height: 1.25rem;
-        background: var(--primary, #3b82f6);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border-radius: 50%;
         cursor: grab;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
         transition: all 0.2s;
       }
 
       .trim-slider::-webkit-slider-thumb:hover {
-        background: var(--accent, #60a5fa);
+        background-color: var(--accent);
+        color: var(--accent-foreground);
         transform: scale(1.1);
       }
 
@@ -264,16 +270,19 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
       .trim-slider::-moz-range-thumb {
         width: 1.25rem;
         height: 1.25rem;
-        background: var(--primary, #3b82f6);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border-radius: 50%;
         cursor: grab;
         border: none;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px
+          color-mix(in oklch, var(--shadow-color) 10%, transparent);
         transition: all 0.2s;
       }
 
       .trim-slider::-moz-range-thumb:hover {
-        background: var(--accent, #60a5fa);
+        background-color: var(--accent);
+        color: var(--accent-foreground);
         transform: scale(1.1);
       }
 
@@ -285,16 +294,16 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
       .start-slider::-webkit-slider-track {
         background: linear-gradient(
           to right,
-          var(--muted, #e5e7eb) 0%,
-          var(--primary, #3b82f6) 100%
+          var(--muted) 0%,
+          var(--primary) 100%
         );
       }
 
       .end-slider::-webkit-slider-track {
         background: linear-gradient(
           to right,
-          var(--primary, #3b82f6) 0%,
-          var(--muted, #e5e7eb) 100%
+          var(--primary) 0%,
+          var(--muted) 100%
         );
       }
 
@@ -304,7 +313,7 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         align-items: center;
         gap: var(--boxel-sp);
         padding-top: 1rem;
-        border-top: 1px solid var(--border, #e5e7eb);
+        border-top: 1px solid var(--border);
       }
 
       .loop-toggle {
@@ -312,7 +321,7 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         align-items: center;
         gap: 0.5rem;
         font-size: 0.875rem;
-        color: var(--foreground, #1f2937);
+        color: var(--foreground);
         cursor: pointer;
         user-select: none;
         white-space: nowrap;
@@ -326,12 +335,12 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         align-items: center;
         gap: 0.375rem;
         white-space: nowrap;
-        background: var(--primary, #3b82f6) !important;
-        color: white !important;
+        background-color: var(--primary) !important;
+        color: var(--primary-foreground) !important;
       }
 
       .trim-apply-btn:hover {
-        background: var(--accent, #60a5fa) !important;
+        background-color: var(--accent) !important;
       }
 
       .playback-controls-row {
@@ -353,24 +362,24 @@ export class TrimEditor extends GlimmerComponent<TrimEditorSignature> {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: var(--primary, #3b82f6) !important;
-        color: white !important;
+        background-color: var(--primary) !important;
+        color: var(--primary-foreground) !important;
       }
 
       .control-btn:hover {
-        background: var(--accent, #60a5fa) !important;
+        background-color: var(--accent) !important;
       }
 
       .time-display-inline {
         font-size: 0.875rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
 
       .loop-checkbox {
         width: 1rem;
         height: 1rem;
         cursor: pointer;
-        accent-color: var(--primary, #3b82f6);
+        accent-color: var(--primary);
       }
     </style>
   </template>

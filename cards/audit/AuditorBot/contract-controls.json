@@ -1,0 +1,134 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Contract controls (quarterly)",
+      "regime": {
+        "regime": "Contract Policy",
+        "version": "2026",
+        "clause": null,
+        "clauseTitle": null
+      },
+      "rules": [
+        {
+          "ruleId": "CON-01",
+          "statement": "A signed contract links its executed document.",
+          "regime": {
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§2.1",
+            "clauseTitle": "Executed copies"
+          },
+          "kind": "presence",
+          "fieldPath": "documentUrl",
+          "parameters": "",
+          "evidenceRequired": false,
+          "severityIfFailed": {
+            "level": "minor"
+          }
+        },
+        {
+          "ruleId": "CON-02",
+          "statement": "A contract in use has not passed its end date.",
+          "regime": {
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§3.2",
+            "clauseTitle": "Term"
+          },
+          "kind": "expiry",
+          "fieldPath": "endDate",
+          "parameters": "{\"mustBeFuture\": true}",
+          "evidenceRequired": false,
+          "severityIfFailed": {
+            "level": "major"
+          }
+        },
+        {
+          "ruleId": "CON-03",
+          "statement": "A contract's value stays within the $250,000 signing limit, with the approval on file.",
+          "regime": {
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§4.1",
+            "clauseTitle": "Signing limits"
+          },
+          "kind": "threshold",
+          "fieldPath": "value.amount",
+          "parameters": "{\"max\": 250000}",
+          "evidenceRequired": true,
+          "severityIfFailed": {
+            "level": "major"
+          }
+        },
+        {
+          "ruleId": "CON-04",
+          "statement": "Contracts are governed by Delaware or English law.",
+          "regime": {
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§5.3",
+            "clauseTitle": "Governing law"
+          },
+          "kind": "predicate",
+          "fieldPath": "governingLaw.jurisdiction",
+          "parameters": "{\"oneOf\": [\"Delaware\", \"England & Wales\"]}",
+          "evidenceRequired": false,
+          "severityIfFailed": {
+            "level": "minor"
+          }
+        }
+      ],
+      "subjectQuery": "{\"filter\": {\"type\": {\"module\": \"@cardstack/catalog/cards/legal/contract\", \"name\": \"Contract\"}}}",
+      "lastRunAt": null,
+      "cardInfo": {
+        "name": "Contract controls (quarterly)",
+        "summary": "Four contract-policy controls over every Contract",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "runsAs": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../auditor-bot",
+        "name": "AuditorBot"
+      },
+      "fields": {
+        "rules": [
+          {
+            "adoptsFrom": {
+              "module": "../validation-rule-field",
+              "name": "ValidationRuleField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../validation-rule-field",
+              "name": "ValidationRuleField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../validation-rule-field",
+              "name": "ValidationRuleField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../validation-rule-field",
+              "name": "ValidationRuleField"
+            }
+          }
+        ]
+      },
+      "_touched": 1788749957541
+    }
+  }
+}

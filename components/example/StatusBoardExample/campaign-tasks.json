@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "records.0": {
+        "links": {
+          "self": "../../../cards/tasks/Task/spring-campaign-launch"
+        }
+      },
+      "records.1": {
+        "links": {
+          "self": "../../../cards/tasks/Task/draft-landing-page-copy"
+        }
+      },
+      "records.2": {
+        "links": {
+          "self": "../../../cards/tasks/Task/book-photo-shoot"
+        }
+      },
+      "records.3": {
+        "links": {
+          "self": "../../../cards/tasks/Task/approve-ad-budget"
+        }
+      },
+      "records.4": {
+        "links": {
+          "self": "../../../cards/tasks/Task/schedule-launch-email"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../status-board-example",
+        "name": "StatusBoardExample"
+      }
+    }
+  }
+}

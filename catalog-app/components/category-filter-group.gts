@@ -4,7 +4,7 @@ import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 import GlimmerComponent from '@glimmer/component';
 
-import type { CardContext } from 'https://cardstack.com/base/card-api';
+import type { CardContext } from '@cardstack/base/card-api';
 import type {
   Query,
   RenderableSearchEntryLike,
@@ -54,7 +54,11 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
 
   @action toggleSphere(sphereId: string) {
     const next = new Set(this.expandedSpheres);
-    next.has(sphereId) ? next.delete(sphereId) : next.add(sphereId);
+    if (next.has(sphereId)) {
+      next.delete(sphereId);
+    } else {
+      next.add(sphereId);
+    }
     this.expandedSpheres = next;
   }
 
@@ -114,7 +118,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
         >
           <Button
             @kind='text-only'
-            @size='small'
+            @size='auto'
             class='filter-list__button'
             {{on 'click' this.selectAll}}
           >
@@ -145,7 +149,7 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
               >
                 <Button
                   @kind='text-only'
-                  @size='small'
+                  @size='auto'
                   class='filter-list__button'
                   {{on 'click' (fn this.selectSphere sphere)}}
                 >
@@ -154,13 +158,15 @@ export default class CategoryFilterGroup extends GlimmerComponent<CategoryFilter
                     class='filter-name boxel-ellipsize'
                   >{{sphere.name}}</span>
                 </Button>
-                <button
+                <Button
+                  @kind='text-only'
+                  @size='auto'
                   class='dropdown-toggle'
                   aria-label='Toggle {{sphere.name}} group'
                   {{on 'click' (fn this.toggleSphere sphere.id)}}
                 >
                   <ChevronDown class='caret-icon' />
-                </button>
+                </Button>
               </span>
               {{#if (this.isSphereExpanded sphere.id)}}
                 <div class='category-pill-list'>

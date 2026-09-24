@@ -1,0 +1,71 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ConsentGrantField",
+        "module": "../consent-vocabulary"
+      },
+      "specType": "field",
+      "readMe": "## Consent Grant\n\nOne permission, for one purpose.\n\n```ts\nimport { ConsentGrantField } from '@cardstack/catalog/fields/consent/consent-vocabulary';\n\n@field consents = containsMany(ConsentGrantField);\n```\n\n### Consent is per-purpose, never blanket\n\nA single `hasConsented` boolean on a person is precisely the error this field exists to prevent. Permission to send order updates is **not** permission to send marketing. A system that cannot tell them apart has to treat every message as the most restricted kind — or send things it should not.\n\nSo `purpose` should be specific: *\"product marketing\"*, *\"usage analytics\"*, *\"service notifications\"*. Never *\"everything\"*.\n\n### Consent is one of six lawful bases, not the only one\n\n`LawfulBasisField`: consent · contract · legal obligation · vital interests · public task · legitimate interests.\n\nTreating consent as the only basis is how a system ends up **asking for permission it does not need** — which is itself a problem, because asking implies the person can say no. An order confirmation rests on *contract*; refusing to send it because nobody ticked a marketing box is a bug.\n\n### `policyVersion` is what makes a grant auditable\n\nConsent is only valid for what the person was actually told. When the privacy notice changes materially, consent to the old version **is not** consent to the new one — and without recording which version was shown, there is no way afterwards to work out who needs re-asking.\n\n`needsEvidence` flags a consent-based grant with no policy version. Flagged rather than rejected: the fix is usually a re-ask, not a deletion.\n\n### Withdrawal must be as easy as granting\n\nSo `withdrawnAt` is a plain field, not a separate workflow. Recording a withdrawal is one write, the same as recording a grant.\n\n### `daysUntilExpiry` counts calendar days, and is undefined when nothing expires\n\nNot a large number. *\"Does not expire\"* and *\"expires in 9999 days\"* are different facts.\n\n### Enum values are migrations\n\nNever rename or remove one. Instances carry these strings, and a renamed value silently reads as unset.\n\n### Composition\n\nA person or contact card carries a list of these beside its Channel Consent entries — one grant per purpose, one channel entry per channel:\n\n```ts\nimport {\n  ConsentGrantField,\n  ChannelConsentField,\n} from '@cardstack/catalog/fields/consent/consent-vocabulary';\n\n@field consents = containsMany(ConsentGrantField);\n@field channels = containsMany(ChannelConsentField);\n```\n\nA send is allowed when the grant for its purpose `isActive` **and** the channel `isContactable`. A marketing email needs both an active \"product marketing\" grant and a contactable email channel; an order confirmation rests on a contract-basis grant and still needs the channel.\n\n### Examples\n\nActive marketing consent; an order-notification grant on the contract basis; a withdrawn analytics grant; an invitation grant past its expiry; and an imported grant with no policy version, which shows the not-auditable warning.\n\n### Non-goals\n\nNot a preference-centre UI; the consumer's settings page renders these fields. Not a data-subject-access workflow. Does not decide a send: the consumer's send path combines this field with Channel Consent as above, and no catalog block owns that path.",
+      "cardInfo": {
+        "name": "Consent Grant",
+        "summary": "One permission for one purpose, under one of six lawful bases, with the policy version that makes it auditable."
+      },
+      "containedExamples": [
+        {
+          "purpose": "product marketing",
+          "lawfulBasis": "consent",
+          "status": "granted",
+          "grantedAt": "2026-05-02T09:14:00.000Z",
+          "expiresAt": "2028-05-02T09:14:00.000Z",
+          "capturedVia": "double opt-in",
+          "policyVersion": "privacy-2026-04",
+          "evidenceUrl": "https://example.com/consent/9f21"
+        },
+        {
+          "purpose": "order notifications",
+          "lawfulBasis": "contract",
+          "status": "granted",
+          "note": "No opt-in needed — the basis is the contract, not consent.",
+          "grantedAt": "2026-05-02T09:14:00.000Z"
+        },
+        {
+          "purpose": "usage analytics",
+          "lawfulBasis": "consent",
+          "status": "withdrawn",
+          "grantedAt": "2026-01-10T12:00:00.000Z",
+          "withdrawnAt": "2026-07-03T16:42:00.000Z",
+          "capturedVia": "signup form",
+          "policyVersion": "privacy-2025-11"
+        },
+        {
+          "purpose": "event invitations",
+          "lawfulBasis": "consent",
+          "status": "granted",
+          "grantedAt": "2024-09-01T10:00:00.000Z",
+          "expiresAt": "2026-09-01T10:00:00.000Z",
+          "capturedVia": "phone call",
+          "policyVersion": "privacy-2024-06",
+          "note": "Past its expiry; isActive is false although the stored status still says granted."
+        },
+        {
+          "purpose": "partner offers",
+          "lawfulBasis": "consent",
+          "status": "granted",
+          "grantedAt": "2025-03-14T08:30:00.000Z",
+          "capturedVia": "import",
+          "note": "Imported without the notice version shown, so it is flagged as not auditable."
+        }
+      ],
+      "cardTitle": "Consent Grant Field",
+      "cardDescription": "One permission for one specific purpose, with its lawful basis, the policy version shown, and when it was granted, withdrawn or expires."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../components/ticket-workspace",
+        "name": "TicketWorkspace"
+      },
+      "specType": "component",
+      "readMe": "# Ticket Workspace\n\n## Summary\nThe agent's working view of one ticket: header slab with pickers for assignee, queue, category and policy, SLA badges, the conversation feed with reply composer, status transitions, escalation, merge and knowledge-article suggestions — every action routed through the cluster's commands.\n\n## API\nArgs: `ticket?`, `context?`, `realms?`, `onLeftQueue?()` (called when the ticket leaves the list the reader is working). A Glimmer component, not a card format, because its interactive state cannot live inside `static isolated = class`.\n\n## Usage\n```ts\nimport { TicketWorkspace } from '@cardstack/catalog/cards/service-desk/components/ticket-workspace';\n\n<TicketWorkspace @ticket={{this.selected}} @context={{@context}} @realms={{this.realms}} @onLeftQueue={{this.clearSelection}} />\n```\nLazily imports Service Request and its approval command so a console without approvals never loads them.\n\n## Non-goals\nNot the queue list beside it and not a card; consumers place it in their own console layout.",
+      "cardTitle": "Ticket Workspace",
+      "cardDescription": "The agent's working view of one ticket: pickers, SLA badges, conversation, and every lifecycle action routed through the cluster's commands.",
+      "cardInfo": {
+        "name": "Ticket Workspace",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Ticket/1288-invoice-download"
+        }
+      }
+    }
+  }
+}

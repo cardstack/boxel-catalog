@@ -32,7 +32,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../Theme/cellar"
         }
       },
       "cardInfo.cardThumbnail": {

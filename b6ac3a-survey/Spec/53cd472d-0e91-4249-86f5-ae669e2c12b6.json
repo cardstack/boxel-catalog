@@ -2,17 +2,17 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "## Question Input\n\nA single question's answer control — renders the right input widget for a `SurveyQuestion`'s `kind` (`short-text`, `long-text`, `single-choice`, `multi-choice`, `rating`, `yes-no`) and reports the answer back through one uniform `onChange`. Plain inputs styled after `boxel-surface` cell-chrome; no surface `Cell`/context machinery, so the listing stays self-contained.\n\n### Contract\n- `@question` — the `SurveyQuestion` supplying `kind` and, for choice kinds, `options`.\n- `@value` / `@onChange` — the host owns the answer's storage; the component is uncontrolled beyond that. The value shape follows the kind: `string` (text kinds), `string[]` (multi-choice), `number` 1–5 (rating), `boolean` (yes/no).\n- `@autofocus` — forwarded to the rendered text/textarea input only.\n- `@invalid` — draws the shared invalid state (red border/mark/star) across every kind; the component does not itself decide what counts as invalid.\n\n### Behavior per kind\n- **short-text** / **long-text** — plain input / textarea, reports on every keystroke.\n- **single-choice** — radio-styled button group (`role='radiogroup'`), one selection.\n- **multi-choice** — checkbox-styled button group, toggles membership in the array.\n- **rating** — 5-star control; clicking the already-set star resets to 0 (no forced answer).\n- **yes-no** — two-button toggle; `true`/`false`, not a string.\n- An unrecognized `kind` falls back to a plain text input rather than rendering nothing.\n\n### Non-goals\nQuestion Input does not validate, does not know what \"required\" means, and does not persist the answer — the host (`Survey`) owns validity, persistence, and where the answer lives on the response record. It does not manage a full form's step/progress state — that's **Setup Wizard**'s job when a survey is broken into pages.\n\n## Usage\n\n```gts\nimport QuestionInput from '../components/question-input';\n\n<template>\n  <QuestionInput\n    @question={{this.question}}\n    @value={{this.answer}}\n    @onChange={{this.setAnswer}}\n    @invalid={{this.showError}}\n  />\n</template>\n```\n\nSee the `Survey` card's isolated template for the canonical consumer — it iterates a survey's questions, mounts one `QuestionInput` per row, and collects the answers into a `SurveyResponse`.",
       "ref": {
         "module": "../components/question-input",
         "name": "default"
       },
       "specType": "component",
       "containedExamples": [],
-      "cardTitle": "default",
-      "cardDescription": null,
+      "cardTitle": "Question Input",
+      "cardDescription": "Renders the answer control matching a survey question's kind (short/long text, single/multi choice, rating, yes/no) and reports the answer through one uniform onChange.",
       "cardInfo": {
-        "name": null,
+        "name": "Question Input",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null

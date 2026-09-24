@@ -1,12 +1,7 @@
-import {
-  FieldDef,
-  Component,
-  contains,
-  field,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import NumberField from 'https://cardstack.com/base/number';
-import ColorField from 'https://cardstack.com/base/color';
+import { FieldDef, Component, contains, field } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import NumberField from '@cardstack/base/number';
+import ColorField from '@cardstack/base/color';
 import { htmlSafe } from '@ember/template';
 
 import LayoutRowsIcon from '@cardstack/boxel-icons/layout-rows';
@@ -36,7 +31,7 @@ export class Tier extends FieldDef {
           padding: 0.125rem 0.5rem;
           border-radius: 0.25rem;
           font-weight: 700;
-          color: #111;
+          color: var(--foreground);
         }
       </style>
     </template>

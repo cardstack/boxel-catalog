@@ -139,14 +139,14 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
             cx={{this.center}}
             cy={{this.center}}
             r={{this.center}}
-            fill='#d1fae5'
+            fill='color-mix(in oklch, var(--success) 25%, transparent)'
           />
         {{/if}}
         <circle
           cx={{this.center}}
           cy={{this.center}}
           r={{this.holeRadius}}
-          fill='#ffffff'
+          fill='var(--card)'
         />
         <text
           x={{this.center}}
@@ -154,7 +154,7 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
           text-anchor='middle'
           font-size='9'
           font-weight='700'
-          fill='#94a3b8'
+          fill='var(--muted-foreground)'
           font-family='inherit'
           letter-spacing='0.08em'
         >MONTHLY</text>
@@ -164,7 +164,7 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
           text-anchor='middle'
           font-size='14'
           font-weight='800'
-          fill='#0f172a'
+          fill='var(--foreground)'
           font-family='inherit'
         >{{formatCurrencyShort this.total @currencyCode}}</text>
       </svg>
@@ -179,7 +179,9 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
           transform 0.3s ease;
       }
       .dc-wrap:hover {
-        filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.18));
+        filter: drop-shadow(
+          0 6px 18px color-mix(in oklch, var(--foreground) 18%, transparent)
+        );
         transform: scale(1.03);
       }
       .dc-svg {

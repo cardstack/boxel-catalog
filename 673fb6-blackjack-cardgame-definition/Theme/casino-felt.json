@@ -1,0 +1,71 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rootVariables": {
+        "background": "#0f2a1c",
+        "foreground": "#f1e9d2",
+        "card": "#164a30",
+        "cardForeground": "#f1e9d2",
+        "popover": "#1a3a2a",
+        "popoverForeground": "#f1e9d2",
+        "primary": "#d4af37",
+        "primaryForeground": "#1a1204",
+        "secondary": "#1f5a3a",
+        "secondaryForeground": "#f1e9d2",
+        "muted": "#12382a",
+        "mutedForeground": "#b9c9b0",
+        "accent": "#c9a84c",
+        "accentForeground": "#1a1204",
+        "destructive": "#c0392b",
+        "destructiveForeground": "#ffffff",
+        "border": "#2d6a45",
+        "input": "#2d6a45",
+        "ring": "#d4af37",
+        "canvas": "#2b1a10",
+        "inset": "#0d5a2f",
+        "sidebar": "#0f3a26",
+        "sidebarForeground": "#f1e9d2",
+        "tooltip": "#0b0d10",
+        "tooltipForeground": "#f1e9d2",
+        "fontSans": "'Inter', system-ui, sans-serif",
+        "fontSerif": "'Playfair Display', Georgia, serif",
+        "radius": "0.75rem",
+        "stripe": "#1e4e34",
+        "field": "#164a30",
+        "hover": "#f1e9d214",
+        "selected": "#375934",
+        "overlay": "#f1e9d280",
+        "subtleForeground": "#82957f",
+        "borderStrong": "#7c9b7a",
+        "sidebarBorder": "#2d6a45",
+        "sidebarPrimary": "#d4af37",
+        "sidebarPrimaryForeground": "#1a1204",
+        "sidebarAccent": "#c9a84c",
+        "sidebarAccentForeground": "#1a1204",
+        "sidebarRing": "#d4af37",
+        "success": "#7bc97e",
+        "successForeground": "#111111",
+        "warning": "#dea946",
+        "warningForeground": "#111111",
+        "info": "#6fb9ff",
+        "infoForeground": "#111111",
+        "attention": "#f18fbf",
+        "attentionForeground": "#111111"
+      },
+      "customCssImports": [],
+      "cardInfo": {
+        "name": "Casino Felt",
+        "summary": "Blackjack's default look — deep felt greens as the table surfaces, walnut ground, gold trim, ivory ink.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/structured-theme",
+        "name": "default"
+      }
+    }
+  }
+}

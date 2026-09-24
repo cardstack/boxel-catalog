@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/icon-button",
+        "name": "IconButton"
+      },
+      "specType": "component",
+      "readMe": "# Icon Button\n\n## Summary\nA square **Button** carrying an icon instead of text, with a mandatory label. Use it in dense chrome where a word will not fit — toolbar affordances, row actions, panel headers, close buttons. If there is room for a word, use **Button**: an icon plus a label is comprehended faster than an icon alone by every measure, and the icon-only form is a space decision, not a clarity one. For a copy-to-clipboard affordance specifically, use **CopyButton**, which adds the confirm-state feedback.\n\n## API\n```\n@label: string   (required)\n@variant?: ButtonVariant   (default 'secondary'; the same spellings Button accepts)\n@size?: 'xs' | 's' | 'm' | 'l' | 'xl'   (default 'm', forwarded to Button)\n@disabled?, @isDisabled?\n<:default>   — the icon\nElement: HTMLButtonElement\n```\n\n## Usage\n```gts\nimport { IconButton } from '@cardstack/pretui/components/icon-button';\n\n<IconButton @label='Close' @size='s'><XIcon /></IconButton>\n```\n\nServed from the Pret UI realm. The component's full write-up, with prior art, accessibility and theming notes, lives beside its source at `@cardstack/pretui/components/icon-button.md`.\n",
+      "cardTitle": "Icon Button",
+      "cardDescription": "A square action whose label is an icon; the accessible name comes from @label.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Icon Button",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

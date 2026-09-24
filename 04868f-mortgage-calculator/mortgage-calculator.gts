@@ -1,6 +1,6 @@
-import NumberField from 'https://cardstack.com/base/number';
-import CurrencyField from 'https://cardstack.com/base/currency';
-import { CardDef, field, contains } from 'https://cardstack.com/base/card-api';
+import NumberField from '@cardstack/base/number';
+import CurrencyField from '@cardstack/base/currency';
+import { CardDef, field, contains } from '@cardstack/base/card-api';
 import CalculatorIcon from '@cardstack/boxel-icons/calculator';
 import { MortgageCalculatorIsolated } from './components/isolated-template';
 import { MortgageCalculatorFitted } from './components/fitted-template';

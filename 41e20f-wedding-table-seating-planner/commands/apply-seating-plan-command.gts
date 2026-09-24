@@ -4,9 +4,9 @@ import {
   field,
   contains,
   containsMany,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import NumberField from 'https://cardstack.com/base/number';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import { GUEST_CATEGORIES } from '../utils/index';

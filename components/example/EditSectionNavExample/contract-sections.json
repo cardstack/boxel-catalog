@@ -1,0 +1,53 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sections": [
+        {
+          "sectionId": "parties",
+          "label": "Parties",
+          "body": "Who is bound: the customer entity and ours, each with the role it plays."
+        },
+        {
+          "sectionId": "term",
+          "label": "Term",
+          "body": "Effective 1 January 2026 for twelve months, renewing annually unless either side gives 60 days' notice."
+        },
+        {
+          "sectionId": "commercials",
+          "label": "Commercials",
+          "body": "Annual fee, payment terms net 30, and the price-increase cap on renewal."
+        },
+        {
+          "sectionId": "clauses",
+          "label": "Clauses",
+          "body": "Liability cap, auto-renewal and payment terms, each linked from the clause library."
+        },
+        {
+          "sectionId": "signatures",
+          "label": "Signatures",
+          "body": "Signature blocks for both parties, with the signatory and their authority."
+        }
+      ],
+      "cardInfo": {
+        "name": "A contract's edit sections",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../edit-section-nav-example",
+        "name": "EditSectionNavExample"
+      }
+    }
+  }
+}

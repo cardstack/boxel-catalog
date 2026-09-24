@@ -1,19 +1,17 @@
-import { Component } from 'https://cardstack.com/base/card-api';
+import { Component } from '@cardstack/base/card-api';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { lte, not } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/boxel-ui/components';
 
 import NumberField, {
   deserializeForUI,
   serializeForUI,
-} from 'https://cardstack.com/base/number';
-import { TextInputValidator } from 'https://cardstack.com/base/text-input-validator';
+} from '@cardstack/base/number';
+import { TextInputValidator } from '@cardstack/base/text-input-validator';
 import { NumberSerializer } from '@cardstack/runtime-common';
 
-import {
-  getNumericValue,
-  hasValue,
-} from 'https://cardstack.com/base/number/util/index';
+import { getNumericValue, hasValue } from '@cardstack/base/number/util/index';
 
 // Options interface for rating field
 export interface RatingOptions {
@@ -57,12 +55,13 @@ export default class RatingField extends NumberField {
     <template>
       <div class='rating-field-edit' data-test-rating-edit>
         {{#each this.stars as |star|}}
-          <button
-            type='button'
+          <Button
+            @kind='text-only'
+            @size='auto'
             class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
-            disabled={{not @canEdit}}
+            @disabled={{not @canEdit}}
             {{on 'click' (fn this.setRating star)}}
-          >{{if (lte star this.numericValue) '★' '☆'}}</button>
+          >{{if (lte star this.numericValue) '★' '☆'}}</Button>
         {{/each}}
         <span
           class='rating-value'
@@ -73,13 +72,13 @@ export default class RatingField extends NumberField {
         .rating-field-edit {
           display: flex;
           align-items: center;
-          gap: calc(var(--spacing, 0.25rem) * 2);
+          gap: calc(var(--spacing) * 2);
         }
         .star-btn {
+          --boxel-button-ghost-foreground: var(--muted-foreground);
           background: none;
           border: none;
           font-size: 1.25rem;
-          color: var(--muted-foreground, #cbd5e1);
           cursor: pointer;
           padding: 0;
           transition:
@@ -87,12 +86,12 @@ export default class RatingField extends NumberField {
             color 0.2s;
         }
         .star-filled {
-          color: var(--accent, #f59e0b);
+          --boxel-button-ghost-foreground: var(--warning-ink);
         }
         .rating-value {
-          margin-left: calc(var(--spacing, 0.25rem) * 2);
+          margin-left: calc(var(--spacing) * 2);
           font-weight: 600;
-          color: var(--muted-foreground, #64748b);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -129,28 +128,41 @@ export default class RatingField extends NumberField {
 
     <template>
       <span class='rating-field-atom' data-test-rating-atom>
-        <span class='atom-star {{if this.isHighlighted "highlighted"}}'>★</span>
-        <span class='atom-value'>{{this.numericValue}}</span>
+        {{#if this.hasValue}}
+          <span
+            class='atom-star {{if this.isHighlighted "highlighted"}}'
+          >★</span>
+          <span class='atom-value'>{{this.numericValue}}</span>
+        {{else}}
+          <span
+            class='atom-value unset'
+            role='img'
+            aria-label='Not rated'
+          >—</span>
+        {{/if}}
       </span>
 
       <style scoped>
         .rating-field-atom {
           display: inline-flex;
           align-items: center;
-          gap: calc(var(--spacing, 0.25rem) * 1);
+          gap: calc(var(--spacing) * 1);
           line-height: 1;
         }
         .atom-star {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #cbd5e1);
+          color: var(--muted-foreground);
         }
         .atom-star.highlighted {
-          color: var(--accent, #f59e0b);
+          color: var(--warning-ink);
         }
         .atom-value {
           font-size: 0.6875rem;
           font-weight: 600;
-          color: var(--foreground, #0f172a);
+          color: var(--foreground);
+        }
+        .atom-value.unset {
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -163,6 +175,10 @@ export default class RatingField extends NumberField {
 
     get options() {
       return this.config.options ?? {};
+    }
+
+    get hasValue() {
+      return hasValue(this.args.model);
     }
 
     get numericValue() {
@@ -179,28 +195,35 @@ export default class RatingField extends NumberField {
 
     <template>
       <div class='rating-field-edit' data-test-rating-embedded>
-        {{#each this.stars as |star|}}
-          <button
-            type='button'
-            class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
-          >{{if (lte star this.numericValue) '★' '☆'}}</button>
-        {{/each}}
-        <span
-          class='rating-value'
-        >{{this.numericValue}}/{{this.maxStars}}</span>
+        {{#if this.hasValue}}
+          {{#each this.stars as |star|}}
+            <span
+              class='star-btn {{if (lte star this.numericValue) "star-filled"}}'
+            >{{if (lte star this.numericValue) '★' '☆'}}</span>
+          {{/each}}
+          <span
+            class='rating-value'
+          >{{this.numericValue}}/{{this.maxStars}}</span>
+        {{else}}
+          <span
+            class='rating-value unset'
+            role='img'
+            aria-label='Not rated'
+          >—</span>
+        {{/if}}
       </div>
 
       <style scoped>
         .rating-field-edit {
           display: flex;
           align-items: center;
-          gap: calc(var(--spacing, 0.25rem) * 2);
+          gap: calc(var(--spacing) * 2);
         }
         .star-btn {
           background: none;
           border: none;
           font-size: 1.25rem;
-          color: var(--muted-foreground, #cbd5e1);
+          color: var(--muted-foreground);
           cursor: pointer;
           padding: 0;
           transition:
@@ -208,12 +231,16 @@ export default class RatingField extends NumberField {
             color 0.2s;
         }
         .star-filled {
-          color: var(--accent, #f59e0b);
+          color: var(--warning-ink);
         }
         .rating-value {
-          margin-left: calc(var(--spacing, 0.25rem) * 2);
+          margin-left: calc(var(--spacing) * 2);
           font-weight: 600;
-          color: var(--muted-foreground, #64748b);
+          color: var(--muted-foreground);
+        }
+        .rating-value.unset {
+          margin-left: 0;
+          color: var(--muted-foreground);
         }
       </style>
     </template>

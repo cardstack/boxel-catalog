@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "End of Season Awards Night",
+      "kind": "Club Event",
+      "startsAt": "2027-05-22T18:00:00.000Z",
+      "endsAt": "2027-05-22T22:30:00.000Z",
+      "status": "Scheduled",
+      "capacity": {
+        "total": 450,
+        "unit": "seats",
+        "allocations": [
+          {
+            "name": "Members",
+            "quantity": 300
+          },
+          {
+            "name": "Guests",
+            "quantity": 100
+          },
+          {
+            "name": "Staff & players",
+            "quantity": 50
+          }
+        ]
+      },
+      "description": "Season awards dinner in the Meridian Park hospitality suite — player of the season, golden boot, and the supporters' awards. Dress code: smart. Doors 6pm, dinner 7:30pm.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "venue": {
+        "links": {
+          "self": "../Location/meridian-park-stadium"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../event",
+        "name": "Event"
+      }
+    }
+  }
+}

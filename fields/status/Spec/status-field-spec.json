@@ -1,0 +1,47 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../status",
+        "name": "default"
+      },
+      "specType": "field",
+      "readMe": "# Status\n\n## Summary\nThe generic lifecycle status block: an option set, a colour per option, and the legal moves between them, all supplied by the consumer through the `statusField` factory. A neutral four-state default (`Draft → Active → Done / Cancelled`) ships as the default export for consumers without opinions yet.\n\nThe transition graph is the part worth having. Without it every status field is a free-text dropdown, and every lifecycle is one careless click away from a record that skipped the middle of its own process: a ticket closed without ever being worked, an invoice paid before it was issued. Storing the graph next to the options is what lets the field answer \"may I?\" instead of only \"what are the choices?\".\n\n## API\n- `statusField(config)` builds a FieldDef bound to one lifecycle. `config.options`: `{ value, label?, hue?, terminal?, holds?, meaning? }[]`; `config.transitions`: `value → values that may follow`. The edit format is the constrained dropdown from `enumField`; embedded and atom render a hue-checked `StatePill`.\n- `canTransition(fieldClass, from, to)` and `nextStatuses(fieldClass, from)`: what an action menu should offer.\n- `statusOption(fieldClass, value)` and `statusHue(fieldClass, value)`: option lookup for custom renders.\n\n## Usage\n```ts\nimport StatusField, { statusField, nextStatuses } from '@cardstack/catalog/fields/status/status';\n\n@field status = contains(StatusField);\n\nconst TicketStatusField = statusField({\n  displayName: 'Ticket Status',\n  options: [\n    { value: 'Open', hue: 'teal' },\n    { value: 'Pending', hue: 'amber', holds: true },\n    { value: 'Resolved', hue: 'green', terminal: true },\n  ],\n  transitions: { Open: ['Pending', 'Resolved'], Pending: ['Open', 'Resolved'], Resolved: ['Open'] },\n});\n```\nThe examples below are live: `standard` is the default lifecycle, `lifecycle` is a ticket lifecycle built with the factory. The linked example is a task record that mounts Status beside Priority, Due Date and Created At and offers only the moves the graph allows.\n\n## Non-goals\nThe block never ships a domain's option set: Open / Pending / Resolved belongs to the ticket app, planned / in progress / done to the content calendar. How urgent something is belongs to the sibling Priority block. Enforcing transitions is the consumer's command's job; the block only answers \"may I?\".",
+      "cardTitle": "Status Field",
+      "cardDescription": "A lifecycle status whose option set, colours and legal transitions are supplied by the consumer.",
+      "standard": "Active",
+      "lifecycle": "Pending",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Status",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/TaskRecordExample/ship-status-block"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "./status-field-spec",
+        "name": "StatusFieldSpec"
+      }
+    }
+  }
+}

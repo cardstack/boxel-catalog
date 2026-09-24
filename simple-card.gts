@@ -1,13 +1,8 @@
 // ═══ [EDIT TRACKING: ON] Mark all changes with ⁿ ═══
-import {
-  CardDef,
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api'; // ¹
-import StringField from 'https://cardstack.com/base/string'; // ²
-import TextAreaField from 'https://cardstack.com/base/text-area'; // ³
-import DateField from 'https://cardstack.com/base/date'; // ⁴
+import { CardDef, Component, field, contains } from '@cardstack/base/card-api'; // ¹
+import StringField from '@cardstack/base/string'; // ²
+import TextAreaField from '@cardstack/base/text-area'; // ³
+import DateField from '@cardstack/base/date'; // ⁴
 import NotepadIcon from '@cardstack/boxel-icons/file-text'; // ⁵
 
 export class SimpleCard extends CardDef {
@@ -92,13 +87,10 @@ export class SimpleCard extends CardDef {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-xl);
-          background-color: var(--background);
-          color: var(--foreground);
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-lg);
           box-sizing: border-box;
-          font-family: var(--font-sans);
         }
         .sc-header {
           display: flex;
@@ -109,8 +101,8 @@ export class SimpleCard extends CardDef {
         }
         .sc-icon {
           flex-shrink: 0;
-          width: 52px;
-          height: 52px;
+          width: 3.25rem;
+          height: 3.25rem;
           border-radius: var(--boxel-border-radius-lg);
           background-color: var(--primary);
           color: var(--primary-foreground);
@@ -210,8 +202,8 @@ export class SimpleCard extends CardDef {
         }
         .sce-icon {
           flex-shrink: 0;
-          width: 32px;
-          height: 32px;
+          width: 2rem;
+          height: 2rem;
           border-radius: var(--boxel-border-radius-sm);
           background-color: var(--primary);
           color: var(--primary-foreground);
@@ -388,13 +380,13 @@ export class SimpleCard extends CardDef {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 0.25rem;
             height: 100%;
             padding: var(--boxel-sp-xs);
           }
           .scf-icon {
-            width: 28px;
-            height: 28px;
+            width: 1.75rem;
+            height: 1.75rem;
             border-radius: var(--boxel-border-radius-sm);
             background-color: var(--primary);
             color: var(--primary-foreground);
@@ -424,8 +416,8 @@ export class SimpleCard extends CardDef {
           }
           .scfs-icon {
             flex-shrink: 0;
-            width: 28px;
-            height: 28px;
+            width: 1.75rem;
+            height: 1.75rem;
             border-radius: var(--boxel-border-radius-sm);
             background-color: var(--primary);
             color: var(--primary-foreground);
@@ -468,8 +460,8 @@ export class SimpleCard extends CardDef {
             gap: var(--boxel-sp-xs);
           }
           .scft-icon {
-            width: 28px;
-            height: 28px;
+            width: 1.75rem;
+            height: 1.75rem;
             border-radius: var(--boxel-border-radius-sm);
             background-color: var(--primary);
             color: var(--primary-foreground);
@@ -522,8 +514,8 @@ export class SimpleCard extends CardDef {
             gap: var(--boxel-sp-xs);
           }
           .scfc-icon {
-            width: 36px;
-            height: 36px;
+            width: 2.25rem;
+            height: 2.25rem;
             border-radius: var(--boxel-border-radius);
             background-color: var(--primary);
             color: var(--primary-foreground);

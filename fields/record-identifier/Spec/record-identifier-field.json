@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "RecordIdentifierField",
+        "module": "../record-identifier-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Record Identifier\n\nCASE-2026-0142: minted at create time by the creating command (`mintIdentifier`), pattern travels with the value, NEVER edited or recycled. Generic \u2014 an invoice app mints through the same field.\n\n```ts\nimport {\n  RecordIdentifierField,\n  mintIdentifier,\n} from '@cardstack/catalog/fields/record-identifier/record-identifier-field';\n\n@field identifier = contains(RecordIdentifierField);\n```\n\n### Non-goals\n\nNo server-side sequence (the app's App Configuration carries the counter; single-writer per realm is the recorded trade-off). Uniqueness is the minting command's job, not this field's.",
+      "cardInfo": {
+        "name": "Record Identifier",
+        "summary": "The human-readable handle of a record \u2014 minted once, unique, never recycled."
+      },
+      "containedExamples": [
+        {
+          "value": "CASE-2026-0142",
+          "pattern": "CASE-{yyyy}-{seq4}",
+          "issuedAt": "2026-09-04T08:00:00.000Z"
+        }
+      ],
+      "cardTitle": "Record Identifier Field",
+      "cardDescription": "A human-readable id such as CASE-2026-0142, minted once at create time from a pattern that travels with the value."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../record-identifier-field",
+              "name": "RecordIdentifierField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

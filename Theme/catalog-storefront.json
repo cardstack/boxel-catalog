@@ -1,23 +1,177 @@
 {
   "data": {
-    "meta": {
-      "adoptsFrom": {
-        "name": "Theme",
-        "module": "https://cardstack.com/base/card-api"
-      }
-    },
     "type": "card",
     "attributes": {
+      "historicalContext": "An in-house identity for the Boxel Catalog storefront, drawing on the warm-paper look of print catalogs and the IBM Plex family's technical heritage rather than any single design movement.",
+      "colorPalette": "Warm paper ground `#ece9e1` with near-black ink `#16161c` and white cards floating above it. A vivid signal green leads: `#00ffba` primary with deep-green text `#04231a`, stepping down to `#16e098` for accents and rings. Coral red `#ff5f57` marks destructive actions. Charts run a candy spread — pink, blue, violet, lime, orange — against the muted paper neutrals.",
+      "typography": {
+        "heading": {
+          "fontFamily": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "sectionHeading": {
+          "fontFamily": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "subheading": {
+          "fontFamily": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "body": {
+          "fontFamily": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "caption": {
+          "fontFamily": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        }
+      },
+      "typographySystem": "The IBM Plex superfamily throughout: Plex Sans for UI and product copy, Plex Serif for editorial passages, Plex Mono for code and specs — one voice across all three, with a slight `0.01em` tracking for airiness.",
+      "geometricLanguage": null,
+      "materialVocabulary": null,
+      "compositionRules": null,
+      "motionLanguage": null,
+      "componentVocabulary": null,
+      "contentVoice": null,
+      "technicalSpecs": null,
+      "applicationScenarios": null,
+      "qualityStandards": null,
+      "designMindset": null,
+      "styleName": "Catalog Storefront",
+      "inspirations": ["Print catalog paper stock", "IBM Plex type system", "Modern storefront and marketplace UIs"],
+      "visualDNA": "Warm paper ground, crisp white cards, one signal-green accent doing all the pointing. Generous 1rem rounding, hairline paper-edge shadows with deep soft drops — tactile, calm, and confident in light mode only.",
+      "wallpaperImages": [],
+      "rootVariables": {
+        "background": "#ece9e1",
+        "foreground": "#16161c",
+        "card": "#ffffff",
+        "cardForeground": "#16161c",
+        "popover": "#ffffff",
+        "popoverForeground": "#16161c",
+        "primary": "#00ffba",
+        "primaryForeground": "#04231a",
+        "secondary": "#f1eee6",
+        "secondaryForeground": "#16161c",
+        "muted": "#f0ede4",
+        "mutedForeground": "#8a8578",
+        "accent": "#16e098",
+        "accentForeground": "#04231a",
+        "destructive": "#bf4741",
+        "destructiveForeground": "#ffffff",
+        "success": null,
+        "border": "#ddd8cb",
+        "input": "#ffffff",
+        "ring": "#16e098",
+        "chart1": "#ff5b9c",
+        "chart2": "#2bb3ff",
+        "chart3": "#7b5bff",
+        "chart4": "#c2e23f",
+        "chart5": "#ff9d3d",
+        "sidebar": "#f0ede4",
+        "sidebarForeground": "#16161c",
+        "sidebarPrimary": "#11cf8a",
+        "sidebarPrimaryForeground": "#04231a",
+        "sidebarAccent": "#16e098",
+        "sidebarAccentForeground": "#04231a",
+        "sidebarBorder": "#ddd8cb",
+        "sidebarRing": "#16e098",
+        "fontSans": "'IBM Plex Sans', 'Helvetica Neue', Arial, ui-sans-serif, sans-serif, system-ui",
+        "fontSerif": "'IBM Plex Serif', 'Georgia', Times, serif",
+        "fontMono": "'IBM Plex Mono', 'Menlo', 'Courier New', Courier, ui-monospace, monospace",
+        "radius": "1rem",
+        "spacing": "0.25rem",
+        "themeFontSize": null,
+        "themeScale": null,
+        "trackingNormal": "0.01em",
+        "shadow2xs": "0 1px 0 #e4e0d4",
+        "shadowXs": "0 1px 0 #e4e0d4",
+        "shadowSm": "0 1px 0 #e4e0d4, 0 14px 30px -22px rgba(0, 0, 0, 0.4)",
+        "shadow": "0 1px 0 #e4e0d4, 0 14px 30px -22px rgba(0, 0, 0, 0.4)",
+        "shadowMd": "0 1px 0 #e4e0d4, 0 18px 40px -26px rgba(0, 0, 0, 0.4)",
+        "shadowLg": "0 1px 0 #e4e0d4, 0 26px 44px -22px rgba(0, 0, 0, 0.45)",
+        "shadowXl": "0 1px 0 #e4e0d4, 0 30px 70px -24px rgba(0, 0, 0, 0.4)",
+        "shadow2xl": "0 1px 0 #e4e0d4, 0 40px 80px -28px rgba(0, 0, 0, 0.46)"
+      },
+      "darkModeVariables": {
+        "background": null,
+        "foreground": null,
+        "card": null,
+        "cardForeground": null,
+        "popover": null,
+        "popoverForeground": null,
+        "primary": null,
+        "primaryForeground": null,
+        "secondary": null,
+        "secondaryForeground": null,
+        "muted": null,
+        "mutedForeground": null,
+        "accent": null,
+        "accentForeground": null,
+        "destructive": null,
+        "destructiveForeground": null,
+        "success": null,
+        "border": null,
+        "input": null,
+        "ring": null,
+        "chart1": null,
+        "chart2": null,
+        "chart3": null,
+        "chart4": null,
+        "chart5": null,
+        "sidebar": null,
+        "sidebarForeground": null,
+        "sidebarPrimary": null,
+        "sidebarPrimaryForeground": null,
+        "sidebarAccent": null,
+        "sidebarAccentForeground": null,
+        "sidebarBorder": null,
+        "sidebarRing": null,
+        "fontSans": null,
+        "fontSerif": null,
+        "fontMono": null,
+        "radius": null,
+        "spacing": null,
+        "themeFontSize": null,
+        "themeScale": null,
+        "trackingNormal": null,
+        "shadow2xs": null,
+        "shadowXs": null,
+        "shadowSm": null,
+        "shadow": null,
+        "shadowMd": null,
+        "shadowLg": null,
+        "shadowXl": null,
+        "shadow2xl": null
+      },
+      "version": "1.0",
+      "customCssImports": [],
       "cardInfo": {
-        "notes": null,
         "name": "Catalog Storefront",
         "summary": "Warm-paper storefront identity for the Boxel Catalog — IBM Plex type, paper ground, signal-green accent.",
-        "cardThumbnailURL": null
-      },
-      "cssImports": [
-        "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap"
-      ],
-      "cssVariables": ":root {\n  --background: #ece9e1;\n  --foreground: #16161c;\n  --card: #ffffff;\n  --card-foreground: #16161c;\n  --popover: #ffffff;\n  --popover-foreground: #16161c;\n  --primary: #00ffba;\n  --primary-foreground: #04231a;\n  --secondary: #f1eee6;\n  --secondary-foreground: #16161c;\n  --muted: #f0ede4;\n  --muted-foreground: #8a8578;\n  --accent: #16e098;\n  --accent-foreground: #04231a;\n  --destructive: #ff5f57;\n  --destructive-foreground: #ffffff;\n  --border: #ddd8cb;\n  --input: #ffffff;\n  --ring: #16e098;\n  --chart-1: #ff5b9c;\n  --chart-2: #2bb3ff;\n  --chart-3: #7b5bff;\n  --chart-4: #c2e23f;\n  --chart-5: #ff9d3d;\n  --sidebar: #f0ede4;\n  --sidebar-foreground: #16161c;\n  --sidebar-primary: #11cf8a;\n  --sidebar-primary-foreground: #04231a;\n  --sidebar-accent: #16e098;\n  --sidebar-accent-foreground: #04231a;\n  --sidebar-border: #ddd8cb;\n  --sidebar-ring: #16e098;\n  --font-sans: 'IBM Plex Sans', 'Helvetica Neue', Arial, ui-sans-serif, sans-serif, system-ui;\n  --font-serif: 'IBM Plex Serif', 'Georgia', Times, serif;\n  --font-mono: 'IBM Plex Mono', 'Menlo', 'Courier New', Courier, ui-monospace, monospace;\n  --radius: 1rem;\n  --shadow-color: #000000;\n  --shadow-2xs: 0 1px 0 #e4e0d4;\n  --shadow-xs: 0 1px 0 #e4e0d4;\n  --shadow-sm: 0 1px 0 #e4e0d4, 0 14px 30px -22px rgba(0, 0, 0, 0.4);\n  --shadow: 0 1px 0 #e4e0d4, 0 14px 30px -22px rgba(0, 0, 0, 0.4);\n  --shadow-md: 0 1px 0 #e4e0d4, 0 18px 40px -26px rgba(0, 0, 0, 0.4);\n  --shadow-lg: 0 1px 0 #e4e0d4, 0 26px 44px -22px rgba(0, 0, 0, 0.45);\n  --shadow-xl: 0 1px 0 #e4e0d4, 0 30px 70px -24px rgba(0, 0, 0, 0.4);\n  --shadow-2xl: 0 1px 0 #e4e0d4, 0 40px 80px -28px rgba(0, 0, 0, 0.46);\n  --tracking-normal: 0.01em;\n  --spacing: 0.25rem;\n}\n"
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/detailed-style-reference",
+        "name": "default"
+      }
     }
   }
 }

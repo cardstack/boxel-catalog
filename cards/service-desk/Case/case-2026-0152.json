@@ -1,0 +1,63 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "subject": "Webhook deliveries delayed 20+ minutes",
+      "status": "open",
+      "severity": "critical",
+      "openedOn": "2026-09-07",
+      "problemStatement": "Outbound webhooks queue backlog growing since 06:10 UTC; two enterprise customers paging.",
+      "caseId": {
+        "value": "CASE-2026-0152",
+        "pattern": "CASE-{yyyy}-{seq4}",
+        "issuedAt": "2026-09-07T08:00:00.000Z"
+      },
+      "ownership": {
+        "teamName": "Platform",
+        "ownerId": "../../hr/Employee/dana-kim",
+        "ownerName": "Dana Kim",
+        "since": "2026-09-07T12:29:36.067Z",
+        "how": "assigned",
+        "previousOwnerName": null
+      },
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [
+        {
+          "system": {
+            "name": "Jira",
+            "kind": "repo",
+            "baseUrl": null,
+            "idPattern": "OPS-452"
+          },
+          "externalId": "OPS-452",
+          "url": null,
+          "lastSeenAt": "2026-09-07T10:00:00.000Z",
+          "state": "to do"
+        }
+      ],
+      "workflowState": {
+        "key": "new",
+        "label": "New",
+        "kind": "initial",
+        "pausesSlaClock": false
+      },
+      "resolvedOn": null,
+      "resolution": null,
+      "cardInfo": {
+        "name": "CASE-2026-0152",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "findings": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../case",
+        "name": "Case"
+      }
+    }
+  }
+}

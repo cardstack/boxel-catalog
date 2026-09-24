@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "memberNumber": "NBF-2022-00006304",
+      "tier": "Silver",
+      "tierSince": "2025-01-15",
+      "memberSince": "2022-03-02",
+      "status": "Active",
+      "pointsBalance": 1225,
+      "lifetimePoints": 4725,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "holder": {
+        "links": {
+          "self": "../../crm/Contact/priya-shah"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../loyalty-account",
+        "name": "LoyaltyAccount"
+      }
+    }
+  }
+}

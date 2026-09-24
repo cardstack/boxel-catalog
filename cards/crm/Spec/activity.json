@@ -1,0 +1,55 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Activity",
+        "module": "../activity"
+      },
+      "specType": "card",
+      "readMe": "## Activity\n\nOne timeline entry: `activityType` (note / call / email / meeting / status change, each with its own icon), `summary`, a markdown `body`, `occurredAt`, `author = linksTo(User)` and `about = linksTo(CardDef)`, so an activity can attach to any record — a deal, an opportunity, an account.\n\n```ts\nimport { Activity } from '@cardstack/catalog/cards/crm/activity';\n\n// Query Activity by type, then keep the ones about this record, newest first.\nlet timeline = (activities as Activity[])\n  .filter((a) => a.about?.id === record.id)\n  .sort((a, b) => +new Date(b.occurredAt) - +new Date(a.occurredAt));\n```\n\nThe record holds no list of its activities. A timeline is a reverse-chronological query for `Activity` where `about` is that record, so logging an activity never has to write back to what it is about. The embedded format is the timeline row; to render a list of them, hand the results to the service desk's `Feed` (`@cardstack/catalog/cards/service-desk/components/feed`).\n\n### Examples\nTwo entries on `Deal/acme-enterprise-renewal` (a call and a stage change), an email about `Opportunity/brightleaf-workspace` sent before it closed, a note on `Account/acme-industries`, and a meeting on `Account/brightleaf-studio` with no body.\n\n**Non-goals:** reminders and scheduling, automatic capture from email or calendar sync, threaded comments.",
+      "cardInfo": {
+        "name": "Activity",
+        "summary": "Timeline entry: typed (note/call/email/meeting/status change), authored, timestamped, attachable to any record via about=linksTo(CardDef).",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Activity",
+      "cardDescription": "One timeline entry — a note, call, email, meeting or status change — by a User about any record."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Activity/acme-renewal-call"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Activity/acme-stage-change"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Activity/brightleaf-proposal-email"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../Activity/acme-account-note"
+        }
+      },
+      "linkedExamples.4": {
+        "links": {
+          "self": "../Activity/brightleaf-quarterly-review"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

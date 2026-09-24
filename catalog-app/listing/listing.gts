@@ -10,15 +10,15 @@ import {
   instanceOf,
   realmURL,
   type GetMenuItemParams,
-} from 'https://cardstack.com/base/card-api';
-import { commandData } from 'https://cardstack.com/base/resources/command-data';
-import MarkdownField from 'https://cardstack.com/base/markdown';
-import { Spec } from 'https://cardstack.com/base/spec';
-import { Skill } from 'https://cardstack.com/base/skill';
+} from '@cardstack/base/card-api';
+import { commandData } from '@cardstack/base/resources/command-data';
+import MarkdownField from '@cardstack/base/markdown';
+import { Spec } from '@cardstack/base/spec';
+import { Skill } from '@cardstack/base/skill';
 import type {
   GetAllRealmMetasResult,
   RealmMetaField,
-} from 'https://cardstack.com/base/command';
+} from '@cardstack/base/command';
 
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
@@ -28,7 +28,7 @@ import { modifier } from 'ember-modifier';
 import { task } from 'ember-concurrency';
 import { eq, not, type MenuItemOptions } from '@cardstack/boxel-ui/helpers';
 
-import { CardContainer } from '@cardstack/boxel-ui/components';
+import { BoxelButton, CardContainer } from '@cardstack/boxel-ui/components';
 import Refresh from '@cardstack/boxel-icons/refresh';
 import Wand from '@cardstack/boxel-icons/wand';
 import Package from '@cardstack/boxel-icons/package';
@@ -317,28 +317,30 @@ class EmbeddedTemplate extends Component<typeof Listing> {
           {{#if this.hasMultipleImages}}
             <div class='thumbs'>
               {{#each this.images as |shot index|}}
-                <button
-                  type='button'
+                <BoxelButton
+                  @kind='text-only'
+                  @size='auto'
                   class='thumb {{if (eq index this.selectedShot) "is-active"}}'
                   {{on 'click' (fn this.selectShot index)}}
                 >
                   <img src={{shot}} alt='Screenshot' />
-                </button>
+                </BoxelButton>
               {{/each}}
             </div>
           {{/if}}
 
           <div class='tabs' role='tablist'>
             {{#each DETAIL_TABS as |tab|}}
-              <button
-                type='button'
+              <BoxelButton
+                @kind='text-only'
+                @size='auto'
                 role='tab'
                 aria-selected='{{if (eq this.selectedTab tab) "true" "false"}}'
                 tabindex='{{if (eq this.selectedTab tab) "0" "-1"}}'
                 class='tab {{if (eq this.selectedTab tab) "is-active"}}'
                 data-test-listing-tab={{tab}}
                 {{on 'click' (fn this.setTab tab)}}
-              >{{tab}}</button>
+              >{{tab}}</BoxelButton>
             {{/each}}
           </div>
 
@@ -456,20 +458,22 @@ class EmbeddedTemplate extends Component<typeof Listing> {
               />
             {{/if}}
             {{#if this.actions.preview}}
-              <button
-                type='button'
+              <BoxelButton
+                @kind='text-only'
+                @size='auto'
                 class='remix-secondary'
                 data-test-listing-preview-button
                 {{on 'click' this.preview}}
-              >▷ Try live preview</button>
+              >▷ Try live preview</BoxelButton>
             {{/if}}
             {{#if this.skillActions.addSkillsToRoom}}
-              <button
-                type='button'
+              <BoxelButton
+                @kind='text-only'
+                @size='auto'
                 class='remix-secondary'
                 data-test-listing-use-skills-button
                 {{on 'click' this.skillActions.addSkillsToRoom}}
-              >Use Skills</button>
+              >Use Skills</BoxelButton>
             {{/if}}
           </div>
 
@@ -690,19 +694,26 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         display: flex;
         gap: 0.25rem;
       }
+      /* Styled through BoxelButton's own knobs: its default is a 100px pill
+         (.boxel-button:not(.rectangular)), which bent the underline around
+         the corners. The underline rides the box-shadow knob so no button
+         border rule can contest it. */
       .tab {
-        padding: 0.75rem 1rem;
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        cursor: pointer;
-        font: 600 0.84rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: var(--muted-foreground, #8a8578);
+        --boxel-button-border-radius: 0;
+        --boxel-button-border: none;
+        --boxel-button-padding: 0.75rem 1rem;
+        --boxel-button-min-height: 0;
+        --boxel-button-min-width: 0;
+        --boxel-button-font: 600 0.84rem/1
+          var(--font-sans, 'IBM Plex Sans', sans-serif);
+        --boxel-button-letter-spacing: normal;
+        --boxel-button-ghost-foreground: var(--muted-foreground, #8a8578);
+        --boxel-button-box-shadow: inset 0 -2px 0 transparent;
         margin-bottom: -1px;
       }
       .tab.is-active {
-        color: var(--foreground, #16161c);
-        border-bottom-color: var(--foreground, #16161c);
+        --boxel-button-ghost-foreground: var(--foreground, #16161c);
+        --boxel-button-box-shadow: inset 0 -2px 0 var(--foreground, #16161c);
       }
 
       .panel {

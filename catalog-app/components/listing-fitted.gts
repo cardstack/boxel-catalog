@@ -1,4 +1,4 @@
-import { Component, CardDef } from 'https://cardstack.com/base/card-api';
+import { Component, CardDef } from '@cardstack/base/card-api';
 
 import { htmlSafe } from '@ember/template';
 

@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../created-at",
+        "name": "default"
+      },
+      "specType": "field",
+      "readMe": "# Created At\n\n## Summary\nWhen the record came into existence. Write-once by convention: the command or author that creates the record stamps it, and nothing rewrites it. The block renders the fact; it cannot enforce the discipline, because a FieldDef cannot see writes. Embedded shows the audit-precision form with relative recency (\"26 Aug 2026, 02:00 (4h ago)\"); atom is the compact relative form (\"4h ago\") with the absolute stamp as its tooltip. Unset renders an em-dash.\n\n## API\n- `relativeStamp(date)`: \"3d ago\", \"in 2h\", \"just now\". Sign-aware, so an anomalous future stamp is visible rather than clamped.\n- `absoluteStamp(date)`: \"26 Aug 2026, 14:41\". Both exported for consumers that render timestamps outside this field (an activity feed, an audit row).\n\n## Usage\n```ts\nimport CreatedAtField from '@cardstack/catalog/fields/created-at/created-at';\n\n@field createdAt = contains(CreatedAtField);\n```\nSerializes exactly like `DateTimeField` (ISO datetime), so an existing `createdAt: DateTimeField` upgrades in place with no instance migration. The example below is a fixed stamp, so its relative form ages truthfully. The linked example is a task record that mounts Created At beside Status, Priority and Due Date.\n\n## Non-goals\nAuto-stamping on save is a command or host concern, not a FieldDef's. Last-change tracking is the sibling Updated At block. Calendar-day semantics (a hire date, a publish date) belong to `DateField`-family blocks; this is an instant.",
+      "cardTitle": "Created At Field",
+      "cardDescription": "A write-once creation timestamp rendered with audit precision and relative recency.",
+      "standard": "2026-09-07T09:12:00.000Z",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Created At",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../../status/example/TaskRecordExample/ship-status-block"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "./created-at-field-spec",
+        "name": "CreatedAtFieldSpec"
+      }
+    }
+  }
+}

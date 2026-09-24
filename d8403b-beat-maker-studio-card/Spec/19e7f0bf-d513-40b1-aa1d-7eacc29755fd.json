@@ -4,7 +4,7 @@
     "attributes": {
       "readMe": null,
       "ref": {
-        "module": "../beat-maker-studio-bfa35141-1cb4-4ba3-8f6c-5057dc4ca110/beat-maker/beat-maker",
+        "module": "../fields",
         "name": "DrumKitField"
       },
       "specType": "field",

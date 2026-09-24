@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "direction": "outbound",
+      "channel": "email",
+      "body": "We've identified a pattern in the failing requests and are reviewing the gateway logs. Next update within the hour.",
+      "sentAt": "2026-09-05T06:31:00.000Z",
+      "cardInfo": {
+        "name": "\u2191 out \u00b7 Dana Kim"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../customer-reply",
+        "name": "CustomerReply"
+      }
+    },
+    "relationships": {
+      "case": {
+        "links": {
+          "self": "../Case/case-2026-0142"
+        }
+      },
+      "author": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      }
+    }
+  }
+}

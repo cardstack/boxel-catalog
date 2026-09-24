@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "FileIsolatedShell",
+        "module": "https://cardstack.com/base/file-formats/file-shell-isolated"
+      },
+      "specType": "component",
+      "readMe": "## File Isolated Card (FI)\n\nThe full work surface for a file.\n\n### Composition\n\nThe hero is the family's own renderer **at the source's aspect ratio** — not a fixed frame the image is fitted into. Beside it sits a property area that groups three distinct kinds of knowledge, and keeping them visibly distinct is the design:\n\n| Group | What it is |\n|---|---|\n| what the realm knows | name, size, type, when it arrived |\n| what the parser extracted | the family's metadata field |\n| what was computed from that | derived and computed values |\n\nA reader who cannot tell an extracted fact from a computed one cannot tell which number to distrust when the file changes.\n\n### Every displayed fact is a real field\n\nThe rule that keeps this view honest: nothing is rendered here that is not a declared field on the card.\n\nThat means the **default editor stays the correction surface** — if a value is wrong, you fix it where every other value is fixed. This view never becomes the only place a value exists, which is what happens when an isolated template starts computing its own display-only facts inline.\n\n### Empty schema is a real answer\n\nA GTS module may export utilities only. The shell says so plainly (*\"schema detected — this module may export utilities or components\"*) rather than rendering an empty property panel that reads as a failure.\n\n### The family this belongs to\n\nFive pieces make up how a file renders in Boxel:\n\n| Piece | Job |\n|---|---|\n| `file-shell-atom` | inline reference — icon, name, extension |\n| `file-shell-embedded` | complete content, flowing inside a document |\n| `file-shell-fitted` | the parent-sized collection cell |\n| `file-shell-isolated` | the full work surface |\n| `file-preview-stage` | the slot all four project into; owns loading, failure, provenance |\n\nA shell never knows how to draw a PDF, a waveform or a 3D scene. It renders the\nstage, and the stage hands the remaining space to the family's own renderer,\ndeclared by a FileDef subclass as `static previewComponent`. A file whose family\nhas no renderer yet gets an honest generic pane rather than a broken one.\n",
+      "cardInfo": {
+        "name": "File Isolated Card",
+        "summary": "Full work surface: family renderer at source aspect ratio, plus realm / extracted / computed facts kept visibly apart."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

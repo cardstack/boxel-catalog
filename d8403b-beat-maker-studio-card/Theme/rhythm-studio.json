@@ -1,0 +1,71 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rootVariables": {
+        "background": "#0f1012",
+        "foreground": "#ecebe6",
+        "card": "#181a1e",
+        "cardForeground": "#ecebe6",
+        "popover": "#1f2227",
+        "popoverForeground": "#ecebe6",
+        "primary": "#f5b942",
+        "primaryForeground": "#1a1204",
+        "secondary": "#24272d",
+        "secondaryForeground": "#ecebe6",
+        "muted": "#1c1f24",
+        "mutedForeground": "#a2a6ad",
+        "accent": "#5ee6b0",
+        "accentForeground": "#04140d",
+        "destructive": "#f0604d",
+        "destructiveForeground": "#1a0705",
+        "border": "#2c3037",
+        "input": "#2c3037",
+        "ring": "#f5b942",
+        "canvas": "#0a0b0d",
+        "inset": "#131518",
+        "sidebar": "#14161a",
+        "sidebarForeground": "#ecebe6",
+        "tooltip": "#0b0d10",
+        "tooltipForeground": "#f3f5f8",
+        "fontSans": "'Inter', system-ui, sans-serif",
+        "fontMono": "'IBM Plex Mono', Menlo, monospace",
+        "radius": "0.625rem",
+        "stripe": "#1d1f23",
+        "field": "#181a1e",
+        "hover": "#ecebe614",
+        "selected": "#342f27",
+        "overlay": "#ecebe680",
+        "subtleForeground": "#71747a",
+        "borderStrong": "#727578",
+        "sidebarBorder": "#2c3037",
+        "sidebarPrimary": "#f5b942",
+        "sidebarPrimaryForeground": "#1a1204",
+        "sidebarAccent": "#5ee6b0",
+        "sidebarAccentForeground": "#04140d",
+        "sidebarRing": "#f5b942",
+        "success": "#8ddb8f",
+        "successForeground": "#111111",
+        "warning": "#f0ba59",
+        "warningForeground": "#111111",
+        "info": "#80caff",
+        "infoForeground": "#111111",
+        "attention": "#ffa0d0",
+        "attentionForeground": "#111111"
+      },
+      "customCssImports": [],
+      "cardInfo": {
+        "name": "Rhythm Studio",
+        "summary": "Beat Maker's default look — matte-black studio panels, amber transport lights, mint step pads.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/structured-theme",
+        "name": "default"
+      }
+    }
+  }
+}

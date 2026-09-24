@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Kenji Tanaka",
+      "company": "Tanaka Precision Tooling",
+      "email": "kenji.tanaka@tanaka-precision.example",
+      "phone": "+81352001234",
+      "source": "webinar",
+      "status": "qualified",
+      "score": 82,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "campaign": {
+        "links": {
+          "self": "../Campaign/q3-webinar-series"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lead",
+        "name": "Lead"
+      }
+    }
+  }
+}

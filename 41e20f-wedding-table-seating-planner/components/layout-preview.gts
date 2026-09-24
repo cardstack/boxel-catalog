@@ -238,7 +238,7 @@ export default class LayoutPreview extends Component<Signature> {
         display: block;
         width: 100%;
         height: 100%;
-        color: var(--tsp-accent, var(--accent, #c5a35c));
+        color: var(--accent-ink);
       }
       .lp-table {
         fill: none;
@@ -246,7 +246,7 @@ export default class LayoutPreview extends Component<Signature> {
       }
       .lp-seat {
         fill: none;
-        stroke: color-mix(in srgb, currentColor 75%, transparent);
+        stroke: color-mix(in oklch, currentColor 75%, transparent);
         stroke-width: 1.25;
       }
     </style>

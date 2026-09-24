@@ -5,7 +5,7 @@ import { identifyCard, isResolvedCodeRef } from '@cardstack/runtime-common';
 
 import ListingInstallCommand from '../../../commands/listing-install';
 
-import type { CardDef } from 'https://cardstack.com/base/card-api';
+import type { CardDef } from '@cardstack/base/card-api';
 
 import {
   setupLocalIndexing,

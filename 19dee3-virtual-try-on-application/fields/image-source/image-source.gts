@@ -5,9 +5,9 @@ import {
   linksTo,
   Component,
   ImageDef,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import UrlField from 'https://cardstack.com/base/url';
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import UrlField from '@cardstack/base/url';
 import ImageIcon from '@cardstack/boxel-icons/image';
 import ImageSourceEditor from './components/image-source-editor';
 import { selectedSourceMode } from './utils';

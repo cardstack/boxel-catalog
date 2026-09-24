@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Regime Metadata Field",
+      "specType": "field",
+      "ref": {
+        "module": "../regime-metadata-field",
+        "name": "RegimeMetadataField"
+      },
+      "readMe": "## Regime Metadata\n\nWhich rule-set, which edition, which clause: `regime` (\"ISO 9001:2015\"), `version`, `clause` (\"§8.4.2\"), `clauseTitle`, a link to the Certification Authority that owns it, and a `url` to the clause text. `reference` is derived (\"ISO 9001:2015 §8.4.2\"). A control means nothing without the clause it satisfies, and auditors speak in clause numbers.\n\n```ts\nimport { RegimeMetadataField } from '@cardstack/catalog/cards/audit/regime-metadata-field';\n@field regime = contains(RegimeMetadataField);\n```\n\nDomain-neutral on purpose — this row comes from the BSL v0 design records, where a regime is a Boxel standard and a clause is one of its sections. \"ISO 9001:2015 §8.5.1\" and \"Card Conventions §3.2\" are the same shape; nothing here names a compliance-only concept. A regime-level reference leaves `clause` empty.\n\n## Example\nThe contained example is ISO 9001:2015 §8.4.2 (type and extent of control of externally provided processes). The authority link is left unset in the example; Certification Authority is its own card with its own Spec.\n\n## Non-goals\nDoes not carry the clause text (licensed content — `url` points at it). Not the rule: a Validation Rule contains a Regime Metadata and adds the testable statement. Not the certificate.",
+      "containedExamples": [
+        {
+          "regime": "ISO 9001:2015",
+          "version": "2015",
+          "clause": "§8.4.2",
+          "clauseTitle": "Type and extent of control",
+          "url": "https://www.iso.org/standard/62085.html"
+        }
+      ],
+      "cardInfo": {
+        "name": "Regime Metadata",
+        "summary": "Regime, edition and clause a control satisfies — ISO clause or Boxel standard section, same shape.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "The regime, edition and clause a control satisfies — an ISO clause or an internal standard's section, in one shape."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../regime-metadata-field",
+              "name": "RegimeMetadataField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

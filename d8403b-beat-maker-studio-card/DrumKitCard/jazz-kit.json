@@ -3,7 +3,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "DrumKitCard",
-        "module": "../beat-maker"
+        "module": "../fields"
       }
     },
     "type": "card",

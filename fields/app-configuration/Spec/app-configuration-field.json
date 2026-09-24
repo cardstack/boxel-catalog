@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AppConfigurationField",
+        "module": "../app-configuration-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## App Configuration\n\nOne app instance's settings, carried once on its app card: the Record Identifier pattern and mint counter, a default SLA Window, the Integration References it talks to, its Automation Policies, and where a setup wizard left off (`setupStep`, `setupCompletedAt`). App-agnostic: a support app and a billing app keep their settings in the same shape.\n\n```ts\nimport { AppConfigurationField } from '@cardstack/catalog/fields/app-configuration/app-configuration-field';\n\n@field config = contains(AppConfigurationField);\n```\n\n### Non-goals\n\nNot realm config and not per-user preferences \u2014 one per app instance.",
+      "cardInfo": {
+        "name": "App Configuration",
+        "summary": "The bag of desk-level settings an app card carries once."
+      },
+      "containedExamples": [
+        {
+          "idPattern": "CASE-{yyyy}-{seq4}",
+          "identifierSeq": 147,
+          "setupStep": 4
+        }
+      ],
+      "cardTitle": "App Configuration Field",
+      "cardDescription": "One app instance's settings: the record-id pattern and counter, a default SLA window, its integrations and automation policies, and where the setup wizard left off."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../app-configuration-field",
+              "name": "AppConfigurationField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

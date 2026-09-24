@@ -2,17 +2,17 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": null,
+      "readMe": "## Setup Wizard\n\nA multi-step, clickable stepper shell — steps rail on top, an active-panel slot in the middle (`yield`ed by the host), and a Back/Continue/Finish footer at the bottom. Stepper chrome + CSS ported from `boxel-surface` `FormWizard`; driven entirely by args (no surface runtime), so the listing stays self-contained.\n\n### Contract\n- `@steps` — `WizardStep[]` (`{ label: string }`); the component only ever reads `.label` for the rail.\n- `@activeIndex` — which step is current; the host owns this, not the component.\n- `@onSelect(index)` — fired when a step in the rail is clicked (jump-navigation, not just linear).\n- `@onPrevious()` / `@onNext()` — Back/Continue footer buttons. Back is disabled on the first step; the button label swaps to `@finishLabel` on the last step.\n- `@canAdvance` — gates the Continue/Finish button's `disabled` state; defaults `true`. The component does not itself validate the current step's content — it only renders whatever `disabled` state the host computes.\n- `@nextLabel` / `@previousLabel` / `@finishLabel` — copy overrides, default \"Continue\" / \"Back\" / \"Finish\".\n- Default block — the host yields the active step's panel content into `.bx-form-wizard__panels`; the component never decides what a step renders.\n- Step rail marks completed steps (`index < activeIndex`) with a muted \"complete\" style, and collapses to one column per row under `max-width: 36rem` via its own `container-type: inline-size`.\n\n### Non-goals\nSetup Wizard does not validate step content, does not persist progress, and does not know what a step *is* beyond a label — the host owns step definitions, per-step validity (feeding `@canAdvance`), and what's rendered in the yielded panel. It is not a single-question answer control — that's **Question Input**'s job for one field inside a step's panel.\n\n## Usage\n\n```gts\nimport FormWizard from '../components/form-wizard';\n\n<template>\n  <FormWizard\n    @steps={{this.steps}}\n    @activeIndex={{this.activeIndex}}\n    @canAdvance={{this.currentStepValid}}\n    @onSelect={{this.jumpTo}}\n    @onPrevious={{this.goBack}}\n    @onNext={{this.goNext}}\n  >\n    {{this.currentStepPanel}}\n  </FormWizard>\n</template>\n```\n\nA survey with pages, an onboarding flow, or any multi-step form composes its per-step content and feeds it through the default block; Setup Wizard only owns the rail, the panel slot, and the footer.",
       "ref": {
         "module": "../components/form-wizard",
         "name": "default"
       },
       "specType": "component",
       "containedExamples": [],
-      "cardTitle": "default",
-      "cardDescription": null,
+      "cardTitle": "Setup Wizard",
+      "cardDescription": "A clickable multi-step stepper shell (rail + panel slot + Back/Continue/Finish footer) that a host drives with step definitions and per-step validity.",
       "cardInfo": {
-        "name": null,
+        "name": "Setup Wizard",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null

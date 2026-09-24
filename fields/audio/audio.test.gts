@@ -3,7 +3,7 @@ import { module, test } from 'qunit';
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import { AudioDef } from 'https://cardstack.com/base/audio-file-def';
+import { AudioDef } from '@cardstack/base/audio-file-def';
 
 import AudioField from './audio';
 

@@ -1,11 +1,6 @@
-import {
-  FieldDef,
-  Component,
-  field,
-  contains,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import NumberField from 'https://cardstack.com/base/number';
+import { FieldDef, Component, field, contains } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import NumberField from '@cardstack/base/number';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
@@ -15,7 +10,7 @@ import { eq, not } from '@cardstack/boxel-ui/helpers';
 import CalendarEventIcon from '@cardstack/boxel-icons/calendar-event';
 import InfoIcon from '@cardstack/boxel-icons/info';
 
-import DateField from 'https://cardstack.com/base/date';
+import DateField from '@cardstack/base/date';
 
 class RecurringPatternFieldEdit extends Component<
   typeof RecurringPatternField
@@ -304,7 +299,7 @@ class RecurringPatternFieldEdit extends Component<
       .input-label {
         font-size: 0.875rem;
         font-weight: 600;
-        color: var(--foreground, #1a1a1a);
+        color: var(--foreground);
       }
 
       .pattern-select {
@@ -320,7 +315,7 @@ class RecurringPatternFieldEdit extends Component<
       .pattern-icon {
         width: 1rem;
         height: 1rem;
-        color: var(--primary, #3b82f6);
+        color: var(--primary-ink);
       }
 
       .recurrence-details {
@@ -328,9 +323,10 @@ class RecurringPatternFieldEdit extends Component<
         flex-direction: column;
         gap: 0.75rem;
         padding: 0.75rem;
-        background: var(--muted, #f8fafc);
-        border: 1px solid var(--border, #e2e8f0);
-        border-radius: var(--radius, 0.375rem);
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
       }
 
       .detail-field {
@@ -342,7 +338,7 @@ class RecurringPatternFieldEdit extends Component<
       .detail-label {
         font-size: 0.75rem;
         font-weight: 500;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
       }
 
       .weekday-pills {
@@ -366,7 +362,7 @@ class RecurringPatternFieldEdit extends Component<
       .end-option-label {
         font-size: 0.8125rem;
         font-weight: 500;
-        color: var(--foreground, #1a1a1a);
+        color: var(--foreground);
       }
 
       .occurrence-input {
@@ -382,7 +378,7 @@ class RecurringPatternFieldEdit extends Component<
 
       .occurrence-label {
         font-size: 0.8125rem;
-        color: var(--muted-foreground, #64748b);
+        color: var(--muted-foreground);
         padding-top: 0.5rem;
       }
 
@@ -391,18 +387,18 @@ class RecurringPatternFieldEdit extends Component<
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem 0.75rem;
-        background: rgba(59, 130, 246, 0.1);
-        border-left: 3px solid var(--primary, #3b82f6);
-        border-radius: var(--radius, 0.25rem);
+        background-color: var(--hover);
+        border-left: 3px solid var(--border);
+        border-radius: var(--radius);
         font-size: 0.8125rem;
-        color: var(--foreground, #1a1a1a);
+        color: var(--foreground);
       }
 
       .summary-icon {
         width: 1rem;
         height: 1rem;
         flex-shrink: 0;
-        color: var(--primary, #3b82f6);
+        color: var(--primary-ink);
       }
     </style>
   </template>
@@ -483,7 +479,7 @@ export default class RecurringPatternField extends FieldDef {
           align-items: center;
           padding: 0.5rem;
           font-size: 0.875rem;
-          color: var(--foreground, #1a1a1a);
+          color: var(--foreground);
         }
 
         .recurring-value {
@@ -524,9 +520,9 @@ export default class RecurringPatternField extends FieldDef {
           align-items: center;
           gap: 0.375rem;
           padding: 0.25rem 0.5rem;
-          background: var(--primary, #3b82f6);
-          color: var(--primary-foreground, #ffffff);
-          border-radius: var(--radius, 0.375rem);
+          background-color: var(--primary);
+          color: var(--primary-foreground);
+          border-radius: var(--radius);
           font-size: 0.8125rem;
           font-weight: 500;
         }

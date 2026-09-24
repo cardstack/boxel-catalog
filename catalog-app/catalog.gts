@@ -11,10 +11,10 @@ import {
   type BaseDef,
   linksToMany,
   realmURL,
-} from 'https://cardstack.com/base/card-api';
+} from '@cardstack/base/card-api';
 import type { Query, AnyFilter, Filter } from '@cardstack/runtime-common';
 import { isCardInstance } from '@cardstack/runtime-common';
-import StringField from 'https://cardstack.com/base/string';
+import StringField from '@cardstack/base/string';
 
 import LayoutGridPlusIcon from '@cardstack/boxel-icons/layout-grid-plus';
 

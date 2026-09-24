@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Quote\n\n`version`, `status` (draft / sent / under-review / won / lost / expired), `supersedes` (linksTo the previous Quote), `deal` (linksTo Deal), an optional `proposal` link, and `lineItems` (containsMany LineItem). `total` is computed from the line items with `line-item-totals`.\n\n```ts\nimport { Quote } from '@cardstack/catalog/cards/commerce/quote';\n\n@field acceptedQuote = linksTo(Quote);\n```\n\nEach negotiation round is a new Quote that `supersedes` the last, so the history of what was offered stays intact and the latest version is the one that binds.\n\n### Non-goals\nDoes not become an invoice itself; converting a won quote is the consumer's command. Line items are a snapshot of description, quantity and price at negotiation time, not live links to a price list.\n\n### Example\nTwo rounds on `Deal/acme-enterprise-renewal`: `Quote/acme-enterprise-renewal-q1` (version 1, `sent`, one $62,000 line) and `Quote/acme-enterprise-renewal-q2` (version 2, `won`, `supersedes` v1, the plan re-priced and onboarding broken out to total the deal's $58,000). Both link the deal's Proposal.",
+      "ref": {
+        "module": "../quote",
+        "name": "Quote"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Quote",
+      "cardDescription": "A versioned, priced proposal — each negotiation round is a new immutable version, the latest one binding.",
+      "cardInfo": {
+        "name": "Quote",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Quote/acme-enterprise-renewal-q2"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Quote/acme-enterprise-renewal-q1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

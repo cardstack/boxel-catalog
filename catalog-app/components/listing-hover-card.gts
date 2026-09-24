@@ -1,6 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
-import { type CardContext } from 'https://cardstack.com/base/card-api';
+import { BoxelButton } from '@cardstack/boxel-ui/components';
+import { type CardContext } from '@cardstack/base/card-api';
 
 import { type Listing } from '../listing/listing';
 import { listingActions, isReady } from '../resources/listing-actions';
@@ -59,27 +60,30 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
 
       <div class='hover-layer'>
         <div class='hover-actions'>
-          <button
-            type='button'
+          <BoxelButton
+            @kind='text-only'
+            @size='auto'
             class='hover-btn hover-btn-primary'
             data-test-listing-fitted-remix
             {{on 'click' this.openRemix}}
-          >↺ Remix</button>
+          >↺ Remix</BoxelButton>
           {{#if this.actions.preview}}
-            <button
-              type='button'
+            <BoxelButton
+              @kind='text-only'
+              @size='auto'
               class='hover-btn'
               data-test-listing-fitted-preview
               {{on 'click' this.preview}}
-            >▷ Preview</button>
+            >▷ Preview</BoxelButton>
           {{/if}}
         </div>
-        <button
-          type='button'
+        <BoxelButton
+          @kind='text-only'
+          @size='auto'
           class='hover-details'
           data-test-listing-fitted-details
           {{on 'click' this.viewDetails}}
-        >View details →</button>
+        >View details →</BoxelButton>
       </div>
     </div>
 
@@ -130,12 +134,21 @@ export default class ListingHoverCard extends GlimmerComponent<Signature> {
         font-weight: 700;
       }
       .hover-details {
-        font: 600 0.75rem/1 var(--font-sans, 'IBM Plex Sans', sans-serif);
-        color: #fff;
-        background: transparent;
-        border: none;
+        /* A text link, not a pill: BoxelButton's default is a 100px radius, so
+           zero it and drop the fill through the button's own knobs rather than
+           fighting them with element-level rules. */
+        --boxel-button-border-radius: 0;
+        --boxel-button-color: transparent;
+        --boxel-button-border: none;
+        --boxel-button-box-shadow: none;
+        --boxel-button-ghost-foreground: #fff;
+        --boxel-button-font: 600 0.75rem/1
+          var(--font-sans, 'IBM Plex Sans', sans-serif);
+        --boxel-button-letter-spacing: normal;
+        --boxel-button-padding: 0 0 0.125rem;
+        --boxel-button-min-height: 0;
+        --boxel-button-min-width: 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-        padding-bottom: 0.125rem;
         cursor: pointer;
       }
       @container fitted-card (height <= 105px) {

@@ -1,0 +1,42 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "reference": "BK-20260905-00188",
+      "quantity": 2,
+      "rsvp": "Declined",
+      "paymentStatus": "Refunded",
+      "totalPrice": {
+        "amount": 90,
+        "currency": {
+          "code": "GBP"
+        }
+      },
+      "checkedInAt": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "event": {
+        "links": {
+          "self": "../Event/end-of-season-awards-night"
+        }
+      },
+      "holder": {
+        "links": {
+          "self": "../../crm/Contact/dev-okafor"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../booking",
+        "name": "Booking"
+      }
+    }
+  }
+}
