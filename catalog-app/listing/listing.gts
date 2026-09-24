@@ -267,13 +267,35 @@ class EmbeddedTemplate extends Component<typeof Listing> {
           <span class='crumb-type'>{{this.typeMeta.plural}}</span>
           <span class='sep'>/</span>
           <span class='crumb-current'>{{@model.name}}</span>
-        </nav>
-        <div class='title-row'>
-          <h1 class='title'>{{@model.name}}</h1>
           <span class='type-chip'>
             <span class='type-dot' style={{this.chipDotStyle}}></span>
             {{this.typeMeta.label}}
           </span>
+        </nav>
+        <div class='title-row'>
+          <h1 class='title'>{{@model.name}}</h1>
+          <div class='top-actions' data-test-listing-top-actions>
+            {{#if this.actions.preview}}
+              <BoxelButton
+                @kind='secondary-light'
+                @size='extra-small'
+                class='top-preview-button'
+                data-test-listing-top-preview-button
+                {{on 'click' this.preview}}
+              >
+                ▷ Preview
+              </BoxelButton>
+            {{/if}}
+            {{#if this.remix}}
+              <ChooseRealmAction
+                @name='Remix'
+                @size='extra-small'
+                @writableRealms={{this.writableRealms}}
+                @onAction={{this.remix}}
+                @hide={{not this.isRemixableRealm}}
+              />
+            {{/if}}
+          </div>
         </div>
         {{#if @model.cardDescription}}
           <p class='lede'>{{@model.cardDescription}}</p>
@@ -539,6 +561,7 @@ class EmbeddedTemplate extends Component<typeof Listing> {
       .title-row {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 0.6875rem;
         margin-bottom: 0.75rem;
       }
@@ -558,11 +581,28 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         font: 600 0.625rem/1 var(--font-mono, 'IBM Plex Mono', monospace);
         letter-spacing: 0.08em;
         text-transform: uppercase;
+        margin-left: auto;
       }
       .type-dot {
         width: 0.375rem;
         height: 0.375rem;
         border-radius: 50%;
+      }
+      .top-actions {
+        display: none;
+        margin-left: auto;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-left: auto;
+      }
+      .top-preview-button {
+        flex: 0 0 auto;
+        line-height: 1;
+        --boxel-button-font: 600 var(--boxel-font-sm);
+        --boxel-button-padding: var(--boxel-sp-xs) var(--boxel-sp);
+        --boxel-button-gap: var(--boxel-sp);
       }
       .lede {
         margin: 0;
@@ -920,6 +960,10 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         }
         .right {
           position: static;
+        }
+        .top-actions {
+          display: flex;
+          margin-top: var(--boxel-sp);
         }
       }
       @container listing-detail (max-width: 34rem) {
