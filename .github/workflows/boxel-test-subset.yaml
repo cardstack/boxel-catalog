@@ -81,18 +81,27 @@ jobs:
           fi
           run=true
           if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
-            if [ "${{ github.event_name }}" = "pull_request" ]; then
-              gh api "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}/files" \
-                --paginate --jq '.[] | .filename, (.previous_filename // empty)' > changed.txt
-            else
-              gh api "repos/$GITHUB_REPOSITORY/compare/${{ github.event.before }}...${{ github.sha }}" \
-                --jq '.files[] | .filename, (.previous_filename // empty)' > changed.txt
-            fi
+            # Both file listings are capped (3,000 files for a PR, 300 for a
+            # compare), and a full list may hide a subset file, so a full
+            # list counts as touching the subset.
             # A rename lists its old path only as previous_filename; include it
             # so moving a subset file away runs the tests, whose sync then
             # fails on the missing file.
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              gh api "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}/files" \
+                --paginate --jq '.[] | .filename, (.previous_filename // empty)' > changed.txt
+              listed=$(gh api "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}" --jq .changed_files)
+              cap=3000
+            else
+              gh api "repos/$GITHUB_REPOSITORY/compare/${{ github.event.before }}...${{ github.sha }}" > compare.json
+              jq -r '.files[] | .filename, (.previous_filename // empty)' compare.json > changed.txt
+              listed=$(jq '.files | length' compare.json)
+              cap=300
+            fi
             jq -r '.files[].path' "$manifest" > subset.txt
-            if grep -qxFf subset.txt changed.txt; then
+            if [ "$listed" -ge "$cap" ]; then
+              echo "The change lists $listed files, at the API's cap, so it may touch a subset file"
+            elif grep -qxFf subset.txt changed.txt; then
               echo "Touched subset files:"; grep -xFf subset.txt changed.txt
             else
               echo "No subset file touched"
