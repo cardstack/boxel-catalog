@@ -440,7 +440,7 @@ export function runTests() {
           ],
         });
         let roomsBefore = getRoomIds().length;
-        let remixButton = `[data-test-card="${catalogRealmAuthorListingId}"] [data-test-catalog-listing-action]`;
+        let remixButton = `[data-test-card="${catalogRealmAuthorListingId}"] [data-test-catalog-listing-action="Remix into my realm"]`;
         await waitFor(remixButton);
         await click(remixButton);
         await clickDropdownItem('Test Workspace B');
