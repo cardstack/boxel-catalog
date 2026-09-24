@@ -83,11 +83,14 @@ jobs:
           if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
             if [ "${{ github.event_name }}" = "pull_request" ]; then
               gh api "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}/files" \
-                --paginate --jq '.[].filename' > changed.txt
+                --paginate --jq '.[] | .filename, (.previous_filename // empty)' > changed.txt
             else
               gh api "repos/$GITHUB_REPOSITORY/compare/${{ github.event.before }}...${{ github.sha }}" \
-                --jq '.files[].filename' > changed.txt
+                --jq '.files[] | .filename, (.previous_filename // empty)' > changed.txt
             fi
+            # A rename lists its old path only as previous_filename; include it
+            # so moving a subset file away runs the tests, whose sync then
+            # fails on the missing file.
             jq -r '.files[].path' "$manifest" > subset.txt
             if grep -qxFf subset.txt changed.txt; then
               echo "Touched subset files:"; grep -xFf subset.txt changed.txt
