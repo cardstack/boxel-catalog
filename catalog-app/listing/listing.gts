@@ -594,7 +594,6 @@ class EmbeddedTemplate extends Component<typeof Listing> {
         flex-wrap: wrap;
         justify-content: flex-end;
         gap: 0.5rem;
-        margin-left: auto;
       }
       .lede {
         margin: 0;
