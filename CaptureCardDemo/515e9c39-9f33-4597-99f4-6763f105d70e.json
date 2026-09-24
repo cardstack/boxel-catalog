@@ -2,8 +2,8 @@
   "data": {
     "meta": {
       "adoptsFrom": {
-        "name": "ScreenshotCardDemo",
-        "module": "@cardstack/catalog/screenshot-card-demo"
+        "name": "CaptureCardDemo",
+        "module": "@cardstack/catalog/capture-card-demo"
       }
     },
     "type": "card",
