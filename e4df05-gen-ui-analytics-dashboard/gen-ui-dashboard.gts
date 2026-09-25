@@ -77,9 +77,14 @@ import { parseCsv, suggestChart } from './utils/parse-csv';
 // did. Unset reads as dark (the Night Wall identity's default); "light" is
 // the one explicit opt-out a viewer can save. Shared by every format — a
 // fitted tile and the isolated view must agree on the same instance's mode.
-function resolveColorScheme(model: {
-  colorScheme?: string | null;
-} | null | undefined): 'light' | 'dark' {
+function resolveColorScheme(
+  model:
+    | {
+        colorScheme?: string | null;
+      }
+    | null
+    | undefined,
+): 'light' | 'dark' {
   if ((globalThis as any).__boxelRenderContext) {
     return 'dark';
   }
