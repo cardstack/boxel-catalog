@@ -3316,7 +3316,6 @@ export class TableSeatingPlannerIsolated extends Component<
         path: `${FLOOR_PLAN_DIR}${slug}.${ext}`,
         realm: this.realmUrl,
         base64Content: base64,
-        contentType,
         useNonConflictingFilename: true,
       });
       let url = (res as any)?.fileIdentifier ?? '';

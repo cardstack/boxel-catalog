@@ -49,6 +49,14 @@ jobs:
         run: pnpm run lint
         working-directory: packages/host
 
+      # packages/catalog/scripts is boxel's Node tooling for the catalog
+      # (clone updates, the test-subset sync), not catalog content. The
+      # catalog type check reads every .ts file in the package as CommonJS,
+      # which rejects that tooling's ES-module syntax, so leave it out.
+      - name: Remove boxel's catalog tooling scripts
+        if: always()
+        run: rm -rf packages/catalog/scripts
+
       - name: Lint Catalog
         if: always()
         run: pnpm run lint

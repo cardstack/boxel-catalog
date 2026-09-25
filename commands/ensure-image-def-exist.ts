@@ -78,7 +78,6 @@ export default class EnsureImageDefCommand extends Command<
       path,
       realm: targetRealmUrl,
       base64Content: arrayBufferToBase64(image.bytes),
-      contentType: image.contentType,
       useNonConflictingFilename: true,
     });
 

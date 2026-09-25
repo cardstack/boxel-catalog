@@ -190,14 +190,13 @@ export default class ListingInstallCommand extends Command<
     // their file links as soon as they index. There is no rollback: an atomic
     // failure leaves these copies orphaned in the fresh install directory.
     for (let { sourceUrl, targetPath } of binaryCopies) {
-      let { base64Content, contentType } = await new ReadBinaryFileCommand(
+      let { base64Content } = await new ReadBinaryFileCommand(
         this.commandContext,
       ).execute({ fileIdentifier: sourceUrl });
       await new WriteBinaryFileCommand(this.commandContext).execute({
         realm: realmUrl,
         path: targetPath,
         base64Content,
-        contentType,
       });
     }
 
