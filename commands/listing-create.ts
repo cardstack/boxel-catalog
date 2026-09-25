@@ -31,7 +31,7 @@ import GetRealmOfResourceIdentifierCommand from '@cardstack/boxel-host/commands/
 import OneShotLlmRequestCommand from '@cardstack/boxel-host/commands/one-shot-llm-request';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import SanitizeModuleListCommand from '@cardstack/boxel-host/commands/sanitize-module-list';
-import ScreenshotCardCommand from '@cardstack/boxel-host/commands/screenshot-card';
+import CaptureCardCommand from '@cardstack/boxel-host/commands/capture-card';
 import SearchAndChooseCommand from '@cardstack/boxel-host/commands/search-and-choose';
 import { SearchCardsByTypeAndTitleCommand } from '@cardstack/boxel-host/commands/search-cards';
 import StoreAddCommand from '@cardstack/boxel-host/commands/store-add';
@@ -642,7 +642,7 @@ export default class ListingCreateCommand extends Command<
 
     let imageDefUrl: string | undefined;
     try {
-      const result = await new ScreenshotCardCommand(
+      const result = await new CaptureCardCommand(
         this.commandContext,
       ).execute({ card: firstExample, format: 'isolated' });
       imageDefUrl = (result as any)?.imageDefUrl;
