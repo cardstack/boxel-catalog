@@ -20,17 +20,17 @@
     "relationships": {
       "tags.0": {
         "links": {
-          "self": "@cardstack/catalog/Tag/ai"
+          "self": "../../Tag/ai"
         }
       },
       "tags.1": {
         "links": {
-          "self": "@cardstack/catalog/Tag/app"
+          "self": "../../Tag/app"
         }
       },
       "tags.2": {
         "links": {
-          "self": "@cardstack/catalog/Tag/dashboard"
+          "self": "../../Tag/dashboard"
         }
       },
       "license": {
@@ -53,6 +53,16 @@
           "self": "../Spec/c2ae4d7c-88bb-4215-b96c-7eda6bd4901e"
         }
       },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/1cbbaed5-d7cf-432b-a4c2-376f7219cd5f"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/08d03c4f-19d6-499f-8473-8c72eeab5697"
+        }
+      },
       "skills.0": {
         "links": {
           "self": "../Skill/gen-ui-analyst"
@@ -65,12 +75,12 @@
       },
       "categories.0": {
         "links": {
-          "self": "@cardstack/catalog/Category/data-analytics"
+          "self": "../../Category/data-analytics"
         }
       },
       "categories.1": {
         "links": {
-          "self": "@cardstack/catalog/Category/ai-automation"
+          "self": "../../Category/ai-automation"
         }
       },
       "examples.0": {
@@ -115,7 +125,7 @@
       },
       "supportingCards.0": {
         "links": {
-          "self": "../Theme/night-wall"
+          "self": "../Theme/night-wall-brand"
         }
       },
       "cardInfo.cardThumbnail": {
@@ -128,14 +138,74 @@
           "self": null
         }
       },
-      "specs.3": {
+      "supportingCards.1": {
         "links": {
-          "self": "../Spec/1cbbaed5-d7cf-432b-a4c2-376f7219cd5f"
+          "self": "../ChartCard/tesla-2025-total-kpi"
         }
       },
-      "specs.4": {
+      "supportingCards.2": {
         "links": {
-          "self": "../Spec/08d03c4f-19d6-499f-8473-8c72eeab5697"
+          "self": "../ChartCard/tesla-revenue-segments-donut"
+        }
+      },
+      "supportingCards.3": {
+        "links": {
+          "self": "../ChartCard/tesla-2025-regional-bar"
+        }
+      },
+      "supportingCards.4": {
+        "links": {
+          "self": "../ChartCard/tesla-model-mix-stacked"
+        }
+      },
+      "supportingCards.5": {
+        "links": {
+          "self": "../ChartCard/tesla-byd-delivery-trend-line"
+        }
+      },
+      "supportingCards.6": {
+        "links": {
+          "self": "../ChartCard/tesla-malaysia-sales-bar"
+        }
+      },
+      "supportingCards.7": {
+        "links": {
+          "self": "../ChartCard/sales-by-product-line-bar"
+        }
+      },
+      "supportingCards.8": {
+        "links": {
+          "self": "../Dataset/tesla-2025-quarterly-deliveries"
+        }
+      },
+      "supportingCards.9": {
+        "links": {
+          "self": "../Dataset/tesla-2025-revenue-segments"
+        }
+      },
+      "supportingCards.10": {
+        "links": {
+          "self": "../Dataset/tesla-2025-regional-deliveries"
+        }
+      },
+      "supportingCards.11": {
+        "links": {
+          "self": "../Dataset/tesla-deliveries-by-model"
+        }
+      },
+      "supportingCards.12": {
+        "links": {
+          "self": "../Dataset/tesla-byd-deliveries"
+        }
+      },
+      "supportingCards.13": {
+        "links": {
+          "self": "../Dataset/tesla-malaysia-sales"
+        }
+      },
+      "supportingCards.14": {
+        "links": {
+          "self": "../Dataset/sales-by-product-line"
         }
       }
     }

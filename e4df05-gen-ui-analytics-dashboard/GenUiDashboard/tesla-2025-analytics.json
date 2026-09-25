@@ -9,7 +9,8 @@
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
-      }
+      },
+      "colorScheme": "dark"
     },
     "relationships": {
       "cards.0": {
@@ -44,13 +45,13 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": "../Theme/night-wall"
+          "self": "../Theme/night-wall-brand"
         }
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../gen-ui-dashboard",
+        "module": "@cardstack/catalog/e4df05-gen-ui-analytics-dashboard/gen-ui-dashboard",
         "name": "GenUiDashboard"
       }
     }

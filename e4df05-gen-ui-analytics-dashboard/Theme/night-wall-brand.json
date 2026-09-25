@@ -2,6 +2,72 @@
   "data": {
     "type": "card",
     "attributes": {
+      "version": null,
+      "cardInfo": {
+        "name": "Night Wall",
+        "notes": null,
+        "summary": "The Gen UI Analytics Dashboard brand identity: a near-black analytics wall with signal-blue primary and a seven-hue chart palette, plus a matching day scheme for the dashboard light/dark toggle.",
+        "cardThumbnailURL": null
+      },
+      "markUsage": {
+        "primaryMark1": null,
+        "primaryMark2": null,
+        "secondaryMark1": null,
+        "secondaryMark2": null,
+        "primaryMarkMinHeight": null,
+        "primaryMarkGreyscale1": null,
+        "primaryMarkGreyscale2": null,
+        "socialMediaProfileIcon": null,
+        "secondaryMarkMinHeight": null,
+        "secondaryMarkGreyscale1": null,
+        "secondaryMarkGreyscale2": null,
+        "primaryMarkClearanceRatio": null,
+        "secondaryMarkClearanceRatio": null
+      },
+      "styleName": "Night Wall",
+      "visualDNA": "A near-black data wall that lets signal-blue and a seven-hue chart palette carry every insight; a matching daylight scheme keeps the same identity when the dashboard flips to light mode.",
+      "cssImports": [],
+      "typography": {
+        "body": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "caption": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "heading": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "subheading": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        },
+        "sectionHeading": {
+          "fontSize": null,
+          "fontFamily": null,
+          "fontWeight": null,
+          "lineHeight": null,
+          "sampleText": null
+        }
+      },
+      "colorPalette": null,
+      "contentVoice": null,
+      "inspirations": [],
+      "designMindset": null,
       "rootVariables": {
         "radius": "0.75rem",
         "spacing": "0.25rem",
@@ -56,6 +122,13 @@
         "shadowLg": "0 10px 24px -4px rgb(15 23 42 / 0.14)",
         "shadowXl": "0 18px 40px -6px rgb(15 23 42 / 0.18)"
       },
+      "motionLanguage": null,
+      "technicalSpecs": null,
+      "wallpaperImages": [],
+      "compositionRules": null,
+      "qualityStandards": null,
+      "typographySystem": null,
+      "brandColorPalette": [],
       "darkModeVariables": {
         "radius": "0.75rem",
         "spacing": "0.25rem",
@@ -110,20 +183,28 @@
         "shadowLg": "0 10px 28px -4px rgb(0 0 0 / 0.55)",
         "shadowXl": "0 18px 44px -6px rgb(0 0 0 / 0.6)"
       },
-      "cardInfo": {
-        "name": "Night Wall",
-        "summary": "The Gen UI Analytics identity: a near-black analytics wall with signal-blue primary and a seven-hue chart palette, plus a matching day scheme for the dashboard's light/dark toggle.",
-        "cardThumbnailURL": null,
-        "notes": null
-      }
+      "functionalPalette": {
+        "dark": null,
+        "light": null,
+        "accent": null,
+        "primary": null,
+        "secondary": null
+      },
+      "geometricLanguage": null,
+      "historicalContext": null,
+      "customCssVariables": [],
+      "materialVocabulary": null,
+      "componentVocabulary": null,
+      "applicationScenarios": null,
+      "brandImageAttachments": []
     },
     "relationships": {
-      "cardInfo.cardThumbnail": {
+      "cardInfo.theme": {
         "links": {
           "self": null
         }
       },
-      "cardInfo.theme": {
+      "cardInfo.cardThumbnail": {
         "links": {
           "self": null
         }
@@ -131,8 +212,8 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/base/structured-theme",
-        "name": "default"
+        "name": "default",
+        "module": "https://cardstack.com/base/brand-guide"
       }
     }
   }
