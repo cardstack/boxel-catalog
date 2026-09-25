@@ -7,6 +7,7 @@ import {
   realmURL,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
+import enumField from '@cardstack/base/enum';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
@@ -67,45 +68,36 @@ import { parseCsv, suggestChart } from './utils/parse-csv';
 // created CRM records directly; any card embeds.
 // ---------------------------------------------------------------------------
 
-const SCHEME_STORAGE_KEY = 'gen-ui-dashboard:color-scheme';
-
 // The dashboard is an app shell, so it may own a light/dark toggle: it stamps
 // data-theme on its root and the linked theme's darkModeVariables take over
-// for the whole wall, tiles included. The scheme is the viewer's saved choice
-// (localStorage), else their OS preference. A prerender is neither viewer:
-// it renders the fixed dark default, the Night Wall identity, so the
-// rendering machine's own preference is never baked into the HTML.
-function initialScheme(): 'light' | 'dark' {
+// for the whole wall, tiles included. The scheme lives on the card itself
+// (below, `colorScheme`) rather than in browser storage — it is this
+// instance's own data, so it saves with the card, follows it to any viewer,
+// and can never leak into a different dashboard the way a shared storage key
+// did. Unset reads as dark (the Night Wall identity's default); "light" is
+// the one explicit opt-out a viewer can save. Shared by every format — a
+// fitted tile and the isolated view must agree on the same instance's mode.
+function resolveColorScheme(model: {
+  colorScheme?: string | null;
+} | null | undefined): 'light' | 'dark' {
   if ((globalThis as any).__boxelRenderContext) {
     return 'dark';
   }
-  try {
-    let saved = globalThis.localStorage?.getItem(SCHEME_STORAGE_KEY);
-    if (saved === 'light' || saved === 'dark') {
-      return saved;
-    }
-  } catch {
-    // storage blocked: fall through to the OS preference
-  }
-  let prefersLight = globalThis.matchMedia?.(
-    '(prefers-color-scheme: light)',
-  ).matches;
-  return prefersLight ? 'light' : 'dark';
+  return model?.colorScheme === 'light' ? 'light' : 'dark';
 }
 
 class Isolated extends Component<typeof GenUiDashboard> {
-  @tracked colorScheme: 'light' | 'dark' = initialScheme();
+  get colorScheme(): 'light' | 'dark' {
+    return resolveColorScheme(this.args.model);
+  }
 
   get isDark(): boolean {
     return this.colorScheme === 'dark';
   }
 
   @action toggleColorScheme() {
-    this.colorScheme = this.isDark ? 'light' : 'dark';
-    try {
-      globalThis.localStorage?.setItem(SCHEME_STORAGE_KEY, this.colorScheme);
-    } catch {
-      // the toggle still works for this session
+    if (this.args.model) {
+      this.args.model.colorScheme = this.isDark ? 'light' : 'dark';
     }
   }
   @tracked promptDraft = '';
@@ -935,7 +927,7 @@ class Isolated extends Component<typeof GenUiDashboard> {
   });
 
   <template>
-    <section
+    <main
       class='dashboard {{if this.isDragging "dragging"}}'
       data-theme={{this.colorScheme}}
       aria-label={{if @model.title @model.title 'Gen UI Analytics'}}
@@ -1271,7 +1263,7 @@ class Isolated extends Component<typeof GenUiDashboard> {
           <p class='page-hint'>…or drop a screenshot / CSV with data in it</p>
         </div>
       {{/if}}
-    </section>
+    </main>
     <style scoped>
       /* The wall reads only contract tokens: its colours come from the linked
          theme (Night Wall), light or dark per the data-theme on the root. */
@@ -1741,6 +1733,11 @@ class Isolated extends Component<typeof GenUiDashboard> {
   </template>
 }
 
+const ColorSchemeField = enumField(StringField, {
+  options: ['light', 'dark'],
+  displayName: 'Color Scheme',
+});
+
 export class GenUiDashboard extends CardDef {
   static displayName = 'Gen UI Dashboard';
   static icon = LayoutDashboardIcon;
@@ -1752,6 +1749,10 @@ export class GenUiDashboard extends CardDef {
   // Figma-style free placement — positions live in layoutJson on THIS
   // dashboard, so the same chart can sit differently on different walls
   @field layoutJson = contains(StringField); // {[cardId]: {x,y,w,h}}
+  // This instance's own light/dark choice — unset reads as dark (see
+  // Isolated.colorScheme below). Per-instance by construction: it is a field
+  // on the card, not a shared key, so two dashboards can never collide.
+  @field colorScheme = contains(ColorSchemeField);
 
   static isolated = Isolated;
 
@@ -1761,8 +1762,11 @@ export class GenUiDashboard extends CardDef {
     get cardCount(): number {
       return this.args.model?.cards?.length ?? 0;
     }
+    get colorScheme(): 'light' | 'dark' {
+      return resolveColorScheme(this.args.model);
+    }
     <template>
-      <article class='fit'>
+      <article class='fit' data-theme={{this.colorScheme}}>
         <div class='r-head'>
           <p class='eyebrow'>Gen UI Dashboard</p>
           <h3 class='title'>{{if @model.title @model.title 'My Analytics'}}</h3>
