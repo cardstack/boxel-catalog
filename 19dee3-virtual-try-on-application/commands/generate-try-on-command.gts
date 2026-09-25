@@ -226,7 +226,6 @@ export class GenerateTryOnCommand extends Command<
       path: filePath,
       realm: targetRealmIdentifier,
       base64Content,
-      contentType: mimeType,
       useNonConflictingFilename: true,
     });
 

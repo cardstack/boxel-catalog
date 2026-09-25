@@ -753,7 +753,6 @@ class IsolatedTemplate extends Component<typeof VirtualTryOnApp> {
         path: `${dir}/${slug}.${ext}`,
         realm: this.realmUrl,
         base64Content,
-        contentType: mimeType,
         useNonConflictingFilename: true,
       });
       const imageUrl = writeResult.fileIdentifier;

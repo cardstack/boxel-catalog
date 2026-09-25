@@ -174,7 +174,6 @@ export class InvitationPosterCommand extends Command<
       path: filePath,
       realm: input.targetRealmIdentifier,
       base64Content,
-      contentType: mimeType,
       useNonConflictingFilename: true,
     });
 
