@@ -1,0 +1,59 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tesla 2025 Analytics",
+      "layoutJson": "{\"tesla-2025-total-kpi\":{\"x\":0,\"y\":0,\"w\":384,\"h\":272},\"tesla-revenue-segments-donut\":{\"x\":400,\"y\":0,\"w\":352,\"h\":272},\"tesla-2025-regional-bar\":{\"x\":768,\"y\":0,\"w\":320,\"h\":560},\"tesla-model-mix-stacked\":{\"x\":0,\"y\":288,\"w\":752,\"h\":288},\"tesla-byd-delivery-trend-line\":{\"x\":0,\"y\":592,\"w\":384,\"h\":288},\"tesla-malaysia-sales-bar\":{\"x\":400,\"y\":592,\"w\":352,\"h\":288}}",
+      "cardInfo": {
+        "name": "Tesla 2025 Analytics",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "colorScheme": "dark"
+    },
+    "relationships": {
+      "cards.0": {
+        "links": {
+          "self": "../ChartCard/tesla-2025-total-kpi"
+        }
+      },
+      "cards.1": {
+        "links": {
+          "self": "../ChartCard/tesla-revenue-segments-donut"
+        }
+      },
+      "cards.2": {
+        "links": {
+          "self": "../ChartCard/tesla-2025-regional-bar"
+        }
+      },
+      "cards.3": {
+        "links": {
+          "self": "../ChartCard/tesla-model-mix-stacked"
+        }
+      },
+      "cards.4": {
+        "links": {
+          "self": "../ChartCard/tesla-byd-delivery-trend-line"
+        }
+      },
+      "cards.5": {
+        "links": {
+          "self": "../ChartCard/tesla-malaysia-sales-bar"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/night-wall-brand"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/e4df05-gen-ui-analytics-dashboard/gen-ui-dashboard",
+        "name": "GenUiDashboard"
+      }
+    }
+  }
+}

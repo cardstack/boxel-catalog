@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Imported Sales Data",
+      "layoutJson": "{\"sales-by-product-line-bar\":{\"x\":48,\"y\":48,\"w\":624,\"h\":416}}",
+      "cardInfo": {
+        "name": "Imported Sales Data",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cards.0": {
+        "links": {
+          "self": "../ChartCard/sales-by-product-line-bar"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/night-wall-brand"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/e4df05-gen-ui-analytics-dashboard/gen-ui-dashboard",
+        "name": "GenUiDashboard"
+      }
+    }
+  }
+}
