@@ -2,14 +2,14 @@
 
 ## Definitions the boxel platform tests against
 
-Some definitions in this repo are system-level: code and tests in the boxel monorepo ([cardstack/boxel](https://github.com/cardstack/boxel)) depend on them. Boxel lists them in [`packages/catalog/test-subset.json`](https://github.com/cardstack/boxel/blob/main/packages/catalog/test-subset.json), which is the authoritative list, and tests the platform against a pinned revision of this repo. Today the list holds the operation-permission policy definitions:
+Some definitions in this repo are system-level: code and tests in the boxel monorepo ([cardstack/boxel](https://github.com/cardstack/boxel)) depend on them. Boxel lists them in [`packages/catalog/test-subset.json`](https://github.com/cardstack/boxel/blob/main/packages/catalog/test-subset.json) and tests the platform against a pinned revision of this repo. This repo is their only source. Boxel keeps no copy of them.
+
+**Before changing or moving a file, check whether its path is in that manifest's `files` list.** The manifest is the only complete list. It grows as boxel adds definitions, so don't rely on memory or on the examples here. Examples are the operation-permission policy definitions:
 
 - `realm-policy/realm-policy.gts`, with `RealmPolicy`, `PolicyRule` and `OperationGrant`
 - `fields/policy-predicate/policy-predicate.gts`, with `PolicyPredicateField`
 
-This repo is their only source. Boxel keeps no copy of them.
-
-To change one of these files, or to add one:
+To change a file the manifest lists, or to add one:
 
 1. **Keep it compatible with boxel `main`.** The deployed catalog realm serves this repo's `main`, running against the deployed platform. Platform code the change needs, such as a serializer, a `runtime-common` export or a base module, lands in boxel first.
 2. **Name the branch after the boxel branch that pins the change.** The `Boxel Test Subset` workflow runs boxel's tests for these files whenever a PR touches one. It runs them against the boxel branch with the same name when there is one, and otherwise against boxel `main`.
