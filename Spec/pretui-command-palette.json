@@ -3,39 +3,41 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/command-palette",
+        "name": "CommandPalette"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
+      "cardTitle": "CommandPalette",
+      "cardDescription": null,
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
-      "tier": "Element",
-      "tags": [],
+      "componentName": "CommandPalette",
+      "icon": "square-terminal",
+      "category": "Overlays",
+      "tier": "Surface",
+      "tags": [
+        "keyboard-navigation"
+      ],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
+      "introducedVersion": "0.4.0",
       "territory": "controls",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": null,
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": null,
+      "refs": null,
       "buildsOn": null,
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "CommandPalette",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +46,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/command-palette.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/command-palette.md"
         }
       },
       "linkedExamples": {

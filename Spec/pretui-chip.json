@@ -3,30 +3,30 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/chip",
+        "name": "Chip"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { Chip } from '@cardstack/pretui/components/chip';\n```\n",
+      "cardTitle": "Chip",
+      "cardDescription": "Inline label with a Law-2 hue treatment",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
+      "componentName": "Chip",
+      "icon": "tag",
+      "category": "Foundations",
       "tier": "Element",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
       "introducedVersion": "0.1.0",
-      "territory": "controls",
+      "territory": "ink",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": "BoxelTag, Pill",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": "Inline label with a Law-2 hue treatment · shadcn Badge, wa-tag, boxel-ui Pill",
+      "refs": "shadcn Badge · wa-tag/wa-badge · boxel-ui Pill/BoxelTag",
       "buildsOn": null,
       "featured": false,
       "isNew": false,
@@ -35,7 +35,7 @@
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "Chip",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/chip.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/chip.md"
         }
       },
       "linkedExamples": {

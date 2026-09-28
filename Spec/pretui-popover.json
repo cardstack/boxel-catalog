@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/popover",
+        "name": "Popover"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { Popover } from '@cardstack/pretui/components/popover';\n```\n",
+      "cardTitle": "Popover",
+      "cardDescription": "Anchored floating panel with backdrop close",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
-      "tier": "Element",
+      "componentName": "Popover",
+      "icon": "message-circle-up",
+      "category": "Overlays",
+      "tier": "Compound",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
-      "territory": "controls",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
       "stage": "live",
-      "source": "design-v1",
-      "lineage": "Switch",
+      "source": "webawesome",
+      "lineage": "BoxelDropdown",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
-      "buildsOn": null,
-      "featured": false,
-      "isNew": false,
+      "brief": "Anchored floating panel with backdrop close · shadcn Popover, wa-popover",
+      "refs": "shadcn Popover · wa-popover · boxel-ui BoxelDropdown",
+      "buildsOn": "Popup",
+      "featured": true,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "Popover",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/popover.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/popover.md"
         }
       },
       "linkedExamples": {
