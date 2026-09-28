@@ -116,14 +116,14 @@ export function loyaltyTierField(config: LoyaltyTierConfig) {
         <style scoped>
           .rungs {
             display: inline-flex;
-            gap: 2px;
+            gap: 0.125rem;
             margin-left: var(--boxel-sp-4xs);
           }
           .rung {
             width: 0.25rem;
             height: 0.25rem;
             border-radius: 50%;
-            background: currentColor;
+            background-color: currentColor;
             opacity: 0.25;
           }
           .rung.filled {
@@ -131,7 +131,7 @@ export function loyaltyTierField(config: LoyaltyTierConfig) {
           }
           .no-tier {
             font-size: var(--boxel-font-size-sm);
-            color: var(--muted-foreground, var(--boxel-450));
+            color: var(--muted-foreground);
           }
         </style>
       </template>
@@ -229,10 +229,12 @@ export class TierBadge extends GlimmerComponent<TierBadgeSignature> {
     let { bg, fg, ring } = stateColor(this.args.hue ?? 'slate');
     let slug = slugOf(this.args.value);
     if (!slug) {
-      return htmlSafe(`background: ${bg}; color: ${fg}; --tier-ring: ${ring};`);
+      return htmlSafe(
+        `background-color: ${bg}; color: ${fg}; --tier-ring: ${ring};`,
+      );
     }
     return htmlSafe(
-      `background: var(--tier-${slug}-bg, ${bg});` +
+      `background-color: var(--tier-${slug}-bg, ${bg});` +
         ` color: var(--tier-${slug}-fg, ${fg});` +
         ` --tier-ring: var(--tier-${slug}-ring, ${ring});`,
     );
@@ -247,7 +249,7 @@ export class TierBadge extends GlimmerComponent<TierBadgeSignature> {
       .tier-badge {
         display: inline-flex;
         align-items: center;
-        padding: 1px var(--boxel-sp-xs);
+        padding: 0.0625rem var(--boxel-sp-xs);
         border-radius: 999px;
         box-shadow: inset 0 0 0 1px
           color-mix(in oklch, var(--tier-ring) 45%, transparent);

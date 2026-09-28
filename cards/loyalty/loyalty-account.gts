@@ -1,4 +1,5 @@
 import { htmlSafe } from '@ember/template';
+import GlimmerComponent from '@glimmer/component';
 import {
   CardDef,
   Component,
@@ -21,20 +22,42 @@ import MemberNumberField from './member-number-field';
 import PointsBalanceField from './points-balance-field';
 import { MembershipStatusField } from './membership-status-field';
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 
-// Token-derived color only — never a user string.
-function htmlSafeColor(color: string) {
-  return htmlSafe(`color: ${color};`);
+interface SignedPointsSignature {
+  Args: {
+    amount?: number | null;
+    /** Colour the figure by its sign: earns green, deductions red. */
+    toned?: boolean;
+  };
+  Element: HTMLSpanElement;
 }
 
-function signedPoints(amount?: number | null): string {
-  let n = amount ?? 0;
-  return `${n > 0 ? '+' : ''}${new Intl.NumberFormat().format(n)}`;
-}
+/**
+ * A signed points movement, `+` on earns — the one place every ledger view
+ * formats and colours an amount.
+ */
+class SignedPoints extends GlimmerComponent<SignedPointsSignature> {
+  get value(): number {
+    return this.args.amount ?? 0;
+  }
 
-function pointsColor(amount?: number | null): string {
-  let hue: Hue = (amount ?? 0) > 0 ? 'green' : 'red';
-  return stateColor(hue).fg;
+  // Token-derived color only — never a user string.
+  get toneStyle() {
+    if (!this.args.toned) {
+      return undefined;
+    }
+    let hue: Hue = this.value > 0 ? 'green' : 'red';
+    return htmlSafe(`color: ${stateColor(hue).fg};`);
+  }
+
+  <template>
+    <span style={{this.toneStyle}} ...attributes><FormatNumber
+        @value={{this.value}}
+        @signDisplay='exceptZero'
+      /></span>
+  </template>
 }
 
 /**
@@ -93,13 +116,13 @@ export class LoyaltyAccount extends CardDef {
           font-size: 0.8125rem;
         }
         .la-icon {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex-shrink: 0;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .la-number {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           letter-spacing: 0.04em;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -146,7 +169,7 @@ export class LoyaltyAccount extends CardDef {
         }
         .la-number {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .la-tier {
           flex-shrink: 0;
@@ -191,7 +214,7 @@ export class LoyaltyAccount extends CardDef {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .top {
           display: flex;
@@ -200,7 +223,7 @@ export class LoyaltyAccount extends CardDef {
           min-width: 0;
         }
         .number {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.75rem;
           letter-spacing: 0.04em;
           overflow: hidden;
@@ -212,7 +235,7 @@ export class LoyaltyAccount extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .line-tier,
         .line-balance,
@@ -285,27 +308,6 @@ export class LoyaltyAccount extends CardDef {
       return Boolean(this.ledgerQuery);
     }
 
-    signedAmount = (transaction: PointsTransaction): string =>
-      signedPoints(transaction.amount);
-
-    amountStyle = (transaction: PointsTransaction) =>
-      htmlSafeColor(pointsColor(transaction.amount));
-
-    whenLabel = (transaction: PointsTransaction): string => {
-      let at = transaction.occurredAt;
-      if (!at) {
-        return '';
-      }
-      let d = new Date(at);
-      return Number.isNaN(d.getTime())
-        ? ''
-        : d.toLocaleDateString(undefined, {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          });
-    };
-
     <template>
       <article class='la-page'>
         <header class='lh'>
@@ -356,10 +358,11 @@ export class LoyaltyAccount extends CardDef {
               <ol class='ledger'>
                 {{#each this.ledger key='id' as |transaction|}}
                   <li class='ledger-row'>
-                    <span
+                    <SignedPoints
                       class='ledger-amount'
-                      style={{this.amountStyle transaction}}
-                    >{{this.signedAmount transaction}}</span>
+                      @amount={{transaction.amount}}
+                      @toned={{true}}
+                    />
                     <span class='ledger-reason'>{{if
                         transaction.reason
                         transaction.reason
@@ -368,9 +371,13 @@ export class LoyaltyAccount extends CardDef {
                     {{#if transaction.source}}
                       <span class='ledger-source'>{{transaction.source}}</span>
                     {{/if}}
-                    <span class='ledger-when'>{{this.whenLabel
-                        transaction
-                      }}</span>
+                    <span class='ledger-when'><FormatDate
+                        @date={{transaction.occurredAt}}
+                        @month='short'
+                        @day='numeric'
+                        @year='numeric'
+                        @placeholder=''
+                      /></span>
                   </li>
                 {{/each}}
               </ol>
@@ -400,7 +407,7 @@ export class LoyaltyAccount extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .lh-id {
@@ -409,17 +416,17 @@ export class LoyaltyAccount extends CardDef {
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .lh-number {
           margin: 0.25rem 0 0;
@@ -437,20 +444,23 @@ export class LoyaltyAccount extends CardDef {
           gap: 0.75rem;
         }
         .stat {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 0.875rem 1rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
           display: flex;
           flex-direction: column;
           gap: 0.375rem;
         }
         .stat-label {
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .stat-value {
           font-size: 1.125rem;
@@ -461,21 +471,24 @@ export class LoyaltyAccount extends CardDef {
           font-size: 0.9375rem;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .holder {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
         }
         .ledger {
@@ -490,7 +503,7 @@ export class LoyaltyAccount extends CardDef {
           align-items: baseline;
           gap: 0.625rem;
           padding: 0.375rem 0;
-          border-bottom: 1px solid var(--border, #f3f4f6);
+          border-bottom: 1px solid var(--border);
           font-size: 0.8125rem;
         }
         .ledger-row:last-child {
@@ -519,14 +532,14 @@ export class LoyaltyAccount extends CardDef {
           letter-spacing: 0.06em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
           flex-shrink: 0;
         }
         .ledger-when {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           white-space: nowrap;
           flex-shrink: 0;
         }
@@ -534,7 +547,7 @@ export class LoyaltyAccount extends CardDef {
           margin: 0;
           font-size: 0.875rem;
           font-style: italic;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -571,11 +584,9 @@ export class PointsTransaction extends CardDef {
   });
 
   static atom = class Atom extends Component<typeof PointsTransaction> {
-    get signed() {
-      return signedPoints(this.args.model.amount);
-    }
     <template>
-      <span class='ptx-atom'>{{this.signed}} pts</span>
+      <span class='ptx-atom'><SignedPoints @amount={{@model.amount}} />
+        pts</span>
       <style scoped>
         .ptx-atom {
           font-variant-numeric: tabular-nums;
@@ -587,18 +598,13 @@ export class PointsTransaction extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof PointsTransaction> {
-    get signed() {
-      return signedPoints(this.args.model.amount);
-    }
-    get amountColor() {
-      return pointsColor(this.args.model.amount);
-    }
     <template>
       <div class='ptx'>
-        <span
+        <SignedPoints
           class='ptx-amount'
-          style={{htmlSafeColor this.amountColor}}
-        >{{this.signed}}</span>
+          @amount={{@model.amount}}
+          @toned={{true}}
+        />
         <div class='ptx-what'>
           <span class='ptx-reason'>{{if
               @model.reason
@@ -647,14 +653,14 @@ export class PointsTransaction extends CardDef {
           letter-spacing: 0.06em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
           flex-shrink: 0;
         }
         .ptx-when {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           white-space: nowrap;
           flex-shrink: 0;
         }
@@ -663,19 +669,14 @@ export class PointsTransaction extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof PointsTransaction> {
-    get signed() {
-      return signedPoints(this.args.model.amount);
-    }
-    get amountColor() {
-      return pointsColor(this.args.model.amount);
-    }
     <template>
       <div class='ptx-fitted'>
         <div class='ptx-head'>
-          <span
+          <SignedPoints
             class='ptx-amount'
-            style={{htmlSafeColor this.amountColor}}
-          >{{this.signed}}</span>
+            @amount={{@model.amount}}
+            @toned={{true}}
+          />
           <span class='ptx-unit'>pts</span>
         </div>
         <span class='ptx-reason'>{{if
@@ -715,7 +716,7 @@ export class PointsTransaction extends CardDef {
         }
         .ptx-unit {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ptx-reason {
           font-size: 0.8125rem;
@@ -728,7 +729,7 @@ export class PointsTransaction extends CardDef {
           align-items: center;
           gap: 0.5rem;
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ptx-source {
           font-weight: 700;
@@ -736,7 +737,8 @@ export class PointsTransaction extends CardDef {
           letter-spacing: 0.06em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .ptx-when {
@@ -765,19 +767,14 @@ export class PointsTransaction extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof PointsTransaction> {
-    get signed() {
-      return signedPoints(this.args.model.amount);
-    }
-    get amountColor() {
-      return pointsColor(this.args.model.amount);
-    }
     <template>
       <article class='ptx-page'>
         <header class='ptx-hero'>
-          <span
+          <SignedPoints
             class='ptx-amount'
-            style={{htmlSafeColor this.amountColor}}
-          >{{this.signed}}</span>
+            @amount={{@model.amount}}
+            @toned={{true}}
+          />
           <span class='ptx-unit'>points</span>
           <h1 class='ptx-title'>{{if
               @model.reason
@@ -832,11 +829,10 @@ export class PointsTransaction extends CardDef {
         }
         .ptx-unit {
           font-size: 0.875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ptx-title {
           grid-column: 1 / -1;
-          margin: 0;
           font-size: 1.125rem;
           font-weight: 600;
         }
@@ -849,21 +845,23 @@ export class PointsTransaction extends CardDef {
           letter-spacing: 0.06em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
-          border-radius: var(--boxel-border-radius, 0.5rem);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius);
           padding: 1rem;
         }
         .panel h2 {
           margin: 0 0 0.5rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .facts {
           display: grid;
@@ -873,15 +871,15 @@ export class PointsTransaction extends CardDef {
         }
         .facts dt {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .facts dd {
           margin: 0;
           font-size: 0.875rem;
         }
         .linked {
-          border: 1px solid var(--border, #e5e7eb);
-          border-radius: var(--boxel-border-radius, 0.5rem);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius);
           overflow: hidden;
         }
       </style>

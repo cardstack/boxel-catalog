@@ -20,10 +20,10 @@ export default class MemberNumberField extends StringField {
       <span class='member-number'>{{if @model @model '—'}}</span>
       <style scoped>
         .member-number {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-sm);
           letter-spacing: 0.04em;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -34,7 +34,7 @@ export default class MemberNumberField extends StringField {
       <span class='member-number'>{{@model}}</span>
       <style scoped>
         .member-number {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.04em;
         }
