@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/copy-button",
+        "name": "CopyButton"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { CopyButton } from '@cardstack/pretui/components/copy-button';\n```\n",
+      "cardTitle": "CopyButton",
+      "cardDescription": "Copy-to-clipboard with success glyph swap",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
+      "componentName": "CopyButton",
+      "icon": "copy",
+      "category": "Actions",
       "tier": "Element",
       "tags": [],
-      "ownership": "pretui",
+      "ownership": "boxel-ui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
+      "introducedVersion": "0.4.0",
       "territory": "controls",
       "stage": "live",
-      "source": "design-v1",
-      "lineage": "Switch",
+      "source": "boxel-ui",
+      "lineage": "CopyButton",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": "Copy-to-clipboard with success glyph swap · shadcn CopyButton, boxel-ui CopyButton",
+      "refs": "wa-copy-button · boxel-ui CopyButton",
       "buildsOn": null,
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "CopyButton",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/copy-button.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/copy-button.md"
         }
       },
       "linkedExamples": {

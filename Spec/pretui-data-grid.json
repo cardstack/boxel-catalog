@@ -3,39 +3,43 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/data-grid",
+        "name": "DataGrid"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { DataGrid } from '@cardstack/pretui/components/data-grid';\n```\n",
+      "cardTitle": "DataGrid",
+      "cardDescription": "THE records table: sortable, zebra, selectable",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
+      "componentName": "DataGrid",
+      "icon": "table",
+      "category": "Data Display",
       "tier": "Element",
-      "tags": [],
+      "tags": [
+        "keyboard-navigation",
+        "collection",
+        "selection"
+      ],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
       "introducedVersion": "0.1.0",
-      "territory": "controls",
+      "territory": "reading",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": null,
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": "THE records table: sortable, zebra, selectable · TanStack table looks, wa-pro grid territory",
+      "refs": "TanStack Table · wa-pro grid · shadcn DataTable",
       "buildsOn": null,
-      "featured": false,
+      "featured": true,
       "isNew": false,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
+      "liveInUse": false,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "DataGrid",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +48,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/data-grid.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/data-grid.md"
         }
       },
       "linkedExamples": {

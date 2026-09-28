@@ -3,18 +3,18 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/input",
+        "name": "Input"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { Input } from '@cardstack/pretui/components/input';\n```\n",
+      "cardTitle": "Input",
+      "cardDescription": "Single-line entry, all native types",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
+      "componentName": "Input",
+      "icon": "text-cursor-input",
       "category": "Inputs",
-      "tier": "Element",
+      "tier": "Compound",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
@@ -23,11 +23,11 @@
       "territory": "controls",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": "BoxelInput",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
-      "buildsOn": null,
+      "brief": "Single-line entry, all native types · BoxelInput core, error/helper rows",
+      "refs": "shadcn Input · wa-input · boxel-ui BoxelInput",
+      "buildsOn": "boxel-ui BoxelInput",
       "featured": false,
       "isNew": false,
       "hasDesign": true,
@@ -35,7 +35,7 @@
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "Input",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/input.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/input.md"
         }
       },
       "linkedExamples": {

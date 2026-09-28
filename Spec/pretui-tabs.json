@@ -3,17 +3,17 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/tabs",
+        "name": "Tabs"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { Tabs } from '@cardstack/pretui/components/tabs';\n```\n",
+      "cardTitle": "Tabs",
+      "cardDescription": "Content switcher rail",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
+      "componentName": "Tabs",
+      "icon": "panel-top-dashed",
+      "category": "Navigation",
       "tier": "Element",
       "tags": [],
       "ownership": "pretui",
@@ -23,19 +23,19 @@
       "territory": "controls",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": "TabbedHeader",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": "Content switcher rail · shadcn Tabs, wa-tab-group",
+      "refs": "shadcn Tabs · wa-tab-group · boxel-ui TabbedHeader",
       "buildsOn": null,
       "featured": false,
       "isNew": false,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
+      "liveInUse": false,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "Tabs",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/tabs.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/tabs.md"
         }
       },
       "linkedExamples": {
