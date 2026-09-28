@@ -96,8 +96,8 @@ export class RecordOwnerField extends FieldDef {
           place-items: center;
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
-          background: var(--muted, var(--boxel-200));
-          color: var(--muted-foreground, var(--boxel-500));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .owner-body {
           display: flex;
@@ -106,18 +106,18 @@ export class RecordOwnerField extends FieldDef {
         }
         .owner-name {
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .owner-meta {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .owner-none {
           font-style: italic;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -133,7 +133,6 @@ export class RecordOwnerField extends FieldDef {
       <style scoped>
         .owner-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--foreground, var(--boxel-dark));
         }
       </style>
     </template>
@@ -172,12 +171,12 @@ export class RecordOwnerField extends FieldDef {
         .owner-how,
         .owner-prev {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .owner-note {
           margin: var(--boxel-sp-4xs) 0 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

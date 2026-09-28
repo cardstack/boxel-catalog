@@ -105,22 +105,22 @@ export class AutomationPolicyField extends FieldDef {
         }
         .policy-off {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-          border: 1px solid var(--border, var(--boxel-border-color));
+          color: var(--muted-foreground);
+          border: 1px solid var(--border);
           border-radius: 999px;
           padding: 0 0.5rem;
         }
         .policy-rule {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .policy-rule code {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
-          color: var(--foreground, var(--boxel-dark));
+          font-family: var(--font-mono);
+          color: var(--foreground);
         }
         .policy-meta {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

@@ -43,10 +43,9 @@ export class RecordIdentifierField extends FieldDef {
       <code class='record-id'>{{if @model.value @model.value '—'}}</code>
       <style scoped>
         .record-id {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-sm);
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
           letter-spacing: 0.02em;
         }
       </style>
@@ -58,7 +57,7 @@ export class RecordIdentifierField extends FieldDef {
       <code class='record-id-atom'>{{if @model.value @model.value '—'}}</code>
       <style scoped>
         .record-id-atom {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           font-weight: 500;
         }
@@ -95,9 +94,9 @@ export class RecordIdentifierField extends FieldDef {
           gap: var(--boxel-sp-xs);
         }
         .minted {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

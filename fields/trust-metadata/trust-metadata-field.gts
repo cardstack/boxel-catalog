@@ -134,12 +134,12 @@ export class TrustMetadataField extends FieldDef {
         }
         .basis,
         .who {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .gap {
           font-size: 0.75rem;
           font-weight: 600;
-          color: var(--state-next-fg, var(--foreground, var(--boxel-dark)));
+          color: var(--foreground);
         }
       </style>
     </template>

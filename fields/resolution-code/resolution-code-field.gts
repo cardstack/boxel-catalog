@@ -97,7 +97,7 @@ export class ResolutionCodeField extends FieldDef {
         }
         .note {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

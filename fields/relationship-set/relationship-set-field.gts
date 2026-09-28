@@ -73,20 +73,20 @@ export class RelationEntryField extends FieldDef {
           display: inline-flex;
           align-items: baseline;
           gap: var(--boxel-sp-4xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           padding: 0.125rem 0.5rem;
           font-size: var(--boxel-font-size-xs);
           max-width: 100%;
         }
         .rel-kind {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
-          color: var(--muted-foreground, var(--boxel-450));
+          font-family: var(--font-mono);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .rel-target {
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -144,7 +144,7 @@ export class RelationshipSetField extends FieldDef {
         }
         .relset-none {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -157,7 +157,7 @@ export class RelationshipSetField extends FieldDef {
       <style scoped>
         .relset-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

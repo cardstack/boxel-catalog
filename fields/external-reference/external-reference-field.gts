@@ -69,7 +69,7 @@ export class IntegrationReferenceField extends FieldDef {
         }
         .integration-kind {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -138,20 +138,20 @@ export class ExternalReferenceField extends FieldDef {
           display: inline-flex;
           align-items: baseline;
           gap: var(--boxel-sp-4xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           padding: 0.125rem 0.5rem;
           font-size: var(--boxel-font-size-xs);
         }
         .xref-sys {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .xref-id {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-weight: 500;
         }
         .xref-state {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -163,7 +163,7 @@ export class ExternalReferenceField extends FieldDef {
       <code class='xref-atom'>{{@model.title}}</code>
       <style scoped>
         .xref-atom {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
         }
       </style>
