@@ -257,9 +257,6 @@ class TicketRecord extends Component<typeof Ticket> {
         display: flex;
         flex-direction: column;
         min-height: 100%;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
       }
       /* No action bar and no second title: the host's own header already
          names this card and owns Edit / Close. */
@@ -271,16 +268,15 @@ class TicketRecord extends Component<typeof Ticket> {
         padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-sm);
       }
       .rec-ref {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .rec-title {
         margin: 0;
         flex: 1;
         min-width: 12rem;
-        font-family: var(--font-heading, inherit);
         font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         letter-spacing: -0.01em;
@@ -295,21 +291,25 @@ class TicketRecord extends Component<typeof Ticket> {
       .rec-slab {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-        border-block: 1px solid var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-block: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .rec-cell {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
         min-width: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-lg);
       }
       .rec-lb {
-        font-size: 0.5625rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rec-strong {
         font-weight: 700;
@@ -320,7 +320,7 @@ class TicketRecord extends Component<typeof Ticket> {
       }
       .rec-dim {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -346,8 +346,8 @@ class TicketRecord extends Component<typeof Ticket> {
       .rec-details {
         font-size: var(--boxel-font-size-sm);
         line-height: 1.7;
-        color: var(--muted-foreground, var(--boxel-450));
-        border-left: 2px solid var(--border, var(--boxel-200));
+        color: var(--muted-foreground);
+        border-left: 0.125rem solid var(--border);
         padding-left: var(--boxel-sp-sm);
       }
       .rec-rail {
@@ -358,16 +358,19 @@ class TicketRecord extends Component<typeof Ticket> {
       }
       .rec-h {
         margin: 0 0 var(--boxel-sp-4xs);
-        font-size: 0.5625rem;
-        letter-spacing: 0.1em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rec-facts {
         margin: 0;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0.125rem;
       }
       .rec-facts > div {
         display: flex;
@@ -377,7 +380,7 @@ class TicketRecord extends Component<typeof Ticket> {
       }
       .rec-facts dt {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rec-facts dd {
         margin: 0;
@@ -393,17 +396,17 @@ class TicketRecord extends Component<typeof Ticket> {
         padding: 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 3px;
+        gap: 0.1875rem;
       }
       .rec-links {
         flex-direction: column;
       }
       .rec-tags li {
         padding: 0.05em 0.4em;
-        border: 1px solid var(--border, var(--boxel-200));
+        border: 1px solid var(--border);
         border-radius: 999px;
         font-size: 0.625rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rec-links li {
         font-size: var(--boxel-font-size-xs);
@@ -721,28 +724,27 @@ export class Ticket extends CardDef {
           display: flex;
           align-items: center;
           gap: var(--boxel-sp-4xs);
-          height: 46px;
+          height: 2.875rem;
           padding: 0 var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--boxel-border-radius-sm, 6px);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius-sm);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         /* The one cue that stays readable down a long stacked list. */
         .row-spine {
-          width: 3px;
-          height: 26px;
+          width: 0.1875rem;
+          height: 1.625rem;
           flex: none;
           border-radius: 1px;
-          background: var(--primary, var(--boxel-highlight));
+          background-color: var(--primary);
         }
         .row-ref {
           flex: none;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .row-main {
@@ -763,7 +765,7 @@ export class Ticket extends CardDef {
         .row-context {
           font-size: var(--boxel-font-size-xs);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -787,20 +789,19 @@ export class Ticket extends CardDef {
           gap: 0.3rem;
           max-width: 100%;
           font-size: 0.8125rem;
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .atom-spine {
-          width: 3px;
+          width: 0.1875rem;
           height: 0.9rem;
           flex: none;
           border-radius: 1px;
-          background: var(--primary, var(--boxel-highlight));
+          background-color: var(--primary);
         }
         .atom-ref {
           flex: none;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .atom-subject {
@@ -824,7 +825,9 @@ export class Ticket extends CardDef {
       );
     }
     get spineStyle() {
-      return htmlSafe(`background: ${stateColor(this.priorityHue).ring};`);
+      return htmlSafe(
+        `background-color: ${stateColor(this.priorityHue).ring};`,
+      );
     }
 
     <template>
@@ -880,16 +883,15 @@ export class Ticket extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
-          padding: 7px 9px 7px 12px;
+          gap: 0.125rem;
+          padding: 0.4375rem 0.5625rem 0.4375rem 0.75rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
           /* One continuous type scale driven by the container, never stepped
              per tier: the @container blocks below change structure only. */
-          --type-base: clamp(9.5px, 2.7cqi, 12px);
-          --type-title: max(11px, calc(var(--type-base) * 1.25));
+          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
+          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
         }
         .fit > * {
           overflow: hidden;
@@ -900,20 +902,20 @@ export class Ticket extends CardDef {
           left: 0;
           top: 0;
           bottom: 0;
-          width: 3px;
+          width: 0.1875rem;
         }
         .r-head {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         .ref {
           flex: none;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .title {
@@ -934,9 +936,9 @@ export class Ticket extends CardDef {
         .sla {
           flex: none;
           margin-left: auto;
-          padding: 0 4px;
-          border-radius: 4px;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          padding: 0 0.25rem;
+          border-radius: 0.25rem;
+          font-family: var(--font-mono);
           font-size: var(--type-base);
           font-weight: 600;
           font-variant-numeric: tabular-nums;
@@ -944,59 +946,47 @@ export class Ticket extends CardDef {
         }
         .sla-met,
         .sla-healthy {
-          color: color-mix(
-            in oklch,
-            var(--boxel-success) 38%,
-            var(--card-foreground, var(--boxel-dark))
-          );
-          background: color-mix(
-            in oklch,
-            var(--boxel-success) 13%,
-            var(--card, var(--boxel-light))
+          color: var(--success-ink);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--card)
           );
         }
         .sla-warning {
-          color: color-mix(
-            in oklch,
-            var(--boxel-warning) 40%,
-            var(--card-foreground, var(--boxel-dark))
-          );
-          background: color-mix(
-            in oklch,
-            var(--boxel-warning) 14%,
-            var(--card, var(--boxel-light))
+          color: var(--attention-ink);
+          background-color: color-mix(
+            in oklab,
+            var(--attention-ink) 12%,
+            var(--card)
           );
         }
         .sla-urgent {
-          color: color-mix(
-            in oklch,
-            var(--boxel-danger) 42%,
-            var(--card-foreground, var(--boxel-dark))
-          );
-          background: color-mix(
-            in oklch,
-            var(--boxel-danger) 13%,
-            var(--card, var(--boxel-light))
+          color: var(--destructive-ink);
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--card)
           );
         }
         .sla-breached {
-          color: var(--background, var(--boxel-light));
-          background: var(--boxel-danger);
+          color: var(--background);
+          background-color: var(--destructive);
         }
         .sla-paused {
-          color: var(--muted-foreground, var(--boxel-450));
-          background: var(--muted, var(--boxel-100));
+          color: var(--muted-foreground);
+          background-color: var(--muted);
         }
         .r-body {
           grid-area: body;
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .line {
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1009,7 +999,7 @@ export class Ticket extends CardDef {
           display: none;
           margin: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -1018,19 +1008,19 @@ export class Ticket extends CardDef {
           grid-area: meta;
           display: none;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
         }
         .pri {
           flex: none;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--type-base);
           font-weight: 700;
         }
         .status,
         .age {
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1048,7 +1038,7 @@ export class Ticket extends CardDef {
           .fit {
             grid-template-rows: 1fr;
             align-content: center;
-            padding-block: 4px;
+            padding-block: 0.25rem;
           }
           .title {
             -webkit-line-clamp: 1;
@@ -1092,7 +1082,7 @@ export class Ticket extends CardDef {
            content column held at >=200px so the title never becomes a word. */
         @container fitted-card (width > 300px) and (height <= 130px) {
           .fit {
-            grid-template-columns: minmax(200px, 1fr) auto;
+            grid-template-columns: minmax(12.5rem, 1fr) auto;
             grid-template-areas: 'head meta' 'body meta';
             align-items: center;
           }

@@ -84,10 +84,10 @@ export class PolicyConditionField extends FieldDef {
         .cond {
           display: inline-flex;
           padding: 0.1em 0.5em;
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: 999px;
-          background: var(--muted, var(--boxel-100));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--muted);
+          color: var(--foreground);
           font-size: var(--boxel-font-size-xs);
           white-space: nowrap;
         }
@@ -145,10 +145,9 @@ export class SlaTargetField extends FieldDef {
           display: inline-flex;
           gap: var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .tgt-metric {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .tgt-value {
           font-weight: 600;
@@ -361,9 +360,6 @@ export class SlaPolicy extends CardDef {
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .iso-head {
           display: flex;
@@ -371,25 +367,25 @@ export class SlaPolicy extends CardDef {
           gap: var(--boxel-sp);
           align-items: flex-start;
           padding-bottom: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .iso-head h1 {
           margin: 0;
-          font-family: var(--font-heading, inherit);
           font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           letter-spacing: -0.01em;
         }
         .iso-sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
         }
         .iso-flag {
           flex: none;
           padding: 0.1em 0.5em;
-          border-radius: 3px;
-          background: var(--muted, var(--boxel-100));
+          border-radius: 0.1875rem;
+          background-color: var(--muted);
+          color: var(--foreground);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
@@ -401,22 +397,25 @@ export class SlaPolicy extends CardDef {
         .sect h2 {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           margin: 0;
-          font-size: 0.625rem;
-          letter-spacing: 0.1em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* Rule 5: one icon per section header, quiet by design — muted colour and
            ~1em with a px floor, so it identifies the section without competing
            with it. Same size in every header, which is what makes the card
            scannable by shape on a second visit. */
         .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .chips {
           display: flex;
@@ -433,14 +432,18 @@ export class SlaPolicy extends CardDef {
         }
         .matrix th,
         .matrix td {
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
           text-align: start;
         }
         .matrix thead th {
-          background: var(--muted, var(--boxel-100));
-          font-size: 0.625rem;
-          letter-spacing: 0.06em;
+          background-color: var(--muted);
+          color: var(--foreground);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
         }
         .matrix tbody th {
@@ -455,7 +458,7 @@ export class SlaPolicy extends CardDef {
         .empty {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           max-width: 62ch;
           line-height: 1.6;
         }
@@ -481,13 +484,12 @@ export class SlaPolicy extends CardDef {
         .emb {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .emb-name {
           font-weight: 700;
@@ -495,7 +497,7 @@ export class SlaPolicy extends CardDef {
         }
         .emb-cond {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .emb-tgt {
           font-size: var(--boxel-font-size-xs);
@@ -520,7 +522,7 @@ export class SlaPolicy extends CardDef {
         }
         .atom-tgt {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -558,14 +560,13 @@ export class SlaPolicy extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
-          padding: 7px 9px;
+          gap: 0.125rem;
+          padding: 0.4375rem 0.5625rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --type-base: clamp(9.5px, 2.7cqi, 12px);
-          --type-title: max(11px, calc(var(--type-base) * 1.25));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
+          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
         }
         .fit > * {
           overflow: hidden;
@@ -575,7 +576,7 @@ export class SlaPolicy extends CardDef {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         /* fitted-card Rule 2: the anchor. Without it these cells were a title at
@@ -591,9 +592,9 @@ export class SlaPolicy extends CardDef {
         .fit-glyph {
           flex: none;
           align-self: center;
-          width: max(11px, 1.1em);
-          height: max(11px, 1.1em);
-          color: var(--muted-foreground, var(--boxel-450));
+          width: max(0.6875rem, 1.1em);
+          height: max(0.6875rem, 1.1em);
+          color: var(--muted-foreground);
         }
         .title {
           flex: 1;
@@ -611,10 +612,10 @@ export class SlaPolicy extends CardDef {
         .badge {
           flex: none;
           margin-left: auto;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--type-base);
           font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -622,12 +623,12 @@ export class SlaPolicy extends CardDef {
           grid-area: body;
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .line {
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -636,7 +637,7 @@ export class SlaPolicy extends CardDef {
           display: none;
           margin: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -645,7 +646,7 @@ export class SlaPolicy extends CardDef {
           display: none;
           margin-top: auto;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -654,10 +655,10 @@ export class SlaPolicy extends CardDef {
           grid-area: meta;
           display: none;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 50px) {
           .fit {
@@ -698,7 +699,7 @@ export class SlaPolicy extends CardDef {
         }
         @container fitted-card (width > 300px) and (height <= 130px) {
           .fit {
-            grid-template-columns: minmax(200px, 1fr) auto;
+            grid-template-columns: minmax(12.5rem, 1fr) auto;
             grid-template-areas: 'head meta' 'body meta';
             align-items: center;
           }

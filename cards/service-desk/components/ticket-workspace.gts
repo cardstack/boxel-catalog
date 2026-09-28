@@ -1822,9 +1822,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         display: flex;
         flex-direction: column;
         min-height: 100%;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
+        background-color: var(--background);
+        color: var(--foreground);
       }
       .ws:focus {
         outline: none;
@@ -1835,23 +1834,23 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
         flex-wrap: wrap;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
-        background: var(--card, var(--boxel-light));
+        border-bottom: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
         position: sticky;
         top: 0;
         z-index: 2;
       }
       .ws-ref {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .ws-title {
         margin: 0;
         flex: 1;
         min-width: 10rem;
-        font-family: var(--font-heading, inherit);
         font-size: var(--boxel-font-size);
         font-weight: 700;
         letter-spacing: -0.01em;
@@ -1861,7 +1860,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
          load, not as a form nobody finished. */
       .ws-untitled {
         font-style: italic;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .ws-title-btn {
         padding: 0;
@@ -1878,7 +1877,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .ws-title-btn:hover:not(:disabled) {
         text-decoration: underline;
         text-decoration-style: dotted;
-        text-underline-offset: 3px;
+        text-underline-offset: 0.1875rem;
       }
       .ws-title-input {
         flex: 1;
@@ -1891,13 +1890,13 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         flex-direction: column;
         gap: var(--boxel-sp-4xs);
         padding: var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 6px);
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .intake-h {
         margin: 0;
-        font-family: var(--font-heading, inherit);
         font-size: var(--boxel-font-size);
         font-weight: 700;
       }
@@ -1906,14 +1905,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         max-width: 56ch;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.6;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .intake-lb {
         margin-top: var(--boxel-sp-xs);
-        font-size: 0.5625rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .intake-foot {
         display: flex;
@@ -1925,7 +1927,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         flex: 1;
         min-width: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       /* A divider rather than a gap: whitespace alone was what let the two
          run together into one phrase in the first place. */
@@ -1934,14 +1936,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         align-items: center;
         gap: 0.5em;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .ws-type::before {
         content: '';
         width: 1px;
         height: 0.9em;
-        background: var(--border, var(--boxel-300));
+        background-color: var(--border);
       }
       .ws-actions {
         display: flex;
@@ -1955,9 +1957,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .ws-menu-trigger {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        --boxel-button-border: 1px solid var(--border, var(--boxel-300));
-        --boxel-button-secondary-background: var(--card, var(--boxel-light));
+        gap: 0.3125rem;
+        --boxel-button-border: 1px solid var(--border);
+        --boxel-button-secondary-background: var(--card);
         white-space: nowrap;
       }
       .ws-more {
@@ -1972,17 +1974,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .ws-menu {
         list-style: none;
         margin: 0;
-        padding: var(--boxel-sp-5xs, 4px);
+        padding: var(--boxel-sp-5xs);
         min-width: 11rem;
       }
       .ws-mi {
         display: block;
         width: 100%;
-        padding: 5px 9px;
+        padding: 0.3125rem 0.5625rem;
         border: none;
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border-radius: var(--boxel-border-radius-sm);
         background: none;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
         font-family: inherit;
         font-size: var(--boxel-font-size-sm);
         font-weight: 500;
@@ -1992,14 +1994,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .ws-mi:hover:not(:disabled),
       .ws-mi:focus-visible {
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
       }
       .ws-mi:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
-        outline-offset: -2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
       }
       .ws-mi:disabled {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         cursor: default;
       }
       /* The hover explanation. Same shape as the queue's priority popover so
@@ -2011,18 +2013,18 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .minfo {
         max-width: 19rem;
         padding: var(--boxel-sp-xs);
-        font-family: var(--font-sans, var(--boxel-font-family));
+        font-family: var(--font-sans);
       }
       .minfo-h {
         display: block;
         font-size: var(--boxel-font-size-sm);
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .minfo-p {
-        margin: 3px 0 0;
+        margin: 0.1875rem 0 0;
         font-size: var(--boxel-font-size-xs);
         line-height: 1.5;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       /* A tab cannot contain semantic descendants, so the shortcut inside one
          is a span wearing kbd's clothes rather than a real <kbd>. Hidden from
@@ -2031,10 +2033,10 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .key {
         margin-inline-start: 0.45em;
         padding: 0.1em 0.32em;
-        border-radius: 3px;
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-family: var(--font-mono, ui-monospace, monospace);
+        border-radius: 0.1875rem;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        font-family: var(--font-mono);
         font-size: 0.625rem;
         font-weight: 700;
         line-height: 1.4;
@@ -2044,10 +2046,10 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
          rather than to the sentence. */
       kbd {
         padding: 0.1em 0.32em;
-        border-radius: 3px;
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-family: var(--font-mono, ui-monospace, monospace);
+        border-radius: 0.1875rem;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+        font-family: var(--font-mono);
         font-size: 0.5625rem;
         line-height: 1.5;
       }
@@ -2055,23 +2057,27 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .slab {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        border-bottom: 1px solid var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-bottom: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       /* No rules between the cells: they are already aligned columns with
          whitespace around them, so the vertical lines were decoration. */
       .slab-cell {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
         min-width: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .lb {
-        font-size: 0.5625rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .slab-strong {
         font-weight: 700;
@@ -2082,7 +2088,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .slab-dim {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -2106,20 +2112,20 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .open-card {
         --boxel-icon-button-width: 1.75rem;
         --boxel-icon-button-height: 1.75rem;
-        --boxel-icon-button-color: var(--muted-foreground, var(--boxel-450));
+        --boxel-icon-button-color: var(--muted-foreground);
         margin-left: var(--boxel-sp-4xs);
       }
       .open-card:hover:not(:disabled) {
-        --boxel-icon-button-color: var(--primary, var(--boxel-highlight));
+        --boxel-icon-button-color: var(--primary-ink);
       }
       .del {
         --boxel-icon-button-width: 1.75rem;
         --boxel-icon-button-height: 1.75rem;
-        --boxel-icon-button-color: var(--muted-foreground, var(--boxel-450));
+        --boxel-icon-button-color: var(--muted-foreground);
         margin-left: var(--boxel-sp-4xs);
       }
       .del:hover:not(:disabled) {
-        --boxel-icon-button-color: var(--boxel-danger);
+        --boxel-icon-button-color: var(--destructive-ink);
       }
       .del-icon {
         width: 0.95rem;
@@ -2134,16 +2140,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-sm);
         flex-wrap: wrap;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--boxel-danger);
-        background: color-mix(
-          in oklch,
-          var(--boxel-danger) 10%,
-          var(--background, var(--boxel-light))
+        border-bottom: 1px solid var(--destructive-ink);
+        background-color: color-mix(
+          in oklab,
+          var(--destructive-ink) 10%,
+          var(--background)
         );
+        color: var(--foreground);
       }
       .confirm-neutral {
-        border-bottom-color: var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-bottom-color: var(--border);
+        background-color: var(--muted);
       }
       .esc-field {
         flex: none;
@@ -2159,7 +2166,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .confirm-acts {
         display: flex;
@@ -2169,31 +2176,23 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         margin: 0;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
         font-size: var(--boxel-font-size-xs);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .banner-bad {
-        background: color-mix(
-          in oklch,
-          var(--boxel-danger) 12%,
-          var(--background, var(--boxel-light))
+        background-color: color-mix(
+          in oklab,
+          var(--destructive-ink) 12%,
+          var(--background)
         );
-        color: color-mix(
-          in oklch,
-          var(--boxel-danger) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
       }
       .banner-ok {
-        background: color-mix(
-          in oklch,
-          var(--boxel-success) 12%,
-          var(--background, var(--boxel-light))
+        background-color: color-mix(
+          in oklab,
+          var(--success-ink) 12%,
+          var(--background)
         );
-        color: color-mix(
-          in oklch,
-          var(--boxel-success) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--success-ink);
       }
 
       .ws-body {
@@ -2222,8 +2221,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         flex-direction: column;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp-sm);
-        border-left: 1px solid var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-left: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .rail-block {
         display: flex;
@@ -2232,30 +2232,33 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       h2 {
         margin: 0;
-        font-size: 0.5625rem;
-        letter-spacing: 0.1em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rail-empty {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
         line-height: 1.55;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .kb-tools {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
         gap: var(--boxel-sp-4xs);
-        margin-bottom: var(--boxel-sp-xxs);
+        margin-bottom: var(--boxel-sp-2xs);
       }
       .kb-add {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        --boxel-button-border: 1px solid var(--border, var(--boxel-300));
-        --boxel-button-secondary-background: var(--card, var(--boxel-light));
+        gap: 0.25rem;
+        --boxel-button-border: 1px solid var(--border);
+        --boxel-button-secondary-background: var(--card);
         white-space: nowrap;
       }
       /* Pushed to the far end and kept quiet: it is the secondary of the two,
@@ -2263,7 +2266,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .kb-rerank {
         margin-inline-start: auto;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .kb {
         list-style: none;
@@ -2275,10 +2278,10 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .kb-item {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0.125rem;
         font-size: var(--boxel-font-size-xs);
-        padding: 4px 0;
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        padding: 0.25rem 0;
+        border-bottom: 1px solid var(--border);
       }
       .kb-line {
         display: flex;
@@ -2288,7 +2291,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .kb-acts {
         display: flex;
-        gap: 3px;
+        gap: 0.1875rem;
       }
       .kb-title {
         flex: 1;
@@ -2305,13 +2308,13 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .kb-score {
         font-variant-numeric: tabular-nums;
         font-weight: 700;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .facts {
         margin: 0;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0.125rem;
       }
       .facts > div {
         display: flex;
@@ -2321,7 +2324,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .facts dt {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .facts dd {
         margin: 0;
@@ -2336,14 +2339,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         padding: 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 2px;
+        gap: 0.125rem;
       }
       .tags li {
         padding: 0.05em 0.4em;
-        border: 1px solid var(--border, var(--boxel-200));
+        border: 1px solid var(--border);
         border-radius: 999px;
         font-size: 0.625rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
 
       /* Reads as a closing note on the conversation, not as a broken form. */
@@ -2353,26 +2356,28 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         align-items: flex-start;
         gap: var(--boxel-sp-4xs);
         padding: var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-left: 3px solid var(--boxel-success);
-        border-radius: var(--boxel-border-radius-sm, 4px);
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-left: 0.1875rem solid var(--success);
+        border-radius: var(--boxel-border-radius-sm);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .settled p {
         margin: 0;
         max-width: 52ch;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.6;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .composer {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-4xs);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
         padding: var(--boxel-sp-4xs);
-        background: var(--card, var(--boxel-light));
+        background-color: var(--card);
+        color: var(--card-foreground);
         position: sticky;
         bottom: 0;
       }
@@ -2380,12 +2385,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
          costliest mistake available in this interface, so the current mode is
          a place and a colour, not a word in a dropdown. */
       .composer-internal {
-        background: color-mix(
-          in oklch,
-          var(--boxel-warning) 8%,
-          var(--card, var(--boxel-light))
-        );
-        border-color: var(--boxel-warning);
+        background-color: color-mix(in oklab, var(--warning) 8%, var(--card));
+        border-color: var(--attention-ink);
       }
       .comp-tabs {
         display: flex;
@@ -2395,27 +2396,27 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .comp-tab {
         padding: 0.2rem 0.55rem;
         border: none;
-        border-bottom: 2px solid transparent;
+        border-bottom: 0.125rem solid transparent;
         background: none;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-family: inherit;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         cursor: pointer;
       }
       .comp-tab.on {
-        color: var(--foreground, var(--boxel-dark));
-        border-bottom-color: var(--primary, var(--boxel-highlight));
+        color: var(--foreground);
+        border-bottom-color: var(--primary);
       }
       /* Same reasoning as the panel tabs: hover previews what `.comp-tab.on`
          becomes. Reply mode is a choice made before typing, so the control has to
          look reachable at rest and respond on approach. */
       .comp-tab:hover {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .comp-tab:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: 0.125rem;
       }
       .comp-warn {
         margin-left: auto;
@@ -2423,7 +2424,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--boxel-warning);
+        color: var(--attention-ink);
       }
       .comp-foot {
         display: flex;
@@ -2434,7 +2435,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         flex: 1;
         min-width: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
 
       .sr-only {
@@ -2455,7 +2456,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         }
         .rail {
           border-left: none;
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
         }
       }
 

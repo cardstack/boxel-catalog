@@ -147,8 +147,7 @@ export class Feed extends GlimmerComponent<Signature> {
       .feed {
         display: flex;
         flex-direction: column;
-        font-family: var(--font-sans, var(--boxel-font-family));
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .feed-list {
         list-style: none;
@@ -159,29 +158,30 @@ export class Feed extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-sm);
       }
       .feed-card {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-left: 3px solid var(--feed-rule);
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border: 1px solid var(--border);
+        border-left: 0.1875rem solid var(--feed-rule);
+        border-radius: var(--boxel-border-radius-sm);
         overflow: hidden;
-        background: var(--card, var(--boxel-light));
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       /* The private tint is the whole point of the block: an internal note is
          full width with a coloured ground, so it can never be skimmed as one
          more reply in the thread. */
       .feed-private .feed-card {
-        background: var(--feed-tint);
+        background-color: var(--feed-tint);
       }
       .feed-head {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .feed-private .feed-head {
-        background: transparent;
+        background-color: transparent;
         border-bottom: 1px dashed var(--feed-rule);
       }
       .feed-avatar {
@@ -197,12 +197,12 @@ export class Feed extends GlimmerComponent<Signature> {
         justify-content: center;
         font-size: 0.5625rem;
         font-weight: 700;
-        background: var(--feed-rule);
-        color: var(--background, var(--boxel-light));
+        background-color: var(--feed-rule);
+        color: var(--background);
       }
       .feed-actor {
         font-weight: 700;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .feed-tagline {
         font-size: 0.625rem;
@@ -230,14 +230,14 @@ export class Feed extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .feed-system::before,
       .feed-system::after {
         content: '';
         height: 1px;
         flex: 1;
-        background: var(--border, var(--boxel-200));
+        background-color: var(--border);
       }
       .feed-system-meta {
         font-variant-numeric: tabular-nums;
@@ -246,7 +246,7 @@ export class Feed extends GlimmerComponent<Signature> {
         margin: 0;
         padding: var(--boxel-sp) 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         max-width: 60ch;
       }
     </style>

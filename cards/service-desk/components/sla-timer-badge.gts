@@ -94,10 +94,10 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
     // same information drawn twice, around the most-read element on the page.
     if (this.state === 'breached') {
       return htmlSafe(
-        `background: ${this.colors.ring}; color: var(--background, var(--boxel-light));`,
+        `background-color: ${this.colors.ring}; color: var(--background);`,
       );
     }
-    return htmlSafe(`background: ${bg}; color: ${fg};`);
+    return htmlSafe(`background-color: ${bg}; color: ${fg};`);
   }
 
   /**
@@ -117,7 +117,7 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
    */
   get barStyle() {
     let pct = this.snapshot.percentRemaining ?? 0;
-    return htmlSafe(`width: ${pct}%; background: ${this.colors.ring};`);
+    return htmlSafe(`width: ${pct}%; background-color: ${this.colors.ring};`);
   }
 
   get hasBar() {
@@ -156,15 +156,17 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
       .sla {
         display: inline-flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0.125rem;
         min-width: 0;
-        font-family: var(--font-sans, var(--boxel-font-family));
       }
       .sla-caption {
-        font-size: 0.625rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .sla-chip {
         display: inline-flex;
@@ -173,7 +175,7 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
         align-self: flex-start;
         max-width: 100%;
         padding: 0.12em 0.42em;
-        border-radius: 4px;
+        border-radius: 0.25rem;
         font-size: 0.6875rem;
         font-weight: 600;
         line-height: 1.4;
@@ -181,8 +183,8 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .sla-icon {
-        width: 12px;
-        height: 12px;
+        width: 0.75rem;
+        height: 0.75rem;
         flex: none;
       }
       .sla-text {
@@ -191,11 +193,11 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
       }
       .sla-bar {
         display: block;
-        height: 4px;
+        height: 0.25rem;
         width: 100%;
-        border-radius: 2px;
+        border-radius: 0.125rem;
         overflow: hidden;
-        background: var(--muted, var(--boxel-200));
+        background-color: var(--muted);
       }
       .sla-bar-fill {
         display: block;

@@ -59,11 +59,10 @@ export class PersonBase extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-sm);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--background);
+          color: var(--foreground);
           transition: box-shadow 0.15s ease-out;
         }
         .person-avatar {
@@ -77,19 +76,19 @@ export class PersonBase extends CardDef {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-family: var(--font-serif, serif);
+          font-family: var(--font-serif);
           font-weight: 600;
           font-size: var(--boxel-font-size-sm);
           line-height: 1;
-          color: var(--primary-foreground, var(--boxel-light));
-          background: var(--primary, var(--boxel-highlight));
+          color: var(--primary-foreground);
+          background-color: var(--primary);
         }
         .person-main {
           flex: 1;
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .person-name {
           font-size: var(--boxel-font-size-sm);
@@ -100,7 +99,7 @@ export class PersonBase extends CardDef {
         }
         .person-sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

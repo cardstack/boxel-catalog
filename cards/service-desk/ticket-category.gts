@@ -101,18 +101,14 @@ export class TicketCategory extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .trail {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
-          font-family: var(--font-heading, inherit);
           font-size: var(--boxel-font-size-lg);
           font-weight: 700;
         }
@@ -126,10 +122,13 @@ export class TicketCategory extends CardDef {
           min-width: 0;
         }
         .facts dt {
-          font-size: 0.625rem;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .facts dd {
           margin: 0;
@@ -137,12 +136,12 @@ export class TicketCategory extends CardDef {
         }
         .none {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .note {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           max-width: 62ch;
           line-height: 1.6;
         }
@@ -160,13 +159,12 @@ export class TicketCategory extends CardDef {
         .emb {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .emb-name {
           font-weight: 700;
@@ -174,7 +172,7 @@ export class TicketCategory extends CardDef {
         }
         .emb-path {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -213,14 +211,13 @@ export class TicketCategory extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
-          padding: 7px 9px;
+          gap: 0.125rem;
+          padding: 0.4375rem 0.5625rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --type-base: clamp(9.5px, 2.7cqi, 12px);
-          --type-title: max(11px, calc(var(--type-base) * 1.25));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
+          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
         }
         .fit > * {
           overflow: hidden;
@@ -230,7 +227,7 @@ export class TicketCategory extends CardDef {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         /* fitted-card Rule 2: the anchor. Without it these cells were a title at
@@ -246,9 +243,9 @@ export class TicketCategory extends CardDef {
         .fit-glyph {
           flex: none;
           align-self: center;
-          width: max(11px, 1.1em);
-          height: max(11px, 1.1em);
-          color: var(--muted-foreground, var(--boxel-450));
+          width: max(0.6875rem, 1.1em);
+          height: max(0.6875rem, 1.1em);
+          color: var(--muted-foreground);
         }
         .title {
           flex: 1;
@@ -266,10 +263,10 @@ export class TicketCategory extends CardDef {
         .badge {
           flex: none;
           margin-left: auto;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--type-base);
           font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -277,12 +274,12 @@ export class TicketCategory extends CardDef {
           grid-area: body;
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .line {
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -291,7 +288,7 @@ export class TicketCategory extends CardDef {
           display: none;
           margin: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -300,10 +297,10 @@ export class TicketCategory extends CardDef {
           grid-area: meta;
           display: none;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 50px) {
           .fit {
@@ -341,7 +338,7 @@ export class TicketCategory extends CardDef {
         }
         @container fitted-card (width > 300px) and (height <= 130px) {
           .fit {
-            grid-template-columns: minmax(200px, 1fr) auto;
+            grid-template-columns: minmax(12.5rem, 1fr) auto;
             grid-template-areas: 'head meta' 'body meta';
             align-items: center;
           }
