@@ -74,19 +74,19 @@ export class TrackingEventField extends FieldDef {
           grid-template-columns: 10rem minmax(0, 1fr) 9rem;
           gap: var(--boxel-sp-xs);
           font-size: 0.82rem;
-          padding: 3px 0;
+          padding: 0.1875rem 0;
         }
         .ev-when {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          color: var(--muted-foreground, var(--boxel-500));
+          font-family: var(--font-mono);
+          color: var(--muted-foreground);
         }
         .ev-desc {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .ev-where {
           text-align: right;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -558,10 +558,6 @@ class ShipmentIsolated extends Component<typeof Shipment> {
            card scrolls, and `size` needs a definite block size. */
         container-type: inline-size;
         container-name: card-iso;
-        --ful-bg: var(--background);
-        --ful-fg: var(--foreground);
-        --ful-muted-fg: var(--muted-foreground);
-        --ful-border: var(--border);
         --ful-perf: color-mix(in oklch, var(--foreground) 22%, transparent);
         /* ONE panel primitive. Every full-width tinted block on this card —
            section, note, alert, callout — takes its ground, inset and radius
@@ -574,7 +570,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
            exposed it. */
         --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
         --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-        --panel-radius: var(--radius, 8px);
+        --panel-radius: var(--radius);
         /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
            `.cols .sec { margin-top: 0 }` override for the side-by-side case —
            two mechanisms for one relationship, and `.cols` itself had neither,
@@ -589,17 +585,14 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp-lg);
-        background: var(--ful-bg, var(--boxel-light));
-        color: var(--ful-fg, var(--boxel-dark));
-        font-family: var(--font-sans, inherit);
       }
       /* The hero is the label itself: heavy border, perforated divisions,
          monospace throughout — the physical object this card stands for. */
       .label {
-        border: 2px solid var(--ful-perf);
-        border-radius: 3px;
-        background: var(--card, var(--boxel-light));
-        color: var(--card-foreground, var(--boxel-dark));
+        border: 0.125rem solid var(--ful-perf);
+        border-radius: 0.1875rem;
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .label-top {
         display: flex;
@@ -608,18 +601,20 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         justify-content: space-between;
         align-items: flex-start;
         padding: var(--boxel-sp);
-        border-bottom: 2px dashed var(--ful-perf);
+        border-bottom: 0.125rem dashed var(--ful-perf);
       }
       .eyebrow {
-        font-size: var(--t-micro);
-        font-weight: 700;
-        letter-spacing: 0.2em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .num {
-        margin: 2px 0 0;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        margin: 0.125rem 0 0;
+        font-family: var(--font-mono);
         font-size: var(--t-xl);
         line-height: 1;
       }
@@ -634,7 +629,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .service {
         font-size: var(--t-micro);
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .label-mid {
         display: flex;
@@ -643,60 +638,62 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         align-items: center;
         justify-content: space-between;
         padding: var(--boxel-sp);
-        border-bottom: 2px dashed var(--ful-perf);
+        border-bottom: 0.125rem dashed var(--ful-perf);
       }
       .code {
         display: flex;
         align-items: stretch;
-        gap: 2px;
-        height: 42px;
-        flex: 1 1 160px;
-        max-width: 320px;
+        gap: 0.125rem;
+        height: 2.625rem;
+        flex: 1 1 10rem;
+        max-width: 20rem;
         justify-content: flex-end;
       }
       .code span {
         display: block;
-        background: color-mix(
+        background-color: color-mix(
           in oklch,
           var(--card-foreground) 78%,
           transparent
         );
       }
       .code span:nth-child(3n) {
-        width: 5px;
+        width: 0.3125rem;
         opacity: 0.5;
       }
       .code span:nth-child(3n + 1) {
-        width: 2px;
+        width: 0.125rem;
       }
       .code span:nth-child(3n + 2) {
-        width: 3px;
+        width: 0.1875rem;
         opacity: 0.75;
       }
       .label-bot {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(8.125rem, 1fr));
         gap: var(--boxel-sp);
         padding: var(--boxel-sp);
       }
       .label-bot > div {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
       }
       .cap {
-        font-size: var(--t-micro);
-        font-weight: 700;
-        letter-spacing: 0.16em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .val {
         font-size: var(--t-sm);
         font-weight: 600;
       }
       .mono {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
       }
       /* A different TINT (it is a warning, not a section) but the same inset
          and corner — the ground says what kind of block it is, the geometry
@@ -705,38 +702,37 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         margin: var(--boxel-sp) 0 0;
         padding: var(--panel-pad);
         border-radius: var(--panel-radius);
-        border-left: 3px solid
-          color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 55%,
-            transparent
-          );
-        background: color-mix(
+        border-left: 0.1875rem solid
+          color-mix(in oklch, var(--destructive) 55%, transparent);
+        background-color: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 8%,
+          var(--destructive) 8%,
           transparent
         );
         font-size: var(--t-sm);
-        color: var(--ful-fg, var(--boxel-dark));
+        color: var(--foreground);
       }
       .actions {
         margin-top: var(--boxel-sp-lg);
         padding: var(--panel-pad);
-        border: 1px solid var(--ful-border, var(--boxel-border-color));
-        border-radius: 4px;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
       }
       .actions h2 {
-        margin: 0 0 var(--boxel-sp-xxs);
-        font-size: var(--t-micro);
-        letter-spacing: 0.12em;
+        margin: 0 0 var(--boxel-sp-2xs);
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .act-note {
         margin: 0 0 var(--boxel-sp-sm);
         font-size: var(--t-micro);
         max-width: 60ch;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .act-row {
         display: flex;
@@ -745,30 +741,26 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         align-items: center;
       }
       .act-select {
-        flex: 1 1 220px;
-        max-width: 320px;
+        flex: 1 1 13.75rem;
+        max-width: 20rem;
       }
       .act-input {
-        flex: 1 1 200px;
-        max-width: 280px;
+        flex: 1 1 12.5rem;
+        max-width: 17.5rem;
       }
       .act-feedback {
         margin: var(--boxel-sp-sm) 0 0;
         font-size: var(--t-sm);
         font-weight: 600;
-        color: var(--ful-fg, var(--boxel-dark));
+        color: var(--foreground);
       }
       .act-failed {
-        color: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 58%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
       }
       .cols {
         display: grid;
         gap: var(--boxel-sp-lg);
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
       }
       .sec {
         /* A surface, not just a gap. Sections were told apart only by spacing,
@@ -778,7 +770,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
            follows the theme in both modes rather than being a grey. */
         padding: var(--panel-pad);
         border-radius: var(--panel-radius);
-        background: var(--panel-bg);
+        background-color: var(--panel-bg);
       }
       .sec h2 {
         /* The section heading is now the loudest uppercase thing on the card:
@@ -786,17 +778,19 @@ class ShipmentIsolated extends Component<typeof Shipment> {
            alone (500 vs 400) was not a readable difference. */
         display: flex;
         align-items: center;
-        gap: 7px;
+        gap: 0.4375rem;
         margin: 0 0 var(--boxel-sp-xs);
-        font-size: var(--t-micro);
-        font-weight: 700;
-        letter-spacing: 0.14em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--ful-fg, var(--foreground, var(--boxel-dark)));
+        color: var(--foreground);
       }
       .kv {
         display: grid;
-        gap: 6px;
+        gap: 0.375rem;
         margin: 0;
       }
       .kv div {
@@ -806,21 +800,17 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .kv dt {
         font-size: var(--t-micro);
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .kv dd {
         margin: 0;
         font-size: var(--t-sm);
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
       }
       .neg {
         font-weight: 800;
-        color: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
       }
       /* The delivered record sits inside the actions section, which has no
          surface of its own, so it needs its own top margin. Prose, not
@@ -833,27 +823,23 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .late-val {
         font-weight: 700;
-        color: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 58%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
       }
       .muted {
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .empty {
         font-size: var(--t-sm);
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
 
       /* Section icons: one size, one muted colour, everywhere. They make the
          card scannable by shape; they must never compete with the heading. */
       h2 .sec-icon {
-        width: max(14px, 1em);
-        height: max(14px, 1em);
+        width: max(0.875rem, 1em);
+        height: max(0.875rem, 1em);
         flex: 0 0 auto;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
 
       /* One collapse stop. The card is rendered in a resizable stack panel, so
@@ -1011,12 +997,12 @@ export class Shipment extends CardDef {
           font-size: 0.88rem;
         }
         .s-num {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .s-carrier {
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -1042,7 +1028,7 @@ export class Shipment extends CardDef {
       <span class='s-atom'>{{@model.shipmentNumber}}</span>
       <style scoped>
         .s-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85em;
           font-weight: 700;
         }
@@ -1093,25 +1079,28 @@ export class Shipment extends CardDef {
              display role individually did not: in a tall cell the cqi term still
              governs, so tiles are unchanged. */
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(11px, calc(var(--type-base) / var(--type-ratio)));
-          --glyph-size: max(11px, min(3cqi, 14cqb));
+          --meta-size: max(
+            0.6875rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
+          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
           /* The identifier is a VALUE, so it must render in full. It is capped
              against the inline axis as well as the block axis so a real order /
              RMA / SKU always fits its box — the ellipsis below is a safety net
              for a pathological identifier, not a truncation strategy. */
           --num-size: max(
-            11px,
+            0.6875rem,
             min(
               calc(var(--type-base) * pow(var(--type-ratio), 2)),
               26cqb,
               7.5cqi
             )
           );
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
           --perf: color-mix(in oklch, var(--card-foreground) 20%, transparent);
 
           width: 100%;
@@ -1119,12 +1108,11 @@ export class Shipment extends CardDef {
           box-sizing: border-box;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 3px;
+          gap: 0.1875rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .r-head,
         .r-body,
@@ -1136,38 +1124,38 @@ export class Shipment extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .r-meta {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 6px;
-          padding-top: 3px;
+          gap: 0.375rem;
+          padding-top: 0.1875rem;
           border-top: 1px dashed var(--perf);
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .hd-row {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         .dot {
           flex: none;
-          width: 7px;
-          height: 7px;
+          width: 0.4375rem;
+          height: 0.4375rem;
           border-radius: 50%;
-          background: color-mix(
+          background-color: color-mix(
             in oklch,
-            var(--st-hue, var(--muted-foreground, var(--boxel-400))) 72%,
+            var(--st-hue, var(--muted-foreground)) 72%,
             transparent
           );
         }
         .num {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--num-size);
           font-weight: 800;
           line-height: 1.2;
@@ -1179,46 +1167,46 @@ export class Shipment extends CardDef {
           font-size: var(--meta-size);
           font-weight: 700;
           white-space: nowrap;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .code {
           display: flex;
           align-items: stretch;
-          gap: 2px;
-          height: 16px;
-          margin-top: 4px;
+          gap: 0.125rem;
+          height: 1rem;
+          margin-top: 0.25rem;
         }
         .code span {
           display: block;
-          background: color-mix(
+          background-color: color-mix(
             in oklch,
             var(--card-foreground) 72%,
             transparent
           );
         }
         .code span:nth-child(3n) {
-          width: 4px;
+          width: 0.25rem;
           opacity: 0.5;
         }
         .code span:nth-child(3n + 1) {
-          width: 2px;
+          width: 0.125rem;
         }
         .code span:nth-child(3n + 2) {
-          width: 3px;
+          width: 0.1875rem;
           opacity: 0.75;
         }
         .tn {
-          margin: 3px 0 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          margin: 0.1875rem 0 0;
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
           letter-spacing: 0.12em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .status {
-          margin: 3px 0 0;
+          margin: 0.1875rem 0 0;
           font-size: var(--type-base);
           font-weight: 700;
         }

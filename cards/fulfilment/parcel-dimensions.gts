@@ -88,13 +88,13 @@ export class ParcelDimensionsField extends FieldDef {
 
       <style scoped>
         .pd-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.9em;
           font-variant-numeric: tabular-nums;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .pd-empty {
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -124,22 +124,22 @@ export class ParcelDimensionsField extends FieldDef {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           font-size: 0.85rem;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .pd-size {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
         }
         .pd-sep {
-          width: 3px;
-          height: 3px;
+          width: 0.1875rem;
+          height: 0.1875rem;
           border-radius: 50%;
-          background: var(--muted-foreground, var(--boxel-400));
+          background-color: var(--muted-foreground);
         }
         .pd-weight {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 600;
         }
@@ -148,12 +148,12 @@ export class ParcelDimensionsField extends FieldDef {
         .pd-billable {
           font-size: 0.75rem;
           font-weight: 600;
-          padding: 1px 6px;
+          padding: 0.0625rem 0.375rem;
           border-radius: 999px;
-          color: var(--muted-foreground, var(--boxel-500));
-          background: color-mix(
+          color: var(--muted-foreground);
+          background-color: color-mix(
             in oklch,
-            var(--muted-foreground, var(--boxel-500)) 12%,
+            var(--muted-foreground) 12%,
             transparent
           );
         }
@@ -197,34 +197,36 @@ export class ParcelDimensionsField extends FieldDef {
 
       <style scoped>
         .pd-edit {
-          border: 1px solid var(--border, var(--boxel-border-color));
-          border-radius: var(--boxel-border-radius, 8px);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius);
           padding: var(--boxel-sp-sm);
           margin: 0;
-          background: var(--card, var(--boxel-light));
+          background-color: var(--card);
         }
         .pd-legend {
-          font-size: 0.7rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-500));
-          padding: 0 var(--boxel-sp-xxs);
+          color: var(--muted-foreground);
+          padding: 0 var(--boxel-sp-2xs);
         }
         .pd-grid {
           display: grid;
           gap: var(--boxel-sp-xs);
-          grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
         }
         .pd-readout {
           margin: var(--boxel-sp-sm) 0 0;
           font-size: 0.8rem;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .pd-readout strong {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>

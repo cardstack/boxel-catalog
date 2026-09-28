@@ -296,10 +296,6 @@ export class FulfilmentProduct extends CardDef {
              card scrolls, and `size` needs a definite block size. */
           container-type: inline-size;
           container-name: card-iso;
-          --ful-bg: var(--background);
-          --ful-fg: var(--foreground);
-          --ful-muted-fg: var(--muted-foreground);
-          --ful-border: var(--border);
 
           /* ONE panel primitive. Every full-width tinted block on this card —
              section, note, alert, callout — takes its ground, inset and radius
@@ -310,32 +306,9 @@ export class FulfilmentProduct extends CardDef {
              every gap between them reads as a mis-registration rather than a
              rhythm. The inset is the thing that must agree; the tint only
              exposed it. */
-          /* State colours through the adapter block, not as literal hex. These
-             were `#b91c1c` / `#b45309` / `#15803d` written straight into `color:`
-             declarations — a text colour no theme can move, and the exact thing
-             boxel-theming C1 forbids. Each is now the semantic state token mixed
-             TOWARD `--foreground`, which is what keeps it legible on a dark ground
-             as well as a light one: --foreground flips, so the mix flips with it.
-             `--warning` is `initial` in some themes, hence a `--boxel-*` fallback
-             on every one. */
-          --ful-danger: color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --ful-warn: color-mix(
-            in oklch,
-            var(--warning, var(--boxel-warning)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --ful-ok: color-mix(
-            in oklch,
-            var(--success, var(--boxel-success)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
              `.cols .sec { margin-top: 0 }` override for the side-by-side case —
              two mechanisms for one relationship, and `.cols` itself had neither,
@@ -351,9 +324,6 @@ export class FulfilmentProduct extends CardDef {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
-          background: var(--ful-bg, var(--boxel-light));
-          color: var(--ful-fg, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         .hd {
           display: flex;
@@ -362,19 +332,23 @@ export class FulfilmentProduct extends CardDef {
           justify-content: space-between;
           align-items: flex-start;
           padding-bottom: var(--boxel-sp);
-          border-bottom: 2px solid var(--ful-rule);
+          border-bottom: 0.125rem solid var(--ful-rule);
         }
         .hero {
           /* Was a 132px thumbnail inside a 150px header — the most identifying
              thing on the card rendered smaller than the title. */
-          width: min(240px, 28%);
+          width: min(15rem, 28%);
           height: auto;
           aspect-ratio: 1;
           flex: 0 0 auto;
           object-fit: cover;
-          border-radius: 6px;
+          border-radius: 0.375rem;
           border: 1px solid var(--ful-rule);
-          background: color-mix(in oklch, var(--foreground) 6%, transparent);
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 6%,
+            transparent
+          );
         }
         .hd-id {
           flex: 1 1 14rem;
@@ -395,34 +369,33 @@ export class FulfilmentProduct extends CardDef {
           border-top: 1px solid var(--ful-rule);
         }
         .sku {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--t-micro);
           font-weight: 700;
           letter-spacing: 0.16em;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .name {
           margin: 0.1rem 0 0;
           font-size: var(--t-xl);
           line-height: 1.05;
-          font-family: var(--font-heading, inherit);
         }
         .cat {
-          margin: 4px 0 0;
+          margin: 0.25rem 0 0;
           font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .badge {
           font-size: var(--t-micro);
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          padding: 3px 9px;
-          border-radius: 3px;
-          color: var(--ful-muted-fg, var(--boxel-500));
-          background: color-mix(
+          padding: 0.1875rem 0.5625rem;
+          border-radius: 0.1875rem;
+          color: var(--muted-foreground);
+          background-color: color-mix(
             in oklch,
-            var(--muted-foreground, var(--boxel-500)) 12%,
+            var(--muted-foreground) 12%,
             transparent
           );
         }
@@ -437,17 +410,20 @@ export class FulfilmentProduct extends CardDef {
         .stats div {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .stats dt {
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .stats dd {
           margin: 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: var(--t-lg);
           font-weight: 700;
@@ -458,21 +434,29 @@ export class FulfilmentProduct extends CardDef {
            of a number already printed, not a competing element. */
         .m-rail {
           display: block;
-          height: 3px;
-          margin-top: 4px;
+          height: 0.1875rem;
+          margin-top: 0.25rem;
           border-radius: 999px;
-          background: color-mix(in oklch, var(--foreground) 10%, transparent);
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 10%,
+            transparent
+          );
           overflow: hidden;
         }
         .m-fill {
           display: block;
           height: 100%;
-          background: color-mix(in oklch, var(--foreground) 45%, transparent);
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 45%,
+            transparent
+          );
         }
         .stats .q-ratio dd {
           font-size: var(--t-body);
           font-weight: 600;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
 
         .stock-total {
@@ -480,7 +464,7 @@ export class FulfilmentProduct extends CardDef {
           font-size: var(--t-body);
         }
         .stock-total strong {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--t-lg);
           font-weight: 800;
         }
@@ -489,25 +473,25 @@ export class FulfilmentProduct extends CardDef {
           padding: 0;
           list-style: none;
           display: grid;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .stock-row {
           display: grid;
           grid-template-columns: 6rem minmax(0, 1fr) 4rem 5rem;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          padding: 6px 0;
+          padding: 0.375rem 0;
           border-top: 1px solid var(--ful-rule);
           font-size: var(--t-sm);
         }
         .st-wh,
         .st-bin,
         .st-qty {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
         }
         .st-bin {
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .st-qty {
           text-align: right;
@@ -519,20 +503,20 @@ export class FulfilmentProduct extends CardDef {
           letter-spacing: 0.06em;
           text-transform: uppercase;
           text-align: right;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .st-out {
-          color: var(--ful-danger);
+          color: var(--destructive-ink);
         }
         .st-low {
-          color: var(--ful-warn);
+          color: var(--attention-ink);
         }
         .cols {
           display: grid;
           gap: var(--boxel-sp-lg);
           /* `auto-fit` with a max keeps a two-line column from being handed the
              same 368px as a paragraph one. */
-          grid-template-columns: repeat(auto-fit, minmax(240px, max-content));
+          grid-template-columns: repeat(auto-fit, minmax(15rem, max-content));
         }
         .sec {
           /* A surface, not just a gap. Sections were told apart only by spacing,
@@ -542,7 +526,7 @@ export class FulfilmentProduct extends CardDef {
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .sec h2 {
           /* The section heading is now the loudest uppercase thing on the card:
@@ -550,25 +534,31 @@ export class FulfilmentProduct extends CardDef {
              alone (500 vs 400) was not a readable difference. */
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.14em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-fg, var(--foreground, var(--boxel-dark)));
+          color: var(--foreground);
         }
         .sk-rows {
           margin: 0;
           padding: 0;
           list-style: none;
           display: grid;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .sk-line {
-          height: 14px;
-          border-radius: 3px;
-          background: color-mix(in oklch, var(--foreground) 7%, transparent);
+          height: 0.875rem;
+          border-radius: 0.1875rem;
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 7%,
+            transparent
+          );
         }
         @media (prefers-reduced-motion: no-preference) {
           .sk-line {
@@ -583,11 +573,11 @@ export class FulfilmentProduct extends CardDef {
         .hint {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .kv {
           display: grid;
-          gap: 6px;
+          gap: 0.375rem;
           margin: 0;
         }
         .kv div {
@@ -597,23 +587,23 @@ export class FulfilmentProduct extends CardDef {
         }
         .kv dt {
           font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .kv dd {
           margin: 0;
           font-size: var(--t-sm);
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
            card scannable by shape; they must never compete with the heading. */
         h2 .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
 
         /* One collapse stop. The card is rendered in a resizable stack panel, so
@@ -662,31 +652,31 @@ export class FulfilmentProduct extends CardDef {
           font-size: 0.9rem;
         }
         .p-thumb {
-          width: 34px;
-          height: 34px;
+          width: 2.125rem;
+          height: 2.125rem;
           object-fit: cover;
-          border-radius: 4px;
+          border-radius: 0.25rem;
         }
         .p-sku {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.72rem;
           font-weight: 700;
           letter-spacing: 0.08em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .p-name {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .p-slot {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -701,7 +691,7 @@ export class FulfilmentProduct extends CardDef {
         }}</span>
       <style scoped>
         .p-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85em;
           font-weight: 700;
           letter-spacing: 0.05em;
@@ -764,38 +754,40 @@ export class FulfilmentProduct extends CardDef {
              display role individually did not: in a tall cell the cqi term still
              governs, so tiles are unchanged. */
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(11px, calc(var(--type-base) / var(--type-ratio)));
-          --glyph-size: max(11px, min(3cqi, 14cqb));
+          --meta-size: max(
+            0.6875rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
+          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
           /* The identifier is a VALUE, so it must render in full. It is capped
              against the inline axis as well as the block axis so a real order /
              RMA / SKU always fits its box — the ellipsis below is a safety net
              for a pathological identifier, not a truncation strategy. */
           --sku-size: max(
-            10px,
+            0.625rem,
             min(
               calc(var(--type-base) * pow(var(--type-ratio), 2)),
               26cqb,
               7.5cqi
             )
           );
-          --headline-size: max(9px, var(--type-base));
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --headline-size: max(0.5625rem, var(--type-base));
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
 
           width: 100%;
           height: 100%;
           box-sizing: border-box;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         /* The card's own icon, the same one its isolated view uses — the
            fitted's visual anchor. It sits on the quiet eyebrow row so it can
@@ -804,14 +796,14 @@ export class FulfilmentProduct extends CardDef {
         .eyebrow {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 0.25rem;
           min-width: 0;
         }
         .glyph {
           flex: none;
           width: var(--glyph-size);
           height: var(--glyph-size);
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
         .r-head,
         .r-body,
@@ -821,31 +813,31 @@ export class FulfilmentProduct extends CardDef {
         }
         .r-meta {
           display: flex;
-          gap: 8px;
+          gap: 0.5rem;
           justify-content: space-between;
           align-items: baseline;
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         /* SKU is the headline here, so it takes the display size. */
         .sku {
           display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--sku-size);
           font-weight: 800;
           letter-spacing: 0.04em;
           line-height: 1.2;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .headline {
-          margin: 1px 0 0;
+          margin: 0.0625rem 0 0;
           font-size: var(--headline-size);
           font-weight: 500;
           line-height: 1.2;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
@@ -860,8 +852,8 @@ export class FulfilmentProduct extends CardDef {
           height: 100%;
           min-height: 0;
           object-fit: cover;
-          border-radius: 4px;
-          background: color-mix(
+          border-radius: 0.25rem;
+          background-color: color-mix(
             in oklch,
             var(--card-foreground) 8%,
             transparent
@@ -870,45 +862,45 @@ export class FulfilmentProduct extends CardDef {
         .has-photo .r-body {
           display: grid;
           grid-template-rows: minmax(0, 1fr) auto;
-          gap: 4px;
-          margin-top: 5px;
+          gap: 0.25rem;
+          margin-top: 0.3125rem;
         }
         .bars {
           display: flex;
           align-items: stretch;
-          gap: 2px;
-          height: 18px;
-          margin-top: 6px;
+          gap: 0.125rem;
+          height: 1.125rem;
+          margin-top: 0.375rem;
         }
         .bars span {
           display: block;
-          background: color-mix(
+          background-color: color-mix(
             in oklch,
             var(--card-foreground) 70%,
             transparent
           );
         }
         .bars span:nth-child(odd) {
-          width: 2px;
+          width: 0.125rem;
         }
         .bars span:nth-child(even) {
-          width: 4px;
+          width: 0.25rem;
           opacity: 0.55;
         }
         .barcode {
-          margin: 3px 0 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          margin: 0.1875rem 0 0;
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
           letter-spacing: 0.18em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
         }
         .price {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 700;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
         }
         .cat {
           overflow: hidden;
@@ -939,7 +931,7 @@ export class FulfilmentProduct extends CardDef {
             display: none;
           }
           .bars {
-            height: 12px;
+            height: 0.75rem;
           }
         }
         @container fitted-card (width <= 140px) {

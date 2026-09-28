@@ -24,7 +24,7 @@ export type StatusStyle = {
 const fill = (hue: string) => `color-mix(in oklch, ${hue} 14%, transparent)`;
 const edge = (hue: string) => `color-mix(in oklch, ${hue} 32%, transparent)`;
 const ink = (hue: string) =>
-  `color-mix(in oklch, ${hue} 58%, var(--foreground, var(--boxel-dark)))`;
+  `color-mix(in oklch, ${hue} 58%, var(--foreground))`;
 
 interface StatusChipSignature {
   Args: {
@@ -63,7 +63,7 @@ const StatusChip: TemplateOnlyComponent<StatusChipSignature> = <template>
 // With no hue in the data the chip degrades to a neutral that still follows
 // the theme, rather than to a hardcoded grey.
 function statusHue(hue: string | undefined) {
-  return hue && hue.length ? hue : 'var(--muted-foreground, var(--boxel-500))';
+  return hue && hue.length ? hue : 'var(--muted-foreground)';
 }
 
 export default StatusChip;

@@ -67,12 +67,12 @@ export class FulfilmentLineItemField extends FieldDef {
       <style scoped>
         .li-atom {
           font-size: 0.85em;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .li-qty {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-weight: 700;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -137,7 +137,7 @@ export class FulfilmentLineItemField extends FieldDef {
           grid-template-columns: minmax(0, 1fr) 2.25rem 4.5rem 5rem;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xxs) 0;
+          padding: var(--boxel-sp-2xs) 0;
           font-size: 0.85rem;
         }
         .li-id {
@@ -147,26 +147,26 @@ export class FulfilmentLineItemField extends FieldDef {
         }
         .li-name {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .li-sku {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.7rem;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .li-slot {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .li-total {
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         /* A narrow container drops the unit price before the total: the total
            is what anyone reading a compressed row is looking for. The stop moved
@@ -214,7 +214,7 @@ export class FulfilmentLineItemField extends FieldDef {
         .li-edit {
           display: grid;
           gap: var(--boxel-sp-xs);
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(9.375rem, 1fr));
         }
       </style>
     </template>

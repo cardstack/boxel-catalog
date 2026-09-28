@@ -1,5 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { htmlSafe } from '@ember/template';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 import {
   SHIPMENT_PIPELINE,
   shipmentStatusStyle,
@@ -35,19 +36,6 @@ function sortEvents(events: TrackingEventLike[] | undefined) {
     .sort(
       (a, b) => (a.occurredAt?.getTime() ?? 0) - (b.occurredAt?.getTime() ?? 0),
     );
-}
-
-function eventTime(d: Date | null | undefined) {
-  if (!d) {
-    return '';
-  }
-  return d.toLocaleString(undefined, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 function hueVar(hue: string | undefined) {
@@ -135,70 +123,70 @@ export class TrackingStatusView extends GlimmerComponent<RailSignature> {
       .stage {
         position: relative;
         display: grid;
-        gap: 6px;
+        gap: 0.375rem;
         justify-items: start;
-        padding-right: 8px;
+        padding-right: 0.5rem;
       }
       /* The connector is drawn by the stage itself so the rail survives any
          number of stages without a hardcoded width. */
       .stage::before {
         content: '';
         position: absolute;
-        top: 5px;
+        top: 0.3125rem;
         left: 0;
         right: 0;
-        height: 2px;
-        background: color-mix(in oklch, var(--foreground) 12%, transparent);
+        height: 0.125rem;
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 12%,
+          transparent
+        );
       }
       .stage.done::before {
-        background: color-mix(in oklch, var(--st-hue) 45%, transparent);
+        background-color: color-mix(in oklch, var(--st-hue) 45%, transparent);
       }
       .stage:last-child::before {
-        right: 8px;
+        right: 0.5rem;
       }
       .node {
         position: relative;
-        width: 12px;
-        height: 12px;
+        width: 0.75rem;
+        height: 0.75rem;
         border-radius: 50%;
-        background: var(--background, var(--boxel-light));
-        border: 2px solid
+        background-color: var(--background);
+        border: 0.125rem solid
           color-mix(in oklch, var(--foreground) 18%, transparent);
       }
       .stage.done .node {
         border-color: color-mix(in oklch, var(--st-hue) 60%, transparent);
-        background: color-mix(in oklch, var(--st-hue) 60%, transparent);
+        background-color: color-mix(in oklch, var(--st-hue) 60%, transparent);
       }
       .stage.current .node {
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--st-hue) 16%, transparent);
       }
       .label {
         font-size: 0.72rem;
         line-height: 1.2;
-        color: var(--muted-foreground, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .stage.current .label {
         font-weight: 700;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .promise,
       .exception {
         margin: 0;
         font-size: 0.8rem;
-        color: var(--muted-foreground, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .promise strong {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .overdue,
       .exception {
         font-weight: 700;
-        color: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
       }
       @container (width < 380px) {
         .label {
@@ -227,7 +215,7 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
     // instances, whose values live on prototype accessors that a spread would
     // silently drop.
     return sortEvents(this.args.events).map((e, i, all) => ({
-      when: eventTime(e.occurredAt),
+      occurredAt: e.occurredAt ?? undefined,
       statusDescription: e.statusDescription,
       location: e.location,
       isLatest: i === all.length - 1,
@@ -242,7 +230,15 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
             <li class='event {{if event.isLatest "latest"}}'>
               <span class='marker' aria-hidden='true'></span>
               <div class='body'>
-                <span class='when'>{{event.when}}</span>
+                <span class='when'><FormatDate
+                    @date={{event.occurredAt}}
+                    @weekday='short'
+                    @day='numeric'
+                    @month='short'
+                    @hour='2-digit'
+                    @minute='2-digit'
+                    @placeholder=''
+                  /></span>
                 <span class='what'>{{event.statusDescription}}</span>
                 {{#if event.location}}
                   <span class='where'>{{event.location}}</span>
@@ -275,7 +271,7 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
       .event {
         position: relative;
         display: grid;
-        grid-template-columns: 18px minmax(0, 1fr);
+        grid-template-columns: 1.125rem minmax(0, 1fr);
         gap: var(--boxel-sp-xs);
         padding-bottom: var(--boxel-sp-sm);
       }
@@ -284,55 +280,67 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
       .event::before {
         content: '';
         position: absolute;
-        left: 5px;
-        top: 12px;
+        left: 0.3125rem;
+        top: 0.75rem;
         bottom: 0;
-        width: 2px;
-        background: color-mix(in oklch, var(--foreground) 10%, transparent);
+        width: 0.125rem;
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 10%,
+          transparent
+        );
       }
       .event:last-child::before {
         display: none;
       }
       .marker {
-        margin-top: 4px;
-        width: 8px;
-        height: 8px;
+        margin-top: 0.25rem;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
-        background: color-mix(in oklch, var(--foreground) 25%, transparent);
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 25%,
+          transparent
+        );
       }
       .event.latest .marker {
-        width: 12px;
-        height: 12px;
-        margin-top: 2px;
-        margin-left: -2px;
-        background: color-mix(in oklch, var(--foreground) 60%, transparent);
+        width: 0.75rem;
+        height: 0.75rem;
+        margin-top: 0.125rem;
+        margin-left: -0.125rem;
+        background-color: color-mix(
+          in oklch,
+          var(--foreground) 60%,
+          transparent
+        );
       }
       .body {
         display: grid;
-        gap: 1px;
+        gap: 0.0625rem;
         min-width: 0;
       }
       .when {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 0.72rem;
-        color: var(--muted-foreground, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .what {
         font-size: 0.88rem;
         font-weight: 600;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .event.latest .what {
         font-weight: 800;
       }
       .where {
         font-size: 0.78rem;
-        color: var(--muted-foreground, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .empty {
         margin: 0;
         font-size: 0.85rem;
-        color: var(--muted-foreground, var(--boxel-500));
+        color: var(--muted-foreground);
       }
     </style>
   </template>
@@ -383,17 +391,17 @@ export class ShipmentTracker extends GlimmerComponent<TrackerSignature> {
       }
       .log {
         padding-top: var(--boxel-sp-xs);
-        border-top: 1px solid var(--border, var(--boxel-border-color));
+        border-top: 1px solid var(--border);
       }
       .out {
         justify-self: start;
         font-size: 0.8rem;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
         text-decoration: underline;
-        text-underline-offset: 3px;
+        text-underline-offset: 0.1875rem;
         text-decoration-color: color-mix(
           in oklch,
-          var(--foreground, var(--boxel-dark)) 35%,
+          var(--foreground) 35%,
           transparent
         );
       }

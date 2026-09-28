@@ -56,13 +56,13 @@ export class TrackingNumberField extends FieldDef {
 
       <style scoped>
         .tn-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.9em;
           letter-spacing: 0.02em;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .tn-empty {
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -104,44 +104,44 @@ export class TrackingNumberField extends FieldDef {
         .tn {
           display: flex;
           align-items: center;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
         }
         .tn-main {
           display: flex;
           align-items: baseline;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
         }
         .tn-carrier {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.7rem;
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .tn-link,
         .tn-plain {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85rem;
           letter-spacing: 0.03em;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .tn-link {
           text-decoration: underline;
-          text-underline-offset: 3px;
+          text-underline-offset: 0.1875rem;
           text-decoration-color: color-mix(
             in oklch,
-            var(--foreground, var(--boxel-dark)) 35%,
+            var(--foreground) 35%,
             transparent
           );
         }
         .tn-empty {
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
           font-size: 0.85rem;
         }
       </style>

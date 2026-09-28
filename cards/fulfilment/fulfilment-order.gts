@@ -336,10 +336,6 @@ export class FulfilmentOrder extends CardDef {
              card scrolls, and `size` needs a definite block size. */
           container-type: inline-size;
           container-name: card-iso;
-          --ful-bg: var(--background);
-          --ful-fg: var(--foreground);
-          --ful-muted-fg: var(--muted-foreground);
-          --ful-border: var(--border);
 
           /* ONE panel primitive. Every full-width tinted block on this card —
              section, note, alert, callout — takes its ground, inset and radius
@@ -352,7 +348,7 @@ export class FulfilmentOrder extends CardDef {
              exposed it. */
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
              `.cols .sec { margin-top: 0 }` override for the side-by-side case —
              two mechanisms for one relationship, and `.cols` itself had neither,
@@ -372,20 +368,17 @@ export class FulfilmentOrder extends CardDef {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
-          background: var(--ful-bg, var(--boxel-light));
-          color: var(--ful-fg, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         /* Express orders get a rail down the left edge — the physical
            equivalent of the coloured tape a picker looks for. */
         .flash {
           position: absolute;
           inset: 0 auto 0 0;
-          width: 4px;
+          width: 0.25rem;
           background: repeating-linear-gradient(
             -45deg,
-            var(--ful-perf) 0 6px,
-            transparent 6px 12px
+            var(--ful-perf) 0 0.375rem,
+            transparent 0.375rem 0.75rem
           );
         }
         .hd {
@@ -395,29 +388,31 @@ export class FulfilmentOrder extends CardDef {
           justify-content: space-between;
           align-items: flex-start;
           padding-bottom: var(--boxel-sp);
-          border-bottom: 2px dashed var(--ful-perf);
+          border-bottom: 0.125rem dashed var(--ful-perf);
         }
         .eyebrow {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.18em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .num {
-          margin: 2px 0 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          margin: 0.125rem 0 0;
+          font-family: var(--font-mono);
           font-size: var(--t-xl);
           line-height: 1;
           letter-spacing: -0.01em;
         }
         .cust {
-          margin: 8px 0 0;
+          margin: 0.5rem 0 0;
           font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .to {
-          margin-left: 6px;
+          margin-left: 0.375rem;
         }
         .hd-state {
           display: flex;
@@ -429,42 +424,53 @@ export class FulfilmentOrder extends CardDef {
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          padding: 3px 8px;
-          border-radius: 3px;
-          color: var(--ful-fg, var(--boxel-dark));
+          padding: 0.1875rem 0.5rem;
+          border-radius: 0.1875rem;
+          color: var(--foreground);
           border: 1px dashed var(--ful-perf);
         }
         .track {
-          height: 3px;
+          height: 0.1875rem;
           border-radius: 999px;
-          background: color-mix(in oklch, var(--foreground) 10%, transparent);
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 10%,
+            transparent
+          );
           overflow: hidden;
         }
         .track-fill {
           display: block;
           height: 100%;
-          background: color-mix(in oklch, var(--foreground) 55%, transparent);
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 55%,
+            transparent
+          );
         }
         .stats {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
           gap: var(--boxel-sp);
           margin: 0;
         }
         .stats div {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .stats dt {
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .stats dd {
           margin: 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: var(--t-lg);
           font-weight: 700;
@@ -481,7 +487,7 @@ export class FulfilmentOrder extends CardDef {
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .sec h2 {
           /* The section heading is now the loudest uppercase thing on the card:
@@ -489,24 +495,29 @@ export class FulfilmentOrder extends CardDef {
              alone (500 vs 400) was not a readable difference. */
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.14em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-fg, var(--foreground, var(--boxel-dark)));
+          color: var(--foreground);
         }
         .li-head {
           display: grid;
           grid-template-columns: minmax(0, 1fr) 3rem 5.5rem 6rem;
           gap: var(--boxel-sp-xs);
-          padding-bottom: 4px;
-          border-bottom: 1px solid var(--ful-border, var(--boxel-border-color));
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
+          padding-bottom: 0.25rem;
+          border-bottom: 1px solid var(--border);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .li-head span:nth-child(n + 2) {
           text-align: right;
@@ -516,7 +527,7 @@ export class FulfilmentOrder extends CardDef {
           padding-top: var(--boxel-sp-xs);
           border-top: 1px dashed var(--ful-perf);
           display: grid;
-          gap: 4px;
+          gap: 0.25rem;
           justify-content: end;
         }
         .totals div {
@@ -525,28 +536,28 @@ export class FulfilmentOrder extends CardDef {
           gap: var(--boxel-sp-xs);
           font-size: var(--t-sm);
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
         }
         .totals span {
           text-align: left;
-          font-family: var(--font-sans, inherit);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          font-family: var(--font-sans);
+          color: var(--muted-foreground);
         }
         .grand {
           font-weight: 800;
           font-size: var(--t-body);
-          padding-top: 4px;
-          border-top: 1px solid var(--ful-border, var(--boxel-border-color));
+          padding-top: 0.25rem;
+          border-top: 1px solid var(--border);
         }
         .cols {
           display: grid;
           gap: var(--boxel-sp-lg);
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
         }
         .kv {
           display: grid;
-          gap: 6px;
+          gap: 0.375rem;
           margin: 0;
         }
         .kv div {
@@ -556,7 +567,7 @@ export class FulfilmentOrder extends CardDef {
         }
         .kv dt {
           font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .kv dd {
           margin: 0;
@@ -564,16 +575,16 @@ export class FulfilmentOrder extends CardDef {
         }
         .empty {
           font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
            card scannable by shape; they must never compete with the heading. */
         h2 .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
 
         /* One collapse stop. The card is rendered in a resizable stack panel, so
@@ -627,28 +638,28 @@ export class FulfilmentOrder extends CardDef {
           font-size: 0.88rem;
         }
         .o-num {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-weight: 700;
           letter-spacing: 0.02em;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .o-cust {
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .o-slot {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 0.78rem;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .o-total {
           font-size: 0.9rem;
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         @container (width < 430px) {
           .o-emb {
@@ -668,7 +679,7 @@ export class FulfilmentOrder extends CardDef {
       <span class='o-atom'>{{@model.orderNumber}}</span>
       <style scoped>
         .o-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85em;
           font-weight: 700;
         }
@@ -733,25 +744,28 @@ export class FulfilmentOrder extends CardDef {
              display role individually did not: in a tall cell the cqi term still
              governs, so tiles are unchanged. */
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(11px, calc(var(--type-base) / var(--type-ratio)));
-          --glyph-size: max(11px, min(3cqi, 14cqb));
+          --meta-size: max(
+            0.6875rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
+          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
           /* The identifier is a VALUE, so it must render in full. It is capped
              against the inline axis as well as the block axis so a real order /
              RMA / SKU always fits its box — the ellipsis below is a safety net
              for a pathological identifier, not a truncation strategy. */
           --num-size: max(
-            11px,
+            0.6875rem,
             min(
               calc(var(--type-base) * pow(var(--type-ratio), 2)),
               26cqb,
               7.5cqi
             )
           );
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
           --perf: color-mix(in oklch, var(--card-foreground) 20%, transparent);
 
           position: relative;
@@ -761,12 +775,11 @@ export class FulfilmentOrder extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 3px;
+          gap: 0.1875rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         /* The hatched rail reads as priority tape at every size, which is what
            keeps the card's identity alive down at badge. */
@@ -774,11 +787,11 @@ export class FulfilmentOrder extends CardDef {
           content: '';
           position: absolute;
           inset: 0 auto 0 0;
-          width: 3px;
+          width: 0.1875rem;
           background: repeating-linear-gradient(
             -45deg,
-            var(--perf) 0 4px,
-            transparent 4px 8px
+            var(--perf) 0 0.25rem,
+            transparent 0.25rem 0.5rem
           );
         }
         .r-head,
@@ -792,7 +805,7 @@ export class FulfilmentOrder extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .r-body {
           grid-area: body;
@@ -802,33 +815,33 @@ export class FulfilmentOrder extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 6px;
-          padding-top: 3px;
+          gap: 0.375rem;
+          padding-top: 0.1875rem;
           border-top: 1px dashed var(--perf);
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .hd-row {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         .dot {
           flex: none;
-          width: 7px;
-          height: 7px;
+          width: 0.4375rem;
+          height: 0.4375rem;
           border-radius: 50%;
-          background: color-mix(
+          background-color: color-mix(
             in oklch,
-            var(--st-hue, var(--muted-foreground, var(--boxel-400))) 72%,
+            var(--st-hue, var(--muted-foreground)) 72%,
             transparent
           );
         }
         .num {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--num-size);
           font-weight: 800;
           line-height: 1.2;
@@ -841,10 +854,10 @@ export class FulfilmentOrder extends CardDef {
           font-size: var(--meta-size);
           font-weight: 700;
           white-space: nowrap;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .cust {
-          margin: 2px 0 0;
+          margin: 0.125rem 0 0;
           font-size: var(--type-base);
           font-weight: 600;
           line-height: 1.2;
@@ -854,23 +867,23 @@ export class FulfilmentOrder extends CardDef {
           overflow: hidden;
         }
         .dest {
-          margin: 1px 0 0;
+          margin: 0.0625rem 0 0;
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 1;
           overflow: hidden;
         }
         .lines {
-          margin: 5px 0 0;
+          margin: 0.3125rem 0 0;
           padding: 0;
           list-style: none;
           display: grid;
-          gap: 1px;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          gap: 0.0625rem;
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .lines li {
           white-space: nowrap;
@@ -879,12 +892,12 @@ export class FulfilmentOrder extends CardDef {
         }
         .q {
           font-weight: 700;
-          margin-right: 4px;
-          color: var(--card-foreground, var(--boxel-dark));
+          margin-right: 0.25rem;
+          color: var(--card-foreground);
         }
         .total {
           font-weight: 800;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
         }
 
         /* Badge: number + status dot only. */
@@ -915,7 +928,7 @@ export class FulfilmentOrder extends CardDef {
         /* Full card: everything, including the first three SKUs. */
         @container fitted-card (height > 170px) {
           .lines {
-            gap: 2px;
+            gap: 0.125rem;
           }
         }
         @container fitted-card (width <= 150px) {

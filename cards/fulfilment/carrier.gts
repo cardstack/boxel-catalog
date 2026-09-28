@@ -89,30 +89,30 @@ export class CarrierServiceField extends FieldDef {
           grid-template-columns: minmax(0, 1fr) 6rem 5rem 5.5rem;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xxs) 0;
+          padding: var(--boxel-sp-2xs) 0;
           font-size: 0.85rem;
         }
         .svc-name {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .svc-speed,
         .svc-perkg {
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           font-size: 0.78rem;
         }
         .svc-rate,
         .svc-perkg {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
         }
         .svc-rate {
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -420,9 +420,6 @@ export class Carrier extends CardDef {
       </article>
 
       <style scoped>
-        /* Adapter block: the semantic set forwarded once into this card's
-           vocabulary. Nothing is invented here — every value is a token or a
-           mix of one. */
         .carrier {
           /* Type scale, mapped to the house 1.333 modular scale rather than the
              28 hand-picked rem values these cards used to carry — 44 of which
@@ -438,12 +435,6 @@ export class Carrier extends CardDef {
              card scrolls, and `size` needs a definite block size. */
           container-type: inline-size;
           container-name: card-iso;
-          --ful-bg: var(--background);
-          --ful-fg: var(--foreground);
-          --ful-card-bg: var(--card);
-          --ful-card-fg: var(--card-foreground);
-          --ful-muted-fg: var(--muted-foreground);
-          --ful-border: var(--border);
 
           /* ONE panel primitive. Every full-width tinted block on this card —
              section, note, alert, callout — takes its ground, inset and radius
@@ -454,32 +445,9 @@ export class Carrier extends CardDef {
              every gap between them reads as a mis-registration rather than a
              rhythm. The inset is the thing that must agree; the tint only
              exposed it. */
-          /* State colours through the adapter block, not as literal hex. These
-             were `#b91c1c` / `#b45309` / `#15803d` written straight into `color:`
-             declarations — a text colour no theme can move, and the exact thing
-             boxel-theming C1 forbids. Each is now the semantic state token mixed
-             TOWARD `--foreground`, which is what keeps it legible on a dark ground
-             as well as a light one: --foreground flips, so the mix flips with it.
-             `--warning` is `initial` in some themes, hence a `--boxel-*` fallback
-             on every one. */
-          --ful-danger: color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --ful-warn: color-mix(
-            in oklch,
-            var(--warning, var(--boxel-warning)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --ful-ok: color-mix(
-            in oklch,
-            var(--success, var(--boxel-success)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
              `.cols .sec { margin-top: 0 }` override for the side-by-side case —
              two mechanisms for one relationship, and `.cols` itself had neither,
@@ -495,9 +463,6 @@ export class Carrier extends CardDef {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
-          background: var(--ful-bg, var(--boxel-light));
-          color: var(--ful-fg, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         .hd {
           display: flex;
@@ -506,21 +471,20 @@ export class Carrier extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           padding-bottom: var(--boxel-sp);
-          border-bottom: 2px solid var(--ful-rule);
+          border-bottom: 0.125rem solid var(--ful-rule);
         }
         .code {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--t-micro);
           font-weight: 700;
           letter-spacing: 0.16em;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .name {
           margin: 0.1rem 0 0;
           font-size: var(--t-xl);
           line-height: 1.05;
-          font-family: var(--font-heading, inherit);
-          color: var(--ful-fg, var(--boxel-dark));
+          color: var(--foreground);
         }
         .hd-stats {
           display: flex;
@@ -530,17 +494,20 @@ export class Carrier extends CardDef {
         .hd-stats div {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .hd-stats dt {
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .hd-stats dd {
           margin: 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: var(--t-lg);
           font-weight: 700;
@@ -553,7 +520,7 @@ export class Carrier extends CardDef {
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .sec h2 {
           /* The section heading is now the loudest uppercase thing on the card:
@@ -561,24 +528,29 @@ export class Carrier extends CardDef {
              alone (500 vs 400) was not a readable difference. */
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.14em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-fg, var(--foreground, var(--boxel-dark)));
+          color: var(--foreground);
         }
         .svc-head {
           display: grid;
           grid-template-columns: minmax(0, 1fr) 6rem 5rem 5.5rem;
           gap: var(--boxel-sp-xs);
-          padding-bottom: 4px;
-          border-bottom: 1px solid var(--ful-border, var(--boxel-border-color));
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
+          padding-bottom: 0.25rem;
+          border-bottom: 1px solid var(--border);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .svc-head span:nth-child(n + 3) {
           text-align: right;
@@ -595,21 +567,21 @@ export class Carrier extends CardDef {
         }
         .kv dt {
           font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .kv dd {
           margin: 0;
           font-size: var(--t-sm);
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         .wrap {
           overflow-wrap: anywhere;
         }
         .empty {
           font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
           margin: var(--boxel-sp-xs) 0 0;
         }
         @media (width <= 500px) {
@@ -621,10 +593,10 @@ export class Carrier extends CardDef {
         /* Section icons: one size, one muted colour, everywhere. They make the
            card scannable by shape; they must never compete with the heading. */
         h2 .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
 
         /* One collapse stop. The card is rendered in a resizable stack panel, so
@@ -638,7 +610,7 @@ export class Carrier extends CardDef {
         }
 
         .hd-stats .alarm dd {
-          color: var(--ful-danger);
+          color: var(--destructive-ink);
         }
         .cs-rows {
           margin: 0;
@@ -650,17 +622,17 @@ export class Carrier extends CardDef {
           grid-template-columns: 9rem 9rem minmax(0, 1fr) 7rem;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          padding: 6px 0;
-          border-top: 1px solid var(--ful-rule, var(--boxel-border-color));
+          padding: 0.375rem 0;
+          border-top: 1px solid var(--ful-rule);
           font-size: var(--t-sm);
         }
         .cs-num {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-weight: 700;
         }
         .cs-svc,
         .cs-dest {
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -674,7 +646,7 @@ export class Carrier extends CardDef {
         }
         .cs-late .cs-state,
         .cs-late .cs-num {
-          color: var(--ful-danger);
+          color: var(--destructive-ink);
         }
 
         .cs-row-li {
@@ -686,7 +658,7 @@ export class Carrier extends CardDef {
         button.cs-row {
           width: 100%;
           border: 0;
-          border-top: 1px solid var(--ful-rule, var(--boxel-border-color));
+          border-top: 1px solid var(--ful-rule);
           background: none;
           font: inherit;
           color: inherit;
@@ -695,11 +667,15 @@ export class Carrier extends CardDef {
           transition: background-color 160ms ease-out;
         }
         button.cs-row:hover {
-          background: color-mix(in oklch, var(--foreground) 5%, transparent);
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 5%,
+            transparent
+          );
         }
         button.cs-row:focus-visible {
-          outline: 2px solid var(--ring, var(--boxel-highlight));
-          outline-offset: -2px;
+          outline: 0.125rem solid var(--ring);
+          outline-offset: -0.125rem;
         }
         @media (prefers-reduced-motion: reduce) {
           button.cs-row {
@@ -713,12 +689,16 @@ export class Carrier extends CardDef {
           padding: 0;
           list-style: none;
           display: grid;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .sk-line {
-          height: 14px;
-          border-radius: 3px;
-          background: color-mix(in oklch, var(--foreground) 7%, transparent);
+          height: 0.875rem;
+          border-radius: 0.1875rem;
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 7%,
+            transparent
+          );
         }
         @media (prefers-reduced-motion: no-preference) {
           .sk-line {
@@ -734,7 +714,7 @@ export class Carrier extends CardDef {
           margin: 0;
           padding: var(--boxel-sp-xs) 0;
           font-size: var(--t-sm);
-          color: var(--ful-danger);
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -759,15 +739,15 @@ export class Carrier extends CardDef {
           font-size: 0.9rem;
         }
         .c-code {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.7rem;
           font-weight: 700;
           letter-spacing: 0.1em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .c-name {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -776,7 +756,7 @@ export class Carrier extends CardDef {
           text-align: right;
           font-size: 0.78rem;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -839,17 +819,20 @@ export class Carrier extends CardDef {
              display role individually did not: in a tall cell the cqi term still
              governs, so tiles are unchanged. */
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(11px, calc(var(--type-base) / var(--type-ratio)));
-          --glyph-size: max(11px, min(3cqi, 14cqb));
+          --meta-size: max(
+            0.6875rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
+          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
           --headline-size: max(
-            11px,
+            0.6875rem,
             min(calc(var(--type-base) * pow(var(--type-ratio), 2)), 26cqb)
           );
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
 
           width: 100%;
           height: 100%;
@@ -857,12 +840,11 @@ export class Carrier extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         /* The card's own icon, the same one its isolated view uses — the
            fitted's visual anchor. It sits on the quiet eyebrow row so it can
@@ -871,14 +853,14 @@ export class Carrier extends CardDef {
         .eyebrow {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 0.25rem;
           min-width: 0;
         }
         .glyph {
           flex: none;
           width: var(--glyph-size);
           height: var(--glyph-size);
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
         .r-head {
           grid-area: head;
@@ -895,19 +877,19 @@ export class Carrier extends CardDef {
           overflow: hidden;
           min-height: 0;
           display: flex;
-          gap: 8px;
+          gap: 0.5rem;
           justify-content: space-between;
           align-items: baseline;
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .code {
           display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
           font-weight: 700;
           letter-spacing: 0.14em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .headline {
           margin: 0;
@@ -920,16 +902,16 @@ export class Carrier extends CardDef {
           overflow: hidden;
         }
         .cheapest {
-          margin: 4px 0 0;
+          margin: 0.25rem 0 0;
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
           overflow: hidden;
         }
         .cheapest strong {
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
         }
         .ontime {
           font-variant-numeric: tabular-nums;

@@ -109,21 +109,17 @@ export class DeliveryWindowField extends FieldDef {
         .dw-atom {
           font-size: 0.85em;
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           white-space: nowrap;
         }
         .dw-empty {
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
         /* Overdue is the one state worth colouring: it is the only one that
            needs someone to do something. */
         .dw-overdue {
-          color: color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 62%,
-            var(--foreground, var(--boxel-dark))
-          );
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -154,40 +150,36 @@ export class DeliveryWindowField extends FieldDef {
           display: flex;
           align-items: baseline;
           flex-wrap: wrap;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
         }
         .dw-label {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .dw-rel {
           font-size: 0.8rem;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .dw-overdue {
           font-weight: 700;
-          color: color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 62%,
-            var(--foreground, var(--boxel-dark))
-          );
+          color: var(--destructive-ink);
         }
         .dw-commit {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.7rem;
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          padding: 1px 6px;
-          border-radius: 3px;
-          color: var(--muted-foreground, var(--boxel-500));
-          background: color-mix(
+          padding: 0.0625rem 0.375rem;
+          border-radius: 0.1875rem;
+          color: var(--muted-foreground);
+          background-color: color-mix(
             in oklch,
-            var(--muted-foreground, var(--boxel-500)) 12%,
+            var(--muted-foreground) 12%,
             transparent
           );
         }
         .dw-empty {
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
           font-size: 0.85rem;
         }
       </style>
@@ -212,7 +204,7 @@ export class DeliveryWindowField extends FieldDef {
         .dw-edit {
           display: grid;
           gap: var(--boxel-sp-xs);
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
         }
       </style>
     </template>
