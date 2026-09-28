@@ -123,8 +123,10 @@ jobs:
     uses: cardstack/boxel/.github/workflows/catalog-test-subset-consumers.yml@cs-13189-expose-boxels-subset-consumer-test-run-as-a-reusable
     permissions:
       contents: read
-      # Lets boxel's warm-test-images step try its GHCR mirror of the test
-      # images; when this token can't read it, the stack pulls from Docker Hub.
+      # boxel's workflow requests this for its own runs, which pull its test
+      # images from a GHCR mirror, and a called workflow can't hold a
+      # permission its caller withholds. Runs called from here skip the mirror
+      # and pull from Docker Hub.
       packages: read
     with:
       boxel_ref: ${{ needs.scope.outputs.boxel_ref }}
