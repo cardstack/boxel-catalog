@@ -7,23 +7,32 @@ export interface StateColor {
   ring: string;
 }
 
-// A status hue has no semantic theme token (the shadcn set ships only
-// --destructive), so hues come from boxel's design tokens. Boxel ships no
-// orange and no plain blue; those two are mixed from tokens it does ship so a
-// single token definition can still correct every hue globally.
+// The three status hues read the theme's status tokens, so a linked theme
+// restyles them. The category hues have no contract token and come from
+// boxel's fixed palette; orange, blue and pink are mixed from tokens that do
+// exist so one token definition still corrects every hue.
 const HUE = {
-  green: 'var(--boxel-success)',
-  red: 'var(--boxel-danger)',
-  amber: 'var(--boxel-warning)',
-  orange: 'color-mix(in oklch, var(--boxel-warning) 62%, var(--boxel-danger))',
+  green: 'var(--success)',
+  red: 'var(--destructive)',
+  amber: 'var(--warning)',
+  orange: 'color-mix(in oklch, var(--warning) 62%, var(--destructive))',
   teal: 'var(--boxel-dark-teal)',
   purple: 'var(--boxel-purple)',
   blue: 'color-mix(in oklch, var(--boxel-purple) 55%, var(--boxel-highlight))',
-  pink: 'color-mix(in oklch, var(--boxel-danger) 60%, var(--boxel-purple))',
-  slate: 'var(--muted-foreground, var(--boxel-450))',
+  pink: 'color-mix(in oklch, var(--destructive) 60%, var(--boxel-purple))',
+  slate: 'var(--muted-foreground)',
 } as const;
 
 export type Hue = keyof typeof HUE;
+
+// Text for the solid (emphatic) fill. A hue that is a theme status fill takes
+// that fill's own paired foreground, which the theme guarantees reads on it.
+// The category hues have no pair and keep the inverse of the page.
+const EMPHATIC_FOREGROUND: Partial<Record<Hue, string>> = {
+  green: 'var(--success-foreground)',
+  red: 'var(--destructive-foreground)',
+  amber: 'var(--warning-foreground)',
+};
 
 // One hue in, a checked pair out. Fill and text derive from the same hue and
 // the card's own --card/--card-foreground pair, so a linked theme moves both
@@ -33,14 +42,14 @@ export type Hue = keyof typeof HUE;
 // that still clears 4.5:1 for the palest of them. Raising the hue share LOWERS
 // contrast, because the card foreground in the mix supplies the darkness.
 //
-// `in oklab`, not `in oklch`: oklch interpolates the hue angle, and Chrome
-// resolves an achromatic endpoint's hue as 0 (red), so on a white card
-// `green 14% + white 86%` renders pink. oklab has no hue coordinate to rotate.
+// `in oklab`, not `in oklch`: oklch interpolates the hue angle, so on a
+// tinted card a 14% tint keeps mostly the card's hue (purple over cream turns
+// orange). oklab mixes in a straight line and the tint keeps its own hue.
 export function stateColor(hue: Hue): StateColor {
   let h = HUE[hue];
   return {
-    bg: `color-mix(in oklab, ${h} 14%, var(--card, var(--boxel-light)))`,
-    fg: `color-mix(in oklab, ${h} 38%, var(--card-foreground, var(--boxel-dark)))`,
+    bg: `color-mix(in oklab, ${h} 14%, var(--card))`,
+    fg: `color-mix(in oklab, ${h} 38%, var(--card-foreground))`,
     ring: h,
   };
 }
@@ -87,14 +96,15 @@ export class StatePill extends GlimmerComponent<Signature> {
     if (this.args.chrome) {
       return {
         background: 'transparent',
-        font: 'var(--muted-foreground, var(--boxel-450))',
+        font: 'var(--muted-foreground)',
         border: 'transparent',
       };
     }
     if (this.args.emphatic) {
       return {
         background: ring,
-        font: 'var(--background, var(--boxel-light))',
+        font:
+          EMPHATIC_FOREGROUND[this.args.hue ?? 'slate'] ?? 'var(--background)',
         border: ring,
       };
     }
@@ -122,24 +132,25 @@ export class StatePill extends GlimmerComponent<Signature> {
       .state-pill {
         --boxel-pill-gap: 0.25rem;
         --boxel-pill-padding: 0.1em 0.45em;
-        --boxel-pill-border-radius: 3px;
-        --boxel-pill-font: 600 var(--boxel-font-size-xs) / 1.45
-          var(--font-sans, var(--boxel-font-family));
-        --boxel-lsp-xs: 0;
+        --boxel-pill-border-radius: var(--boxel-border-radius-xs);
+        --boxel-pill-font: 600 var(--boxel-ui-label-font-size) /
+          var(--boxel-ui-label-line-height) var(--boxel-ui-label-font-family);
+        --boxel-lsp-xs: var(--boxel-ui-label-letter-spacing);
         max-width: 100%;
         white-space: nowrap;
       }
       .state-chrome {
         --boxel-pill-padding: 0.1em 0;
-        --boxel-pill-font: 500 var(--boxel-font-size-xs) / 1.45
-          var(--font-sans, var(--boxel-font-family));
+        --boxel-pill-font: var(--boxel-ui-label-font-weight)
+          var(--boxel-ui-label-font-size) / var(--boxel-ui-label-line-height)
+          var(--boxel-ui-label-font-family);
       }
       .state-dot {
-        width: 5px;
-        height: 5px;
+        width: 0.3125rem;
+        height: 0.3125rem;
         flex: none;
         border-radius: 50%;
-        background: currentColor;
+        background-color: currentColor;
       }
       .state-label {
         overflow: hidden;

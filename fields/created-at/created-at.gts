@@ -1,6 +1,10 @@
 import { Component } from 'https://cardstack.com/base/card-api';
 import DateTimeField from 'https://cardstack.com/base/datetime';
 import CalendarPlusIcon from '@cardstack/boxel-icons/calendar-plus';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { RelativeTime } from '@cardstack/pretui/components/relative-time';
+
+import { validDate } from '../../utils/valid-date';
 
 const UNITS: [limitSeconds: number, divisorSeconds: number, suffix: string][] =
   [
@@ -13,19 +17,25 @@ const UNITS: [limitSeconds: number, divisorSeconds: number, suffix: string][] =
     [Infinity, 31557600, 'y'],
   ];
 
+/** Within a minute either way reads "just now": clock skew, not an anomaly. */
+function isJustNow(value: Date): boolean {
+  return Math.abs(Date.now() - value.getTime()) < 60000;
+}
+
 /** "3d ago" / "in 2h" / "just now". Anything within a minute either way reads "just now" (clock skew, not an anomaly); beyond that a future stamp renders as "in …" so it stays visible rather than clamped. */
 export function relativeStamp(
   value: Date | null | undefined,
 ): string | undefined {
-  if (!value || Number.isNaN(value.getTime())) {
+  let date = validDate(value);
+  if (!date) {
     return undefined;
   }
-  let diffSeconds = (Date.now() - value.getTime()) / 1000;
-  let past = diffSeconds >= 0;
-  let magnitude = Math.abs(diffSeconds);
-  if (magnitude < 60) {
+  if (isJustNow(date)) {
     return 'just now';
   }
+  let diffSeconds = (Date.now() - date.getTime()) / 1000;
+  let past = diffSeconds >= 0;
+  let magnitude = Math.abs(diffSeconds);
   for (let [limit, divisor, suffix] of UNITS) {
     if (magnitude < limit) {
       let n = Math.floor(magnitude / divisor);
@@ -39,7 +49,8 @@ export function relativeStamp(
 export function absoluteStamp(
   value: Date | null | undefined,
 ): string | undefined {
-  if (!value || Number.isNaN(value.getTime())) {
+  let date = validDate(value);
+  if (!date) {
     return undefined;
   }
   return new Intl.DateTimeFormat(undefined, {
@@ -49,7 +60,7 @@ export function absoluteStamp(
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-  }).format(value);
+  }).format(date);
 }
 
 /**
@@ -64,56 +75,79 @@ export class CreatedAtField extends DateTimeField {
   static icon = CalendarPlusIcon;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get absolute() {
-      return absoluteStamp(this.args.model);
+    get stamp() {
+      return validDate(this.args.model);
     }
-    get relative() {
-      return relativeStamp(this.args.model);
+    get justNow() {
+      return this.stamp ? isJustNow(this.stamp) : false;
     }
     <template>
-      {{#if this.absolute}}
-        <span class='stamp'>{{this.absolute}}
-          <span class='relative'>({{this.relative}})</span></span>
+      {{#if this.stamp}}
+        <span class='stamp'>
+          <FormatDate
+            @date={{this.stamp}}
+            @day='numeric'
+            @month='short'
+            @year='numeric'
+            @hour='2-digit'
+            @minute='2-digit'
+            @hour12={{false}}
+          />
+          <span class='relative'>({{#if this.justNow}}just now{{else}}<RelativeTime
+                @date={{this.stamp}}
+                @format='narrow'
+                @numeric='always'
+              />{{/if}})</span>
+        </span>
       {{else}}
         <span class='unset' aria-label='No creation time'>—</span>
       {{/if}}
       <style scoped>
         .stamp {
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
         }
         .relative,
         .unset {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get stamp() {
+      return validDate(this.args.model);
+    }
+    get justNow() {
+      return this.stamp ? isJustNow(this.stamp) : false;
+    }
     get absolute() {
       return absoluteStamp(this.args.model);
     }
-    get relative() {
-      return relativeStamp(this.args.model);
-    }
     <template>
-      {{#if this.relative}}
-        <span
-          class='stamp-atom'
-          title={{this.absolute}}
-        >{{this.relative}}</span>
+      {{#if this.stamp}}
+        {{#if this.justNow}}
+          <span class='stamp-atom' title={{this.absolute}}>just now</span>
+        {{else}}
+          <RelativeTime
+            class='stamp-atom'
+            title={{this.absolute}}
+            @date={{this.stamp}}
+            @format='narrow'
+            @numeric='always'
+          />
+        {{/if}}
       {{else}}
         <span class='unset' aria-label='No creation time'>—</span>
       {{/if}}
       <style scoped>
         .stamp-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .unset {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
