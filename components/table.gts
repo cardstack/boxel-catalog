@@ -349,8 +349,6 @@ export class Table extends GlimmerComponent<TableSignature> {
       </nav>
     {{/if}}
     <style scoped>
-      /* Every fallback is a --boxel-* token, never a literal hex: the semantic
-         token flips in dark mode and a hex fallback cannot. */
       .table-scroll {
         overflow-x: auto;
         width: 100%;
@@ -359,20 +357,29 @@ export class Table extends GlimmerComponent<TableSignature> {
         container-type: inline-size;
         container-name: tbl;
       }
+      /* The caption and the column headers speak in the eyebrow voice: small,
+         uppercase, tracked out. Taking the whole role group keeps size,
+         leading and tracking in step when a theme retunes it. */
+      .tbl-caption,
+      .sort-btn,
+      .plain-head {
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
       .tbl-caption {
         padding: 0 0.5rem 0.4rem;
         text-align: left;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-500));
       }
       .row-btn {
         display: block;
         width: 100%;
         border: 0;
-        background: none;
+        background-color: transparent;
         padding: 0;
         margin: 0;
         font: inherit;
@@ -397,11 +404,12 @@ export class Table extends GlimmerComponent<TableSignature> {
         outline: none;
       }
       .row-btn:focus-visible::after {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: -2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
       }
       /* Columns hidden below their own breakpoint. The matching <td> carries
-         the same class as the <th>, or the row shifts. */
+         the same class as the <th>, or the row shifts. The breakpoints stay in
+         px because they are the `showAbove` values themselves. */
       @container tbl (width < 480px) {
         .above-480 {
           display: none;
@@ -429,10 +437,11 @@ export class Table extends GlimmerComponent<TableSignature> {
       }
       th {
         padding: 0;
-        border-bottom: 1px solid var(--border, var(--boxel-border-color));
+        border-bottom: 1px solid var(--border);
         position: sticky;
         top: 0;
-        background: var(--card, var(--boxel-light));
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .sort-btn {
         display: inline-flex;
@@ -440,24 +449,18 @@ export class Table extends GlimmerComponent<TableSignature> {
         gap: 0.25rem;
         width: 100%;
         /* 44px hit floor: a column header is a real control. */
-        min-height: 44px;
+        min-height: 2.75rem;
         padding: 0.5rem;
         border: 0;
-        background: none;
+        background-color: transparent;
         cursor: pointer;
-        font: inherit;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-500));
       }
       .sort-btn:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: -2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
       }
       .sort-btn:hover {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .align-right .sort-btn {
         justify-content: flex-end;
@@ -468,15 +471,10 @@ export class Table extends GlimmerComponent<TableSignature> {
       .plain-head {
         display: inline-block;
         padding: 0.5rem;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-500));
       }
       td {
         padding: 0.625rem 0.5rem;
-        border-bottom: 1px solid var(--border, var(--boxel-border-color));
+        border-bottom: 1px solid var(--border);
         vertical-align: baseline;
       }
       .align-right {
@@ -489,28 +487,30 @@ export class Table extends GlimmerComponent<TableSignature> {
       }
       /* Severity stripe at the row edge, applied via `@rowClass`: state read
          before any text, so a scanner finds the overdue rows without parsing a
-         pill mid-line. */
+         pill mid-line. The stripe is an indicator, so it takes the status
+         fill; `sev-cool` has no status token and stays on the fixed palette. */
       tr.sev-over td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-danger);
+        box-shadow: inset 0.1875rem 0 0 var(--destructive);
       }
       tr.sev-note td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-warning);
+        box-shadow: inset 0.1875rem 0 0 var(--warning);
       }
       tr.sev-ok td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-success);
+        box-shadow: inset 0.1875rem 0 0 var(--success);
       }
       tr.sev-cool td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-dark-teal);
+        box-shadow: inset 0.1875rem 0 0 var(--boxel-dark-teal);
       }
       tr.clickable {
         cursor: pointer;
       }
       tr.clickable:hover td {
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .empty {
         text-align: center;
-        color: var(--muted-foreground, var(--boxel-500));
+        color: var(--muted-foreground);
         padding: 1.5rem;
       }
       .pager {
@@ -521,7 +521,7 @@ export class Table extends GlimmerComponent<TableSignature> {
         flex-wrap: wrap;
         padding: 0.5rem 0.5rem 0;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .pager-range {
         font-variant-numeric: tabular-nums;
@@ -537,23 +537,24 @@ export class Table extends GlimmerComponent<TableSignature> {
       /* Under the 44px touch minimum on purpose: the target grows only where a
          coarse pointer is in use. */
       .pager-btn {
-        min-width: 28px;
-        min-height: 28px;
+        min-width: 1.75rem;
+        min-height: 1.75rem;
         padding: 0 0.4rem;
-        border: 1px solid var(--border, var(--boxel-border-color));
-        border-radius: var(--radius, 6px);
-        background: var(--card, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background-color: var(--card);
+        color: var(--card-foreground);
         font: inherit;
         line-height: 1;
         cursor: pointer;
       }
       .pager-btn:hover:not(:disabled) {
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .pager-btn:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: 1px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: 0.0625rem;
       }
       .pager-btn:disabled {
         opacity: 0.4;
@@ -561,8 +562,8 @@ export class Table extends GlimmerComponent<TableSignature> {
       }
       @media (pointer: coarse) {
         .pager-btn {
-          min-width: 44px;
-          min-height: 44px;
+          min-width: 2.75rem;
+          min-height: 2.75rem;
         }
       }
     </style>
