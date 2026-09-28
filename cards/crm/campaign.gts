@@ -76,12 +76,12 @@ export class Campaign extends CardDef {
           min-width: 0;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .ca-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .ca-name {
@@ -128,9 +128,9 @@ export class Campaign extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .info {
@@ -147,7 +147,7 @@ export class Campaign extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           text-transform: capitalize;
         }
         .figure {
@@ -164,21 +164,35 @@ export class Campaign extends CardDef {
           letter-spacing: 0.04em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
+        /* A status pill is the status hue's ink on a 12% tint of that ink, so
+           a theme that moves the hue moves both halves together. */
         .status-running {
-          background: var(--state-positive-bg, #dcfce7);
-          color: var(--state-positive-fg, #166534);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .status-planned {
-          background: var(--state-partial-bg, #fef3c7);
-          color: var(--state-partial-fg, #92400e);
+          background-color: color-mix(
+            in oklab,
+            var(--attention-ink) 12%,
+            var(--background)
+          );
+          color: var(--attention-ink);
         }
         .status-canceled {
-          background: var(--state-overdue-bg, #fee2e2);
-          color: var(--state-overdue-fg, #991b1b);
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--background)
+          );
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -238,7 +252,7 @@ export class Campaign extends CardDef {
           flex-direction: column;
           gap: 0.125rem;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .top {
           display: flex;
@@ -246,9 +260,9 @@ export class Campaign extends CardDef {
           gap: 0.375rem;
         }
         .icon {
-          width: 16px;
-          height: 16px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1rem;
+          height: 1rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .status {
@@ -259,21 +273,33 @@ export class Campaign extends CardDef {
           letter-spacing: 0.06em;
           padding: 0.0625rem 0.375rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .status-running {
-          background: var(--state-positive-bg, #dcfce7);
-          color: var(--state-positive-fg, #166534);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .status-planned {
-          background: var(--state-partial-bg, #fef3c7);
-          color: var(--state-partial-fg, #92400e);
+          background-color: color-mix(
+            in oklab,
+            var(--attention-ink) 12%,
+            var(--background)
+          );
+          color: var(--attention-ink);
         }
         .status-canceled {
-          background: var(--state-overdue-bg, #fee2e2);
-          color: var(--state-overdue-fg, #991b1b);
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--background)
+          );
+          color: var(--destructive-ink);
         }
         .name {
           font-weight: 600;
@@ -288,14 +314,14 @@ export class Campaign extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           text-transform: capitalize;
         }
         .over {
-          color: var(--state-overdue-fg, #991b1b);
+          color: var(--destructive-ink);
           font-weight: 600;
         }
         .line-type,
@@ -397,44 +423,46 @@ export class Campaign extends CardDef {
           display: flex;
           flex-direction: column;
           gap: 1.25rem;
-          color: var(--foreground, #111111);
         }
         .ch {
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
-          font-family: var(--font-heading, inherit);
         }
         .status-line {
           margin: 0.25rem 0 0;
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           text-transform: capitalize;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
-          border-radius: 8px;
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
           padding: 1rem 1.125rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .spend-row {
           display: flex;
@@ -445,33 +473,32 @@ export class Campaign extends CardDef {
           font-size: 1.5rem;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          font-family: var(--font-heading, inherit);
         }
         .of {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .bar {
           margin-top: 0.625rem;
-          height: 8px;
+          height: 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
+          background-color: var(--muted);
           overflow: hidden;
         }
         .bar-fill {
           height: 100%;
-          background: var(--primary, #111111);
+          background-color: var(--primary);
         }
         .bar-over {
-          background: var(--state-overdue-fg, #991b1b);
+          background-color: var(--destructive);
         }
         .bar-note {
           margin: 0.375rem 0 0;
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .over {
-          color: var(--state-overdue-fg, #991b1b);
+          color: var(--destructive-ink);
           font-weight: 600;
         }
         dl {
@@ -482,7 +509,7 @@ export class Campaign extends CardDef {
           font-size: 0.875rem;
         }
         dt {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;
@@ -491,7 +518,7 @@ export class Campaign extends CardDef {
           margin: 0.875rem 0 0;
           font-size: 0.75rem;
           line-height: 1.5;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

@@ -78,12 +78,12 @@ export class Lead extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .la-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .la-name {
@@ -130,9 +130,9 @@ export class Lead extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .info {
@@ -150,7 +150,7 @@ export class Lead extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .score-block {
           display: flex;
@@ -161,7 +161,7 @@ export class Lead extends CardDef {
           flex-shrink: 0;
         }
         .score-none {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .status-col {
           display: flex;
@@ -180,7 +180,7 @@ export class Lead extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .status {
           font-size: 0.625rem;
@@ -189,25 +189,41 @@ export class Lead extends CardDef {
           letter-spacing: 0.04em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .status-new {
-          background: var(--lead-new-bg, #dbeafe);
-          color: var(--lead-new-fg, #1e40af);
+          background-color: color-mix(
+            in oklab,
+            var(--info-ink) 12%,
+            var(--background)
+          );
+          color: var(--info-ink);
         }
         .status-qualified {
-          background: var(--lead-qualified-bg, #dcfce7);
-          color: var(--lead-qualified-fg, #166534);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .status-converted {
-          background: var(--lead-converted-bg, #dcfce7);
-          color: var(--lead-converted-fg, #166534);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .status-disqualified {
-          background: var(--lead-disqualified-bg, #fee2e2);
-          color: var(--lead-disqualified-fg, #991b1b);
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--background)
+          );
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -249,7 +265,7 @@ export class Lead extends CardDef {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .top {
           display: flex;
@@ -258,9 +274,9 @@ export class Lead extends CardDef {
           gap: 0.5rem;
         }
         .icon {
-          width: 18px;
-          height: 18px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.125rem;
+          height: 1.125rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -272,7 +288,7 @@ export class Lead extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -284,25 +300,41 @@ export class Lead extends CardDef {
           letter-spacing: 0.04em;
           padding: 0.125rem 0.4375rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .status-new {
-          background: var(--lead-new-bg, #dbeafe);
-          color: var(--lead-new-fg, #1e40af);
+          background-color: color-mix(
+            in oklab,
+            var(--info-ink) 12%,
+            var(--background)
+          );
+          color: var(--info-ink);
         }
         .status-qualified {
-          background: var(--lead-qualified-bg, #dcfce7);
-          color: var(--lead-qualified-fg, #166534);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .status-converted {
-          background: var(--lead-converted-bg, #dcfce7);
-          color: var(--lead-converted-fg, #166534);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .status-disqualified {
-          background: var(--lead-disqualified-bg, #fee2e2);
-          color: var(--lead-disqualified-fg, #991b1b);
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--background)
+          );
+          color: var(--destructive-ink);
         }
         .line-company,
         .line-score,
@@ -392,27 +424,27 @@ export class Lead extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .company {
           margin: 0.25rem 0 0;
           font-size: 0.875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .status {
           font-size: 0.6875rem;
@@ -421,32 +453,49 @@ export class Lead extends CardDef {
           letter-spacing: 0.04em;
           padding: 0.1875rem 0.625rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           margin-bottom: 0.25rem;
           white-space: nowrap;
         }
         .status-new {
-          background: var(--lead-new-bg, #dbeafe);
-          color: var(--lead-new-fg, #1e40af);
+          background-color: color-mix(
+            in oklab,
+            var(--info-ink) 12%,
+            var(--background)
+          );
+          color: var(--info-ink);
         }
         .status-qualified {
-          background: var(--lead-qualified-bg, #dcfce7);
-          color: var(--lead-qualified-fg, #166534);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .status-converted {
-          background: var(--lead-converted-bg, #dcfce7);
-          color: var(--lead-converted-fg, #166534);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .status-disqualified {
-          background: var(--lead-disqualified-bg, #fee2e2);
-          color: var(--lead-disqualified-fg, #991b1b);
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--background)
+          );
+          color: var(--destructive-ink);
         }
         .score-panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
           display: grid;
           grid-template-columns: auto 1fr;
           align-items: baseline;
@@ -459,28 +508,33 @@ export class Lead extends CardDef {
           line-height: 1;
         }
         .score-label {
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .score-bar {
           grid-column: 1 / -1;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dl {
           margin: 0;
@@ -491,7 +545,7 @@ export class Lead extends CardDef {
           align-items: center;
         }
         dt {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;

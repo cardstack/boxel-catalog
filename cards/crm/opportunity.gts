@@ -82,12 +82,12 @@ export class Opportunity extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .oa-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .oa-name {
@@ -127,44 +127,6 @@ export class Opportunity extends CardDef {
       </div>
       <style scoped>
         .opp-row {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered (boxel-theming C2).
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --stage-closed-lost-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.19 27) 65%,
-            var(--foreground)
-          );
-          --stage-closed-lost-bg: color-mix(
-            in oklch,
-            var(--stage-closed-lost-fg) 12%,
-            var(--background)
-          );
-          --stage-closed-won-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.13 152) 65%,
-            var(--foreground)
-          );
-          --stage-closed-won-bg: color-mix(
-            in oklch,
-            var(--stage-closed-won-fg) 12%,
-            var(--background)
-          );
-          --stage-late-fg: color-mix(
-            in oklch,
-            oklch(0.6 0.14 60) 65%,
-            var(--foreground)
-          );
-          --stage-late-bg: color-mix(
-            in oklch,
-            var(--stage-late-fg) 12%,
-            var(--background)
-          );
           display: flex;
           align-items: center;
           gap: 0.75rem;
@@ -172,9 +134,9 @@ export class Opportunity extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .info {
@@ -192,7 +154,7 @@ export class Opportunity extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .value {
           font-weight: 700;
@@ -205,22 +167,34 @@ export class Opportunity extends CardDef {
           letter-spacing: 0.04em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .stage-closed-won {
-          background: var(--stage-closed-won-bg);
-          color: var(--stage-closed-won-fg);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .stage-closed-lost {
-          background: var(--stage-closed-lost-bg);
-          color: var(--stage-closed-lost-fg);
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--background)
+          );
+          color: var(--destructive-ink);
         }
         .stage-proposal,
         .stage-negotiation {
-          background: var(--stage-late-bg);
-          color: var(--stage-late-fg);
+          background-color: color-mix(
+            in oklab,
+            var(--attention-ink) 12%,
+            var(--background)
+          );
+          color: var(--attention-ink);
         }
       </style>
     </template>
@@ -286,54 +260,6 @@ export class Opportunity extends CardDef {
       </div>
       <style scoped>
         .fitted {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered (boxel-theming C2).
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --stage-closed-lost-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.19 27) 65%,
-            var(--foreground)
-          );
-          --stage-closed-lost-bg: color-mix(
-            in oklch,
-            var(--stage-closed-lost-fg) 12%,
-            var(--background)
-          );
-          --stage-closed-won-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.13 152) 65%,
-            var(--foreground)
-          );
-          --stage-closed-won-bg: color-mix(
-            in oklch,
-            var(--stage-closed-won-fg) 12%,
-            var(--background)
-          );
-          --stage-late-fg: color-mix(
-            in oklch,
-            oklch(0.6 0.14 60) 65%,
-            var(--foreground)
-          );
-          --stage-late-bg: color-mix(
-            in oklch,
-            var(--stage-late-fg) 12%,
-            var(--background)
-          );
-          --state-overdue-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.19 27) 65%,
-            var(--foreground)
-          );
-          --state-overdue-bg: color-mix(
-            in oklch,
-            var(--state-overdue-fg) 12%,
-            var(--background)
-          );
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -343,7 +269,7 @@ export class Opportunity extends CardDef {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .top {
           display: flex;
@@ -352,9 +278,9 @@ export class Opportunity extends CardDef {
           gap: 0.5rem;
         }
         .icon {
-          width: 18px;
-          height: 18px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.125rem;
+          height: 1.125rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -374,7 +300,7 @@ export class Opportunity extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -387,24 +313,36 @@ export class Opportunity extends CardDef {
           letter-spacing: 0.04em;
           padding: 0.125rem 0.4375rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .stage-closed-won {
-          background: var(--stage-closed-won-bg);
-          color: var(--stage-closed-won-fg);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
         }
         .stage-closed-lost {
-          background: var(--stage-closed-lost-bg);
-          color: var(--stage-closed-lost-fg);
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--background)
+          );
+          color: var(--destructive-ink);
         }
         .stage-proposal,
         .stage-negotiation {
-          background: var(--stage-late-bg);
-          color: var(--stage-late-fg);
+          background-color: color-mix(
+            in oklab,
+            var(--attention-ink) 12%,
+            var(--background)
+          );
+          color: var(--attention-ink);
         }
         .line-account,
         .line-prob,
@@ -419,15 +357,19 @@ export class Opportunity extends CardDef {
           letter-spacing: 0.06em;
           padding: 0.0625rem 0.375rem;
           border-radius: 999px;
-          background: var(--state-overdue-bg);
-          color: var(--state-overdue-fg);
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--background)
+          );
+          color: var(--destructive-ink);
           white-space: nowrap;
           flex-shrink: 0;
         }
         /* A stalled deal reads as needing attention at every size, including
            the badge tier where the age line itself is hidden. */
         .fitted.stuck {
-          box-shadow: inset 3px 0 0 var(--state-overdue-fg);
+          box-shadow: inset 0.1875rem 0 0 var(--destructive);
         }
         /* Short cells (strips, badges, the edit-form link pill): a column
            cannot fit, and flex would shear the one shrinkable row mid-glyph
@@ -575,24 +517,6 @@ export class Opportunity extends CardDef {
       </article>
       <style scoped>
         .opp-page {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered (boxel-theming C2).
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --stage-closed-lost-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.19 27) 65%,
-            var(--foreground)
-          );
-          --stage-closed-lost-bg: color-mix(
-            in oklch,
-            var(--stage-closed-lost-fg) 12%,
-            var(--background)
-          );
           max-width: 46rem;
           margin: 0 auto;
           padding: 2rem 1.5rem;
@@ -605,23 +529,23 @@ export class Opportunity extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1rem;
           flex-wrap: wrap;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.75rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .value-block {
           display: flex;
@@ -637,7 +561,7 @@ export class Opportunity extends CardDef {
         }
         .weighted {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .stepper {
           list-style: none;
@@ -658,48 +582,55 @@ export class Opportunity extends CardDef {
         .step::before {
           content: '';
           position: absolute;
-          top: 5px;
+          top: 0.3125rem;
           left: -50%;
           width: 100%;
-          height: 2px;
-          background: var(--border, #e5e7eb);
+          height: 0.125rem;
+          background-color: var(--border);
         }
         .step:first-child::before {
           display: none;
         }
         .dot {
-          width: 12px;
-          height: 12px;
+          width: 0.75rem;
+          height: 0.75rem;
           border-radius: 50%;
-          background: var(--border, #e5e7eb);
+          background-color: var(--border);
           position: relative;
           z-index: 1;
         }
         .step-done .dot {
-          background: var(--primary, #111111);
+          background-color: var(--primary);
         }
         .step-done::before {
-          background: var(--primary, #111111);
+          background-color: var(--primary);
         }
+        /* The current step is a ring: a primary disc with a card-coloured
+           centre, so --primary is only ever a fill. */
         .step-current .dot {
-          background: var(--card, #ffffff);
-          border: 3px solid var(--primary, #111111);
-          box-sizing: border-box;
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
+          background-color: var(--primary);
+        }
+        .step-current .dot::after {
+          content: '';
+          position: absolute;
+          inset: 0.1875rem;
+          border-radius: 50%;
+          background-color: var(--card);
         }
         .step-current::before {
-          background: var(--primary, #111111);
+          background-color: var(--primary);
         }
         .step-lost .dot {
-          background: var(--stage-closed-lost-fg);
+          background-color: var(--destructive);
         }
         .step-label {
           font-size: 0.625rem;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.04em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           text-align: center;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -707,24 +638,27 @@ export class Opportunity extends CardDef {
           max-width: 100%;
         }
         .step-current .step-label {
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .step-lost .step-label {
-          color: var(--stage-closed-lost-fg);
+          color: var(--destructive-ink);
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dl {
           margin: 0;
@@ -735,13 +669,13 @@ export class Opportunity extends CardDef {
           align-items: center;
         }
         dt {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;
         }
         .acct {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
           max-width: 24rem;
         }

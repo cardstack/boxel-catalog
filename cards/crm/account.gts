@@ -59,9 +59,9 @@ export class Account extends CardDef {
           padding: 0.625rem 0.875rem;
         }
         .icon {
-          width: 22px;
-          height: 22px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.375rem;
+          height: 1.375rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -70,7 +70,7 @@ export class Account extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -93,12 +93,12 @@ export class Account extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .ca-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .ca-name {
@@ -190,27 +190,9 @@ export class Account extends CardDef {
       </div>
       <style scoped>
         .fitted {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered (boxel-theming C2).
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --state-positive-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.13 152) 65%,
-            var(--foreground)
-          );
-          --state-positive-bg: color-mix(
-            in oklch,
-            var(--state-positive-fg) 12%,
-            var(--background)
-          );
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -220,14 +202,14 @@ export class Account extends CardDef {
           overflow: hidden;
         }
         .avatar {
-          --profile-avatar-icon-size: 28px;
+          --profile-avatar-icon-size: 1.75rem;
           --profile-avatar-icon-border: 0;
           font-weight: 700;
           letter-spacing: 0.02em;
           flex-shrink: 0;
         }
         .avatar-lg {
-          --profile-avatar-icon-size: 40px;
+          --profile-avatar-icon-size: 2.5rem;
         }
         .name {
           font-weight: 600;
@@ -242,7 +224,7 @@ export class Account extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -263,8 +245,12 @@ export class Account extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          background: var(--state-positive-bg);
-          color: var(--state-positive-fg);
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--background)
+          );
+          color: var(--success-ink);
           flex-shrink: 0;
         }
         @container fitted-card (max-width: 150px) and (max-height: 169px) {
@@ -372,24 +358,6 @@ export class Account extends CardDef {
       </article>
       <style scoped>
         .account-page {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered (boxel-theming C2).
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --state-positive-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.13 152) 65%,
-            var(--foreground)
-          );
-          --state-positive-bg: color-mix(
-            in oklch,
-            var(--state-positive-fg) 12%,
-            var(--background)
-          );
           max-width: 40rem;
           margin: 0 auto;
           padding: 2rem 1.5rem;
@@ -401,51 +369,54 @@ export class Account extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .avatar {
-          --profile-avatar-icon-size: 56px;
+          --profile-avatar-icon-size: 3.5rem;
           font-weight: 700;
           letter-spacing: 0.02em;
           flex-shrink: 0;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .status-line {
           margin: 0.25rem 0 0;
           font-size: 0.75rem;
           font-weight: 600;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .status-line.customer {
-          color: var(--state-positive-fg);
+          color: var(--success-ink);
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dl {
           margin: 0;
@@ -456,7 +427,7 @@ export class Account extends CardDef {
           align-items: center;
         }
         dt {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;

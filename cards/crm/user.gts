@@ -40,10 +40,10 @@ export class User extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .ua-avatar {
-          --profile-avatar-icon-size: 18px;
+          --profile-avatar-icon-size: 1.125rem;
           --profile-avatar-icon-border: 0;
           font-weight: 700;
           flex-shrink: 0;
@@ -81,7 +81,7 @@ export class User extends CardDef {
           padding: 0.625rem 0.875rem;
         }
         .avatar {
-          --profile-avatar-icon-size: 32px;
+          --profile-avatar-icon-size: 2rem;
           --profile-avatar-icon-border: 0;
           font-weight: 700;
           flex-shrink: 0;
@@ -98,7 +98,7 @@ export class User extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -133,10 +133,10 @@ export class User extends CardDef {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .avatar {
-          --profile-avatar-icon-size: 28px;
+          --profile-avatar-icon-size: 1.75rem;
           --profile-avatar-icon-border: 0;
           font-weight: 700;
           flex-shrink: 0;
@@ -156,7 +156,7 @@ export class User extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -177,7 +177,7 @@ export class User extends CardDef {
             padding: 0.875rem;
           }
           .avatar {
-            --profile-avatar-icon-size: 40px;
+            --profile-avatar-icon-size: 2.5rem;
           }
         }
       </style>
@@ -225,41 +225,44 @@ export class User extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .avatar {
-          --profile-avatar-icon-size: 56px;
+          --profile-avatar-icon-size: 3.5rem;
           font-weight: 700;
           flex-shrink: 0;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dl {
           margin: 0;
@@ -270,7 +273,7 @@ export class User extends CardDef {
           align-items: center;
         }
         dt {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;

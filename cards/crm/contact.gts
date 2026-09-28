@@ -72,10 +72,10 @@ export class Contact extends PersonBase {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .cta-avatar {
-          --profile-avatar-icon-size: 18px;
+          --profile-avatar-icon-size: 1.125rem;
           --profile-avatar-icon-border: 0;
           font-weight: 700;
           flex-shrink: 0;
@@ -140,7 +140,7 @@ export class Contact extends PersonBase {
           padding: 0.625rem 0.875rem;
         }
         .avatar {
-          --profile-avatar-icon-size: 32px;
+          --profile-avatar-icon-size: 2rem;
           --profile-avatar-icon-border: 0;
           font-weight: 700;
           flex-shrink: 0;
@@ -162,19 +162,19 @@ export class Contact extends PersonBase {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 22px;
-          height: 22px;
+          width: 1.375rem;
+          height: 1.375rem;
           border-radius: 50%;
-          color: var(--muted-foreground, #6b7280);
-          background: var(--muted, #f3f4f6);
+          color: var(--muted-foreground);
+          background-color: var(--muted);
         }
         .reach-link:hover {
-          color: var(--primary-foreground, #ffffff);
-          background: var(--primary, #111111);
+          color: var(--primary-foreground);
+          background-color: var(--primary);
         }
         .reach-link :deep(svg) {
-          width: 13px;
-          height: 13px;
+          width: 0.8125rem;
+          height: 0.8125rem;
         }
         .name {
           font-weight: 600;
@@ -185,7 +185,7 @@ export class Contact extends PersonBase {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -197,8 +197,8 @@ export class Contact extends PersonBase {
           letter-spacing: 0.06em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
           flex-shrink: 0;
         }
@@ -241,10 +241,10 @@ export class Contact extends PersonBase {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .avatar {
-          --profile-avatar-icon-size: 28px;
+          --profile-avatar-icon-size: 1.75rem;
           --profile-avatar-icon-border: 0;
           font-weight: 700;
           flex-shrink: 0;
@@ -264,7 +264,7 @@ export class Contact extends PersonBase {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -287,7 +287,7 @@ export class Contact extends PersonBase {
             padding: 0.875rem;
           }
           .avatar {
-            --profile-avatar-icon-size: 40px;
+            --profile-avatar-icon-size: 2.5rem;
           }
           .line-email {
             display: block;
@@ -359,11 +359,11 @@ export class Contact extends PersonBase {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .avatar {
-          --profile-avatar-icon-size: 56px;
+          --profile-avatar-icon-size: 3.5rem;
           font-weight: 700;
           flex-shrink: 0;
         }
@@ -373,22 +373,22 @@ export class Contact extends PersonBase {
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .job-title {
           margin: 0.25rem 0 0;
           font-size: 0.875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .role {
           font-size: 0.6875rem;
@@ -397,23 +397,26 @@ export class Contact extends PersonBase {
           letter-spacing: 0.06em;
           padding: 0.1875rem 0.625rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dl {
           margin: 0;
@@ -424,13 +427,13 @@ export class Contact extends PersonBase {
           align-items: center;
         }
         dt {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;
         }
         .acct {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
         }
       </style>
