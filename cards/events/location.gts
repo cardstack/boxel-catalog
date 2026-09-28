@@ -63,13 +63,13 @@ export class Location extends CardDef {
           gap: 0.25rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .pin {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex-shrink: 0;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .loc-name {
           overflow: hidden;
@@ -111,16 +111,16 @@ export class Location extends CardDef {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 32px;
-          height: 32px;
+          width: 2rem;
+          height: 2rem;
           border-radius: 50%;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .pin {
-          width: 16px;
-          height: 16px;
+          width: 1rem;
+          height: 1rem;
         }
         .info {
           min-width: 0;
@@ -135,7 +135,7 @@ export class Location extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -150,8 +150,8 @@ export class Location extends CardDef {
           letter-spacing: 0.06em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
           flex-shrink: 0;
         }
@@ -196,22 +196,22 @@ export class Location extends CardDef {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .pin-disc {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 28px;
-          height: 28px;
+          width: 1.75rem;
+          height: 1.75rem;
           border-radius: 50%;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .pin {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
         }
         .info {
           display: flex;
@@ -228,7 +228,7 @@ export class Location extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -258,8 +258,8 @@ export class Location extends CardDef {
             padding: 0.875rem;
           }
           .pin-disc {
-            width: 36px;
-            height: 36px;
+            width: 2.25rem;
+            height: 2.25rem;
           }
           .line-kind {
             display: block;
@@ -344,23 +344,23 @@ export class Location extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .pin-disc {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 56px;
-          height: 56px;
+          width: 3.5rem;
+          height: 3.5rem;
           border-radius: 50%;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .pin {
-          width: 26px;
-          height: 26px;
+          width: 1.625rem;
+          height: 1.625rem;
         }
         .lh-id {
           flex: 1;
@@ -368,17 +368,17 @@ export class Location extends CardDef {
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .kind {
           font-size: 0.6875rem;
@@ -387,28 +387,31 @@ export class Location extends CardDef {
           letter-spacing: 0.06em;
           padding: 0.1875rem 0.625rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .map {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           overflow: hidden;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dl {
           margin: 0;
@@ -419,7 +422,7 @@ export class Location extends CardDef {
           align-items: center;
         }
         dt {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;
@@ -429,7 +432,7 @@ export class Location extends CardDef {
           margin: 0;
           font-size: 0.875rem;
           font-style: italic;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .about {
           font-size: 0.875rem;

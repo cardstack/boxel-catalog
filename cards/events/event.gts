@@ -9,6 +9,7 @@ import StringField from 'https://cardstack.com/base/string';
 import DateTimeField from 'https://cardstack.com/base/datetime';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import CalendarEventIcon from '@cardstack/boxel-icons/calendar-event';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 import { Location } from './location';
 import CapacityField from './capacity-field';
@@ -46,34 +47,6 @@ export const EventStatusField = statusField({
     Cancelled: ['Scheduled'],
   },
 });
-
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-export function datePart(
-  value?: Date | null,
-): { day: string; month: string } | null {
-  if (!value) {
-    return null;
-  }
-  let d = new Date(value);
-  if (Number.isNaN(d.getTime())) {
-    return null;
-  }
-  return { day: String(d.getDate()), month: MONTHS[d.getMonth()] };
-}
 
 /**
  * Something that happens at a time, usually at a place, usually with an
@@ -122,10 +95,10 @@ export class Event extends CardDef {
           font-weight: 500;
         }
         .ev-icon {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex-shrink: 0;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ev-name {
           overflow: hidden;
@@ -136,20 +109,26 @@ export class Event extends CardDef {
     </template>
   };
 
+  // The date tile formats in en-US, like the DateTimeField beside it, so the
+  // tile and the line next to it never disagree on the month name.
   static embedded = class Embedded extends Component<typeof Event> {
-    get date() {
-      return datePart(this.args.model.startsAt);
-    }
     <template>
       <div class='ev'>
         <div class='ev-date'>
-          {{#if this.date}}
-            <span class='ev-day'>{{this.date.day}}</span>
-            <span class='ev-month'>{{this.date.month}}</span>
-          {{else}}
-            <span class='ev-day ev-tbd'>?</span>
-            <span class='ev-month'>TBD</span>
-          {{/if}}
+          <FormatDate
+            class='ev-day'
+            @date={{@model.startsAt}}
+            @locale='en-US'
+            @day='numeric'
+            @placeholder='?'
+          />
+          <FormatDate
+            class='ev-month'
+            @date={{@model.startsAt}}
+            @locale='en-US'
+            @month='short'
+            @placeholder='TBD'
+          />
         </div>
         <div class='ev-info'>
           <span class='ev-title'>{{@model.cardTitle}}</span>
@@ -178,9 +157,10 @@ export class Event extends CardDef {
           justify-content: center;
           width: 2.75rem;
           height: 2.75rem;
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
-          background: var(--muted, #f3f4f6);
+          background-color: var(--muted);
+          color: var(--foreground);
           flex-shrink: 0;
         }
         .ev-day {
@@ -189,15 +169,12 @@ export class Event extends CardDef {
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
         }
-        .ev-tbd {
-          color: var(--muted-foreground, #6b7280);
-        }
         .ev-month {
           font-size: 0.5625rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ev-info {
           min-width: 0;
@@ -215,7 +192,7 @@ export class Event extends CardDef {
         }
         .ev-meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -233,19 +210,23 @@ export class Event extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Event> {
-    get date() {
-      return datePart(this.args.model.startsAt);
-    }
     <template>
       <div class='fitted'>
         <div class='ev-date'>
-          {{#if this.date}}
-            <span class='ev-day'>{{this.date.day}}</span>
-            <span class='ev-month'>{{this.date.month}}</span>
-          {{else}}
-            <span class='ev-day ev-tbd'>?</span>
-            <span class='ev-month'>TBD</span>
-          {{/if}}
+          <FormatDate
+            class='ev-day'
+            @date={{@model.startsAt}}
+            @locale='en-US'
+            @day='numeric'
+            @placeholder='?'
+          />
+          <FormatDate
+            class='ev-month'
+            @date={{@model.startsAt}}
+            @locale='en-US'
+            @month='short'
+            @placeholder='TBD'
+          />
         </div>
         <div class='info'>
           <span class='title'>{{@model.cardTitle}}</span>
@@ -278,9 +259,10 @@ export class Event extends CardDef {
           justify-content: center;
           width: 2.5rem;
           height: 2.5rem;
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
-          background: var(--muted, #f3f4f6);
+          background-color: var(--muted);
+          color: var(--foreground);
           flex-shrink: 0;
         }
         .ev-day {
@@ -289,15 +271,12 @@ export class Event extends CardDef {
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
         }
-        .ev-tbd {
-          color: var(--muted-foreground, #6b7280);
-        }
         .ev-month {
           font-size: 0.5rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .info {
           display: flex;
@@ -314,7 +293,7 @@ export class Event extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -408,7 +387,7 @@ export class Event extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .eh-id {
@@ -417,42 +396,45 @@ export class Event extends CardDef {
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .eh-when {
           margin: 0.25rem 0 0;
           font-size: 0.875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .eh-status {
           flex-shrink: 0;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .venue {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
         }
         .about {

@@ -52,12 +52,9 @@ export class CapacityAllocationField extends FieldDef {
           align-items: baseline;
           font-size: var(--boxel-font-size-sm);
         }
-        .alloc-name {
-          color: var(--foreground, var(--boxel-dark));
-        }
         .alloc-qty {
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -172,7 +169,7 @@ export default class CapacityField extends FieldDef {
         }
         .cap-unit {
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -193,7 +190,7 @@ export default class CapacityField extends FieldDef {
     }
 
     widthOf = (segment: Segment) => `width: ${segment.percent}%`;
-    swatchOf = (segment: Segment) => `background: ${segment.bg}`;
+    swatchOf = (segment: Segment) => `background-color: ${segment.bg}`;
 
     <template>
       <div class='capacity'>
@@ -252,8 +249,6 @@ export default class CapacityField extends FieldDef {
       </div>
       <style scoped>
         .capacity {
-          font-family: var(--font-sans, var(--boxel-font-family));
-          color: var(--foreground, var(--boxel-dark));
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-4xs);
@@ -270,23 +265,23 @@ export default class CapacityField extends FieldDef {
         }
         .cap-unit {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .cap-warning {
           margin-left: auto;
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
-          color: var(--boxel-danger);
+          color: var(--destructive-ink);
         }
         .cap-bar {
           display: flex;
           height: 0.5rem;
           border-radius: 999px;
           overflow: hidden;
-          background: var(--muted, var(--boxel-100));
+          background-color: var(--muted);
         }
         .cap-bar.over {
-          outline: 1px solid var(--boxel-danger);
+          outline: 1px solid var(--destructive-ink);
           outline-offset: 1px;
         }
         .cap-segment {
@@ -296,8 +291,8 @@ export default class CapacityField extends FieldDef {
         .cap-fill {
           display: block;
           height: 100%;
-          /* Full-strength hue would shout; the mix keeps segments legible as
-             a group while staying inside the token system. */
+          /* Full-strength hue would shout; the reduced opacity keeps
+             segments legible as a group. */
           opacity: 0.75;
         }
         .cap-legend {
@@ -306,7 +301,7 @@ export default class CapacityField extends FieldDef {
           padding: 0;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .cap-row {
           display: flex;
@@ -317,29 +312,26 @@ export default class CapacityField extends FieldDef {
         .cap-swatch {
           width: 0.5rem;
           height: 0.5rem;
-          border-radius: 2px;
+          border-radius: 0.125rem;
           flex: none;
           opacity: 0.75;
         }
         .cap-swatch-rest {
-          background: var(--muted, var(--boxel-100));
-          border: 1px solid var(--border, var(--boxel-200));
-        }
-        .cap-name {
-          color: var(--foreground, var(--boxel-dark));
+          background-color: var(--muted);
+          border: 1px solid var(--border);
         }
         .cap-qty {
           margin-left: auto;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .cap-row-rest .cap-name {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .cap-empty {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

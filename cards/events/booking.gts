@@ -54,13 +54,17 @@ export const BookingPaymentStatusField = statusField({
   },
 });
 
+function placesOf(quantity?: number | null): string {
+  let q = quantity ?? 1;
+  return q === 1 ? '1 place' : `${q} places`;
+}
+
 class BookingIsolated extends Component<typeof Booking> {
   @tracked runningAction: 'confirm' | 'check-in' | undefined;
   @tracked actionProblem: string | undefined;
 
   get places() {
-    let q = this.args.model.quantity ?? 1;
-    return q === 1 ? '1 place' : `${q} places`;
+    return placesOf(this.args.model.quantity);
   }
 
   get realm(): string | undefined {
@@ -207,7 +211,7 @@ class BookingIsolated extends Component<typeof Booking> {
         display: flex;
         align-items: center;
         gap: 1rem;
-        border-bottom: 2px solid var(--foreground, #111111);
+        border-bottom: 0.125rem solid var(--foreground);
         padding-bottom: 1.25rem;
       }
       .bh-id {
@@ -216,23 +220,24 @@ class BookingIsolated extends Component<typeof Booking> {
       }
       .doc-kind {
         margin: 0 0 0.125rem;
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.14em;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
       h1 {
-        margin: 0;
         font-size: 1.5rem;
         line-height: 1.1;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         letter-spacing: 0.04em;
       }
       .bh-places {
         margin: 0.25rem 0 0;
         font-size: 0.875rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
       .bh-standing {
         display: flex;
@@ -242,21 +247,24 @@ class BookingIsolated extends Component<typeof Booking> {
         flex-shrink: 0;
       }
       .panel {
-        border: 1px solid var(--border, #e5e7eb);
+        border: 1px solid var(--border);
         border-radius: 0.75rem;
         padding: 1rem 1.25rem;
-        background: var(--card, #ffffff);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       h2 {
         margin: 0 0 0.75rem;
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
       .linked {
-        border: 1px solid var(--border, #e5e7eb);
+        border: 1px solid var(--border);
         border-radius: 0.5rem;
       }
       .fact {
@@ -265,7 +273,7 @@ class BookingIsolated extends Component<typeof Booking> {
       }
       .fact-empty {
         font-style: italic;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
       .actions {
         display: flex;
@@ -276,16 +284,12 @@ class BookingIsolated extends Component<typeof Booking> {
         margin: 0.75rem 0 0;
         padding: 0.5rem 0.75rem;
         border-radius: 0.5rem;
-        background: color-mix(
+        background-color: color-mix(
           in oklch,
-          var(--destructive, #b91c1c) 12%,
-          var(--card, #ffffff)
+          var(--destructive) 12%,
+          var(--card)
         );
-        color: color-mix(
-          in oklch,
-          var(--destructive, #b91c1c) 55%,
-          var(--foreground, #111111)
-        );
+        color: var(--destructive-ink);
         font-size: 0.8125rem;
       }
       .price {
@@ -365,13 +369,13 @@ export class Booking extends CardDef {
           font-size: 0.8125rem;
         }
         .bk-icon {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex-shrink: 0;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .bk-ref {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           letter-spacing: 0.04em;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -383,8 +387,7 @@ export class Booking extends CardDef {
 
   static embedded = class Embedded extends Component<typeof Booking> {
     get places() {
-      let q = this.args.model.quantity ?? 1;
-      return q === 1 ? '1 place' : `${q} places`;
+      return placesOf(this.args.model.quantity);
     }
     <template>
       <div class='bk'>
@@ -425,7 +428,7 @@ export class Booking extends CardDef {
           gap: 0.125rem;
         }
         .bk-ref {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.8125rem;
           font-weight: 600;
           letter-spacing: 0.04em;
@@ -435,7 +438,7 @@ export class Booking extends CardDef {
         }
         .bk-meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -459,8 +462,7 @@ export class Booking extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Booking> {
     get places() {
-      let q = this.args.model.quantity ?? 1;
-      return q === 1 ? '1 place' : `${q} places`;
+      return placesOf(this.args.model.quantity);
     }
     <template>
       <div class='fitted'>
@@ -491,7 +493,7 @@ export class Booking extends CardDef {
           overflow: hidden;
         }
         .ref {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.75rem;
           font-weight: 600;
           letter-spacing: 0.04em;
@@ -501,7 +503,7 @@ export class Booking extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .line-places,
         .line-rsvp,
