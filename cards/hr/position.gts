@@ -14,13 +14,12 @@ import BooleanField from 'https://cardstack.com/base/boolean';
 import enumField from 'https://cardstack.com/base/enum';
 import BriefcaseBusinessIcon from '@cardstack/boxel-icons/briefcase-business';
 import { BoxelButton } from '@cardstack/boxel-ui/components';
-import { htmlSafe } from '@ember/template';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 
 import { Employee } from './employee';
-import { Skill, SKILL_CATEGORY_COLORS } from './skill';
+import { Skill } from './skill';
 import { ApprovalChainField } from './approval-chain-field';
 import { InterviewPlan } from './interview-plan';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
@@ -29,7 +28,7 @@ import {
   stateColorOf,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { formatMoney } from './utils';
+import { formatMoney, pillStyle } from './utils';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -109,9 +108,7 @@ class PositionIsolated extends Component<typeof Position> {
     return stateColorOf(POSITION_STATUS_COLORS, this.args.model?.status);
   }
   get statusPillStyle() {
-    return htmlSafe(
-      `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-    );
+    return pillStyle(this.statusColor);
   }
   get salaryRangeLabel() {
     return salaryRangeLabel(
@@ -145,13 +142,6 @@ class PositionIsolated extends Component<typeof Position> {
     return n === 0 ? 'Fully staffed' : `${n} open seat${n === 1 ? '' : 's'}`;
   }
 
-  skillChipStyle = (skill: Skill | undefined): ReturnType<typeof htmlSafe> => {
-    let c = SKILL_CATEGORY_COLORS[skill?.category ?? ''] ?? {
-      bg: 'var(--muted, var(--boxel-100))',
-      fg: 'var(--muted-foreground, var(--boxel-450))',
-    };
-    return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-  };
   get daysOpenLabel(): string | undefined {
     let d = daysOpen(this.args.model?.postedDate);
     return d == null ? undefined : `${d} days open`;
@@ -355,18 +345,11 @@ class PositionIsolated extends Component<typeof Position> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
-        --pos-id: var(--primary, var(--boxel-highlight));
-        --pos-strong: color-mix(
-          in oklch,
-          var(--pos-id) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
+        --pos-id: var(--primary);
+        --pos-strong: color-mix(in oklch, var(--pos-id) 45%, var(--foreground));
       }
       .dd-note {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .hero {
         flex: none;
@@ -374,7 +357,7 @@ class PositionIsolated extends Component<typeof Position> {
         align-items: flex-start;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .hero-text {
         flex: 1;
@@ -387,12 +370,11 @@ class PositionIsolated extends Component<typeof Position> {
         letter-spacing: -0.02em;
         line-height: 1.2;
         overflow-wrap: anywhere;
-        font-family: var(--font-heading, inherit);
       }
       .byline {
         margin: var(--boxel-sp-5xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .sep-dot {
         margin: 0 0.25rem;
@@ -410,30 +392,26 @@ class PositionIsolated extends Component<typeof Position> {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         padding: 0.18em 0.5em;
-        border-radius: 3px;
+        border-radius: 0.1875rem;
         white-space: nowrap;
       }
       .pill.neutral {
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .pill.stale {
-        background: color-mix(
-          in oklch,
-          var(--boxel-warning) 12%,
-          var(--card, var(--boxel-light))
+        background-color: color-mix(
+          in oklab,
+          var(--attention-ink) 12%,
+          var(--card)
         );
-        color: color-mix(
-          in oklch,
-          var(--boxel-warning) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--attention-ink);
       }
       .pill-dot {
-        width: 6px;
-        height: 6px;
+        width: 0.375rem;
+        height: 0.375rem;
         border-radius: 50%;
-        background: currentColor;
+        background-color: currentColor;
         flex: none;
       }
       .hero-money {
@@ -450,7 +428,7 @@ class PositionIsolated extends Component<typeof Position> {
       }
       .money-label {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .body {
         display: grid;
@@ -468,8 +446,9 @@ class PositionIsolated extends Component<typeof Position> {
       }
       .side {
         padding: var(--boxel-sp-lg);
-        border-left: 1px solid var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-left: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .panel-title {
         margin: 0 0 var(--boxel-sp-xs);
@@ -498,9 +477,10 @@ class PositionIsolated extends Component<typeof Position> {
       .chips > li {
         font-size: var(--boxel-font-size-xs);
         padding: 0.15em 0.5em;
-        border-radius: 3px;
-        border: 1px solid var(--border, var(--boxel-200));
-        background: var(--card, var(--boxel-light));
+        border-radius: 0.1875rem;
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .facts {
         margin: 0;
@@ -511,12 +491,15 @@ class PositionIsolated extends Component<typeof Position> {
         grid-template-columns: 1fr;
       }
       .facts dt {
-        font-size: var(--boxel-font-size-xs);
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .facts.stacked dt {
         border-bottom: 0;
@@ -526,7 +509,7 @@ class PositionIsolated extends Component<typeof Position> {
         margin: 0;
         padding: 0.45rem 0;
         font-size: var(--boxel-font-size-sm);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
         overflow-wrap: anywhere;
         font-variant-numeric: tabular-nums;
       }
@@ -536,7 +519,7 @@ class PositionIsolated extends Component<typeof Position> {
       .empty {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .approval-actions {
         display: flex;
@@ -546,11 +529,7 @@ class PositionIsolated extends Component<typeof Position> {
       .approval-error {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-xs);
-        color: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 38%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
       }
       @container iso (max-width: 40rem) {
         .body {
@@ -558,7 +537,7 @@ class PositionIsolated extends Component<typeof Position> {
         }
         .side {
           border-left: 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
         }
         .hero {
           flex-wrap: wrap;
@@ -628,7 +607,7 @@ export class Position extends CardDef {
   static embedded = class Embedded extends Component<typeof this> {
     get statusStyle() {
       let c = stateColorOf(POSITION_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+      return pillStyle(c);
     }
     <template>
       <div class='position-embedded'>
@@ -658,18 +637,18 @@ export class Position extends CardDef {
         }
         .pe-icon {
           display: inline-flex;
-          width: 28px;
-          height: 28px;
+          width: 1.75rem;
+          height: 1.75rem;
           flex-shrink: 0;
           align-items: center;
           justify-content: center;
           border-radius: 50%;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .pe-icon-svg {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
         }
         .pe-main {
           display: flex;
@@ -686,7 +665,7 @@ export class Position extends CardDef {
         }
         .pe-dept {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -717,12 +696,12 @@ export class Position extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .position-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .position-atom-name {
@@ -739,9 +718,7 @@ export class Position extends CardDef {
       return stateColorOf(POSITION_STATUS_COLORS, this.args.model?.status);
     }
     get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
+      return pillStyle(this.statusColor);
     }
     get salaryRangeLabel() {
       return salaryRangeLabel(
@@ -828,17 +805,16 @@ export class Position extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --pos-id: var(--primary, var(--boxel-highlight));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --pos-id: var(--primary);
           --pos-strong: color-mix(
             in oklch,
             var(--pos-id) 45%,
-            var(--foreground, var(--boxel-dark))
+            var(--foreground)
           );
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit > * {
           min-height: 0;
@@ -869,7 +845,7 @@ export class Position extends CardDef {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -883,14 +859,14 @@ export class Position extends CardDef {
           font-size: var(--fit-small);
           font-weight: 700;
           padding: 0.1em 0.4em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
         }
         .pill-dot {
-          width: 5px;
-          height: 5px;
+          width: 0.3125rem;
+          height: 0.3125rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
         .fit-mid {
@@ -907,7 +883,7 @@ export class Position extends CardDef {
         }
         .fit-sub {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -917,7 +893,7 @@ export class Position extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -929,7 +905,7 @@ export class Position extends CardDef {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;

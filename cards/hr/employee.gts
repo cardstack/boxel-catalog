@@ -22,7 +22,7 @@ import {
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 import { normalizedDuration } from './duration-field';
-import { daysBetween } from './utils';
+import { daysBetween, pillStyle } from './utils';
 
 export const EMPLOYEE_STATUSES = ['onboarding', 'active', 'offboarded'];
 
@@ -87,15 +87,11 @@ class EmployeeIsolated extends Component<typeof Employee> {
   }
 
   get monogramStyle() {
-    return htmlSafe(
-      `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-    );
+    return pillStyle(this.statusColor);
   }
 
   get statusPillStyle() {
-    return htmlSafe(
-      `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-    );
+    return pillStyle(this.statusColor);
   }
 
   get ptoBalanceLabel(): string {
@@ -216,15 +212,8 @@ class EmployeeIsolated extends Component<typeof Employee> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
-        --emp-id: var(--primary, var(--boxel-highlight));
-        --emp-strong: color-mix(
-          in oklch,
-          var(--emp-id) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
+        --emp-id: var(--primary);
+        --emp-strong: color-mix(in oklch, var(--emp-id) 45%, var(--foreground));
       }
       .avatar {
         flex: none;
@@ -235,8 +224,8 @@ class EmployeeIsolated extends Component<typeof Employee> {
         place-items: center;
         font-weight: 700;
         font-size: var(--boxel-font-size-sm);
-        background: var(--emp-strong);
-        color: var(--background, var(--boxel-light));
+        background-color: var(--emp-strong);
+        color: var(--background);
       }
       .avatar-photo {
         object-fit: cover;
@@ -245,10 +234,10 @@ class EmployeeIsolated extends Component<typeof Employee> {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.6;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .dd-note {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .hero {
         flex: none;
@@ -256,7 +245,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
         align-items: flex-start;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .hero-text {
         flex: 1;
@@ -269,12 +258,11 @@ class EmployeeIsolated extends Component<typeof Employee> {
         letter-spacing: -0.02em;
         line-height: 1.2;
         overflow-wrap: anywhere;
-        font-family: var(--font-heading, inherit);
       }
       .byline {
         margin: var(--boxel-sp-5xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .sep-dot {
         margin: 0 0.25rem;
@@ -292,30 +280,18 @@ class EmployeeIsolated extends Component<typeof Employee> {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         padding: 0.18em 0.5em;
-        border-radius: 3px;
+        border-radius: 0.1875rem;
         white-space: nowrap;
       }
       .pill.neutral {
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .pill.stale {
-        background: color-mix(
-          in oklch,
-          var(--boxel-warning) 12%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklch,
-          var(--boxel-warning) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .pill-dot {
-        width: 6px;
-        height: 6px;
+        width: 0.375rem;
+        height: 0.375rem;
         border-radius: 50%;
-        background: currentColor;
+        background-color: currentColor;
         flex: none;
       }
       .hero-money {
@@ -332,7 +308,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
       }
       .money-label {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .body {
         display: grid;
@@ -350,8 +326,9 @@ class EmployeeIsolated extends Component<typeof Employee> {
       }
       .side {
         padding: var(--boxel-sp-lg);
-        border-left: 1px solid var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-left: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .panel-title {
         margin: 0 0 var(--boxel-sp-xs);
@@ -380,9 +357,10 @@ class EmployeeIsolated extends Component<typeof Employee> {
       .chips > li {
         font-size: var(--boxel-font-size-xs);
         padding: 0.15em 0.5em;
-        border-radius: 3px;
-        border: 1px solid var(--border, var(--boxel-200));
-        background: var(--card, var(--boxel-light));
+        border-radius: 0.1875rem;
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .facts {
         margin: 0;
@@ -393,12 +371,15 @@ class EmployeeIsolated extends Component<typeof Employee> {
         grid-template-columns: 1fr;
       }
       .facts dt {
-        font-size: var(--boxel-font-size-xs);
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .facts.stacked dt {
         border-bottom: 0;
@@ -408,7 +389,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
         margin: 0;
         padding: 0.45rem 0;
         font-size: var(--boxel-font-size-sm);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
         overflow-wrap: anywhere;
         font-variant-numeric: tabular-nums;
       }
@@ -418,7 +399,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
       .empty {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       @container iso (max-width: 40rem) {
         .body {
@@ -426,7 +407,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
         }
         .side {
           border-left: 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
         }
         .hero {
           flex-wrap: wrap;
@@ -501,7 +482,7 @@ export class Employee extends PersonBase {
   static embedded = class Embedded extends Component<typeof this> {
     get statusStyle() {
       let c = stateColorOf(EMPLOYEE_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+      return pillStyle(c);
     }
     <template>
       <div class='employee-embedded'>
@@ -534,8 +515,8 @@ export class Employee extends PersonBase {
           font-size: 0.8125rem;
         }
         .ee-avatar {
-          width: 30px;
-          height: 30px;
+          width: 1.875rem;
+          height: 1.875rem;
           border-radius: 50%;
           object-fit: cover;
           flex-shrink: 0;
@@ -544,8 +525,8 @@ export class Employee extends PersonBase {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           font-size: 0.6875rem;
           font-weight: 700;
         }
@@ -564,7 +545,7 @@ export class Employee extends PersonBase {
         }
         .ee-role {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -595,12 +576,12 @@ export class Employee extends PersonBase {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .employee-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .employee-atom-name {
@@ -619,14 +600,12 @@ export class Employee extends PersonBase {
 
     get avatarRingStyle() {
       return htmlSafe(
-        `box-shadow: 0 0 0 0.125rem var(--background, var(--boxel-light)), 0 0 0 0.1875rem ${this.statusColor.ring};`,
+        `box-shadow: 0 0 0 0.125rem var(--background), 0 0 0 0.1875rem ${this.statusColor.ring};`,
       );
     }
 
     get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
+      return pillStyle(this.statusColor);
     }
 
     get startYear(): string | undefined {
@@ -709,17 +688,16 @@ export class Employee extends PersonBase {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --emp-id: var(--primary, var(--boxel-highlight));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --emp-id: var(--primary);
           --emp-strong: color-mix(
             in oklch,
             var(--emp-id) 45%,
-            var(--foreground, var(--boxel-dark))
+            var(--foreground)
           );
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         /* Same solid-fill treatment as every other card's fitted avatar.
            Status used to be encoded as a coloured ring here, which made this
@@ -734,8 +712,8 @@ export class Employee extends PersonBase {
           place-items: center;
           font-size: var(--fit-small);
           font-weight: 700;
-          background: var(--emp-strong);
-          color: var(--background, var(--boxel-light));
+          background-color: var(--emp-strong);
+          color: var(--background);
         }
         .avatar-photo {
           object-fit: cover;
@@ -775,7 +753,7 @@ export class Employee extends PersonBase {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -789,14 +767,14 @@ export class Employee extends PersonBase {
           font-size: var(--fit-small);
           font-weight: 700;
           padding: 0.1em 0.4em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
         }
         .pill-dot {
-          width: 5px;
-          height: 5px;
+          width: 0.3125rem;
+          height: 0.3125rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
         .fit-mid {
@@ -813,7 +791,7 @@ export class Employee extends PersonBase {
         }
         .fit-sub {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -823,7 +801,7 @@ export class Employee extends PersonBase {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -835,7 +813,7 @@ export class Employee extends PersonBase {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;

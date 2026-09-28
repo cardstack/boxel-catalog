@@ -43,7 +43,7 @@ export class InterviewFeedbackField extends FieldDef {
       <style scoped>
         .feedback-row {
           padding: var(--boxel-sp-sm) 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .feedback-head {
           display: flex;
@@ -57,13 +57,13 @@ export class InterviewFeedbackField extends FieldDef {
         }
         .rating {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-weight: 600;
         }
         .notes {
           margin: var(--boxel-sp-5xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.5;
         }
       </style>

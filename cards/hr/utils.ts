@@ -1,3 +1,7 @@
+import { htmlSafe } from '@ember/template';
+
+type SafeString = ReturnType<typeof htmlSafe>;
+
 /** Whole days from `from` to `to` (default now); undefined when `from` is missing or unparseable. */
 export function daysBetween(
   from?: Date | string | null,
@@ -37,4 +41,9 @@ export function formatMoney(
     return `$${Math.round(n / 1000)}k`;
   }
   return `$${n.toLocaleString()}`;
+}
+
+/** Inline fill + ink for a pill painted from a `{ bg, fg }` colour pair (a StateColor or a category colour). */
+export function pillStyle(c: { bg: string; fg: string }): SafeString {
+  return htmlSafe(`background-color: ${c.bg}; color: ${c.fg};`);
 }

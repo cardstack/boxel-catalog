@@ -11,7 +11,6 @@ import {
 import DateField from 'https://cardstack.com/base/date';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import ListChecksIcon from '@cardstack/boxel-icons/list-checks';
-import { htmlSafe } from '@ember/template';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
@@ -25,6 +24,7 @@ import {
   stateColorOf,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { pillStyle } from './utils';
 
 // Colocated with InterviewPlanRoundField — colors each round's pill in the
 // isolated plan list and the embedded/compact previews. Distinct hues from
@@ -67,7 +67,7 @@ export class InterviewPlanRoundField extends FieldDef {
   static embedded = class Embedded extends Component<typeof this> {
     get pillStyle() {
       let c = stateColorOf(INTERVIEW_ROUND_COLORS, this.args.model?.roundType);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+      return pillStyle(c);
     }
     get preview(): string {
       return questionsPreview(this.args.model?.questions);
@@ -106,26 +106,26 @@ export class InterviewPlanRoundField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           padding: 0.18em 0.5em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
         }
         .ipr-dot {
-          width: 6px;
-          height: 6px;
+          width: 0.375rem;
+          height: 0.375rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
         .ipr-preview {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .ipr-empty {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -256,20 +256,13 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
-        --ip-id: var(--primary, var(--boxel-highlight));
-        --ip-strong: color-mix(
-          in oklch,
-          var(--ip-id) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
+        --ip-id: var(--primary);
+        --ip-strong: color-mix(in oklch, var(--ip-id) 45%, var(--foreground));
       }
       .hero {
         flex: none;
         padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       h1 {
         margin: 0;
@@ -278,12 +271,11 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         letter-spacing: -0.02em;
         line-height: 1.2;
         overflow-wrap: anywhere;
-        font-family: var(--font-heading, inherit);
       }
       .byline {
         margin: var(--boxel-sp-5xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .sep-dot {
         margin: 0 0.25rem;
@@ -312,7 +304,7 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         align-items: flex-start;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) 0;
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .round:last-child {
         border-bottom: 0;
@@ -326,8 +318,8 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         place-items: center;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        background: var(--ip-strong);
-        color: var(--background, var(--boxel-light));
+        background-color: var(--ip-strong);
+        color: var(--background);
       }
       .round-body {
         flex: 1;
@@ -344,16 +336,16 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         min-height: 1.75rem;
         padding: 0.2rem 0.4rem;
         border-radius: var(--boxel-border-radius-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        background-color: var(--card);
         color: var(--ip-strong);
         font: inherit;
         font-size: var(--boxel-font-size-sm);
         cursor: pointer;
       }
       .reorder:focus-visible {
-        outline: 2px solid var(--ring, var(--ip-strong));
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: 0.125rem;
       }
       .reorder:disabled {
         opacity: 0.4;
@@ -362,16 +354,12 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
       .reorder-error {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-xs);
-        color: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 38%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
       }
       .empty {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .facts {
         margin: 0;
@@ -379,10 +367,13 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         grid-template-columns: 1fr;
       }
       .facts dt {
-        font-size: var(--boxel-font-size-xs);
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         padding-top: 0.4rem;
       }
       .facts dd {
@@ -440,18 +431,18 @@ export class InterviewPlan extends CardDef {
         }
         .ipe-icon {
           display: inline-flex;
-          width: 28px;
-          height: 28px;
+          width: 1.75rem;
+          height: 1.75rem;
           flex-shrink: 0;
           align-items: center;
           justify-content: center;
           border-radius: 50%;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .ipe-icon-svg {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
         }
         .ipe-main {
           display: flex;
@@ -468,7 +459,7 @@ export class InterviewPlan extends CardDef {
         }
         .ipe-sub {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -487,12 +478,12 @@ export class InterviewPlan extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .interview-plan-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .interview-plan-atom-name {
@@ -527,11 +518,10 @@ export class InterviewPlan extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit-top {
           display: flex;
@@ -546,12 +536,12 @@ export class InterviewPlan extends CardDef {
           align-items: center;
           justify-content: center;
           border-radius: 50%;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .fit-icon svg {
-          width: 12px;
-          height: 12px;
+          width: 0.75rem;
+          height: 0.75rem;
         }
         .fit-head {
           flex: 1;
@@ -571,7 +561,7 @@ export class InterviewPlan extends CardDef {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height > 80px) {
           .fit-eb {

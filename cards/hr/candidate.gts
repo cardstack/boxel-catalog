@@ -27,7 +27,7 @@ import { DurationField } from './duration-field';
 import { Employee } from './employee';
 import { Position } from './position';
 import { Offer } from './offer';
-import { Skill, SKILL_CATEGORY_COLORS } from './skill';
+import { Skill } from './skill';
 import { BackgroundCheckField } from './background-check-field';
 import { InterviewFeedbackField } from './interview-feedback-field';
 import { RejectionReasonField } from './rejection-reason-field';
@@ -39,7 +39,7 @@ import {
   stateColorOf,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { daysBetween, liveCount } from './utils';
+import { daysBetween, liveCount, pillStyle } from './utils';
 import { ExtractResumeCommand } from './commands/extract-resume-command';
 import { GenerateInterviewQuestionsCommand } from './commands/generate-interview-questions-command';
 import FileDownloadLink from './components/file-download-link';
@@ -104,23 +104,13 @@ class CandidateIsolated extends Component<typeof Candidate> {
 
   get avatarRingStyle() {
     return htmlSafe(
-      `box-shadow: 0 0 0 0.1875rem var(--background, var(--boxel-light)), 0 0 0 0.3125rem ${this.stageColor.ring};`,
+      `box-shadow: 0 0 0 0.1875rem var(--background), 0 0 0 0.3125rem ${this.stageColor.ring};`,
     );
   }
 
   get stagePillStyle() {
-    return htmlSafe(
-      `background: ${this.stageColor.bg}; color: ${this.stageColor.fg};`,
-    );
+    return pillStyle(this.stageColor);
   }
-
-  skillChipStyle = (skill: Skill | undefined): ReturnType<typeof htmlSafe> => {
-    let c = SKILL_CATEGORY_COLORS[skill?.category ?? ''] ?? {
-      bg: 'var(--muted, var(--boxel-100))',
-      fg: 'var(--muted-foreground, var(--boxel-450))',
-    };
-    return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-  };
 
   get extractDisabled(): boolean {
     return Boolean(this.busyTool) || !this.args.model?.resumeText?.trim();
@@ -460,14 +450,11 @@ class CandidateIsolated extends Component<typeof Candidate> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
-        --cand-id: var(--primary, var(--boxel-highlight));
+        --cand-id: var(--primary);
         --cand-strong: color-mix(
           in oklch,
           var(--cand-id) 45%,
-          var(--foreground, var(--boxel-dark))
+          var(--foreground)
         );
       }
       .avatar {
@@ -479,8 +466,8 @@ class CandidateIsolated extends Component<typeof Candidate> {
         place-items: center;
         font-weight: 700;
         font-size: var(--boxel-font-size-sm);
-        background: var(--cand-strong);
-        color: var(--background, var(--boxel-light));
+        background-color: var(--cand-strong);
+        color: var(--background);
       }
       .avatar-photo {
         object-fit: cover;
@@ -492,15 +479,15 @@ class CandidateIsolated extends Component<typeof Candidate> {
       }
       .chips > li.more {
         border-style: dashed;
-        color: var(--muted-foreground, var(--boxel-450));
-        background: transparent;
+        color: var(--muted-foreground);
+        background-color: transparent;
       }
       .markdown {
         font-size: var(--boxel-font-size-sm);
         line-height: 1.65;
         max-height: 20rem;
         overflow-y: auto;
-        border: 1px solid var(--border, var(--boxel-200));
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
         padding: var(--boxel-sp-xs);
       }
@@ -509,7 +496,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
         margin-bottom: var(--boxel-sp-xs);
       }
       .empty code {
-        font-family: var(--boxel-font-family-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 0.92em;
       }
       .actions {
@@ -535,7 +522,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
       .act-msg {
         margin: 0.4rem 0 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .round-label {
         margin-top: 0.6rem;
@@ -547,12 +534,9 @@ class CandidateIsolated extends Component<typeof Candidate> {
         margin: 0.3rem 0 0.6rem;
       }
       .round-btn {
-        --boxel-button-default-background: var(--card, var(--boxel-light));
-        --boxel-button-default-foreground: var(
-          --muted-foreground,
-          var(--boxel-450)
-        );
-        --boxel-button-default-border: var(--border, var(--boxel-200));
+        --boxel-button-default-background: var(--card);
+        --boxel-button-default-foreground: var(--muted-foreground);
+        --boxel-button-default-border: var(--border);
         --boxel-button-border-radius: var(--boxel-border-radius-sm);
         --boxel-button-padding: 0.3rem 0.55rem;
         --boxel-button-min-height: 0;
@@ -563,17 +547,17 @@ class CandidateIsolated extends Component<typeof Candidate> {
       }
       .round-btn[aria-pressed='true'] {
         --boxel-button-color: var(--cand-strong);
-        --boxel-button-text-color: var(--background, var(--boxel-light));
+        --boxel-button-text-color: var(--background);
         --boxel-button-border: 1px solid var(--cand-strong);
       }
       .side-note {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.6;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .dd-note {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .hero {
         flex: none;
@@ -581,7 +565,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
         align-items: flex-start;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .hero-text {
         flex: 1;
@@ -594,12 +578,11 @@ class CandidateIsolated extends Component<typeof Candidate> {
         letter-spacing: -0.02em;
         line-height: 1.2;
         overflow-wrap: anywhere;
-        font-family: var(--font-heading, inherit);
       }
       .byline {
         margin: var(--boxel-sp-5xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .sep-dot {
         margin: 0 0.25rem;
@@ -617,30 +600,18 @@ class CandidateIsolated extends Component<typeof Candidate> {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         padding: 0.18em 0.5em;
-        border-radius: 3px;
+        border-radius: 0.1875rem;
         white-space: nowrap;
       }
       .pill.neutral {
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .pill.stale {
-        background: color-mix(
-          in oklch,
-          var(--boxel-warning) 12%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklch,
-          var(--boxel-warning) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
       .pill-dot {
-        width: 6px;
-        height: 6px;
+        width: 0.375rem;
+        height: 0.375rem;
         border-radius: 50%;
-        background: currentColor;
+        background-color: currentColor;
         flex: none;
       }
       .hero-money {
@@ -657,7 +628,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
       }
       .money-label {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .body {
         display: grid;
@@ -675,8 +646,9 @@ class CandidateIsolated extends Component<typeof Candidate> {
       }
       .side {
         padding: var(--boxel-sp-lg);
-        border-left: 1px solid var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-left: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .panel-title {
         margin: 0 0 var(--boxel-sp-xs);
@@ -705,9 +677,10 @@ class CandidateIsolated extends Component<typeof Candidate> {
       .chips > li {
         font-size: var(--boxel-font-size-xs);
         padding: 0.15em 0.5em;
-        border-radius: 3px;
-        border: 1px solid var(--border, var(--boxel-200));
-        background: var(--card, var(--boxel-light));
+        border-radius: 0.1875rem;
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .facts {
         margin: 0;
@@ -718,12 +691,15 @@ class CandidateIsolated extends Component<typeof Candidate> {
         grid-template-columns: 1fr;
       }
       .facts dt {
-        font-size: var(--boxel-font-size-xs);
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .facts.stacked dt {
         border-bottom: 0;
@@ -733,7 +709,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
         margin: 0;
         padding: 0.45rem 0;
         font-size: var(--boxel-font-size-sm);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
         overflow-wrap: anywhere;
         font-variant-numeric: tabular-nums;
       }
@@ -743,7 +719,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
       .empty {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       @container iso (max-width: 40rem) {
         .body {
@@ -751,7 +727,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
         }
         .side {
           border-left: 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
         }
         .hero {
           flex-wrap: wrap;
@@ -868,7 +844,7 @@ export class Candidate extends PersonBase {
   static embedded = class Embedded extends Component<typeof this> {
     get stageStyle() {
       let c = stateColorOf(CANDIDATE_STAGE_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+      return pillStyle(c);
     }
     get scoreLabel() {
       let v = this.args.model?.overallScore;
@@ -908,8 +884,8 @@ export class Candidate extends PersonBase {
           font-size: 0.8125rem;
         }
         .ce-avatar {
-          width: 30px;
-          height: 30px;
+          width: 1.875rem;
+          height: 1.875rem;
           border-radius: 50%;
           object-fit: cover;
           flex-shrink: 0;
@@ -918,8 +894,8 @@ export class Candidate extends PersonBase {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           font-size: 0.6875rem;
           font-weight: 700;
         }
@@ -938,7 +914,7 @@ export class Candidate extends PersonBase {
         }
         .ce-role {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -961,7 +937,7 @@ export class Candidate extends PersonBase {
         .ce-score {
           font-size: 0.6875rem;
           font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -981,12 +957,12 @@ export class Candidate extends PersonBase {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .candidate-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .candidate-atom-name {
@@ -1005,14 +981,12 @@ export class Candidate extends PersonBase {
 
     get avatarRingStyle() {
       return htmlSafe(
-        `box-shadow: 0 0 0 0.125rem var(--background, var(--boxel-light)), 0 0 0 0.1875rem ${this.stageColor.ring};`,
+        `box-shadow: 0 0 0 0.125rem var(--background), 0 0 0 0.1875rem ${this.stageColor.ring};`,
       );
     }
 
     get stagePillStyle() {
-      return htmlSafe(
-        `background: ${this.stageColor.bg}; color: ${this.stageColor.fg};`,
-      );
+      return pillStyle(this.stageColor);
     }
 
     get pipelineSteps() {
@@ -1099,17 +1073,16 @@ export class Candidate extends PersonBase {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --cand-id: var(--primary, var(--boxel-highlight));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --cand-id: var(--primary);
           --cand-strong: color-mix(
             in oklch,
             var(--cand-id) 45%,
-            var(--foreground, var(--boxel-dark))
+            var(--foreground)
           );
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .avatar {
           flex: none;
@@ -1120,8 +1093,8 @@ export class Candidate extends PersonBase {
           place-items: center;
           font-size: var(--fit-small);
           font-weight: 700;
-          background: var(--cand-strong);
-          color: var(--background, var(--boxel-light));
+          background-color: var(--cand-strong);
+          color: var(--background);
         }
         .avatar-photo {
           object-fit: cover;
@@ -1161,7 +1134,7 @@ export class Candidate extends PersonBase {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1175,14 +1148,14 @@ export class Candidate extends PersonBase {
           font-size: var(--fit-small);
           font-weight: 700;
           padding: 0.1em 0.4em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
         }
         .pill-dot {
-          width: 5px;
-          height: 5px;
+          width: 0.3125rem;
+          height: 0.3125rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
         .fit-mid {
@@ -1199,7 +1172,7 @@ export class Candidate extends PersonBase {
         }
         .fit-sub {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1209,7 +1182,7 @@ export class Candidate extends PersonBase {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -1221,7 +1194,7 @@ export class Candidate extends PersonBase {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;

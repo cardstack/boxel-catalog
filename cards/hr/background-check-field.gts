@@ -8,13 +8,13 @@ import {
 import DateField from 'https://cardstack.com/base/date';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
-import { htmlSafe } from '@ember/template';
 
 import {
   stateColor,
   stateColorOf,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { pillStyle } from './utils';
 
 // Background-check lifecycle: not-started → pending → clear | flagged.
 // This field TRACKS the status a human (or an external screening vendor's
@@ -74,9 +74,7 @@ export class BackgroundCheckField extends FieldDef {
     }
 
     get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
+      return pillStyle(this.statusColor);
     }
 
     get statusLabel(): string {
@@ -119,8 +117,7 @@ export class BackgroundCheckField extends FieldDef {
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-4xs);
-          font-family: var(--font-sans, var(--boxel-font-family));
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .bc-head {
           display: flex;
@@ -135,19 +132,19 @@ export class BackgroundCheckField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           padding: 0.18em 0.5em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
         }
         .pill-dot {
-          width: 6px;
-          height: 6px;
+          width: 0.375rem;
+          height: 0.375rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
         .bc-provider {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .bc-dates {
           margin: 0;
@@ -162,10 +159,13 @@ export class BackgroundCheckField extends FieldDef {
         }
         .bc-dates dt {
           flex: none;
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .bc-dates dd {
           margin: 0;
@@ -177,7 +177,7 @@ export class BackgroundCheckField extends FieldDef {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -192,9 +192,7 @@ export class BackgroundCheckField extends FieldDef {
     }
 
     get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
+      return pillStyle(this.statusColor);
     }
 
     get statusLabel(): string {
@@ -216,14 +214,14 @@ export class BackgroundCheckField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           padding: 0.1em 0.4em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
         }
         .bc-atom-dot {
-          width: 5px;
-          height: 5px;
+          width: 0.3125rem;
+          height: 0.3125rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
       </style>

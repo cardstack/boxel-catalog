@@ -9,7 +9,6 @@ import {
 import NumberField from 'https://cardstack.com/base/number';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
-import { htmlSafe } from '@ember/template';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import {
@@ -17,6 +16,7 @@ import {
   stateColorOf,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { pillStyle } from './utils';
 
 export const RECOMMENDATIONS = [
   'strong-hire',
@@ -78,7 +78,7 @@ export class ScorecardCriterionField extends FieldDef {
       <style scoped>
         .criterion-row {
           padding: var(--boxel-sp-xs) 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .criterion-row:last-child {
           border-bottom: 0;
@@ -96,7 +96,7 @@ export class ScorecardCriterionField extends FieldDef {
         .criterion-notes {
           margin: var(--boxel-sp-4xs) 0 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.5;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -146,9 +146,7 @@ export class ScorecardField extends FieldDef {
     }
 
     get recommendationPillStyle() {
-      return htmlSafe(
-        `background: ${this.recommendationColor.bg}; color: ${this.recommendationColor.fg};`,
-      );
+      return pillStyle(this.recommendationColor);
     }
 
     get averageLabel(): string {
@@ -206,14 +204,14 @@ export class ScorecardField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           padding: 0.18em 0.5em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
         }
         .pill-dot {
-          width: 6px;
-          height: 6px;
+          width: 0.375rem;
+          height: 0.375rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
         .sr-only-heading {
@@ -232,13 +230,13 @@ export class ScorecardField extends FieldDef {
         .empty {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .overall-notes {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.6;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

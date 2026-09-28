@@ -10,7 +10,6 @@ import DateTimeField from 'https://cardstack.com/base/datetime';
 import NumberField from 'https://cardstack.com/base/number';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
-import { htmlSafe } from '@ember/template';
 
 import { Employee } from './employee';
 import {
@@ -18,6 +17,7 @@ import {
   stateColorOf,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { pillStyle } from './utils';
 
 export const APPROVAL_DECISIONS = ['pending', 'approved', 'rejected'];
 
@@ -142,7 +142,7 @@ export class ApprovalStepField extends FieldDef {
   static embedded = class Embedded extends Component<typeof this> {
     get pillStyle() {
       let c = stateColorOf(APPROVAL_DECISION_COLORS, this.args.model?.decision);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+      return pillStyle(c);
     }
 
     <template>
@@ -178,16 +178,16 @@ export class ApprovalStepField extends FieldDef {
         }
         .row-empty {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .row-date {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .row-comment {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.5;
         }
         .pill {
@@ -197,15 +197,15 @@ export class ApprovalStepField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           padding: 0.18em 0.5em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
           flex: none;
         }
         .pill-dot {
-          width: 6px;
-          height: 6px;
+          width: 0.375rem;
+          height: 0.375rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
       </style>

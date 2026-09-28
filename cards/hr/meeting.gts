@@ -11,6 +11,11 @@ import DateTimeField from 'https://cardstack.com/base/datetime';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import enumField from 'https://cardstack.com/base/enum';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
+import GlimmerComponent from '@glimmer/component';
+import {
+  FormatDate,
+  type FormatDateSignature,
+} from '@cardstack/pretui/components/format-date';
 import { htmlSafe } from '@ember/template';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
@@ -24,7 +29,7 @@ import {
   stateColorOf,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { liveCount } from './utils';
+import { liveCount, pillStyle } from './utils';
 
 export const MEETING_TYPES = [
   'interview',
@@ -48,6 +53,24 @@ export const MeetingTypeField = enumField(StringField, {
   options: MEETING_TYPES.map((type) => ({ value: type, label: type })),
   displayName: 'Meeting Type',
 });
+
+// The clock time a meeting starts at, as the header and the tile show it
+// ("9:30 AM"). en-US like the date tile beside it.
+class MeetingTime extends GlimmerComponent<{
+  Args: { date?: FormatDateSignature['Args']['date'] };
+  Element: HTMLTimeElement;
+}> {
+  <template>
+    <FormatDate
+      @date={{@date}}
+      @locale='en-US'
+      @hour='numeric'
+      @minute='2-digit'
+      @placeholder='—'
+      ...attributes
+    />
+  </template>
+}
 
 export class Meeting extends CardDef {
   static displayName = 'Meeting';
@@ -131,13 +154,7 @@ export class Meeting extends CardDef {
     }
 
     get typePillStyle() {
-      return htmlSafe(
-        `background: ${this.typeColor.bg}; color: ${this.typeColor.fg};`,
-      );
-    }
-
-    get accentBarStyle() {
-      return htmlSafe(`background: ${this.typeColor.ring};`);
+      return pillStyle(this.typeColor);
     }
 
     get dateObj(): Date | undefined {
@@ -147,33 +164,6 @@ export class Meeting extends CardDef {
       }
       let date = new Date(value);
       return isNaN(date.getTime()) ? undefined : date;
-    }
-
-    get dateDay(): string {
-      return this.dateObj ? String(this.dateObj.getDate()) : '–';
-    }
-
-    get dateMonth(): string {
-      return this.dateObj
-        ? this.dateObj
-            .toLocaleDateString('en-US', { month: 'short' })
-            .toUpperCase()
-        : '';
-    }
-
-    get timeLabel(): string {
-      return this.dateObj
-        ? this.dateObj.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-          })
-        : '—';
-    }
-
-    get weekdayLabel(): string {
-      return this.dateObj
-        ? this.dateObj.toLocaleDateString('en-US', { weekday: 'short' })
-        : '';
     }
 
     // Derived: the meeting is over and nobody recorded a score. This is the
@@ -236,14 +226,32 @@ export class Meeting extends CardDef {
           {{! A meeting's first question is always "when", so the date gets a
               block of its own rather than a line in the subtitle. }}
           <div class='datebox'>
-            <span class='db-month'>{{this.dateMonth}}</span>
-            <span class='db-day'>{{this.dateDay}}</span>
-            <span class='db-weekday'>{{this.weekdayLabel}}</span>
+            <FormatDate
+              class='db-month'
+              @date={{@model.date}}
+              @locale='en-US'
+              @month='short'
+              @placeholder=''
+            />
+            <FormatDate
+              class='db-day'
+              @date={{@model.date}}
+              @locale='en-US'
+              @day='numeric'
+              @placeholder='–'
+            />
+            <FormatDate
+              class='db-weekday'
+              @date={{@model.date}}
+              @locale='en-US'
+              @weekday='short'
+              @placeholder=''
+            />
           </div>
           <div class='hero-text'>
             <h1>{{@model.title}}</h1>
             <p class='byline'>
-              {{this.timeLabel}}
+              <MeetingTime @date={{@model.date}} />
               {{#if @model.duration.label}}
                 <span class='sep-dot'>&middot;</span>
                 {{@model.duration.label}}
@@ -349,14 +357,11 @@ export class Meeting extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --meet-id: var(--primary, var(--boxel-highlight));
+          --meet-id: var(--primary);
           --meet-strong: color-mix(
             in oklch,
             var(--meet-id) 45%,
-            var(--foreground, var(--boxel-dark))
+            var(--foreground)
           );
         }
         .hero {
@@ -365,19 +370,21 @@ export class Meeting extends CardDef {
           align-items: flex-start;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .datebox {
           flex: none;
           min-width: 4rem;
           text-align: center;
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
           padding: 0.4rem 0.7rem;
-          background: var(--muted, var(--boxel-100));
+          background-color: var(--muted);
+          color: var(--foreground);
         }
         .db-month {
           display: block;
+          text-transform: uppercase;
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.1em;
           font-weight: 700;
@@ -394,7 +401,7 @@ export class Meeting extends CardDef {
         .db-weekday {
           display: block;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .hero-text {
           flex: 1;
@@ -407,12 +414,11 @@ export class Meeting extends CardDef {
           letter-spacing: -0.02em;
           line-height: 1.2;
           overflow-wrap: anywhere;
-          font-family: var(--font-heading, inherit);
         }
         .byline {
           margin: var(--boxel-sp-5xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sep-dot {
           margin: 0 0.25rem;
@@ -430,43 +436,35 @@ export class Meeting extends CardDef {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           padding: 0.18em 0.5em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         /* Score state carries semantic colour, kept separate from the type
            hue so "whose court is the ball in" never competes with "what kind
            of meeting is this". */
         .pill.awaiting {
-          background: color-mix(
-            in oklch,
-            var(--boxel-danger) 12%,
-            var(--card, var(--boxel-light))
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--card)
           );
-          color: color-mix(
-            in oklch,
-            var(--boxel-danger) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
+          color: var(--destructive-ink);
         }
         .pill.scored {
-          background: color-mix(
-            in oklch,
-            var(--boxel-success) 12%,
-            var(--card, var(--boxel-light))
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--card)
           );
-          color: color-mix(
-            in oklch,
-            var(--boxel-success) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
+          color: var(--success-ink);
         }
         .pill-dot {
-          width: 6px;
-          height: 6px;
+          width: 0.375rem;
+          height: 0.375rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
         .body {
@@ -485,8 +483,9 @@ export class Meeting extends CardDef {
         }
         .side {
           padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border, var(--boxel-200));
-          background: var(--muted, var(--boxel-100));
+          border-left: 1px solid var(--border);
+          background-color: var(--muted);
+          color: var(--foreground);
         }
         .panel-title {
           margin: 0 0 var(--boxel-sp-xs);
@@ -517,8 +516,8 @@ export class Meeting extends CardDef {
           place-items: center;
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
-          background: var(--meet-strong);
-          color: var(--background, var(--boxel-light));
+          background-color: var(--meet-strong);
+          color: var(--background);
           object-fit: cover;
         }
         .att-text {
@@ -532,14 +531,14 @@ export class Meeting extends CardDef {
         .att-role {
           display: block;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .notes {
           font-size: var(--boxel-font-size-sm);
           line-height: 1.65;
           max-height: 18rem;
           overflow-y: auto;
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           padding: var(--boxel-sp-xs);
         }
@@ -548,17 +547,17 @@ export class Meeting extends CardDef {
           line-height: 1.65;
           max-height: 20rem;
           overflow-y: auto;
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           padding: var(--boxel-sp-xs);
         }
         .empty {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .scorecard-wrap {
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           padding: var(--boxel-sp-xs);
         }
@@ -582,10 +581,13 @@ export class Meeting extends CardDef {
           grid-template-columns: 1fr;
         }
         .facts dt {
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           padding-top: 0.4rem;
         }
         .facts dd {
@@ -599,7 +601,7 @@ export class Meeting extends CardDef {
           }
           .side {
             border-left: 0;
-            border-top: 1px solid var(--border, var(--boxel-200));
+            border-top: 1px solid var(--border);
           }
         }
       </style>
@@ -612,9 +614,7 @@ export class Meeting extends CardDef {
     }
 
     get typePillStyle() {
-      return htmlSafe(
-        `background: ${this.typeColor.bg}; color: ${this.typeColor.fg};`,
-      );
+      return pillStyle(this.typeColor);
     }
 
     get accentBorderStyle() {
@@ -655,9 +655,8 @@ export class Meeting extends CardDef {
       <style scoped>
         .meeting-embedded {
           padding: var(--boxel-sp);
-          background: var(--card, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
           border-left: 0.1875rem solid;
           transition: box-shadow 0.15s ease-out;
         }
@@ -672,7 +671,7 @@ export class Meeting extends CardDef {
           font-size: var(--boxel-font-size);
         }
         .type {
-          padding: 2px var(--boxel-sp-4xs);
+          padding: 0.125rem var(--boxel-sp-4xs);
           border-radius: 999px;
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
@@ -691,10 +690,13 @@ export class Meeting extends CardDef {
           gap: var(--boxel-sp-5xs);
         }
         .meta-list dt {
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .meta-list dd {
           margin: 0;
@@ -717,12 +719,12 @@ export class Meeting extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .meeting-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .meeting-atom-name {
@@ -739,14 +741,8 @@ export class Meeting extends CardDef {
       return stateColorOf(MEETING_TYPE_COLORS, this.args.model?.meetingType);
     }
 
-    get iconStyle() {
-      return htmlSafe(`color: ${this.typeColor.ring};`);
-    }
-
     get typePillStyle() {
-      return htmlSafe(
-        `background: ${this.typeColor.bg}; color: ${this.typeColor.fg};`,
-      );
+      return pillStyle(this.typeColor);
     }
 
     get dateObj(): Date | undefined {
@@ -756,33 +752,6 @@ export class Meeting extends CardDef {
       }
       let d = new Date(value);
       return isNaN(d.getTime()) ? undefined : d;
-    }
-
-    get dateDay(): string {
-      return this.dateObj ? String(this.dateObj.getDate()) : '–';
-    }
-
-    get dateMonth(): string {
-      return this.dateObj
-        ? this.dateObj
-            .toLocaleDateString('en-US', { month: 'short' })
-            .toUpperCase()
-        : '';
-    }
-
-    get weekdayLabel(): string {
-      return this.dateObj
-        ? this.dateObj.toLocaleDateString('en-US', { weekday: 'short' })
-        : '';
-    }
-
-    get timeLabel(): string {
-      return this.dateObj
-        ? this.dateObj.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-          })
-        : '—';
     }
 
     // Same derivation as isolated: over and unscored means we owe an action.
@@ -806,9 +775,27 @@ export class Meeting extends CardDef {
       <article class='fit'>
         <div class='fit-top'>
           <div class='datebox' aria-hidden='true'>
-            <span class='db-month'>{{this.dateMonth}}</span>
-            <span class='db-day'>{{this.dateDay}}</span>
-            <span class='db-weekday'>{{this.weekdayLabel}}</span>
+            <FormatDate
+              class='db-month'
+              @date={{@model.date}}
+              @locale='en-US'
+              @month='short'
+              @placeholder=''
+            />
+            <FormatDate
+              class='db-day'
+              @date={{@model.date}}
+              @locale='en-US'
+              @day='numeric'
+              @placeholder='–'
+            />
+            <FormatDate
+              class='db-weekday'
+              @date={{@model.date}}
+              @locale='en-US'
+              @weekday='short'
+              @placeholder=''
+            />
           </div>
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
@@ -828,7 +815,7 @@ export class Meeting extends CardDef {
         </div>
 
         <div class='fit-mid'>
-          <span class='fit-time'>{{this.timeLabel}}</span>
+          <MeetingTime class='fit-time' @date={{@model.date}} />
           {{#if @model.candidateName}}
             <span class='fit-who'>{{@model.candidateName}}</span>
           {{/if}}
@@ -860,17 +847,16 @@ export class Meeting extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --meet-id: var(--primary, var(--boxel-highlight));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --meet-id: var(--primary);
           --meet-strong: color-mix(
             in oklch,
             var(--meet-id) 45%,
-            var(--foreground, var(--boxel-dark))
+            var(--foreground)
           );
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit > * {
           min-height: 0;
@@ -890,6 +876,7 @@ export class Meeting extends CardDef {
         }
         .db-month {
           display: block;
+          text-transform: uppercase;
           font-size: var(--fit-small);
           font-weight: 700;
           color: var(--meet-strong);
@@ -904,7 +891,7 @@ export class Meeting extends CardDef {
         .db-weekday {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-head {
           flex: 1;
@@ -924,7 +911,7 @@ export class Meeting extends CardDef {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -938,40 +925,32 @@ export class Meeting extends CardDef {
           font-size: var(--fit-small);
           font-weight: 700;
           padding: 0.1em 0.4em;
-          border-radius: 3px;
+          border-radius: 0.1875rem;
           white-space: nowrap;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .fit-pill.awaiting {
-          background: color-mix(
-            in oklch,
-            var(--boxel-danger) 12%,
-            var(--card, var(--boxel-light))
+          background-color: color-mix(
+            in oklab,
+            var(--destructive-ink) 12%,
+            var(--card)
           );
-          color: color-mix(
-            in oklch,
-            var(--boxel-danger) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
+          color: var(--destructive-ink);
         }
         .fit-pill.scored {
-          background: color-mix(
-            in oklch,
-            var(--boxel-success) 12%,
-            var(--card, var(--boxel-light))
+          background-color: color-mix(
+            in oklab,
+            var(--success-ink) 12%,
+            var(--card)
           );
-          color: color-mix(
-            in oklch,
-            var(--boxel-success) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
+          color: var(--success-ink);
         }
         .pill-dot {
-          width: 5px;
-          height: 5px;
+          width: 0.3125rem;
+          height: 0.3125rem;
           border-radius: 50%;
-          background: currentColor;
+          background-color: currentColor;
           flex: none;
         }
         .fit-mid {
@@ -987,7 +966,7 @@ export class Meeting extends CardDef {
         }
         .fit-who {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -997,7 +976,7 @@ export class Meeting extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -1009,7 +988,7 @@ export class Meeting extends CardDef {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;

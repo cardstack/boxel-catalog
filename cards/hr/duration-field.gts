@@ -198,9 +198,9 @@ export class DurationField extends FieldDef {
           gap: var(--boxel-sp-4xs);
           padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
           border-radius: var(--boxel-border-radius-sm);
-          border: 1px solid var(--border, var(--boxel-200));
-          background: var(--muted, var(--boxel-100));
-          color: var(--foreground, var(--boxel-dark));
+          border: 1px solid var(--border);
+          background-color: var(--muted);
+          color: var(--foreground);
           font-weight: 500;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.2;
@@ -226,7 +226,7 @@ export class DurationField extends FieldDef {
           font-weight: 600;
           font-size: var(--boxel-font-size-xs);
           line-height: 1;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

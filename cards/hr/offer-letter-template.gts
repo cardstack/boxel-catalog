@@ -126,14 +126,11 @@ export class OfferLetterTemplate extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --tpl-id: var(--primary, var(--boxel-highlight));
+          --tpl-id: var(--primary);
           --tpl-strong: color-mix(
             in oklch,
             var(--tpl-id) 45%,
-            var(--foreground, var(--boxel-dark))
+            var(--foreground)
           );
         }
         .hero {
@@ -142,7 +139,7 @@ export class OfferLetterTemplate extends CardDef {
           align-items: flex-start;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .avatar {
           flex: none;
@@ -151,8 +148,8 @@ export class OfferLetterTemplate extends CardDef {
           border-radius: 50%;
           display: grid;
           place-items: center;
-          background: var(--tpl-strong);
-          color: var(--background, var(--boxel-light));
+          background-color: var(--tpl-strong);
+          color: var(--background);
         }
         .avatar-icon {
           width: 1.5rem;
@@ -169,12 +166,11 @@ export class OfferLetterTemplate extends CardDef {
           letter-spacing: -0.02em;
           line-height: 1.2;
           overflow-wrap: anywhere;
-          font-family: var(--font-heading, inherit);
         }
         .byline {
           margin: var(--boxel-sp-5xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sep-dot {
           margin: 0 0.25rem;
@@ -192,8 +188,9 @@ export class OfferLetterTemplate extends CardDef {
         }
         .side {
           padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border, var(--boxel-200));
-          background: var(--muted, var(--boxel-100));
+          border-left: 1px solid var(--border);
+          background-color: var(--muted);
+          color: var(--foreground);
         }
         .panel-title {
           margin: 0 0 var(--boxel-sp-xs);
@@ -201,10 +198,11 @@ export class OfferLetterTemplate extends CardDef {
           font-weight: 700;
         }
         .letter {
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           padding: var(--boxel-sp);
-          background: var(--card, var(--boxel-light));
+          background-color: var(--card);
+          color: var(--card-foreground);
           font-size: var(--boxel-font-size-sm);
           line-height: 1.65;
           max-width: 62ch;
@@ -213,7 +211,7 @@ export class OfferLetterTemplate extends CardDef {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .legend {
           list-style: none;
@@ -225,28 +223,28 @@ export class OfferLetterTemplate extends CardDef {
           flex-direction: column;
           gap: 0.05rem;
           padding: 0.4rem 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .legend-row:last-child {
           border-bottom: 0;
         }
         .legend-row code {
-          font-family: var(--boxel-font-family-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .legend-row.used code {
           color: var(--tpl-strong);
         }
         .legend-src {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .empty {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container iso (max-width: 40rem) {
           .body {
@@ -254,7 +252,7 @@ export class OfferLetterTemplate extends CardDef {
           }
           .side {
             border-left: 0;
-            border-top: 1px solid var(--border, var(--boxel-200));
+            border-top: 1px solid var(--border);
           }
         }
       </style>
@@ -283,18 +281,18 @@ export class OfferLetterTemplate extends CardDef {
         }
         .te-icon {
           display: inline-flex;
-          width: 28px;
-          height: 28px;
+          width: 1.75rem;
+          height: 1.75rem;
           flex-shrink: 0;
           align-items: center;
           justify-content: center;
           border-radius: 50%;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .te-icon-svg {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
         }
         .te-main {
           display: flex;
@@ -311,7 +309,7 @@ export class OfferLetterTemplate extends CardDef {
         }
         .te-sub {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -330,12 +328,12 @@ export class OfferLetterTemplate extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .template-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .template-atom-name {
@@ -393,17 +391,16 @@ export class OfferLetterTemplate extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --tpl-id: var(--primary, var(--boxel-highlight));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --tpl-id: var(--primary);
           --tpl-strong: color-mix(
             in oklch,
             var(--tpl-id) 45%,
-            var(--foreground, var(--boxel-dark))
+            var(--foreground)
           );
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit > * {
           min-height: 0;
@@ -423,8 +420,8 @@ export class OfferLetterTemplate extends CardDef {
           border-radius: 50%;
           display: grid;
           place-items: center;
-          background: var(--tpl-strong);
-          color: var(--background, var(--boxel-light));
+          background-color: var(--tpl-strong);
+          color: var(--background);
         }
         .avatar-icon {
           width: 0.85rem;
@@ -448,7 +445,7 @@ export class OfferLetterTemplate extends CardDef {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -468,10 +465,10 @@ export class OfferLetterTemplate extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           font-size: var(--fit-small);
           line-height: 1.4;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 3;
           overflow: hidden;
