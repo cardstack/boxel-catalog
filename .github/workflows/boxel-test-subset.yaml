@@ -120,7 +120,7 @@ jobs:
     name: Boxel tests against this catalog
     needs: scope
     if: needs.scope.outputs.run == 'true'
-    uses: cardstack/boxel/.github/workflows/catalog-test-subset-consumers.yml@cs-13189-expose-boxels-subset-consumer-test-run-as-a-reusable
+    uses: cardstack/boxel/.github/workflows/catalog-test-subset-consumers.yml@main
     permissions:
       contents: read
       # boxel's workflow requests this for its own runs, which pull its test
