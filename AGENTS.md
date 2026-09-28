@@ -12,7 +12,7 @@ Some definitions in this repo are system-level: code and tests in the boxel mono
 To change a file the manifest lists, or to add one:
 
 1. **Keep it compatible with boxel `main`.** The deployed catalog realm serves this repo's `main`, running against the deployed platform. Platform code the change needs, such as a serializer, a `runtime-common` export or a base module, lands in boxel first.
-2. **Name the branch after the boxel branch that pins the change.** The `Boxel Test Subset` workflow runs boxel's tests for these files whenever a PR touches one. It runs them against the boxel branch with the same name when there is one, and otherwise against boxel `main`.
+2. **Name the branch after the boxel branch that pins the change, and push that boxel branch first.** The `Boxel Test Subset` workflow runs boxel's tests for these files whenever a PR touches one. When it runs, it reads the manifest from the boxel branch with the same name, and from boxel `main` when there is no such branch. So when you add a file, push the boxel branch with its manifest entry before you push this branch or open the PR. Otherwise the workflow reads boxel `main`'s manifest, which doesn't list the new file, and passes without running any test. If it already ran, re-run it once the boxel branch exists.
 3. **Only import what boxel's test stack can serve.** Each import must be one of:
    - another file in the list, which then goes in the manifest too;
    - a base module (`https://cardstack.com/base/…`);
