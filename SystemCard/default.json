@@ -81,12 +81,12 @@
       },
       "modelConfigurations.11": {
         "links": {
-          "self": "../ModelConfiguration/x-ai-grok-46"
+          "self": "../ModelConfiguration/x-ai-grok-47"
         }
       },
       "modelConfigurations.12": {
         "links": {
-          "self": "../ModelConfiguration/x-ai-grok-45"
+          "self": "../ModelConfiguration/x-ai-grok-46"
         }
       },
       "modelConfigurations.13": {
