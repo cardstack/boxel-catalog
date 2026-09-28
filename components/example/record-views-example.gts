@@ -6,7 +6,6 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import TableIcon from '@cardstack/boxel-icons/table';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 import { Table, type TableColumn } from '../table';
 import { Board, type BoardColumn } from '../board';
@@ -45,21 +44,6 @@ function priorityHueOf(item: CardDef) {
   return priorityOption(PriorityField, task(item).priority)?.hue;
 }
 
-// The date columns render through one FormatDate whose parts reproduce
-// `toLocaleDateString()`, keyed by column so both cells share the markup.
-const DATE_OF: Record<string, (t: TaskRecordExample) => Date | undefined> = {
-  due: (t) => t.dueDate ?? undefined,
-  created: (t) => t.createdAt ?? undefined,
-};
-
-function isDateColumn(key: string): boolean {
-  return key in DATE_OF;
-}
-
-function dateOf(item: CardDef, key: string) {
-  return DATE_OF[key]?.(task(item));
-}
-
 /**
  * The same task records shown two ways: a Table with Status and Priority pills
  * yielded into cells, and a Board whose columns are the Status field's option
@@ -85,12 +69,14 @@ export class RecordViewsExample extends CardDef {
         key: 'due',
         label: 'Due',
         showAbove: 640,
+        value: (t) => task(t).dueDate?.toLocaleDateString(),
         sortValue: (t) => task(t).dueDate?.getTime(),
       },
       {
         key: 'created',
         label: 'Created',
         showAbove: 900,
+        value: (t) => task(t).createdAt?.toLocaleDateString(),
         sortValue: (t) => task(t).createdAt?.getTime(),
       },
     ];
@@ -141,13 +127,6 @@ export class RecordViewsExample extends CardDef {
                   @label={{priorityOf item}}
                   @hue={{priorityHueOf item}}
                 />
-              {{else if (isDateColumn column.key)}}
-                <FormatDate
-                  @date={{dateOf item column.key}}
-                  @year='numeric'
-                  @month='numeric'
-                  @day='numeric'
-                />
               {{/if}}
             </:cell>
           </Table>
@@ -171,20 +150,22 @@ export class RecordViewsExample extends CardDef {
           display: grid;
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp-lg);
+          font-family: var(--font-sans, var(--boxel-font-family));
+          color: var(--foreground, var(--boxel-dark));
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           font-weight: 600;
-          color: var(--muted-foreground);
+          color: var(--muted-foreground, var(--boxel-450));
         }
         .hint {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
+          color: var(--muted-foreground, var(--boxel-450));
         }
         .board-section {
-          min-height: 26.25rem;
+          min-height: 420px;
           display: grid;
           grid-template-rows: auto auto 1fr;
         }
