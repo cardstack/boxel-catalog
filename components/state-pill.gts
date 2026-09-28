@@ -7,10 +7,10 @@ export interface StateColor {
   ring: string;
 }
 
-// The three status hues read the theme's status tokens, so a linked theme
-// restyles them. The category hues have no contract token and come from
-// boxel's fixed palette; orange, blue and pink are mixed from tokens that do
-// exist so one token definition still corrects every hue.
+// The status hues read the theme's status tokens, so a linked theme restyles
+// them; orange sits between warning and destructive and follows both. The
+// category hues (teal, purple, blue, pink) have no contract token and come
+// only from boxel's fixed palette, so a theme never moves them.
 const HUE = {
   green: 'var(--success)',
   red: 'var(--destructive)',
@@ -19,19 +19,20 @@ const HUE = {
   teal: 'var(--boxel-dark-teal)',
   purple: 'var(--boxel-purple)',
   blue: 'color-mix(in oklch, var(--boxel-purple) 55%, var(--boxel-highlight))',
-  pink: 'color-mix(in oklch, var(--destructive) 60%, var(--boxel-purple))',
+  pink: 'color-mix(in oklch, var(--boxel-danger) 60%, var(--boxel-purple))',
   slate: 'var(--muted-foreground)',
 } as const;
 
 export type Hue = keyof typeof HUE;
 
-// Text for the solid (emphatic) fill. A hue that is a theme status fill takes
-// that fill's own paired foreground, which the theme guarantees reads on it.
+// Text for the solid (emphatic) fill. A status hue takes its fill's paired
+// foreground from the theme; orange is mostly warning, so it takes warning's.
 // The category hues have no pair and keep the inverse of the page.
 const EMPHATIC_FOREGROUND: Partial<Record<Hue, string>> = {
   green: 'var(--success-foreground)',
   red: 'var(--destructive-foreground)',
   amber: 'var(--warning-foreground)',
+  orange: 'var(--warning-foreground)',
 };
 
 // One hue in, a checked pair out. Fill and text derive from the same hue and

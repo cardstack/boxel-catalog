@@ -2,7 +2,6 @@ import { Component } from 'https://cardstack.com/base/card-api';
 import DateTimeField from 'https://cardstack.com/base/datetime';
 import CalendarPlusIcon from '@cardstack/boxel-icons/calendar-plus';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
-import { RelativeTime } from '@cardstack/pretui/components/relative-time';
 
 import { validDate } from '../../utils/valid-date';
 
@@ -17,11 +16,6 @@ const UNITS: [limitSeconds: number, divisorSeconds: number, suffix: string][] =
     [Infinity, 31557600, 'y'],
   ];
 
-/** Within a minute either way reads "just now": clock skew, not an anomaly. */
-function isJustNow(value: Date): boolean {
-  return Math.abs(Date.now() - value.getTime()) < 60000;
-}
-
 /** "3d ago" / "in 2h" / "just now". Anything within a minute either way reads "just now" (clock skew, not an anomaly); beyond that a future stamp renders as "in …" so it stays visible rather than clamped. */
 export function relativeStamp(
   value: Date | null | undefined,
@@ -30,12 +24,12 @@ export function relativeStamp(
   if (!date) {
     return undefined;
   }
-  if (isJustNow(date)) {
-    return 'just now';
-  }
   let diffSeconds = (Date.now() - date.getTime()) / 1000;
   let past = diffSeconds >= 0;
   let magnitude = Math.abs(diffSeconds);
+  if (magnitude < 60) {
+    return 'just now';
+  }
   for (let [limit, divisor, suffix] of UNITS) {
     if (magnitude < limit) {
       let n = Math.floor(magnitude / divisor);
@@ -78,8 +72,8 @@ export class CreatedAtField extends DateTimeField {
     get stamp() {
       return validDate(this.args.model);
     }
-    get justNow() {
-      return this.stamp ? isJustNow(this.stamp) : false;
+    get relative() {
+      return relativeStamp(this.args.model);
     }
     <template>
       {{#if this.stamp}}
@@ -93,11 +87,7 @@ export class CreatedAtField extends DateTimeField {
             @minute='2-digit'
             @hour12={{false}}
           />
-          <span class='relative'>({{#if this.justNow}}just now{{else}}<RelativeTime
-                @date={{this.stamp}}
-                @format='narrow'
-                @numeric='always'
-              />{{/if}})</span>
+          <span class='relative'>({{this.relative}})</span>
         </span>
       {{else}}
         <span class='unset' aria-label='No creation time'>—</span>
@@ -115,28 +105,22 @@ export class CreatedAtField extends DateTimeField {
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get stamp() {
-      return validDate(this.args.model);
-    }
-    get justNow() {
-      return this.stamp ? isJustNow(this.stamp) : false;
+    get relative() {
+      return relativeStamp(this.args.model);
     }
     get absolute() {
       return absoluteStamp(this.args.model);
     }
+    get iso() {
+      return validDate(this.args.model)?.toISOString();
+    }
     <template>
-      {{#if this.stamp}}
-        {{#if this.justNow}}
-          <span class='stamp-atom' title={{this.absolute}}>just now</span>
-        {{else}}
-          <RelativeTime
-            class='stamp-atom'
-            title={{this.absolute}}
-            @date={{this.stamp}}
-            @format='narrow'
-            @numeric='always'
-          />
-        {{/if}}
+      {{#if this.relative}}
+        <time
+          class='stamp-atom'
+          datetime={{this.iso}}
+          title={{this.absolute}}
+        >{{this.relative}}</time>
       {{else}}
         <span class='unset' aria-label='No creation time'>—</span>
       {{/if}}
