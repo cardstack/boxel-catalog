@@ -161,7 +161,6 @@ async function runImageEngine(
     path: filePath,
     realm: opts.targetRealmIdentifier,
     base64Content,
-    contentType: mimeType,
     useNonConflictingFilename: true,
   });
 
@@ -275,7 +274,6 @@ export class GenerateAiImageCommand extends Command<
           path: `${dir}/ai-image-mask-${Date.now()}.${ext}`,
           realm,
           base64Content,
-          contentType: mimeType,
           useNonConflictingFilename: true,
         });
         const maskUrl = writeResult?.fileIdentifier;

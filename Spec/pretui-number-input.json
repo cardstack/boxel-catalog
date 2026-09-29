@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/number-input",
+        "name": "NumberInput"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { NumberInput } from '@cardstack/pretui/components/number-input';\n```\n",
+      "cardTitle": "NumberInput",
+      "cardDescription": "Numeric input, min/max/step + precision clamp",
+      "containedExamples": [],
+      "componentName": "NumberInput",
+      "icon": "plus-minus",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "boxel-ui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "boxel-ui",
+      "lineage": "BoxelInput",
+      "version": "0.4.0",
+      "brief": "Numeric input, min/max/step + precision clamp · BoxelInput number core",
+      "refs": "wa-input[type=number] · MUI NumberField",
+      "buildsOn": "boxel-ui BoxelInput",
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "NumberInput",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/number-input.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/number-input.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

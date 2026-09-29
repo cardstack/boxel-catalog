@@ -7,10 +7,33 @@
         "name": "Switch"
       },
       "specType": "component",
-      "readMe": "# Switch\n\n## Summary\nAn immediate on/off. The distinction from **Checkbox** is not shape, it is _when the change lands_: a Switch takes effect the moment it is flipped, a Checkbox is a value collected and submitted. If your Switch sits above a Save button, it should have been a Checkbox. For one-of-many use **RadioGroup**; for a pressed/unpressed _action_ use a **Button** with `aria-pressed`.\n\n## API\n```\n@checked?, @defaultChecked?, @disabled?, @controlId?\n@onCheckedChange?(checked: boolean)\nElement: HTMLButtonElement\n```\n\n## Usage\n```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n\n<Switch @controlId='notify' @checked={{@model.notify}} @onCheckedChange={{this.setNotify}} />\n<label for='notify'>Notifications</label>\n```\n\nServed from the Pret UI realm. The component's full write-up, with prior art, accessibility and theming notes, lives beside its source at `@cardstack/pretui/components/switch.md`.\n",
+      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
       "cardTitle": "Switch",
       "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
       "containedExamples": [],
+      "componentName": "Switch",
+      "icon": "toggle-right",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "Switch",
+      "version": "0.4.0",
+      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
+      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
       "cardInfo": {
         "name": "Switch",
         "summary": null,
@@ -19,6 +42,15 @@
       }
     },
     "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/switch.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/switch.md"
+        }
+      },
       "linkedExamples": {
         "links": {
           "self": null
@@ -37,8 +69,8 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
-        "name": "Spec"
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
       }
     }
   }

@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/range-slider",
+        "name": "RangeSlider"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { RangeSlider } from '@cardstack/pretui/components/range-slider';\n```\n",
+      "cardTitle": "RangeSlider",
+      "cardDescription": "ALIAS of Slider in @range mode — already implemented",
+      "containedExamples": [],
+      "componentName": "RangeSlider",
+      "icon": "sliders-vertical",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "ALIAS of Slider in @range mode — already implemented",
+      "refs": "shadcn Slider(array) · Mantine RangeSlider · Ant Slider(range) · MUI Slider(range)",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 4,
+      "cardInfo": {
+        "name": "RangeSlider",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/range-slider.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/range-slider.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

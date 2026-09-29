@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/usage-object",
+        "name": "UsageObject"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { UsageObject } from '@cardstack/pretui/components/usage-object';\n```\n",
+      "cardTitle": "UsageObject",
+      "cardDescription": "Read-only JSON viewer row",
+      "containedExamples": [],
+      "componentName": "UsageObject",
+      "icon": "brackets-contain",
+      "category": "Authoring Tools",
+      "tier": "Runtime",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "freestyle",
+      "stage": "live",
+      "source": "ember-freestyle",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Read-only JSON viewer row · ember-freestyle Usage::Object",
+      "refs": null,
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "UsageObject",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/usage-object.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/usage-object.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

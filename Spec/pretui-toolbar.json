@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/toolbar",
+        "name": "Toolbar"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Toolbar } from '@cardstack/pretui/components/toolbar';\n```\n",
+      "cardTitle": "Toolbar",
+      "cardDescription": "Page-top rail: eyebrow, title, meta, trailing actions",
+      "containedExamples": [],
+      "componentName": "Toolbar",
+      "icon": "tools",
+      "category": "Navigation",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "BoxelHeader",
+      "version": "0.4.0",
+      "brief": "Page-top rail: eyebrow, title, meta, trailing actions · boxel-ui Header re-cut",
+      "refs": "shadcn none · boxel-ui BoxelHeader",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "Toolbar",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/toolbar.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/toolbar.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

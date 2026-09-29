@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/relative-time",
+        "name": "RelativeTime"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { RelativeTime } from '@cardstack/pretui/components/relative-time';\n```\n",
+      "cardTitle": "RelativeTime",
+      "cardDescription": "One-shot relative phrase from caller-supplied now",
+      "containedExamples": [],
+      "componentName": "RelativeTime",
+      "icon": "clock",
+      "category": "Data Display",
+      "tier": "Element",
+      "tags": [
+        "time-based"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "reading",
+      "stage": "live",
+      "source": "webawesome",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "One-shot relative phrase from caller-supplied now · wa-relative-time, timer-free",
+      "refs": "wa-relative-time",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "RelativeTime",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/relative-time.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/relative-time.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

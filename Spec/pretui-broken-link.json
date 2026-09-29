@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/broken-link",
+        "name": "BrokenLink"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { BrokenLink } from '@cardstack/pretui/components/broken-link';\n```\n",
+      "cardTitle": "BrokenLink",
+      "cardDescription": "Broken card-reference affordance",
+      "containedExamples": [],
+      "componentName": "BrokenLink",
+      "icon": "link-2-off",
+      "category": "Feedback",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "feedback",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "BrokenLink",
+      "version": "0.4.0",
+      "brief": "Broken card-reference affordance · unique to Boxel",
+      "refs": null,
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "BrokenLink",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/broken-link.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/broken-link.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
