@@ -51,7 +51,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/catalog/e4df05-gen-ui-analytics-dashboard/gen-ui-dashboard",
+        "module": "../gen-ui-dashboard",
         "name": "GenUiDashboard"
       }
     }
