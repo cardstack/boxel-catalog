@@ -23,6 +23,21 @@ import { fn } from '@ember/helper';
 // the constructor, never at module evaluation.
 import { Shipment } from './shipment';
 import { isShipmentException } from './shipment-status';
+import StatusChip from './fulfilment-status-chip';
+import { ALERT_STYLE, LoadingRows } from './fulfilment-ui';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
+import { eq } from '@cardstack/boxel-ui/helpers';
+
+const ACCOUNT_FACTS = [
+  { key: 'Account number', value: 'accountNumber' },
+  { key: 'Tracking URL', value: 'trackingUrlPattern' },
+  { key: 'Dimensional divisor', value: 'dimDivisor' },
+  { key: 'Countries', value: 'supportedCountries' },
+];
 
 // A carrier's service level: the promise, and what it costs.
 //
@@ -89,30 +104,30 @@ export class CarrierServiceField extends FieldDef {
           grid-template-columns: minmax(0, 1fr) 6rem 5rem 5.5rem;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xxs) 0;
+          padding: var(--boxel-sp-2xs) 0;
           font-size: 0.85rem;
         }
         .svc-name {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .svc-speed,
         .svc-perkg {
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           font-size: 0.78rem;
         }
         .svc-rate,
         .svc-perkg {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
         }
         .svc-rate {
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -281,6 +296,12 @@ export class Carrier extends CardDef {
       return this.shipments.filter((s) => s.status && s.status !== 'delivered');
     }
 
+    // Stat prints a string verbatim, and an empty one as its dash.
+    get onTimeText() {
+      let pct = this.args.model?.onTimePercent;
+      return pct ? `${pct}%` : '';
+    }
+
     get troubled(): any[] {
       return this.inFlight.filter(
         (s) => s.isLate || isShipmentException(s.status),
@@ -291,49 +312,56 @@ export class Carrier extends CardDef {
       <article class='carrier'>
         <header class='hd'>
           <div class='hd-id'>
-            <span class='code'>{{@model.code}}</span>
+            {{#if @model.code}}<Token
+                class='code'
+                @value={{@model.code}}
+              />{{/if}}
             <h1 class='name'>{{@model.carrierName}}</h1>
           </div>
-          <dl class='hd-stats'>
-            <div>
-              <dt>On time</dt>
-              <dd>{{#if
-                  @model.onTimePercent
-                }}{{@model.onTimePercent}}%{{else}}—{{/if}}</dd>
-            </div>
-            <div>
-              <dt>Deliveries</dt>
-              <dd>{{if @model.totalDeliveries @model.totalDeliveries '—'}}</dd>
-            </div>
-            <div>
-              <dt>Services</dt>
-              <dd>{{@model.services.length}}</dd>
-            </div>
-            <div>
-              <dt>In flight</dt>
-              <dd>{{this.inFlight.length}}</dd>
-            </div>
-            <div class='{{if this.troubled.length "alarm"}}'>
-              <dt>Troubled</dt>
-              <dd>{{this.troubled.length}}</dd>
-            </div>
-          </dl>
+          <div class='hd-stats'>
+            <Stat
+              class='stat'
+              @label='On time'
+              @value={{this.onTimeText}}
+              @roll={{false}}
+            />
+            <Stat
+              class='stat'
+              @label='Deliveries'
+              @value={{if @model.totalDeliveries @model.totalDeliveries ''}}
+            />
+            <Stat
+              class='stat'
+              @label='Services'
+              @value={{if @model.services.length @model.services.length 0}}
+            />
+            <Stat
+              class='stat'
+              @label='In flight'
+              @value={{this.inFlight.length}}
+              @roll={{false}}
+            />
+            <Stat
+              class='stat {{if this.troubled.length "alarm"}}'
+              @label='Troubled'
+              @value={{this.troubled.length}}
+              @roll={{false}}
+            />
+          </div>
         </header>
 
         <section class='sec'>
           <h2><Route class='sec-icon' role='presentation' />With them now</h2>
           {{#if this.queryError}}
-            <p class='q-error' role='alert'>Could not read shipments for this
-              carrier.
-              {{this.queryError}}</p>
+            <Alert
+              @tone='danger'
+              @title='Could not read shipments for this carrier.'
+              style={{ALERT_STYLE.danger}}
+            >{{this.queryError}}</Alert>
             {{! Loading is not empty. Space is reserved so the section does not
               jump when the query lands. }}
           {{else if this.isQueryLoading}}
-            <ul class='sk-rows' aria-busy='true'>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-            </ul>
+            <LoadingRows />
           {{else if this.inFlight.length}}
             <ul class='cs-rows'>
               {{#each this.inFlight as |s|}}
@@ -343,7 +371,7 @@ export class Carrier extends CardDef {
                     class='cs-row {{if s.isLate "cs-late"}}'
                     {{on 'click' (fn this.open s)}}
                   >
-                    <span class='cs-num'>{{s.shipmentNumber}}</span>
+                    <Token class='cs-num' @value={{s.shipmentNumber}} />
                     <span class='cs-svc'>{{if
                         s.serviceLevel
                         s.serviceLevel
@@ -354,13 +382,20 @@ export class Carrier extends CardDef {
                         s.latestEvent.location
                         ''
                       }}</span>
-                    <span class='cs-state'>{{s.statusStyle.label}}</span>
+                    <span class='cs-state'><StatusChip
+                        @label={{s.statusStyle.label}}
+                        @hue={{s.statusStyle.hue}}
+                      /></span>
                   </button>
                 </li>
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>Nothing with this carrier right now.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='Nothing with this carrier right now'
+            />
           {{/if}}
         </section>
 
@@ -375,54 +410,48 @@ export class Carrier extends CardDef {
           {{#if @model.services.length}}
             <@fields.services @format='embedded' />
           {{else}}
-            <p class='empty'>No services configured. Rate shopping will skip
-              this carrier until at least one service has a base rate.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No services configured'
+              @message='Rate shopping will skip this carrier until at least one service has a base rate.'
+            />
           {{/if}}
         </section>
 
         <section class='sec'>
           <h2><CreditCard class='sec-icon' role='presentation' />Account</h2>
-          <dl class='kv'>
-            <div>
-              <dt>Account number</dt>
-              <dd class='mono'>{{if
-                  @model.accountNumber
-                  @model.accountNumber
-                  '—'
-                }}</dd>
-            </div>
-            <div>
-              <dt>Tracking URL</dt>
-              <dd class='mono wrap'>{{if
-                  @model.trackingUrlPattern
-                  @model.trackingUrlPattern
-                  'Not configured — tracking numbers will not link out'
-                }}</dd>
-            </div>
-            <div>
-              <dt>Dimensional divisor</dt>
-              <dd class='mono'>{{if
-                  @model.dimDivisor
-                  @model.dimDivisor
-                  '—'
-                }}</dd>
-            </div>
-            <div>
-              <dt>Countries</dt>
-              <dd>{{if
+          <KeyValue class='kv' @items={{ACCOUNT_FACTS}}>
+            <:value as |item|>
+              {{#if (eq item.value 'accountNumber')}}
+                {{#if @model.accountNumber}}<Token
+                    @value={{@model.accountNumber}}
+                  />{{else}}—{{/if}}
+              {{else if (eq item.value 'trackingUrlPattern')}}
+                <span class='mono wrap'>{{if
+                    @model.trackingUrlPattern
+                    @model.trackingUrlPattern
+                    'Not configured — tracking numbers will not link out'
+                  }}</span>
+              {{else if (eq item.value 'dimDivisor')}}
+                <span class='mono'>{{if
+                    @model.dimDivisor
+                    @model.dimDivisor
+                    '—'
+                  }}</span>
+              {{else}}
+                {{if
                   @model.supportedCountries.length
                   (join @model.supportedCountries)
                   '—'
-                }}</dd>
-            </div>
-          </dl>
+                }}
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
       </article>
 
       <style scoped>
-        /* Adapter block: the semantic set forwarded once into this card's
-           vocabulary. Nothing is invented here — every value is a token or a
-           mix of one. */
         .carrier {
           /* Type scale, mapped to the house 1.333 modular scale rather than the
              28 hand-picked rem values these cards used to carry — 44 of which
@@ -438,12 +467,6 @@ export class Carrier extends CardDef {
              card scrolls, and `size` needs a definite block size. */
           container-type: inline-size;
           container-name: card-iso;
-          --ful-bg: var(--background);
-          --ful-fg: var(--foreground);
-          --ful-card-bg: var(--card);
-          --ful-card-fg: var(--card-foreground);
-          --ful-muted-fg: var(--muted-foreground);
-          --ful-border: var(--border);
 
           /* ONE panel primitive. Every full-width tinted block on this card —
              section, note, alert, callout — takes its ground, inset and radius
@@ -454,32 +477,9 @@ export class Carrier extends CardDef {
              every gap between them reads as a mis-registration rather than a
              rhythm. The inset is the thing that must agree; the tint only
              exposed it. */
-          /* State colours through the adapter block, not as literal hex. These
-             were `#b91c1c` / `#b45309` / `#15803d` written straight into `color:`
-             declarations — a text colour no theme can move, and the exact thing
-             boxel-theming C1 forbids. Each is now the semantic state token mixed
-             TOWARD `--foreground`, which is what keeps it legible on a dark ground
-             as well as a light one: --foreground flips, so the mix flips with it.
-             `--warning` is `initial` in some themes, hence a `--boxel-*` fallback
-             on every one. */
-          --ful-danger: color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --ful-warn: color-mix(
-            in oklch,
-            var(--warning, var(--boxel-warning)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --ful-ok: color-mix(
-            in oklch,
-            var(--success, var(--boxel-success)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
              `.cols .sec { margin-top: 0 }` override for the side-by-side case —
              two mechanisms for one relationship, and `.cols` itself had neither,
@@ -495,9 +495,6 @@ export class Carrier extends CardDef {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
-          background: var(--ful-bg, var(--boxel-light));
-          color: var(--ful-fg, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         .hd {
           display: flex;
@@ -506,44 +503,29 @@ export class Carrier extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           padding-bottom: var(--boxel-sp);
-          border-bottom: 2px solid var(--ful-rule);
+          border-bottom: 0.125rem solid var(--ful-rule);
         }
-        .code {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.16em;
-          color: var(--ful-muted-fg, var(--boxel-500));
+        /* Pret UI Token for the carrier code, on the muted ink. The body
+           knob lands the pill at the micro size. */
+        .hd .code {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(var(--t-micro) + 3.5px);
+          margin-inline: 0;
         }
         .name {
           margin: 0.1rem 0 0;
           font-size: var(--t-xl);
           line-height: 1.05;
-          font-family: var(--font-heading, inherit);
-          color: var(--ful-fg, var(--boxel-dark));
+          color: var(--foreground);
         }
         .hd-stats {
           display: flex;
+          flex-wrap: wrap;
           gap: var(--boxel-sp-lg);
-          margin: 0;
         }
-        .hd-stats div {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-        .hd-stats dt {
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
-        }
-        .hd-stats dd {
-          margin: 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
-          font-size: var(--t-lg);
-          font-weight: 700;
+        /* Pret UI Stat: the knob keeps the figure at the old large size. */
+        .stat {
+          --text-stat: var(--t-lg);
         }
         .sec {
           /* A surface, not just a gap. Sections were told apart only by spacing,
@@ -553,7 +535,7 @@ export class Carrier extends CardDef {
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .sec h2 {
           /* The section heading is now the loudest uppercase thing on the card:
@@ -561,70 +543,61 @@ export class Carrier extends CardDef {
              alone (500 vs 400) was not a readable difference. */
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.14em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-fg, var(--foreground, var(--boxel-dark)));
+          color: var(--foreground);
         }
         .svc-head {
           display: grid;
           grid-template-columns: minmax(0, 1fr) 6rem 5rem 5.5rem;
           gap: var(--boxel-sp-xs);
-          padding-bottom: 4px;
-          border-bottom: 1px solid var(--ful-border, var(--boxel-border-color));
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
+          padding-bottom: 0.25rem;
+          border-bottom: 1px solid var(--border);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .svc-head span:nth-child(n + 3) {
           text-align: right;
         }
+        /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-          margin: 0;
-        }
-        .kv div {
-          display: grid;
-          grid-template-columns: 12rem minmax(0, 1fr);
-          gap: var(--boxel-sp-xs);
-        }
-        .kv dt {
-          font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
-        }
-        .kv dd {
-          margin: 0;
-          font-size: var(--t-sm);
+          --text-ui: var(--t-micro);
+          --text-ui-md: var(--t-sm);
+          --space-6: 1.25rem;
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         .wrap {
           overflow-wrap: anywhere;
         }
+        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
+           title at the body size. */
         .empty {
-          font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
-          margin: var(--boxel-sp-xs) 0 0;
-        }
-        @media (width <= 500px) {
-          .kv div {
-            grid-template-columns: minmax(0, 1fr);
-          }
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
+          margin-top: var(--boxel-sp-xs);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
            card scannable by shape; they must never compete with the heading. */
         h2 .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
 
         /* One collapse stop. The card is rendered in a resizable stack panel, so
@@ -637,8 +610,8 @@ export class Carrier extends CardDef {
           }
         }
 
-        .hd-stats .alarm dd {
-          color: var(--ful-danger);
+        .hd-stats .alarm {
+          color: var(--destructive-ink);
         }
         .cs-rows {
           margin: 0;
@@ -650,31 +623,33 @@ export class Carrier extends CardDef {
           grid-template-columns: 9rem 9rem minmax(0, 1fr) 7rem;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          padding: 6px 0;
-          border-top: 1px solid var(--ful-rule, var(--boxel-border-color));
+          padding: 0.375rem 0;
+          border-top: 1px solid var(--ful-rule);
           font-size: var(--t-sm);
         }
-        .cs-num {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-weight: 700;
+        /* Pret UI Token for the shipment number, on the primary ink. */
+        .cs-row .cs-num {
+          --pretui-token-hue: var(--primary-ink);
+          --text-body: calc(var(--t-sm) + 3.5px);
+          justify-self: start;
+          margin-inline: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .cs-svc,
         .cs-dest {
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .cs-state {
           text-align: right;
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
         }
-        .cs-late .cs-state,
-        .cs-late .cs-num {
-          color: var(--ful-danger);
+        /* A late row's number takes the danger ink. */
+        .cs-row.cs-late .cs-num {
+          --pretui-token-hue: var(--destructive-ink);
         }
 
         .cs-row-li {
@@ -686,7 +661,7 @@ export class Carrier extends CardDef {
         button.cs-row {
           width: 100%;
           border: 0;
-          border-top: 1px solid var(--ful-rule, var(--boxel-border-color));
+          border-top: 1px solid var(--ful-rule);
           background: none;
           font: inherit;
           color: inherit;
@@ -695,46 +670,20 @@ export class Carrier extends CardDef {
           transition: background-color 160ms ease-out;
         }
         button.cs-row:hover {
-          background: color-mix(in oklch, var(--foreground) 5%, transparent);
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 5%,
+            transparent
+          );
         }
         button.cs-row:focus-visible {
-          outline: 2px solid var(--ring, var(--boxel-highlight));
-          outline-offset: -2px;
+          outline: 0.125rem solid var(--ring);
+          outline-offset: -0.125rem;
         }
         @media (prefers-reduced-motion: reduce) {
           button.cs-row {
             transition: none;
           }
-        }
-        /* Skeleton rows hold the height the real rows will take. Motion is
-           opt-in via prefers-reduced-motion; the shape is not. */
-        .sk-rows {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: grid;
-          gap: 8px;
-        }
-        .sk-line {
-          height: 14px;
-          border-radius: 3px;
-          background: color-mix(in oklch, var(--foreground) 7%, transparent);
-        }
-        @media (prefers-reduced-motion: no-preference) {
-          .sk-line {
-            animation: sk-pulse 1.4s ease-in-out infinite;
-          }
-        }
-        @keyframes sk-pulse {
-          50% {
-            opacity: 0.45;
-          }
-        }
-        .q-error {
-          margin: 0;
-          padding: var(--boxel-sp-xs) 0;
-          font-size: var(--t-sm);
-          color: var(--ful-danger);
         }
       </style>
     </template>
@@ -743,7 +692,10 @@ export class Carrier extends CardDef {
   static embedded = class Embedded extends Component<typeof Carrier> {
     <template>
       <div class='c-emb'>
-        <span class='c-code'>{{@model.code}}</span>
+        <span class='c-code'>{{#if @model.code}}<Token
+              class='c-token'
+              @value={{@model.code}}
+            />{{/if}}</span>
         <span class='c-name'>{{@model.carrierName}}</span>
         <span class='c-slot'>{{#if
             @model.onTimePercent
@@ -759,15 +711,17 @@ export class Carrier extends CardDef {
           font-size: 0.9rem;
         }
         .c-code {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: 0.7rem;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, var(--boxel-500));
+          min-width: 0;
+        }
+        /* Pret UI Token for the carrier code, on the muted ink. */
+        .c-code .c-token {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.7rem + 3.5px);
+          margin-inline: 0;
         }
         .c-name {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -776,7 +730,7 @@ export class Carrier extends CardDef {
           text-align: right;
           font-size: 0.78rem;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -839,17 +793,20 @@ export class Carrier extends CardDef {
              display role individually did not: in a tall cell the cqi term still
              governs, so tiles are unchanged. */
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(11px, calc(var(--type-base) / var(--type-ratio)));
-          --glyph-size: max(11px, min(3cqi, 14cqb));
+          --meta-size: max(
+            0.6875rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
+          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
           --headline-size: max(
-            11px,
+            0.6875rem,
             min(calc(var(--type-base) * pow(var(--type-ratio), 2)), 26cqb)
           );
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
 
           width: 100%;
           height: 100%;
@@ -857,12 +814,11 @@ export class Carrier extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         /* The card's own icon, the same one its isolated view uses — the
            fitted's visual anchor. It sits on the quiet eyebrow row so it can
@@ -871,14 +827,14 @@ export class Carrier extends CardDef {
         .eyebrow {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 0.25rem;
           min-width: 0;
         }
         .glyph {
           flex: none;
           width: var(--glyph-size);
           height: var(--glyph-size);
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
         .r-head {
           grid-area: head;
@@ -895,19 +851,19 @@ export class Carrier extends CardDef {
           overflow: hidden;
           min-height: 0;
           display: flex;
-          gap: 8px;
+          gap: 0.5rem;
           justify-content: space-between;
           align-items: baseline;
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .code {
           display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
           font-weight: 700;
           letter-spacing: 0.14em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .headline {
           margin: 0;
@@ -920,16 +876,16 @@ export class Carrier extends CardDef {
           overflow: hidden;
         }
         .cheapest {
-          margin: 4px 0 0;
+          margin: 0.25rem 0 0;
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
           overflow: hidden;
         }
         .cheapest strong {
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
         }
         .ontime {
           font-variant-numeric: tabular-nums;

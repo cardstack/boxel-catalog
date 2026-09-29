@@ -6,6 +6,7 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import TableIcon from '@cardstack/boxel-icons/table';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { TrackedObject } from 'tracked-built-ins';
 
 import { Table, type TableColumn } from '../table';
 import { Board, type BoardColumn } from '../board';
@@ -13,8 +14,12 @@ import { StatePill } from '../state-pill';
 import StatusField, {
   canTransition,
   statusHue,
+  statusRank,
 } from '../../fields/status/status';
-import PriorityField, { priorityOption } from '../../fields/priority/priority';
+import PriorityField, {
+  priorityOption,
+  priorityRank,
+} from '../../fields/priority/priority';
 import { dueness } from '../../fields/due-date/due-date';
 import { TaskRecordExample } from '../../fields/status/example/task-record-example';
 
@@ -28,16 +33,8 @@ function task(item: CardDef): TaskRecordExample {
   return item as TaskRecordExample;
 }
 
-function statusOf(item: CardDef) {
-  return task(item).status;
-}
-
 function priorityOf(item: CardDef) {
   return task(item).priority;
-}
-
-function statusHueOf(item: CardDef) {
-  return statusHue(StatusField, task(item).status);
 }
 
 function priorityHueOf(item: CardDef) {
@@ -58,12 +55,16 @@ export class RecordViewsExample extends CardDef {
   static isolated = class Isolated extends Component<typeof this> {
     columns: TableColumn[] = [
       { key: 'title', label: 'Task', value: (t) => task(t).title },
-      { key: 'status', label: 'Status', sortValue: (t) => task(t).status },
+      {
+        key: 'status',
+        label: 'Status',
+        sortValue: (t) => statusRank(StatusField, this.statusOf(t)),
+      },
       {
         key: 'priority',
         label: 'Priority',
         showAbove: 480,
-        sortValue: (t) => task(t).priority,
+        sortValue: (t) => priorityRank(PriorityField, task(t).priority),
       },
       {
         key: 'due',
@@ -95,11 +96,19 @@ export class RecordViewsExample extends CardDef {
       return state ? STRIPE[state] : undefined;
     };
 
-    columnKeyFor = (item: CardDef) => task(item).status;
+    // Board moves stay on this page: the records are shared examples of several
+    // field Specs, so a drag here must not rewrite them.
+    moved = new TrackedObject<Record<string, string>>();
+
+    statusOf = (item: CardDef) => this.moved[item.id] ?? task(item).status;
+    statusHueOf = (item: CardDef) =>
+      statusHue(StatusField, this.statusOf(item));
+
+    columnKeyFor = (item: CardDef) => this.statusOf(item);
 
     onMove = (item: CardDef, key: string) => {
-      if (canTransition(StatusField, task(item).status, key)) {
-        task(item).status = key;
+      if (canTransition(StatusField, this.statusOf(item), key)) {
+        this.moved[item.id] = key;
       }
     };
 
@@ -118,8 +127,8 @@ export class RecordViewsExample extends CardDef {
             <:cell as |item column|>
               {{#if (eq column.key 'status')}}
                 <StatePill
-                  @label={{statusOf item}}
-                  @hue={{statusHueOf item}}
+                  @label={{this.statusOf item}}
+                  @hue={{this.statusHueOf item}}
                   @dot={{true}}
                 />
               {{else if (eq column.key 'priority')}}
