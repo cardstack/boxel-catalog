@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/format-bytes",
+        "name": "FormatBytes"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { FormatBytes } from '@cardstack/pretui/components/format-bytes';\n```\n",
+      "cardTitle": "FormatBytes",
+      "cardDescription": "Human-readable byte sizes",
+      "containedExamples": [],
+      "componentName": "FormatBytes",
+      "icon": "file-type",
+      "category": "Data Display",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "reading",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Human-readable byte sizes · RelativeTime's sibling",
+      "refs": "wa-format-bytes",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 2,
+      "cardInfo": {
+        "name": "FormatBytes",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/format-bytes.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/format-bytes.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

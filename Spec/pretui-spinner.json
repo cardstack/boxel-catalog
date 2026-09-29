@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/spinner",
+        "name": "Spinner"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Spinner } from '@cardstack/pretui/components/spinner';\n```\n",
+      "cardTitle": "Spinner",
+      "cardDescription": "Indeterminate loading disc",
+      "containedExamples": [],
+      "componentName": "Spinner",
+      "icon": "loader",
+      "category": "Feedback",
+      "tier": "Element",
+      "tags": [
+        "async"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "feedback",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "CircleSpinner, LoadingIndicator",
+      "version": "0.4.0",
+      "brief": "Indeterminate loading disc · shadcn Loader, wa-spinner",
+      "refs": "shadcn Loader · wa-spinner · boxel-ui LoadingIndicator",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Spinner",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/spinner.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/spinner.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

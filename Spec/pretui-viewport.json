@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/viewport",
+        "name": "Viewport"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Viewport } from '@cardstack/pretui/components/viewport';\n```\n",
+      "cardTitle": "Viewport",
+      "cardDescription": "Universal preview frame: resizable width, inline-in-prose, grid-of-many",
+      "containedExamples": [],
+      "componentName": "Viewport",
+      "icon": "scan-eye",
+      "category": "Authoring Tools",
+      "tier": "Runtime",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "freestyle",
+      "stage": "live",
+      "source": "ember-freestyle",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Universal preview frame: resizable width, inline-in-prose, grid-of-many · Storybook viewport addon",
+      "refs": "Storybook viewport addon",
+      "buildsOn": "SegmentedControl, Slider",
+      "featured": true,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "Viewport",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/viewport.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/viewport.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

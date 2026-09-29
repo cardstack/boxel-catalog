@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/drawer",
+        "name": "Drawer"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Drawer } from '@cardstack/pretui/components/drawer';\n```\n",
+      "cardTitle": "Drawer",
+      "cardDescription": "Edge-anchored panel on the native dialog",
+      "containedExamples": [],
+      "componentName": "Drawer",
+      "icon": "layout-sidebar-right",
+      "category": "Overlays",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "webawesome",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Edge-anchored panel on the native dialog · shadcn Sheet, wa-drawer",
+      "refs": "shadcn Sheet · wa-drawer",
+      "buildsOn": "native <dialog>",
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Drawer",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/drawer.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/drawer.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

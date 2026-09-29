@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/usage-css-variable",
+        "name": "UsageCssVariable"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { UsageCssVariable } from '@cardstack/pretui/components/usage-css-variable';\n```\n",
+      "cardTitle": "UsageCssVariable",
+      "cardDescription": "CSS custom-property knob",
+      "containedExamples": [],
+      "componentName": "UsageCssVariable",
+      "icon": "variable",
+      "category": "Authoring Tools",
+      "tier": "Runtime",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "freestyle",
+      "stage": "live",
+      "source": "ember-freestyle",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "CSS custom-property knob · ember-freestyle Usage::BasicCssVariable",
+      "refs": null,
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "UsageCssVariable",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/usage-css-variable.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/usage-css-variable.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

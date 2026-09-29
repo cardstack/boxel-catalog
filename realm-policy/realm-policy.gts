@@ -7,6 +7,10 @@ import {
   field,
 } from 'https://cardstack.com/base/card-api';
 import CodeRefField from 'https://cardstack.com/base/code-ref';
+import {
+  operation,
+  type OperationDeclaration,
+} from 'https://cardstack.com/base/operations';
 import PolicyPredicateField from '@cardstack/catalog/fields/policy-predicate/policy-predicate';
 import StringField from 'https://cardstack.com/base/string';
 import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
@@ -145,6 +149,39 @@ export class RealmPolicy extends CardDef {
   static icon = ShieldCheckIcon;
 
   @field rules = containsMany(PolicyRule);
+
+  // A policy card is authorization infrastructure. Whoever can write one
+  // decides what every realm whose policy key names it grants. So no policy
+  // grant may write one, and each write is open only to a caller the realm's
+  // own permissions let write. These are the writes a card carries, declared
+  // in their built-in form so they can be marked. Each does what it does on
+  // any other card.
+  //
+  // The realm refuses more than these marks reach. A grant never admits a
+  // write to a card of this type or of any subtype, under whatever name the
+  // write is invoked, and never admits a create that mints one. That covers a
+  // subtype's own named writes, which it need not mark. It also covers a card
+  // no realm's policy key names: a draft, or a card that only another realm's
+  // policy key names.
+  @operation static update = {
+    base: 'update',
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
+
+  @operation static delete = {
+    base: 'delete',
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
+
+  @operation static transform = {
+    base: 'transform',
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
+
+  @operation static appendContainsMany = {
+    base: 'appendContainsMany',
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
 
   static isolated = class Isolated extends Component<typeof RealmPolicy> {
     <template>

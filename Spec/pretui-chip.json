@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/chip",
+        "name": "Chip"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Chip } from '@cardstack/pretui/components/chip';\n```\n",
+      "cardTitle": "Chip",
+      "cardDescription": "Inline label with a Law-2 hue treatment",
+      "containedExamples": [],
+      "componentName": "Chip",
+      "icon": "tag",
+      "category": "Foundations",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "ink",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "BoxelTag, Pill",
+      "version": "0.4.0",
+      "brief": "Inline label with a Law-2 hue treatment · shadcn Badge, wa-tag, boxel-ui Pill",
+      "refs": "shadcn Badge · wa-tag/wa-badge · boxel-ui Pill/BoxelTag",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Chip",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/chip.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/chip.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

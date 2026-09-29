@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/freestyle-usage",
+        "name": "FreestyleUsage"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { FreestyleUsage } from '@cardstack/pretui/components/freestyle-usage';\n```\n",
+      "cardTitle": "FreestyleUsage",
+      "cardDescription": "The usage page: specimen + property panel + API docs",
+      "containedExamples": [],
+      "componentName": "FreestyleUsage",
+      "icon": "book-open",
+      "category": "Authoring Tools",
+      "tier": "Runtime",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "freestyle",
+      "stage": "live",
+      "source": "ember-freestyle",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "The usage page: specimen + property panel + API docs · ember-freestyle FreestyleUsage",
+      "refs": "ember-freestyle FreestyleUsage · Storybook docs page",
+      "buildsOn": "Viewport, Table, Select, Input, Switch, Slider",
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "FreestyleUsage",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/freestyle-usage.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/freestyle-usage.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

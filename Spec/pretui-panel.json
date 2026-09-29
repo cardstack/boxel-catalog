@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/panel",
+        "name": "Panel"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Panel } from '@cardstack/pretui/components/panel';\n```\n",
+      "cardTitle": "Panel",
+      "cardDescription": "The card surface: body + status hairline + action bar",
+      "containedExamples": [],
+      "componentName": "Panel",
+      "icon": "panel-top",
+      "category": "Containers",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "BoxelContainer",
+      "version": "0.4.0",
+      "brief": "The card surface: body + status hairline + action bar · shadcn Card, wa-card",
+      "refs": "shadcn Card · wa-card · boxel-ui BoxelContainer",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Panel",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/panel.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/panel.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

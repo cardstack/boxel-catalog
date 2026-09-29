@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/entity-display",
+        "name": "EntityDisplay"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { EntityDisplay } from '@cardstack/pretui/components/entity-display';\n```\n",
+      "cardTitle": "EntityDisplay",
+      "cardDescription": "Icon/thumbnail + title + tag row",
+      "containedExamples": [],
+      "componentName": "EntityDisplay",
+      "icon": "id-badge",
+      "category": "Data Display",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "boxel-ui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "reading",
+      "stage": "live",
+      "source": "boxel-ui",
+      "lineage": "EntityDisplayWithIcon, EntityDisplayWithThumbnail",
+      "version": "0.4.0",
+      "brief": "Icon/thumbnail + title + tag row · boxel-ui entity displays merged",
+      "refs": null,
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "EntityDisplay",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/entity-display.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/entity-display.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
