@@ -767,7 +767,6 @@ class Isolated extends Component<typeof GenUiDashboard> {
           path: this.sourcePathFor(slug, realm),
           realm,
           base64Content: base64,
-          contentType: file.type || 'application/octet-stream',
           useNonConflictingFilename: true,
         });
         sourceFileUrl = (res as any)?.fileIdentifier ?? '';
