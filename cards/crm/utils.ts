@@ -19,9 +19,12 @@ export function formatMoney(amount: number | undefined, code?: string): string {
   }).format(amount);
 }
 
-/** Whether an amount is present and finite, so a template can guard a money line. */
-export function isAmount(amount: number | null | undefined): boolean {
-  return typeof amount === 'number' && Number.isFinite(amount);
+/**
+ * Whether a number is present and finite, so a template can guard a money line
+ * or a score. 0 counts: only an unset value hides.
+ */
+export function hasNumber(value: number | null | undefined): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }
 
 /**

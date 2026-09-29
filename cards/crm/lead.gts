@@ -20,7 +20,7 @@ import {
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { Campaign } from './campaign';
-import { labelProgress } from './utils';
+import { hasNumber, labelProgress } from './utils';
 
 const LeadStatusField = enumField(StringField, {
   options: ['new', 'contacted', 'qualified', 'converted', 'disqualified'],
@@ -53,11 +53,6 @@ const STATUS_HUE: Record<string, Hue> = {
 
 function statusHue(status: string | undefined): Hue {
   return (status && STATUS_HUE[status]) || 'slate';
-}
-
-// 0 is a real score (the Spec's scale is 0–100); only an unset score hides.
-function hasScore(score: number | null | undefined): boolean {
-  return typeof score === 'number' && Number.isFinite(score);
 }
 
 export class Lead extends CardDef {
@@ -129,7 +124,7 @@ export class Lead extends CardDef {
           {{/if}}
         </div>
         <span class='score-block'>
-          {{#if (hasScore @model.score)}}
+          {{#if (hasNumber @model.score)}}
             <span class='score'>{{@model.score}}</span>
             <span class='score-caption'>score</span>
           {{else}}
@@ -225,7 +220,7 @@ export class Lead extends CardDef {
         {{#if @model.company}}
           <span class='meta line-company'>{{@model.company}}</span>
         {{/if}}
-        {{#if (hasScore @model.score)}}
+        {{#if (hasNumber @model.score)}}
           <span class='meta line-score'>Score {{@model.score}}</span>
         {{/if}}
         {{#if @model.source}}
@@ -327,7 +322,7 @@ export class Lead extends CardDef {
             @hue={{statusHue @model.status}}
           />
         </header>
-        {{#if (hasScore @model.score)}}
+        {{#if (hasNumber @model.score)}}
           <section class='score-panel'>
             <span class='score-value'>{{@model.score}}</span>
             <span id={{this.scoreLabelId}} class='score-label'>lead score</span>
@@ -420,7 +415,11 @@ export class Lead extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
+        /* Pret UI ProgressBar paints its fill with --primary, which measures
+           1.20:1 against the track on a light page; the ink token is the
+           guaranteed pair. */
         .score-bar {
+          --primary: var(--primary-ink);
           grid-column: 1 / -1;
         }
         .panel {

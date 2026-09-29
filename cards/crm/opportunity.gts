@@ -13,7 +13,6 @@ import PercentageField from 'https://cardstack.com/base/percentage';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import TrendingUpIcon from '@cardstack/boxel-icons/trending-up';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import {
   KeyValue,
   type KeyValueItem,
@@ -27,7 +26,8 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { Account } from './account';
 import { User } from './user';
-import { isAmount } from './utils';
+import { Money } from './money';
+import { hasNumber } from './utils';
 // EXTRACTED to its own module (Revenue Ops Console build) so Pipeline Stage
 // is a standalone, Spec-able block instead of private to this file. Kept as
 // a re-export below so every existing consumer of `./opportunity`
@@ -127,14 +127,11 @@ export class Opportunity extends CardDef {
             <span class='meta'>{{@model.account.name}}</span>
           {{/if}}
         </div>
-        {{#if (isAmount @model.value.amount)}}
-          <FormatNumber
+        {{#if (hasNumber @model.value.amount)}}
+          <Money
             class='value'
-            @value={{@model.value.amount}}
-            @style='currency'
-            @currency={{@model.value.currency.code}}
-            @locale='en-US'
-            @maximumFractionDigits={{unless @model.value.currency.code 2}}
+            @amount={{@model.value.amount}}
+            @code={{@model.value.currency.code}}
           />
         {{/if}}
         <StatePill @label={{@model.stage}} @hue={{stageHue @model.stage}} />
@@ -215,14 +212,11 @@ export class Opportunity extends CardDef {
           {{/if}}
         </div>
         <span class='name'>{{@model.cardTitle}}</span>
-        {{#if (isAmount @model.value.amount)}}
-          <FormatNumber
+        {{#if (hasNumber @model.value.amount)}}
+          <Money
             class='figure'
-            @value={{@model.value.amount}}
-            @style='currency'
-            @currency={{@model.value.currency.code}}
-            @locale='en-US'
-            @maximumFractionDigits={{unless @model.value.currency.code 2}}
+            @amount={{@model.value.amount}}
+            @code={{@model.value.currency.code}}
           />
         {{/if}}
         {{#if @model.account.name}}
@@ -361,8 +355,8 @@ export class Opportunity extends CardDef {
     get weighted(): number | undefined {
       let amount = this.args.model?.value?.amount;
       let p = this.args.model?.effectiveProbability;
-      if (!isAmount(amount) || typeof p !== 'number') return undefined;
-      return ((amount as number) * p) / 100;
+      if (!hasNumber(amount) || typeof p !== 'number') return undefined;
+      return (amount * p) / 100;
     }
     get probabilitySource() {
       return typeof this.args.model?.probability === 'number'
@@ -406,26 +400,17 @@ export class Opportunity extends CardDef {
             <p class='doc-kind'>{{@model.constructor.displayName}}</p>
             <h1>{{@model.cardTitle}}</h1>
           </div>
-          {{#if (isAmount @model.value.amount)}}
+          {{#if (hasNumber @model.value.amount)}}
             <div class='value-block'>
-              <FormatNumber
+              <Money
                 class='value'
-                @value={{@model.value.amount}}
-                @style='currency'
-                @currency={{@model.value.currency.code}}
-                @locale='en-US'
-                @maximumFractionDigits={{unless @model.value.currency.code 2}}
+                @amount={{@model.value.amount}}
+                @code={{@model.value.currency.code}}
               />
-              {{#if (isAmount this.weighted)}}
-                <span class='weighted'><FormatNumber
-                    @value={{this.weighted}}
-                    @style='currency'
-                    @currency={{@model.value.currency.code}}
-                    @locale='en-US'
-                    @maximumFractionDigits={{unless
-                      @model.value.currency.code
-                      2
-                    }}
+              {{#if (hasNumber this.weighted)}}
+                <span class='weighted'><Money
+                    @amount={{this.weighted}}
+                    @code={{@model.value.currency.code}}
                   />
                   weighted ·
                   {{@model.effectiveProbability}}% ({{this.probabilitySource}})</span>

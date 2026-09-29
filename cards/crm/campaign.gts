@@ -13,14 +13,14 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import enumField from 'https://cardstack.com/base/enum';
 import SpeakerphoneIcon from '@cardstack/boxel-icons/speakerphone';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import {
   KeyValue,
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import { isAmount, labelProgress } from './utils';
+import { Money } from './money';
+import { hasNumber, labelProgress } from './utils';
 
 // Mirrors the channels Lead.source names, so a lead's channel and the specific
 // activity it came from describe the same thing at two levels of detail.
@@ -125,13 +125,10 @@ export class Campaign extends CardDef {
             <span class='meta'>{{@model.campaignType}}</span>
           {{/if}}
         </div>
-        <FormatNumber
+        <Money
           class='figure'
-          @value={{@model.spend.amount}}
-          @style='currency'
-          @currency={{@model.spend.currency.code}}
-          @locale='en-US'
-          @maximumFractionDigits={{unless @model.spend.currency.code 2}}
+          @amount={{@model.spend.amount}}
+          @code={{@model.spend.currency.code}}
         />
         <span class='status-col'>
           <StatePill
@@ -197,14 +194,11 @@ export class Campaign extends CardDef {
           />
         </div>
         <span class='name'>{{@model.cardTitle}}</span>
-        {{#if (isAmount @model.spend.amount)}}
-          <FormatNumber
+        {{#if (hasNumber @model.spend.amount)}}
+          <Money
             class='figure'
-            @value={{@model.spend.amount}}
-            @style='currency'
-            @currency={{@model.spend.currency.code}}
-            @locale='en-US'
-            @maximumFractionDigits={{unless @model.spend.currency.code 2}}
+            @amount={{@model.spend.amount}}
+            @code={{@model.spend.currency.code}}
           />
         {{/if}}
         {{#if @model.campaignType}}
@@ -214,12 +208,9 @@ export class Campaign extends CardDef {
           <span
             class='meta line-budget {{if @model.isOverBudget "over"}}'
           >{{@model.budgetUsedPercent}}% of
-            <FormatNumber
-              @value={{@model.budget.amount}}
-              @style='currency'
-              @currency={{@model.budget.currency.code}}
-              @locale='en-US'
-              @maximumFractionDigits={{unless @model.budget.currency.code 2}}
+            <Money
+              @amount={{@model.budget.amount}}
+              @code={{@model.budget.currency.code}}
             /></span>
         {{/if}}
         {{#if @model.endDate}}
@@ -327,32 +318,23 @@ export class Campaign extends CardDef {
           </div>
         </header>
 
-        {{#if (isAmount @model.budget.amount)}}
+        {{#if (hasNumber @model.budget.amount)}}
           <section class='panel'>
             <h2>Budget</h2>
             <div class='spend-row'>
-              <FormatNumber
+              <Money
                 class='spend'
-                @value={{@model.spend.amount}}
-                @style='currency'
-                @currency={{@model.spend.currency.code}}
-                @locale='en-US'
-                @maximumFractionDigits={{unless @model.spend.currency.code 2}}
+                @amount={{@model.spend.amount}}
+                @code={{@model.spend.currency.code}}
               />
               <span class='of'>of
-                <FormatNumber
-                  @value={{@model.budget.amount}}
-                  @style='currency'
-                  @currency={{@model.budget.currency.code}}
-                  @locale='en-US'
-                  @maximumFractionDigits={{unless
-                    @model.budget.currency.code
-                    2
-                  }}
+                <Money
+                  @amount={{@model.budget.amount}}
+                  @code={{@model.budget.currency.code}}
                 /></span>
             </div>
             <ProgressBar
-              class='bar'
+              class='bar {{if @model.isOverBudget "bar-over"}}'
               @value={{this.barValue}}
               @max={{100}}
               @steps={{false}}
@@ -446,8 +428,15 @@ export class Campaign extends CardDef {
           font-size: 0.8125rem;
           color: var(--muted-foreground);
         }
+        /* Pret UI ProgressBar paints its fill with --primary, which measures
+           1.20:1 against the track on a light page, so the bar takes the ink
+           token, and the destructive ink once the campaign is over budget. */
         .bar {
+          --primary: var(--primary-ink);
           margin-top: 0.625rem;
+        }
+        .bar-over {
+          --primary: var(--destructive-ink);
         }
         .bar-note {
           margin: 0.375rem 0 0;
