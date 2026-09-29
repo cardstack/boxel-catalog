@@ -413,9 +413,10 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
             aria-labelledby='table-heading'
           >
             <BlockHead @entry={{this.block 'table'}} @context={{@context}} />
-            <p class='hint'>Paged five at a time through Pret UI Pagination,
-              sortable headers, a severity stripe from each due date, then the
-              empty state.</p>
+            <p class='hint'>Pret UI Table shell, paged five at a time through
+              Pret UI Pagination, with sortable headers and a severity stripe
+              from each due date; then the empty state, which is Pret UI
+              EmptyState.</p>
             <Table
               @items={{this.items}}
               @columns={{this.columns}}
