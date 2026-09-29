@@ -1,8 +1,10 @@
 import { Component } from 'https://cardstack.com/base/card-api';
 import DateField from 'https://cardstack.com/base/date';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 import { StatePill, type Hue } from '../../components/state-pill';
+import { validDate } from '../../utils/valid-date';
 
 /**
  * A calendar day something is expected by. The block states calendar facts,
@@ -18,12 +20,13 @@ const SOON_DAYS = 7;
 
 /** Whole calendar days from today; negative = past. Local calendar, not UTC instants. */
 export function dueDays(value: Date | null | undefined): number | undefined {
-  if (!value || Number.isNaN(value.getTime())) {
+  let date = validDate(value);
+  if (!date) {
     return undefined;
   }
   let now = new Date();
   let today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  let due = Date.UTC(value.getFullYear(), value.getMonth(), value.getDate());
+  let due = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
   return Math.round((due - today) / 86400000);
 }
 
@@ -62,22 +65,10 @@ function phrase(days: number): string {
   return `due in ${days} days`;
 }
 
-function validDate(value: Date | null | undefined): Date | undefined {
-  return value && !Number.isNaN(value.getTime()) ? value : undefined;
-}
-
 function shortDate(value: Date): string {
   return new Intl.DateTimeFormat(undefined, {
     day: 'numeric',
     month: 'short',
-  }).format(value);
-}
-
-function longDate(value: Date): string {
-  return new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
   }).format(value);
 }
 
@@ -90,8 +81,7 @@ export class DueDateField extends DateField {
       return dueDays(this.args.model);
     }
     get date() {
-      let d = validDate(this.args.model);
-      return d ? longDate(d) : undefined;
+      return validDate(this.args.model);
     }
     get phrase() {
       return this.days === undefined ? undefined : phrase(this.days);
@@ -107,7 +97,13 @@ export class DueDateField extends DateField {
     <template>
       {{#if this.date}}
         <span class='due'>
-          <span class='date'>{{this.date}}</span>
+          <FormatDate
+            class='date'
+            @date={{this.date}}
+            @day='numeric'
+            @month='short'
+            @year='numeric'
+          />
           <StatePill
             @label={{this.phrase}}
             @hue={{this.hue}}
@@ -125,10 +121,9 @@ export class DueDateField extends DateField {
         }
         .date {
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
         }
         .unset {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -164,7 +159,7 @@ export class DueDateField extends DateField {
       {{/if}}
       <style scoped>
         .unset {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
