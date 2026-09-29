@@ -63,14 +63,9 @@ export class CapacityAllocationField extends FieldDef {
 
 // The segment palette cycles in a fixed order so the same allocation index
 // gets the same hue on every card — a legend the eye can carry between rows.
-const SEGMENT_HUES: Hue[] = [
-  'teal',
-  'blue',
-  'purple',
-  'amber',
-  'pink',
-  'green',
-];
+// Only StatePill's category hues: the status hues follow the theme's status
+// tokens, and an allocation is a category, not a status.
+const SEGMENT_HUES: Hue[] = ['teal', 'blue', 'purple', 'pink', 'slate'];
 
 // Inline styles carry only computed widths and token-derived colors, never
 // user strings.
