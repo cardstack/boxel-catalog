@@ -4,6 +4,10 @@ import { htmlSafe } from '@ember/template';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { guidFor } from '@ember/object/internals';
+import { modifier } from 'ember-modifier';
+import { Table as PretTable } from '@cardstack/pretui/components/table';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Pagination } from '@cardstack/pretui/components/pagination';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import sortBy from '../utils/sort';
@@ -78,6 +82,23 @@ function clickableCell(onRowClick: unknown, index: number): boolean {
   return typeof onRowClick === 'function' && index === 0;
 }
 
+// Pret UI's Table owns the <table> and yields only head and body, so the
+// caption sits just above it and this names the table after it instead:
+// a screen reader still announces "table, <caption>" before the rows.
+const labelledBy = modifier(
+  (element: HTMLElement, [id]: [string | undefined]) => {
+    let table = element.querySelector('table');
+    if (!table) {
+      return;
+    }
+    if (id) {
+      table.setAttribute('aria-labelledby', id);
+    } else {
+      table.removeAttribute('aria-labelledby');
+    }
+  },
+);
+
 interface TableSignature {
   Args: {
     columns: TableColumn[];
@@ -113,6 +134,10 @@ interface TableSignature {
 }
 
 export class Table extends GlimmerComponent<TableSignature> {
+  get captionId(): string | undefined {
+    return this.args.caption ? `${guidFor(this)}-caption` : undefined;
+  }
+
   @tracked sortKey: string | undefined;
   @tracked sortDir: 'asc' | 'desc' = 'asc';
 
@@ -237,11 +262,11 @@ export class Table extends GlimmerComponent<TableSignature> {
 
   <template>
     <div class='table-scroll' ...attributes>
-      <table class='record-table'>
-        {{#if @caption}}
-          <caption class='tbl-caption'>{{@caption}}</caption>
-        {{/if}}
-        <thead>
+      {{#if @caption}}
+        <span class='tbl-caption' id={{this.captionId}}>{{@caption}}</span>
+      {{/if}}
+      <PretTable {{labelledBy this.captionId}}>
+        <:head>
           <tr>
             {{#each @columns as |column|}}
               <th
@@ -266,8 +291,8 @@ export class Table extends GlimmerComponent<TableSignature> {
               </th>
             {{/each}}
           </tr>
-        </thead>
-        <tbody>
+        </:head>
+        <:body>
           {{#each this.pagedItems key=@rowKey as |item|}}
             <tr
               class='{{if @onRowClick "clickable"}}
@@ -305,12 +330,15 @@ export class Table extends GlimmerComponent<TableSignature> {
           {{else}}
             <tr>
               <td class='empty' colspan={{@columns.length}}>
-                {{if @emptyMessage @emptyMessage 'No records'}}
+                <EmptyState
+                  @title={{if @emptyMessage @emptyMessage 'No records'}}
+                  @texture={{false}}
+                />
               </td>
             </tr>
           {{/each}}
-        </tbody>
-      </table>
+        </:body>
+      </PretTable>
     </div>
 
     {{#if this.isPaged}}
@@ -332,20 +360,18 @@ export class Table extends GlimmerComponent<TableSignature> {
       </div>
     {{/if}}
     <style scoped>
+      /* `showAbove` is a container query, so the wrapper has to BE the
+         container: the table sizes to its panel, not to the viewport. */
       .table-scroll {
-        overflow-x: auto;
         width: 100%;
-        /* `showAbove` is a container query, so the wrapper has to BE the
-           container: the table sizes to its panel, not to the viewport. */
         container-type: inline-size;
         container-name: tbl;
       }
-      /* The caption and the column headers speak in the eyebrow voice: small,
-         uppercase, tracked out. Taking the whole role group keeps size,
-         leading and tracking in step when a theme retunes it. */
-      .tbl-caption,
-      .sort-btn,
-      .plain-head {
+      /* The caption speaks in the eyebrow voice; the header cells take Pret UI
+         Table's own mono header, so the controls inside them inherit it. */
+      .tbl-caption {
+        display: block;
+        padding: 0 0.5rem 0.4rem;
         font-family: var(--boxel-eyebrow-font-family);
         font-size: var(--boxel-eyebrow-font-size);
         font-weight: var(--boxel-eyebrow-font-weight);
@@ -354,9 +380,44 @@ export class Table extends GlimmerComponent<TableSignature> {
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
-      .tbl-caption {
-        padding: 0 0.5rem 0.4rem;
-        text-align: left;
+      .sort-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        width: 100%;
+        min-height: 100%;
+        padding: 0;
+        border: 0;
+        background-color: transparent;
+        font: inherit;
+        letter-spacing: inherit;
+        text-transform: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+      .sort-btn:focus-visible {
+        outline: 0.125rem solid var(--ring);
+        outline-offset: 0.125rem;
+      }
+      .sort-btn:hover {
+        color: var(--foreground);
+      }
+      .align-right .sort-btn {
+        justify-content: flex-end;
+      }
+      .sort-mark {
+        font-size: 0.5625rem;
+      }
+      .align-right .plain-head {
+        display: block;
+        text-align: right;
+      }
+      /* A column header is a real control: it grows to the 44px touch minimum
+         where a coarse pointer is in use. */
+      @media (pointer: coarse) {
+        .sort-btn {
+          min-height: 2.75rem;
+        }
       }
       .row-btn {
         display: block;
@@ -376,6 +437,7 @@ export class Table extends GlimmerComponent<TableSignature> {
          `position: relative; z-index: 1` to sit above it. */
       tr.clickable {
         position: relative;
+        cursor: pointer;
       }
       .row-btn::after {
         content: '';
@@ -413,88 +475,43 @@ export class Table extends GlimmerComponent<TableSignature> {
           display: none;
         }
       }
-      .record-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
-      }
-      th {
-        padding: 0;
-        border-bottom: 1px solid var(--border);
-        position: sticky;
-        top: 0;
-        background-color: var(--card);
-        color: var(--card-foreground);
-      }
-      .sort-btn {
-        display: inline-flex;
-        align-items: baseline;
-        gap: 0.25rem;
-        width: 100%;
-        /* 44px hit floor: a column header is a real control. */
-        min-height: 2.75rem;
-        padding: 0.5rem;
-        border: 0;
-        background-color: transparent;
-        cursor: pointer;
-      }
-      .sort-btn:focus-visible {
-        outline: 0.125rem solid var(--ring);
-        outline-offset: -0.125rem;
-      }
-      .sort-btn:hover {
-        color: var(--foreground);
-      }
-      .align-right .sort-btn {
-        justify-content: flex-end;
-      }
-      .sort-mark {
-        font-size: 0.5625rem;
-      }
-      .plain-head {
-        display: inline-block;
-        padding: 0.5rem;
-      }
-      td {
-        padding: 0.625rem 0.5rem;
-        border-bottom: 1px solid var(--border);
-        vertical-align: baseline;
-      }
       .align-right {
         text-align: right;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
-      .align-left {
-        text-align: left;
-      }
       /* Severity stripe at the row edge, applied via `@rowClass`: state read
          before any text, so a scanner finds the overdue rows without parsing a
          pill mid-line. The stripe is an indicator, so it takes the status
-         fill; `sev-cool` has no status token and stays on the fixed palette. */
+         fill; `sev-cool` has no status token and stays on the fixed palette.
+         Pret UI Table draws each row's divider as the cell's own inset
+         shadow, so the stripe keeps that divider as its second layer. */
       tr.sev-over td:first-child {
-        box-shadow: inset 0.1875rem 0 0 var(--destructive);
+        box-shadow:
+          inset 0.1875rem 0 0 var(--destructive),
+          inset 0 -1px 0 var(--border);
       }
       tr.sev-note td:first-child {
-        box-shadow: inset 0.1875rem 0 0 var(--warning);
+        box-shadow:
+          inset 0.1875rem 0 0 var(--warning),
+          inset 0 -1px 0 var(--border);
       }
       tr.sev-ok td:first-child {
-        box-shadow: inset 0.1875rem 0 0 var(--success);
+        box-shadow:
+          inset 0.1875rem 0 0 var(--success),
+          inset 0 -1px 0 var(--border);
       }
       tr.sev-cool td:first-child {
-        box-shadow: inset 0.1875rem 0 0 var(--boxel-dark-teal);
+        box-shadow:
+          inset 0.1875rem 0 0 var(--boxel-dark-teal),
+          inset 0 -1px 0 var(--border);
       }
-      tr.clickable {
-        cursor: pointer;
-      }
-      tr.clickable:hover td {
-        background-color: var(--muted);
-        color: var(--foreground);
-      }
+      /* Pret UI EmptyState, tuned through its own spacing and title knobs to a
+         single quiet line that fits inside a table cell. */
       .empty {
-        text-align: center;
-        color: var(--muted-foreground);
-        padding: 1.5rem;
+        --space-9: 1rem;
+        --space-6: 1rem;
+        --text-heading: var(--boxel-font-size);
       }
       .pager {
         display: flex;
