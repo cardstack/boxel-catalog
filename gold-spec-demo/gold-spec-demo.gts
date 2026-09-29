@@ -3,6 +3,7 @@ import {
   Component,
   containsMany,
   field,
+  linksToMany,
   type BoxComponent,
 } from 'https://cardstack.com/base/card-api';
 import GlimmerComponent from '@glimmer/component';
@@ -14,11 +15,14 @@ import SwitchSubmodeCommand from '@cardstack/boxel-host/commands/switch-submode'
 import type { CardContext } from 'https://cardstack.com/base/card-api';
 import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
 
-import StatusField from '../fields/status/status';
-import PriorityField from '../fields/priority/priority';
-import DueDateField from '../fields/due-date/due-date';
+import StatusField, { canTransition, statusHue } from '../fields/status/status';
+import PriorityField, { priorityOption } from '../fields/priority/priority';
+import DueDateField, { dueness } from '../fields/due-date/due-date';
 import CreatedAtField from '../fields/created-at/created-at';
 import { StatePill, STATE_HUES } from '../components/state-pill';
+import { Table, type TableColumn } from '../components/table';
+import { Board, type BoardColumn } from '../components/board';
+import { TaskRecordExample } from '../fields/status/example/task-record-example';
 import {
   EditSectionNav,
   type NavSection,
@@ -97,7 +101,32 @@ const BLOCKS: Block[] = [
     kind: 'component',
     path: 'components/state-pill.gts',
   },
+  {
+    id: 'table',
+    label: 'Table',
+    kind: 'component',
+    path: 'components/table.gts',
+  },
+  {
+    id: 'board',
+    label: 'Board',
+    kind: 'component',
+    path: 'components/board.gts',
+  },
 ];
+
+// Table and Board run over the same task records the Table/Board Spec example
+// uses, so the demo shows them on real cards rather than stand-in rows.
+function task(item: CardDef): TaskRecordExample {
+  return item as TaskRecordExample;
+}
+
+/** Severity stripe per due-date band; later dates carry no stripe. */
+const DUE_STRIPE: Record<string, string> = {
+  overdue: 'sev-over',
+  today: 'sev-note',
+  soon: 'sev-note',
+};
 
 /** Sidebar groups, in order; a group with no blocks is not shown. */
 const GROUPS: { kind: BlockKind; label: string }[] = [
@@ -194,6 +223,55 @@ class FormatRows extends GlimmerComponent<{
 class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
   hues = STATE_HUES;
   block = blockOf;
+  noItems: CardDef[] = [];
+
+  columns: TableColumn[] = [
+    { key: 'title', label: 'Task', value: (t) => task(t).title },
+    { key: 'status', label: 'Status', sortValue: (t) => task(t).status },
+    {
+      key: 'priority',
+      label: 'Priority',
+      showAbove: 480,
+      sortValue: (t) => task(t).priority,
+    },
+    {
+      key: 'due',
+      label: 'Due',
+      showAbove: 640,
+      value: (t) => task(t).dueDate?.toLocaleDateString(),
+      sortValue: (t) => task(t).dueDate?.getTime(),
+    },
+  ];
+
+  // Board columns come straight from the Status field's option set.
+  boardColumns: BoardColumn[] = StatusField.statusOptions.map((o) => ({
+    key: o.value,
+    label: o.label ?? o.value,
+  }));
+
+  get items(): CardDef[] {
+    return ((this.args.model.records ?? []) as CardDef[]).filter(Boolean);
+  }
+
+  rowClass = (item: CardDef) => {
+    let band = dueness(task(item).dueDate);
+    return band ? DUE_STRIPE[band] : undefined;
+  };
+
+  statusOf = (item: CardDef) => task(item).status;
+  priorityOf = (item: CardDef) => task(item).priority;
+  statusHueOf = (item: CardDef) => statusHue(StatusField, task(item).status);
+  priorityHueOf = (item: CardDef) =>
+    priorityOption(PriorityField, task(item).priority)?.hue;
+
+  columnKeyFor = (item: CardDef) => task(item).status;
+
+  // A move the Status transition graph does not allow snaps back.
+  onMove = (item: CardDef, key: string) => {
+    if (canTransition(StatusField, task(item).status, key)) {
+      task(item).status = key;
+    }
+  };
   @tracked active: string = BLOCKS[0]!.id;
 
   get groups(): { label: string; sections: NavSection[] }[] {
@@ -328,6 +406,64 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
               </tbody>
             </table>
           </section>
+
+          <section
+            class='block {{if (eq this.active "table") "is-active"}}'
+            data-sect='table'
+            aria-labelledby='table-heading'
+          >
+            <BlockHead @entry={{this.block 'table'}} @context={{@context}} />
+            <p class='hint'>Paged five at a time through Pret UI Pagination,
+              sortable headers, a severity stripe from each due date, then the
+              empty state.</p>
+            <Table
+              @items={{this.items}}
+              @columns={{this.columns}}
+              @rowClass={{this.rowClass}}
+              @pageSize={{5}}
+              @caption='Tasks'
+              @emptyMessage='No tasks linked'
+            >
+              <:cell as |item column|>
+                {{#if (eq column.key 'status')}}
+                  <StatePill
+                    @label={{this.statusOf item}}
+                    @hue={{this.statusHueOf item}}
+                    @dot={{true}}
+                  />
+                {{else if (eq column.key 'priority')}}
+                  <StatePill
+                    @label={{this.priorityOf item}}
+                    @hue={{this.priorityHueOf item}}
+                  />
+                {{/if}}
+              </:cell>
+            </Table>
+            <Table
+              @items={{this.noItems}}
+              @columns={{this.columns}}
+              @caption='Empty'
+              @emptyMessage='No tasks match'
+            />
+          </section>
+
+          <section
+            class='block board-block
+              {{if (eq this.active "board") "is-active"}}'
+            data-sect='board'
+            aria-labelledby='board-heading'
+          >
+            <BlockHead @entry={{this.block 'board'}} @context={{@context}} />
+            <p class='hint'>Columns are the Status field's option set; a drag
+              the transition graph does not allow snaps back.</p>
+            <Board
+              @boardLabel='Tasks'
+              @items={{this.items}}
+              @columns={{this.boardColumns}}
+              @columnKeyFor={{this.columnKeyFor}}
+              @onMove={{this.onMove}}
+            />
+          </section>
         </div>
       </div>
     </article>
@@ -392,6 +528,10 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
         scroll-margin-top: var(--boxel-sp);
       }
       /* mirror the rail's active stop on the section itself */
+      .board-block {
+        min-height: 26.25rem;
+        grid-template-rows: auto auto 1fr;
+      }
       .block.is-active {
         box-shadow: 0 0 0 2px var(--ring);
       }
@@ -449,6 +589,7 @@ export class GoldSpecDemo extends CardDef {
   @field dueDates = containsMany(DueDateField, {
     computeVia: dueSamples,
   });
+  @field records = linksToMany(TaskRecordExample);
   @field createdStamps = containsMany(CreatedAtField, {
     computeVia: createdSamples,
   });

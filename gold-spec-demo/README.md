@@ -18,4 +18,6 @@ Contents:
 
 - `gold-spec-demo.gts` + `GoldSpecDemo/all-states.json`: the Gold Spec Demo
   card. Status, Priority, Due Date and Created At in every state (embedded and
-  atom), and StatePill in every hue and mode (tinted, dot, emphatic, chrome).
+  atom), StatePill in every hue and mode (tinted, dot, emphatic, chrome),
+  and Table and Board over the Status Spec's task records (paging, sorting,
+  severity stripes, empty state; Status-driven board columns).
