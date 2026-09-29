@@ -1,6 +1,8 @@
 import GlimmerComponent from '@glimmer/component';
-import { htmlSafe } from '@ember/template';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { StepList } from '@cardstack/pretui/components/step-list';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { lifecycleSteps } from './fulfilment-ui';
 import {
   SHIPMENT_PIPELINE,
   shipmentStatusStyle,
@@ -38,10 +40,6 @@ function sortEvents(events: TrackingEventLike[] | undefined) {
     );
 }
 
-function hueVar(hue: string | undefined) {
-  return htmlSafe(`--st-hue: ${hue ?? 'var(--muted-foreground)'}`);
-}
-
 // ── Tracking Status View (TV) ───────────────────────────────────────────────
 // The compact rail. Four fixed stages, because a package's progress is only
 // legible as a fraction of a known route. A package in exception shows the rail
@@ -56,15 +54,12 @@ interface RailSignature {
 }
 
 export class TrackingStatusView extends GlimmerComponent<RailSignature> {
-  get stages() {
-    let reached = shipmentStageIndex(this.args.status);
-    return SHIPMENT_PIPELINE.map((value, i) => ({
-      value,
-      label: shipmentStatusStyle(value).label,
-      hue: shipmentStatusStyle(value).hue,
-      done: reached >= 0 && i <= reached,
-      current: i === reached,
-    }));
+  get steps() {
+    return lifecycleSteps(
+      SHIPMENT_PIPELINE,
+      (value) => shipmentStatusStyle(value).label,
+      shipmentStageIndex(this.args.status),
+    );
   }
 
   get isException() {
@@ -77,19 +72,13 @@ export class TrackingStatusView extends GlimmerComponent<RailSignature> {
 
   <template>
     <div class='rail' ...attributes>
-      <ol class='stages'>
-        {{#each this.stages as |stage|}}
-          <li
-            class='stage
-              {{if stage.done "done"}}
-              {{if stage.current "current"}}'
-            style={{hueVar stage.hue}}
-          >
-            <span class='node' aria-hidden='true'></span>
-            <span class='label'>{{stage.label}}</span>
-          </li>
-        {{/each}}
-      </ol>
+      {{! Pret UI StepList: an ordered list with a state per stage, the current
+          stage marked aria-current, and state text for assistive tech. }}
+      <StepList
+        class='stages'
+        @steps={{this.steps}}
+        @label='Shipment progress'
+      />
 
       {{#if this.isException}}
         <p class='exception'>Stalled: {{this.exceptionLabel}}</p>
@@ -111,68 +100,11 @@ export class TrackingStatusView extends GlimmerComponent<RailSignature> {
         display: grid;
         gap: var(--boxel-sp-xs);
       }
+      /* StepList knobs: a completed stage's check reads the success ink rather
+         than the fill, and the labels sit at the rail's old caption size. */
       .stages {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: 1fr;
-        gap: 0;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-      .stage {
-        position: relative;
-        display: grid;
-        gap: 0.375rem;
-        justify-items: start;
-        padding-right: 0.5rem;
-      }
-      /* The connector is drawn by the stage itself so the rail survives any
-         number of stages without a hardcoded width. */
-      .stage::before {
-        content: '';
-        position: absolute;
-        top: 0.3125rem;
-        left: 0;
-        right: 0;
-        height: 0.125rem;
-        background-color: color-mix(
-          in oklch,
-          var(--foreground) 12%,
-          transparent
-        );
-      }
-      .stage.done::before {
-        background-color: color-mix(in oklch, var(--st-hue) 45%, transparent);
-      }
-      .stage:last-child::before {
-        right: 0.5rem;
-      }
-      .node {
-        position: relative;
-        width: 0.75rem;
-        height: 0.75rem;
-        border-radius: 50%;
-        background-color: var(--background);
-        border: 0.125rem solid
-          color-mix(in oklch, var(--foreground) 18%, transparent);
-      }
-      .stage.done .node {
-        border-color: color-mix(in oklch, var(--st-hue) 60%, transparent);
-        background-color: color-mix(in oklch, var(--st-hue) 60%, transparent);
-      }
-      .stage.current .node {
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--st-hue) 16%, transparent);
-      }
-      .label {
-        font-size: 0.72rem;
-        line-height: 1.2;
-        color: var(--muted-foreground);
-      }
-      .stage.current .label {
-        font-weight: 700;
-        color: var(--foreground);
+        --text-ui: 0.75rem;
+        --pretui-step-complete-marker-fg: var(--success-ink);
       }
       .promise,
       .exception {
@@ -187,11 +119,6 @@ export class TrackingStatusView extends GlimmerComponent<RailSignature> {
       .exception {
         font-weight: 700;
         color: var(--destructive-ink);
-      }
-      @container (width < 380px) {
-        .label {
-          font-size: 0.62rem;
-        }
       }
     </style>
   </template>
@@ -248,12 +175,15 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
           {{/each}}
         </ol>
       {{else}}
-        <p class='empty'>{{if
+        <EmptyState
+          class='empty'
+          @texture={{false}}
+          @title={{if @emptyMessage @emptyMessage 'No carrier scans yet'}}
+          @message={{unless
             @emptyMessage
-            @emptyMessage
-            'No carrier scans yet. The first one usually appears within a few
-            hours of handover.'
-          }}</p>
+            'The first one usually appears within a few hours of handover.'
+          }}
+        />
       {{/if}}
     </div>
 
@@ -337,10 +267,12 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
         font-size: 0.78rem;
         color: var(--muted-foreground);
       }
+      /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
+         title at the body size. */
       .empty {
-        margin: 0;
-        font-size: 0.85rem;
-        color: var(--muted-foreground);
+        --space-9: 1rem;
+        --space-6: 1rem;
+        --text-heading: var(--boxel-font-size);
       }
     </style>
   </template>

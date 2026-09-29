@@ -7,6 +7,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import DateField from 'https://cardstack.com/base/date';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { Token } from '@cardstack/pretui/components/token';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 
 // A delivery date is a calendar day, not an instant. Reading it back with
@@ -55,6 +57,17 @@ export class DeliveryWindowField extends FieldDef {
       return to ?? from;
     },
   });
+
+  // The days the embedded view prints: both ends of a range, or the one day.
+  get isRange() {
+    let from = dayLabel(this.earliest);
+    let to = dayLabel(this.latest);
+    return Boolean(from && to && from !== to);
+  }
+
+  get promisedDay() {
+    return this.latest ?? this.earliest ?? undefined;
+  }
 
   // Days remaining is deliberately a getter, not a computed field: it depends
   // on today, and a field that silently changes value every midnight would make
@@ -131,14 +144,39 @@ export class DeliveryWindowField extends FieldDef {
     <template>
       {{#if @model.label}}
         <div class='dw'>
-          <span class='dw-label'>{{@model.label}}</span>
+          {{! Pret UI FormatDate with dayLabel's parts, so the text matches
+              the computed label and each day carries a <time datetime>. }}
+          <span class='dw-label'>
+            {{#if @model.isRange}}
+              <FormatDate
+                @date={{@model.earliest}}
+                @weekday='short'
+                @day='numeric'
+                @month='short'
+              />
+              –
+              <FormatDate
+                @date={{@model.latest}}
+                @weekday='short'
+                @day='numeric'
+                @month='short'
+              />
+            {{else}}
+              <FormatDate
+                @date={{@model.promisedDay}}
+                @weekday='short'
+                @day='numeric'
+                @month='short'
+              />
+            {{/if}}
+          </span>
           {{#if @model.relativeLabel}}
             <span
               class='dw-rel {{if @model.isOverdue "dw-overdue"}}'
             >{{@model.relativeLabel}}</span>
           {{/if}}
           {{#if @model.commitment}}
-            <span class='dw-commit'>{{@model.commitment}}</span>
+            <Token class='dw-commit' @value={{@model.commitment}} />
           {{/if}}
         </div>
       {{else}}
@@ -164,19 +202,12 @@ export class DeliveryWindowField extends FieldDef {
           font-weight: 700;
           color: var(--destructive-ink);
         }
-        .dw-commit {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          padding: 0.0625rem 0.375rem;
-          border-radius: 0.1875rem;
-          color: var(--muted-foreground);
-          background-color: color-mix(
-            in oklch,
-            var(--muted-foreground) 12%,
-            transparent
-          );
+        /* Pret UI Token for the carrier's service code, on the muted ink.
+           The body knob lands the pill at 0.75rem. */
+        .dw .dw-commit {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.75rem + 3.5px);
+          margin-inline: 0;
         }
         .dw-empty {
           color: var(--muted-foreground);

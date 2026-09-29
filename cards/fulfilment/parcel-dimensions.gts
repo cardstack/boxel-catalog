@@ -6,6 +6,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import NumberField from 'https://cardstack.com/base/number';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import BoxIcon from '@cardstack/boxel-icons/box';
 
 // Parcel Dimensions (PD) — what the packing station measures, and what the
@@ -81,7 +83,12 @@ export class ParcelDimensionsField extends FieldDef {
   static atom = class Atom extends Component<typeof ParcelDimensionsField> {
     <template>
       {{#if @model.billableWeight}}
-        <span class='pd-atom'>{{@model.billableWeight}} kg</span>
+        <FormatNumber
+          class='pd-atom'
+          @value={{@model.billableWeight}}
+          @style='unit'
+          @unit='kilogram'
+        />
       {{else}}
         <span class='pd-atom pd-empty'>Not measured</span>
       {{/if}}
@@ -111,11 +118,19 @@ export class ParcelDimensionsField extends FieldDef {
             'Unmeasured parcel'
           }}</span>
         <span class='pd-sep' aria-hidden='true'></span>
-        <span class='pd-weight'>{{if @model.weight @model.weight '—'}} kg</span>
+        <FormatNumber
+          class='pd-weight'
+          @value={{@model.weight}}
+          @style='unit'
+          @unit='kilogram'
+        />
         {{#if @model.isVolumetric}}
-          <span class='pd-billable'>bills at
-            {{@model.volumetricWeight}}
-            kg</span>
+          <Chip class='pd-billable' @dot={{false}}>bills at
+            <FormatNumber
+              @value={{@model.volumetricWeight}}
+              @style='unit'
+              @unit='kilogram'
+            /></Chip>
         {{/if}}
       </div>
 
@@ -144,18 +159,13 @@ export class ParcelDimensionsField extends FieldDef {
           font-weight: 600;
         }
         /* The dimensional-weight warning is the only thing here a packer can
-           act on, so it is the only thing that gets a tint. */
-        .pd-billable {
-          font-size: 0.75rem;
+           act on, so it is the only thing that gets a tint: a Pret UI Chip on
+           its default muted hue, at StatePill's checked recipe. */
+        .pd .pd-billable {
+          --pretui-chip-mix: 14%;
+          --pretui-ink-mix: 62%;
+          --text-ui-xs: 0.75rem;
           font-weight: 600;
-          padding: 0.0625rem 0.375rem;
-          border-radius: 999px;
-          color: var(--muted-foreground);
-          background-color: color-mix(
-            in oklch,
-            var(--muted-foreground) 12%,
-            transparent
-          );
         }
       </style>
     </template>
@@ -183,7 +193,11 @@ export class ParcelDimensionsField extends FieldDef {
         {{#if @model.billableWeight}}
           <p class='pd-readout'>
             Billable weight
-            <strong>{{@model.billableWeight}} kg</strong>
+            <strong><FormatNumber
+                @value={{@model.billableWeight}}
+                @style='unit'
+                @unit='kilogram'
+              /></strong>
             {{#if @model.isVolumetric}}
               — volumetric, from
               {{@model.volume}}

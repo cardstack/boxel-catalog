@@ -7,7 +7,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import NumberField from 'https://cardstack.com/base/number';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
-import { money } from './fulfilment-format';
+import { Money } from './fulfilment-ui';
+import { Token } from '@cardstack/pretui/components/token';
 import CurrencyField from 'https://cardstack.com/base/currency';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import ListIcon from '@cardstack/boxel-icons/list';
@@ -92,7 +93,14 @@ export class FulfilmentLineItemField extends FieldDef {
               @model.productName
               'Unnamed item'
             }}</span>
-          <span class='li-sku'>{{if @model.sku @model.sku '—'}}</span>
+          {{#if @model.sku}}
+            <span class='li-sku'><Token
+                class='li-sku-token'
+                @value={{@model.sku}}
+              /></span>
+          {{else}}
+            <span class='li-sku'>—</span>
+          {{/if}}
         </div>
 
         <span class='li-slot li-qty'>
@@ -103,14 +111,17 @@ export class FulfilmentLineItemField extends FieldDef {
           {{/if}}
         </span>
 
-        {{! `money` rather than the AmountWithCurrency atom. The atom renders
+        {{! `Money` rather than the AmountWithCurrency atom. The atom renders
             "£ 42" — a space after the symbol and no minor units — while every
-            other figure on the host card goes through `money` and renders
-            "£6.87". Two money formats on one screen is exactly what that helper
-            exists to prevent, and a row of line items is where it showed. }}
+            other figure on the host card goes through `money` / `Money` and
+            renders "£6.87". Two money formats on one screen is exactly what
+            those exist to prevent, and a row of line items is where it showed. }}
         <span class='li-slot li-price'>
           {{#if @model.unitPrice.amount}}
-            {{money @model.unitPrice.amount @model.unitPrice.currency.code}}
+            <Money
+              @amount={{@model.unitPrice.amount}}
+              @code={{@model.unitPrice.currency.code}}
+            />
           {{else}}
             —
           {{/if}}
@@ -118,7 +129,10 @@ export class FulfilmentLineItemField extends FieldDef {
 
         <span class='li-slot li-total'>
           {{#if @model.lineTotal.amount}}
-            {{money @model.lineTotal.amount @model.lineTotal.currency.code}}
+            <Money
+              @amount={{@model.lineTotal.amount}}
+              @code={{@model.lineTotal.currency.code}}
+            />
           {{else}}
             —
           {{/if}}
@@ -153,10 +167,19 @@ export class FulfilmentLineItemField extends FieldDef {
           white-space: nowrap;
         }
         .li-sku {
-          font-family: var(--font-mono);
+          min-width: 0;
           font-size: 0.7rem;
-          letter-spacing: 0.06em;
           color: var(--muted-foreground);
+        }
+        /* Pret UI Token for the SKU, on the muted ink; the body knob lands
+           the pill at the old 0.7rem. */
+        .li-sku .li-sku-token {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.7rem + 3.5px);
+          margin-inline: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .li-slot {
           text-align: right;
