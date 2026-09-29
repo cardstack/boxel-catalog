@@ -12,8 +12,15 @@ import EmailField from 'https://cardstack.com/base/email';
 import PhoneNumberField from 'https://cardstack.com/base/phone-number';
 import AddressField from 'https://cardstack.com/base/address';
 import UsersIcon from '@cardstack/boxel-icons/users';
-import { Avatar } from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { User } from './user';
+import { avatarHue } from './utils';
 
 export class Account extends CardDef {
   static displayName = 'Account';
@@ -122,19 +129,17 @@ export class Account extends CardDef {
       <div class='fitted'>
         <div class='fmt badge'>
           <Avatar
-            class='avatar'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{28}}
           />
           <span class='name'>{{this.name}}</span>
         </div>
         <div class='fmt strip'>
           <Avatar
-            class='avatar'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{28}}
           />
           <div class='info'>
             <span class='name'>{{this.name}}</span>
@@ -145,10 +150,10 @@ export class Account extends CardDef {
         </div>
         <div class='fmt tile'>
           <Avatar
-            class='avatar avatar-lg'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            class='avatar-lg'
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{40}}
           />
           <span class='name'>{{this.name}}</span>
           {{#if @model.industry}}
@@ -163,10 +168,10 @@ export class Account extends CardDef {
         </div>
         <div class='fmt card'>
           <Avatar
-            class='avatar avatar-lg'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            class='avatar-lg'
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{40}}
           />
           <div class='info'>
             <span class='name name-lg'>{{this.name}}</span>
@@ -184,7 +189,7 @@ export class Account extends CardDef {
             {{/if}}
           </div>
           {{#if @model.isCustomer}}
-            <span class='badge-pill'>Customer</span>
+            <StatePill class='badge-pill' @label='Customer' @hue='green' />
           {{/if}}
         </div>
       </div>
@@ -200,16 +205,6 @@ export class Account extends CardDef {
           height: 100%;
           box-sizing: border-box;
           overflow: hidden;
-        }
-        .avatar {
-          --profile-avatar-icon-size: 1.75rem;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          flex-shrink: 0;
-        }
-        .avatar-lg {
-          --profile-avatar-icon-size: 2.5rem;
         }
         .name {
           font-weight: 600;
@@ -239,18 +234,6 @@ export class Account extends CardDef {
         }
         .badge-pill {
           align-self: flex-start;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--background)
-          );
-          color: var(--success-ink);
           flex-shrink: 0;
         }
         @container fitted-card (max-width: 150px) and (max-height: 169px) {
@@ -301,14 +284,28 @@ export class Account extends CardDef {
     get name() {
       return this.args.model?.name?.trim() || 'Unnamed Account';
     }
+    get company(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.industry) rows.push({ key: 'Industry', value: 'industry' });
+      if (m?.domain) rows.push({ key: 'Domain', value: 'domain' });
+      if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
+      return rows;
+    }
+    get contact(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.email) rows.push({ key: 'Email', value: 'email' });
+      if (m?.phone) rows.push({ key: 'Phone', value: 'phone' });
+      return rows;
+    }
     <template>
       <article class='account-page'>
         <header class='ch'>
           <Avatar
-            class='avatar'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{56}}
           />
           <div class='ch-id'>
             <p class='doc-kind'>Account</p>
@@ -323,33 +320,29 @@ export class Account extends CardDef {
         </header>
         <section class='panel'>
           <h2>Company</h2>
-          <dl>
-            {{#if @model.industry}}
-              <dt>Industry</dt>
-              <dd>{{@model.industry}}</dd>
-            {{/if}}
-            {{#if @model.domain}}
-              <dt>Domain</dt>
-              <dd>{{@model.domain}}</dd>
-            {{/if}}
-            {{#if @model.owner}}
-              <dt>Owner</dt>
-              <dd><@fields.owner @format='atom' /></dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='details' @items={{this.company}}>
+            <:value as |row|>
+              {{#if (eq row.value 'industry')}}
+                <@fields.industry />
+              {{else if (eq row.value 'domain')}}
+                <@fields.domain />
+              {{else}}
+                <@fields.owner @format='atom' />
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
         <section class='panel'>
           <h2>Contact</h2>
-          <dl>
-            {{#if @model.email}}
-              <dt>Email</dt>
-              <dd><@fields.email /></dd>
-            {{/if}}
-            {{#if @model.phone}}
-              <dt>Phone</dt>
-              <dd><@fields.phone /></dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='details' @items={{this.contact}}>
+            <:value as |row|>
+              {{#if (eq row.value 'email')}}
+                <@fields.email />
+              {{else}}
+                <@fields.phone />
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
         <section class='panel'>
           <h2>Billing Address</h2>
@@ -371,12 +364,6 @@ export class Account extends CardDef {
           gap: 1rem;
           border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
-        }
-        .avatar {
-          --profile-avatar-icon-size: 3.5rem;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          flex-shrink: 0;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
@@ -418,19 +405,11 @@ export class Account extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
       </style>
     </template>

@@ -12,9 +12,22 @@ import DateField from 'https://cardstack.com/base/date';
 import PercentageField from 'https://cardstack.com/base/percentage';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import TrendingUpIcon from '@cardstack/boxel-icons/trending-up';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import {
+  StepList,
+  type StepItem,
+  type StepState,
+} from '@cardstack/pretui/components/step-list';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { Account } from './account';
 import { User } from './user';
-import { formatMoney } from './utils';
+import { isAmount } from './utils';
 // EXTRACTED to its own module (Revenue Ops Console build) so Pipeline Stage
 // is a standalone, Spec-able block instead of private to this file. Kept as
 // a re-export below so every existing consumer of `./opportunity`
@@ -28,6 +41,11 @@ import {
 } from './pipeline-stage-field';
 
 export { PIPELINE_STAGES, STAGE_DEFAULT_PROBABILITY, STAGE_COLORS, stageSlug };
+
+/** The stage pill's hue, from the Pipeline Stage field's own option table. */
+function stageHue(stage: string | undefined) {
+  return statusHue(StageField, stage);
+}
 
 export class Opportunity extends CardDef {
   static displayName = 'Opportunity';
@@ -100,15 +118,6 @@ export class Opportunity extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof Opportunity> {
-    get valueDisplay() {
-      return formatMoney(
-        this.args.model?.value?.amount,
-        this.args.model?.value?.currency?.code,
-      );
-    }
-    get stageClass() {
-      return stageSlug(this.args.model?.stage);
-    }
     <template>
       <div class='opp-row'>
         <TrendingUpIcon class='icon' />
@@ -118,12 +127,17 @@ export class Opportunity extends CardDef {
             <span class='meta'>{{@model.account.name}}</span>
           {{/if}}
         </div>
-        {{#if this.valueDisplay}}
-          <span class='value'>{{this.valueDisplay}}</span>
+        {{#if (isAmount @model.value.amount)}}
+          <FormatNumber
+            class='value'
+            @value={{@model.value.amount}}
+            @style='currency'
+            @currency={{@model.value.currency.code}}
+            @locale='en-US'
+            @maximumFractionDigits={{unless @model.value.currency.code 2}}
+          />
         {{/if}}
-        {{#if @model.stage}}
-          <span class='stage stage-{{this.stageClass}}'>{{@model.stage}}</span>
-        {{/if}}
+        <StatePill @label={{@model.stage}} @hue={{stageHue @model.stage}} />
       </div>
       <style scoped>
         .opp-row {
@@ -158,58 +172,12 @@ export class Opportunity extends CardDef {
         }
         .value {
           font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        .stage {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-        }
-        .stage-closed-won {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--background)
-          );
-          color: var(--success-ink);
-        }
-        .stage-closed-lost {
-          background-color: color-mix(
-            in oklab,
-            var(--destructive-ink) 12%,
-            var(--background)
-          );
-          color: var(--destructive-ink);
-        }
-        .stage-proposal,
-        .stage-negotiation {
-          background-color: color-mix(
-            in oklab,
-            var(--attention-ink) 12%,
-            var(--background)
-          );
-          color: var(--attention-ink);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof Opportunity> {
-    get valueDisplay() {
-      return formatMoney(
-        this.args.model?.value?.amount,
-        this.args.model?.value?.currency?.code,
-      );
-    }
-    get stageClass() {
-      return stageSlug(this.args.model?.stage);
-    }
     get probabilityDisplay() {
       let p = this.args.model?.effectiveProbability;
       return typeof p === 'number' ? `${p}%` : '';
@@ -232,18 +200,30 @@ export class Opportunity extends CardDef {
       <div class='fitted {{if this.isStuck "stuck"}}'>
         <div class='top'>
           <TrendingUpIcon class='icon' />
-          {{#if @model.stage}}
-            <span
-              class='stage stage-{{this.stageClass}}'
-            >{{@model.stage}}</span>
-          {{/if}}
+          <StatePill
+            class='stage'
+            @label={{@model.stage}}
+            @hue={{stageHue @model.stage}}
+          />
           {{#if this.isStuck}}
-            <span class='stuck-flag' title={{this.ageDisplay}}>stalled</span>
+            <StatePill
+              class='stuck-flag'
+              title={{this.ageDisplay}}
+              @label='stalled'
+              @hue='red'
+            />
           {{/if}}
         </div>
         <span class='name'>{{@model.cardTitle}}</span>
-        {{#if this.valueDisplay}}
-          <span class='figure'>{{this.valueDisplay}}</span>
+        {{#if (isAmount @model.value.amount)}}
+          <FormatNumber
+            class='figure'
+            @value={{@model.value.amount}}
+            @style='currency'
+            @currency={{@model.value.currency.code}}
+            @locale='en-US'
+            @maximumFractionDigits={{unless @model.value.currency.code 2}}
+          />
         {{/if}}
         {{#if @model.account.name}}
           <span class='meta line-account'>{{@model.account.name}}</span>
@@ -293,9 +273,7 @@ export class Opportunity extends CardDef {
         }
         .figure {
           font-weight: 700;
-          font-variant-numeric: tabular-nums;
           font-size: 0.9375rem;
-          white-space: nowrap;
           flex-shrink: 0;
         }
         .meta {
@@ -307,42 +285,7 @@ export class Opportunity extends CardDef {
           flex-shrink: 0;
         }
         .stage {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .stage-closed-won {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--background)
-          );
-          color: var(--success-ink);
-        }
-        .stage-closed-lost {
-          background-color: color-mix(
-            in oklab,
-            var(--destructive-ink) 12%,
-            var(--background)
-          );
-          color: var(--destructive-ink);
-        }
-        .stage-proposal,
-        .stage-negotiation {
-          background-color: color-mix(
-            in oklab,
-            var(--attention-ink) 12%,
-            var(--background)
-          );
-          color: var(--attention-ink);
+          min-width: 0;
         }
         .line-account,
         .line-prob,
@@ -351,19 +294,6 @@ export class Opportunity extends CardDef {
         }
         .stuck-flag {
           margin-left: auto;
-          font-size: 0.5625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.0625rem 0.375rem;
-          border-radius: 999px;
-          background-color: color-mix(
-            in oklab,
-            var(--destructive-ink) 12%,
-            var(--background)
-          );
-          color: var(--destructive-ink);
-          white-space: nowrap;
           flex-shrink: 0;
         }
         /* A stalled deal reads as needing attention at every size, including
@@ -428,46 +358,46 @@ export class Opportunity extends CardDef {
   static isolated: BaseDefComponent = class Isolated extends Component<
     typeof Opportunity
   > {
-    get valueDisplay() {
-      return formatMoney(
-        this.args.model?.value?.amount,
-        this.args.model?.value?.currency?.code,
-      );
-    }
-    get weightedDisplay() {
+    get weighted(): number | undefined {
       let amount = this.args.model?.value?.amount;
       let p = this.args.model?.effectiveProbability;
-      if (typeof amount !== 'number' || typeof p !== 'number') return '';
-      return formatMoney(
-        (amount * p) / 100,
-        this.args.model?.value?.currency?.code,
-      );
+      if (!isAmount(amount) || typeof p !== 'number') return undefined;
+      return ((amount as number) * p) / 100;
     }
     get probabilitySource() {
       return typeof this.args.model?.probability === 'number'
         ? 'override'
         : 'stage default';
     }
-    get stages() {
+    // A lost deal's rail ends at "closed lost" (an error step) instead of
+    // "closed won"; a won deal is complete through its last step.
+    get stages(): StepItem[] {
       let current = this.args.model?.stage;
       let lost = current === 'closed lost';
+      let won = current === 'closed won';
       let list = PIPELINE_STAGES.filter((s) =>
         lost ? s !== 'closed won' : s !== 'closed lost',
       );
       let idx = list.indexOf(current as (typeof PIPELINE_STAGES)[number]);
-      return list.map((label, i) => ({
-        label,
-        state:
-          idx < 0
-            ? 'todo'
-            : i < idx
-              ? 'done'
-              : i === idx
-                ? lost
-                  ? 'lost'
-                  : 'current'
-                : 'todo',
-      }));
+      return list.map((label, i) => {
+        let state: StepState =
+          idx < 0 || i > idx
+            ? 'upcoming'
+            : i < idx || won
+              ? 'complete'
+              : lost
+                ? 'error'
+                : 'current';
+        return { label, state };
+      });
+    }
+    get details(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.account) rows.push({ key: 'Account', value: 'account' });
+      if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
+      if (m?.closeDate) rows.push({ key: 'Close date', value: 'closeDate' });
+      return rows;
     }
     <template>
       <article class='opp-page'>
@@ -476,11 +406,27 @@ export class Opportunity extends CardDef {
             <p class='doc-kind'>{{@model.constructor.displayName}}</p>
             <h1>{{@model.cardTitle}}</h1>
           </div>
-          {{#if this.valueDisplay}}
+          {{#if (isAmount @model.value.amount)}}
             <div class='value-block'>
-              <span class='value'>{{this.valueDisplay}}</span>
-              {{#if this.weightedDisplay}}
-                <span class='weighted'>{{this.weightedDisplay}}
+              <FormatNumber
+                class='value'
+                @value={{@model.value.amount}}
+                @style='currency'
+                @currency={{@model.value.currency.code}}
+                @locale='en-US'
+                @maximumFractionDigits={{unless @model.value.currency.code 2}}
+              />
+              {{#if (isAmount this.weighted)}}
+                <span class='weighted'><FormatNumber
+                    @value={{this.weighted}}
+                    @style='currency'
+                    @currency={{@model.value.currency.code}}
+                    @locale='en-US'
+                    @maximumFractionDigits={{unless
+                      @model.value.currency.code
+                      2
+                    }}
+                  />
                   weighted ·
                   {{@model.effectiveProbability}}% ({{this.probabilitySource}})</span>
               {{/if}}
@@ -488,31 +434,26 @@ export class Opportunity extends CardDef {
           {{/if}}
         </header>
 
-        <ol class='stepper'>
-          {{#each this.stages as |step|}}
-            <li class='step step-{{step.state}}'>
-              <span class='dot'></span>
-              <span class='step-label'>{{step.label}}</span>
-            </li>
-          {{/each}}
-        </ol>
+        <StepList
+          class='stepper'
+          @steps={{this.stages}}
+          @variant='track'
+          @label='Pipeline stage'
+        />
 
         <section class='panel'>
           <h2>Details</h2>
-          <dl>
-            {{#if @model.account}}
-              <dt>Account</dt>
-              <dd class='acct'><@fields.account @format='embedded' /></dd>
-            {{/if}}
-            {{#if @model.owner}}
-              <dt>Owner</dt>
-              <dd><@fields.owner @format='atom' /></dd>
-            {{/if}}
-            {{#if @model.closeDate}}
-              <dt>Close date</dt>
-              <dd><@fields.closeDate /></dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='details' @items={{this.details}}>
+            <:value as |row|>
+              {{#if (eq row.value 'account')}}
+                <div class='acct'><@fields.account @format='embedded' /></div>
+              {{else if (eq row.value 'owner')}}
+                <@fields.owner @format='atom' />
+              {{else}}
+                <@fields.closeDate />
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
       </article>
       <style scoped>
@@ -556,92 +497,26 @@ export class Opportunity extends CardDef {
         .value {
           font-size: 1.5rem;
           font-weight: 700;
-          font-variant-numeric: tabular-nums;
           line-height: 1.1;
         }
         .weighted {
           font-size: 0.75rem;
           color: var(--muted-foreground);
         }
+        /* Pret UI StepList, track variant. Its knobs put every mark on a
+           guaranteed pair with the page: the current step's number takes
+           --foreground, and its bar, the complete check and the lost step's
+           label and glyph take ink tokens. The defaults measure 1.31:1 for
+           the current bar (--primary on a light page) and 1.87:1 for the
+           current number (--primary-foreground with no disc behind it, on a
+           dark page). */
         .stepper {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          gap: 0;
-        }
-        .step {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.375rem;
-          position: relative;
-          min-width: 0;
-        }
-        .step::before {
-          content: '';
-          position: absolute;
-          top: 0.3125rem;
-          left: -50%;
-          width: 100%;
-          height: 0.125rem;
-          background-color: var(--border);
-        }
-        .step:first-child::before {
-          display: none;
-        }
-        .dot {
-          width: 0.75rem;
-          height: 0.75rem;
-          border-radius: 50%;
-          background-color: var(--border);
-          position: relative;
-          z-index: 1;
-        }
-        .step-done .dot {
-          background-color: var(--primary);
-        }
-        .step-done::before {
-          background-color: var(--primary);
-        }
-        /* The current step is a ring: a primary disc with a card-coloured
-           centre, so --primary is only ever a fill. */
-        .step-current .dot {
-          width: 0.875rem;
-          height: 0.875rem;
-          background-color: var(--primary);
-        }
-        .step-current .dot::after {
-          content: '';
-          position: absolute;
-          inset: 0.1875rem;
-          border-radius: 50%;
-          background-color: var(--card);
-        }
-        .step-current::before {
-          background-color: var(--primary);
-        }
-        .step-lost .dot {
-          background-color: var(--destructive);
-        }
-        .step-label {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          color: var(--muted-foreground);
-          text-align: center;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .step-current .step-label {
-          color: var(--foreground);
-        }
-        .step-lost .step-label {
-          color: var(--destructive-ink);
+          --pretui-step-current-marker-fg: var(--foreground);
+          --pretui-step-current-bar: var(--primary-ink);
+          --pretui-step-complete-marker-fg: var(--success-ink);
+          --pretui-step-error-tone: var(--destructive-ink);
+          --pretui-step-error-marker-fg: var(--destructive-ink);
+          text-transform: capitalize;
         }
         .panel {
           border: 1px solid var(--border);
@@ -660,21 +535,14 @@ export class Opportunity extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
         .acct {
+          flex: 1;
           border: 1px solid var(--border);
           border-radius: 0.5rem;
           max-width: 24rem;

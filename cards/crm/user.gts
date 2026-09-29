@@ -7,7 +7,9 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import EmailField from 'https://cardstack.com/base/email';
 import UserIcon from '@cardstack/boxel-icons/user';
-import { Avatar } from '@cardstack/boxel-ui/components';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { avatarHue } from './utils';
 
 export class User extends CardDef {
   static displayName = 'User';
@@ -26,10 +28,9 @@ export class User extends CardDef {
     <template>
       <span class='user-atom'>
         <Avatar
-          class='ua-avatar'
-          @userId={{@model.email}}
-          @displayName={{@model.name}}
-          @isReady={{true}}
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{18}}
         />
         <span class='ua-name'>{{if @model.name @model.name 'Unassigned'}}</span>
       </span>
@@ -41,12 +42,6 @@ export class User extends CardDef {
           font-size: 0.8125rem;
           font-weight: 500;
           color: var(--foreground);
-        }
-        .ua-avatar {
-          --profile-avatar-icon-size: 1.125rem;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          flex-shrink: 0;
         }
         .ua-name {
           overflow: hidden;
@@ -61,10 +56,9 @@ export class User extends CardDef {
     <template>
       <div class='user'>
         <Avatar
-          class='avatar'
-          @userId={{@model.email}}
-          @displayName={{@model.name}}
-          @isReady={{true}}
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{32}}
         />
         <div class='info'>
           <div class='name'>{{if @model.name @model.name 'Unnamed'}}</div>
@@ -79,12 +73,6 @@ export class User extends CardDef {
           align-items: center;
           gap: 0.625rem;
           padding: 0.625rem 0.875rem;
-        }
-        .avatar {
-          --profile-avatar-icon-size: 2rem;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          flex-shrink: 0;
         }
         .info {
           min-width: 0;
@@ -111,10 +99,16 @@ export class User extends CardDef {
     <template>
       <div class='fitted'>
         <Avatar
-          class='avatar'
-          @userId={{@model.email}}
-          @displayName={{@model.name}}
-          @isReady={{true}}
+          class='avatar-sm'
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{28}}
+        />
+        <Avatar
+          class='avatar-lg'
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{40}}
         />
         <div class='info'>
           <span class='name'>{{this.name}}</span>
@@ -135,11 +129,11 @@ export class User extends CardDef {
           overflow: hidden;
           color: var(--foreground);
         }
-        .avatar {
-          --profile-avatar-icon-size: 1.75rem;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          flex-shrink: 0;
+        /* Pret UI Avatar sizes itself from @size, so each tier mounts its own
+           and the container query shows one. The parent class keeps these
+           rules above Avatar's own display. */
+        .fitted .avatar-lg {
+          display: none;
         }
         .info {
           display: flex;
@@ -176,8 +170,11 @@ export class User extends CardDef {
             justify-content: center;
             padding: 0.875rem;
           }
-          .avatar {
-            --profile-avatar-icon-size: 2.5rem;
+          .fitted .avatar-sm {
+            display: none;
+          }
+          .fitted .avatar-lg {
+            display: inline-flex;
           }
         }
       </style>
@@ -188,14 +185,14 @@ export class User extends CardDef {
     get name() {
       return this.args.model?.name?.trim() || 'Unnamed User';
     }
+    contactRows = [{ key: 'Email', value: 'email' }];
     <template>
       <article class='user-page'>
         <header class='uh'>
           <Avatar
-            class='avatar'
-            @userId={{@model.email}}
-            @displayName={{@model.name}}
-            @isReady={{true}}
+            @name={{if @model.name @model.name ''}}
+            @hue={{avatarHue @model.name}}
+            @size={{56}}
           />
           <div class='uh-id'>
             <p class='doc-kind'>{{@model.constructor.displayName}}</p>
@@ -205,10 +202,9 @@ export class User extends CardDef {
         {{#if @model.email}}
           <section class='panel'>
             <h2>Contact</h2>
-            <dl>
-              <dt>Email</dt>
-              <dd><@fields.email /></dd>
-            </dl>
+            <KeyValue class='details' @items={{this.contactRows}}>
+              <:value><@fields.email /></:value>
+            </KeyValue>
           </section>
         {{/if}}
       </article>
@@ -227,11 +223,6 @@ export class User extends CardDef {
           gap: 1rem;
           border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
-        }
-        .avatar {
-          --profile-avatar-icon-size: 3.5rem;
-          font-weight: 700;
-          flex-shrink: 0;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
@@ -264,19 +255,11 @@ export class User extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
       </style>
     </template>

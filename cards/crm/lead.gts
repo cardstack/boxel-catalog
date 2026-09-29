@@ -10,9 +10,17 @@ import NumberField from 'https://cardstack.com/base/number';
 import EmailField from 'https://cardstack.com/base/email';
 import PhoneNumberField from 'https://cardstack.com/base/phone-number';
 import enumField from 'https://cardstack.com/base/enum';
+import { guidFor } from '@ember/object/internals';
 import TargetIcon from '@cardstack/boxel-icons/target';
-import { ProgressBar } from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { Campaign } from './campaign';
+import { labelProgress } from './utils';
 
 const LeadStatusField = enumField(StringField, {
   options: ['new', 'contacted', 'qualified', 'converted', 'disqualified'],
@@ -31,6 +39,21 @@ const LeadSourceField = enumField(StringField, {
   ],
   displayName: 'Lead Source',
 });
+
+// Status hues for the pill. Qualified and converted are good news and
+// disqualified bad news; new is the one open state that stands out, so it
+// takes a category hue rather than a status one; contacted is neutral.
+const STATUS_HUE: Record<string, Hue> = {
+  new: 'blue',
+  contacted: 'slate',
+  qualified: 'green',
+  converted: 'green',
+  disqualified: 'red',
+};
+
+function statusHue(status: string | undefined): Hue {
+  return (status && STATUS_HUE[status]) || 'slate';
+}
 
 // 0 is a real score (the Spec's scale is 0–100); only an unset score hides.
 function hasScore(score: number | null | undefined): boolean {
@@ -114,11 +137,10 @@ export class Lead extends CardDef {
           {{/if}}
         </span>
         <span class='status-col'>
-          {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
-          {{/if}}
+          <StatePill
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+          />
         </span>
       </div>
       <style scoped>
@@ -182,49 +204,6 @@ export class Lead extends CardDef {
           letter-spacing: 0.08em;
           color: var(--muted-foreground);
         }
-        .status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-        }
-        .status-new {
-          background-color: color-mix(
-            in oklab,
-            var(--info-ink) 12%,
-            var(--background)
-          );
-          color: var(--info-ink);
-        }
-        .status-qualified {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--background)
-          );
-          color: var(--success-ink);
-        }
-        .status-converted {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--background)
-          );
-          color: var(--success-ink);
-        }
-        .status-disqualified {
-          background-color: color-mix(
-            in oklab,
-            var(--destructive-ink) 12%,
-            var(--background)
-          );
-          color: var(--destructive-ink);
-        }
       </style>
     </template>
   };
@@ -237,11 +216,10 @@ export class Lead extends CardDef {
       <div class='fitted'>
         <div class='top'>
           <TargetIcon class='icon' />
-          {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
-          {{/if}}
+          <StatePill
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+          />
         </div>
         <span class='name'>{{this.name}}</span>
         {{#if @model.company}}
@@ -293,49 +271,6 @@ export class Lead extends CardDef {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-        }
-        .status-new {
-          background-color: color-mix(
-            in oklab,
-            var(--info-ink) 12%,
-            var(--background)
-          );
-          color: var(--info-ink);
-        }
-        .status-qualified {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--background)
-          );
-          color: var(--success-ink);
-        }
-        .status-converted {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--background)
-          );
-          color: var(--success-ink);
-        }
-        .status-disqualified {
-          background-color: color-mix(
-            in oklab,
-            var(--destructive-ink) 12%,
-            var(--background)
-          );
-          color: var(--destructive-ink);
-        }
         .line-company,
         .line-score,
         .line-source {
@@ -364,8 +299,17 @@ export class Lead extends CardDef {
     get name() {
       return this.args.model?.name?.trim() || 'Unnamed Lead';
     }
+    scoreLabelId = `${guidFor(this)}-score-label`;
     get clampedScore() {
       return Math.max(0, Math.min(100, this.args.model?.score ?? 0));
+    }
+    get details(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.email) rows.push({ key: 'Email', value: 'email' });
+      if (m?.phone) rows.push({ key: 'Phone', value: 'phone' });
+      if (m?.source) rows.push({ key: 'Source', value: 'source' });
+      return rows;
     }
     <template>
       <article class='lead-page'>
@@ -377,37 +321,38 @@ export class Lead extends CardDef {
               <p class='company'>{{@model.company}}</p>
             {{/if}}
           </div>
-          {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
-          {{/if}}
+          <StatePill
+            class='status'
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+          />
         </header>
         {{#if (hasScore @model.score)}}
           <section class='score-panel'>
             <span class='score-value'>{{@model.score}}</span>
-            <span class='score-label'>lead score</span>
-            <div class='score-bar'>
-              <ProgressBar @value={{this.clampedScore}} @max={{100}} />
-            </div>
+            <span id={{this.scoreLabelId}} class='score-label'>lead score</span>
+            <ProgressBar
+              class='score-bar'
+              @value={{this.clampedScore}}
+              @max={{100}}
+              @steps={{false}}
+              {{labelProgress this.scoreLabelId}}
+            />
           </section>
         {{/if}}
         <section class='panel'>
           <h2>Details</h2>
-          <dl>
-            {{#if @model.email}}
-              <dt>Email</dt>
-              <dd><@fields.email /></dd>
-            {{/if}}
-            {{#if @model.phone}}
-              <dt>Phone</dt>
-              <dd><@fields.phone /></dd>
-            {{/if}}
-            {{#if @model.source}}
-              <dt>Source</dt>
-              <dd class='cap'>{{@model.source}}</dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='details' @items={{this.details}}>
+            <:value as |row|>
+              {{#if (eq row.value 'email')}}
+                <@fields.email />
+              {{else if (eq row.value 'phone')}}
+                <@fields.phone />
+              {{else}}
+                <span class='cap'>{{@model.source}}</span>
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
       </article>
       <style scoped>
@@ -447,48 +392,7 @@ export class Lead extends CardDef {
           color: var(--muted-foreground);
         }
         .status {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
           margin-bottom: 0.25rem;
-          white-space: nowrap;
-        }
-        .status-new {
-          background-color: color-mix(
-            in oklab,
-            var(--info-ink) 12%,
-            var(--background)
-          );
-          color: var(--info-ink);
-        }
-        .status-qualified {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--background)
-          );
-          color: var(--success-ink);
-        }
-        .status-converted {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--background)
-          );
-          color: var(--success-ink);
-        }
-        .status-disqualified {
-          background-color: color-mix(
-            in oklab,
-            var(--destructive-ink) 12%,
-            var(--background)
-          );
-          color: var(--destructive-ink);
         }
         .score-panel {
           border: 1px solid var(--border);
@@ -536,19 +440,11 @@ export class Lead extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
         .cap {
           text-transform: capitalize;
