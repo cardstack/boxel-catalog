@@ -11,13 +11,13 @@ import { not } from '@cardstack/boxel-ui/helpers';
 import SwitchSubmodeCommand from '@cardstack/boxel-host/commands/switch-submode';
 import { identifyCard, moduleFrom } from '@cardstack/runtime-common';
 
-// Shared pieces of the Gold Spec Demo pages: the demo itself (fields and
-// components) and each card cluster's page (a Gold Spec Card Group).
+// Pieces of the Gold Spec Card Group page, one page per card cluster: the page
+// shell, the file links, and a card rendered in every format.
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const here: string = import.meta.url;
 
-/** The catalog root, which every path on these pages is relative to. */
+/** The catalog root, which every path on the page is relative to. */
 export const catalogRoot = new URL('../', here).href;
 const CATALOG_PREFIX = '@cardstack/catalog/';
 const SOURCE_EXTENSION = /\.g?ts$/;
@@ -45,16 +45,6 @@ export function cardSourcePath(card: CardDef): string {
 /** A card instance's JSON file relative to the catalog root. */
 export function cardInstancePath(card: CardDef): string {
   return card.id ? `${fromCatalogRoot(card.id)}.json` : '';
-}
-
-export type BlockKind = 'field' | 'component';
-
-export interface Block {
-  id: string;
-  label: string;
-  kind: BlockKind;
-  /** Source file, relative to the catalog root. */
-  path: string;
 }
 
 /** A file path; clicking opens the file in code mode. */
@@ -87,27 +77,6 @@ export class SourceLink extends GlimmerComponent<{
       .source-link code {
         font-family: var(--font-mono);
         font-size: var(--boxel-caption-font-size);
-      }
-    </style>
-  </template>
-}
-
-/** A section's heading row: the block's name and its source link. */
-export class BlockHead extends GlimmerComponent<{
-  Args: { entry: Block; context?: CardContext };
-}> {
-  <template>
-    <div class='block-head'>
-      <h2 id='{{@entry.id}}-heading'>{{@entry.label}}</h2>
-      <SourceLink @path={{@entry.path}} @context={{@context}} />
-    </div>
-    <style scoped>
-      .block-head {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: var(--boxel-sp-xs);
       }
     </style>
   </template>
@@ -213,8 +182,7 @@ export class CardFormats extends GlimmerComponent<{
 }
 
 /**
- * The page frame both demo pages share: intro, a sticky sidebar and the
- * sections column. Sections are yielded, so their card styling reaches them
+ * The page frame: intro, a sticky sidebar and the sections column. Sections are yielded, so their card styling reaches them
  * through `:deep()`.
  */
 export class DemoShell extends GlimmerComponent<{
