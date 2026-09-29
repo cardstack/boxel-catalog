@@ -186,7 +186,7 @@ export class ApprovalStepField extends FieldDef {
         .approval-step-row {
           display: flex;
           flex-direction: column;
-          gap: 0.2rem;
+          gap: var(--boxel-sp-2xs);
         }
         .row-top {
           display: flex;

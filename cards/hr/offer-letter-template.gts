@@ -248,7 +248,7 @@ export class OfferLetterTemplate extends CardDef {
         .legend-row {
           display: flex;
           flex-direction: column;
-          gap: 0.05rem;
+          gap: var(--boxel-sp-3xs);
           padding: 0.4rem 0;
           border-bottom: 1px solid var(--border);
         }

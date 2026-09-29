@@ -597,7 +597,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
       .pill-row {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--boxel-sp-5xs);
+        gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         margin-top: var(--boxel-sp-xs);
       }
       .body {
@@ -642,7 +642,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
         padding: 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 0.3rem;
+        gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
       .facts {
         --text-ui-md: var(--boxel-font-size-sm);
@@ -682,6 +682,11 @@ class CandidateIsolated extends Component<typeof Candidate> {
         --space-9: var(--boxel-sp);
         --space-6: var(--boxel-sp);
         --text-heading: var(--boxel-font-size);
+      }
+      /* The resume panel can stack a missing-file and a missing-text state. */
+      .empty + .empty,
+      .empty + .prose {
+        margin-top: var(--boxel-sp-xs);
       }
       @container iso (max-width: 40rem) {
         .body {
@@ -857,7 +862,7 @@ export class Candidate extends PersonBase {
           display: flex;
           flex-direction: column;
           align-items: flex-end;
-          gap: 0.1875rem;
+          gap: var(--boxel-sp-3xs);
           flex-shrink: 0;
         }
         .ce-stage {
@@ -1070,7 +1075,7 @@ export class Candidate extends PersonBase {
           padding-top: 0.3rem;
           border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
+          gap: 0.125rem 0.5rem;
         }
         .fit-add > div {
           display: flex;

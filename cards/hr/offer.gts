@@ -518,7 +518,7 @@ class OfferIsolated extends Component<typeof Offer> {
       .pill-row {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--boxel-sp-5xs);
+        gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         margin-top: var(--boxel-sp-xs);
       }
       .hero-money {
@@ -1042,7 +1042,7 @@ export class Offer extends CardDef {
           padding-top: 0.3rem;
           border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
+          gap: 0.125rem 0.5rem;
         }
         .fit-add > div {
           display: flex;

@@ -339,7 +339,7 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         flex: none;
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
+        gap: var(--boxel-sp-2xs);
       }
       .notice {
         margin-top: var(--boxel-sp-xs);

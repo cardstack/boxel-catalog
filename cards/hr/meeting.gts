@@ -466,7 +466,7 @@ export class Meeting extends CardDef {
         .pill-row {
           display: flex;
           flex-wrap: wrap;
-          gap: var(--boxel-sp-5xs);
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           margin-top: var(--boxel-sp-xs);
         }
         .body {
@@ -652,7 +652,7 @@ export class Meeting extends CardDef {
         .meta-list > div {
           display: flex;
           align-items: baseline;
-          gap: var(--boxel-sp-5xs);
+          gap: var(--boxel-sp-2xs);
         }
         .meta-list dt {
           font-family: var(--boxel-eyebrow-font-family);
@@ -908,7 +908,7 @@ export class Meeting extends CardDef {
           padding-top: 0.3rem;
           border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
+          gap: 0.125rem 0.5rem;
         }
         .fit-add > div {
           display: flex;

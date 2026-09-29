@@ -442,7 +442,7 @@ class PositionIsolated extends Component<typeof Position> {
       .pill-row {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--boxel-sp-5xs);
+        gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         margin-top: var(--boxel-sp-xs);
       }
       .hero-money {
@@ -498,7 +498,7 @@ class PositionIsolated extends Component<typeof Position> {
         padding: 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 0.3rem;
+        gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
       .chips > li {
         font-size: var(--boxel-font-size-xs);
@@ -872,7 +872,7 @@ export class Position extends CardDef {
           padding-top: 0.3rem;
           border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
+          gap: 0.125rem 0.5rem;
         }
         .fit-add > div {
           display: flex;

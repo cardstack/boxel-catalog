@@ -120,7 +120,7 @@ export class BackgroundCheckField extends FieldDef {
         .background-check {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-4xs);
+          gap: var(--boxel-sp-2xs);
           color: var(--foreground);
         }
         .bc-head {
