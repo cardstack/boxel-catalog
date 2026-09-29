@@ -2,6 +2,8 @@ import GlimmerComponent from '@glimmer/component';
 import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 
 /**
@@ -16,7 +18,10 @@ export interface FeedEntry {
   id?: string;
   /** Who or what. Rendered as the entry's heading. */
   actor?: string;
-  /** Two-letter fallback when there is no avatar image. */
+  /**
+   * Accepted for older callers. The avatar derives its initials from `actor`,
+   * the way Pret UI `Avatar` does everywhere else.
+   */
   initials?: string;
   avatarUrl?: string;
   /** Right-hand side of the header: role, timestamp, channel. */
@@ -83,6 +88,17 @@ export class Feed extends GlimmerComponent<Signature> {
     return htmlSafe(`--feed-rule: ${ring}; --feed-tint: ${bg};`);
   };
 
+  /**
+   * The entry's hue for Pret UI `Avatar`, pulled 45% toward the foreground.
+   * Avatar sets its initials at 80% of the hue on a 16% tint of it, and the
+   * paler kind hues (amber for an internal note) would leave them under
+   * 4.5:1; pulled toward the foreground they clear it and the hue still reads.
+   */
+  avatarHueFor = (entry: FeedEntry) => {
+    let hue = entry.hue ?? KIND_HUE[entry.kind ?? 'inward'] ?? 'slate';
+    return `color-mix(in oklch, ${stateColor(hue).ring} 45%, var(--foreground))`;
+  };
+
   select = (entry: FeedEntry) => {
     this.args.onSelect?.(entry);
   };
@@ -108,12 +124,18 @@ export class Feed extends GlimmerComponent<Signature> {
               {{else}}
                 <article class='feed-card'>
                   <header class='feed-head'>
-                    {{#if entry.avatarUrl}}
-                      <img class='feed-avatar' src={{entry.avatarUrl}} alt='' />
-                    {{else if entry.initials}}
-                      <span
-                        class='feed-avatar feed-initials'
-                      >{{entry.initials}}</span>
+                    {{! Pret UI Avatar: the photo when there is one, falling
+                        back to initials if it fails to load. Hidden from
+                        assistive tech, because the actor's name is the next
+                        thing read. }}
+                    {{#if entry.actor}}
+                      <Avatar
+                        @name={{entry.actor}}
+                        @src={{entry.avatarUrl}}
+                        @hue={{this.avatarHueFor entry}}
+                        @size={{20}}
+                        aria-hidden='true'
+                      />
                     {{/if}}
                     <span class='feed-actor'>{{entry.actor}}</span>
                     {{#if (eq entry.kind 'private')}}
@@ -135,11 +157,16 @@ export class Feed extends GlimmerComponent<Signature> {
           {{/each}}
         </ol>
       {{else}}
-        <p class='feed-empty'>{{if
+        <EmptyState
+          class='feed-empty'
+          @title='Nothing here yet'
+          @message={{if
             @emptyMessage
             @emptyMessage
             'Nothing has happened here yet.'
-          }}</p>
+          }}
+          @texture={{false}}
+        />
       {{/if}}
     </div>
 
@@ -184,22 +211,6 @@ export class Feed extends GlimmerComponent<Signature> {
         background-color: transparent;
         border-bottom: 1px dashed var(--feed-rule);
       }
-      .feed-avatar {
-        width: 1.25rem;
-        height: 1.25rem;
-        border-radius: 50%;
-        flex: none;
-        object-fit: cover;
-      }
-      .feed-initials {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.5625rem;
-        font-weight: 700;
-        background-color: var(--feed-rule);
-        color: var(--background);
-      }
       .feed-actor {
         font-weight: 700;
         color: var(--foreground);
@@ -242,12 +253,12 @@ export class Feed extends GlimmerComponent<Signature> {
       .feed-system-meta {
         font-variant-numeric: tabular-nums;
       }
+      /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+         compact well where the thread would be. */
       .feed-empty {
-        margin: 0;
-        padding: var(--boxel-sp) 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-        max-width: 60ch;
+        --space-9: 1rem;
+        --space-6: 1rem;
+        --text-heading: var(--boxel-font-size);
       }
     </style>
   </template>

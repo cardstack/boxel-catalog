@@ -14,6 +14,8 @@ import enumField from 'https://cardstack.com/base/enum';
 import CalendarCogIcon from '@cardstack/boxel-icons/calendar-cog';
 import CalendarOffIcon from '@cardstack/boxel-icons/calendar-off';
 import { htmlSafe } from '@ember/template';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Stat } from '@cardstack/pretui/components/stat';
 
 import type { BusinessSchedule, DayWindow } from './utils/sla';
 
@@ -297,17 +299,30 @@ export class Schedule extends CardDef {
             <h1>{{@model.title}}</h1>
             <p class='iso-sub'>{{@model.summary}}</p>
           </div>
-          <dl class='iso-facts'>
-            <div><dt>Time zone</dt><dd>{{if
-                  @model.timeZone
-                  @model.timeZone
-                  'UTC'
-                }}</dd></div>
-            <div><dt>Holidays</dt><dd>{{@model.holidayCount}}</dd></div>
+          {{! Pret UI Stat for the header figures. Every value is a word or
+              a pre-formatted count, so none of them rolls. }}
+          <div class='iso-facts'>
+            <Stat
+              class='fact'
+              @label='Time zone'
+              @value={{if @model.timeZone @model.timeZone 'UTC'}}
+              @roll={{false}}
+            />
+            <Stat
+              class='fact'
+              @label='Holidays'
+              @value={{if @model.holidayCount @model.holidayCount ''}}
+              @roll={{false}}
+            />
             {{#if @model.isDefault}}
-              <div><dt>Role</dt><dd>Realm default</dd></div>
+              <Stat
+                class='fact'
+                @label='Role'
+                @value='Realm default'
+                @roll={{false}}
+              />
             {{/if}}
-          </dl>
+          </div>
         </header>
 
         <section class='week' aria-label='Working week'>
@@ -341,8 +356,12 @@ export class Schedule extends CardDef {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>No holidays set. The clock will tick on public
-              holidays — add them here so it stops.</p>
+            <EmptyState
+              class='empty'
+              @title='No holidays set'
+              @message='The clock will tick on public holidays — add them here so it stops.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
       </article>
@@ -379,24 +398,11 @@ export class Schedule extends CardDef {
         .iso-facts {
           display: flex;
           gap: var(--boxel-sp-lg);
-          margin: 0;
         }
-        .iso-facts > div {
+        /* Pret UI Stat: the knob keeps each value at its old 14px size. */
+        .fact {
+          --text-stat: var(--boxel-font-size-sm);
           min-width: 0;
-        }
-        .iso-facts dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .iso-facts dd {
-          margin: 0;
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
           overflow-wrap: anywhere;
         }
         .week-axis {
@@ -498,11 +504,12 @@ export class Schedule extends CardDef {
           font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
         }
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well. */
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-          max-width: 60ch;
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
         .sr-only {
           position: absolute;

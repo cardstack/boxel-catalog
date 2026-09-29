@@ -152,25 +152,18 @@ export class TicketMessageField extends FieldDef {
       <span class='msg-atom'>
         <span class='msg-atom-author'>{{@model.author}}</span>
         {{#if @model.isInternal}}
-          <span class='msg-atom-tag'>internal</span>
+          <StatePill @label='Internal' @hue='amber' />
         {{/if}}
       </span>
       <style scoped>
         .msg-atom {
           display: inline-flex;
-          align-items: baseline;
+          align-items: center;
           gap: 0.3rem;
           font-size: 0.8125rem;
         }
         .msg-atom-author {
           font-weight: 600;
-        }
-        .msg-atom-tag {
-          font-size: 0.625rem;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--attention-ink);
-          font-weight: 700;
         }
       </style>
     </template>

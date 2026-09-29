@@ -35,6 +35,11 @@ function ticketRefIn(realm: string | undefined) {
 }
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { AVATAR_HUE } from './components/service-desk-ui';
 
 export const AGENT_TIERS = ['L1', 'L2', 'L3'] as const;
 
@@ -130,26 +135,39 @@ export class SupportAgent extends PersonBase {
       return url ? [url.href] : [];
     }
 
+    get facts() {
+      let model = this.args.model;
+      return [
+        ...(model?.email ? [{ key: 'Email', value: model.email }] : []),
+        { key: 'Skills', value: model?.skillSummary ?? '' },
+      ];
+    }
+
     <template>
       <article class='iso'>
         <header class='iso-head'>
-          {{#if @model.photo.resolvedUrl}}
-            <img class='avatar' src={{@model.photo.resolvedUrl}} alt='' />
-          {{else}}
-            <span class='avatar initials'>{{@model.initials}}</span>
-          {{/if}}
+          <Avatar
+            @name={{if @model.name @model.name '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{48}}
+            aria-hidden='true'
+          />
           <div class='who'>
             <h1>{{@model.title}}</h1>
             <p class='org'>{{@model.tierLabel}}</p>
           </div>
         </header>
 
-        <dl class='facts'>
-          {{#if @model.email}}
-            <div><dt>Email</dt><dd><@fields.email /></dd></div>
-          {{/if}}
-          <div><dt>Skills</dt><dd>{{@model.skillSummary}}</dd></div>
-        </dl>
+        <KeyValue class='facts' @items={{this.facts}}>
+          <:value as |row|>
+            {{#if (eq row.key 'Email')}}
+              <@fields.email />
+            {{else}}
+              {{row.value}}
+            {{/if}}
+          </:value>
+        </KeyValue>
 
         {{#if @model.skills.length}}
           <ul class='skills'>
@@ -171,7 +189,11 @@ export class SupportAgent extends PersonBase {
               @format='fitted'
             />
           {{else}}
-            <p class='empty'>Nothing assigned right now.</p>
+            <EmptyState
+              class='empty'
+              @title='Nothing assigned right now'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
       </article>
@@ -191,20 +213,6 @@ export class SupportAgent extends PersonBase {
           padding-bottom: var(--boxel-sp);
           border-bottom: 1px solid var(--border);
         }
-        .avatar {
-          width: 3rem;
-          height: 3rem;
-          border-radius: 50%;
-          flex: none;
-          object-fit: cover;
-        }
-        .initials {
-          display: grid;
-          place-items: center;
-          font-weight: 700;
-          background-color: var(--primary);
-          color: var(--primary-foreground);
-        }
         .who h1 {
           margin: 0;
           font-size: var(--boxel-font-size-lg);
@@ -215,28 +223,16 @@ export class SupportAgent extends PersonBase {
           color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
         }
+        /* Pret UI KeyValue at the card's 14px text, values in bold. A long
+           corporate email wraps inside its column instead of widening it. */
         .facts {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-          gap: var(--boxel-sp-sm);
-          margin: 0;
+          --text-ui: var(--boxel-font-size-xs);
+          --text-ui-md: var(--boxel-font-size-sm);
+          --space-6: var(--boxel-sp);
         }
-        .facts > div {
+        .facts :deep(dd) {
           min-width: 0;
-        }
-        .facts dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .facts dd {
-          margin: 0;
           font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
           overflow-wrap: anywhere;
         }
         .skills {
@@ -270,10 +266,12 @@ export class SupportAgent extends PersonBase {
           flex: 0 0 auto;
           color: var(--muted-foreground);
         }
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well. */
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
       </style>
     </template>
@@ -289,7 +287,13 @@ export class SupportAgent extends PersonBase {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <article class='sa-row'>
-        <span class='sa-avatar' aria-hidden='true'>{{@model.initials}}</span>
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue='var(--muted-foreground)'
+          @size={{30}}
+          aria-hidden='true'
+        />
         <span class='sa-main'>
           <span class='sa-line'>
             <span class='sa-name'>{{if
@@ -317,19 +321,6 @@ export class SupportAgent extends PersonBase {
           min-width: 0;
           padding: var(--boxel-sp-4xs) 0;
           color: var(--foreground);
-        }
-        .sa-avatar {
-          flex: none;
-          width: 1.9rem;
-          height: 1.9rem;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
         }
         .sa-main {
           flex: 1;
@@ -364,7 +355,13 @@ export class SupportAgent extends PersonBase {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='atom'>
-        <span class='atom-av'>{{@model.initials}}</span>
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          @size={{18}}
+          aria-hidden='true'
+        />
         <span class='atom-name'>{{@model.title}}</span>
         {{#if @model.tier}}<span class='atom-tier'>{{@model.tier}}</span>{{/if}}
       </span>
@@ -374,18 +371,6 @@ export class SupportAgent extends PersonBase {
           align-items: center;
           gap: 0.3rem;
           font-size: 0.8125rem;
-        }
-        .atom-av {
-          width: 1.1rem;
-          height: 1.1rem;
-          border-radius: 50%;
-          display: inline-grid;
-          place-items: center;
-          font-size: 0.5625rem;
-          font-weight: 700;
-          background-color: var(--primary);
-          color: var(--primary-foreground);
-          flex: none;
         }
         .atom-name {
           font-weight: 500;

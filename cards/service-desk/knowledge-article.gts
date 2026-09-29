@@ -188,7 +188,7 @@ export class KnowledgeArticle extends CardDef {
           {{#if @model.keywords.length}}
             <ul class='kw'>
               {{#each @model.keywords as |keyword|}}
-                <li>{{keyword}}</li>
+                <li><StatePill @label={{keyword}} @hue='slate' /></li>
               {{/each}}
             </ul>
           {{/if}}
@@ -236,11 +236,8 @@ export class KnowledgeArticle extends CardDef {
           gap: var(--boxel-sp-4xs);
         }
         .kw li {
-          padding: 0.05em 0.45em;
-          border: 1px solid var(--border);
-          border-radius: 999px;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
+          display: flex;
+          max-width: 100%;
         }
         /* This is the one thing on the page meant to be READ rather than
            scanned, so it gets a reading measure instead of the full width. */

@@ -11,6 +11,15 @@ import FolderIcon from '@cardstack/boxel-icons/folder';
 import { Queue } from './queue';
 import { TicketPriorityField } from './ticket-taxonomy';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+
+// The two routing defaults as Pret UI KeyValue rows. `value` names which
+// field the isolated view's value block renders for the row.
+const ROUTING_FACTS = [
+  { key: 'New tickets start at', value: 'priority' },
+  { key: 'and land in', value: 'queue' },
+];
 
 /**
  * What kind of problem this is, and what that implies.
@@ -68,28 +77,23 @@ export class TicketCategory extends CardDef {
           <p class='trail'>{{@model.path}}</p>
           <h1>{{@model.title}}</h1>
         </header>
-        <dl class='facts'>
-          <div>
-            <dt>New tickets start at</dt>
-            <dd>
+        {{! Pret UI KeyValue; both values are field renders, so they come
+            through its value block. }}
+        <KeyValue class='facts' @items={{ROUTING_FACTS}}>
+          <:value as |row|>
+            {{#if (eq row.value 'priority')}}
               {{#if @model.defaultPriority}}
                 <@fields.defaultPriority @format='embedded' />
               {{else}}
                 <span class='none'>No default — the agent picks</span>
               {{/if}}
-            </dd>
-          </div>
-          <div>
-            <dt>and land in</dt>
-            <dd>
-              {{#if @model.defaultQueue}}
-                <@fields.defaultQueue @format='atom' />
-              {{else}}
-                <span class='none'>No default queue — they stay unrouted</span>
-              {{/if}}
-            </dd>
-          </div>
-        </dl>
+            {{else if @model.defaultQueue}}
+              <@fields.defaultQueue @format='atom' />
+            {{else}}
+              <span class='none'>No default queue — they stay unrouted</span>
+            {{/if}}
+          </:value>
+        </KeyValue>
         <p class='note'>Both are suggestions. A ticket may override either, and
           the override is deliberate: routing an agent cannot argue with is
           routing they work around by filing things in the wrong category.</p>
@@ -112,26 +116,14 @@ export class TicketCategory extends CardDef {
           font-size: var(--boxel-font-size-lg);
           font-weight: 700;
         }
+        /* Pret UI KeyValue at the card's 14px text. */
         .facts {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-          gap: var(--boxel-sp);
-          margin: 0;
+          --text-ui: var(--boxel-font-size-sm);
+          --text-ui-md: var(--boxel-font-size-sm);
+          --space-6: var(--boxel-sp);
         }
-        .facts > div {
+        .facts :deep(dd) {
           min-width: 0;
-        }
-        .facts dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .facts dd {
-          margin: 0;
           overflow-wrap: anywhere;
         }
         .none {

@@ -39,6 +39,8 @@ import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
 import { timerSnapshot, urgencyRank, type TimerSnapshot } from './utils/sla';
 import { stateColor } from '@cardstack/catalog/components/state-pill';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Token } from '@cardstack/pretui/components/token';
 
 function daysBetween(
   from?: Date | string | null,
@@ -116,14 +118,23 @@ class TicketRecord extends Component<typeof Ticket> {
     return (this.args.model?.linkedArticles ?? []).filter(Boolean);
   }
 
+  get facts() {
+    let model = this.args.model;
+    return [
+      { key: 'Category', value: model?.categoryName || '—' },
+      { key: 'Channel', value: model?.channel || '—' },
+      { key: 'Opened', value: model?.ageLabel || '—' },
+    ];
+  }
+
   <template>
     <article class='rec'>
       <header class='rec-head'>
-        <span class='rec-ref'>{{if
-            @model.reference
-            @model.reference
-            '—'
-          }}</span>
+        <Token
+          class='rec-ref'
+          @value={{if @model.reference @model.reference '—'}}
+          @hue='var(--muted-foreground)'
+        />
         <h1 class='rec-title'>{{if
             @model.subject
             @model.subject
@@ -204,26 +215,12 @@ class TicketRecord extends Component<typeof Ticket> {
         <aside class='rec-rail' aria-label='Details'>
           <section>
             <h2 class='rec-h'>Details</h2>
-            <dl class='rec-facts'>
-              <div><dt>Category</dt><dd>{{if
-                    @model.categoryName
-                    @model.categoryName
-                    '—'
-                  }}</dd></div>
-              <div><dt>Channel</dt><dd>{{if
-                    @model.channel
-                    @model.channel
-                    '—'
-                  }}</dd></div>
-              <div><dt>Opened</dt><dd>{{if
-                    @model.ageLabel
-                    @model.ageLabel
-                    '—'
-                  }}</dd></div>
-            </dl>
+            <KeyValue class='rec-facts' @items={{this.facts}} />
             {{#if @model.tags.length}}
               <ul class='rec-tags'>
-                {{#each @model.tags as |tag|}}<li>{{tag}}</li>{{/each}}
+                {{#each @model.tags as |tag|}}
+                  <li><StatePill @label={{tag}} @hue='slate' /></li>
+                {{/each}}
               </ul>
             {{/if}}
           </section>
@@ -267,11 +264,11 @@ class TicketRecord extends Component<typeof Ticket> {
         flex-wrap: wrap;
         padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-sm);
       }
-      .rec-ref {
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
+      /* Pret UI Token in the muted hue, at the reference's old 14px size:
+         Token draws its text at the knob minus 3.5px. */
+      .rec-head .rec-ref {
+        --text-body: calc(var(--boxel-font-size-sm) + 3.5px);
+        margin-inline: 0;
       }
       .rec-title {
         margin: 0;
@@ -366,27 +363,14 @@ class TicketRecord extends Component<typeof Ticket> {
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
+      /* Pret UI KeyValue at the rail's 12px text, values in bold. */
       .rec-facts {
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.125rem;
+        --text-ui: var(--boxel-font-size-xs);
+        --text-ui-md: var(--boxel-font-size-xs);
+        --space-6: var(--boxel-sp-xs);
       }
-      .rec-facts > div {
-        display: flex;
-        justify-content: space-between;
-        gap: var(--boxel-sp-xs);
-        min-width: 0;
-      }
-      .rec-facts dt {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .rec-facts dd {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
+      .rec-facts :deep(dd) {
         font-weight: 600;
-        text-align: end;
         overflow-wrap: anywhere;
       }
       .rec-tags,
@@ -402,11 +386,8 @@ class TicketRecord extends Component<typeof Ticket> {
         flex-direction: column;
       }
       .rec-tags li {
-        padding: 0.05em 0.4em;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        font-size: 0.625rem;
-        color: var(--muted-foreground);
+        display: flex;
+        max-width: 100%;
       }
       .rec-links li {
         font-size: var(--boxel-font-size-xs);
@@ -704,7 +685,13 @@ export class Ticket extends CardDef {
     <template>
       <article class='row'>
         <span class='row-spine'></span>
-        <span class='row-ref'>{{@model.reference}}</span>
+        {{#if @model.reference}}
+          <Token
+            class='row-ref'
+            @value={{@model.reference}}
+            @hue='var(--muted-foreground)'
+          />
+        {{/if}}
         <span class='row-main'>
           <span class='row-subject'>{{@model.subject}}</span>
           <span class='row-context'>{{this.context}}</span>
@@ -740,12 +727,11 @@ export class Ticket extends CardDef {
           border-radius: 1px;
           background-color: var(--primary);
         }
-        .row-ref {
+        /* Pret UI Token in the muted hue, at the reference's old 12px size. */
+        .row .row-ref {
+          --text-body: calc(var(--boxel-font-size-xs) + 3.5px);
           flex: none;
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
+          margin-inline: 0;
         }
         .row-main {
           flex: 1;

@@ -35,6 +35,11 @@ function ticketRefIn(realm: string | undefined) {
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { AVATAR_HUE } from './components/service-desk-ui';
 
 export const CUSTOMER_TIERS = ['VIP', 'Standard', 'Trial'] as const;
 
@@ -97,14 +102,24 @@ export class SupportContact extends PersonBase {
       return url ? [url.href] : [];
     }
 
+    get facts() {
+      let model = this.args.model;
+      return [
+        ...(model?.email ? [{ key: 'Email', value: model.email }] : []),
+        ...(model?.phone ? [{ key: 'Phone', value: model.phone }] : []),
+      ];
+    }
+
     <template>
       <article class='iso'>
         <header class='iso-head'>
-          {{#if @model.photo.resolvedUrl}}
-            <img class='avatar' src={{@model.photo.resolvedUrl}} alt='' />
-          {{else}}
-            <span class='avatar initials'>{{@model.initials}}</span>
-          {{/if}}
+          <Avatar
+            @name={{if @model.name @model.name '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{48}}
+            aria-hidden='true'
+          />
           <div class='who'>
             <h1>{{@model.title}}</h1>
             {{#if @model.company}}
@@ -118,14 +133,17 @@ export class SupportContact extends PersonBase {
           />
         </header>
 
-        <dl class='facts'>
-          {{#if @model.email}}
-            <div><dt>Email</dt><dd><@fields.email /></dd></div>
-          {{/if}}
-          {{#if @model.phone}}
-            <div><dt>Phone</dt><dd>{{@model.phone}}</dd></div>
-          {{/if}}
-        </dl>
+        {{#if this.facts.length}}
+          <KeyValue class='facts' @items={{this.facts}}>
+            <:value as |row|>
+              {{#if (eq row.key 'Email')}}
+                <@fields.email />
+              {{else}}
+                {{row.value}}
+              {{/if}}
+            </:value>
+          </KeyValue>
+        {{/if}}
 
         <section class='hist'>
           <h2><TicketIcon class='sec-icon' role='presentation' />Their tickets</h2>
@@ -138,9 +156,12 @@ export class SupportContact extends PersonBase {
               @format='fitted'
             />
           {{else}}
-            <p class='empty'>No tickets yet. When they write in, everything they
-              have asked before will be here — which is the difference between
-              support and a stranger asking you to explain it again.</p>
+            <EmptyState
+              class='empty'
+              @title='No tickets yet'
+              @message='When they write in, everything they have asked before will be here — which is the difference between support and a stranger asking you to explain it again.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
       </article>
@@ -162,20 +183,6 @@ export class SupportContact extends PersonBase {
           padding-bottom: var(--boxel-sp);
           border-bottom: 1px solid var(--border);
         }
-        .avatar {
-          width: 3rem;
-          height: 3rem;
-          border-radius: 50%;
-          flex: none;
-          object-fit: cover;
-        }
-        .initials {
-          display: grid;
-          place-items: center;
-          font-weight: 700;
-          background-color: var(--primary);
-          color: var(--primary-foreground);
-        }
         .who {
           flex: 1;
           min-width: 0;
@@ -190,31 +197,18 @@ export class SupportContact extends PersonBase {
           color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
         }
+        /* Pret UI KeyValue at the card's 14px text, values in bold.
+           min-width:0 and anywhere-wrapping on the value: a real corporate
+           email is long enough to widen the column otherwise, and short demo
+           data hides it. */
         .facts {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-          gap: var(--boxel-sp-sm);
-          margin: 0;
+          --text-ui: var(--boxel-font-size-xs);
+          --text-ui-md: var(--boxel-font-size-sm);
+          --space-6: var(--boxel-sp);
         }
-        /* min-width:0 on the wrapper and anywhere-wrapping on the value: a real
-           corporate email is long enough to shove the next column off the row
-           otherwise, and short demo data hides it. */
-        .facts > div {
+        .facts :deep(dd) {
           min-width: 0;
-        }
-        .facts dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .facts dd {
-          margin: 0;
           font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
           overflow-wrap: anywhere;
         }
         .hist h2 {
@@ -240,12 +234,12 @@ export class SupportContact extends PersonBase {
           flex: 0 0 auto;
           color: var(--muted-foreground);
         }
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well. */
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-          max-width: 62ch;
-          line-height: 1.6;
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
       </style>
     </template>
@@ -266,7 +260,13 @@ export class SupportContact extends PersonBase {
 
     <template>
       <article class='sc-row'>
-        <span class='sc-avatar' aria-hidden='true'>{{@model.initials}}</span>
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue='var(--muted-foreground)'
+          @size={{30}}
+          aria-hidden='true'
+        />
         <span class='sc-main'>
           <span class='sc-line'>
             <span class='sc-name'>{{if
@@ -301,19 +301,6 @@ export class SupportContact extends PersonBase {
           min-width: 0;
           padding: var(--boxel-sp-4xs) 0;
           color: var(--foreground);
-        }
-        .sc-avatar {
-          flex: none;
-          width: 1.9rem;
-          height: 1.9rem;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
         }
         .sc-main {
           flex: 1;
@@ -357,7 +344,7 @@ export class SupportContact extends PersonBase {
           }
           .sc-contact {
             width: 100%;
-            padding-left: calc(1.9rem + var(--boxel-sp-xs));
+            padding-left: calc(1.875rem + var(--boxel-sp-xs));
             text-align: start;
           }
         }
@@ -368,9 +355,15 @@ export class SupportContact extends PersonBase {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='atom'>
-        <span class='atom-av'>{{@model.initials}}</span>
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          @size={{18}}
+          aria-hidden='true'
+        />
         <span class='atom-name'>{{@model.title}}</span>
-        {{#if @model.isVip}}<span class='atom-vip'>VIP</span>{{/if}}
+        {{#if @model.isVip}}<StatePill @label='VIP' @hue='purple' />{{/if}}
       </span>
       <style scoped>
         .atom {
@@ -379,29 +372,11 @@ export class SupportContact extends PersonBase {
           gap: 0.3rem;
           font-size: 0.8125rem;
         }
-        .atom-av {
-          width: 1.1rem;
-          height: 1.1rem;
-          border-radius: 50%;
-          display: inline-grid;
-          place-items: center;
-          font-size: 0.5625rem;
-          font-weight: 700;
-          background-color: var(--primary);
-          color: var(--primary-foreground);
-          flex: none;
-        }
         .atom-name {
           font-weight: 500;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-        }
-        .atom-vip {
-          font-size: 0.5625rem;
-          letter-spacing: 0.08em;
-          font-weight: 700;
-          color: var(--boxel-purple);
         }
       </style>
     </template>

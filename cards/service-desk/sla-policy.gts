@@ -15,6 +15,11 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import TargetIcon from '@cardstack/boxel-icons/target';
 import ClockIcon from '@cardstack/boxel-icons/clock';
 import SirenIcon from '@cardstack/boxel-icons/siren';
+import { modifier } from 'ember-modifier';
+import { guidFor } from '@ember/object/internals';
+import { Table } from '@cardstack/pretui/components/table';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 import { Schedule } from './schedule';
 import { TicketPriorityField, ticketPriorityFactor } from './ticket-taxonomy';
@@ -158,6 +163,14 @@ export class SlaTargetField extends FieldDef {
   };
 }
 
+/**
+ * Pret UI's `Table` has no caption slot, so the matrix is named by the
+ * heading above it: this points the rendered `<table>` at that heading.
+ */
+const labelledBy = modifier((element: HTMLElement, [id]: [string]) => {
+  element.querySelector('table')?.setAttribute('aria-labelledby', id);
+});
+
 interface MatrixRow {
   priority: string;
   cells: string[];
@@ -254,6 +267,8 @@ export class SlaPolicy extends CardDef {
   }
 
   static isolated = class Isolated extends Component<typeof this> {
+    targetsId = `sla-targets-${guidFor(this)}`;
+
     get matrix(): MatrixRow[] {
       let model = this.args.model;
       let metrics = ['First response', 'Resolution'];
@@ -274,7 +289,7 @@ export class SlaPolicy extends CardDef {
             <p class='iso-sub'>{{@model.conditionSummary}}</p>
           </div>
           {{#if @model.isDefault}}
-            <span class='iso-flag'>Fallback policy</span>
+            <StatePill @label='Fallback policy' @hue='slate' />
           {{/if}}
         </header>
 
@@ -287,36 +302,39 @@ export class SlaPolicy extends CardDef {
               {{/each}}
             </div>
           {{else}}
-            <p class='empty'>No conditions — this policy matches every ticket.
-              Only one policy should be this permissive, and it should be the
-              fallback.</p>
+            <EmptyState
+              class='empty'
+              @title='No conditions'
+              @message='This policy matches every ticket. Only one policy should be this permissive, and it should be the fallback.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
 
         <section class='sect'>
-          <h2><TargetIcon class='sec-icon' role='presentation' />Targets</h2>
-          <div class='tablewrap'>
-            <table class='matrix'>
-              <caption class='sr-only'>Targets by priority</caption>
-              <thead>
+          <h2 id={{this.targetsId}}><TargetIcon
+              class='sec-icon'
+              role='presentation'
+            />Targets</h2>
+          <Table class='matrix' {{labelledBy this.targetsId}}>
+            <:head>
+              <tr>
+                <th scope='col'>Priority</th>
+                <th scope='col'>First response</th>
+                <th scope='col'>Resolution</th>
+              </tr>
+            </:head>
+            <:body>
+              {{#each this.matrix as |row|}}
                 <tr>
-                  <th scope='col'>Priority</th>
-                  <th scope='col'>First response</th>
-                  <th scope='col'>Resolution</th>
+                  <th scope='row'>{{row.priority}}</th>
+                  {{#each row.cells as |cell|}}
+                    <td>{{cell}}</td>
+                  {{/each}}
                 </tr>
-              </thead>
-              <tbody>
-                {{#each this.matrix as |row|}}
-                  <tr>
-                    <th scope='row'>{{row.priority}}</th>
-                    {{#each row.cells as |cell|}}
-                      <td>{{cell}}</td>
-                    {{/each}}
-                  </tr>
-                {{/each}}
-              </tbody>
-            </table>
-          </div>
+              {{/each}}
+            </:body>
+          </Table>
           <p class='note'>One target per metric, scaled by each priority's
             factor. Stating all four by hand is how a P3 ends up resolving
             faster than a P2.</p>
@@ -327,8 +345,12 @@ export class SlaPolicy extends CardDef {
           {{#if @model.businessHours}}
             <@fields.businessHours @format='embedded' />
           {{else}}
-            <p class='empty'>No schedule linked — the clock ticks around the
-              clock, including weekends and holidays.</p>
+            <EmptyState
+              class='empty'
+              @title='No schedule linked'
+              @message='The clock ticks around the clock, including weekends and holidays.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
 
@@ -345,8 +367,12 @@ export class SlaPolicy extends CardDef {
               {{/each}}
             </ol>
           {{else}}
-            <p class='empty'>Nothing happens on breach. The target is a
-              measurement, not a commitment, until something acts on it.</p>
+            <EmptyState
+              class='empty'
+              @title='Nothing happens on breach'
+              @message='The target is a measurement, not a commitment, until something acts on it.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
       </article>
@@ -379,15 +405,6 @@ export class SlaPolicy extends CardDef {
           margin: 0;
           color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
-        }
-        .iso-flag {
-          flex: none;
-          padding: 0.1em 0.5em;
-          border-radius: 0.1875rem;
-          background-color: var(--muted);
-          color: var(--foreground);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
         }
         .sect {
           display: flex;
@@ -422,52 +439,52 @@ export class SlaPolicy extends CardDef {
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
         }
-        .tablewrap {
-          overflow-x: auto;
-        }
+        /* Pret UI Table: its header band, zebra rows and hover. It sizes to
+           its content like the old matrix, and its numbers stay tabular. The
+           P1–P4 row headers are th cells, which Table styles as its sticky,
+           mono, uppercase header band; these rules put them back to body
+           cells in bold. */
         .matrix {
-          border-collapse: collapse;
-          font-size: var(--boxel-font-size-sm);
+          align-self: flex-start;
           font-variant-numeric: tabular-nums;
         }
-        .matrix th,
-        .matrix td {
-          border: 1px solid var(--border);
-          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-          text-align: start;
-        }
-        .matrix thead th {
-          background-color: var(--muted);
-          color: var(--foreground);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-        }
-        .matrix tbody th {
+        .matrix :deep(tbody th) {
+          position: static;
+          height: auto;
+          padding: 0.5rem 0.625rem;
+          font-family: inherit;
+          font-size: inherit;
           font-weight: 700;
+          letter-spacing: normal;
+          text-transform: none;
+          color: var(--foreground);
+          background-color: transparent;
+          box-shadow: inset 0 -1px 0 var(--border);
+        }
+        .matrix :deep(tbody tr:nth-child(even) th) {
+          background-color: var(--stripe);
+        }
+        .matrix :deep(tbody tr:hover th) {
+          background-color: var(--hover);
         }
         .actions {
           margin: 0;
           padding-left: 1.2rem;
           font-size: var(--boxel-font-size-sm);
         }
-        .note,
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well beside the section text. */
         .empty {
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
+        }
+        .note {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           max-width: 62ch;
           line-height: 1.6;
-        }
-        .sr-only {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          overflow: hidden;
-          clip: rect(0 0 0 0);
         }
       </style>
     </template>

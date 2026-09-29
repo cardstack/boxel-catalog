@@ -44,6 +44,8 @@ import {
 } from './support-agent';
 import { SlaPolicy } from './sla-policy';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
 
 function liveCount(links: unknown[] | null | undefined): number {
   return (links ?? []).filter(Boolean).length;
@@ -190,16 +192,24 @@ export class Queue extends CardDef {
                   </li>
                 {{else}}
                   {{#if results.isLoading}}
-                    <li class='q-note' role='status'>Loading…</li>
+                    <li class='q-note'>
+                      <LoadingState
+                        class='q-loading'
+                        @label='Loading this queue'
+                      />
+                    </li>
                   {{else}}
                     {{! An empty queue is GOOD NEWS and has to look like it.
                         This said "No results were found" — the base CardList's
                         generic string, which reads as a failed search on a
                         surface where nothing was searched for. }}
                     <li class='q-clear'>
-                      <b>Nothing waiting in this queue</b>
-                      <p>Everything routed here has been answered. New work
-                        lands at the top of this list.</p>
+                      <EmptyState
+                        class='q-empty'
+                        @title='Nothing waiting in this queue'
+                        @message='Everything routed here has been answered. New work lands at the top of this list.'
+                        @texture={{false}}
+                      />
                     </li>
                   {{/if}}
                 {{/each}}
@@ -207,7 +217,12 @@ export class Queue extends CardDef {
             </Search>
           {{/let}}
         {{else}}
-          <p class='empty'>Open this queue in the console to see its live list.</p>
+          <EmptyState
+            class='empty'
+            @title='No live list here'
+            @message='Open this queue in the console to see its live list.'
+            @texture={{false}}
+          />
         {{/if}}
 
         <section class='team'>
@@ -220,8 +235,12 @@ export class Queue extends CardDef {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>Nobody is assigned to this queue yet. Tickets
-              routed here will sit unclaimed — and their clocks keep running.</p>
+            <EmptyState
+              class='empty'
+              @title='Nobody is assigned to this queue yet'
+              @message='Tickets routed here will sit unclaimed — and their clocks keep running.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
       </article>
@@ -290,38 +309,37 @@ export class Queue extends CardDef {
           overflow: hidden;
           background-color: var(--card);
         }
-        /* A state message spans the whole grid and sits on its own ground, so
-           it reads as "the list is telling you something" rather than as a
-           row. Dashed, not solid: nothing is here, and nothing is wrong. */
+        /* A state message spans the whole grid, so it reads as "the list is
+           telling you something" rather than as a row. */
         .q-note,
         .q-clear {
           grid-column: 1 / -1;
+        }
+        .q-note {
           padding: var(--boxel-sp) var(--boxel-sp-sm);
           border: 1px dashed var(--border);
           border-radius: var(--boxel-border-radius-sm);
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-sm);
         }
-        /* An empty queue is good news, so the accent is the success hue —
-           diluted as a ground and a stripe, never asked to carry the text. */
+        /* Pret UI LoadingState: its dim shimmer stop (--ink-3) falls back to
+           a 2.2:1 grey, so it is pointed at the muted foreground. */
+        .q-loading {
+          --ink-3: var(--muted-foreground);
+          --text-ui-md: var(--boxel-font-size-sm);
+        }
+        /* An empty queue is good news, so the well carries the success hue as
+           a stripe, never as the text. */
         .q-clear {
-          border-inline-start: 0.1875rem solid
-            color-mix(in oklch, var(--success) 60%, transparent);
-          background-color: color-mix(
-            in oklch,
-            var(--success) 7%,
-            var(--muted)
-          );
+          border-inline-start: 0.1875rem solid var(--success);
+          border-radius: var(--boxel-border-radius-sm);
+          overflow: hidden;
         }
-        .q-clear b {
-          display: block;
-          color: var(--foreground);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .q-clear p {
-          margin: 0.125rem 0 0;
-          font-size: var(--boxel-font-size-xs);
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well. */
+        .q-empty,
+        .empty {
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
         .team h2 {
           display: flex;
@@ -353,14 +371,6 @@ export class Queue extends CardDef {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
-        }
-        .note,
-        .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          max-width: 62ch;
-          line-height: 1.6;
         }
       </style>
     </template>

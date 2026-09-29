@@ -7,6 +7,10 @@ import { guidFor } from '@ember/object/internals';
 import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
 import ChevronDownIcon from '@cardstack/boxel-icons/chevron-down';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
+import { ALERT_STYLE } from './service-desk-ui';
 import {
   identifyCard,
   type Filter,
@@ -341,9 +345,13 @@ export class LinkPicker extends GlimmerComponent<Signature> {
             />
 
             {{#if this.problem}}
-              <p class='lp-note lp-bad' role='alert'>{{this.problem}}</p>
+              <Alert
+                class='lp-bad'
+                @tone='danger'
+                style={{ALERT_STYLE.danger}}
+              >{{this.problem}}</Alert>
             {{else if this.isSearching}}
-              <p class='lp-note' role='status'>Searching…</p>
+              <LoadingState class='lp-loading' @label='Searching' />
             {{else if this.results.length}}
               {{! Real listbox semantics: the popover's keyboard layer and any
                   screen reader both read the roles, not the class names. }}
@@ -361,11 +369,16 @@ export class LinkPicker extends GlimmerComponent<Signature> {
                 {{/each}}
               </ul>
             {{else}}
-              <p class='lp-note'>{{if
+              <EmptyState
+                class='lp-none'
+                @title={{if this.search 'Nothing matches' 'None yet'}}
+                @message={{if
                   this.search
-                  'Nothing matches. Try fewer words.'
+                  'Try fewer words.'
                   'There are none of these to choose yet.'
-                }}</p>
+                }}
+                @texture={{false}}
+              />
             {{/if}}
 
             {{#if this.canCreate}}
@@ -555,13 +568,23 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         font-weight: 700;
         background-color: var(--selected);
       }
-      .lp-note {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
+      /* Pret UI Alert, LoadingState and EmptyState for the list's three
+         non-result states, sized to the popover's 12px text. LoadingState's
+         dim shimmer stop (--ink-3) falls back to a 2.2:1 grey, so it is
+         pointed at the muted foreground. */
       .lp-bad {
-        color: var(--destructive-ink);
+        --text-ui-md: var(--boxel-font-size-xs);
+      }
+      .lp-loading {
+        --ink-3: var(--muted-foreground);
+        --text-ui-md: var(--boxel-font-size-xs);
+        padding-block: 0.25rem;
+      }
+      .lp-none {
+        --space-9: 0.75rem;
+        --space-6: 0.75rem;
+        --text-heading: var(--boxel-font-size-sm);
+        --text-ui-md: var(--boxel-font-size-xs);
       }
       .lp-new {
         display: flex;
