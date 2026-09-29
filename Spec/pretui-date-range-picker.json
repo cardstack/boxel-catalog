@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/date-range-picker",
+        "name": "DateRangePicker"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { DateRangePicker } from '@cardstack/pretui/components/date-range-picker';\n```\n",
+      "cardTitle": "DateRangePicker",
+      "cardDescription": "Popover range input on the Pretui Calendar — two months, hover paint",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
+      "componentName": "DateRangePicker",
+      "icon": "calendar-range",
       "category": "Inputs",
-      "tier": "Element",
+      "tier": "Compound",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
+      "introducedVersion": "0.4.0",
       "territory": "controls",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": "DateRangePicker",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
-      "buildsOn": null,
+      "brief": "Popover range input on the Pretui Calendar — two months, hover paint",
+      "refs": "shadcn Date Range Picker · Airbnb react-dates",
+      "buildsOn": "Popover, Input, Calendar",
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
+      "liveInUse": false,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "DateRangePicker",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/date-range-picker.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/date-range-picker.md"
         }
       },
       "linkedExamples": {

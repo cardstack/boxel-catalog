@@ -3,18 +3,18 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/textarea",
+        "name": "Textarea"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { Textarea } from '@cardstack/pretui/components/textarea';\n```\n",
+      "cardTitle": "Textarea",
+      "cardDescription": "Multi-line entry",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
+      "componentName": "Textarea",
+      "icon": "text-quote",
       "category": "Inputs",
-      "tier": "Element",
+      "tier": "Compound",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
@@ -23,11 +23,11 @@
       "territory": "controls",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": null,
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
-      "buildsOn": null,
+      "brief": "Multi-line entry · BoxelInput textarea core, vertical resize",
+      "refs": "shadcn Textarea · wa-textarea · boxel-ui BoxelInput(textarea)",
+      "buildsOn": "boxel-ui BoxelInput",
       "featured": false,
       "isNew": false,
       "hasDesign": true,
@@ -35,7 +35,7 @@
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "Textarea",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/textarea.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/textarea.md"
         }
       },
       "linkedExamples": {

@@ -3,39 +3,42 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/label",
+        "name": "Label"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { Label } from '@cardstack/pretui/components/label';\n```\n",
+      "cardTitle": "Label",
+      "cardDescription": "Small-caps mono field label",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
-      "tier": "Element",
-      "tags": [],
-      "ownership": "pretui",
+      "componentName": "Label",
+      "icon": "label",
+      "category": "Foundations",
+      "tier": "Primitive",
+      "tags": [
+        "accessible-utility",
+        "form-associated"
+      ],
+      "ownership": "boxel-ui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
-      "territory": "controls",
+      "introducedVersion": "0.4.0",
+      "territory": "ink",
       "stage": "live",
-      "source": "design-v1",
-      "lineage": "Switch",
+      "source": "boxel-ui",
+      "lineage": "Label",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": "Small-caps mono field label · boxel-ui Label re-voiced as the eyebrow",
+      "refs": null,
       "buildsOn": null,
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "Label",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +47,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/label.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/label.md"
         }
       },
       "linkedExamples": {

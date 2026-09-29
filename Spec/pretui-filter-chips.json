@@ -3,16 +3,16 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/filter-chips",
+        "name": "FilterChips"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { FilterChips } from '@cardstack/pretui/components/filter-chips';\n```\n",
+      "cardTitle": "FilterChips",
+      "cardDescription": "Capsule filter row with counts (single-select wave-0)",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
+      "componentName": "FilterChips",
+      "icon": "filter-check",
       "category": "Inputs",
       "tier": "Element",
       "tags": [],
@@ -23,10 +23,10 @@
       "territory": "controls",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": "TagList",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": "Capsule filter row with counts (single-select wave-0) · GitHub filter pills",
+      "refs": "GitHub filter pills · boxel-ui TagList",
       "buildsOn": null,
       "featured": false,
       "isNew": false,
@@ -35,7 +35,7 @@
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "FilterChips",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/filter-chips.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/filter-chips.md"
         }
       },
       "linkedExamples": {
