@@ -4,7 +4,7 @@ import { htmlSafe } from '@ember/template';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { Pagination } from '@cardstack/pretui/components/pagination';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import sortBy from '../utils/sort';
 
@@ -193,21 +193,14 @@ export class Table extends GlimmerComponent<TableSignature> {
     return Math.min(this.rangeStart + this.pagedItems.length - 1, this.total);
   }
 
-  get isFirstPage(): boolean {
-    return this.currentPage === 0;
+  // Pret UI Pagination counts pages from 1; the table stores them from 0.
+  get pageNumber(): number {
+    return this.currentPage + 1;
   }
 
-  get isLastPage(): boolean {
-    return this.currentPage >= this.pageCount - 1;
-  }
-
-  @action prevPage() {
-    this.page = Math.max(0, this.currentPage - 1);
-  }
-
-  @action nextPage() {
-    this.page = Math.min(this.pageCount - 1, this.currentPage + 1);
-  }
+  goToPage = (n: number) => {
+    this.page = Math.min(this.pageCount - 1, Math.max(0, n - 1));
+  };
 
   sortIndicator = (key: string) => {
     if (this.activeSortKey !== key) return '';
@@ -321,32 +314,22 @@ export class Table extends GlimmerComponent<TableSignature> {
     </div>
 
     {{#if this.isPaged}}
-      <nav class='pager' aria-label='Table pages'>
+      {{! Pret UI Pagination brings its own nav landmark, so the range summary
+          sits beside it in a plain wrapper rather than a second nav. }}
+      <div class='pager'>
         <span
           class='pager-range'
           aria-live='polite'
         >{{this.rangeStart}}–{{this.rangeEnd}}
           of
           {{this.total}}</span>
-        <span class='pager-btns'>
-          <button
-            type='button'
-            class='pager-btn'
-            disabled={{this.isFirstPage}}
-            aria-label='Previous page'
-            {{on 'click' this.prevPage}}
-          >←</button>
-          <span class='pager-page'>{{this.pageCount}}
-            {{if (eq this.pageCount 1) 'page' 'pages'}}</span>
-          <button
-            type='button'
-            class='pager-btn'
-            disabled={{this.isLastPage}}
-            aria-label='Next page'
-            {{on 'click' this.nextPage}}
-          >→</button>
-        </span>
-      </nav>
+        <Pagination
+          @page={{this.pageNumber}}
+          @pages={{this.pageCount}}
+          @onPageChange={{this.goToPage}}
+          aria-label='Table pages'
+        />
+      </div>
     {{/if}}
     <style scoped>
       .table-scroll {
@@ -526,44 +509,24 @@ export class Table extends GlimmerComponent<TableSignature> {
       .pager-range {
         font-variant-numeric: tabular-nums;
       }
-      .pager-btns {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+      /* Pret UI Pagination's own knobs, pointed at the contract: the active
+         page reads as ink on the selected surface instead of the --primary
+         fill used as text, and the gap takes the muted ink. */
+      .pager {
+        --pretui-primary-ink: var(--primary-ink);
+        --pretui-selected: var(--selected);
+        --ink-3: var(--muted-foreground);
       }
-      .pager-page {
-        font-variant-numeric: tabular-nums;
-      }
-      /* Under the 44px touch minimum on purpose: the target grows only where a
-         coarse pointer is in use. */
-      .pager-btn {
-        min-width: 1.75rem;
-        min-height: 1.75rem;
-        padding: 0 0.4rem;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background-color: var(--card);
-        color: var(--card-foreground);
-        font: inherit;
-        line-height: 1;
-        cursor: pointer;
-      }
-      .pager-btn:hover:not(:disabled) {
-        background-color: var(--muted);
-        color: var(--foreground);
-      }
-      .pager-btn:focus-visible {
+      .pager :deep(.pretui-page:focus-visible) {
         outline: 0.125rem solid var(--ring);
         outline-offset: 0.0625rem;
       }
-      .pager-btn:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
+      /* Under the 44px touch minimum on purpose: the target grows only where a
+         coarse pointer is in use. */
       @media (pointer: coarse) {
-        .pager-btn {
+        .pager :deep(.pretui-page) {
           min-width: 2.75rem;
-          min-height: 2.75rem;
+          height: 2.75rem;
         }
       }
     </style>
