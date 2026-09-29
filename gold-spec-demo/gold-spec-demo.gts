@@ -15,8 +15,15 @@ import SwitchSubmodeCommand from '@cardstack/boxel-host/commands/switch-submode'
 import type { CardContext } from 'https://cardstack.com/base/card-api';
 import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
 
-import StatusField, { canTransition, statusHue } from '../fields/status/status';
-import PriorityField, { priorityOption } from '../fields/priority/priority';
+import StatusField, {
+  canTransition,
+  statusHue,
+  statusRank,
+} from '../fields/status/status';
+import PriorityField, {
+  priorityOption,
+  priorityRank,
+} from '../fields/priority/priority';
 import DueDateField, { dueness } from '../fields/due-date/due-date';
 import CreatedAtField from '../fields/created-at/created-at';
 import { StatePill, STATE_HUES } from '../components/state-pill';
@@ -227,12 +234,16 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
 
   columns: TableColumn[] = [
     { key: 'title', label: 'Task', value: (t) => task(t).title },
-    { key: 'status', label: 'Status', sortValue: (t) => task(t).status },
+    {
+      key: 'status',
+      label: 'Status',
+      sortValue: (t) => statusRank(StatusField, this.statusOf(t)),
+    },
     {
       key: 'priority',
       label: 'Priority',
       showAbove: 480,
-      sortValue: (t) => task(t).priority,
+      sortValue: (t) => priorityRank(PriorityField, task(t).priority),
     },
     {
       key: 'due',
@@ -258,18 +269,22 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
     return band ? DUE_STRIPE[band] : undefined;
   };
 
-  statusOf = (item: CardDef) => task(item).status;
+  // Board moves stay on this page: the records are shared examples of several
+  // field Specs, so a drag here must not rewrite them.
+  @tracked moved: Record<string, string> = {};
+
+  statusOf = (item: CardDef) => this.moved[item.id] ?? task(item).status;
   priorityOf = (item: CardDef) => task(item).priority;
-  statusHueOf = (item: CardDef) => statusHue(StatusField, task(item).status);
+  statusHueOf = (item: CardDef) => statusHue(StatusField, this.statusOf(item));
   priorityHueOf = (item: CardDef) =>
     priorityOption(PriorityField, task(item).priority)?.hue;
 
-  columnKeyFor = (item: CardDef) => task(item).status;
+  columnKeyFor = (item: CardDef) => this.statusOf(item);
 
   // A move the Status transition graph does not allow snaps back.
   onMove = (item: CardDef, key: string) => {
-    if (canTransition(StatusField, task(item).status, key)) {
-      task(item).status = key;
+    if (canTransition(StatusField, this.statusOf(item), key)) {
+      this.moved = { ...this.moved, [item.id]: key };
     }
   };
   @tracked active: string = BLOCKS[0]!.id;
@@ -528,11 +543,11 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
         border-radius: var(--radius);
         scroll-margin-top: var(--boxel-sp);
       }
-      /* mirror the rail's active stop on the section itself */
       .board-block {
         min-height: 26.25rem;
         grid-template-rows: auto auto 1fr;
       }
+      /* mirror the rail's active stop on the section itself */
       .block.is-active {
         box-shadow: 0 0 0 2px var(--ring);
       }
