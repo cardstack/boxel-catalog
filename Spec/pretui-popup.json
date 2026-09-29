@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/popup",
+        "name": "Popup"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Popup } from '@cardstack/pretui/components/popup';\n```\n",
+      "cardTitle": "Popup",
+      "cardDescription": "Headless anchored-positioning primitive (flip/shift/matchWidth)",
+      "containedExamples": [],
+      "componentName": "Popup",
+      "icon": "external-link",
+      "category": "Overlays",
+      "tier": "Primitive",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "webawesome",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Headless anchored-positioning primitive (flip/shift/matchWidth) · floating-ui, wa-popup",
+      "refs": "floating-ui · wa-popup",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Popup",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/popup.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/popup.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/phone-input",
+        "name": "PhoneInput"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { PhoneInput } from '@cardstack/pretui/components/phone-input';\n```\n",
+      "cardTitle": "PhoneInput",
+      "cardDescription": "Wrapped boxel-ui PhoneInput: country codes + E.164",
+      "containedExamples": [],
+      "componentName": "PhoneInput",
+      "icon": "phone",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "boxel-ui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "boxel-ui",
+      "lineage": "PhoneInput",
+      "version": "0.4.0",
+      "brief": "Wrapped boxel-ui PhoneInput: country codes + E.164 · runtime reuse",
+      "refs": null,
+      "buildsOn": "boxel-ui PhoneInput",
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "PhoneInput",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/phone-input.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/phone-input.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

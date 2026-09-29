@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/avatar",
+        "name": "Avatar"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Avatar } from '@cardstack/pretui/components/avatar';\n```\n",
+      "cardTitle": "Avatar",
+      "cardDescription": "Identity disc with name-derived hue and initials",
+      "containedExamples": [],
+      "componentName": "Avatar",
+      "icon": "user",
+      "category": "Foundations",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "ink",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "Avatar",
+      "version": "0.4.0",
+      "brief": "Identity disc with name-derived hue and initials · shadcn Avatar, wa-avatar",
+      "refs": "shadcn Avatar · wa-avatar · boxel-ui Avatar",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Avatar",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/avatar.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/avatar.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

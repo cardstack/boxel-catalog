@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/rating",
+        "name": "Rating"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Rating } from '@cardstack/pretui/components/rating';\n```\n",
+      "cardTitle": "Rating",
+      "cardDescription": "Star score with half-symbol precision and hover preview",
+      "containedExamples": [],
+      "componentName": "Rating",
+      "icon": "star",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "webawesome",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Star score with half-symbol precision and hover preview · wa-rating (ported), shadcn none",
+      "refs": "wa-rating · MUI Rating",
+      "buildsOn": null,
+      "featured": true,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Rating",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/rating.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/rating.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
