@@ -1,5 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
-import { Pill } from '@cardstack/boxel-ui/components';
+import { htmlSafe } from '@ember/template';
+import { Chip } from '@cardstack/pretui/components/chip';
 
 export interface StateColor {
   bg: string;
@@ -30,17 +31,25 @@ const HUE = {
 
 export type Hue = keyof typeof HUE;
 
+/** Every hue name, in the table's order: the one list to iterate instead of re-typing the names. */
+export const STATE_HUES = Object.keys(HUE) as Hue[];
+
 // Text for the solid (emphatic) fill. A status hue takes its fill's paired
 // foreground from the theme; orange is mostly warning, so it takes warning's.
-// The category hues have no pair and keep the inverse of the page.
+// Slate is the page's own muted ink, so it keeps the inverse of the page.
 const EMPHATIC_FOREGROUND: Partial<Record<Hue, string>> = {
   green: 'var(--success-foreground)',
   red: 'var(--destructive-foreground)',
   amber: 'var(--warning-foreground)',
   orange: 'var(--warning-foreground)',
-  // Fixed metal fills take fixed ink: dark on gold (10.6:1), light on bronze
-  // (7.0:1).
+  // Fixed category fills take fixed ink, so the pair holds under any theme:
+  // dark on teal (11.5:1), blue (8.6:1), pink (5.1:1) and gold (10.6:1); light
+  // on purple (5.9:1) and bronze (7.0:1).
+  teal: 'var(--boxel-dark)',
+  blue: 'var(--boxel-dark)',
+  pink: 'var(--boxel-dark)',
   gold: 'var(--boxel-dark)',
+  purple: 'var(--boxel-light)',
   bronze: 'var(--boxel-light)',
 };
 
@@ -94,74 +103,48 @@ interface Signature {
 
 /**
  * A small state label whose colour is derived, never stored. The chrome is
- * boxel-ui's `Pill`; only the hue derivation lives here.
+ * Pret UI's `Chip`; only the hue derivation lives here.
+ *
+ * Chip's own treatment mixes 20% hue into the fill and 34% foreground into the
+ * ink, which leaves pale hues below 4.5:1 (amber 3.90 light, bronze 3.15 dark).
+ * StatePill sets Chip's two knobs to its checked recipe instead, 14% fill and
+ * 62% foreground ink, which clears 5.59:1 for every hue in both schemes. Chip
+ * has no solid or unfilled mode, so `emphatic` and `chrome` set the fill, ink
+ * and ring directly; every value comes from the hue tables above, never from
+ * a caller.
  */
 export class StatePill extends GlimmerComponent<Signature> {
-  get colors() {
-    return stateColor(this.args.hue ?? 'slate');
+  get hue(): string {
+    return HUE[this.args.hue ?? 'slate'];
   }
 
-  get colorArgs() {
-    let { bg, fg, ring } = this.colors;
+  get style() {
+    let hue = `--pretui-chip-hue: ${this.hue}`;
     if (this.args.chrome) {
-      return {
-        background: 'transparent',
-        font: 'var(--muted-foreground)',
-        border: 'transparent',
-      };
+      return htmlSafe(
+        `${hue}; background-color: transparent; color: var(--muted-foreground); box-shadow: none; padding-inline: 0; max-width: 100%`,
+      );
     }
     if (this.args.emphatic) {
-      return {
-        background: ring,
-        font:
-          EMPHATIC_FOREGROUND[this.args.hue ?? 'slate'] ?? 'var(--background)',
-        border: ring,
-      };
+      let ink =
+        EMPHATIC_FOREGROUND[this.args.hue ?? 'slate'] ?? 'var(--background)';
+      return htmlSafe(
+        `${hue}; --pretui-chip-mix: 100%; color: ${ink}; box-shadow: none; max-width: 100%`,
+      );
     }
-    return { background: bg, font: fg, border: bg };
+    return htmlSafe(
+      `${hue}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; max-width: 100%`,
+    );
   }
 
   <template>
     {{#if @label}}
-      <Pill
-        class='state-pill {{if @chrome "state-chrome"}}'
-        @pillBackgroundColor={{this.colorArgs.background}}
-        @pillFontColor={{this.colorArgs.font}}
-        @pillBorderColor={{this.colorArgs.border}}
-        ...attributes
-      >
-        <:default>
-          {{#if @dot}}<span class='state-dot'></span>{{/if}}
-          <span class='state-label'>{{@label}}</span>
-        </:default>
-      </Pill>
+      <Chip @dot={{if @dot true false}} style={{this.style}} ...attributes>
+        <span class='state-label'>{{@label}}</span>
+      </Chip>
     {{/if}}
 
     <style scoped>
-      /* Denser than Pill's default: forty of these share one queue row. */
-      .state-pill {
-        --boxel-pill-gap: 0.25rem;
-        --boxel-pill-padding: 0.1em 0.45em;
-        --boxel-pill-border-radius: var(--boxel-border-radius-xs);
-        --boxel-pill-font: 600 var(--boxel-ui-label-font-size) /
-          var(--boxel-ui-label-line-height) var(--boxel-ui-label-font-family);
-        --boxel-lsp-xs: var(--boxel-ui-label-letter-spacing);
-        max-width: 100%;
-        white-space: nowrap;
-      }
-      .state-chrome {
-        --boxel-pill-padding: 0.1em 0;
-        --boxel-pill-font: var(--boxel-ui-label-font-weight)
-          var(--boxel-ui-label-font-size) / var(--boxel-ui-label-line-height)
-          var(--boxel-ui-label-font-family);
-      }
-      .state-dot {
-        width: 0.3125rem;
-        height: 0.3125rem;
-        flex: none;
-        border-radius: 50%;
-        background-color: currentColor;
-      }
       .state-label {
         overflow: hidden;
         text-overflow: ellipsis;
