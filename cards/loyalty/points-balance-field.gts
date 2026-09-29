@@ -1,13 +1,7 @@
 import { Component } from 'https://cardstack.com/base/card-api';
 import NumberField from 'https://cardstack.com/base/number';
 import CoinsIcon from '@cardstack/boxel-icons/coins';
-
-function formatPoints(n?: number | null): string {
-  if (n == null || Number.isNaN(n)) {
-    return '—';
-  }
-  return new Intl.NumberFormat().format(n);
-}
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
 
 /**
  * A quantity of loyalty points — a count, not money. It never carries a
@@ -24,12 +18,12 @@ export default class PointsBalanceField extends NumberField {
   static icon = CoinsIcon;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get formatted() {
-      return formatPoints(this.args.model as unknown as number);
+    get value() {
+      return (this.args.model as unknown as number | null) ?? undefined;
     }
     <template>
       <span class='points'>
-        <span class='points-value'>{{this.formatted}}</span>
+        <span class='points-value'><FormatNumber @value={{this.value}} /></span>
         <span class='points-unit'>pts</span>
       </span>
       <style scoped>
@@ -41,22 +35,22 @@ export default class PointsBalanceField extends NumberField {
         .points-value {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .points-unit {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get formatted() {
-      return formatPoints(this.args.model as unknown as number);
+    get value() {
+      return (this.args.model as unknown as number | null) ?? undefined;
     }
     <template>
-      <span class='points'>{{this.formatted}} pts</span>
+      <span class='points'><FormatNumber @value={{this.value}} /> pts</span>
       <style scoped>
         .points {
           font-variant-numeric: tabular-nums;
