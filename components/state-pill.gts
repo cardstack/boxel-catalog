@@ -9,8 +9,8 @@ export interface StateColor {
 
 // The status hues read the theme's status tokens, so a linked theme restyles
 // them; orange sits between warning and destructive and follows both. The
-// category hues (teal, purple, blue, pink) have no contract token and come
-// only from boxel's fixed palette, so a theme never moves them.
+// category hues (teal, purple, blue, pink, gold, bronze) have no contract
+// token and come only from boxel's fixed palette, so a theme never moves them.
 const HUE = {
   green: 'var(--success)',
   red: 'var(--destructive)',
@@ -21,6 +21,11 @@ const HUE = {
   blue: 'color-mix(in oklch, var(--boxel-purple) 55%, var(--boxel-highlight))',
   pink: 'color-mix(in oklch, var(--boxel-danger) 60%, var(--boxel-purple))',
   slate: 'var(--muted-foreground)',
+  // Metal hues for tiers and ranks (bronze / gold). They are categories, not
+  // statuses, so they stay on the fixed palette like the other category hues:
+  // a tier ladder must not turn into warning colours under a theme.
+  gold: 'color-mix(in oklch, var(--boxel-yellow) 55%, var(--boxel-amber))',
+  bronze: 'color-mix(in oklch, var(--boxel-orange) 65%, var(--boxel-dark))',
 } as const;
 
 export type Hue = keyof typeof HUE;
@@ -33,6 +38,10 @@ const EMPHATIC_FOREGROUND: Partial<Record<Hue, string>> = {
   red: 'var(--destructive-foreground)',
   amber: 'var(--warning-foreground)',
   orange: 'var(--warning-foreground)',
+  // Fixed metal fills take fixed ink: dark on gold (10.6:1), light on bronze
+  // (7.0:1).
+  gold: 'var(--boxel-dark)',
+  bronze: 'var(--boxel-light)',
 };
 
 // One hue in, a checked pair out. Fill and text derive from the same hue and
