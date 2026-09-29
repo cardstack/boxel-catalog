@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/alert",
+        "name": "Alert"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Alert } from '@cardstack/pretui/components/alert';\n```\n",
+      "cardTitle": "Alert",
+      "cardDescription": "Inline tone-mapped callout",
+      "containedExamples": [],
+      "componentName": "Alert",
+      "icon": "triangle-alert",
+      "category": "Feedback",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "feedback",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "Alert",
+      "version": "0.4.0",
+      "brief": "Inline tone-mapped callout · shadcn Alert, wa-callout",
+      "refs": "shadcn Alert · wa-callout · boxel-ui Alert",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Alert",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/alert.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/alert.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

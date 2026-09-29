@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/menu",
+        "name": "Menu"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Menu } from '@cardstack/pretui/components/menu';\n```\n",
+      "cardTitle": "Menu",
+      "cardDescription": "Action list from plain data with kbd hints and destructive rows",
+      "containedExamples": [],
+      "componentName": "Menu",
+      "icon": "menu-2",
+      "category": "Overlays",
+      "tier": "Element",
+      "tags": [
+        "keyboard-navigation"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "Menu",
+      "version": "0.4.0",
+      "brief": "Action list from plain data with kbd hints and destructive rows · shadcn DropdownMenu, wa-dropdown",
+      "refs": "shadcn DropdownMenu · wa-dropdown · boxel-ui Menu",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Menu",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/menu.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/menu.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

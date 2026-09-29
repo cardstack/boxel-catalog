@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/progress-radial",
+        "name": "ProgressRadial"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ProgressRadial } from '@cardstack/pretui/components/progress-radial';\n```\n",
+      "cardTitle": "ProgressRadial",
+      "cardDescription": "Circular determinate progress",
+      "containedExamples": [],
+      "componentName": "ProgressRadial",
+      "icon": "circle-dashed",
+      "category": "Feedback",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "feedback",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "ProgressRadial",
+      "version": "0.4.0",
+      "brief": "Circular determinate progress · wa-progress-ring",
+      "refs": "wa-progress-ring · boxel-ui ProgressRadial",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "ProgressRadial",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/progress-radial.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/progress-radial.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

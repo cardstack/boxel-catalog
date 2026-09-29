@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/dialog",
+        "name": "Dialog"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Dialog } from '@cardstack/pretui/components/dialog';\n```\n",
+      "cardTitle": "Dialog",
+      "cardDescription": "Modal on the native top layer (showModal)",
+      "containedExamples": [],
+      "componentName": "Dialog",
+      "icon": "messages",
+      "category": "Overlays",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "webawesome",
+      "lineage": "Modal",
+      "version": "0.4.0",
+      "brief": "Modal on the native top layer (showModal) · shadcn Dialog, wa-dialog; supersedes boxel-ui Modal",
+      "refs": "shadcn Dialog · wa-dialog · boxel-ui Modal",
+      "buildsOn": "native <dialog>",
+      "featured": true,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Dialog",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/dialog.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/dialog.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

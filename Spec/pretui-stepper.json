@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/stepper",
+        "name": "Stepper"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Stepper } from '@cardstack/pretui/components/stepper';\n```\n",
+      "cardTitle": "Stepper",
+      "cardDescription": "Number input flanked by −/+ on one hairline",
+      "containedExamples": [],
+      "componentName": "Stepper",
+      "icon": "circle-plus",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Number input flanked by −/+ on one hairline · wa-number-input, MUI Stepper",
+      "refs": "wa-number-input · MUI Stepper",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Stepper",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/stepper.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/stepper.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
