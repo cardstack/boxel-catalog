@@ -42,11 +42,12 @@ export const MEETING_TYPES = [
 // event chips in components/calendar.gts. Harmonized with the Ledger
 // identity: interview shares candidate.gts's "interviewing" plum, vendor
 // review shares the brass seal color.
+// Category hues only; the status hues follow the theme's status tokens.
 export const MEETING_TYPE_COLORS: Record<string, StateColor> = {
   interview: stateColor('purple'),
-  'one-on-one': stateColor('green'),
+  'one-on-one': stateColor('teal'),
   standup: stateColor('blue'),
-  'vendor-review': stateColor('orange'),
+  'vendor-review': stateColor('pink'),
 };
 
 export const MeetingTypeField = enumField(StringField, {

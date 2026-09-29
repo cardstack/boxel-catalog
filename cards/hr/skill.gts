@@ -18,13 +18,14 @@ export const SKILL_CATEGORIES = [
   'practice',
 ];
 
+// Category hues only; the status hues follow the theme's status tokens.
 export const SKILL_CATEGORY_COLORS: Record<string, { bg: string; fg: string }> =
   {
     language: stateColor('purple'),
     framework: stateColor('blue'),
-    tool: stateColor('amber'),
+    tool: stateColor('teal'),
     platform: stateColor('pink'),
-    practice: stateColor('green'),
+    practice: stateColor('slate'),
   };
 
 const UNCATEGORISED = {

@@ -31,12 +31,13 @@ import { pillStyle } from './utils';
 // CANDIDATE_STAGE_COLORS/MEETING_TYPE_COLORS (this classifies a PLAN round's
 // content, not a candidate's stage or a meeting's type), but the same
 // stateColor()/stateColorOf() machinery from utils/index.
+// Category hues only; the status hues follow the theme's status tokens.
 export const INTERVIEW_ROUND_COLORS: Record<string, StateColor> = {
-  'phone-screen': stateColor('green'),
+  'phone-screen': stateColor('slate'),
   technical: stateColor('purple'),
   onsite: stateColor('blue'),
   panel: stateColor('teal'),
-  final: stateColor('orange'),
+  final: stateColor('pink'),
 };
 
 function questionsPreview(markdown?: string | null): string {
