@@ -11,22 +11,26 @@ each other.
   kind, source path). That entry drives the sidebar group (fields and
   components), the section heading, and the link that opens the source file in
   code mode. Adding a field or component is one `BLOCKS` entry plus its
-  section; cards come from the linked card groups instead.
+  section.
+- Cards never go in the Gold Spec Demo. Each card cluster has its own
+  standalone page, so card PRs only add a cluster JSON and never conflict on
+  the demo.
 - Remove this folder once the gold-Spec blocks are fully on Pret UI and the
   theming system, and their own Spec examples cover these states.
 
 Contents:
 
 - `gold-spec-demo.gts` + `GoldSpecDemo/all-states.json`: the Gold Spec Demo
-  card. Status, Priority, Due Date and Created At in every state (embedded and
-  atom), StatePill in every hue and mode (tinted, dot, emphatic, chrome), and
-  the linked card clusters.
-- `gold-spec-card-group.gts` + `GoldSpecCardGroup/<cluster>.json`: one Gold
-  Spec Card Group per card cluster, a title and links to one existing example
-  of each card in it. `GoldSpecCardGroup/crm.json` links Account, Campaign,
-  Contact, Lead, Opportunity and User from `cards/crm/`. The sidebar's Cards
-  group picks a cluster (Pret UI FilterChips) and lists its cards; each card's
-  section renders it fitted at four sizes, embedded, atom and isolated, with a
-  source link read off the card's own class. Adding a cluster is one new group
-  instance linked from `GoldSpecDemo/all-states.json`, with no code change.
-  The linked examples are only rendered, never written.
+  card, fields and components only. Status, Priority, Due Date and Created At
+  in every state (embedded and atom), and StatePill in every hue and mode
+  (tinted, dot, emphatic, chrome).
+- `gold-spec-card-group.gts` + `GoldSpecCardGroup/<cluster>.json`: one
+  standalone page per card cluster, with a title and links to one existing
+  example of each card in it. `GoldSpecCardGroup/crm.json` links Account,
+  Campaign, Contact, Lead, Opportunity and User from `cards/crm/`. Each card's
+  section shows its title and type, its instance path and source path (both
+  open in code mode), and the card fitted at four sizes, embedded, atom and
+  isolated. Adding a cluster is one new JSON, with no code change. The linked
+  examples are only rendered, never written.
+- `demo-parts.gts`: the pieces both pages share (page shell, source link,
+  section heading, card formats).

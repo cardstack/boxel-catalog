@@ -31,11 +31,6 @@
         "links": {
           "self": null
         }
-      },
-      "cardGroups.0": {
-        "links": {
-          "self": "../GoldSpecCardGroup/crm"
-        }
       }
     },
     "meta": {
