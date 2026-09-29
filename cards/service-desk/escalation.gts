@@ -150,6 +150,7 @@ class EscalationEdit extends Component<typeof Escalation> {
     <style scoped>
       .esc-edit {
         container-type: inline-size;
+        padding: var(--boxel-sp);
       }
       .edit-body {
         display: grid;
@@ -171,11 +172,11 @@ class EscalationEdit extends Component<typeof Escalation> {
       .sect {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp-xs);
+        gap: var(--boxel-sp-sm);
         border: 1px solid var(--border, var(--boxel-border-color));
         border-radius: var(--boxel-border-radius);
         background: var(--card, var(--boxel-light));
-        padding: var(--boxel-sp-sm);
+        padding: var(--boxel-sp);
         scroll-margin-top: var(--boxel-sp);
       }
       .sect.focused {
