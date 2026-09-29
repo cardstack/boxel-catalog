@@ -10,9 +10,17 @@ import NumberField from 'https://cardstack.com/base/number';
 import EmailField from 'https://cardstack.com/base/email';
 import PhoneNumberField from 'https://cardstack.com/base/phone-number';
 import enumField from 'https://cardstack.com/base/enum';
+import { guidFor } from '@ember/object/internals';
 import TargetIcon from '@cardstack/boxel-icons/target';
-import { ProgressBar } from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { Campaign } from './campaign';
+import { hasNumber, labelProgress } from './utils';
 
 const LeadStatusField = enumField(StringField, {
   options: ['new', 'contacted', 'qualified', 'converted', 'disqualified'],
@@ -32,9 +40,19 @@ const LeadSourceField = enumField(StringField, {
   displayName: 'Lead Source',
 });
 
-// 0 is a real score (the Spec's scale is 0–100); only an unset score hides.
-function hasScore(score: number | null | undefined): boolean {
-  return typeof score === 'number' && Number.isFinite(score);
+// Status hues for the pill. Qualified and converted are good news and
+// disqualified bad news; new is the one open state that stands out, so it
+// takes a category hue rather than a status one; contacted is neutral.
+const STATUS_HUE: Record<string, Hue> = {
+  new: 'blue',
+  contacted: 'slate',
+  qualified: 'green',
+  converted: 'green',
+  disqualified: 'red',
+};
+
+function statusHue(status: string | undefined): Hue {
+  return (status && STATUS_HUE[status]) || 'slate';
 }
 
 export class Lead extends CardDef {
@@ -78,12 +96,12 @@ export class Lead extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .la-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .la-name {
@@ -106,7 +124,7 @@ export class Lead extends CardDef {
           {{/if}}
         </div>
         <span class='score-block'>
-          {{#if (hasScore @model.score)}}
+          {{#if (hasNumber @model.score)}}
             <span class='score'>{{@model.score}}</span>
             <span class='score-caption'>score</span>
           {{else}}
@@ -114,11 +132,10 @@ export class Lead extends CardDef {
           {{/if}}
         </span>
         <span class='status-col'>
-          {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
-          {{/if}}
+          <StatePill
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+          />
         </span>
       </div>
       <style scoped>
@@ -130,9 +147,9 @@ export class Lead extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .info {
@@ -150,7 +167,7 @@ export class Lead extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .score-block {
           display: flex;
@@ -161,7 +178,7 @@ export class Lead extends CardDef {
           flex-shrink: 0;
         }
         .score-none {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .status-col {
           display: flex;
@@ -180,34 +197,7 @@ export class Lead extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-        }
-        .status-new {
-          background: var(--lead-new-bg, #dbeafe);
-          color: var(--lead-new-fg, #1e40af);
-        }
-        .status-qualified {
-          background: var(--lead-qualified-bg, #dcfce7);
-          color: var(--lead-qualified-fg, #166534);
-        }
-        .status-converted {
-          background: var(--lead-converted-bg, #dcfce7);
-          color: var(--lead-converted-fg, #166534);
-        }
-        .status-disqualified {
-          background: var(--lead-disqualified-bg, #fee2e2);
-          color: var(--lead-disqualified-fg, #991b1b);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -221,17 +211,16 @@ export class Lead extends CardDef {
       <div class='fitted'>
         <div class='top'>
           <TargetIcon class='icon' />
-          {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
-          {{/if}}
+          <StatePill
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+          />
         </div>
         <span class='name'>{{this.name}}</span>
         {{#if @model.company}}
           <span class='meta line-company'>{{@model.company}}</span>
         {{/if}}
-        {{#if (hasScore @model.score)}}
+        {{#if (hasNumber @model.score)}}
           <span class='meta line-score'>Score {{@model.score}}</span>
         {{/if}}
         {{#if @model.source}}
@@ -249,7 +238,7 @@ export class Lead extends CardDef {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .top {
           display: flex;
@@ -258,9 +247,9 @@ export class Lead extends CardDef {
           gap: 0.5rem;
         }
         .icon {
-          width: 18px;
-          height: 18px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.125rem;
+          height: 1.125rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -272,37 +261,10 @@ export class Lead extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-        }
-        .status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-        }
-        .status-new {
-          background: var(--lead-new-bg, #dbeafe);
-          color: var(--lead-new-fg, #1e40af);
-        }
-        .status-qualified {
-          background: var(--lead-qualified-bg, #dcfce7);
-          color: var(--lead-qualified-fg, #166534);
-        }
-        .status-converted {
-          background: var(--lead-converted-bg, #dcfce7);
-          color: var(--lead-converted-fg, #166534);
-        }
-        .status-disqualified {
-          background: var(--lead-disqualified-bg, #fee2e2);
-          color: var(--lead-disqualified-fg, #991b1b);
         }
         .line-company,
         .line-score,
@@ -332,8 +294,17 @@ export class Lead extends CardDef {
     get name() {
       return this.args.model?.name?.trim() || 'Unnamed Lead';
     }
+    scoreLabelId = `${guidFor(this)}-score-label`;
     get clampedScore() {
       return Math.max(0, Math.min(100, this.args.model?.score ?? 0));
+    }
+    get details(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.email) rows.push({ key: 'Email', value: 'email' });
+      if (m?.phone) rows.push({ key: 'Phone', value: 'phone' });
+      if (m?.source) rows.push({ key: 'Source', value: 'source' });
+      return rows;
     }
     <template>
       <article class='lead-page'>
@@ -345,37 +316,38 @@ export class Lead extends CardDef {
               <p class='company'>{{@model.company}}</p>
             {{/if}}
           </div>
-          {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
-          {{/if}}
+          <StatePill
+            class='status'
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+          />
         </header>
-        {{#if (hasScore @model.score)}}
+        {{#if (hasNumber @model.score)}}
           <section class='score-panel'>
             <span class='score-value'>{{@model.score}}</span>
-            <span class='score-label'>lead score</span>
-            <div class='score-bar'>
-              <ProgressBar @value={{this.clampedScore}} @max={{100}} />
-            </div>
+            <span id={{this.scoreLabelId}} class='score-label'>lead score</span>
+            <ProgressBar
+              class='score-bar'
+              @value={{this.clampedScore}}
+              @max={{100}}
+              @steps={{false}}
+              {{labelProgress this.scoreLabelId}}
+            />
           </section>
         {{/if}}
         <section class='panel'>
           <h2>Details</h2>
-          <dl>
-            {{#if @model.email}}
-              <dt>Email</dt>
-              <dd><@fields.email /></dd>
-            {{/if}}
-            {{#if @model.phone}}
-              <dt>Phone</dt>
-              <dd><@fields.phone /></dd>
-            {{/if}}
-            {{#if @model.source}}
-              <dt>Source</dt>
-              <dd class='cap'>{{@model.source}}</dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='details' @items={{this.details}}>
+            <:value as |row|>
+              {{#if (eq row.value 'email')}}
+                <@fields.email />
+              {{else if (eq row.value 'phone')}}
+                <@fields.phone />
+              {{else}}
+                <span class='cap'>{{@model.source}}</span>
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
       </article>
       <style scoped>
@@ -392,61 +364,37 @@ export class Lead extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .company {
           margin: 0.25rem 0 0;
           font-size: 0.875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .status {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
           margin-bottom: 0.25rem;
-          white-space: nowrap;
-        }
-        .status-new {
-          background: var(--lead-new-bg, #dbeafe);
-          color: var(--lead-new-fg, #1e40af);
-        }
-        .status-qualified {
-          background: var(--lead-qualified-bg, #dcfce7);
-          color: var(--lead-qualified-fg, #166534);
-        }
-        .status-converted {
-          background: var(--lead-converted-bg, #dcfce7);
-          color: var(--lead-converted-fg, #166534);
-        }
-        .status-disqualified {
-          background: var(--lead-disqualified-bg, #fee2e2);
-          color: var(--lead-disqualified-fg, #991b1b);
         }
         .score-panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
           display: grid;
           grid-template-columns: auto 1fr;
           align-items: baseline;
@@ -459,42 +407,43 @@ export class Lead extends CardDef {
           line-height: 1;
         }
         .score-label {
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
+        /* Pret UI ProgressBar paints its fill with --primary, which measures
+           1.20:1 against the track on a light page; the ink token is the
+           guaranteed pair. */
         .score-bar {
+          --primary: var(--primary-ink);
           grid-column: 1 / -1;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
         .cap {
           text-transform: capitalize;

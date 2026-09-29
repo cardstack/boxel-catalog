@@ -23,11 +23,19 @@ export default class FieldShowcaseCard extends GlimmerComponent<FieldShowcaseCar
       {{yield}}
     </CardContainer>
     <style scoped>
+      /* CardContainer clips its content, but field editors such as enumField
+         render their dropdown in place, so the example card has to let it
+         overflow. The focused card rises above its siblings so the open
+         list is not painted over by the next example. */
       .field-showcase-card {
         padding: var(--boxel-sp-xs);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-xs);
+        overflow: visible;
+      }
+      .field-showcase-card:focus-within {
+        z-index: 1;
       }
     </style>
   </template>

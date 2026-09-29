@@ -99,7 +99,10 @@ export function statusField(config: StatusFieldConfig) {
         return optionOf(options, this.args.model as unknown as string);
       }
       <template>
-        <StatePill @label={{@model}} @hue={{this.option.hue}} />
+        <StatePill
+          @label={{if this.option.label this.option.label @model}}
+          @hue={{this.option.hue}}
+        />
       </template>
     };
   }
@@ -147,6 +150,18 @@ export function statusHue(
   value?: string | null,
 ): Hue {
   return optionOf(fieldClass.statusOptions, value)?.hue ?? 'slate';
+}
+
+/**
+ * The status's place in the option order, which is the lifecycle order, for a
+ * sort key. An unknown or unset value has no rank, so a sort puts it last.
+ */
+export function statusRank(
+  fieldClass: StatusFieldClass,
+  value?: string | null,
+): number | undefined {
+  let idx = fieldClass.statusOptions.findIndex((o) => o.value === value);
+  return idx < 0 ? undefined : idx;
 }
 
 /**
