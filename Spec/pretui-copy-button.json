@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/copy-button",
+        "name": "CopyButton"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { CopyButton } from '@cardstack/pretui/components/copy-button';\n```\n",
+      "cardTitle": "CopyButton",
+      "cardDescription": "Copy-to-clipboard with success glyph swap",
+      "containedExamples": [],
+      "componentName": "CopyButton",
+      "icon": "copy",
+      "category": "Actions",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "boxel-ui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "boxel-ui",
+      "lineage": "CopyButton",
+      "version": "0.4.0",
+      "brief": "Copy-to-clipboard with success glyph swap · shadcn CopyButton, boxel-ui CopyButton",
+      "refs": "wa-copy-button · boxel-ui CopyButton",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "CopyButton",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/copy-button.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/copy-button.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

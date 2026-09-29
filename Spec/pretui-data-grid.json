@@ -1,0 +1,81 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/data-grid",
+        "name": "DataGrid"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { DataGrid } from '@cardstack/pretui/components/data-grid';\n```\n",
+      "cardTitle": "DataGrid",
+      "cardDescription": "THE records table: sortable, zebra, selectable",
+      "containedExamples": [],
+      "componentName": "DataGrid",
+      "icon": "table",
+      "category": "Data Display",
+      "tier": "Element",
+      "tags": [
+        "keyboard-navigation",
+        "collection",
+        "selection"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "reading",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "THE records table: sortable, zebra, selectable · TanStack table looks, wa-pro grid territory",
+      "refs": "TanStack Table · wa-pro grid · shadcn DataTable",
+      "buildsOn": null,
+      "featured": true,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "DataGrid",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/data-grid.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/data-grid.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

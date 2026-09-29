@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/url-input",
+        "name": "UrlInput"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { UrlInput } from '@cardstack/pretui/components/url-input';\n```\n",
+      "cardTitle": "UrlInput",
+      "cardDescription": "URL entry with blur-gated http(s) validation",
+      "containedExamples": [],
+      "componentName": "UrlInput",
+      "icon": "link",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "boxel-ui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "boxel-ui",
+      "lineage": "BoxelInput",
+      "version": "0.4.0",
+      "brief": "URL entry with blur-gated http(s) validation · BoxelInput url core",
+      "refs": "wa-input[type=url] · boxel-ui validation idiom",
+      "buildsOn": "boxel-ui BoxelInput",
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "UrlInput",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/url-input.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/url-input.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
