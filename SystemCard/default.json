@@ -98,11 +98,6 @@
         "links": {
           "self": "../ModelConfiguration/moonshotai-kimi-k2-7-code"
         }
-      },
-      "modelConfigurations.15": {
-        "links": {
-          "self": "../ModelConfiguration/qwen-qwen3-7-max"
-        }
       }
     },
     "meta": {
