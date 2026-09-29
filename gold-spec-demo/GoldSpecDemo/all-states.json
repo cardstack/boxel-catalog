@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "statuses": [
+        "Draft",
+        "Active",
+        "Done",
+        "Cancelled"
+      ],
+      "priorities": [
+        "Urgent",
+        "High",
+        "Normal",
+        "Low"
+      ],
+      "cardInfo": {
+        "name": "Gold Spec Demo",
+        "summary": "Preview only: every gold-Spec building block in every state, embedded and atom side by side.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../gold-spec-demo",
+        "name": "GoldSpecDemo"
+      }
+    }
+  }
+}
