@@ -59,14 +59,17 @@ export class EnumSelect extends GlimmerComponent<Signature> {
       .es {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
         min-width: 0;
       }
       .es-label {
-        font-size: 0.5625rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       /* Skinned to match LinkPicker's trigger, because they sit in the same
          column doing the same job — "change this field" — and were rendering
@@ -80,11 +83,11 @@ export class EnumSelect extends GlimmerComponent<Signature> {
          by construction — check it against the component, not against
          memory. */
       .es-input {
-        --boxel-select-background-color: var(--card, var(--boxel-light));
-        --boxel-select-border-color: var(--border, var(--boxel-200));
-        --boxel-select-text-color: var(--foreground, var(--boxel-dark));
-        --boxel-select-trigger-padding: 3px 6px;
-        --boxel-form-control-border-radius: var(--boxel-border-radius-sm, 4px);
+        --boxel-select-background-color: var(--card);
+        --boxel-select-border-color: var(--border);
+        --boxel-select-text-color: var(--foreground);
+        --boxel-select-trigger-padding: 0.1875rem 0.375rem;
+        --boxel-form-control-border-radius: var(--boxel-border-radius-sm);
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
       }

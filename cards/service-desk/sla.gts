@@ -56,7 +56,7 @@ export class PauseIntervalField extends FieldDef {
       <style scoped>
         .pause {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -119,6 +119,7 @@ class SlaEdit extends Component<typeof Sla> {
     <style scoped>
       .sla-edit {
         container-type: inline-size;
+        padding: var(--boxel-sp);
       }
       .edit-body {
         display: grid;
@@ -140,22 +141,23 @@ class SlaEdit extends Component<typeof Sla> {
       .sect {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp-xs);
-        border: 1px solid var(--border, var(--boxel-border-color));
+        gap: var(--boxel-sp-sm);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
-        background: var(--card, var(--boxel-light));
-        padding: var(--boxel-sp-sm);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        padding: var(--boxel-sp);
         scroll-margin-top: var(--boxel-sp);
       }
       .sect.focused {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--ring);
       }
       .sect h3 {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-5xs);
@@ -303,8 +305,6 @@ export class Sla extends CardDef {
         .sla-page {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
@@ -320,7 +320,7 @@ export class Sla extends CardDef {
           font-size: var(--boxel-font-size-lg);
         }
         .sla-subject {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
         }
         h2,
@@ -329,7 +329,7 @@ export class Sla extends CardDef {
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sla-clocks {
           display: flex;
@@ -342,21 +342,22 @@ export class Sla extends CardDef {
           gap: var(--boxel-sp);
         }
         .sla-cell {
-          border: 1px solid var(--border, var(--boxel-border-color));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
           padding: var(--boxel-sp-sm);
-          background: var(--card, var(--boxel-light));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .sla-none {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
         .sla-paused-total {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -385,7 +386,7 @@ export class Sla extends CardDef {
         }
         .sla-none {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -397,7 +398,7 @@ export class Sla extends CardDef {
       <span class='sla-atom'>{{@model.nearestLabel}}</span>
       <style scoped>
         .sla-atom {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
         }
@@ -450,7 +451,7 @@ export class Sla extends CardDef {
           flex: none;
           width: 1.25rem;
           height: 1.25rem;
-          color: var(--primary, var(--boxel-highlight));
+          color: var(--primary-ink);
         }
         .sla-fitted-body {
           display: flex;
@@ -478,7 +479,7 @@ export class Sla extends CardDef {
           }
           .sla-fitted-note {
             font-size: var(--boxel-font-size-xs);
-            color: var(--muted-foreground, var(--boxel-450));
+            color: var(--muted-foreground);
           }
         }
         @container fitted-card (height <= 80px) {

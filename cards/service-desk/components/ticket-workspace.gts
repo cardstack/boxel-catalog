@@ -35,6 +35,16 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { LinkPicker } from './link-picker';
 import { EnumSelect } from './enum-select';
 import { Feed, type FeedEntry } from './feed';
+import { ALERT_STYLE, tokenStyle } from './service-desk-ui';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Kbd } from '@cardstack/pretui/components/kbd';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import {
+  SegmentedControl,
+  type SegmentOption,
+} from '@cardstack/pretui/components/segmented-control';
+import { Token } from '@cardstack/pretui/components/token';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
@@ -59,6 +69,37 @@ import { SuggestKbArticlesCommand } from '../commands/suggest-kb-articles-comman
 import { KnowledgeArticle } from '../knowledge-article';
 
 type ComposeMode = 'Public' | 'Internal';
+
+// Input types that take a key press as a choice rather than as text. A radio
+// (SegmentedControl's segments), checkbox or button that holds focus must not
+// swallow the workspace shortcuts: none of them use letter keys.
+const NON_TEXT_INPUT_TYPES = new Set([
+  'radio',
+  'checkbox',
+  'button',
+  'submit',
+  'reset',
+  'range',
+  'color',
+  'file',
+  'image',
+]);
+
+// True while the reader is typing: a text-like input, a textarea, a select
+// (letter keys jump between its options) or contenteditable content.
+function isTextEntry(target: HTMLElement | null): boolean {
+  if (!target) {
+    return false;
+  }
+  if (target instanceof HTMLInputElement) {
+    return !NON_TEXT_INPUT_TYPES.has(target.type);
+  }
+  return (
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target.isContentEditable
+  );
+}
 
 interface Signature {
   Args: {
@@ -155,6 +196,19 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
 
   get canSend() {
     return Boolean(this.draft.trim()) && !this.busy;
+  }
+
+  composeModes: SegmentOption[] = [
+    { value: 'Public', label: 'Public reply' },
+    { value: 'Internal', label: 'Internal note' },
+  ];
+
+  pickMode = (value: string) => {
+    this.setMode(value === 'Internal' ? 'Internal' : 'Public');
+  };
+
+  get facts() {
+    return [{ key: 'Opened', value: this.args.ticket?.ageLabel || '—' }];
   }
 
   setMode = (mode: ComposeMode, _event?: Event) => {
@@ -1085,13 +1139,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
   handleKey = (raw: Event) => {
     let event = raw as KeyboardEvent;
     let target = event.target as HTMLElement | null;
-    if (
-      event.metaKey ||
-      event.ctrlKey ||
-      target?.tagName === 'INPUT' ||
-      target?.tagName === 'TEXTAREA' ||
-      target?.isContentEditable
-    ) {
+    if (event.metaKey || event.ctrlKey || isTextEntry(target)) {
       return;
     }
     switch (event.key.toLowerCase()) {
@@ -1137,7 +1185,16 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       ...attributes
     >
       <header class='ws-head'>
-        <span class='ws-ref'>{{@ticket.reference}}</span>
+        {{#if @ticket.reference}}
+          <Token
+            class='ws-ref'
+            @value={{@ticket.reference}}
+            style={{tokenStyle
+              '--boxel-font-size-xs'
+              'var(--muted-foreground)'
+            }}
+          />
+        {{/if}}
         {{#if this.editingSubject}}
           <BoxelInput
             class='ws-title-input'
@@ -1275,9 +1332,10 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                   </Button>
                 </:trigger>
                 <:content as |dd|>
-                  {{! Own markup rather than boxel-ui's Menu, for one reason:
-                      every row has to be a popover ANCHOR, and Menu renders
-                      the row itself so there is nowhere to put the attribute.
+                  {{! Own markup rather than boxel-ui's or Pret UI's Menu, for
+                      one reason: every row has to be a popover ANCHOR, and
+                      both Menus render the row from data, so there is nowhere
+                      to put the attribute or the hover and focus handlers.
                       Menu's `subtext` was the first attempt and it set the
                       label and the explanation side by side — a one-word
                       status next to a wrapped sentence, with the explanation
@@ -1454,7 +1512,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       {{#if this.escalating}}
         {{! Escalation is a handover: it needs somewhere to go and a reason
             the receiving tier can act on, so neither is optional. }}
-        <div class='confirm confirm-neutral' role='group' aria-label='Escalate'>
+        <div class='confirm' role='group' aria-label='Escalate'>
           <span class='esc-field'>
             <LinkPicker
               @label='To queue'
@@ -1494,7 +1552,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       {{/if}}
 
       {{#if this.merging}}
-        <div class='confirm confirm-neutral' role='group' aria-label='Merge'>
+        <div class='confirm' role='group' aria-label='Merge'>
           <span class='esc-field'>
             <LinkPicker
               @label='Fold into this one'
@@ -1519,35 +1577,53 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       {{/if}}
 
       {{#if this.confirmingDelete}}
-        <div class='confirm' role='alertdialog' aria-label='Confirm delete'>
-          <p class='confirm-q'>
-            <b>Delete {{this.deleteSubject}}?</b>
+        {{! Alert sets role=alert on its danger tone; the question it asks
+            makes it an alertdialog, which the attribute below restores. }}
+        <Alert
+          class='callout'
+          @tone='danger'
+          @title='Delete {{this.deleteSubject}}?'
+          role='alertdialog'
+          aria-label='Confirm delete'
+          style={{ALERT_STYLE.danger}}
+        >
+          <:default>
             {{#unless this.isDraft}}
               This removes the conversation and the record of what was promised.
               It cannot be undone — Close keeps the ticket and its history
               instead.
             {{/unless}}
-          </p>
-          <span class='confirm-acts'>
-            <Button
-              @kind='secondary'
-              @size='small'
-              {{on 'click' this.cancelDelete}}
-            >Cancel</Button>
-            <Button
-              @kind='destructive'
-              @size='small'
-              @loading={{if (eq this.busy 'discard') true false}}
-              {{on 'click' this.discard}}
-            >{{this.deleteLabel}}</Button>
-          </span>
-        </div>
+          </:default>
+          <:action>
+            <span class='confirm-acts'>
+              <Button
+                @kind='secondary'
+                @size='small'
+                {{on 'click' this.cancelDelete}}
+              >Cancel</Button>
+              <Button
+                @kind='destructive'
+                @size='small'
+                @loading={{if (eq this.busy 'discard') true false}}
+                {{on 'click' this.discard}}
+              >{{this.deleteLabel}}</Button>
+            </span>
+          </:action>
+        </Alert>
       {{/if}}
 
       {{#if this.problem}}
-        <p class='banner banner-bad' role='alert'>{{this.problem}}</p>
+        <Alert
+          class='callout'
+          @tone='danger'
+          style={{ALERT_STYLE.danger}}
+        >{{this.problem}}</Alert>
       {{else if this.notice}}
-        <p class='banner banner-ok' role='status'>{{this.notice}}</p>
+        <Alert
+          class='callout'
+          @tone='success'
+          style={{ALERT_STYLE.success}}
+        >{{this.notice}}</Alert>
       {{/if}}
 
       <div class='ws-body'>
@@ -1601,43 +1677,46 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
               {{! Not a disabled textarea. A greyed-out box invites the reader to
                 work out why they cannot type; a sentence tells them, and the
                 one control offers the move that would let them. }}
-              <div class='settled' role='status'>
-                <b>This ticket is {{@ticket.status}}.</b>
-                <p>The conversation is closed. Reopen it to reply — the reopen
-                  is recorded, so the history stays true.</p>
-                <Button
-                  @kind='secondary'
-                  @size='small'
-                  @loading={{if (eq this.busy 'Open') true false}}
-                  {{on 'click' (fn this.transition 'Open')}}
-                >Reopen to reply</Button>
-              </div>
+              <Alert
+                @tone='success'
+                @title='This ticket is {{@ticket.status}}.'
+                style={{ALERT_STYLE.success}}
+              >
+                <:default>
+                  The conversation is closed. Reopen it to reply — the reopen is
+                  recorded, so the history stays true.
+                </:default>
+                <:action>
+                  <Button
+                    @kind='secondary'
+                    @size='small'
+                    @loading={{if (eq this.busy 'Open') true false}}
+                    {{on 'click' (fn this.transition 'Open')}}
+                  >Reopen to reply</Button>
+                </:action>
+              </Alert>
             {{else}}
               <div class='composer {{if this.isInternal "composer-internal"}}'>
-                {{! Raw buttons with role=tab: these are TABS, not actions —
-                boxel-ui's Button would announce them as buttons and lose the
-                selected state that carries the public/internal distinction. }}
-                <div class='comp-tabs' role='tablist' aria-label='Reply mode'>
-                  <button
-                    type='button'
-                    role='tab'
-                    class='comp-tab {{unless this.isInternal "on"}}'
-                    aria-selected={{if this.isInternal 'false' 'true'}}
-                    {{on 'click' (fn this.setMode 'Public')}}
-                  >Public reply<span
-                      class='key'
-                      aria-hidden='true'
-                    >R</span></button>
-                  <button
-                    type='button'
-                    role='tab'
-                    class='comp-tab {{if this.isInternal "on"}}'
-                    aria-selected={{if this.isInternal 'true' 'false'}}
-                    {{on 'click' (fn this.setMode 'Internal')}}
-                  >Internal note<span
-                      class='key'
-                      aria-hidden='true'
-                    >N</span></button>
+                {{! Pret UI SegmentedControl: reply mode is one value out of two,
+                    so it is a radio group, which carries the checked state
+                    that tells public from internal. The R and N shortcut
+                    faces sit beside it, hidden from assistive tech: they are
+                    a visual affordance, and read aloud they would turn
+                    "Internal note" into "Internal note N". }}
+                <div class='comp-tabs'>
+                  <SegmentedControl
+                    class='comp-mode'
+                    @label='Reply mode'
+                    @options={{this.composeModes}}
+                    @value={{this.composeMode}}
+                    @onValueChange={{this.pickMode}}
+                  />
+                  <span class='comp-keys' aria-hidden='true'>
+                    <Kbd class='key' @value='R' />
+                    reply
+                    <Kbd class='key' @value='N' />
+                    note
+                  </span>
                   {{#if this.isInternal}}
                     <span class='comp-warn'>Only agents can see this</span>
                   {{/if}}
@@ -1761,8 +1840,12 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 {{/each}}
               </ul>
             {{else}}
-              <p class='rail-empty'>Nothing matched. That gap is an article
-                somebody should write.</p>
+              <EmptyState
+                class='rail-empty'
+                @title='Nothing matched'
+                @message='That gap is an article somebody should write.'
+                @texture={{false}}
+              />
             {{/if}}
           </section>
 
@@ -1798,16 +1881,12 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             </div>
             {{! Opened stays read-only: it is a fact about what happened, not
                 a setting. }}
-            <dl class='facts'>
-              <div><dt>Opened</dt><dd>{{if
-                    @ticket.ageLabel
-                    @ticket.ageLabel
-                    '—'
-                  }}</dd></div>
-            </dl>
+            <KeyValue class='facts' @items={{this.facts}} />
             {{#if @ticket.tags.length}}
               <ul class='tags'>
-                {{#each @ticket.tags as |tag|}}<li>{{tag}}</li>{{/each}}
+                {{#each @ticket.tags as |tag|}}
+                  <li><StatePill @label={{tag}} @hue='slate' /></li>
+                {{/each}}
               </ul>
             {{/if}}
           </section>
@@ -1822,9 +1901,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         display: flex;
         flex-direction: column;
         min-height: 100%;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
+        background-color: var(--background);
+        color: var(--foreground);
       }
       .ws:focus {
         outline: none;
@@ -1835,23 +1913,20 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
         flex-wrap: wrap;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
-        background: var(--card, var(--boxel-light));
+        border-bottom: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
         position: sticky;
         top: 0;
         z-index: 2;
       }
-      .ws-ref {
-        font-family: var(--font-mono, ui-monospace, monospace);
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-        font-variant-numeric: tabular-nums;
+      .ws-head .ws-ref {
+        margin-inline: 0;
       }
       .ws-title {
         margin: 0;
         flex: 1;
         min-width: 10rem;
-        font-family: var(--font-heading, inherit);
         font-size: var(--boxel-font-size);
         font-weight: 700;
         letter-spacing: -0.01em;
@@ -1861,7 +1936,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
          load, not as a form nobody finished. */
       .ws-untitled {
         font-style: italic;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .ws-title-btn {
         padding: 0;
@@ -1878,7 +1953,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .ws-title-btn:hover:not(:disabled) {
         text-decoration: underline;
         text-decoration-style: dotted;
-        text-underline-offset: 3px;
+        text-underline-offset: 0.1875rem;
       }
       .ws-title-input {
         flex: 1;
@@ -1891,13 +1966,13 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         flex-direction: column;
         gap: var(--boxel-sp-4xs);
         padding: var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 6px);
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .intake-h {
         margin: 0;
-        font-family: var(--font-heading, inherit);
         font-size: var(--boxel-font-size);
         font-weight: 700;
       }
@@ -1906,14 +1981,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         max-width: 56ch;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.6;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .intake-lb {
         margin-top: var(--boxel-sp-xs);
-        font-size: 0.5625rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .intake-foot {
         display: flex;
@@ -1925,7 +2003,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         flex: 1;
         min-width: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       /* A divider rather than a gap: whitespace alone was what let the two
          run together into one phrase in the first place. */
@@ -1934,14 +2012,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         align-items: center;
         gap: 0.5em;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .ws-type::before {
         content: '';
         width: 1px;
         height: 0.9em;
-        background: var(--border, var(--boxel-300));
+        background-color: var(--border);
       }
       .ws-actions {
         display: flex;
@@ -1955,9 +2033,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .ws-menu-trigger {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        --boxel-button-border: 1px solid var(--border, var(--boxel-300));
-        --boxel-button-secondary-background: var(--card, var(--boxel-light));
+        gap: 0.3125rem;
+        --boxel-button-border: 1px solid var(--border);
+        --boxel-button-secondary-background: var(--card);
         white-space: nowrap;
       }
       .ws-more {
@@ -1972,17 +2050,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .ws-menu {
         list-style: none;
         margin: 0;
-        padding: var(--boxel-sp-5xs, 4px);
+        padding: var(--boxel-sp-5xs);
         min-width: 11rem;
       }
       .ws-mi {
         display: block;
         width: 100%;
-        padding: 5px 9px;
+        padding: 0.3125rem 0.5625rem;
         border: none;
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border-radius: var(--boxel-border-radius-sm);
         background: none;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
         font-family: inherit;
         font-size: var(--boxel-font-size-sm);
         font-weight: 500;
@@ -1992,14 +2070,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .ws-mi:hover:not(:disabled),
       .ws-mi:focus-visible {
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
       }
       .ws-mi:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
-        outline-offset: -2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
       }
       .ws-mi:disabled {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         cursor: default;
       }
       /* The hover explanation. Same shape as the queue's priority popover so
@@ -2011,67 +2089,57 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .minfo {
         max-width: 19rem;
         padding: var(--boxel-sp-xs);
-        font-family: var(--font-sans, var(--boxel-font-family));
+        font-family: var(--font-sans);
       }
       .minfo-h {
         display: block;
         font-size: var(--boxel-font-size-sm);
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .minfo-p {
-        margin: 3px 0 0;
+        margin: 0.1875rem 0 0;
         font-size: var(--boxel-font-size-xs);
         line-height: 1.5;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
-      /* A tab cannot contain semantic descendants, so the shortcut inside one
-         is a span wearing kbd's clothes rather than a real <kbd>. Hidden from
-         assistive tech: the letter is a visual affordance, and read aloud it
-         turns "Internal note" into "Internal note N". */
+      /* Pret UI Kbd faces for the R / N shortcuts, on the muted ground
+         they had. */
+      .comp-keys {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+        white-space: nowrap;
+      }
       .key {
-        margin-inline-start: 0.45em;
-        padding: 0.1em 0.32em;
-        border-radius: 3px;
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-family: var(--font-mono, ui-monospace, monospace);
-        font-size: 0.625rem;
-        font-weight: 700;
-        line-height: 1.4;
-      }
-      /* A hint, not a second label: it sits apart from the word, in a filled
-         chip rather than an outline, so it reads as belonging to the keyboard
-         rather than to the sentence. */
-      kbd {
-        padding: 0.1em 0.32em;
-        border-radius: 3px;
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-family: var(--font-mono, ui-monospace, monospace);
-        font-size: 0.5625rem;
-        line-height: 1.5;
+        --pretui-kbd-background: var(--muted);
       }
 
       .slab {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        border-bottom: 1px solid var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-bottom: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       /* No rules between the cells: they are already aligned columns with
          whitespace around them, so the vertical lines were decoration. */
       .slab-cell {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
         min-width: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .lb {
-        font-size: 0.5625rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .slab-strong {
         font-weight: 700;
@@ -2082,7 +2150,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .slab-dim {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -2106,20 +2174,20 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .open-card {
         --boxel-icon-button-width: 1.75rem;
         --boxel-icon-button-height: 1.75rem;
-        --boxel-icon-button-color: var(--muted-foreground, var(--boxel-450));
+        --boxel-icon-button-color: var(--muted-foreground);
         margin-left: var(--boxel-sp-4xs);
       }
       .open-card:hover:not(:disabled) {
-        --boxel-icon-button-color: var(--primary, var(--boxel-highlight));
+        --boxel-icon-button-color: var(--primary-ink);
       }
       .del {
         --boxel-icon-button-width: 1.75rem;
         --boxel-icon-button-height: 1.75rem;
-        --boxel-icon-button-color: var(--muted-foreground, var(--boxel-450));
+        --boxel-icon-button-color: var(--muted-foreground);
         margin-left: var(--boxel-sp-4xs);
       }
       .del:hover:not(:disabled) {
-        --boxel-icon-button-color: var(--boxel-danger);
+        --boxel-icon-button-color: var(--destructive-ink);
       }
       .del-icon {
         width: 0.95rem;
@@ -2134,16 +2202,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-sm);
         flex-wrap: wrap;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--boxel-danger);
-        background: color-mix(
-          in oklch,
-          var(--boxel-danger) 10%,
-          var(--background, var(--boxel-light))
-        );
-      }
-      .confirm-neutral {
-        border-bottom-color: var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-bottom: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .esc-field {
         flex: none;
@@ -2159,41 +2220,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .confirm-acts {
         display: flex;
         gap: var(--boxel-sp-4xs);
       }
-      .banner {
-        margin: 0;
-        padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
-        font-size: var(--boxel-font-size-xs);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
-      }
-      .banner-bad {
-        background: color-mix(
-          in oklch,
-          var(--boxel-danger) 12%,
-          var(--background, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklch,
-          var(--boxel-danger) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
-      }
-      .banner-ok {
-        background: color-mix(
-          in oklch,
-          var(--boxel-success) 12%,
-          var(--background, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklch,
-          var(--boxel-success) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
+      /* Pret UI Alert for the delete question and the action results. It
+         is a rounded callout, so it sits inset under the slab rather than
+         spanning the pane edge to edge. */
+      .callout {
+        margin: var(--boxel-sp-xs) var(--boxel-sp-sm) 0;
       }
 
       .ws-body {
@@ -2222,8 +2259,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         flex-direction: column;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp-sm);
-        border-left: 1px solid var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-left: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .rail-block {
         display: flex;
@@ -2232,30 +2270,35 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       h2 {
         margin: 0;
-        font-size: 0.5625rem;
-        letter-spacing: 0.1em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
+      /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+         compact well in the narrow rail. */
       .rail-empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.55;
-        color: var(--muted-foreground, var(--boxel-450));
+        --space-9: 0.75rem;
+        --space-6: 0.75rem;
+        --text-heading: var(--boxel-font-size-sm);
+        --text-ui-md: var(--boxel-font-size-xs);
       }
       .kb-tools {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
         gap: var(--boxel-sp-4xs);
-        margin-bottom: var(--boxel-sp-xxs);
+        margin-bottom: var(--boxel-sp-2xs);
       }
       .kb-add {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        --boxel-button-border: 1px solid var(--border, var(--boxel-300));
-        --boxel-button-secondary-background: var(--card, var(--boxel-light));
+        gap: 0.25rem;
+        --boxel-button-border: 1px solid var(--border);
+        --boxel-button-secondary-background: var(--card);
         white-space: nowrap;
       }
       /* Pushed to the far end and kept quiet: it is the secondary of the two,
@@ -2263,7 +2306,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .kb-rerank {
         margin-inline-start: auto;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .kb {
         list-style: none;
@@ -2275,10 +2318,10 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .kb-item {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0.125rem;
         font-size: var(--boxel-font-size-xs);
-        padding: 4px 0;
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        padding: 0.25rem 0;
+        border-bottom: 1px solid var(--border);
       }
       .kb-line {
         display: flex;
@@ -2288,7 +2331,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .kb-acts {
         display: flex;
-        gap: 3px;
+        gap: 0.1875rem;
       }
       .kb-title {
         flex: 1;
@@ -2305,30 +2348,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .kb-score {
         font-variant-numeric: tabular-nums;
         font-weight: 700;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
+      /* Pret UI KeyValue at the rail's 12px text, values in bold. */
       .facts {
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+        --text-ui: var(--boxel-font-size-xs);
+        --text-ui-md: var(--boxel-font-size-xs);
+        --space-6: var(--boxel-sp-xs);
       }
-      .facts > div {
-        display: flex;
-        justify-content: space-between;
-        gap: var(--boxel-sp-xs);
-        min-width: 0;
-      }
-      .facts dt {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .facts dd {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
+      .facts :deep(dd) {
         font-weight: 600;
         overflow-wrap: anywhere;
-        text-align: end;
       }
       .tags {
         list-style: none;
@@ -2336,43 +2366,22 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         padding: 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 2px;
+        gap: 0.25rem;
       }
       .tags li {
-        padding: 0.05em 0.4em;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: 999px;
-        font-size: 0.625rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        display: flex;
+        max-width: 100%;
       }
 
-      /* Reads as a closing note on the conversation, not as a broken form. */
-      .settled {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--boxel-sp-4xs);
-        padding: var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-left: 3px solid var(--boxel-success);
-        border-radius: var(--boxel-border-radius-sm, 4px);
-        background: var(--card, var(--boxel-light));
-      }
-      .settled p {
-        margin: 0;
-        max-width: 52ch;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.6;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
       .composer {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-4xs);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
         padding: var(--boxel-sp-4xs);
-        background: var(--card, var(--boxel-light));
+        background-color: var(--card);
+        color: var(--card-foreground);
         position: sticky;
         bottom: 0;
       }
@@ -2380,42 +2389,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
          costliest mistake available in this interface, so the current mode is
          a place and a colour, not a word in a dropdown. */
       .composer-internal {
-        background: color-mix(
-          in oklch,
-          var(--boxel-warning) 8%,
-          var(--card, var(--boxel-light))
-        );
-        border-color: var(--boxel-warning);
+        background-color: color-mix(in oklab, var(--warning) 8%, var(--card));
+        border-color: var(--attention-ink);
       }
       .comp-tabs {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-4xs);
       }
-      .comp-tab {
-        padding: 0.2rem 0.55rem;
-        border: none;
-        border-bottom: 2px solid transparent;
-        background: none;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-family: inherit;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        cursor: pointer;
-      }
-      .comp-tab.on {
-        color: var(--foreground, var(--boxel-dark));
-        border-bottom-color: var(--primary, var(--boxel-highlight));
-      }
-      /* Same reasoning as the panel tabs: hover previews what `.comp-tab.on`
-         becomes. Reply mode is a choice made before typing, so the control has to
-         look reachable at rest and respond on approach. */
-      .comp-tab:hover {
-        color: var(--foreground, var(--boxel-dark));
-      }
-      .comp-tab:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
-        outline-offset: 2px;
+      /* Pret UI SegmentedControl at the composer's 12px text. */
+      .comp-mode {
+        --text-ui: var(--boxel-font-size-xs);
       }
       .comp-warn {
         margin-left: auto;
@@ -2423,7 +2407,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--boxel-warning);
+        color: var(--attention-ink);
       }
       .comp-foot {
         display: flex;
@@ -2434,7 +2418,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         flex: 1;
         min-width: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
 
       .sr-only {
@@ -2455,7 +2439,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         }
         .rail {
           border-left: none;
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
         }
       }
 
