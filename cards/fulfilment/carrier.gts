@@ -339,11 +339,13 @@ export class Carrier extends CardDef {
               class='stat'
               @label='In flight'
               @value={{this.inFlight.length}}
+              @roll={{false}}
             />
             <Stat
               class='stat {{if this.troubled.length "alarm"}}'
               @label='Troubled'
               @value={{this.troubled.length}}
+              @roll={{false}}
             />
           </div>
         </header>

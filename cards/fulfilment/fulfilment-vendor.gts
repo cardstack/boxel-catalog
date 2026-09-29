@@ -182,6 +182,7 @@ export class FulfilmentVendor extends CardDef {
             class='stat'
             @label='Products supplied'
             @value={{this.products.length}}
+            @roll={{false}}
           />
         </div>
 

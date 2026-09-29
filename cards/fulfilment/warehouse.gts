@@ -192,21 +192,29 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         {{! Above the fold, because it is the answer — capacity and address are
             supporting detail. }}
         <div class='wh-stats'>
-          <Stat class='stat' @label='SKUs held' @value={{this.rows.length}} />
+          <Stat
+            class='stat'
+            @label='SKUs held'
+            @value={{this.rows.length}}
+            @roll={{false}}
+          />
           <Stat
             class='stat'
             @label='Units on hand'
             @value={{this.unitsOnHand}}
+            @roll={{false}}
           />
           <Stat
             class='stat'
             @label='Available'
             @value={{this.unitsAvailable}}
+            @roll={{false}}
           />
           <Stat
             class='stat {{if this.needsAttention.length "alarm"}}'
             @label='Needs attention'
             @value={{this.needsAttention.length}}
+            @roll={{false}}
           />
         </div>
       {{/unless}}
