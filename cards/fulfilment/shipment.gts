@@ -480,23 +480,29 @@ class ShipmentIsolated extends Component<typeof Shipment> {
             {{/if}}
           {{/if}}
 
-          {{#if this.feedback}}
-            {{! Pret UI Alert: a failure is role=alert, a success role=status,
-                so the result of a button press is announced either way. }}
-            {{#if this.failed}}
-              <Alert
-                class='act-feedback'
-                @tone='danger'
-                style={{ALERT_STYLE.danger}}
-              >{{this.feedback}}</Alert>
-            {{else}}
-              <Alert
-                class='act-feedback'
-                @tone='success'
-                style={{ALERT_STYLE.success}}
-              >{{this.feedback}}</Alert>
+          {{! One live region, always in the DOM, so the result of a button
+              press is announced whether it succeeded or failed: a region
+              created together with its text is often not read. The Alerts
+              inside drop their own roles so the message is not read twice. }}
+          <div class='act-live' aria-live='polite' aria-atomic='true'>
+            {{#if this.feedback}}
+              {{#if this.failed}}
+                <Alert
+                  class='act-feedback'
+                  @tone='danger'
+                  style={{ALERT_STYLE.danger}}
+                  role='none'
+                >{{this.feedback}}</Alert>
+              {{else}}
+                <Alert
+                  class='act-feedback'
+                  @tone='success'
+                  style={{ALERT_STYLE.success}}
+                  role='none'
+                >{{this.feedback}}</Alert>
+              {{/if}}
             {{/if}}
-          {{/if}}
+          </div>
         </section>
       {{/if}}
 

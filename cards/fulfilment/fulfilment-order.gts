@@ -26,7 +26,6 @@ import {
   OrderStatusField,
   ORDER_PIPELINE,
   orderStatusStyle,
-  orderProgress,
 } from './order-status';
 import { Warehouse } from './warehouse';
 import StatusChip from './fulfilment-status-chip';
@@ -195,10 +194,6 @@ export class FulfilmentOrder extends CardDef {
 
   get statusStyle() {
     return orderStatusStyle(this.status);
-  }
-
-  get progress() {
-    return Math.round(orderProgress(this.status) * 100);
   }
 
   get isExpress() {

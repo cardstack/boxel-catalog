@@ -14,8 +14,7 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import FactoryIcon from '@cardstack/boxel-icons/building-factory';
 import MapPin from '@cardstack/boxel-icons/map-pin';
 import User from '@cardstack/boxel-icons/user';
-import { money } from './fulfilment-format';
-import { ALERT_STYLE, LoadingRows, Money } from './fulfilment-ui';
+import { ALERT_STYLE, LoadingRows, Money, amountText } from './fulfilment-ui';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -23,16 +22,6 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Token } from '@cardstack/pretui/components/token';
 import { eq } from '@cardstack/boxel-ui/helpers';
-
-const CONTACT_FACTS = [
-  { key: 'Email', value: 'contactEmail' },
-  { key: 'Phone', value: 'contactPhone' },
-];
-
-// Stat prints a string verbatim, and an empty one as its dash.
-function amountText(amount?: number | null, code?: string | null) {
-  return amount ? money(amount, code ?? undefined) : '';
-}
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import { on } from '@ember/modifier';
@@ -41,6 +30,11 @@ import Package from '@cardstack/boxel-icons/package';
 // Cyclic with fulfilment-product.gts (it links to this vendor); the binding is
 // only read inside the constructor, never at module evaluation.
 import { FulfilmentProduct } from './fulfilment-product';
+
+const CONTACT_FACTS = [
+  { key: 'Email', value: 'contactEmail' },
+  { key: 'Phone', value: 'contactPhone' },
+];
 
 // Vendor (Ve) — a supplier. Two jobs, and it matters that they are separate:
 // restocking your own shelves (lead time, minimum order), and dropshipping

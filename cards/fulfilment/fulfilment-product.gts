@@ -24,8 +24,12 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // tolerate because the binding is only read inside the constructor, never at
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
-import { money } from './fulfilment-format';
-import { ALERT_STYLE, LoadingRows, stockStateHue } from './fulfilment-ui';
+import {
+  ALERT_STYLE,
+  LoadingRows,
+  StatusPill,
+  amountText,
+} from './fulfilment-ui';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -48,11 +52,6 @@ const IDENTIFIER_FACTS = [
   { key: 'Barcode', value: 'barcode' },
   { key: 'Vendor SKU', value: 'vendorSku' },
 ];
-
-// Stat prints a string verbatim, and an empty one as its dash.
-function amountText(amount?: number | null, code?: string | null) {
-  return amount ? money(amount, code ?? undefined) : '';
-}
 
 export class FulfilmentProduct extends CardDef {
   static displayName = 'Product';
@@ -283,9 +282,9 @@ export class FulfilmentProduct extends CardDef {
                       ''
                     }}</span>
                   <span class='st-qty'>{{row.quantityAvailable}}</span>
-                  <span class='st-state'><StatePill
+                  <span class='st-state'><StatusPill
                       @label={{row.stockStateLabel}}
-                      @hue={{stockStateHue row.stockState}}
+                      @hue={{row.stockStateHue}}
                     /></span>
                 </li>
               {{/each}}

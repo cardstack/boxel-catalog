@@ -3,11 +3,14 @@ import { htmlSafe } from '@ember/template';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import type { StepItem } from '@cardstack/pretui/components/step-list';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { money } from './fulfilment-format';
 
 // The Pret UI settings the fulfilment cards share, kept in one module so the
-// six isolated views that show a query error, a loading list or a money figure
-// all render them the same way.
+// six isolated views that show a query error, a loading list, a money figure or
+// a stock or capacity pill all render them the same way.
 
 interface MoneySignature {
   Args: {
@@ -36,6 +39,11 @@ export const Money: TemplateOnlyComponent<MoneySignature> = <template>
   />
 </template>;
 
+/** Stat prints a string verbatim, and an empty one as its dash. */
+export function amountText(amount?: number | null, code?: string | null) {
+  return amount ? money(amount, code ?? undefined) : '';
+}
+
 // Pret UI `Alert` paints its tone from the fill tokens, whose text mixes fall
 // under 4.5:1 on some grounds, and its info tone reads a token boxel's theme
 // does not declare. Alert writes its hue as an inline style, so the override
@@ -56,17 +64,49 @@ export const ALERT_STYLE = {
   attention: alertStyle('--attention-ink'),
 };
 
-// Stock states are statuses, so they take the status hues.
-const STOCK_STATE_HUE: Record<string, Hue> = {
-  out: 'red',
-  low: 'amber',
-  ok: 'green',
-  draft: 'slate',
-};
+// A status pill hue: one of StatePill's, or `attention` for the low / tight
+// state. That state reads `--attention` everywhere it is drawn. Its bars and
+// gauges need a fill that shows against their track, which `--warning`'s
+// yellow does not (1.03:1 on the light track), and its quantity text reads
+// `--attention-ink`, which clears 4.5:1 on a hovered row where `--warning-ink`
+// does not (4.34:1). StatePill has no attention hue, so that one pill is Pret
+// UI `Chip` with StatePill's own recipe (14% fill, 62% foreground ink, no dot)
+// on `--attention`: 13.91:1 light, 6.38:1 dark.
+export type StatusHue = Hue | 'attention';
 
-export function stockStateHue(state?: string | null): Hue {
-  return STOCK_STATE_HUE[state ?? ''] ?? 'slate';
+const ATTENTION_CHIP_STYLE = htmlSafe(
+  '--pretui-chip-hue: var(--attention); --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; max-width: 100%',
+);
+
+function statePillHue(hue?: StatusHue): Hue | undefined {
+  return hue === 'attention' ? undefined : hue;
 }
+
+interface StatusPillSignature {
+  Args: {
+    label?: string | null;
+    hue?: StatusHue;
+  };
+}
+
+/** A StatePill that also takes the `attention` hue. */
+export const StatusPill: TemplateOnlyComponent<StatusPillSignature> = <template>
+  {{#if (eq @hue 'attention')}}
+    {{#if @label}}
+      <Chip @dot={{false}} style={{ATTENTION_CHIP_STYLE}}>
+        <span class='status-label'>{{@label}}</span>
+      </Chip>
+    {{/if}}
+  {{else}}
+    <StatePill @label={{@label}} @hue={{statePillHue @hue}} />
+  {{/if}}
+  <style scoped>
+    .status-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</template>;
 
 /**
  * A lifecycle as Pret UI `StepList` steps. Stages before the reached one are

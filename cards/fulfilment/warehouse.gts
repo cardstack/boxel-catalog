@@ -31,8 +31,13 @@ import Boxes from '@cardstack/boxel-icons/boxes';
 // Cyclic with inventory-stock.gts (it links to Warehouse); safe because the
 // binding is only read inside the constructor, not at module evaluation.
 import { InventoryStock } from './inventory-stock';
-import { ALERT_STYLE, LoadingRows, stockStateHue } from './fulfilment-ui';
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import {
+  ALERT_STYLE,
+  LoadingRows,
+  StatusPill,
+  type StatusHue,
+} from './fulfilment-ui';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
@@ -47,17 +52,6 @@ const CONTACT_FACTS = [
   { key: 'Phone', value: 'contactPhone' },
   { key: 'Hours', value: 'operatingHours' },
 ];
-
-// Capacity bands are statuses, so their pills take the status hues.
-const BAND_HUE: Record<string, Hue> = {
-  full: 'red',
-  tight: 'amber',
-  ok: 'green',
-};
-
-function bandHue(key?: string): Hue {
-  return BAND_HUE[key ?? ''] ?? 'slate';
-}
 
 // A warehouse is not always a building you own. A 3PL holds your stock and
 // ships it for you; a dropship "location" holds nothing at all and exists so an
@@ -229,18 +223,20 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
               of
               {{@model.totalBins}}
               bins filled</span>
-            <StatePill
+            <StatusPill
               @label={{@model.capacityBand.label}}
-              @hue={{bandHue @model.capacityBand.key}}
+              @hue={{@model.capacityBand.pill}}
             />
           </div>
           {{! Pret UI ProgressBar: occupied bins against total bins, filled
-              with the capacity band's hue. }}
+              with the capacity band's hue. Hidden from assistive tech, as the
+              other rails are: cap-count and the pill say the same in text. }}
           <ProgressBar
             class='cap-rail'
             style={{capStyle @model.capacityBand.hue}}
             @value={{if @model.occupiedBins @model.occupiedBins 0}}
             @max={{@model.totalBins}}
+            aria-hidden='true'
           />
         </section>
       {{/if}}
@@ -323,9 +319,9 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
                         ''
                       }}</span>
                     <span class='wr-qty'>{{row.quantityAvailable}}</span>
-                    <span class='wr-state'><StatePill
+                    <span class='wr-state'><StatusPill
                         @label={{row.stockStateLabel}}
-                        @hue={{stockStateHue row.stockState}}
+                        @hue={{row.stockStateHue}}
                       /></span>
                   </button>
                 </li>
@@ -723,19 +719,37 @@ export class Warehouse extends CardDef {
 
   // Near-full is a WARNING, not an achievement — the accent green the default
   // progress bar uses read as "good" at 92% occupancy. The band is also rendered
-  // as text, so the signal survives for anyone who cannot use the colour.
-  get capacityBand() {
+  // as text, so the signal survives for anyone who cannot use the colour. `hue`
+  // fills the rail and `pill` colours the pill, from the same status token.
+  get capacityBand():
+    | { key: string; label: string; hue: string; pill: StatusHue }
+    | undefined {
     let pct = this.utilizationPercent;
     if (pct == null) {
       return undefined;
     }
     if (pct >= 90) {
-      return { key: 'full', label: 'Almost full', hue: 'var(--destructive)' };
+      return {
+        key: 'full',
+        label: 'Almost full',
+        hue: 'var(--destructive)',
+        pill: 'red',
+      };
     }
     if (pct >= 75) {
-      return { key: 'tight', label: 'Filling up', hue: 'var(--attention)' };
+      return {
+        key: 'tight',
+        label: 'Filling up',
+        hue: 'var(--attention)',
+        pill: 'attention',
+      };
     }
-    return { key: 'ok', label: 'Room to spare', hue: 'var(--success)' };
+    return {
+      key: 'ok',
+      label: 'Room to spare',
+      hue: 'var(--success)',
+      pill: 'green',
+    };
   }
 
   get isVirtual() {

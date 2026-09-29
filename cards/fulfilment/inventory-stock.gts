@@ -21,8 +21,12 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import Network from '@cardstack/boxel-icons/git-fork';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { ALERT_STYLE, LoadingRows, stockStateHue } from './fulfilment-ui';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import {
+  ALERT_STYLE,
+  LoadingRows,
+  StatusPill,
+  type StatusHue,
+} from './fulfilment-ui';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
@@ -176,6 +180,18 @@ export class InventoryStock extends CardDef {
       return 'Out of stock';
     }
     return this.isLowStock ? 'Low stock' : 'In stock';
+  }
+
+  // The pill hue for `stockStateLabel`. Low stock is `attention`, the same
+  // token `stockHue` fills with and the low quantity text is inked in.
+  get stockStateHue(): StatusHue {
+    if (this.isDraft) {
+      return 'slate';
+    }
+    if (this.isOutOfStock) {
+      return 'red';
+    }
+    return this.isLowStock ? 'attention' : 'green';
   }
 
   // Status fills from the theme, so a themed card moves them with its other
@@ -338,9 +354,9 @@ export class InventoryStock extends CardDef {
                 />{{/if}}
             </p>
           </div>
-          <StatePill
+          <StatusPill
             @label={{@model.stockStateLabel}}
-            @hue={{stockStateHue @model.stockState}}
+            @hue={{@model.stockStateHue}}
           />
         </header>
 
@@ -480,9 +496,9 @@ export class InventoryStock extends CardDef {
                         ''
                       }}</span>
                     <span class='el-qty'>{{row.quantityAvailable}}</span>
-                    <span class='el-state'><StatePill
+                    <span class='el-state'><StatusPill
                         @label={{row.stockStateLabel}}
-                        @hue={{stockStateHue row.stockState}}
+                        @hue={{row.stockStateHue}}
                       /></span>
                   </button>
                 </li>
