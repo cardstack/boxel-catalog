@@ -539,7 +539,7 @@ export class SupportContact extends PersonBase {
           .r-meta {
             flex-direction: column;
             align-items: flex-end;
-            gap: 1px;
+            gap: 0.0625rem;
           }
         }
       </style>

@@ -1074,7 +1074,7 @@ export class Ticket extends CardDef {
           .r-meta {
             flex-direction: column;
             align-items: flex-end;
-            gap: 1px;
+            gap: 0.0625rem;
           }
           .age {
             margin-left: 0;

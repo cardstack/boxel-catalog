@@ -454,7 +454,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 1px;
+        gap: 0.0625rem;
         width: 100%;
         min-width: 0;
         padding: 0.1875rem 0.375rem;

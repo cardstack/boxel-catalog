@@ -179,7 +179,7 @@ export class KnowledgeArticle extends CardDef {
           <div class='badges'>
             <StatePill
               @label={{if @model.isInternal 'Internal only' 'Public'}}
-              @hue={{if @model.isInternal 'amber' 'green'}}
+              @hue={{if @model.isInternal 'amber' 'teal'}}
             />
             {{#if @model.status}}
               <StatePill @label={{@model.status}} @hue='slate' />
@@ -545,7 +545,7 @@ export class KnowledgeArticle extends CardDef {
           .r-meta {
             flex-direction: column;
             align-items: flex-end;
-            gap: 1px;
+            gap: 0.0625rem;
           }
         }
         @container fitted-card (width <= 170px) {

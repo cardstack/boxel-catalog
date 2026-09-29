@@ -436,7 +436,7 @@ export class Escalation extends CardDef {
           font-size: var(--boxel-font-size-xs);
           padding: 0.125rem 0.5rem;
           border-radius: var(--boxel-border-radius-sm);
-          background: var(--esc-bg);
+          background-color: var(--esc-bg);
           color: var(--esc-fg);
         }
         .esc-body {
@@ -522,7 +522,7 @@ export class Escalation extends CardDef {
           font-size: var(--boxel-font-size);
           padding: 0.25rem 0.5rem;
           border-radius: var(--boxel-border-radius-sm);
-          background: var(--esc-bg);
+          background-color: var(--esc-bg);
           color: var(--esc-fg);
         }
         .esc-fitted-body {
