@@ -170,7 +170,7 @@ const REASONS: Record<PolicyExplanation['reason'], string> = {
     "A grant's condition failed while it was evaluated, so the invocation fails.",
   'non-grantable': "This operation is kept out of every policy's reach.",
   'authorization-infrastructure':
-    "No grant writes the realm's policy card or its config card.",
+    "No grant writes a policy card or the realm's config card, or creates a policy card.",
   'unmatchable-target':
     'No rule can apply to this target for this operation: its index entry records an error, so its type is unknown; it is a file and the operation is not a read of its bytes; or it is module source.',
   'not-resolved': 'The card does not carry this operation.',
@@ -229,6 +229,22 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
 
   get reason(): string | undefined {
     return this.explanation ? REASONS[this.explanation.reason] : undefined;
+  }
+
+  // What the realm's own permissions let the actor do. Write without read
+  // is a shape the realm accepts, so it is named rather than read as both.
+  get aclStanding(): string | undefined {
+    let acl = this.explanation?.acl;
+    if (!acl) {
+      return undefined;
+    }
+    if (acl.read && acl.write) {
+      return 'read and write';
+    }
+    if (acl.write) {
+      return 'write, not read';
+    }
+    return acl.read ? 'read' : 'none';
   }
 
   get decisionVariant() {
@@ -370,13 +386,7 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
             }}
           </dd>
           <dt>Realm permissions</dt>
-          <dd data-test-explanation-acl>
-            {{if
-              this.explanation.acl.write
-              'read and write'
-              (if this.explanation.acl.read 'read' 'none')
-            }}
-          </dd>
+          <dd data-test-explanation-acl>{{this.aclStanding}}</dd>
           {{#if this.explanation.refusal}}
             <dt>Refused with</dt>
             <dd data-test-explanation-refusal>
