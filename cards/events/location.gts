@@ -11,6 +11,15 @@ import WebsiteField from 'https://cardstack.com/base/website';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import GeoPointField from '@cardstack/catalog/fields/geo-point/geo-point';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 /**
  * A named physical place — somewhere things happen, ship to, or are held at.
@@ -86,74 +95,52 @@ export class Location extends CardDef {
       return [a?.city, a?.country?.name ?? a?.state].filter(Boolean).join(', ');
     }
     <template>
-      <div class='loc'>
-        <span class='pin-disc'><MapPinIcon class='pin' /></span>
-        <div class='info'>
-          <div class='name'>{{if @model.name @model.name 'Unnamed'}}</div>
+      <EntityDisplay
+        class='loc'
+        @title={{if @model.name @model.name 'Unnamed'}}
+        @tag={{@model.kind}}
+        @center={{true}}
+      >
+        <:visual>
+          <span class='pin-disc'><MapPinIcon class='pin' /></span>
+        </:visual>
+        <:meta>
           {{#if this.place}}
-            <div class='meta'>{{this.place}}</div>
+            {{this.place}}
           {{else}}
-            <div class='meta muted-em'>No address on file</div>
+            <span class='muted-em'>No address on file</span>
           {{/if}}
-        </div>
-        {{#if @model.kind}}
-          <span class='kind'>{{@model.kind}}</span>
-        {{/if}}
-      </div>
+        </:meta>
+      </EntityDisplay>
       <style scoped>
+        /* Pret UI EntityDisplay: the pin disc in its visual slot, the kind
+           as its tag Chip on StatePill's 14% / 62% recipe (15.20:1 light /
+           6.81:1 dark), title and meta at the row's sizes. */
         .loc {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
+          --pretui-entity-visual-size: 2rem;
+          --pretui-chip-mix: 14%;
+          --pretui-ink-mix: 62%;
+          --space-3: 0.625rem;
+          --text-ui-md: 0.875rem;
+          --text-ui-sm: 0.75rem;
           padding: 0.625rem 0.875rem;
         }
+        /* EntityDisplay sizes the slot's svg to 100%, so the disc's padding
+           is what keeps the pin at half the disc. */
         .pin-disc {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 2rem;
-          height: 2rem;
+          box-sizing: border-box;
+          width: 100%;
+          height: 100%;
+          padding: 25%;
           border-radius: 50%;
           background-color: var(--muted);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .pin {
-          width: 1rem;
-          height: 1rem;
-        }
-        .info {
-          min-width: 0;
-          flex: 1;
-        }
-        .name {
-          font-weight: 600;
-          font-size: 0.875rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
         }
         .muted-em {
           font-style: italic;
-        }
-        .kind {
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          flex-shrink: 0;
         }
       </style>
     </template>
@@ -283,8 +270,12 @@ export class Location extends CardDef {
         this.args.model?.geo?.lat != null && this.args.model?.geo?.lon != null
       );
     }
-    get hasReach() {
-      return Boolean(this.args.model?.phone || this.args.model?.website);
+    get reach(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.phone) rows.push({ key: 'Phone', value: 'phone' });
+      if (m?.website) rows.push({ key: 'Website', value: 'website' });
+      return rows;
     }
     <template>
       <article class='loc-page'>
@@ -294,9 +285,7 @@ export class Location extends CardDef {
             <p class='doc-kind'>Location</p>
             <h1>{{this.name}}</h1>
           </div>
-          {{#if @model.kind}}
-            <span class='kind'>{{@model.kind}}</span>
-          {{/if}}
+          <StatePill @label={{@model.kind}} />
         </header>
         {{#if this.hasGeo}}
           <div class='map'><@fields.geo @format='embedded' /></div>
@@ -306,22 +295,25 @@ export class Location extends CardDef {
           {{#if @model.address.fullAddress}}
             <div class='addr'><@fields.address @format='embedded' /></div>
           {{else}}
-            <p class='empty'>No address on file</p>
+            <EmptyState
+              class='empty'
+              @title='No address on file'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
-        {{#if this.hasReach}}
+        {{#if this.reach.length}}
           <section class='panel'>
             <h2>Reach</h2>
-            <dl>
-              {{#if @model.phone}}
-                <dt>Phone</dt>
-                <dd><@fields.phone /></dd>
-              {{/if}}
-              {{#if @model.website}}
-                <dt>Website</dt>
-                <dd><@fields.website /></dd>
-              {{/if}}
-            </dl>
+            <KeyValue class='details' @items={{this.reach}}>
+              <:value as |row|>
+                {{#if (eq row.value 'phone')}}
+                  <@fields.phone />
+                {{else}}
+                  <@fields.website />
+                {{/if}}
+              </:value>
+            </KeyValue>
           </section>
         {{/if}}
         {{#if @model.description}}
@@ -380,17 +372,6 @@ export class Location extends CardDef {
           font-size: 1.625rem;
           line-height: 1.1;
         }
-        .kind {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-        }
         .map {
           border: 1px solid var(--border);
           border-radius: 0.75rem;
@@ -413,26 +394,19 @@ export class Location extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
           overflow-wrap: anywhere;
         }
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well inside the panel. */
         .empty {
-          margin: 0;
-          font-size: 0.875rem;
-          font-style: italic;
-          color: var(--muted-foreground);
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
         .about {
           font-size: 0.875rem;

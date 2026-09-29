@@ -10,6 +10,7 @@ import DateTimeField from 'https://cardstack.com/base/datetime';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import CalendarEventIcon from '@cardstack/boxel-icons/calendar-event';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
 
 import { Location } from './location';
 import CapacityField from './capacity-field';
@@ -114,29 +115,34 @@ export class Event extends CardDef {
   static embedded = class Embedded extends Component<typeof Event> {
     <template>
       <div class='ev'>
-        <div class='ev-date'>
-          <FormatDate
-            class='ev-day'
-            @date={{@model.startsAt}}
-            @locale='en-US'
-            @day='numeric'
-            @placeholder='?'
-          />
-          <FormatDate
-            class='ev-month'
-            @date={{@model.startsAt}}
-            @locale='en-US'
-            @month='short'
-            @placeholder='TBD'
-          />
-        </div>
-        <div class='ev-info'>
-          <span class='ev-title'>{{@model.cardTitle}}</span>
-          <span class='ev-meta'>
+        <EntityDisplay
+          class='ev-entity'
+          @title={{@model.cardTitle}}
+          @center={{true}}
+        >
+          <:visual>
+            <div class='ev-date'>
+              <FormatDate
+                class='ev-day'
+                @date={{@model.startsAt}}
+                @locale='en-US'
+                @day='numeric'
+                @placeholder='?'
+              />
+              <FormatDate
+                class='ev-month'
+                @date={{@model.startsAt}}
+                @locale='en-US'
+                @month='short'
+                @placeholder='TBD'
+              />
+            </div>
+          </:visual>
+          <:meta>
             {{#if @model.startsAt}}<@fields.startsAt />{{/if}}
             {{#if @model.venue.name}}· {{@model.venue.name}}{{/if}}
-          </span>
-        </div>
+          </:meta>
+        </EntityDisplay>
         <span class='ev-status'>
           {{#if @model.status}}<@fields.status @format='atom' />{{/if}}
         </span>
@@ -148,6 +154,15 @@ export class Event extends CardDef {
           gap: 0.75rem;
           padding: 0.625rem 0.875rem;
         }
+        /* Pret UI EntityDisplay: the date tile in its visual slot, sized and
+           spaced through its own knobs, title and meta at the row's sizes. */
+        .ev-entity {
+          --pretui-entity-visual-size: 2.75rem;
+          --space-3: 0.75rem;
+          --text-ui-md: 0.875rem;
+          --text-ui-sm: 0.75rem;
+          flex: 1;
+        }
         /* The date block is the row's anchor: events are found by date
            first, name second. */
         .ev-date {
@@ -155,8 +170,9 @@ export class Event extends CardDef {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          width: 2.75rem;
-          height: 2.75rem;
+          box-sizing: border-box;
+          width: 100%;
+          height: 100%;
           border: 1px solid var(--border);
           border-radius: 0.5rem;
           background-color: var(--muted);
@@ -175,27 +191,6 @@ export class Event extends CardDef {
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--muted-foreground);
-        }
-        .ev-info {
-          min-width: 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-        }
-        .ev-title {
-          font-weight: 600;
-          font-size: 0.875rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .ev-meta {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
         }
         /* Constant-width slot so event rows column-align whether or not a
            status is set. */
