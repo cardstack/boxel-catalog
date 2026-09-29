@@ -403,12 +403,21 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
                         data-test-explanation-grant={{grant.outcome}}
                       >
                         {{#if grant.where}}
-                          <code class='where'>{{grant.where}}</code>
+                          <code
+                            class='where'
+                            data-test-explanation-grant-where
+                          >{{grant.where}}</code>
                           <span class='tier'>reads {{grant.tier}}</span>
                         {{/if}}
                         <span class='outcome'>{{this.outcomeLabel
                             grant.outcome
                           }}</span>
+                        {{#if (this.isAdmitting ruleIndex grantIndex)}}
+                          <Pill
+                            @variant='primary'
+                            data-test-explanation-admitting
+                          >admitted</Pill>
+                        {{/if}}
                       </li>
                     {{/each}}
                   </ul>
