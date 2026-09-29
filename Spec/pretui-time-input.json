@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/time-input",
+        "name": "TimeInput"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { TimeInput } from '@cardstack/pretui/components/time-input';\n```\n",
+      "cardTitle": "TimeInput",
+      "cardDescription": "Segmented time entry — the Calendar family's clock",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
+      "componentName": "TimeInput",
+      "icon": "clock-3",
       "category": "Inputs",
       "tier": "Element",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
+      "introducedVersion": "0.4.0",
       "territory": "controls",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": null,
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": "Segmented time entry — the Calendar family's clock",
+      "refs": "wa-time-input",
       "buildsOn": null,
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "liveInUse": false,
+      "demand": 3,
       "cardInfo": {
-        "name": "Switch",
+        "name": "TimeInput",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/time-input.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/time-input.md"
         }
       },
       "linkedExamples": {

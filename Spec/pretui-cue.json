@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/cue",
+        "name": "Cue"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { Cue } from '@cardstack/pretui/components/cue';\n```\n",
+      "cardTitle": "Cue",
+      "cardDescription": "Signage primitive — kind x position x tone, with a glyph per tone",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
+      "componentName": "Cue",
+      "icon": "badge-info",
+      "category": "Feedback",
       "tier": "Element",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
-      "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
       "territory": "controls",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
-      "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Signage primitive — kind x position x tone, with a glyph per tone",
+      "refs": "boxel-catalog E11 field cue accessories",
       "buildsOn": null,
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
-      "demand": null,
+      "demand": 3,
       "cardInfo": {
-        "name": "Switch",
+        "name": "Cue",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/cue.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/cue.md"
         }
       },
       "linkedExamples": {

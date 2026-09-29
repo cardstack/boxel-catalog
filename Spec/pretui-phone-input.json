@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/phone-input",
+        "name": "PhoneInput"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { PhoneInput } from '@cardstack/pretui/components/phone-input';\n```\n",
+      "cardTitle": "PhoneInput",
+      "cardDescription": "Wrapped boxel-ui PhoneInput: country codes + E.164",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
+      "componentName": "PhoneInput",
+      "icon": "phone",
       "category": "Inputs",
-      "tier": "Element",
+      "tier": "Compound",
       "tags": [],
-      "ownership": "pretui",
+      "ownership": "boxel-ui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
+      "introducedVersion": "0.4.0",
       "territory": "controls",
       "stage": "live",
-      "source": "design-v1",
-      "lineage": "Switch",
+      "source": "boxel-ui",
+      "lineage": "PhoneInput",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
-      "buildsOn": null,
+      "brief": "Wrapped boxel-ui PhoneInput: country codes + E.164 · runtime reuse",
+      "refs": null,
+      "buildsOn": "boxel-ui PhoneInput",
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
+      "liveInUse": false,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "PhoneInput",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/phone-input.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/phone-input.md"
         }
       },
       "linkedExamples": {

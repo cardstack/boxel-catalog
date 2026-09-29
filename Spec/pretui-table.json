@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/table",
+        "name": "Table"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { Table } from '@cardstack/pretui/components/table';\n```\n",
+      "cardTitle": "Table",
+      "cardDescription": "The DataGrid shell as a yieldable primitive for custom tables",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
-      "tier": "Element",
+      "componentName": "Table",
+      "icon": "table-2",
+      "category": "Data Display",
+      "tier": "Compound",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
-      "territory": "controls",
+      "introducedVersion": "0.4.0",
+      "territory": "reading",
       "stage": "live",
-      "source": "design-v1",
-      "lineage": "Switch",
+      "source": "pretui",
+      "lineage": null,
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
-      "buildsOn": null,
+      "brief": "The DataGrid shell as a yieldable primitive for custom tables · shadcn Table",
+      "refs": "shadcn Table",
+      "buildsOn": "DataGrid visual language",
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "Table",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/table.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/table.md"
         }
       },
       "linkedExamples": {
