@@ -158,7 +158,11 @@ export class FulfilmentVendor extends CardDef {
             class='stat'
             @label='Lead time'
             @value={{if @model.leadTimeDays @model.leadTimeDays ''}}
-            @hint={{if @model.leadTimeDays 'days'}}
+            @hint={{if
+              (eq @model.leadTimeDays 1)
+              'day'
+              (if @model.leadTimeDays 'days')
+            }}
           />
           <Stat
             class='stat'
