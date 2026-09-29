@@ -11,9 +11,16 @@ import enumField from 'https://cardstack.com/base/enum';
 import ContactIcon from '@cardstack/boxel-icons/address-book';
 import PhoneIcon from '@cardstack/boxel-icons/phone';
 import MailIcon from '@cardstack/boxel-icons/mail';
-import { Avatar } from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Account } from './account';
 import { PersonBase } from '../people/person-base';
+import { avatarHue } from './utils';
 
 const ContactRoleField = enumField(StringField, {
   options: ['decision maker', 'champion', 'influencer', 'user', 'billing'],
@@ -54,10 +61,9 @@ export class Contact extends PersonBase {
     <template>
       <span class='contact-atom'>
         <Avatar
-          class='cta-avatar'
-          @userId={{@model.email}}
-          @displayName={{@model.name}}
-          @isReady={{true}}
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{18}}
         />
         <span class='cta-name'>{{if
             @model.name
@@ -72,13 +78,7 @@ export class Contact extends PersonBase {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
-        }
-        .cta-avatar {
-          --profile-avatar-icon-size: 18px;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          flex-shrink: 0;
+          color: var(--foreground);
         }
         .cta-name {
           overflow: hidden;
@@ -99,10 +99,9 @@ export class Contact extends PersonBase {
     <template>
       <div class='contact'>
         <Avatar
-          class='avatar'
-          @userId={{@model.email}}
-          @displayName={{@model.name}}
-          @isReady={{true}}
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{32}}
         />
         <div class='info'>
           <div class='name'>{{if @model.name @model.name 'Unnamed'}}</div>
@@ -128,9 +127,7 @@ export class Contact extends PersonBase {
             ><MailIcon /></a>
           {{/if}}
         </span>
-        {{#if @model.role}}
-          <span class='role'>{{@model.role}}</span>
-        {{/if}}
+        <StatePill class='role' @label={{@model.role}} />
       </div>
       <style scoped>
         .contact {
@@ -138,12 +135,6 @@ export class Contact extends PersonBase {
           align-items: center;
           gap: 0.625rem;
           padding: 0.625rem 0.875rem;
-        }
-        .avatar {
-          --profile-avatar-icon-size: 32px;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          flex-shrink: 0;
         }
         .info {
           min-width: 0;
@@ -162,19 +153,19 @@ export class Contact extends PersonBase {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 22px;
-          height: 22px;
+          width: 1.375rem;
+          height: 1.375rem;
           border-radius: 50%;
-          color: var(--muted-foreground, #6b7280);
-          background: var(--muted, #f3f4f6);
+          color: var(--muted-foreground);
+          background-color: var(--muted);
         }
         .reach-link:hover {
-          color: var(--primary-foreground, #ffffff);
-          background: var(--primary, #111111);
+          color: var(--primary-foreground);
+          background-color: var(--primary);
         }
         .reach-link :deep(svg) {
-          width: 13px;
-          height: 13px;
+          width: 0.8125rem;
+          height: 0.8125rem;
         }
         .name {
           font-weight: 600;
@@ -185,21 +176,12 @@ export class Contact extends PersonBase {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .role {
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
           flex-shrink: 0;
         }
       </style>
@@ -213,10 +195,16 @@ export class Contact extends PersonBase {
     <template>
       <div class='fitted'>
         <Avatar
-          class='avatar'
-          @userId={{@model.email}}
-          @displayName={{@model.name}}
-          @isReady={{true}}
+          class='avatar-sm'
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{28}}
+        />
+        <Avatar
+          class='avatar-lg'
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{40}}
         />
         <div class='info'>
           <span class='name'>{{this.name}}</span>
@@ -241,13 +229,13 @@ export class Contact extends PersonBase {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
-        .avatar {
-          --profile-avatar-icon-size: 28px;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          flex-shrink: 0;
+        /* Pret UI Avatar sizes itself from @size, so each tier mounts its own
+           and the container query shows one. The parent class keeps these
+           rules above Avatar's own display. */
+        .fitted .avatar-lg {
+          display: none;
         }
         .info {
           display: flex;
@@ -264,7 +252,7 @@ export class Contact extends PersonBase {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -286,8 +274,11 @@ export class Contact extends PersonBase {
             justify-content: center;
             padding: 0.875rem;
           }
-          .avatar {
-            --profile-avatar-icon-size: 40px;
+          .fitted .avatar-sm {
+            display: none;
+          }
+          .fitted .avatar-lg {
+            display: inline-flex;
           }
           .line-email {
             display: block;
@@ -306,14 +297,20 @@ export class Contact extends PersonBase {
     get name() {
       return this.args.model?.name?.trim() || 'Unnamed Contact';
     }
+    get reach(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.email) rows.push({ key: 'Email', value: 'email' });
+      if (m?.phone) rows.push({ key: 'Phone', value: 'phone' });
+      return rows;
+    }
     <template>
       <article class='contact-page'>
         <header class='ch'>
           <Avatar
-            class='avatar'
-            @userId={{@model.email}}
-            @displayName={{@model.name}}
-            @isReady={{true}}
+            @name={{if @model.name @model.name ''}}
+            @hue={{avatarHue @model.name}}
+            @size={{56}}
           />
           <div class='ch-id'>
             <p class='doc-kind'>Contact</p>
@@ -322,22 +319,19 @@ export class Contact extends PersonBase {
               <p class='job-title'>{{@model.jobTitle}}</p>
             {{/if}}
           </div>
-          {{#if @model.role}}
-            <span class='role'>{{@model.role}}</span>
-          {{/if}}
+          <StatePill @label={{@model.role}} />
         </header>
         <section class='panel'>
           <h2>Reach</h2>
-          <dl>
-            {{#if @model.email}}
-              <dt>Email</dt>
-              <dd><@fields.email /></dd>
-            {{/if}}
-            {{#if @model.phone}}
-              <dt>Phone</dt>
-              <dd><@fields.phone /></dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='details' @items={{this.reach}}>
+            <:value as |row|>
+              {{#if (eq row.value 'email')}}
+                <@fields.email />
+              {{else}}
+                <@fields.phone />
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
         {{#if @model.account}}
           <section class='panel'>
@@ -359,13 +353,8 @@ export class Contact extends PersonBase {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
-        }
-        .avatar {
-          --profile-avatar-icon-size: 56px;
-          font-weight: 700;
-          flex-shrink: 0;
         }
         .ch-id {
           flex: 1;
@@ -373,64 +362,48 @@ export class Contact extends PersonBase {
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .job-title {
           margin: 0.25rem 0 0;
           font-size: 0.875rem;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .role {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
+          color: var(--muted-foreground);
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
         .acct {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
         }
       </style>

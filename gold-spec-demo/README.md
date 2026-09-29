@@ -1,21 +1,25 @@
 # gold-spec-demo (preview only)
 
-A preview card for checking the Pret UI and theming work on the gold-Spec
-building blocks in one place: every block, in every state and format, next to
-each other.
+One preview page per gold-Spec card cluster, for checking the Pret UI and
+theming work by eye: each card in the cluster, in every format, next to each
+other.
 
-- It is a preview, not a building block. It only mounts the real blocks and
-  defines none of its own. Lists it iterates (such as the StatePill hues) are
-  imported from the owning module, not re-typed.
-- Each block has an entry in `BLOCKS` in `gold-spec-demo.gts` (id, label,
-  kind, source path). That entry drives the sidebar group (fields, cards,
-  components), the section heading, and the link that opens the source file in
-  code mode. Adding a block is one `BLOCKS` entry plus its section.
+- Each cluster is one `GoldSpecCardGroup/<cluster>.json`: a title and links to
+  one existing example of each card in the cluster. A cluster PR adds only its
+  own JSON, so cluster PRs never conflict here.
+- The page (`gold-spec-card-group.gts`) lists the cluster's cards in a sidebar.
+  Each card's section shows its title and type, its instance path and source
+  path (both open in code mode), and the card fitted at four sizes, embedded,
+  atom and isolated. Fields and components show through the cards that use
+  them.
+- It is a preview, not a building block: it only renders the linked examples
+  and never writes to them.
 - Remove this folder once the gold-Spec blocks are fully on Pret UI and the
   theming system, and their own Spec examples cover these states.
 
 Contents:
 
-- `gold-spec-demo.gts` + `GoldSpecDemo/all-states.json`: the Gold Spec Demo
-  card. Status, Priority, Due Date and Created At in every state (embedded and
-  atom), and StatePill in every hue and mode (tinted, dot, emphatic, chrome).
+- `gold-spec-card-group.gts`: the Gold Spec Card Group card and its page.
+- `demo-parts.gts`: the page shell, file links and card formats it uses.
+- `GoldSpecCardGroup/crm.json`: Account, Campaign, Contact, Lead, Opportunity
+  and User from `cards/crm/`.
