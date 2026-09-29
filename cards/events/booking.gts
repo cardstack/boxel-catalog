@@ -12,9 +12,14 @@ import DateTimeField from 'https://cardstack.com/base/datetime';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
+import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/boxel-ui/components';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
+import { Token } from '@cardstack/pretui/components/token';
 
 import { Contact } from '@cardstack/catalog/cards/crm/contact';
 import { Event } from './event';
@@ -53,6 +58,15 @@ export const BookingPaymentStatusField = statusField({
     Refunded: [],
   },
 });
+
+// Pret UI Alert's danger tone, pointed at the destructive ink: the ink is
+// the hue, so the glyph disc and the text share one token and the glyph takes
+// the card as its foreground. Body 7.99:1 light / 4.71:1 dark on the 10% tint,
+// glyph 9.56:1 / 5.65:1. Alert sets its hue inline, so the override is inline
+// too; every value is a token, never caller data.
+const PROBLEM_STYLE = htmlSafe(
+  '--pretui-alert-hue: var(--destructive-ink); --pretui-chip-mix: 10%; --pretui-on-neutral: var(--card); color: var(--destructive-ink)',
+);
 
 function placesOf(quantity?: number | null): string {
   let q = quantity ?? 1;
@@ -133,6 +147,8 @@ class BookingIsolated extends Component<typeof Booking> {
     void this.runCommand('check-in');
   };
 
+  problemStyle = PROBLEM_STYLE;
+
   <template>
     <article class='bk-page'>
       <header class='bh'>
@@ -164,37 +180,52 @@ class BookingIsolated extends Component<typeof Booking> {
         <h2>Attendance</h2>
         {{#if @model.checkedInAt}}
           <p class='fact'>Checked in <@fields.checkedInAt /></p>
+        {{else if this.hasActions}}
+          <EmptyState class='not-in' @title='Not checked in' @texture={{false}}>
+            <:action>
+              <div class='actions'>
+                {{#if this.canConfirm}}
+                  <Button
+                    @kind='secondary-light'
+                    @size='small'
+                    @loading={{eq this.runningAction 'confirm'}}
+                    {{on 'click' this.confirm}}
+                  >Confirm</Button>
+                {{/if}}
+                {{#if this.canCheckIn}}
+                  <Button
+                    @kind='primary'
+                    @size='small'
+                    @loading={{eq this.runningAction 'check-in'}}
+                    {{on 'click' this.checkIn}}
+                  >Check in</Button>
+                {{/if}}
+              </div>
+            </:action>
+          </EmptyState>
         {{else}}
-          <p class='fact fact-empty'>Not checked in</p>
-          {{#if this.hasActions}}
-            <div class='actions'>
-              {{#if this.canConfirm}}
-                <Button
-                  @kind='secondary-light'
-                  @size='small'
-                  @loading={{eq this.runningAction 'confirm'}}
-                  {{on 'click' this.confirm}}
-                >Confirm</Button>
-              {{/if}}
-              {{#if this.canCheckIn}}
-                <Button
-                  @kind='primary'
-                  @size='small'
-                  @loading={{eq this.runningAction 'check-in'}}
-                  {{on 'click' this.checkIn}}
-                >Check in</Button>
-              {{/if}}
-            </div>
-          {{/if}}
-          {{#if this.actionProblem}}
-            <p class='problem' role='alert'>{{this.actionProblem}}</p>
-          {{/if}}
+          <EmptyState
+            class='not-in'
+            @title='Not checked in'
+            @texture={{false}}
+          />
+        {{/if}}
+        {{#if this.actionProblem}}
+          <Alert class='problem' @tone='danger' style={{this.problemStyle}}>
+            {{this.actionProblem}}
+          </Alert>
         {{/if}}
       </section>
       {{#if @model.totalPrice.amount}}
         <section class='panel'>
           <h2>Price</h2>
-          <div class='price'><@fields.totalPrice /></div>
+          <FormatNumber
+            class='price'
+            @value={{@model.totalPrice.amount}}
+            @style='currency'
+            @currency={{@model.totalPrice.currency.code}}
+            @locale='en-US'
+          />
         </section>
       {{/if}}
     </article>
@@ -271,28 +302,25 @@ class BookingIsolated extends Component<typeof Booking> {
         margin: 0;
         font-size: 0.875rem;
       }
-      .fact-empty {
-        font-style: italic;
-        color: var(--muted-foreground);
+      /* Pret UI EmptyState, tuned through its own spacing and title knobs
+         to a compact well that fits inside the panel. */
+      .not-in {
+        --space-9: 1rem;
+        --space-6: 1rem;
+        --text-heading: var(--boxel-font-size);
       }
       .actions {
         display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 0.5rem;
-        margin-top: 0.75rem;
       }
       .problem {
-        margin: 0.75rem 0 0;
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.5rem;
-        background-color: color-mix(
-          in oklch,
-          var(--destructive) 12%,
-          var(--card)
-        );
-        color: var(--destructive-ink);
-        font-size: 0.8125rem;
+        margin-top: 0.75rem;
+        --text-ui-md: 0.8125rem;
       }
       .price {
+        display: block;
         font-size: 0.9375rem;
         font-weight: 600;
       }
@@ -392,11 +420,10 @@ export class Booking extends CardDef {
     <template>
       <div class='bk'>
         <div class='bk-id'>
-          <span class='bk-ref'>{{if
-              @model.reference
-              @model.reference
-              'No reference'
-            }}</span>
+          <Token
+            class='bk-ref'
+            @value={{if @model.reference @model.reference 'No reference'}}
+          />
           <span class='bk-meta'>
             {{if @model.holder.name @model.holder.name 'Unassigned'}}
             ·
@@ -427,14 +454,19 @@ export class Booking extends CardDef {
           flex-direction: column;
           gap: 0.125rem;
         }
+        /* Pret UI Token, sized through its body-text knob to the row's
+           title size (Token draws at the knob minus 3.5px, so the calc
+           cancels it), inked from --primary-ink (8.24:1 light / 8.14:1 dark
+           on its own tint) and clipped with an ellipsis like a title. */
         .bk-ref {
-          font-family: var(--font-mono);
-          font-size: 0.8125rem;
+          --text-body: calc(0.8125rem + 3.5px);
+          --pretui-primary-ink: var(--primary-ink);
+          align-self: flex-start;
+          max-width: 100%;
+          margin-inline: 0;
           font-weight: 600;
-          letter-spacing: 0.04em;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
         }
         .bk-meta {
           font-size: 0.75rem;
@@ -466,11 +498,10 @@ export class Booking extends CardDef {
     }
     <template>
       <div class='fitted'>
-        <span class='ref'>{{if
-            @model.reference
-            @model.reference
-            'No reference'
-          }}</span>
+        <Token
+          class='ref'
+          @value={{if @model.reference @model.reference 'No reference'}}
+        />
         <span class='meta line-places'>{{this.places}}</span>
         <span class='line-rsvp'>
           {{#if @model.rsvp}}<@fields.rsvp @format='atom' />{{/if}}
@@ -492,14 +523,16 @@ export class Booking extends CardDef {
           box-sizing: border-box;
           overflow: hidden;
         }
+        /* Pret UI Token at the fitted title size; see Embedded. */
         .ref {
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
+          --text-body: calc(0.75rem + 3.5px);
+          --pretui-primary-ink: var(--primary-ink);
+          align-self: flex-start;
+          max-width: 100%;
+          margin-inline: 0;
           font-weight: 600;
-          letter-spacing: 0.04em;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
         }
         .meta {
           font-size: 0.6875rem;
