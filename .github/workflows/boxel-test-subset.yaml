@@ -123,10 +123,9 @@ jobs:
     uses: cardstack/boxel/.github/workflows/catalog-test-subset-consumers.yml@main
     permissions:
       contents: read
-      # boxel's workflow requests this for its own runs, which pull its test
-      # images from a GHCR mirror, and a called workflow can't hold a
-      # permission its caller withholds. Runs called from here skip the mirror
-      # and pull from Docker Hub.
+      # boxel's workflow requests this to pull its test images from a GHCR
+      # mirror whose packages admit this repository's workflows, and a called
+      # workflow can't hold a permission its caller withholds.
       packages: read
     with:
       boxel_ref: ${{ needs.scope.outputs.boxel_ref }}
