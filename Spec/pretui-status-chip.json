@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/status-chip",
+        "name": "StatusChip"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { StatusChip } from '@cardstack/pretui/components/status-chip';\n```\n",
+      "cardTitle": "StatusChip",
+      "cardDescription": "Chip whose hue is hashed from its value — same value, same color everywhere",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
-      "tier": "Element",
+      "componentName": "StatusChip",
+      "icon": "badge-check",
+      "category": "Foundations",
+      "tier": "Compound",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
       "introducedVersion": "0.1.0",
-      "territory": "controls",
+      "territory": "ink",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": null,
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
-      "buildsOn": null,
-      "featured": false,
+      "brief": "Chip whose hue is hashed from its value — same value, same color everywhere · unique to Pretui",
+      "refs": "unique — hash-hued status",
+      "buildsOn": "Chip",
+      "featured": true,
       "isNew": false,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "StatusChip",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/status-chip.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/status-chip.md"
         }
       },
       "linkedExamples": {

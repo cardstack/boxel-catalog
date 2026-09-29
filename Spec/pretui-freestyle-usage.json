@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/checkbox",
-        "name": "Checkbox"
+        "module": "@cardstack/pretui/components/freestyle-usage",
+        "name": "FreestyleUsage"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Checkbox } from '@cardstack/pretui/components/checkbox';\n```\n",
-      "cardTitle": "Checkbox",
-      "cardDescription": "A binary choice with its own label, collected and submitted with a form.",
+      "readMe": "```gts\nimport { FreestyleUsage } from '@cardstack/pretui/components/freestyle-usage';\n```\n",
+      "cardTitle": "FreestyleUsage",
+      "cardDescription": "The usage page: specimen + property panel + API docs",
       "containedExamples": [],
-      "componentName": "Checkbox",
-      "icon": "checkbox",
-      "category": "Inputs",
-      "tier": "Element",
+      "componentName": "FreestyleUsage",
+      "icon": "book-open",
+      "category": "Authoring Tools",
+      "tier": "Runtime",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
-      "territory": "controls",
+      "introducedVersion": "0.4.0",
+      "territory": "freestyle",
       "stage": "live",
-      "source": "design-v1",
+      "source": "ember-freestyle",
       "lineage": null,
-      "version": "0.4.0",
-      "brief": "Binary choice with label · shadcn Checkbox, wa-checkbox",
-      "refs": "shadcn Checkbox · wa-checkbox · radix Checkbox",
-      "buildsOn": null,
+      "version": "0.2.0",
+      "brief": "The usage page: specimen + property panel + API docs · ember-freestyle FreestyleUsage",
+      "refs": "ember-freestyle FreestyleUsage · Storybook docs page",
+      "buildsOn": "Viewport, Table, Select, Input, Switch, Slider",
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
+      "liveInUse": false,
       "demand": null,
       "cardInfo": {
-        "name": "Checkbox",
+        "name": "FreestyleUsage",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/checkbox.md"
+          "self": "@cardstack/pretui/components/freestyle-usage.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/checkbox.md"
+          "id": "@cardstack/pretui/components/freestyle-usage.md"
         }
       },
       "linkedExamples": {
