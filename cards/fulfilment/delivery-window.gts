@@ -7,6 +7,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import DateField from 'https://cardstack.com/base/date';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { Token } from '@cardstack/pretui/components/token';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 
 // A delivery date is a calendar day, not an instant. Reading it back with
@@ -55,6 +57,17 @@ export class DeliveryWindowField extends FieldDef {
       return to ?? from;
     },
   });
+
+  // The days the embedded view prints: both ends of a range, or the one day.
+  get isRange() {
+    let from = dayLabel(this.earliest);
+    let to = dayLabel(this.latest);
+    return Boolean(from && to && from !== to);
+  }
+
+  get promisedDay() {
+    return this.latest ?? this.earliest ?? undefined;
+  }
 
   // Days remaining is deliberately a getter, not a computed field: it depends
   // on today, and a field that silently changes value every midnight would make
@@ -109,21 +122,17 @@ export class DeliveryWindowField extends FieldDef {
         .dw-atom {
           font-size: 0.85em;
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           white-space: nowrap;
         }
         .dw-empty {
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
         /* Overdue is the one state worth colouring: it is the only one that
            needs someone to do something. */
         .dw-overdue {
-          color: color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 62%,
-            var(--foreground, var(--boxel-dark))
-          );
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -135,14 +144,39 @@ export class DeliveryWindowField extends FieldDef {
     <template>
       {{#if @model.label}}
         <div class='dw'>
-          <span class='dw-label'>{{@model.label}}</span>
+          {{! Pret UI FormatDate with dayLabel's parts, so the text matches
+              the computed label and each day carries a <time datetime>. }}
+          <span class='dw-label'>
+            {{#if @model.isRange}}
+              <FormatDate
+                @date={{@model.earliest}}
+                @weekday='short'
+                @day='numeric'
+                @month='short'
+              />
+              –
+              <FormatDate
+                @date={{@model.latest}}
+                @weekday='short'
+                @day='numeric'
+                @month='short'
+              />
+            {{else}}
+              <FormatDate
+                @date={{@model.promisedDay}}
+                @weekday='short'
+                @day='numeric'
+                @month='short'
+              />
+            {{/if}}
+          </span>
           {{#if @model.relativeLabel}}
             <span
               class='dw-rel {{if @model.isOverdue "dw-overdue"}}'
             >{{@model.relativeLabel}}</span>
           {{/if}}
           {{#if @model.commitment}}
-            <span class='dw-commit'>{{@model.commitment}}</span>
+            <Token class='dw-commit' @value={{@model.commitment}} />
           {{/if}}
         </div>
       {{else}}
@@ -154,40 +188,29 @@ export class DeliveryWindowField extends FieldDef {
           display: flex;
           align-items: baseline;
           flex-wrap: wrap;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
         }
         .dw-label {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .dw-rel {
           font-size: 0.8rem;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .dw-overdue {
           font-weight: 700;
-          color: color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 62%,
-            var(--foreground, var(--boxel-dark))
-          );
+          color: var(--destructive-ink);
         }
-        .dw-commit {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: 0.7rem;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          padding: 1px 6px;
-          border-radius: 3px;
-          color: var(--muted-foreground, var(--boxel-500));
-          background: color-mix(
-            in oklch,
-            var(--muted-foreground, var(--boxel-500)) 12%,
-            transparent
-          );
+        /* Pret UI Token for the carrier's service code, on the muted ink.
+           The body knob lands the pill at 0.75rem. */
+        .dw .dw-commit {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.75rem + 3.5px);
+          margin-inline: 0;
         }
         .dw-empty {
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
           font-size: 0.85rem;
         }
       </style>
@@ -212,7 +235,7 @@ export class DeliveryWindowField extends FieldDef {
         .dw-edit {
           display: grid;
           gap: var(--boxel-sp-xs);
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
         }
       </style>
     </template>
