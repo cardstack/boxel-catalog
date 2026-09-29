@@ -202,7 +202,8 @@ const OUTCOME_LABEL: Record<
 // Asks the realm what this policy decides for one caller, one card and one
 // operation. Nothing is invoked. Only a caller who can read both this card's
 // realm and the card's realm is answered; anyone else is told the card is not
-// there, which is also why no one can ask this about themselves.
+// there, so a caller who cannot read the card's realm learns nothing about it
+// this way.
 interface ExplainPanelSignature {
   Args: { policy: RealmPolicy };
 }
