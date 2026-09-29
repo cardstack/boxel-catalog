@@ -4,6 +4,8 @@ import { Component, StringField } from 'https://cardstack.com/base/card-api';
 import enumField from 'https://cardstack.com/base/enum';
 import AwardIcon from '@cardstack/boxel-icons/award';
 
+import { Chip } from '@cardstack/pretui/components/chip';
+
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 
 /**
@@ -117,7 +119,6 @@ export function loyaltyTierField(config: LoyaltyTierConfig) {
           .rungs {
             display: inline-flex;
             gap: 0.125rem;
-            margin-left: var(--boxel-sp-4xs);
           }
           .rung {
             width: 0.25rem;
@@ -219,48 +220,33 @@ function slugOf(value?: string): string {
 
 /**
  * The badge is the tier made visible — the one place the ladder's styling
- * lives. Colours route through per-tier theme tokens (`--tier-<slug>-bg`,
- * `--tier-<slug>-fg`) so an app can hand its ladder a metallic treatment in
- * its theme; the fallback pair derives from the option's hue and stays
- * legible in both themes.
+ * lives. The chrome is Pret UI's `Chip`, set to StatePill's checked recipe
+ * (14% fill, 62% foreground ink), so a tier pill and a state pill read as
+ * one family. The hue routes through a per-tier theme token,
+ * `--tier-<slug>-hue`, so an app can hand its ladder a metallic treatment in
+ * its theme; fill and ink always derive from that one hue by the same
+ * recipe, so a theme never sets a fill without its matching ink.
  */
 export class TierBadge extends GlimmerComponent<TierBadgeSignature> {
   get style() {
-    let { bg, fg, ring } = stateColor(this.args.hue ?? 'slate');
+    let hue = stateColor(this.args.hue ?? 'slate').ring;
     let slug = slugOf(this.args.value);
-    if (!slug) {
-      return htmlSafe(
-        `background-color: ${bg}; color: ${fg}; --tier-ring: ${ring};`,
-      );
-    }
+    let chipHue = slug ? `var(--tier-${slug}-hue, ${hue})` : hue;
     return htmlSafe(
-      `background-color: var(--tier-${slug}-bg, ${bg});` +
-        ` color: var(--tier-${slug}-fg, ${fg});` +
-        ` --tier-ring: var(--tier-${slug}-ring, ${ring});`,
+      `--pretui-chip-hue: ${chipHue}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; max-width: 100%;`,
     );
   }
 
   <template>
-    <span class='tier-badge' style={{this.style}} ...attributes>
+    <Chip @dot={{false}} style={{this.style}} ...attributes>
       <span class='tier-label'>{{@label}}</span>
       {{yield}}
-    </span>
+    </Chip>
     <style scoped>
-      .tier-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.0625rem var(--boxel-sp-xs);
-        border-radius: 999px;
-        box-shadow: inset 0 0 0 1px
-          color-mix(in oklch, var(--tier-ring) 45%, transparent);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        white-space: nowrap;
-      }
       .tier-label {
-        line-height: 1.6;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     </style>
   </template>
@@ -274,9 +260,9 @@ export class TierBadge extends GlimmerComponent<TierBadgeSignature> {
 export const LoyaltyTierField = loyaltyTierField({
   displayName: 'Loyalty Tier',
   options: [
-    { value: 'Bronze', hue: 'orange' },
+    { value: 'Bronze', hue: 'bronze' },
     { value: 'Silver', hue: 'slate' },
-    { value: 'Gold', hue: 'amber' },
+    { value: 'Gold', hue: 'gold' },
     { value: 'Platinum', hue: 'teal' },
   ],
 });
