@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/loader",
+        "name": "Loader"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { Loader } from '@cardstack/pretui/components/loader';\n```\n",
+      "cardTitle": "Loader",
+      "cardDescription": "ALIAS of Spinner — shadcn/Mantine name",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
-      "category": "Inputs",
+      "componentName": "Loader",
+      "icon": "hourglass",
+      "category": "Feedback",
       "tier": "Element",
       "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
-      "adoptionStatus": "in-use",
-      "introducedVersion": "0.1.0",
-      "territory": "controls",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "feedback",
       "stage": "live",
-      "source": "design-v1",
-      "lineage": "Switch",
+      "source": "react-ecosystem",
+      "lineage": null,
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": "ALIAS of Spinner — shadcn/Mantine name",
+      "refs": "shadcn Spinner · Mantine Loader · Ant Spin",
       "buildsOn": null,
       "featured": false,
-      "isNew": false,
+      "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "liveInUse": false,
+      "demand": 4,
       "cardInfo": {
-        "name": "Switch",
+        "name": "Loader",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/loader.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/loader.md"
         }
       },
       "linkedExamples": {

@@ -3,16 +3,16 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/switch",
-        "name": "Switch"
+        "module": "@cardstack/pretui/components/radio-group",
+        "name": "RadioGroup"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { Switch } from '@cardstack/pretui/components/switch';\n```\n",
-      "cardTitle": "Switch",
-      "cardDescription": "An immediate on/off setting that takes effect the moment it is flipped.",
+      "readMe": "```gts\nimport { RadioGroup } from '@cardstack/pretui/components/radio-group';\n```\n",
+      "cardTitle": "RadioGroup",
+      "cardDescription": "One-of-N fieldset",
       "containedExamples": [],
-      "componentName": "Switch",
-      "icon": "toggle-right",
+      "componentName": "RadioGroup",
+      "icon": "radio",
       "category": "Inputs",
       "tier": "Element",
       "tags": [],
@@ -23,10 +23,10 @@
       "territory": "controls",
       "stage": "live",
       "source": "design-v1",
-      "lineage": "Switch",
+      "lineage": "RadioInput",
       "version": "0.4.0",
-      "brief": "Immediate on/off toggle · shadcn Switch, wa-switch",
-      "refs": "shadcn Switch · wa-switch · radix Switch · boxel-ui Switch",
+      "brief": "One-of-N fieldset · shadcn RadioGroup, wa-radio-group",
+      "refs": "shadcn RadioGroup · wa-radio-group · boxel-ui RadioInput",
       "buildsOn": null,
       "featured": false,
       "isNew": false,
@@ -35,7 +35,7 @@
       "liveInUse": true,
       "demand": null,
       "cardInfo": {
-        "name": "Switch",
+        "name": "RadioGroup",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/switch.md"
+          "self": "@cardstack/pretui/components/radio-group.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/switch.md"
+          "id": "@cardstack/pretui/components/radio-group.md"
         }
       },
       "linkedExamples": {
