@@ -153,6 +153,18 @@ export function statusHue(
 }
 
 /**
+ * The status's place in the option order, which is the lifecycle order, for a
+ * sort key. An unknown or unset value has no rank, so a sort puts it last.
+ */
+export function statusRank(
+  fieldClass: StatusFieldClass,
+  value?: string | null,
+): number | undefined {
+  let idx = fieldClass.statusOptions.findIndex((o) => o.value === value);
+  return idx < 0 ? undefined : idx;
+}
+
+/**
  * A neutral four-state lifecycle for consumers that just want a status and do
  * not have opinions yet. Anything with a real process should call
  * `statusField` with its own options instead of adopting this.
