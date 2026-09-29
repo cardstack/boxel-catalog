@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Brief",
+      "specType": "card",
+      "ref": {
+        "module": "../brief",
+        "name": "Brief"
+      },
+      "readMe": "# Brief\n\n## Summary\nThe one artifact a design pipeline writes to before anything is built, at\n`brief.gts`. Each stage owns one MarkdownField and never touches another's:\n`spec` is what the thing is, `designDirection` is how it should look and\nmove, `motion` is the build numbers for an arc the direction asked for. A\nstage replaces its own field whole, so nobody reads the whole brief back to\nadd a part, and nobody can truncate another stage's text by accident. Title\nand summary live on `cardInfo`.\n\n## API\n- `spec` — MarkdownField; domain primer, schema, coverage matrix, per-screen content contracts, flows, sample data, open questions. Written by `domain-interview`\n- `designDirection` — MarkdownField; style in full, the first screen in full, other screens as stubs, acceptance lines. Written by `design-direction`\n- `motion` — MarkdownField; one motion system, engine per beat, load-bearing structure, exhaustive effect table, the three capture points. Written by `motion-authoring`, only when the direction recorded an arc\n- `cardInfo.name` / `cardInfo.summary` — the title and the overview paragraph\n\n## Usage\n```json\n{ \"meta\": { \"adoptsFrom\": { \"module\": \"@cardstack/catalog/cards/projects/brief\", \"name\": \"Brief\" } } }\n```\nInstances live at `Brief/<slug>.json` in the realm being built for. Fill a\nfield with `patch-fields` once the card has indexed; change one block inside\na field with `apply-markdown-edit`, not a resend of the field.\n\n## Non-goals\nScores and review verdicts — `design-review` reads this card and writes\nnothing. Build state, task lists and theme tokens belong to whatever builds\nfrom the brief, not on it.",
+      "cardInfo": {
+        "name": "Brief",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "The one artifact a design pipeline writes to before anything is built — spec, design direction and motion as three fields, one per stage."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Brief/live-show-platform"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
