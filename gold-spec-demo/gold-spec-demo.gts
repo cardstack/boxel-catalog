@@ -3,6 +3,8 @@ import {
   Component,
   containsMany,
   field,
+  getComponent,
+  linksToMany,
   type BoxComponent,
 } from 'https://cardstack.com/base/card-api';
 import GlimmerComponent from '@glimmer/component';
@@ -13,12 +15,18 @@ import { eq, not } from '@cardstack/boxel-ui/helpers';
 import SwitchSubmodeCommand from '@cardstack/boxel-host/commands/switch-submode';
 import type { CardContext } from 'https://cardstack.com/base/card-api';
 import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
+import { identifyCard, moduleFrom } from '@cardstack/runtime-common';
+import {
+  FilterChips,
+  type FilterChipOption,
+} from '@cardstack/pretui/components/filter-chips';
 
 import StatusField from '../fields/status/status';
 import PriorityField from '../fields/priority/priority';
 import DueDateField from '../fields/due-date/due-date';
 import CreatedAtField from '../fields/created-at/created-at';
 import { StatePill, STATE_HUES } from '../components/state-pill';
+import { GoldSpecCardGroup } from './gold-spec-card-group';
 import {
   EditSectionNav,
   type NavSection,
@@ -99,6 +107,31 @@ const BLOCKS: Block[] = [
   },
 ];
 
+/** The catalog root, which every block `path` is relative to. */
+const catalogRoot = new URL('../', here).href;
+const CATALOG_PREFIX = '@cardstack/catalog/';
+const SOURCE_EXTENSION = /\.g?ts$/;
+
+/** A card's source file relative to the catalog root, read off its own class. */
+function cardPath(card: CardDef): string {
+  let ref = identifyCard(card.constructor as typeof CardDef);
+  if (!ref) {
+    return '';
+  }
+  let module = moduleFrom(ref);
+  let path = module.startsWith(catalogRoot)
+    ? module.slice(catalogRoot.length)
+    : module.startsWith(CATALOG_PREFIX)
+      ? module.slice(CATALOG_PREFIX.length)
+      : module;
+  return SOURCE_EXTENSION.test(path) ? path : `${path}.gts`;
+}
+
+/** A card section: the block entry plus the linked example it renders. */
+interface CardBlock extends Block {
+  card: CardDef;
+}
+
 /** Sidebar groups, in order; a group with no blocks is not shown. */
 const GROUPS: { kind: BlockKind; label: string }[] = [
   { kind: 'field', label: 'Fields' },
@@ -119,7 +152,7 @@ class SourceLink extends GlimmerComponent<{
   Args: { path: string; context?: CardContext };
 }> {
   get url() {
-    return new URL(`../${this.args.path}`, here).href;
+    return new URL(this.args.path, catalogRoot).href;
   }
   open = async () => {
     let commandContext = this.args.context?.commandContext;
@@ -191,19 +224,163 @@ class FormatRows extends GlimmerComponent<{
   </template>
 }
 
+/**
+ * One linked card in every format: fitted at the badge, strip, tile and card
+ * sizes, then embedded and atom, then isolated behind a disclosure. The card
+ * is a shared example, so this only renders it.
+ */
+class CardFormats extends GlimmerComponent<{
+  Args: { card: CardDef };
+}> {
+  get Card(): BoxComponent {
+    return getComponent(this.args.card);
+  }
+  <template>
+    <div class='fits'>
+      <figure class='fit fit-badge'>
+        <div class='fit-box'><this.Card @format='fitted' /></div>
+        <figcaption>Fitted badge, 150 × 65</figcaption>
+      </figure>
+      <figure class='fit fit-strip'>
+        <div class='fit-box'><this.Card @format='fitted' /></div>
+        <figcaption>Fitted strip, 250 × 65</figcaption>
+      </figure>
+      <figure class='fit fit-tile'>
+        <div class='fit-box'><this.Card @format='fitted' /></div>
+        <figcaption>Fitted tile, 180 × 170</figcaption>
+      </figure>
+      <figure class='fit fit-card'>
+        <div class='fit-box'><this.Card @format='fitted' /></div>
+        <figcaption>Fitted card, 400 × 170</figcaption>
+      </figure>
+    </div>
+    <div class='flows'>
+      <div class='embedded'><this.Card @format='embedded' /></div>
+      <span class='atom'><this.Card @format='atom' /></span>
+    </div>
+    <details class='isolated'>
+      <summary>Isolated</summary>
+      <this.Card @format='isolated' />
+    </details>
+    <style scoped>
+      .fits {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: var(--boxel-sp-sm);
+      }
+      .fit {
+        display: grid;
+        gap: var(--boxel-sp-5xs);
+        margin: 0;
+      }
+      .fit-box {
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+      }
+      .fit-badge .fit-box {
+        width: 9.375rem;
+        height: 4.0625rem;
+      }
+      .fit-strip .fit-box {
+        width: 15.625rem;
+        height: 4.0625rem;
+      }
+      .fit-tile .fit-box {
+        width: 11.25rem;
+        height: 10.625rem;
+      }
+      .fit-card .fit-box {
+        width: 25rem;
+        height: 10.625rem;
+      }
+      figcaption,
+      summary {
+        font-size: var(--boxel-caption-font-size);
+        line-height: var(--boxel-caption-line-height);
+        color: var(--muted-foreground);
+      }
+      .flows {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp);
+      }
+      .embedded {
+        flex: 1 1 22rem;
+        max-width: 36rem;
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+      }
+      summary {
+        cursor: pointer;
+      }
+      .isolated[open] > summary {
+        margin-block-end: var(--boxel-sp-xs);
+      }
+    </style>
+  </template>
+}
+
 class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
   hues = STATE_HUES;
   block = blockOf;
   @tracked active: string = BLOCKS[0]!.id;
+  // The card cluster the sidebar and the card sections show; page state only.
+  @tracked chosenGroup: string | undefined;
 
-  get groups(): { label: string; sections: NavSection[] }[] {
+  get cardGroups(): GoldSpecCardGroup[] {
+    return (this.args.model.cardGroups ?? []).filter(Boolean);
+  }
+
+  get groupOptions(): FilterChipOption[] {
+    return this.cardGroups.map((g) => ({
+      value: g.cardTitle,
+      label: g.cardTitle,
+      count: (g.cards ?? []).filter(Boolean).length,
+    }));
+  }
+
+  get selectedGroup(): GoldSpecCardGroup | undefined {
+    return (
+      this.cardGroups.find((g) => g.cardTitle === this.chosenGroup) ??
+      this.cardGroups[0]
+    );
+  }
+
+  get cardBlocks(): CardBlock[] {
+    let cards = (this.selectedGroup?.cards ?? []).filter(Boolean);
+    return cards.map((card, i) => ({
+      id: `card-${i}`,
+      label: (card.constructor as typeof CardDef).displayName,
+      kind: 'card',
+      path: cardPath(card),
+      card,
+    }));
+  }
+
+  chooseGroup = (title: string) => {
+    this.chosenGroup = title;
+  };
+
+  get groups(): {
+    kind: BlockKind;
+    label: string;
+    sections: NavSection[];
+  }[] {
     return GROUPS.map((g) => ({
+      kind: g.kind,
       label: g.label,
-      sections: BLOCKS.filter((b) => b.kind === g.kind).map((b) => ({
-        id: b.id,
-        label: b.label,
-      })),
-    })).filter((g) => g.sections.length > 0);
+      sections: (g.kind === 'card'
+        ? this.cardBlocks
+        : BLOCKS.filter((b) => b.kind === g.kind)
+      ).map((b) => ({ id: b.id, label: b.label })),
+    })).filter(
+      (g) =>
+        g.sections.length > 0 ||
+        (g.kind === 'card' && this.cardGroups.length > 0),
+    );
   }
 
   goTo = (id: string, event: Event) => {
@@ -219,8 +396,10 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
       <header class='intro'>
         <span class='eyebrow'>Preview only</span>
         <h1>Gold Spec Demo</h1>
-        <p>Every block in every state. Each row shows the embedded format, then
-          the atom format.</p>
+        <p>Every block in every state. Field rows show the embedded format, then
+          the atom format. Cards come in clusters: pick one under Cards to see
+          an example of each of its cards fitted at four sizes, embedded, atom
+          and isolated.</p>
       </header>
 
       <div class='layout'>
@@ -228,6 +407,15 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
           {{#each this.groups as |group|}}
             <div class='nav-group'>
               <span class='group-label'>{{group.label}}</span>
+              {{#if (eq group.kind 'card')}}
+                <FilterChips
+                  class='cluster-filter'
+                  @label='Card cluster'
+                  @options={{this.groupOptions}}
+                  @value={{this.selectedGroup.cardTitle}}
+                  @onValueChange={{this.chooseGroup}}
+                />
+              {{/if}}
               <EditSectionNav
                 @sections={{group.sections}}
                 @activeId={{this.active}}
@@ -328,6 +516,20 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
               </tbody>
             </table>
           </section>
+
+          {{#each this.cardBlocks as |entry|}}
+            <section
+              class='block {{if (eq this.active entry.id) "is-active"}}'
+              data-sect={{entry.id}}
+              aria-labelledby='{{entry.id}}-heading'
+            >
+              <BlockHead @entry={{entry}} @context={{@context}} />
+              <p class='hint'>{{this.selectedGroup.cardTitle}}
+                example:
+                {{entry.card.cardTitle}}</p>
+              <CardFormats @card={{entry.card}} />
+            </section>
+          {{/each}}
         </div>
       </div>
     </article>
@@ -376,6 +578,11 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
       .nav-group {
         display: grid;
         gap: var(--boxel-sp-2xs);
+      }
+      /* Pret UI FilterChips: the count reads --ink-3, a fixed grey with no
+         contrast guarantee, so it takes the muted ink instead. */
+      .cluster-filter {
+        --ink-3: var(--muted-foreground);
       }
       .blocks {
         display: grid;
@@ -435,10 +642,11 @@ class GoldSpecDemoIsolated extends Component<typeof GoldSpecDemo> {
 /**
  * Preview of the gold-Spec building blocks, every state on one page: Status and
  * Priority across their full option sets, Due Date across each dueness band,
- * Created At across each relative-time unit, and StatePill across every hue
- * and mode. Each value renders in embedded and atom so a visual regression in
- * any block shows up side by side. A sidebar groups the blocks by kind and
- * jumps to each section.
+ * Created At across each relative-time unit, StatePill across every hue and
+ * mode, and each linked card cluster (a Gold Spec Card Group) over its cards'
+ * own examples. Each value renders in every format so a visual regression in
+ * any block shows up side by side. A sidebar groups the blocks by kind, picks
+ * the card cluster, and jumps to each section.
  */
 export class GoldSpecDemo extends CardDef {
   static displayName = 'Gold Spec Demo';
@@ -452,6 +660,8 @@ export class GoldSpecDemo extends CardDef {
   @field createdStamps = containsMany(CreatedAtField, {
     computeVia: createdSamples,
   });
+  // One linked group per card cluster; each links its cards' own examples.
+  @field cardGroups = linksToMany(GoldSpecCardGroup);
 
   static isolated = GoldSpecDemoIsolated;
 }

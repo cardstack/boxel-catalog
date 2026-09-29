@@ -16,7 +16,7 @@
       ],
       "cardInfo": {
         "name": "Gold Spec Demo",
-        "summary": "Preview only: every gold-Spec building block in every state, embedded and atom side by side.",
+        "summary": "Preview only: every gold-Spec building block in every state and format, side by side, with the cards grouped by cluster.",
         "cardThumbnailURL": null,
         "notes": null
       }
@@ -30,6 +30,11 @@
       "cardInfo.cardThumbnail": {
         "links": {
           "self": null
+        }
+      },
+      "cardGroups.0": {
+        "links": {
+          "self": "../GoldSpecCardGroup/crm"
         }
       }
     },
