@@ -1,6 +1,7 @@
 import { Component } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import IdIcon from '@cardstack/boxel-icons/id';
+import { Token } from '@cardstack/pretui/components/token';
 
 /**
  * The identifier a membership program prints on the card — stable, human-
@@ -8,8 +9,8 @@ import IdIcon from '@cardstack/boxel-icons/id';
  * is the reference other cards link by; the member number is what the
  * member sees.
  *
- * Rendering is monospaced so the digit groups line up in lists and read
- * unambiguously (no 0/O squint).
+ * It renders as a Pret UI `Token`, the kit's mono pill for an id, so the
+ * digit groups line up in lists and read unambiguously (no 0/O squint).
  */
 export default class MemberNumberField extends StringField {
   static displayName = 'Member Number';
@@ -17,13 +18,18 @@ export default class MemberNumberField extends StringField {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <span class='member-number'>{{if @model @model '—'}}</span>
+      {{#if @model}}
+        <Token class='member-number' @value={{@model}} />
+      {{else}}
+        <span class='no-number'>—</span>
+      {{/if}}
       <style scoped>
+        /* Neutral hue: a member number is an id, not a primary action. */
         .member-number {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-sm);
-          letter-spacing: 0.04em;
-          color: var(--foreground);
+          --pretui-token-hue: var(--muted-foreground);
+        }
+        .no-number {
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -31,12 +37,12 @@ export default class MemberNumberField extends StringField {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='member-number'>{{@model}}</span>
+      {{#if @model}}
+        <Token class='member-number' @value={{@model}} />
+      {{/if}}
       <style scoped>
         .member-number {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.04em;
+          --pretui-token-hue: var(--muted-foreground);
         }
       </style>
     </template>
