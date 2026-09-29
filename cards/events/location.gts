@@ -95,35 +95,45 @@ export class Location extends CardDef {
       return [a?.city, a?.country?.name ?? a?.state].filter(Boolean).join(', ');
     }
     <template>
-      <EntityDisplay
-        class='loc'
-        @title={{if @model.name @model.name 'Unnamed'}}
-        @tag={{@model.kind}}
-        @center={{true}}
-      >
-        <:visual>
-          <span class='pin-disc'><MapPinIcon class='pin' /></span>
-        </:visual>
-        <:meta>
-          {{#if this.place}}
-            {{this.place}}
-          {{else}}
-            <span class='muted-em'>No address on file</span>
-          {{/if}}
-        </:meta>
-      </EntityDisplay>
+      <div class='loc'>
+        <EntityDisplay
+          class='loc-entity'
+          @title={{if @model.name @model.name 'Unnamed'}}
+          @center={{true}}
+        >
+          <:visual>
+            <span class='pin-disc'><MapPinIcon class='pin' /></span>
+          </:visual>
+          <:meta>
+            {{#if this.place}}
+              {{this.place}}
+            {{else}}
+              <span class='muted-em'>No address on file</span>
+            {{/if}}
+          </:meta>
+        </EntityDisplay>
+        <StatePill class='loc-kind' @label={{@model.kind}} />
+      </div>
       <style scoped>
-        /* Pret UI EntityDisplay: the pin disc in its visual slot, the kind
-           as its tag Chip on StatePill's 14% / 62% recipe (15.20:1 light /
-           6.81:1 dark), title and meta at the row's sizes. */
+        /* The kind sits outside EntityDisplay, pinned to the row's right
+           edge: EntityDisplay's tag wraps under a long name. */
         .loc {
+          display: flex;
+          align-items: center;
+          gap: 0.625rem;
+          padding: 0.625rem 0.875rem;
+        }
+        /* Pret UI EntityDisplay: the pin disc in its visual slot, title and
+           meta at the row's sizes. */
+        .loc-entity {
           --pretui-entity-visual-size: 2rem;
-          --pretui-chip-mix: 14%;
-          --pretui-ink-mix: 62%;
           --space-3: 0.625rem;
           --text-ui-md: 0.875rem;
           --text-ui-sm: 0.75rem;
-          padding: 0.625rem 0.875rem;
+          flex: 1;
+        }
+        .loc-kind {
+          flex-shrink: 0;
         }
         /* EntityDisplay sizes the slot's svg to 100%, so the disc's padding
            is what keeps the pin at half the disc. */

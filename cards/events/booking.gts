@@ -18,10 +18,10 @@ import { Button } from '@cardstack/boxel-ui/components';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import { Token } from '@cardstack/pretui/components/token';
 
 import { Contact } from '@cardstack/catalog/cards/crm/contact';
+import { Money } from '@cardstack/catalog/cards/crm/money';
 import { Event } from './event';
 import RsvpStatusField from './rsvp-status-field';
 import { statusField } from '@cardstack/catalog/fields/status/status';
@@ -219,12 +219,10 @@ class BookingIsolated extends Component<typeof Booking> {
       {{#if @model.totalPrice.amount}}
         <section class='panel'>
           <h2>Price</h2>
-          <FormatNumber
+          <Money
             class='price'
-            @value={{@model.totalPrice.amount}}
-            @style='currency'
-            @currency={{@model.totalPrice.currency.code}}
-            @locale='en-US'
+            @amount={{@model.totalPrice.amount}}
+            @code={{@model.totalPrice.currency.code}}
           />
         </section>
       {{/if}}
