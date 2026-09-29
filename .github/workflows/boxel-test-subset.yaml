@@ -120,7 +120,7 @@ jobs:
     name: Boxel tests against this catalog
     needs: scope
     if: needs.scope.outputs.run == 'true'
-    uses: cardstack/boxel/.github/workflows/catalog-test-subset-consumers.yml@main
+    uses: cardstack/boxel/.github/workflows/catalog-test-subset-consumers.yml@cs-13243-let-boxel-catalogs-calls-into-boxel-ci-pull-boxels-ghcr-test
     permissions:
       contents: read
       # boxel's workflow requests this to pull its test images from a GHCR
