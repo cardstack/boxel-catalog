@@ -7,6 +7,10 @@ import { guidFor } from '@ember/object/internals';
 import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
 import ChevronDownIcon from '@cardstack/boxel-icons/chevron-down';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
+import { ALERT_STYLE } from './service-desk-ui';
 import {
   identifyCard,
   type Filter,
@@ -341,9 +345,13 @@ export class LinkPicker extends GlimmerComponent<Signature> {
             />
 
             {{#if this.problem}}
-              <p class='lp-note lp-bad' role='alert'>{{this.problem}}</p>
+              <Alert
+                class='lp-bad'
+                @tone='danger'
+                style={{ALERT_STYLE.danger}}
+              >{{this.problem}}</Alert>
             {{else if this.isSearching}}
-              <p class='lp-note' role='status'>Searching…</p>
+              <LoadingState class='lp-loading' @label='Searching' />
             {{else if this.results.length}}
               {{! Real listbox semantics: the popover's keyboard layer and any
                   screen reader both read the roles, not the class names. }}
@@ -361,11 +369,16 @@ export class LinkPicker extends GlimmerComponent<Signature> {
                 {{/each}}
               </ul>
             {{else}}
-              <p class='lp-note'>{{if
+              <EmptyState
+                class='lp-none'
+                @title={{if this.search 'Nothing matches' 'None yet'}}
+                @message={{if
                   this.search
-                  'Nothing matches. Try fewer words.'
+                  'Try fewer words.'
                   'There are none of these to choose yet.'
-                }}</p>
+                }}
+                @texture={{false}}
+              />
             {{/if}}
 
             {{#if this.canCreate}}
@@ -418,14 +431,17 @@ export class LinkPicker extends GlimmerComponent<Signature> {
       .lp {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
         min-width: 0;
       }
       .lp-label {
-        font-size: 0.5625rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       /* Looks like what it is: a control you pick a value in.
          It used to be styled "quiet until approached" — transparent border,
@@ -438,23 +454,23 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 1px;
+        gap: 0.0625rem;
         width: 100%;
         min-width: 0;
-        padding: 3px 6px;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 4px);
-        background: var(--card, var(--boxel-light));
+        padding: 0.1875rem 0.375rem;
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+        background-color: var(--card);
         color: inherit;
         font-family: inherit;
         text-align: start;
         cursor: pointer;
       }
       .lp-trigger:hover:not(:disabled) {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary-ink);
       }
       .lp-trigger:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
+        outline: 0.125rem solid var(--ring);
         outline-offset: 1px;
       }
       /* Read-only: no box, no caret, no pointer — a value, not a control. */
@@ -476,7 +492,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         width: 0.8rem;
         height: 0.8rem;
         margin-left: auto;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .lp-value {
         max-width: 100%;
@@ -490,12 +506,12 @@ export class LinkPicker extends GlimmerComponent<Signature> {
       .lp-empty .lp-value {
         font-weight: 600;
         font-style: italic;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .lp-detail {
         max-width: 100%;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -516,12 +532,9 @@ export class LinkPicker extends GlimmerComponent<Signature> {
          component's own knobs, paired background and foreground together so a
          theme flip cannot produce black-on-black. */
       .lp-q {
-        --boxel-input-search-background-color: var(--card, var(--boxel-light));
-        --boxel-input-search-color: var(--foreground, var(--boxel-dark));
-        --boxel-input-search-icon-color: var(
-          --muted-foreground,
-          var(--boxel-450)
-        );
+        --boxel-input-search-background-color: var(--card);
+        --boxel-input-search-color: var(--foreground);
+        --boxel-input-search-icon-color: var(--muted-foreground);
         --boxel-input-height: 2rem;
       }
       .lp-list {
@@ -534,9 +547,9 @@ export class LinkPicker extends GlimmerComponent<Signature> {
       .lp-opt {
         display: block;
         width: 100%;
-        padding: 4px 6px;
+        padding: 0.25rem 0.375rem;
         border: none;
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border-radius: var(--boxel-border-radius-sm);
         background: none;
         color: inherit;
         font-family: inherit;
@@ -545,54 +558,60 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         cursor: pointer;
       }
       .lp-opt:hover {
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
       }
       .lp-opt:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
-        outline-offset: -2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
       }
       .lp-opt-on {
         font-weight: 700;
-        background: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 12%,
-          var(--card, var(--boxel-light))
-        );
+        background-color: var(--selected);
       }
-      .lp-note {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
+      /* Pret UI Alert, LoadingState and EmptyState for the list's three
+         non-result states, sized to the popover's 12px text. LoadingState's
+         dim shimmer stop (--ink-3) falls back to a 2.2:1 grey, so it is
+         pointed at the muted foreground. */
       .lp-bad {
-        color: var(--boxel-danger);
+        --text-ui-md: var(--boxel-font-size-xs);
+      }
+      .lp-loading {
+        --ink-3: var(--muted-foreground);
+        --text-ui-md: var(--boxel-font-size-xs);
+        padding-block: 0.25rem;
+      }
+      .lp-none {
+        --space-9: 0.75rem;
+        --space-6: 0.75rem;
+        --text-heading: var(--boxel-font-size-sm);
+        --text-ui-md: var(--boxel-font-size-xs);
       }
       .lp-new {
         display: flex;
         align-items: center;
         gap: 0.45em;
         width: 100%;
-        margin-top: 2px;
-        padding: 5px 6px;
+        margin-top: 0.125rem;
+        padding: 0.3125rem 0.375rem;
         border: none;
-        border-top: 1px solid var(--border, var(--boxel-200));
+        border-top: 1px solid var(--border);
         border-radius: 0;
         background: none;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
         font-family: inherit;
         font-size: var(--boxel-font-size-xs);
         text-align: start;
         cursor: pointer;
       }
       .lp-new:hover:not(:disabled) {
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
       }
       .lp-new:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
-        outline-offset: -2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
       }
       .lp-new:disabled {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         cursor: default;
       }
       .lp-plus {
@@ -602,9 +621,9 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 3px;
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
+        border-radius: 0.1875rem;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
         font-weight: 700;
         line-height: 1;
       }
@@ -620,9 +639,9 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         display: flex;
         justify-content: flex-end;
         gap: var(--boxel-sp-4xs);
-        margin-top: 2px;
-        padding-top: 4px;
-        border-top: 1px solid var(--border, var(--boxel-200));
+        margin-top: 0.125rem;
+        padding-top: 0.25rem;
+        border-top: 1px solid var(--border);
       }
       .sr-only {
         position: absolute;

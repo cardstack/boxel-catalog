@@ -155,8 +155,7 @@ export class SlaTimerField extends FieldDef {
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-xs);
-          font-family: var(--font-sans, var(--boxel-font-family));
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .timer-row {
           display: grid;
@@ -167,7 +166,7 @@ export class SlaTimerField extends FieldDef {
         }
         .timer-lbl {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .timer-target {
           display: flex;
@@ -177,7 +176,7 @@ export class SlaTimerField extends FieldDef {
         }
         .timer-hint {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .timer-readonly {
@@ -185,13 +184,13 @@ export class SlaTimerField extends FieldDef {
           flex-direction: column;
           gap: var(--boxel-sp-4xs);
           padding-top: var(--boxel-sp-xs);
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
         }
         .timer-note {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
           line-height: 1.45;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           max-width: 46ch;
         }
       </style>
