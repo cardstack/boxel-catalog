@@ -99,7 +99,10 @@ export function statusField(config: StatusFieldConfig) {
         return optionOf(options, this.args.model as unknown as string);
       }
       <template>
-        <StatePill @label={{@model}} @hue={{this.option.hue}} />
+        <StatePill
+          @label={{if this.option.label this.option.label @model}}
+          @hue={{this.option.hue}}
+        />
       </template>
     };
   }

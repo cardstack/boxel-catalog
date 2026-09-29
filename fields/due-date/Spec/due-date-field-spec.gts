@@ -12,12 +12,14 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import DueDateField from '../due-date';
 import CodeSnippet from '../../../components/code-snippet';
+import FieldShowcase from '../../../components/field-showcase';
+import FieldShowcaseCard from '../../../components/field-showcase-card';
 
 const standardCode = `@field dueDate = contains(DueDateField);`;
 
 class DueDateFieldSpecIsolated extends Component<typeof DueDateFieldSpec> {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -28,45 +30,25 @@ class DueDateFieldSpecIsolated extends Component<typeof DueDateFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <article class='example-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardCode}} />
           <@fields.upcoming />
           <@fields.upcoming @format='atom' />
-        </article>
-        <article class='example-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <@fields.overdue />
           <@fields.overdue @format='atom' />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .example-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 
 class DueDateFieldSpecEdit extends Component<typeof DueDateFieldSpec> {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -81,37 +63,17 @@ class DueDateFieldSpecEdit extends Component<typeof DueDateFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <article class='example-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardCode}} />
           <@fields.upcoming @format='edit' />
-        </article>
-        <article class='example-card'>
+        </FieldShowcaseCard>
+        <FieldShowcaseCard>
           <@fields.overdue @format='edit' />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .example-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 
