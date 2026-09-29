@@ -30,29 +30,26 @@ import { LoadingState } from '@cardstack/pretui/components/loading-state';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Token } from '@cardstack/pretui/components/token';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
-import {
-  formatDate,
-  formatNumber,
-  toDate,
-} from '@cardstack/pretui/internal/reading-format';
+import { validDate } from '../../utils/valid-date';
 
 /** `+1,200`, `-500`, `0`: the sign on earns, through the kit's own number formatter. */
+const SIGNED = new Intl.NumberFormat(undefined, { signDisplay: 'exceptZero' });
+const LONG_DATE = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' });
+
 function signedPoints(n: number): string {
-  return formatNumber(n, undefined, { signDisplay: 'exceptZero' });
+  return SIGNED.format(n);
 }
 
-// Delta colours a rise with the `--success` fill and has no knob for it, so
-// on the Delta element itself `--success` is re-pointed at its ink token, the
-// colour a status word takes on a neutral surface. A fall reads Delta's own
-// `--pretui-destructive-ink` knob.
+// Delta reads its own `--pretui-destructive-ink` knob for a fall; a rise has
+// no knob, so the rise's ink is set from PointsDelta's wrapper instead.
 const POINTS_INK = htmlSafe(
-  '--success: var(--success-ink); --pretui-destructive-ink: var(--destructive-ink);',
+  '--pretui-destructive-ink: var(--destructive-ink);',
 );
 
 /** A date fact as the Date field's own long preset prints it; empty when unset, so `Stat` shows its dash. */
 function longDate(value?: Date | null): string {
-  let date = toDate(value ?? undefined);
-  return date ? formatDate(date, undefined, { dateStyle: 'long' }) : '';
+  let date = validDate(value);
+  return date ? LONG_DATE.format(date) : '';
 }
 
 const TRANSACTION_FACTS = [
@@ -76,12 +73,22 @@ class PointsDelta extends GlimmerComponent<PointsDeltaSignature> {
   }
 
   <template>
-    <Delta
-      @value={{this.value}}
-      @format={{signedPoints}}
-      style={{POINTS_INK}}
-      ...attributes
-    />
+    <span class='points-delta' ...attributes>
+      <Delta
+        @value={{this.value}}
+        @format={{signedPoints}}
+        style={{POINTS_INK}}
+      />
+    </span>
+    <style scoped>
+      .points-delta {
+        display: inline-block;
+      }
+      /* A rise reads as the success ink on a neutral surface, not the fill. */
+      .points-delta :deep(.pretui-delta[data-sign='up']) {
+        color: var(--success-ink);
+      }
+    </style>
   </template>
 }
 

@@ -231,7 +231,11 @@ export class TierBadge extends GlimmerComponent<TierBadgeSignature> {
   get style() {
     let hue = stateColor(this.args.hue ?? 'slate').ring;
     let slug = slugOf(this.args.value);
-    let chipHue = slug ? `var(--tier-${slug}-hue, ${hue})` : hue;
+    // `-ring` is the hook's earlier name for the same hue; it stays a fallback
+    // so a theme that sets it keeps working.
+    let chipHue = slug
+      ? `var(--tier-${slug}-hue, var(--tier-${slug}-ring, ${hue}))`
+      : hue;
     return htmlSafe(
       `--pretui-chip-hue: ${chipHue}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; max-width: 100%;`,
     );
