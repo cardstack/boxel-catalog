@@ -172,7 +172,7 @@ const REASONS: Record<PolicyExplanation['reason'], string> = {
   'authorization-infrastructure':
     "No grant writes the realm's policy card or its config card.",
   'unmatchable-target':
-    'No rule can apply to this target: it is not a card, or its index entry records an error, so its type is unknown.',
+    'No rule can apply to this target for this operation: its index entry records an error, so its type is unknown; it is a file and the operation is not a read of its bytes; or it is module source.',
   'not-resolved': 'The card does not carry this operation.',
   'actor-required':
     'A caller who presents no credentials is refused before the policy is consulted.',
