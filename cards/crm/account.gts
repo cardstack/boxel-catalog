@@ -12,8 +12,15 @@ import EmailField from 'https://cardstack.com/base/email';
 import PhoneNumberField from 'https://cardstack.com/base/phone-number';
 import AddressField from 'https://cardstack.com/base/address';
 import UsersIcon from '@cardstack/boxel-icons/users';
-import { Avatar } from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { User } from './user';
+import { avatarHue } from './utils';
 
 export class Account extends CardDef {
   static displayName = 'Account';
@@ -59,9 +66,9 @@ export class Account extends CardDef {
           padding: 0.625rem 0.875rem;
         }
         .icon {
-          width: 22px;
-          height: 22px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.375rem;
+          height: 1.375rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -70,7 +77,7 @@ export class Account extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -93,12 +100,12 @@ export class Account extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .ca-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .ca-name {
@@ -122,19 +129,17 @@ export class Account extends CardDef {
       <div class='fitted'>
         <div class='fmt badge'>
           <Avatar
-            class='avatar'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{28}}
           />
           <span class='name'>{{this.name}}</span>
         </div>
         <div class='fmt strip'>
           <Avatar
-            class='avatar'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{28}}
           />
           <div class='info'>
             <span class='name'>{{this.name}}</span>
@@ -145,10 +150,10 @@ export class Account extends CardDef {
         </div>
         <div class='fmt tile'>
           <Avatar
-            class='avatar avatar-lg'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            class='avatar-lg'
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{40}}
           />
           <span class='name'>{{this.name}}</span>
           {{#if @model.industry}}
@@ -163,10 +168,10 @@ export class Account extends CardDef {
         </div>
         <div class='fmt card'>
           <Avatar
-            class='avatar avatar-lg'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            class='avatar-lg'
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{40}}
           />
           <div class='info'>
             <span class='name name-lg'>{{this.name}}</span>
@@ -184,33 +189,15 @@ export class Account extends CardDef {
             {{/if}}
           </div>
           {{#if @model.isCustomer}}
-            <span class='badge-pill'>Customer</span>
+            <StatePill class='badge-pill' @label='Customer' @hue='green' />
           {{/if}}
         </div>
       </div>
       <style scoped>
         .fitted {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered (boxel-theming C2).
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --state-positive-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.13 152) 65%,
-            var(--foreground)
-          );
-          --state-positive-bg: color-mix(
-            in oklch,
-            var(--state-positive-fg) 12%,
-            var(--background)
-          );
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -218,16 +205,6 @@ export class Account extends CardDef {
           height: 100%;
           box-sizing: border-box;
           overflow: hidden;
-        }
-        .avatar {
-          --profile-avatar-icon-size: 28px;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          flex-shrink: 0;
-        }
-        .avatar-lg {
-          --profile-avatar-icon-size: 40px;
         }
         .name {
           font-weight: 600;
@@ -242,7 +219,7 @@ export class Account extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -257,14 +234,6 @@ export class Account extends CardDef {
         }
         .badge-pill {
           align-self: flex-start;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          background: var(--state-positive-bg);
-          color: var(--state-positive-fg);
           flex-shrink: 0;
         }
         @container fitted-card (max-width: 150px) and (max-height: 169px) {
@@ -315,14 +284,28 @@ export class Account extends CardDef {
     get name() {
       return this.args.model?.name?.trim() || 'Unnamed Account';
     }
+    get company(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.industry) rows.push({ key: 'Industry', value: 'industry' });
+      if (m?.domain) rows.push({ key: 'Domain', value: 'domain' });
+      if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
+      return rows;
+    }
+    get contact(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.email) rows.push({ key: 'Email', value: 'email' });
+      if (m?.phone) rows.push({ key: 'Phone', value: 'phone' });
+      return rows;
+    }
     <template>
       <article class='account-page'>
         <header class='ch'>
           <Avatar
-            class='avatar'
-            @userId={{@model.email}}
-            @displayName={{this.name}}
-            @isReady={{true}}
+            @name={{this.name}}
+            @hue={{avatarHue this.name}}
+            @size={{56}}
           />
           <div class='ch-id'>
             <p class='doc-kind'>Account</p>
@@ -337,33 +320,29 @@ export class Account extends CardDef {
         </header>
         <section class='panel'>
           <h2>Company</h2>
-          <dl>
-            {{#if @model.industry}}
-              <dt>Industry</dt>
-              <dd>{{@model.industry}}</dd>
-            {{/if}}
-            {{#if @model.domain}}
-              <dt>Domain</dt>
-              <dd>{{@model.domain}}</dd>
-            {{/if}}
-            {{#if @model.owner}}
-              <dt>Owner</dt>
-              <dd><@fields.owner @format='atom' /></dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='details' @items={{this.company}}>
+            <:value as |row|>
+              {{#if (eq row.value 'industry')}}
+                <@fields.industry />
+              {{else if (eq row.value 'domain')}}
+                <@fields.domain />
+              {{else}}
+                <@fields.owner @format='atom' />
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
         <section class='panel'>
           <h2>Contact</h2>
-          <dl>
-            {{#if @model.email}}
-              <dt>Email</dt>
-              <dd><@fields.email /></dd>
-            {{/if}}
-            {{#if @model.phone}}
-              <dt>Phone</dt>
-              <dd><@fields.phone /></dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='details' @items={{this.contact}}>
+            <:value as |row|>
+              {{#if (eq row.value 'email')}}
+                <@fields.email />
+              {{else}}
+                <@fields.phone />
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
         <section class='panel'>
           <h2>Billing Address</h2>
@@ -372,24 +351,6 @@ export class Account extends CardDef {
       </article>
       <style scoped>
         .account-page {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered (boxel-theming C2).
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --state-positive-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.13 152) 65%,
-            var(--foreground)
-          );
-          --state-positive-bg: color-mix(
-            in oklch,
-            var(--state-positive-fg) 12%,
-            var(--background)
-          );
           max-width: 40rem;
           margin: 0 auto;
           padding: 2rem 1.5rem;
@@ -401,65 +362,54 @@ export class Account extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
-        }
-        .avatar {
-          --profile-avatar-icon-size: 56px;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          flex-shrink: 0;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .status-line {
           margin: 0.25rem 0 0;
           font-size: 0.75rem;
           font-weight: 600;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .status-line.customer {
-          color: var(--state-positive-fg);
+          color: var(--success-ink);
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
       </style>
     </template>
