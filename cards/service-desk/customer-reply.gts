@@ -122,21 +122,22 @@ class CustomerReplyEdit extends Component<typeof CustomerReply> {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-border-color));
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
-        background: var(--card, var(--boxel-light));
+        background-color: var(--card);
+        color: var(--card-foreground);
         padding: var(--boxel-sp);
         scroll-margin-top: var(--boxel-sp);
       }
       .sect.focused {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--ring);
       }
       .sect h3 {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-5xs);
@@ -214,8 +215,6 @@ export class CustomerReply extends CardDef {
         .reply-page {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
@@ -226,13 +225,14 @@ export class CustomerReply extends CardDef {
         }
         .reply-meta {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .reply-body {
-          border: 1px solid var(--border, var(--boxel-border-color));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
           padding: var(--boxel-sp);
-          background: var(--card, var(--boxel-light));
+          background-color: var(--card);
+          color: var(--card-foreground);
           max-width: 70ch;
         }
       </style>
@@ -267,26 +267,26 @@ export class CustomerReply extends CardDef {
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-4xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           width: 100%;
           min-width: 0;
         }
         .reply-out {
-          border-left: 0.1875rem solid var(--primary, var(--boxel-highlight));
+          border-left: 0.1875rem solid var(--primary);
         }
         .reply-line {
           display: flex;
           gap: var(--boxel-sp-xs);
           align-items: baseline;
           font-size: var(--boxel-font-size-xs);
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
-          color: var(--muted-foreground, var(--boxel-450));
+          font-family: var(--font-mono);
+          color: var(--muted-foreground);
         }
         .reply-who {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .reply-excerpt {
           font-size: var(--boxel-font-size-sm);
@@ -331,7 +331,7 @@ export class CustomerReply extends CardDef {
           flex: none;
           width: 1.25rem;
           height: 1.25rem;
-          color: var(--primary, var(--boxel-highlight));
+          color: var(--primary-ink);
         }
         .reply-fitted-body {
           display: flex;
@@ -348,7 +348,7 @@ export class CustomerReply extends CardDef {
         }
         .reply-fitted-meta {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .reply-fitted-body-excerpt {
           display: none;
@@ -357,7 +357,7 @@ export class CustomerReply extends CardDef {
           .reply-fitted-body-excerpt {
             display: block;
             font-size: var(--boxel-font-size-xs);
-            color: var(--muted-foreground, var(--boxel-450));
+            color: var(--muted-foreground);
             overflow: hidden;
             max-height: 7rem;
             margin-top: var(--boxel-sp-4xs);

@@ -35,7 +35,7 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { LinkPicker } from './link-picker';
 import { EnumSelect } from './enum-select';
 import { Feed, type FeedEntry } from './feed';
-import { ALERT_STYLE } from './service-desk-ui';
+import { ALERT_STYLE, tokenStyle } from './service-desk-ui';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Kbd } from '@cardstack/pretui/components/kbd';
@@ -69,6 +69,37 @@ import { SuggestKbArticlesCommand } from '../commands/suggest-kb-articles-comman
 import { KnowledgeArticle } from '../knowledge-article';
 
 type ComposeMode = 'Public' | 'Internal';
+
+// Input types that take a key press as a choice rather than as text. A radio
+// (SegmentedControl's segments), checkbox or button that holds focus must not
+// swallow the workspace shortcuts: none of them use letter keys.
+const NON_TEXT_INPUT_TYPES = new Set([
+  'radio',
+  'checkbox',
+  'button',
+  'submit',
+  'reset',
+  'range',
+  'color',
+  'file',
+  'image',
+]);
+
+// True while the reader is typing: a text-like input, a textarea, a select
+// (letter keys jump between its options) or contenteditable content.
+function isTextEntry(target: HTMLElement | null): boolean {
+  if (!target) {
+    return false;
+  }
+  if (target instanceof HTMLInputElement) {
+    return !NON_TEXT_INPUT_TYPES.has(target.type);
+  }
+  return (
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target.isContentEditable
+  );
+}
 
 interface Signature {
   Args: {
@@ -1108,13 +1139,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
   handleKey = (raw: Event) => {
     let event = raw as KeyboardEvent;
     let target = event.target as HTMLElement | null;
-    if (
-      event.metaKey ||
-      event.ctrlKey ||
-      target?.tagName === 'INPUT' ||
-      target?.tagName === 'TEXTAREA' ||
-      target?.isContentEditable
-    ) {
+    if (event.metaKey || event.ctrlKey || isTextEntry(target)) {
       return;
     }
     switch (event.key.toLowerCase()) {
@@ -1164,7 +1189,10 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
           <Token
             class='ws-ref'
             @value={{@ticket.reference}}
-            @hue='var(--muted-foreground)'
+            style={{tokenStyle
+              '--boxel-font-size-xs'
+              'var(--muted-foreground)'
+            }}
           />
         {{/if}}
         {{#if this.editingSubject}}
@@ -1892,10 +1920,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         top: 0;
         z-index: 2;
       }
-      /* Pret UI Token in the muted hue, at the reference's old 12px size:
-         Token draws its text at the knob minus 3.5px. */
       .ws-head .ws-ref {
-        --text-body: calc(var(--boxel-font-size-xs) + 3.5px);
         margin-inline: 0;
       }
       .ws-title {

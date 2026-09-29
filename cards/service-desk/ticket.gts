@@ -35,6 +35,7 @@ import { SlaTimerBadge } from './components/sla-timer-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Feed, type FeedEntry } from './components/feed';
 import { TicketWorkspace } from './components/ticket-workspace';
+import { tokenStyle } from './components/service-desk-ui';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
 import { timerSnapshot, urgencyRank, type TimerSnapshot } from './utils/sla';
@@ -133,7 +134,7 @@ class TicketRecord extends Component<typeof Ticket> {
         <Token
           class='rec-ref'
           @value={{if @model.reference @model.reference '—'}}
-          @hue='var(--muted-foreground)'
+          style={{tokenStyle '--boxel-font-size-sm' 'var(--muted-foreground)'}}
         />
         <h1 class='rec-title'>{{if
             @model.subject
@@ -264,10 +265,7 @@ class TicketRecord extends Component<typeof Ticket> {
         flex-wrap: wrap;
         padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-sm);
       }
-      /* Pret UI Token in the muted hue, at the reference's old 14px size:
-         Token draws its text at the knob minus 3.5px. */
       .rec-head .rec-ref {
-        --text-body: calc(var(--boxel-font-size-sm) + 3.5px);
         margin-inline: 0;
       }
       .rec-title {
@@ -689,7 +687,10 @@ export class Ticket extends CardDef {
           <Token
             class='row-ref'
             @value={{@model.reference}}
-            @hue='var(--muted-foreground)'
+            style={{tokenStyle
+              '--boxel-font-size-xs'
+              'var(--muted-foreground)'
+            }}
           />
         {{/if}}
         <span class='row-main'>
@@ -727,9 +728,7 @@ export class Ticket extends CardDef {
           border-radius: 1px;
           background-color: var(--primary);
         }
-        /* Pret UI Token in the muted hue, at the reference's old 12px size. */
         .row .row-ref {
-          --text-body: calc(var(--boxel-font-size-xs) + 3.5px);
           flex: none;
           margin-inline: 0;
         }
@@ -957,7 +956,7 @@ export class Ticket extends CardDef {
         }
         .sla-breached {
           color: var(--background);
-          background-color: var(--destructive);
+          background-color: var(--destructive-ink);
         }
         .sla-paused {
           color: var(--muted-foreground);

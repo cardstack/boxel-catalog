@@ -15,12 +15,12 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import TargetIcon from '@cardstack/boxel-icons/target';
 import ClockIcon from '@cardstack/boxel-icons/clock';
 import SirenIcon from '@cardstack/boxel-icons/siren';
-import { modifier } from 'ember-modifier';
 import { guidFor } from '@ember/object/internals';
 import { Table } from '@cardstack/pretui/components/table';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 
+import { labelledBy } from './components/service-desk-ui';
 import { Schedule } from './schedule';
 import { TicketPriorityField, ticketPriorityFactor } from './ticket-taxonomy';
 import { formatMinutes, ALWAYS_ON, type BusinessSchedule } from './utils/sla';
@@ -162,14 +162,6 @@ export class SlaTargetField extends FieldDef {
     </template>
   };
 }
-
-/**
- * Pret UI's `Table` has no caption slot, so the matrix is named by the
- * heading above it: this points the rendered `<table>` at that heading.
- */
-const labelledBy = modifier((element: HTMLElement, [id]: [string]) => {
-  element.querySelector('table')?.setAttribute('aria-labelledby', id);
-});
 
 interface MatrixRow {
   priority: string;
@@ -439,11 +431,15 @@ export class SlaPolicy extends CardDef {
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
         }
-        /* Pret UI Table: its header band, zebra rows and hover. It sizes to
-           its content like the old matrix, and its numbers stay tabular. The
-           P1–P4 row headers are th cells, which Table styles as its sticky,
-           mono, uppercase header band; these rules put them back to body
-           cells in bold. */
+        /* Pret UI Table: its header band, zebra rows and hover. The matrix
+           sizes to its content and its numbers stay tabular.
+           The P1–P4 row headers are th cells, and Table's header-band rule
+           targets every th, so it would make them sticky, mono and uppercase.
+           The rules below reverse that property by property, restyle them as
+           bold body cells, and give them the body rows' zebra and hover
+           fills. They undo only the properties listed here: Table's
+           white-space, text-align and z-index still apply, and any property
+           Table later adds to its th rule lands on these cells too. */
         .matrix {
           align-self: flex-start;
           font-variant-numeric: tabular-nums;

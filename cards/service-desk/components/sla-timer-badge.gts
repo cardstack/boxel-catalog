@@ -134,13 +134,19 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
     // Chip's own rules and this module's scoped rules tie on specificity, so
     // every property that differs from Chip's (weight, alignment) rides in
     // the inline style rather than a class.
-    let hue = `--pretui-chip-hue: ${this.colors.ring}; align-self: flex-start; font-weight: 600; box-shadow: none; max-width: 100%`;
+    let shared =
+      'align-self: flex-start; font-weight: 600; box-shadow: none; max-width: 100%';
     if (this.state === 'breached') {
+      // The solid fill is `--destructive-ink` under `--background` text: the
+      // ink moves away from the page colour in both schemes, where the
+      // `--destructive` fill sits too close to it for 4.5:1 in light mode.
       return htmlSafe(
-        `${hue}; --pretui-chip-mix: 100%; color: var(--background)`,
+        `--pretui-chip-hue: var(--destructive-ink); ${shared}; --pretui-chip-mix: 100%; color: var(--background)`,
       );
     }
-    return htmlSafe(`${hue}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%`);
+    return htmlSafe(
+      `--pretui-chip-hue: ${this.colors.ring}; ${shared}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%`,
+    );
   }
 
   /**

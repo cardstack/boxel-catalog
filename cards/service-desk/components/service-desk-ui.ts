@@ -28,14 +28,53 @@ export const ALERT_STYLE = {
  */
 export const AVATAR_HUE = 'var(--primary-ink)';
 
+// Sets ARIA attributes on the element a Pret UI component renders inside the
+// one this modifier sits on, for the components that expose no argument for
+// them.
+function setAriaOn(
+  element: HTMLElement,
+  selector: string,
+  attrs: Record<string, string>,
+) {
+  let target = element.querySelector(selector);
+  for (let [name, value] of Object.entries(attrs)) {
+    target?.setAttribute(name, value);
+  }
+}
+
 /**
  * Pret UI's `ProgressBar` renders its `role='progressbar'` element with no
  * accessible name and no minimum, so this names it and states the 0 floor.
  */
 export const nameProgress = modifier(
   (element: HTMLElement, [label]: [string]) => {
-    let bar = element.querySelector('[role="progressbar"]');
-    bar?.setAttribute('aria-label', label);
-    bar?.setAttribute('aria-valuemin', '0');
+    setAriaOn(element, '[role="progressbar"]', {
+      'aria-label': label,
+      'aria-valuemin': '0',
+    });
   },
 );
+
+/**
+ * Pret UI's `Table` has no caption slot, so a table is named by the heading
+ * above it: this points the rendered `<table>` at that heading's id.
+ */
+export const labelledBy = modifier((element: HTMLElement, [id]: [string]) => {
+  setAriaOn(element, 'table', { 'aria-labelledby': id });
+});
+
+// Pret UI `Token` sets its text at `--text-body` minus this offset, so a
+// Token that should read at a given size takes that size plus the offset.
+const TOKEN_TEXT_OFFSET = '3.5px';
+
+/**
+ * Inline style for a Pret UI `Token` drawn in `hue` with its text at `size`
+ * (a font-size custom property such as `--boxel-font-size-xs`). Token writes
+ * `@hue` as its own inline style, which a caller's `style` would replace, so
+ * the hue travels in this style instead of through `@hue`.
+ */
+export function tokenStyle(size: string, hue: string) {
+  return htmlSafe(
+    `--pretui-token-hue: ${hue}; --text-body: calc(var(${size}) + ${TOKEN_TEXT_OFFSET})`,
+  );
+}

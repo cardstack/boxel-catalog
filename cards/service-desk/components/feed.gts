@@ -18,11 +18,6 @@ export interface FeedEntry {
   id?: string;
   /** Who or what. Rendered as the entry's heading. */
   actor?: string;
-  /**
-   * Accepted for older callers. The avatar derives its initials from `actor`,
-   * the way Pret UI `Avatar` does everywhere else.
-   */
-  initials?: string;
   avatarUrl?: string;
   /** Right-hand side of the header: role, timestamp, channel. */
   meta?: string;

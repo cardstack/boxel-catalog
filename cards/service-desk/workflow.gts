@@ -53,7 +53,7 @@ export class TransitionField extends FieldDef {
       <code class='transition'>{{@model.title}}</code>
       <style scoped>
         .transition {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
         }
       </style>
@@ -146,21 +146,22 @@ class WorkflowEdit extends Component<typeof Workflow> {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-border-color));
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
-        background: var(--card, var(--boxel-light));
+        background-color: var(--card);
+        color: var(--card-foreground);
         padding: var(--boxel-sp);
         scroll-margin-top: var(--boxel-sp);
       }
       .sect.focused {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--ring);
       }
       .sect h3 {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-5xs);
@@ -244,8 +245,6 @@ export class Workflow extends CardDef {
         .wf-page {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
@@ -256,7 +255,7 @@ export class Workflow extends CardDef {
         }
         .wf-applies {
           margin: var(--boxel-sp-4xs) 0 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
         }
         h2 {
@@ -264,7 +263,7 @@ export class Workflow extends CardDef {
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .wf-states {
           display: flex;
@@ -283,12 +282,12 @@ export class Workflow extends CardDef {
           gap: var(--boxel-sp-4xs);
         }
         code {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-sm);
         }
         .wf-none {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
           font-size: var(--boxel-font-size-sm);
         }
@@ -316,7 +315,7 @@ export class Workflow extends CardDef {
         }
         .wf-meta {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -353,6 +352,7 @@ export class Workflow extends CardDef {
       </div>
       <style scoped>
         .wf-fitted {
+          --wf-accent: var(--primary-ink);
           height: 100%;
           display: flex;
           align-items: flex-start;
@@ -364,7 +364,7 @@ export class Workflow extends CardDef {
           flex: none;
           width: 1.25rem;
           height: 1.25rem;
-          color: var(--wf-accent, var(--primary, var(--boxel-highlight)));
+          color: var(--wf-accent);
         }
         .wf-fitted-body {
           display: flex;
@@ -381,7 +381,7 @@ export class Workflow extends CardDef {
         }
         .wf-fitted-meta {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .wf-fitted-states {
           display: none;
