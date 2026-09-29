@@ -21,6 +21,21 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import Network from '@cardstack/boxel-icons/git-fork';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { ALERT_STYLE, LoadingRows, stockStateHue } from './fulfilment-ui';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
+
+const REORDER_FACTS = [
+  { key: 'Reorder point', value: 'reorderPoint' },
+  { key: 'Reorder quantity', value: 'reorderQuantity' },
+  { key: 'Last counted', value: 'lastCountedAt' },
+  { key: 'Last movement', value: 'lastMovementAt' },
+];
 
 // Inventory Stock — one product, in one warehouse, at one bin.
 //
@@ -310,22 +325,23 @@ export class InventoryStock extends CardDef {
       <article class='stk' style={{stockAccent @model.stockHue}}>
         <header class='hd'>
           <div>
-            <span class='sku'>{{@model.sku}}</span>
+            {{#if @model.sku}}<Token class='sku' @value={{@model.sku}} />{{/if}}
             <h1 class='name'>{{@model.productName}}</h1>
             <p class='where'>
-              {{#if @model.warehouseCode}}<span
+              {{#if @model.warehouseCode}}<Token
                   class='wh'
-                >{{@model.warehouseCode}}</span>{{/if}}
-              {{#if @model.binLocation}}<span
+                  @value={{@model.warehouseCode}}
+                />{{/if}}
+              {{#if @model.binLocation}}<Token
                   class='bin'
-                >{{@model.binLocation}}</span>{{/if}}
+                  @value={{@model.binLocation}}
+                />{{/if}}
             </p>
           </div>
-          <span class='state state-{{@model.stockState}}'>
-            {{#if @model.isOutOfStock}}Out of stock{{else if
-              @model.isLowStock
-            }}Low stock{{else}}In stock{{/if}}
-          </span>
+          <StatePill
+            @label={{@model.stockStateLabel}}
+            @hue={{stockStateHue @model.stockState}}
+          />
         </header>
 
         {{! The headline figure keeps its own size — "how many can I promise" is
@@ -339,19 +355,12 @@ export class InventoryStock extends CardDef {
             tight internal spacing. Unwrapped, each part was a root sibling and
             the bar drifted 28px away from the figure it belongs to. }}
         <div class='stock-summary'>
-          <div class='stock-figure'>
-            <span class='sf-label'>Available to promise</span>
-            <span class='sf-value'>{{if
-                @model.quantityAvailable
-                @model.quantityAvailable
-                0
-              }}</span>
-            <span class='sf-unit'>{{if
-                (eq @model.quantityAvailable 1)
-                'unit'
-                'units'
-              }}</span>
-          </div>
+          <Stat
+            class='stock-figure'
+            @label='Available to promise'
+            @value={{if @model.quantityAvailable @model.quantityAvailable 0}}
+            @hint={{if (eq @model.quantityAvailable 1) 'unit' 'units'}}
+          />
 
           {{#if @model.stockComposition}}
             {{#let @model.stockComposition as |c|}}
@@ -419,40 +428,34 @@ export class InventoryStock extends CardDef {
 
         <section class='sec'>
           <h2><RotateCcw class='sec-icon' role='presentation' />Reordering</h2>
-          <dl class='kv'>
-            <div>
-              <dt>Reorder point</dt>
-              <dd>{{if @model.reorderPoint @model.reorderPoint '—'}}</dd>
-            </div>
-            <div>
-              <dt>Reorder quantity</dt>
-              <dd>{{if @model.reorderQuantity @model.reorderQuantity '—'}}</dd>
-            </div>
-            <div>
-              <dt>Last counted</dt>
-              <dd><@fields.lastCountedAt @format='atom' /></dd>
-            </div>
-            <div>
-              <dt>Last movement</dt>
-              <dd><@fields.lastMovementAt @format='atom' /></dd>
-            </div>
-          </dl>
+          <KeyValue class='kv' @items={{REORDER_FACTS}}>
+            <:value as |item|>
+              {{#if (eq item.value 'reorderPoint')}}
+                {{if @model.reorderPoint @model.reorderPoint '—'}}
+              {{else if (eq item.value 'reorderQuantity')}}
+                {{if @model.reorderQuantity @model.reorderQuantity '—'}}
+              {{else if (eq item.value 'lastCountedAt')}}
+                <@fields.lastCountedAt @format='atom' />
+              {{else}}
+                <@fields.lastMovementAt @format='atom' />
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
 
         <section class='sec'>
           <h2><Network class='sec-icon' role='presentation' />Elsewhere in the
             network</h2>
           {{#if this.queryError}}
-            <p class='q-error' role='alert'>Could not check other locations.
-              {{this.queryError}}</p>
+            <Alert
+              @tone='danger'
+              @title='Could not check other locations.'
+              style={{ALERT_STYLE.danger}}
+            >{{this.queryError}}</Alert>
             {{! Loading is not empty. Space is reserved so the section does not
               jump when the query lands. }}
           {{else if this.isQueryLoading}}
-            <ul class='sk-rows' aria-busy='true'>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-            </ul>
+            <LoadingRows />
           {{else if this.elsewhere.length}}
             <p class='else-total'><strong>{{this.elsewhereTotal}}</strong>
               available in
@@ -467,25 +470,31 @@ export class InventoryStock extends CardDef {
                     class='else-row els-{{row.stockState}}'
                     {{on 'click' (fn this.open row)}}
                   >
-                    <span class='el-wh'>{{if
-                        row.warehouseCode
-                        row.warehouseCode
-                        '—'
-                      }}</span>
+                    {{#if row.warehouseCode}}<Token
+                        class='el-wh'
+                        @value={{row.warehouseCode}}
+                      />{{else}}<span class='el-wh'>—</span>{{/if}}
                     <span class='el-bin'>{{if
                         row.binLocation
                         row.binLocation
                         ''
                       }}</span>
                     <span class='el-qty'>{{row.quantityAvailable}}</span>
-                    <span class='el-state'>{{row.stockState}}</span>
+                    <span class='el-state'><StatePill
+                        @label={{row.stockStateLabel}}
+                        @hue={{stockStateHue row.stockState}}
+                      /></span>
                   </button>
                 </li>
               {{/each}}
             </ul>
           {{else}}
-            <p class='hint'>This is the only place this product is stocked. A
-              short pick here cannot be covered from another bin.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='This is the only place this product is stocked'
+              @message='A short pick here cannot be covered from another bin.'
+            />
           {{/if}}
         </section>
 
@@ -551,12 +560,14 @@ export class InventoryStock extends CardDef {
           padding-bottom: var(--boxel-sp);
           border-bottom: 0.125rem solid var(--ful-rule);
         }
-        .sku {
-          font-family: var(--font-mono);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.16em;
-          color: var(--muted-foreground);
+        /* Pret UI Token for the SKU, warehouse and bin codes, on the muted
+           ink. The body knob lands each pill at the micro size. */
+        .hd .sku,
+        .where .wh,
+        .where .bin {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(var(--t-micro) + 3.5px);
+          margin-inline: 0;
         }
         .name {
           margin: 0.1rem 0 0;
@@ -568,39 +579,6 @@ export class InventoryStock extends CardDef {
           gap: 0.5rem;
           margin: 0.375rem 0 0;
         }
-        .wh,
-        .bin {
-          font-family: var(--font-mono);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 0.1875rem;
-          border: 1px solid var(--border);
-          color: var(--muted-foreground);
-        }
-        .state {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 0.25rem 0.625rem;
-          border-radius: 0.1875rem;
-          color: var(--muted-foreground);
-          background-color: color-mix(
-            in oklch,
-            var(--muted-foreground) 12%,
-            transparent
-          );
-        }
-        .state-out {
-          color: var(--destructive-ink);
-          background-color: color-mix(
-            in oklch,
-            var(--destructive) 12%,
-            transparent
-          );
-        }
         /* The one figure the card exists to answer, at the size that says so.
            No box around it: a border earns its place by separating things that
            would otherwise run together, and nothing here would. */
@@ -609,33 +587,10 @@ export class InventoryStock extends CardDef {
           flex-direction: column;
           gap: var(--boxel-sp-xs);
         }
+        /* Pret UI Stat for the headline figure: the knob keeps its display
+           size, and the unit sits in Stat's foot. */
         .stock-figure {
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          margin: 0;
-          flex-wrap: wrap;
-        }
-        .sf-label {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          flex: 1 0 100%;
-        }
-        .sf-value {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: calc(var(--t-xl) * 1.5);
-          font-weight: 800;
-          line-height: 1;
-        }
-        .sf-unit {
-          font-size: var(--t-sm);
-          color: var(--muted-foreground);
+          --text-stat: calc(var(--t-xl) * 1.5);
         }
 
         /* One length, three segments, one threshold tick. The composition is the
@@ -796,24 +751,19 @@ export class InventoryStock extends CardDef {
           text-transform: uppercase;
           color: var(--foreground);
         }
+        /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          display: grid;
-          gap: 0.375rem;
-          margin: 0;
-        }
-        .kv div {
-          display: grid;
-          grid-template-columns: 9rem minmax(0, 1fr);
-          gap: var(--boxel-sp-xs);
-        }
-        .kv dt {
-          font-size: var(--t-micro);
-          color: var(--muted-foreground);
-        }
-        .kv dd {
-          margin: 0;
-          font-size: var(--t-sm);
+          --text-ui: var(--t-micro);
+          --text-ui-md: var(--t-sm);
+          --space-6: 1.25rem;
           font-variant-numeric: tabular-nums;
+        }
+        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
+           title at the body size. */
+        .empty {
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
@@ -858,11 +808,17 @@ export class InventoryStock extends CardDef {
           border-top: 1px solid var(--ful-rule);
           font-size: var(--t-sm);
         }
-        .el-wh,
         .el-bin,
         .el-qty {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
+        }
+        /* Pret UI Token for the warehouse code, on the muted ink. */
+        .else-row .el-wh {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(var(--t-sm) + 3.5px);
+          justify-self: start;
+          margin-inline: 0;
         }
         .el-bin {
           color: var(--muted-foreground);
@@ -873,16 +829,10 @@ export class InventoryStock extends CardDef {
         }
         .el-state {
           text-align: right;
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
         }
-        .els-out .el-state,
         .els-out .el-qty {
           color: var(--destructive-ink);
         }
-        .els-low .el-state,
         .els-low .el-qty {
           color: var(--attention-ink);
         }
@@ -920,40 +870,6 @@ export class InventoryStock extends CardDef {
             transition: none;
           }
         }
-        /* Skeleton rows hold the height the real rows will take. Motion is
-           opt-in via prefers-reduced-motion; the shape is not. */
-        .sk-rows {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: grid;
-          gap: 0.5rem;
-        }
-        .sk-line {
-          height: 0.875rem;
-          border-radius: 0.1875rem;
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 7%,
-            transparent
-          );
-        }
-        @media (prefers-reduced-motion: no-preference) {
-          .sk-line {
-            animation: sk-pulse 1.4s ease-in-out infinite;
-          }
-        }
-        @keyframes sk-pulse {
-          50% {
-            opacity: 0.45;
-          }
-        }
-        .q-error {
-          margin: 0;
-          padding: var(--boxel-sp-xs) 0;
-          font-size: var(--t-sm);
-          color: var(--destructive-ink);
-        }
       </style>
     </template>
   };
@@ -970,7 +886,10 @@ export class InventoryStock extends CardDef {
           aria-hidden='true'
         ></span>
         <div class='id'>
-          <span class='sku'>{{if @model.sku @model.sku '—'}}</span>
+          {{#if @model.sku}}<Token
+              class='sku'
+              @value={{@model.sku}}
+            />{{else}}<span class='sku'>—</span>{{/if}}
           <span class='name'>{{if
               @model.productName
               @model.productName
@@ -1023,12 +942,16 @@ export class InventoryStock extends CardDef {
           flex-direction: column;
           min-width: 0;
         }
-        .sku {
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
-          font-weight: 700;
-          letter-spacing: 0.06em;
-          color: var(--foreground);
+        /* Pret UI Token for the SKU, on the primary ink: it is the row's
+           identity. */
+        .id .sku {
+          --pretui-token-hue: var(--primary-ink);
+          --text-body: calc(0.75rem + 3.5px);
+          align-self: flex-start;
+          margin-inline: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .name {
           font-size: 0.75rem;
@@ -1143,12 +1066,14 @@ export class InventoryStock extends CardDef {
             />
           {{/if}}
           {{#if @model.fillPercent}}
-            <div class='gauge' aria-hidden='true'>
-              <span
-                class='gauge-fill'
-                style={{gaugeStyle @model.fillPercent @model.stockHue}}
-              ></span>
-            </div>
+            {{! Pret UI ProgressBar, hidden from assistive tech: the figure
+                above already says how many are available. }}
+            <ProgressBar
+              class='gauge'
+              style={{stockAccent @model.stockHue}}
+              @value={{@model.fillPercent}}
+              aria-hidden='true'
+            />
           {{/if}}
         </div>
         <div class='r-meta'>
@@ -1314,23 +1239,23 @@ export class InventoryStock extends CardDef {
           font-size: var(--meta-size);
           color: var(--muted-foreground);
         }
+        /* Pret UI ProgressBar for the gauge, filled with the stock hue. Its
+           --inset track all but vanishes on the card, so the track keeps its
+           old mix. */
         .gauge {
           margin-top: 0.375rem;
-          height: 0.25rem;
-          border-radius: 999px;
+        }
+        .gauge :deep(.pretui-progress) {
           background-color: color-mix(
             in oklch,
             var(--card-foreground) 12%,
             transparent
           );
-          overflow: hidden;
         }
-        .gauge-fill {
-          display: block;
-          height: 100%;
+        .gauge :deep(.pretui-progress-fill) {
           background-color: color-mix(
             in oklch,
-            var(--stock-hue, var(--muted-foreground)) 65%,
+            var(--stock-hue) 65%,
             transparent
           );
         }
@@ -1383,14 +1308,6 @@ function segStyle(pct: number | undefined) {
 
 function tickStyle(pct: number | undefined) {
   return htmlSafe(`left: ${Math.max(0, Math.min(100, pct ?? 0))}%`);
-}
-
-function gaugeStyle(pct: number | undefined, hue: string | undefined) {
-  return htmlSafe(
-    `width: ${Math.min(100, Math.max(0, pct ?? 0))}%; --stock-hue: ${
-      hue ?? 'var(--muted-foreground)'
-    }`,
-  );
 }
 
 export default InventoryStock;

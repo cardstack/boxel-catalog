@@ -13,7 +13,12 @@ import BooleanField from 'https://cardstack.com/base/boolean';
 import DatetimeField from 'https://cardstack.com/base/datetime';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import { htmlSafe } from '@ember/template';
-import { money } from './fulfilment-format';
+import { ALERT_STYLE, Money } from './fulfilment-ui';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Token } from '@cardstack/pretui/components/token';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
@@ -115,6 +120,12 @@ export class TrackingEventField extends FieldDef {
 // SNAPSHOTTED onto the shipment when the label is created, not read through the
 // link. A carrier renaming a service two years from now must not rewrite what
 // happened on a package that already arrived.
+const COST_FACTS = [
+  { key: 'Carrier charged', value: 'shippingCost' },
+  { key: 'Customer paid', value: 'customerPaid' },
+  { key: 'Margin', value: 'shippingMargin' },
+];
+
 class ShipmentIsolated extends Component<typeof Shipment> {
   @tracked trackingInput = '';
   @tracked podInput = '';
@@ -175,6 +186,17 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       wasLate: promised ? at.getTime() > promised.getTime() : undefined,
       promised,
     };
+  }
+
+  // The delivered record's KeyValue rows; the promise row only when there
+  // was a promise to measure against.
+  get deliveredFacts() {
+    let facts = [{ key: 'Delivered', value: 'deliveredAt' }];
+    if (this.deliveredRecord?.promised) {
+      facts.push({ key: 'Against promise', value: 'promise' });
+    }
+    facts.push({ key: 'Proof of delivery', value: 'proofOfDelivery' });
+    return facts;
   }
 
   @action setTracking(value: string) {
@@ -329,19 +351,17 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         <div class='label-bot'>
           <div>
             <span class='cap'>Order</span>
-            <span class='val mono'>{{if
-                @model.orderNumber
-                @model.orderNumber
-                '—'
-              }}</span>
+            <span class='val'>{{#if @model.orderNumber}}<Token
+                  class='val-token'
+                  @value={{@model.orderNumber}}
+                />{{else}}—{{/if}}</span>
           </div>
           <div>
             <span class='cap'>From</span>
-            <span class='val mono'>{{if
-                @model.originCode
-                @model.originCode
-                '—'
-              }}</span>
+            <span class='val'>{{#if @model.originCode}}<Token
+                  class='val-token'
+                  @value={{@model.originCode}}
+                />{{else}}—{{/if}}</span>
           </div>
           <div>
             <span class='cap'>Parcel</span>
@@ -437,30 +457,23 @@ class ShipmentIsolated extends Component<typeof Shipment> {
               {{! The delivery was recorded and then withheld: deliveredAt and
                   proofOfDelivery were both written by the command and drawn
                   by nothing. This is the read side of Mark delivered. }}
-              <dl class='kv delivered-kv'>
-                <div>
-                  <dt>Delivered</dt>
-                  <dd><@fields.deliveredAt @format='atom' /></dd>
-                </div>
-                {{#if this.deliveredRecord.promised}}
-                  <div>
-                    <dt>Against promise</dt>
-                    <dd class={{if this.deliveredRecord.wasLate 'late-val'}}>
-                      {{#if this.deliveredRecord.wasLate}}
-                        Late — promised
-                        <@fields.deliveryWindow @format='atom' />
-                      {{else}}
-                        On time
-                      {{/if}}
-                    </dd>
-                  </div>
-                {{/if}}
-                <div>
-                  <dt>Proof of delivery</dt>
-                  <dd>{{#if @model.proofOfDelivery}}{{@model.proofOfDelivery}}
-                    {{else}}<span class='muted'>Not recorded</span>{{/if}}</dd>
-                </div>
-              </dl>
+              <KeyValue class='kv delivered-kv' @items={{this.deliveredFacts}}>
+                <:value as |item|>
+                  {{#if (eq item.value 'deliveredAt')}}
+                    <@fields.deliveredAt @format='atom' />
+                  {{else if (eq item.value 'promise')}}
+                    {{#if this.deliveredRecord.wasLate}}
+                      <span class='late-val'>Late — promised
+                        <@fields.deliveryWindow @format='atom' /></span>
+                    {{else}}
+                      On time
+                    {{/if}}
+                  {{else}}
+                    {{#if @model.proofOfDelivery}}{{@model.proofOfDelivery}}
+                    {{else}}<span class='muted'>Not recorded</span>{{/if}}
+                  {{/if}}
+                </:value>
+              </KeyValue>
             {{else}}
               <p class='act-note'>This shipment has finished its journey.
                 Nothing further to record.</p>
@@ -468,23 +481,40 @@ class ShipmentIsolated extends Component<typeof Shipment> {
           {{/if}}
 
           {{#if this.feedback}}
-            <p
-              class='act-feedback {{if this.failed "act-failed"}}'
-            >{{this.feedback}}</p>
+            {{! Pret UI Alert: a failure is role=alert, a success role=status,
+                so the result of a button press is announced either way. }}
+            {{#if this.failed}}
+              <Alert
+                class='act-feedback'
+                @tone='danger'
+                style={{ALERT_STYLE.danger}}
+              >{{this.feedback}}</Alert>
+            {{else}}
+              <Alert
+                class='act-feedback'
+                @tone='success'
+                style={{ALERT_STYLE.success}}
+              >{{this.feedback}}</Alert>
+            {{/if}}
           {{/if}}
         </section>
       {{/if}}
 
       {{#if @model.isException}}
-        <p class='alert'>
-          This package is in exception. It will not move again until someone
-          acts — check the latest scan below for what the carrier needs.
-        </p>
+        <Alert
+          class='alert'
+          @tone='danger'
+          @title='This package is in exception.'
+          style={{ALERT_STYLE.danger}}
+        >It will not move again until someone acts — check the latest scan below
+          for what the carrier needs.</Alert>
       {{else if @model.isLate}}
-        <p class='alert'>
-          Past its promised delivery window. The customer has almost certainly
-          noticed.
-        </p>
+        <Alert
+          class='alert'
+          @tone='warning'
+          @title='Past its promised delivery window.'
+          style={{ALERT_STYLE.attention}}
+        >The customer has almost certainly noticed.</Alert>
       {{/if}}
 
       <section class='sec'>
@@ -503,41 +533,41 @@ class ShipmentIsolated extends Component<typeof Shipment> {
           {{#if @model.lineItems.length}}
             <@fields.lineItems @format='embedded' />
           {{else}}
-            <p class='empty'>No contents recorded on this shipment.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No contents recorded on this shipment'
+            />
           {{/if}}
         </section>
 
         <section class='sec'>
           <h2><Receipt class='sec-icon' role='presentation' />Cost</h2>
-          <dl class='kv'>
-            <div>
-              <dt>Carrier charged</dt>
-              <dd>{{#if @model.shippingCost.amount}}{{money
-                    @model.shippingCost.amount
-                    @model.customerPaid.currency.code
-                  }}{{else}}—{{/if}}</dd>
-            </div>
-            <div>
-              <dt>Customer paid</dt>
-              <dd>{{#if @model.customerPaid.amount}}{{money
-                    @model.customerPaid.amount
-                    @model.customerPaid.currency.code
-                  }}{{else}}—{{/if}}</dd>
-            </div>
-            <div>
-              <dt>Margin</dt>
-              {{! `shippingMargin` is a NumberField, so it printed raw: "-1.88"
-                  sat under "£6.87" and "£4.99" — three money values on one
-                  card, one of them missing its symbol. Through `money` like
-                  every other figure in this family. }}
-              <dd class='{{if @model.isMarginNegative "neg"}}'>{{#if
-                  @model.shippingMargin
-                }}{{money
-                    @model.shippingMargin
-                    @model.customerPaid.currency.code
-                  }}{{else}}—{{/if}}</dd>
-            </div>
-          </dl>
+          <KeyValue class='kv' @items={{COST_FACTS}}>
+            <:value as |item|>
+              {{#if (eq item.value 'shippingCost')}}
+                {{#if @model.shippingCost.amount}}<Money
+                    @amount={{@model.shippingCost.amount}}
+                    @code={{@model.customerPaid.currency.code}}
+                  />{{else}}—{{/if}}
+              {{else if (eq item.value 'customerPaid')}}
+                {{#if @model.customerPaid.amount}}<Money
+                    @amount={{@model.customerPaid.amount}}
+                    @code={{@model.customerPaid.currency.code}}
+                  />{{else}}—{{/if}}
+              {{else}}
+                {{! `shippingMargin` is a NumberField, so it printed raw:
+                    "-1.88" sat under "£6.87" and "£4.99" — three money values
+                    on one card, one of them missing its symbol. Through
+                    `Money` like every other figure in this family. }}
+                {{#if @model.shippingMargin}}<Money
+                    class='{{if @model.isMarginNegative "neg"}}'
+                    @amount={{@model.shippingMargin}}
+                    @code={{@model.customerPaid.currency.code}}
+                  />{{else}}—{{/if}}
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
       </div>
     </article>
@@ -692,25 +722,18 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         font-size: var(--t-sm);
         font-weight: 600;
       }
-      .mono {
-        font-family: var(--font-mono);
+      /* Pret UI Token for the order number and origin code, on the muted
+         ink. */
+      .val .val-token {
+        --pretui-token-hue: var(--muted-foreground);
+        --text-body: calc(var(--t-sm) + 3.5px);
+        margin-inline: 0;
       }
-      /* A different TINT (it is a warning, not a section) but the same inset
-         and corner — the ground says what kind of block it is, the geometry
-         keeps it registered with everything above and below it. */
+      /* Pret UI Alert for the exception and late notes; the tone's inks
+         come from ALERT_STYLE and the size from the body knob. */
       .alert {
+        --text-ui-md: var(--t-sm);
         margin: var(--boxel-sp) 0 0;
-        padding: var(--panel-pad);
-        border-radius: var(--panel-radius);
-        border-left: 0.1875rem solid
-          color-mix(in oklch, var(--destructive) 55%, transparent);
-        background-color: color-mix(
-          in oklch,
-          var(--destructive) 8%,
-          transparent
-        );
-        font-size: var(--t-sm);
-        color: var(--foreground);
       }
       .actions {
         margin-top: var(--boxel-sp-lg);
@@ -748,14 +771,10 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         flex: 1 1 12.5rem;
         max-width: 17.5rem;
       }
+      /* Pret UI Alert for an action's result. */
       .act-feedback {
+        --text-ui-md: var(--t-sm);
         margin: var(--boxel-sp-sm) 0 0;
-        font-size: var(--t-sm);
-        font-weight: 600;
-        color: var(--foreground);
-      }
-      .act-failed {
-        color: var(--destructive-ink);
       }
       .cols {
         display: grid;
@@ -788,23 +807,14 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         text-transform: uppercase;
         color: var(--foreground);
       }
+      /* Pret UI KeyValue: label and value sizes and the column gap. Cost
+         figures are mono. */
       .kv {
-        display: grid;
-        gap: 0.375rem;
-        margin: 0;
+        --text-ui: var(--t-micro);
+        --text-ui-md: var(--t-sm);
+        --space-6: 1.25rem;
       }
-      .kv div {
-        display: grid;
-        grid-template-columns: 9rem minmax(0, 1fr);
-        gap: var(--boxel-sp-xs);
-      }
-      .kv dt {
-        font-size: var(--t-micro);
-        color: var(--muted-foreground);
-      }
-      .kv dd {
-        margin: 0;
-        font-size: var(--t-sm);
+      .kv :deep(dd) {
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
       }
@@ -818,7 +828,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       .delivered-kv {
         margin-top: var(--boxel-sp-xs);
       }
-      .delivered-kv dd {
+      .delivered-kv :deep(dd) {
         font-family: inherit;
       }
       .late-val {
@@ -828,9 +838,12 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       .muted {
         color: var(--muted-foreground);
       }
+      /* Pret UI EmptyState, compact: no texture, 1rem padding, and the title
+         at the body size. */
       .empty {
-        font-size: var(--t-sm);
-        color: var(--muted-foreground);
+        --space-9: 1rem;
+        --space-6: 1rem;
+        --text-heading: var(--boxel-font-size);
       }
 
       /* Section icons: one size, one muted colour, everywhere. They make the
@@ -975,7 +988,10 @@ export class Shipment extends CardDef {
   static embedded = class Embedded extends Component<typeof Shipment> {
     <template>
       <div class='s-emb'>
-        <span class='s-num'>{{@model.shipmentNumber}}</span>
+        <span class='s-num'>{{#if @model.shipmentNumber}}<Token
+              class='s-token'
+              @value={{@model.shipmentNumber}}
+            />{{/if}}</span>
         <span class='s-carrier'>{{if
             @model.carrierName
             @model.carrierName
@@ -997,9 +1013,16 @@ export class Shipment extends CardDef {
           font-size: 0.88rem;
         }
         .s-num {
-          font-family: var(--font-mono);
-          font-weight: 700;
-          color: var(--foreground);
+          min-width: 0;
+        }
+        /* Pret UI Token for the shipment number, on the primary ink. */
+        .s-num .s-token {
+          --pretui-token-hue: var(--primary-ink);
+          --text-body: calc(0.88rem + 3.5px);
+          margin-inline: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .s-carrier {
           color: var(--muted-foreground);

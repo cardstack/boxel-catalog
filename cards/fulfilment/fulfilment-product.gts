@@ -24,8 +24,16 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // tolerate because the binding is only read inside the constructor, never at
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
-import { htmlSafe } from '@ember/template';
 import { money } from './fulfilment-format';
+import { ALERT_STYLE, LoadingRows, stockStateHue } from './fulfilment-ui';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { realmURL } from 'https://cardstack.com/base/card-api';
 import type Owner from '@ember/owner';
@@ -36,6 +44,16 @@ import type Owner from '@ember/owner';
 //
 // Named distinctly from the realm's existing retail `product.gts` so the two
 // can coexist. A merge would force one card to carry both jobs.
+const IDENTIFIER_FACTS = [
+  { key: 'Barcode', value: 'barcode' },
+  { key: 'Vendor SKU', value: 'vendorSku' },
+];
+
+// Stat prints a string verbatim, and an empty one as its dash.
+function amountText(amount?: number | null, code?: string | null) {
+  return amount ? money(amount, code ?? undefined) : '';
+}
+
 export class FulfilmentProduct extends CardDef {
   static displayName = 'Product';
   static icon = PackageIcon;
@@ -139,7 +157,7 @@ export class FulfilmentProduct extends CardDef {
             <img class='hero' src={{@model.image.resolvedUrl}} alt='' />
           {{/if}}
           <div class='hd-id'>
-            <span class='sku'>{{@model.sku}}</span>
+            {{#if @model.sku}}<Token class='sku' @value={{@model.sku}} />{{/if}}
             <h1 class='name'>{{@model.productName}}</h1>
             {{#if @model.category}}
               <p class='cat'>{{@model.category}}</p>
@@ -153,43 +171,56 @@ export class FulfilmentProduct extends CardDef {
                 a whole horizontal band deleted. They also belong here on the
                 merits — cost, price and margin are what identifies a product
                 commercially, so they read with its name rather than after it. }}
-            <dl class='stats'>
-              <div>
-                <dt>Cost</dt>
-                {{! `money` rather than the field atom: the atom drops trailing
-                    zeros, so £11.50 rendered as "£ 11.5" — not a price. }}
-                <dd>{{#if @model.cost.amount}}{{money
-                      @model.cost.amount
-                      @model.cost.currency.code
-                    }}{{else}}—{{/if}}</dd>
-              </div>
-              <div>
-                <dt>Price</dt>
-                <dd>{{#if @model.price.amount}}{{money
-                      @model.price.amount
-                      @model.price.currency.code
-                    }}{{else}}—{{/if}}</dd>
-              </div>
+            <div class='stats'>
+              {{! `money` rather than the field atom: the atom drops trailing
+                  zeros, so £11.50 rendered as "£ 11.5" — not a price. }}
+              <Stat
+                class='stat'
+                @label='Cost'
+                @value={{amountText
+                  @model.cost.amount
+                  @model.cost.currency.code
+                }}
+                @roll={{false}}
+              />
+              <Stat
+                class='stat'
+                @label='Price'
+                @value={{amountText
+                  @model.price.amount
+                  @model.price.currency.code
+                }}
+                @roll={{false}}
+              />
               <div class='q-ratio'>
-                <dt>Margin</dt>
-                <dd>{{#if
+                <Stat
+                  class='stat stat-ratio'
+                  @label='Margin'
+                  @value={{if
                     @model.marginPercent
-                  }}{{@model.marginPercent}}%{{else}}—{{/if}}</dd>
+                    (percentText @model.marginPercent)
+                    ''
+                  }}
+                  @roll={{false}}
+                />
                 {{! Margin is the one figure here that IS a proportion — 0–100%
                     of the price — so it gets a length as well as a number. Cost
                     and price are absolute amounts with nothing to be a
-                    proportion OF, which is why they stay figures. }}
+                    proportion OF, which is why they stay figures. The Pret UI
+                    ProgressBar is hidden from assistive tech: the figure above
+                    already says it, and a margin is not task progress. }}
                 {{#if @model.marginPercent}}
-                  <span class='m-rail' aria-hidden='true'><span
-                      class='m-fill'
-                      style={{marginBar @model.marginPercent}}
-                    ></span></span>
+                  <ProgressBar
+                    class='m-rail'
+                    @value={{@model.marginPercent}}
+                    aria-hidden='true'
+                  />
                 {{/if}}
               </div>
-            </dl>
+            </div>
           </div>
           {{#if @model.isDropship}}
-            <span class='badge'>Dropship — no stock held</span>
+            <StatePill @label='Dropship — no stock held' @hue='teal' />
           {{/if}}
         </header>
 
@@ -203,37 +234,34 @@ export class FulfilmentProduct extends CardDef {
 
           <section class='sec'>
             <h2><Barcode class='sec-icon' role='presentation' />Identifiers</h2>
-            <dl class='kv'>
-              <div>
-                <dt>Barcode</dt>
-                <dd class='mono'>{{if @model.barcode @model.barcode '—'}}</dd>
-              </div>
-              <div>
-                <dt>Vendor SKU</dt>
-                <dd class='mono'>{{if
-                    @model.vendorSku
-                    @model.vendorSku
-                    '—'
-                  }}</dd>
-              </div>
-            </dl>
+            <KeyValue class='kv' @items={{IDENTIFIER_FACTS}}>
+              <:value as |item|>
+                {{#if (eq item.value 'barcode')}}
+                  {{#if @model.barcode}}<Token
+                      @value={{@model.barcode}}
+                    />{{else}}—{{/if}}
+                {{else}}
+                  {{#if @model.vendorSku}}<Token
+                      @value={{@model.vendorSku}}
+                    />{{else}}—{{/if}}
+                {{/if}}
+              </:value>
+            </KeyValue>
           </section>
         </div>
 
         <section class='sec'>
           <h2><Boxes class='sec-icon' role='presentation' />Stock</h2>
           {{#if this.queryError}}
-            <p class='q-error' role='alert'>Could not read stock for this
-              product.
-              {{this.queryError}}</p>
+            <Alert
+              @tone='danger'
+              @title='Could not read stock for this product.'
+              style={{ALERT_STYLE.danger}}
+            >{{this.queryError}}</Alert>
             {{! Loading is not empty. Space is reserved so the section does not
               jump when the query lands. }}
           {{else if this.isQueryLoading}}
-            <ul class='sk-rows' aria-busy='true'>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-            </ul>
+            <LoadingRows />
           {{else if this.stockRows.length}}
             <p class='stock-total'>
               <strong>{{this.totalAvailable}}</strong>
@@ -255,15 +283,20 @@ export class FulfilmentProduct extends CardDef {
                       ''
                     }}</span>
                   <span class='st-qty'>{{row.quantityAvailable}}</span>
-                  <span
-                    class='st-state st-{{row.stockState}}'
-                  >{{row.stockState}}</span>
+                  <span class='st-state'><StatePill
+                      @label={{row.stockStateLabel}}
+                      @hue={{stockStateHue row.stockState}}
+                    /></span>
                 </li>
               {{/each}}
             </ul>
           {{else}}
-            <p class='hint'>No stock rows reference this product yet. Add one
-              from the Inventory tab to start tracking it.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No stock rows reference this product yet'
+              @message='Add one from the Inventory tab to start tracking it.'
+            />
           {{/if}}
         </section>
 
@@ -368,12 +401,13 @@ export class FulfilmentProduct extends CardDef {
           padding-top: var(--boxel-sp-xs);
           border-top: 1px solid var(--ful-rule);
         }
-        .sku {
-          font-family: var(--font-mono);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.16em;
-          color: var(--muted-foreground);
+        /* Pret UI Token for the SKU, on the muted ink. The body knob lands
+           the pill at the micro size. */
+        .hd-id .sku {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(var(--t-micro) + 3.5px);
+          align-self: flex-start;
+          margin-inline: 0;
         }
         .name {
           margin: 0.1rem 0 0;
@@ -385,80 +419,40 @@ export class FulfilmentProduct extends CardDef {
           font-size: var(--t-sm);
           color: var(--muted-foreground);
         }
-        .badge {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 0.1875rem 0.5625rem;
-          border-radius: 0.1875rem;
-          color: var(--muted-foreground);
-          background-color: color-mix(
-            in oklch,
-            var(--muted-foreground) 12%,
-            transparent
-          );
-        }
         /* Inside the header column now, so the gap tightens: `sp-xl` was spacing
            for a 757px band and here it would push Margin off the end. */
         .stats {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-lg);
-          margin: 0;
         }
-        .stats div {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
+        /* Pret UI Stat: the knob keeps the figures at the old large size. A
+           ratio is not an amount, so the margin is one step quieter and muted
+           so the two money figures read as the pair they are. */
+        .stat {
+          --text-stat: var(--t-lg);
         }
-        .stats dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
+        .stat-ratio {
+          --text-stat: var(--t-body);
           color: var(--muted-foreground);
         }
-        .stats dd {
-          margin: 0;
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: var(--t-lg);
-          font-weight: 700;
-        }
-        /* A ratio is not an amount — one step quieter so the two money figures
-           read as the pair they are. */
-        /* A proportion drawn as a length. Deliberately quiet — a second reading
-           of a number already printed, not a competing element. */
+        /* Pret UI ProgressBar for the margin length. Deliberately quiet — a
+           second reading of a number already printed — so the fill is the
+           muted ink rather than the primary, and the track keeps its old mix
+           because --inset all but vanishes on the page. */
         .m-rail {
-          display: block;
-          height: 0.1875rem;
           margin-top: 0.25rem;
-          border-radius: 999px;
+        }
+        .m-rail :deep(.pretui-progress) {
           background-color: color-mix(
             in oklch,
             var(--foreground) 10%,
             transparent
           );
-          overflow: hidden;
         }
-        .m-fill {
-          display: block;
-          height: 100%;
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 45%,
-            transparent
-          );
+        .m-rail :deep(.pretui-progress-fill) {
+          background-color: var(--muted-foreground);
         }
-        .stats .q-ratio dd {
-          font-size: var(--t-body);
-          font-weight: 600;
-          color: var(--muted-foreground);
-        }
-
         .stock-total {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--t-body);
@@ -498,18 +492,7 @@ export class FulfilmentProduct extends CardDef {
           font-weight: 700;
         }
         .st-state {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
           text-align: right;
-          color: var(--muted-foreground);
-        }
-        .st-out {
-          color: var(--destructive-ink);
-        }
-        .st-low {
-          color: var(--attention-ink);
         }
         .cols {
           display: grid;
@@ -544,59 +527,24 @@ export class FulfilmentProduct extends CardDef {
           text-transform: uppercase;
           color: var(--foreground);
         }
-        .sk-rows {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: grid;
-          gap: 0.5rem;
-        }
-        .sk-line {
-          height: 0.875rem;
-          border-radius: 0.1875rem;
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 7%,
-            transparent
-          );
-        }
-        @media (prefers-reduced-motion: no-preference) {
-          .sk-line {
-            animation: sk-pulse 1.4s ease-in-out infinite;
-          }
-        }
-        @keyframes sk-pulse {
-          50% {
-            opacity: 0.45;
-          }
-        }
         .hint {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--t-micro);
           color: var(--muted-foreground);
         }
+        /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          display: grid;
-          gap: 0.375rem;
-          margin: 0;
+          --text-ui: var(--t-micro);
+          --text-ui-md: var(--t-sm);
+          --space-6: 1.25rem;
         }
-        .kv div {
-          display: grid;
-          grid-template-columns: 6rem minmax(0, 1fr);
-          gap: var(--boxel-sp-xs);
+        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
+           title at the body size. */
+        .empty {
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
-        .kv dt {
-          font-size: var(--t-micro);
-          color: var(--muted-foreground);
-        }
-        .kv dd {
-          margin: 0;
-          font-size: var(--t-sm);
-        }
-        .mono {
-          font-family: var(--font-mono);
-        }
-
         /* Section icons: one size, one muted colour, everywhere. They make the
            card scannable by shape; they must never compete with the heading. */
         h2 .sec-icon {
@@ -622,11 +570,38 @@ export class FulfilmentProduct extends CardDef {
   static embedded = class Embedded extends Component<typeof FulfilmentProduct> {
     <template>
       <div class='p-emb'>
+        {{! Pret UI EntityDisplay: the photo in the thumbnail slot, the name as
+            the title and the SKU as a Token on the meta line. With no photo
+            there is no visual block, so no empty gutter is reserved. }}
         {{#if @model.image.resolvedUrl}}
-          <img class='p-thumb' src={{@model.image.resolvedUrl}} alt='' />
+          <EntityDisplay
+            class='p-entity'
+            @variant='thumbnail'
+            @title={{@model.productName}}
+            @center={{true}}
+          >
+            <:visual><img
+                class='p-thumb'
+                src={{@model.image.resolvedUrl}}
+                alt=''
+              /></:visual>
+            <:meta>{{#if @model.sku}}<Token
+                  class='p-sku'
+                  @value={{@model.sku}}
+                />{{/if}}</:meta>
+          </EntityDisplay>
+        {{else}}
+          <EntityDisplay
+            class='p-entity'
+            @title={{@model.productName}}
+            @center={{true}}
+          >
+            <:meta>{{#if @model.sku}}<Token
+                  class='p-sku'
+                  @value={{@model.sku}}
+                />{{/if}}</:meta>
+          </EntityDisplay>
         {{/if}}
-        <span class='p-sku'>{{@model.sku}}</span>
-        <span class='p-name'>{{@model.productName}}</span>
         <span class='p-slot'>{{#if @model.price.amount}}<@fields.price
               @format='atom'
             />{{else}}—{{/if}}</span>
@@ -644,32 +619,28 @@ export class FulfilmentProduct extends CardDef {
         .p-emb {
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           display: grid;
-          /* `auto` for the thumb column so the row keeps its shape when a
-             product has no photo — no reserved empty gutter. */
-          grid-template-columns: auto 6rem minmax(0, 1fr) 5.5rem;
+          grid-template-columns: minmax(0, 1fr) 5.5rem;
           align-items: center;
           gap: var(--boxel-sp-xs);
           font-size: 0.9rem;
         }
+        /* Pret UI EntityDisplay knobs: the old thumbnail size, gap and title
+           size. */
+        .p-entity {
+          --pretui-entity-visual-size: 2.125rem;
+          --space-3: var(--boxel-sp-xs);
+          --text-ui-md: 0.9rem;
+        }
         .p-thumb {
-          width: 2.125rem;
-          height: 2.125rem;
+          width: 100%;
+          height: 100%;
           object-fit: cover;
-          border-radius: 0.25rem;
         }
-        .p-sku {
-          font-family: var(--font-mono);
-          font-size: 0.72rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground);
-        }
-        .p-name {
-          font-weight: 600;
-          color: var(--foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        /* Pret UI Token for the SKU, on the muted ink. */
+        .p-entity .p-sku {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.72rem + 3.5px);
+          margin-inline: 0;
         }
         .p-slot {
           text-align: right;
@@ -946,6 +917,6 @@ export class FulfilmentProduct extends CardDef {
 
 export default FulfilmentProduct;
 
-function marginBar(pct: number | undefined) {
-  return htmlSafe(`width: ${Math.max(0, Math.min(100, pct ?? 0))}%`);
+function percentText(pct: number | undefined) {
+  return `${pct}%`;
 }

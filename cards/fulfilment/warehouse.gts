@@ -31,6 +31,33 @@ import Boxes from '@cardstack/boxel-icons/boxes';
 // Cyclic with inventory-stock.gts (it links to Warehouse); safe because the
 // binding is only read inside the constructor, not at module evaluation.
 import { InventoryStock } from './inventory-stock';
+import { ALERT_STYLE, LoadingRows, stockStateHue } from './fulfilment-ui';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
+import { eq } from '@cardstack/boxel-ui/helpers';
+
+const CONTACT_FACTS = [
+  { key: 'Person', value: 'contactPerson' },
+  { key: 'Email', value: 'contactEmail' },
+  { key: 'Phone', value: 'contactPhone' },
+  { key: 'Hours', value: 'operatingHours' },
+];
+
+// Capacity bands are statuses, so their pills take the status hues.
+const BAND_HUE: Record<string, Hue> = {
+  full: 'red',
+  tight: 'amber',
+  ok: 'green',
+};
+
+function bandHue(key?: string): Hue {
+  return BAND_HUE[key ?? ''] ?? 'slate';
+}
 
 // A warehouse is not always a building you own. A 3PL holds your stock and
 // ships it for you; a dropship "location" holds nothing at all and exists so an
@@ -150,7 +177,10 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
     <article class='wh'>
       <header class='hd'>
         <div>
-          <span class='code'>{{@model.code}}</span>
+          {{#if @model.code}}<Token
+              class='code'
+              @value={{@model.code}}
+            />{{/if}}
           <h1 class='name'>{{@model.warehouseName}}</h1>
           {{#if @model.locationLabel}}
             <p class='loc'>{{@model.locationLabel}}</p>
@@ -159,7 +189,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         <div class='hd-type'>
           <@fields.warehouseType @format='atom' />
           {{#unless @model.isActive}}
-            <span class='inactive'>Inactive</span>
+            <StatePill @label='Inactive' @hue='red' />
           {{/unless}}
         </div>
       </header>
@@ -167,31 +197,30 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
       {{#unless @model.isVirtual}}
         {{! Above the fold, because it is the answer — capacity and address are
             supporting detail. }}
-        <dl class='wh-stats'>
-          <div>
-            <dt>SKUs held</dt>
-            <dd>{{this.rows.length}}</dd>
-          </div>
-          <div>
-            <dt>Units on hand</dt>
-            <dd>{{this.unitsOnHand}}</dd>
-          </div>
-          <div>
-            <dt>Available</dt>
-            <dd>{{this.unitsAvailable}}</dd>
-          </div>
-          <div class='{{if this.needsAttention.length "alarm"}}'>
-            <dt>Needs attention</dt>
-            <dd>{{this.needsAttention.length}}</dd>
-          </div>
-        </dl>
+        <div class='wh-stats'>
+          <Stat class='stat' @label='SKUs held' @value={{this.rows.length}} />
+          <Stat
+            class='stat'
+            @label='Units on hand'
+            @value={{this.unitsOnHand}}
+          />
+          <Stat
+            class='stat'
+            @label='Available'
+            @value={{this.unitsAvailable}}
+          />
+          <Stat
+            class='stat {{if this.needsAttention.length "alarm"}}'
+            @label='Needs attention'
+            @value={{this.needsAttention.length}}
+          />
+        </div>
       {{/unless}}
 
       {{#if @model.isVirtual}}
-        <p class='virtual-note'>
-          This is a virtual location. Stock is never counted here — orders
-          allocated to it are forwarded to the supplier, who ships direct.
-        </p>
+        <Alert class='virtual-note' @tone='info' style={{ALERT_STYLE.info}}>This
+          is a virtual location. Stock is never counted here — orders allocated
+          to it are forwarded to the supplier, who ships direct.</Alert>
       {{else if @model.utilizationPercent}}
         <section class='sec'>
           <h2><Gauge class='sec-icon' role='presentation' />Capacity</h2>
@@ -200,19 +229,19 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
               of
               {{@model.totalBins}}
               bins filled</span>
-            <span
-              class='cap-band cap-{{@model.capacityBand.key}}'
-            >{{@model.capacityBand.label}}</span>
+            <StatePill
+              @label={{@model.capacityBand.label}}
+              @hue={{bandHue @model.capacityBand.key}}
+            />
           </div>
-          <div class='cap-rail'>
-            <span
-              class='cap-fill'
-              style={{capStyle
-                @model.utilizationPercent
-                @model.capacityBand.hue
-              }}
-            ></span>
-          </div>
+          {{! Pret UI ProgressBar: occupied bins against total bins, filled
+              with the capacity band's hue. }}
+          <ProgressBar
+            class='cap-rail'
+            style={{capStyle @model.capacityBand.hue}}
+            @value={{if @model.occupiedBins @model.occupiedBins 0}}
+            @max={{@model.totalBins}}
+          />
         </section>
       {{/if}}
 
@@ -241,28 +270,23 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
 
         <section class='sec'>
           <h2><User class='sec-icon' role='presentation' />Contact</h2>
-          <dl class='kv'>
-            <div>
-              <dt>Person</dt>
-              <dd>{{if @model.contactPerson @model.contactPerson '—'}}</dd>
-            </div>
-            <div>
-              <dt>Email</dt>
-              <dd><@fields.contactEmail @format='atom' /></dd>
-            </div>
-            <div>
-              <dt>Phone</dt>
-              <dd class='mono'>{{if
-                  @model.contactPhone
-                  @model.contactPhone
-                  '—'
-                }}</dd>
-            </div>
-            <div>
-              <dt>Hours</dt>
-              <dd>{{if @model.operatingHours @model.operatingHours '—'}}</dd>
-            </div>
-          </dl>
+          <KeyValue class='kv' @items={{CONTACT_FACTS}}>
+            <:value as |item|>
+              {{#if (eq item.value 'contactPerson')}}
+                {{if @model.contactPerson @model.contactPerson '—'}}
+              {{else if (eq item.value 'contactEmail')}}
+                <@fields.contactEmail @format='atom' />
+              {{else if (eq item.value 'contactPhone')}}
+                <span class='mono'>{{if
+                    @model.contactPhone
+                    @model.contactPhone
+                    '—'
+                  }}</span>
+              {{else}}
+                {{if @model.operatingHours @model.operatingHours '—'}}
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
       </div>
 
@@ -270,9 +294,11 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         <section class='sec'>
           <h2><Boxes class='sec-icon' role='presentation' />Stock on hand</h2>
           {{#if this.queryError}}
-            <p class='q-error' role='alert'>Could not read stock for this
-              warehouse.
-              {{this.queryError}}</p>
+            <Alert
+              @tone='danger'
+              @title='Could not read stock for this warehouse.'
+              style={{ALERT_STYLE.danger}}
+            >{{this.queryError}}</Alert>
           {{else if this.needsAttention.length}}
             <ul class='wh-rows'>
               {{#each this.needsAttention as |row|}}
@@ -282,7 +308,10 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
                     class='wh-row wh-{{row.stockState}}'
                     {{on 'click' (fn this.open row)}}
                   >
-                    <span class='wr-sku'>{{if row.sku row.sku '—'}}</span>
+                    {{#if row.sku}}<Token
+                        class='wr-sku'
+                        @value={{row.sku}}
+                      />{{else}}<span class='wr-sku'>—</span>{{/if}}
                     <span class='wr-name'>{{if
                         row.productName
                         row.productName
@@ -294,7 +323,10 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
                         ''
                       }}</span>
                     <span class='wr-qty'>{{row.quantityAvailable}}</span>
-                    <span class='wr-state'>{{row.stockState}}</span>
+                    <span class='wr-state'><StatePill
+                        @label={{row.stockStateLabel}}
+                        @hue={{stockStateHue row.stockState}}
+                      /></span>
                   </button>
                 </li>
               {{/each}}
@@ -307,17 +339,17 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
             {{! Loading is not empty. Space is reserved so the section does not
             jump when the query lands. }}
           {{else if this.isQueryLoading}}
-            <ul class='sk-rows' aria-busy='true'>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-            </ul>
+            <LoadingRows />
           {{else if this.rows.length}}
             <p class='hint'>All
               {{this.rows.length}}
               stock rows here are above their reorder point.</p>
           {{else}}
-            <p class='hint'>No stock rows reference this warehouse yet.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No stock rows reference this warehouse yet'
+            />
           {{/if}}
         </section>
       {{/unless}}
@@ -327,7 +359,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
           <h2><Layers class='sec-icon' role='presentation' />Zones</h2>
           <ul class='zones'>
             {{#each @model.zones as |zone|}}
-              <li class='zone'>{{zone}}</li>
+              <li><StatePill @label={{zone}} /></li>
             {{/each}}
           </ul>
         </section>
@@ -388,12 +420,12 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         padding-bottom: var(--boxel-sp);
         border-bottom: 0.125rem solid var(--ful-rule);
       }
-      .code {
-        font-family: var(--font-mono);
-        font-size: var(--t-micro);
-        font-weight: 700;
-        letter-spacing: 0.16em;
-        color: var(--muted-foreground);
+      /* Pret UI Token for the warehouse code, on the muted ink. The body
+         knob lands the pill at the micro size. */
+      .hd .code {
+        --pretui-token-hue: var(--muted-foreground);
+        --text-body: calc(var(--t-micro) + 3.5px);
+        margin-inline: 0;
       }
       .name {
         margin: 0.1rem 0 0;
@@ -409,20 +441,6 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
-      }
-      .inactive {
-        font-size: var(--t-micro);
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 0.125rem 0.4375rem;
-        border-radius: 0.1875rem;
-        color: var(--destructive-ink);
-        background-color: color-mix(
-          in oklch,
-          var(--destructive) 12%,
-          transparent
-        );
       }
       /* Same ground as a section, so it must have the same inset and the same
          corner. It used to be `sp-sm` with square corners against sections at
@@ -446,14 +464,11 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         font-size: var(--t-sm);
         color: var(--muted-foreground);
       }
+      /* Pret UI Alert, info tone, for the virtual-location note; the tone's
+         inks come from ALERT_STYLE and the size from the body knob. */
       .virtual-note {
+        --text-ui-md: var(--t-sm);
         margin: var(--boxel-sp) 0 0;
-        padding: var(--panel-pad);
-        border-radius: var(--panel-radius);
-        border-left: 0.1875rem solid var(--border);
-        font-size: var(--t-sm);
-        color: var(--muted-foreground);
-        background-color: var(--panel-bg);
       }
       .cols {
         display: grid;
@@ -486,23 +501,18 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         text-transform: uppercase;
         color: var(--foreground);
       }
+      /* Pret UI KeyValue: label and value sizes and the column gap. */
       .kv {
-        display: grid;
-        gap: 0.375rem;
-        margin: 0;
+        --text-ui: var(--t-micro);
+        --text-ui-md: var(--t-sm);
+        --space-6: 1.25rem;
       }
-      .kv div {
-        display: grid;
-        grid-template-columns: 5rem minmax(0, 1fr);
-        gap: var(--boxel-sp-xs);
-      }
-      .kv dt {
-        font-size: var(--t-micro);
-        color: var(--muted-foreground);
-      }
-      .kv dd {
-        margin: 0;
-        font-size: var(--t-sm);
+      /* Pret UI EmptyState, compact: no texture, 1rem padding, and the title
+         at the body size. */
+      .empty {
+        --space-9: 1rem;
+        --space-6: 1rem;
+        --text-heading: var(--boxel-font-size);
       }
       .mono {
         font-family: var(--font-mono);
@@ -514,15 +524,6 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         margin: 0;
         padding: 0;
         list-style: none;
-      }
-      .zone {
-        font-family: var(--font-mono);
-        font-size: var(--t-micro);
-        font-weight: 700;
-        padding: 0.1875rem 0.5625rem;
-        border-radius: 0.1875rem;
-        border: 1px solid var(--border);
-        color: var(--muted-foreground);
       }
 
       /* Section icons: one size, one muted colour, everywhere. They make the
@@ -552,28 +553,11 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         padding-bottom: var(--boxel-sp);
         border-bottom: 1px solid var(--ful-rule);
       }
-      .wh-stats div {
-        display: flex;
-        flex-direction: column;
-        gap: 0.125rem;
+      /* Pret UI Stat: the knob keeps the figures at the old large size. */
+      .stat {
+        --text-stat: var(--t-lg);
       }
-      .wh-stats dt {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .wh-stats dd {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-        font-size: var(--t-lg);
-        font-weight: 800;
-      }
-      .wh-stats .alarm dd {
+      .wh-stats .alarm {
         color: var(--destructive-ink);
       }
       .wh-rows {
@@ -590,11 +574,20 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         border-top: 1px solid var(--ful-rule);
         font-size: var(--t-sm);
       }
-      .wr-sku,
       .wr-bin,
       .wr-qty {
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
+      }
+      /* Pret UI Token for the SKU, on the muted ink. */
+      .wh-row .wr-sku {
+        --pretui-token-hue: var(--muted-foreground);
+        --text-body: calc(var(--t-sm) + 3.5px);
+        justify-self: start;
+        margin-inline: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .wr-name {
         overflow: hidden;
@@ -610,16 +603,10 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
       }
       .wr-state {
         text-align: right;
-        font-size: var(--t-micro);
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
       }
-      .wh-out .wr-state,
       .wh-out .wr-qty {
         color: var(--destructive-ink);
       }
-      .wh-low .wr-state,
       .wh-low .wr-qty {
         color: var(--attention-ink);
       }
@@ -657,41 +644,6 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
           transition: none;
         }
       }
-      /* Skeleton rows hold the height the real rows will take. Motion is
-         opt-in via prefers-reduced-motion; the shape is not. */
-      .sk-rows {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        display: grid;
-        gap: 0.5rem;
-      }
-      .sk-line {
-        height: 0.875rem;
-        border-radius: 0.1875rem;
-        background-color: color-mix(
-          in oklch,
-          var(--foreground) 7%,
-          transparent
-        );
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .sk-line {
-          animation: sk-pulse 1.4s ease-in-out infinite;
-        }
-      }
-      @keyframes sk-pulse {
-        50% {
-          opacity: 0.45;
-        }
-      }
-      .q-error {
-        margin: 0;
-        padding: var(--boxel-sp-xs) 0;
-        font-size: var(--t-sm);
-        color: var(--destructive-ink);
-      }
-
       .cap-head {
         display: flex;
         align-items: baseline;
@@ -704,34 +656,21 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
       }
-      .cap-band {
-        font-size: var(--t-micro);
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-      .cap-full {
-        color: var(--destructive-ink);
-      }
-      .cap-tight {
-        color: var(--attention-ink);
-      }
-      .cap-ok {
-        color: var(--success-ink);
-      }
-      .cap-rail {
+      /* Pret UI ProgressBar for the capacity rail. Its track reads --inset,
+         which sits within a shade of the section panel, so the track and the
+         height are set here, and the fill takes the band's hue. */
+      .cap-rail :deep(.pretui-progress) {
         height: 0.5rem;
         border-radius: 0.25rem;
-        overflow: hidden;
         background-color: color-mix(
           in oklch,
           var(--foreground) 10%,
           transparent
         );
       }
-      .cap-fill {
-        display: block;
-        height: 100%;
+      .cap-rail :deep(.pretui-progress-fill) {
+        border-radius: 0;
+        background-color: var(--cap-hue);
       }
     </style>
   </template>
@@ -833,7 +772,10 @@ export class Warehouse extends CardDef {
   static embedded = class Embedded extends Component<typeof Warehouse> {
     <template>
       <div class='wh-emb'>
-        <span class='wh-code'>{{@model.code}}</span>
+        <span class='wh-code'>{{#if @model.code}}<Token
+              class='wh-token'
+              @value={{@model.code}}
+            />{{/if}}</span>
         <span class='wh-name'>{{@model.warehouseName}}</span>
         <span class='wh-slot'>{{if
             @model.locationLabel
@@ -863,11 +805,13 @@ export class Warehouse extends CardDef {
           font-size: 0.9rem;
         }
         .wh-code {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground);
+          min-width: 0;
+        }
+        /* Pret UI Token for the warehouse code, on the muted ink. */
+        .wh-code .wh-token {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.7rem + 3.5px);
+          margin-inline: 0;
         }
         .wh-name {
           font-weight: 600;
@@ -927,12 +871,13 @@ export class Warehouse extends CardDef {
             <p class='loc'>{{@model.locationLabel}}</p>
           {{/if}}
           {{#if @model.utilizationPercent}}
-            <div class='gauge' aria-hidden='true'>
-              <span
-                class='gauge-fill'
-                style={{fillWidth @model.utilizationPercent}}
-              ></span>
-            </div>
+            {{! Pret UI ProgressBar, hidden from assistive tech: the meta row
+                prints the same percentage. }}
+            <ProgressBar
+              class='gauge'
+              @value={{@model.utilizationPercent}}
+              aria-hidden='true'
+            />
           {{/if}}
         </div>
         <div class='r-meta'>
@@ -1048,20 +993,19 @@ export class Warehouse extends CardDef {
           -webkit-line-clamp: 1;
           overflow: hidden;
         }
+        /* Pret UI ProgressBar for the gauge. Its --inset track all but
+           vanishes on the card, so the track and fill keep their old mixes. */
         .gauge {
           margin-top: 0.375rem;
-          height: 0.25rem;
-          border-radius: 999px;
+        }
+        .gauge :deep(.pretui-progress) {
           background-color: color-mix(
             in oklch,
             var(--card-foreground) 12%,
             transparent
           );
-          overflow: hidden;
         }
-        .gauge-fill {
-          display: block;
-          height: 100%;
+        .gauge :deep(.pretui-progress-fill) {
           background-color: color-mix(
             in oklch,
             var(--card-foreground) 55%,
@@ -1106,13 +1050,8 @@ export class Warehouse extends CardDef {
   };
 }
 
-function fillWidth(pct: number | undefined) {
-  return htmlSafe(`width: ${Math.min(100, Math.max(0, pct ?? 0))}%`);
-}
-
 export default Warehouse;
 
-function capStyle(percent: number | undefined, hue: string | undefined) {
-  let pct = Math.max(0, Math.min(100, percent ?? 0));
-  return htmlSafe(`width: ${pct}%; background-color: ${hue ?? 'currentColor'}`);
+function capStyle(hue: string | undefined) {
+  return htmlSafe(`--cap-hue: ${hue ?? 'var(--muted-foreground)'}`);
 }

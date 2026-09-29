@@ -15,6 +15,24 @@ import FactoryIcon from '@cardstack/boxel-icons/building-factory';
 import MapPin from '@cardstack/boxel-icons/map-pin';
 import User from '@cardstack/boxel-icons/user';
 import { money } from './fulfilment-format';
+import { ALERT_STYLE, LoadingRows, Money } from './fulfilment-ui';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
+import { eq } from '@cardstack/boxel-ui/helpers';
+
+const CONTACT_FACTS = [
+  { key: 'Email', value: 'contactEmail' },
+  { key: 'Phone', value: 'contactPhone' },
+];
+
+// Stat prints a string verbatim, and an empty one as its dash.
+function amountText(amount?: number | null, code?: string | null) {
+  return amount ? money(amount, code ?? undefined) : '';
+}
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import { on } from '@ember/modifier';
@@ -130,58 +148,65 @@ export class FulfilmentVendor extends CardDef {
       <article class='vendor'>
         <header class='hd'>
           <div>
-            <span class='code'>{{@model.code}}</span>
+            {{#if @model.code}}<Token
+                class='code'
+                @value={{@model.code}}
+              />{{/if}}
             <h1 class='name'>{{@model.vendorName}}</h1>
           </div>
           {{#if @model.supportsDropship}}
-            <span class='badge'>Dropship enabled</span>
+            <StatePill @label='Dropship enabled' @hue='teal' />
           {{/if}}
         </header>
 
-        <dl class='stats'>
-          <div>
-            <dt>Lead time</dt>
-            <dd>{{#if @model.leadTimeDays}}{{@model.leadTimeDays}}<span
-                  class='unit'
-                >d</span>{{else}}—{{/if}}</dd>
-          </div>
-          <div>
-            <dt>Minimum order</dt>
-            <dd>{{#if @model.minimumOrder.amount}}{{money
-                  @model.minimumOrder.amount
-                  @model.minimumOrder.currency.code
-                }}{{else}}—{{/if}}</dd>
-          </div>
-          <div>
-            <dt>Dropship fee</dt>
-            <dd>{{#if @model.dropshipFee.amount}}{{money
-                  @model.dropshipFee.amount
-                  @model.dropshipFee.currency.code
-                }}{{else}}—{{/if}}</dd>
-          </div>
-          <div>
-            <dt>Products supplied</dt>
-            <dd>{{this.products.length}}</dd>
-          </div>
-        </dl>
+        <div class='stats'>
+          <Stat
+            class='stat'
+            @label='Lead time'
+            @value={{if @model.leadTimeDays @model.leadTimeDays ''}}
+            @hint={{if @model.leadTimeDays 'days'}}
+          />
+          <Stat
+            class='stat'
+            @label='Minimum order'
+            @value={{amountText
+              @model.minimumOrder.amount
+              @model.minimumOrder.currency.code
+            }}
+            @roll={{false}}
+          />
+          <Stat
+            class='stat'
+            @label='Dropship fee'
+            @value={{amountText
+              @model.dropshipFee.amount
+              @model.dropshipFee.currency.code
+            }}
+            @roll={{false}}
+          />
+          <Stat
+            class='stat'
+            @label='Products supplied'
+            @value={{this.products.length}}
+          />
+        </div>
 
         <div class='cols'>
           <section class='sec'>
             <h2><User class='sec-icon' role='presentation' />Contact</h2>
-            <dl class='kv'>
-              <div>
-                <dt>Email</dt>
-                <dd><@fields.contactEmail @format='atom' /></dd>
-              </div>
-              <div>
-                <dt>Phone</dt>
-                <dd class='mono'>{{if
-                    @model.contactPhone
-                    @model.contactPhone
-                    '—'
-                  }}</dd>
-              </div>
-            </dl>
+            <KeyValue class='kv' @items={{CONTACT_FACTS}}>
+              <:value as |item|>
+                {{#if (eq item.value 'contactEmail')}}
+                  <@fields.contactEmail @format='atom' />
+                {{else}}
+                  <span class='mono'>{{if
+                      @model.contactPhone
+                      @model.contactPhone
+                      '—'
+                    }}</span>
+                {{/if}}
+              </:value>
+            </KeyValue>
           </section>
           <section class='sec'>
             <h2><MapPin class='sec-icon' role='presentation' />Ships from</h2>
@@ -192,17 +217,15 @@ export class FulfilmentVendor extends CardDef {
         <section class='sec'>
           <h2><Package class='sec-icon' role='presentation' />Products supplied</h2>
           {{#if this.queryError}}
-            <p class='q-error' role='alert'>Could not read this vendor's
-              products.
-              {{this.queryError}}</p>
+            <Alert
+              @tone='danger'
+              @title="Could not read this vendor's products."
+              style={{ALERT_STYLE.danger}}
+            >{{this.queryError}}</Alert>
             {{! Loading is not empty. Space is reserved so the section does not
               jump when the query lands. }}
           {{else if this.isQueryLoading}}
-            <ul class='sk-rows' aria-busy='true'>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-            </ul>
+            <LoadingRows />
           {{else if this.products.length}}
             <ul class='vp-rows'>
               {{#each this.products as |p|}}
@@ -222,7 +245,10 @@ export class FulfilmentVendor extends CardDef {
                     {{else}}
                       <span class='vp-thumb vp-blank'></span>
                     {{/if}}
-                    <span class='vp-sku'>{{if p.sku p.sku '—'}}</span>
+                    {{#if p.sku}}<Token
+                        class='vp-sku'
+                        @value={{p.sku}}
+                      />{{else}}<span class='vp-sku'>—</span>{{/if}}
                     <span class='vp-name'>{{if
                         p.productName
                         p.productName
@@ -233,10 +259,10 @@ export class FulfilmentVendor extends CardDef {
                         p.vendorSku
                         ''
                       }}</span>
-                    <span class='vp-cost'>{{#if p.cost.amount}}{{money
-                          p.cost.amount
-                          p.cost.currency.code
-                        }}{{else}}—{{/if}}</span>
+                    <span class='vp-cost'>{{#if p.cost.amount}}<Money
+                          @amount={{p.cost.amount}}
+                          @code={{p.cost.currency.code}}
+                        />{{else}}—{{/if}}</span>
                   </button>
                 </li>
               {{/each}}
@@ -247,16 +273,19 @@ export class FulfilmentVendor extends CardDef {
                 shelves.</p>
             {{/if}}
           {{else}}
-            <p class='hint'>No products name this vendor yet. Set a product's
-              supplier to see it here.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No products name this vendor yet'
+              @message="Set a product's supplier to see it here."
+            />
           {{/if}}
         </section>
 
         {{#unless @model.supportsDropship}}
-          <p class='note'>
-            This vendor restocks your warehouses only. Orders for their products
-            are picked from your own shelves, never forwarded.
-          </p>
+          <Alert class='note' @tone='info' style={{ALERT_STYLE.info}}>This
+            vendor restocks your warehouses only. Orders for their products are
+            picked from your own shelves, never forwarded.</Alert>
         {{/unless}}
       </article>
 
@@ -314,62 +343,26 @@ export class FulfilmentVendor extends CardDef {
           padding-bottom: var(--boxel-sp);
           border-bottom: 0.125rem solid var(--ful-rule);
         }
-        .code {
-          font-family: var(--font-mono);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.16em;
-          color: var(--muted-foreground);
+        /* Pret UI Token for the vendor code, on the muted ink. The body knob
+           lands the pill at the micro size. */
+        .hd .code {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(var(--t-micro) + 3.5px);
+          margin-inline: 0;
         }
         .name {
           margin: 0.1rem 0 0;
           font-size: var(--t-xl);
           line-height: 1.05;
         }
-        .badge {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 0.1875rem 0.5625rem;
-          border-radius: 0.1875rem;
-          color: var(--muted-foreground);
-          background-color: color-mix(
-            in oklch,
-            var(--muted-foreground) 12%,
-            transparent
-          );
-        }
         .stats {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-xl);
-          margin: 0;
         }
-        .stats div {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-        }
-        .stats dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .stats dd {
-          margin: 0;
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: var(--t-lg);
-          font-weight: 700;
-        }
-        .unit {
-          font-size: var(--t-micro);
-          color: var(--muted-foreground);
+        /* Pret UI Stat: the knob keeps the figures at the old large size. */
+        .stat {
+          --text-stat: var(--t-lg);
         }
         .cols {
           display: grid;
@@ -402,38 +395,26 @@ export class FulfilmentVendor extends CardDef {
           text-transform: uppercase;
           color: var(--foreground);
         }
+        /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          display: grid;
-          gap: 0.375rem;
-          margin: 0;
+          --text-ui: var(--t-micro);
+          --text-ui-md: var(--t-sm);
+          --space-6: 1.25rem;
         }
-        .kv div {
-          display: grid;
-          grid-template-columns: 4.5rem minmax(0, 1fr);
-          gap: var(--boxel-sp-xs);
-        }
-        .kv dt {
-          font-size: var(--t-micro);
-          color: var(--muted-foreground);
-        }
-        .kv dd {
-          margin: 0;
-          font-size: var(--t-sm);
+        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
+           title at the body size. */
+        .empty {
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
         .mono {
           font-family: var(--font-mono);
         }
-        /* Measured before: padL 12.0 / radius 0 / no ground, against panels at
-           padL 21.3 / radius 10 / 3% tint. Same page, two insets — so its text
-           started 9px left of every heading above it. It keeps its quiet voice
-           (no ground) but takes the panel geometry so it registers. */
+        /* Pret UI Alert, info tone, for the restock-only note; the tone's inks
+           come from ALERT_STYLE and the size from the body knob. */
         .note {
-          margin: 0;
-          padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
-          border-left: 0.1875rem solid var(--border);
-          font-size: var(--t-sm);
-          color: var(--muted-foreground);
+          --text-ui-md: var(--t-sm);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
@@ -482,11 +463,20 @@ export class FulfilmentVendor extends CardDef {
             transparent
           );
         }
-        .vp-sku,
         .vp-vsku,
         .vp-cost {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
+        }
+        /* Pret UI Token for the SKU, on the muted ink. */
+        .vp-row .vp-sku {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(var(--t-sm) + 3.5px);
+          justify-self: start;
+          margin-inline: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .vp-name {
           overflow: hidden;
@@ -535,40 +525,6 @@ export class FulfilmentVendor extends CardDef {
             transition: none;
           }
         }
-        /* Skeleton rows hold the height the real rows will take. Motion is
-           opt-in via prefers-reduced-motion; the shape is not. */
-        .sk-rows {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: grid;
-          gap: 0.5rem;
-        }
-        .sk-line {
-          height: 0.875rem;
-          border-radius: 0.1875rem;
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 7%,
-            transparent
-          );
-        }
-        @media (prefers-reduced-motion: no-preference) {
-          .sk-line {
-            animation: sk-pulse 1.4s ease-in-out infinite;
-          }
-        }
-        @keyframes sk-pulse {
-          50% {
-            opacity: 0.45;
-          }
-        }
-        .q-error {
-          margin: 0;
-          padding: var(--boxel-sp-xs) 0;
-          font-size: var(--t-sm);
-          color: var(--destructive-ink);
-        }
       </style>
     </template>
   };
@@ -576,7 +532,10 @@ export class FulfilmentVendor extends CardDef {
   static embedded = class Embedded extends Component<typeof FulfilmentVendor> {
     <template>
       <div class='v-emb'>
-        <span class='v-code'>{{@model.code}}</span>
+        <span class='v-code'>{{#if @model.code}}<Token
+              class='v-token'
+              @value={{@model.code}}
+            />{{/if}}</span>
         <span class='v-name'>{{@model.vendorName}}</span>
         <span class='v-slot'>{{if
             @model.leadTimeLabel
@@ -608,11 +567,13 @@ export class FulfilmentVendor extends CardDef {
           font-size: 0.9rem;
         }
         .v-code {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground);
+          min-width: 0;
+        }
+        /* Pret UI Token for the vendor code, on the muted ink. */
+        .v-code .v-token {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.7rem + 3.5px);
+          margin-inline: 0;
         }
         .v-name {
           font-weight: 600;

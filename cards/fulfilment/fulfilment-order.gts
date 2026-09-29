@@ -24,12 +24,21 @@ import MapPin from '@cardstack/boxel-icons/map-pin';
 import { FulfilmentLineItemField } from './fulfilment-line-item';
 import {
   OrderStatusField,
+  ORDER_PIPELINE,
   orderStatusStyle,
   orderProgress,
 } from './order-status';
 import { Warehouse } from './warehouse';
 import StatusChip from './fulfilment-status-chip';
 import { money } from './fulfilment-format';
+import { Money, lifecycleSteps } from './fulfilment-ui';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { StepList } from '@cardstack/pretui/components/step-list';
+import { Token } from '@cardstack/pretui/components/token';
+import { eq } from '@cardstack/boxel-ui/helpers';
 
 // Where the order came from. v1 enters orders by hand; the field exists now so
 // that an integration later is a new option rather than a migration.
@@ -68,6 +77,22 @@ export const OrderPriorityField = enumField(StringField, {
   options: ORDER_PRIORITIES,
   displayName: 'Priority',
 });
+
+// Urgency is a status, so the priority pill takes the status hues.
+const PRIORITY_HUE: Record<string, Hue> = {
+  express: 'amber',
+  rush: 'orange',
+};
+
+const TIMELINE_FACTS = [
+  { key: 'Placed', value: 'placedAt' },
+  { key: 'Fulfilled', value: 'fulfilledAt' },
+  { key: 'Source', value: 'source' },
+];
+
+function labelOf(options: { value: string; label: string }[], value?: string) {
+  return options.find((o) => o.value === value)?.label ?? value ?? '';
+}
 
 // Order (Or) — what the customer bought, and how far it has got.
 //
@@ -180,6 +205,14 @@ export class FulfilmentOrder extends CardDef {
     return this.priority === 'express' || this.priority === 'rush';
   }
 
+  get priorityLabel() {
+    return labelOf(ORDER_PRIORITIES, this.priority);
+  }
+
+  get priorityHue(): Hue {
+    return PRIORITY_HUE[this.priority ?? ''] ?? 'slate';
+  }
+
   get isFulfilled() {
     return this.fulfilledAt != null;
   }
@@ -197,6 +230,32 @@ export class FulfilmentOrder extends CardDef {
   }
 
   static isolated = class Isolated extends Component<typeof FulfilmentOrder> {
+    get lifecycle() {
+      return lifecycleSteps(
+        ORDER_PIPELINE,
+        (value) => orderStatusStyle(value).label,
+        ORDER_PIPELINE.indexOf(this.args.model?.status ?? ''),
+      );
+    }
+
+    get paymentLabel() {
+      return labelOf(PAYMENT_STATUSES, this.args.model?.paymentStatus);
+    }
+
+    // The totals block as KeyValue rows: every line is a formatted string.
+    get totalsFacts() {
+      let model = this.args.model;
+      let code = model?.currencyCode;
+      let shipping = model?.shippingCost?.amount;
+      let tax = model?.tax?.amount;
+      return [
+        { key: 'Subtotal', value: money(model?.subtotal?.amount, code) },
+        { key: 'Shipping', value: shipping ? money(shipping, code) : '—' },
+        { key: 'Tax', value: tax ? money(tax, code) : '—' },
+        { key: 'Total', value: money(model?.total?.amount, code) },
+      ];
+    }
+
     <template>
       <article class='ord'>
         {{#if @model.isExpress}}
@@ -220,37 +279,53 @@ export class FulfilmentOrder extends CardDef {
               @size='base'
             />
             {{#if @model.isExpress}}
-              <span class='prio'><@fields.priority @format='atom' /></span>
+              <StatePill
+                @label={{@model.priorityLabel}}
+                @hue={{@model.priorityHue}}
+              />
             {{/if}}
           </div>
         </header>
 
-        <div class='track' aria-hidden='true'>
-          <span class='track-fill' style={{barWidth @model.progress}}></span>
-        </div>
+        {{! Pret UI StepList, track variant: one bar per happy-path stage with
+            its caption. An order that has left the path (on hold, cancelled,
+            returned) shows every stage upcoming. }}
+        <StepList
+          class='track'
+          @steps={{this.lifecycle}}
+          @variant='track'
+          @label='Order progress'
+        />
 
-        <dl class='stats'>
-          <div>
-            <dt>Items</dt>
-            <dd>{{@model.itemCount}}</dd>
-          </div>
-          <div>
-            <dt>Total</dt>
-            <dd>{{money @model.total.amount @model.currencyCode}}</dd>
-          </div>
-          <div>
-            <dt>Warehouse</dt>
-            <dd class='sm'>{{if
-                @model.warehouseCode
-                @model.warehouseCode
-                'Not allocated'
-              }}</dd>
-          </div>
-          <div>
-            <dt>Payment</dt>
-            <dd class='sm'><@fields.paymentStatus @format='atom' /></dd>
-          </div>
-        </dl>
+        <div class='stats'>
+          <Stat
+            class='stat'
+            @label='Items'
+            @value={{if @model.itemCount @model.itemCount 0}}
+          />
+          <Stat
+            class='stat'
+            @label='Total'
+            @value={{money @model.total.amount @model.currencyCode}}
+            @roll={{false}}
+          />
+          <Stat
+            class='stat stat-sm'
+            @label='Warehouse'
+            @value={{if
+              @model.warehouseCode
+              @model.warehouseCode
+              'Not allocated'
+            }}
+            @roll={{false}}
+          />
+          <Stat
+            class='stat stat-sm'
+            @label='Payment'
+            @value={{this.paymentLabel}}
+            @roll={{false}}
+          />
+        </div>
 
         <section class='sec'>
           <h2><List class='sec-icon' role='presentation' />Line items</h2>
@@ -260,29 +335,14 @@ export class FulfilmentOrder extends CardDef {
               >Total</span>
             </div>
             <@fields.lineItems @format='embedded' />
-            <div class='totals'>
-              <div><span>Subtotal</span>{{money
-                  @model.subtotal.amount
-                  @model.currencyCode
-                }}</div>
-              <div><span>Shipping</span>{{#if
-                  @model.shippingCost.amount
-                }}{{money
-                    @model.shippingCost.amount
-                    @model.currencyCode
-                  }}{{else}}—{{/if}}</div>
-              <div><span>Tax</span>{{#if @model.tax.amount}}{{money
-                    @model.tax.amount
-                    @model.currencyCode
-                  }}{{else}}—{{/if}}</div>
-              <div class='grand'><span>Total</span>{{money
-                  @model.total.amount
-                  @model.currencyCode
-                }}</div>
-            </div>
+            <KeyValue class='totals' @items={{this.totalsFacts}} />
           {{else}}
-            <p class='empty'>No line items. An order with no lines cannot be
-              picked — add at least one before allocating.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No line items'
+              @message='An order with no lines cannot be picked — add at least one before allocating.'
+            />
           {{/if}}
         </section>
 
@@ -293,22 +353,19 @@ export class FulfilmentOrder extends CardDef {
           </section>
           <section class='sec'>
             <h2><Clock class='sec-icon' role='presentation' />Timeline</h2>
-            <dl class='kv'>
-              <div>
-                <dt>Placed</dt>
-                <dd><@fields.placedAt @format='atom' /></dd>
-              </div>
-              <div>
-                <dt>Fulfilled</dt>
-                <dd>{{#if @model.fulfilledAt}}<@fields.fulfilledAt
+            <KeyValue class='kv' @items={{TIMELINE_FACTS}}>
+              <:value as |item|>
+                {{#if (eq item.value 'placedAt')}}
+                  <@fields.placedAt @format='atom' />
+                {{else if (eq item.value 'fulfilledAt')}}
+                  {{#if @model.fulfilledAt}}<@fields.fulfilledAt
                       @format='atom'
-                    />{{else}}Not yet{{/if}}</dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd><@fields.source @format='atom' /></dd>
-              </div>
-            </dl>
+                    />{{else}}Not yet{{/if}}
+                {{else}}
+                  <@fields.source @format='atom' />
+                {{/if}}
+              </:value>
+            </KeyValue>
           </section>
         </div>
 
@@ -419,65 +476,29 @@ export class FulfilmentOrder extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
         }
-        .prio {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 0.1875rem 0.5rem;
-          border-radius: 0.1875rem;
-          color: var(--foreground);
-          border: 1px dashed var(--ful-perf);
-        }
+        /* Pret UI StepList, track variant. Captions sit at the micro size.
+           The track draws its markers with no disc, so the current number
+           and the bars read the ink tokens: the stock current marker is
+           --primary-foreground (1.50:1 on the dark panel) and the stock
+           current bar is --primary (1.22:1 on the light panel). */
         .track {
-          height: 0.1875rem;
-          border-radius: 999px;
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 10%,
-            transparent
-          );
-          overflow: hidden;
-        }
-        .track-fill {
-          display: block;
-          height: 100%;
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 55%,
-            transparent
-          );
+          --text-ui: var(--t-micro);
+          --pretui-step-current-marker-fg: var(--primary-ink);
+          --pretui-step-current-bar: var(--primary-ink);
+          --pretui-step-complete-marker-fg: var(--success-ink);
+          --pretui-step-complete-bar: var(--success-ink);
         }
         .stats {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
           gap: var(--boxel-sp);
-          margin: 0;
         }
-        .stats div {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
+        /* Pret UI Stat: the knob keeps the figures at the old sizes. */
+        .stat {
+          --text-stat: var(--t-lg);
         }
-        .stats dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .stats dd {
-          margin: 0;
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: var(--t-lg);
-          font-weight: 700;
-        }
-        .stats .sm {
-          font-size: var(--t-sm);
-          font-weight: 600;
+        .stat-sm {
+          --text-stat: var(--t-sm);
         }
         .sec {
           /* A surface, not just a gap. Sections were told apart only by spacing,
@@ -522,60 +543,50 @@ export class FulfilmentOrder extends CardDef {
         .li-head span:nth-child(n + 2) {
           text-align: right;
         }
-        .totals {
+        /* Pret UI KeyValue for the totals, right-aligned under the lines
+           with the grand total set heavier above a rule. */
+        .sec .totals {
+          --text-ui: var(--t-sm);
+          --text-ui-md: var(--t-sm);
+          --space-6: var(--boxel-sp-lg);
+          justify-content: end;
+          grid-template-columns: 6rem 6rem;
           margin-top: var(--boxel-sp-sm);
           padding-top: var(--boxel-sp-xs);
           border-top: 1px dashed var(--ful-perf);
-          display: grid;
-          gap: 0.25rem;
-          justify-content: end;
         }
-        .totals div {
-          display: grid;
-          grid-template-columns: 6rem 6rem;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--t-sm);
-          text-align: right;
+        .totals :deep(dd) {
+          justify-content: flex-end;
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
         }
-        .totals span {
-          text-align: left;
-          font-family: var(--font-sans);
-          color: var(--muted-foreground);
-        }
-        .grand {
-          font-weight: 800;
-          font-size: var(--t-body);
+        .totals :deep(dt:last-of-type),
+        .totals :deep(dd:last-of-type) {
           padding-top: 0.25rem;
           border-top: 1px solid var(--border);
+          font-size: var(--t-body);
+          font-weight: 800;
+        }
+        .totals :deep(dt:last-of-type) {
+          color: var(--foreground);
         }
         .cols {
           display: grid;
           gap: var(--boxel-sp-lg);
           grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
         }
+        /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          display: grid;
-          gap: 0.375rem;
-          margin: 0;
+          --text-ui: var(--t-micro);
+          --text-ui-md: var(--t-sm);
+          --space-6: 1.25rem;
         }
-        .kv div {
-          display: grid;
-          grid-template-columns: 6rem minmax(0, 1fr);
-          gap: var(--boxel-sp-xs);
-        }
-        .kv dt {
-          font-size: var(--t-micro);
-          color: var(--muted-foreground);
-        }
-        .kv dd {
-          margin: 0;
-          font-size: var(--t-sm);
-        }
+        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
+           title at the body size. */
         .empty {
-          font-size: var(--t-sm);
-          color: var(--muted-foreground);
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
@@ -603,7 +614,10 @@ export class FulfilmentOrder extends CardDef {
   static embedded = class Embedded extends Component<typeof FulfilmentOrder> {
     <template>
       <div class='o-emb'>
-        <span class='o-num'>{{@model.orderNumber}}</span>
+        <span class='o-num'>{{#if @model.orderNumber}}<Token
+              class='o-token'
+              @value={{@model.orderNumber}}
+            />{{/if}}</span>
         <span class='o-cust'>{{if
             @model.customerName
             @model.customerName
@@ -614,10 +628,11 @@ export class FulfilmentOrder extends CardDef {
             @hue={{@model.statusStyle.hue}}
           /></span>
         <span class='o-slot'>{{@model.itemCount}} items</span>
-        <span class='o-slot o-total'>{{money
-            @model.total.amount
-            @model.currencyCode
-          }}</span>
+        <Money
+          class='o-slot o-total'
+          @amount={{@model.total.amount}}
+          @code={{@model.currencyCode}}
+        />
       </div>
 
       <style scoped>
@@ -638,10 +653,16 @@ export class FulfilmentOrder extends CardDef {
           font-size: 0.88rem;
         }
         .o-num {
-          font-family: var(--font-mono);
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          color: var(--foreground);
+          min-width: 0;
+        }
+        /* Pret UI Token for the order number, on the primary ink. */
+        .o-num .o-token {
+          --pretui-token-hue: var(--primary-ink);
+          --text-body: calc(0.88rem + 3.5px);
+          margin-inline: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .o-cust {
           color: var(--muted-foreground);
@@ -725,10 +746,11 @@ export class FulfilmentOrder extends CardDef {
               @model.warehouseCode
               ''
             }}</span>
-          <span class='total'>{{money
-              @model.total.amount
-              @model.currencyCode
-            }}</span>
+          <Money
+            class='total'
+            @amount={{@model.total.amount}}
+            @code={{@model.currencyCode}}
+          />
         </div>
       </article>
 
@@ -945,10 +967,6 @@ export class FulfilmentOrder extends CardDef {
       </style>
     </template>
   };
-}
-
-function barWidth(pct: number | undefined) {
-  return htmlSafe(`width: ${Math.min(100, Math.max(0, pct ?? 0))}%`);
 }
 
 function dotStyle(hue: string | undefined) {

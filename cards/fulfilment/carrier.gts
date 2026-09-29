@@ -23,6 +23,21 @@ import { fn } from '@ember/helper';
 // the constructor, never at module evaluation.
 import { Shipment } from './shipment';
 import { isShipmentException } from './shipment-status';
+import StatusChip from './fulfilment-status-chip';
+import { ALERT_STYLE, LoadingRows } from './fulfilment-ui';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
+import { eq } from '@cardstack/boxel-ui/helpers';
+
+const ACCOUNT_FACTS = [
+  { key: 'Account number', value: 'accountNumber' },
+  { key: 'Tracking URL', value: 'trackingUrlPattern' },
+  { key: 'Dimensional divisor', value: 'dimDivisor' },
+  { key: 'Countries', value: 'supportedCountries' },
+];
 
 // A carrier's service level: the promise, and what it costs.
 //
@@ -281,6 +296,12 @@ export class Carrier extends CardDef {
       return this.shipments.filter((s) => s.status && s.status !== 'delivered');
     }
 
+    // Stat prints a string verbatim, and an empty one as its dash.
+    get onTimeText() {
+      let pct = this.args.model?.onTimePercent;
+      return pct ? `${pct}%` : '';
+    }
+
     get troubled(): any[] {
       return this.inFlight.filter(
         (s) => s.isLate || isShipmentException(s.status),
@@ -291,49 +312,54 @@ export class Carrier extends CardDef {
       <article class='carrier'>
         <header class='hd'>
           <div class='hd-id'>
-            <span class='code'>{{@model.code}}</span>
+            {{#if @model.code}}<Token
+                class='code'
+                @value={{@model.code}}
+              />{{/if}}
             <h1 class='name'>{{@model.carrierName}}</h1>
           </div>
-          <dl class='hd-stats'>
-            <div>
-              <dt>On time</dt>
-              <dd>{{#if
-                  @model.onTimePercent
-                }}{{@model.onTimePercent}}%{{else}}—{{/if}}</dd>
-            </div>
-            <div>
-              <dt>Deliveries</dt>
-              <dd>{{if @model.totalDeliveries @model.totalDeliveries '—'}}</dd>
-            </div>
-            <div>
-              <dt>Services</dt>
-              <dd>{{@model.services.length}}</dd>
-            </div>
-            <div>
-              <dt>In flight</dt>
-              <dd>{{this.inFlight.length}}</dd>
-            </div>
-            <div class='{{if this.troubled.length "alarm"}}'>
-              <dt>Troubled</dt>
-              <dd>{{this.troubled.length}}</dd>
-            </div>
-          </dl>
+          <div class='hd-stats'>
+            <Stat
+              class='stat'
+              @label='On time'
+              @value={{this.onTimeText}}
+              @roll={{false}}
+            />
+            <Stat
+              class='stat'
+              @label='Deliveries'
+              @value={{if @model.totalDeliveries @model.totalDeliveries ''}}
+            />
+            <Stat
+              class='stat'
+              @label='Services'
+              @value={{if @model.services.length @model.services.length 0}}
+            />
+            <Stat
+              class='stat'
+              @label='In flight'
+              @value={{this.inFlight.length}}
+            />
+            <Stat
+              class='stat {{if this.troubled.length "alarm"}}'
+              @label='Troubled'
+              @value={{this.troubled.length}}
+            />
+          </div>
         </header>
 
         <section class='sec'>
           <h2><Route class='sec-icon' role='presentation' />With them now</h2>
           {{#if this.queryError}}
-            <p class='q-error' role='alert'>Could not read shipments for this
-              carrier.
-              {{this.queryError}}</p>
+            <Alert
+              @tone='danger'
+              @title='Could not read shipments for this carrier.'
+              style={{ALERT_STYLE.danger}}
+            >{{this.queryError}}</Alert>
             {{! Loading is not empty. Space is reserved so the section does not
               jump when the query lands. }}
           {{else if this.isQueryLoading}}
-            <ul class='sk-rows' aria-busy='true'>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-            </ul>
+            <LoadingRows />
           {{else if this.inFlight.length}}
             <ul class='cs-rows'>
               {{#each this.inFlight as |s|}}
@@ -343,7 +369,7 @@ export class Carrier extends CardDef {
                     class='cs-row {{if s.isLate "cs-late"}}'
                     {{on 'click' (fn this.open s)}}
                   >
-                    <span class='cs-num'>{{s.shipmentNumber}}</span>
+                    <Token class='cs-num' @value={{s.shipmentNumber}} />
                     <span class='cs-svc'>{{if
                         s.serviceLevel
                         s.serviceLevel
@@ -354,13 +380,20 @@ export class Carrier extends CardDef {
                         s.latestEvent.location
                         ''
                       }}</span>
-                    <span class='cs-state'>{{s.statusStyle.label}}</span>
+                    <span class='cs-state'><StatusChip
+                        @label={{s.statusStyle.label}}
+                        @hue={{s.statusStyle.hue}}
+                      /></span>
                   </button>
                 </li>
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>Nothing with this carrier right now.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='Nothing with this carrier right now'
+            />
           {{/if}}
         </section>
 
@@ -375,47 +408,44 @@ export class Carrier extends CardDef {
           {{#if @model.services.length}}
             <@fields.services @format='embedded' />
           {{else}}
-            <p class='empty'>No services configured. Rate shopping will skip
-              this carrier until at least one service has a base rate.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No services configured'
+              @message='Rate shopping will skip this carrier until at least one service has a base rate.'
+            />
           {{/if}}
         </section>
 
         <section class='sec'>
           <h2><CreditCard class='sec-icon' role='presentation' />Account</h2>
-          <dl class='kv'>
-            <div>
-              <dt>Account number</dt>
-              <dd class='mono'>{{if
-                  @model.accountNumber
-                  @model.accountNumber
-                  '—'
-                }}</dd>
-            </div>
-            <div>
-              <dt>Tracking URL</dt>
-              <dd class='mono wrap'>{{if
-                  @model.trackingUrlPattern
-                  @model.trackingUrlPattern
-                  'Not configured — tracking numbers will not link out'
-                }}</dd>
-            </div>
-            <div>
-              <dt>Dimensional divisor</dt>
-              <dd class='mono'>{{if
-                  @model.dimDivisor
-                  @model.dimDivisor
-                  '—'
-                }}</dd>
-            </div>
-            <div>
-              <dt>Countries</dt>
-              <dd>{{if
+          <KeyValue class='kv' @items={{ACCOUNT_FACTS}}>
+            <:value as |item|>
+              {{#if (eq item.value 'accountNumber')}}
+                {{#if @model.accountNumber}}<Token
+                    @value={{@model.accountNumber}}
+                  />{{else}}—{{/if}}
+              {{else if (eq item.value 'trackingUrlPattern')}}
+                <span class='mono wrap'>{{if
+                    @model.trackingUrlPattern
+                    @model.trackingUrlPattern
+                    'Not configured — tracking numbers will not link out'
+                  }}</span>
+              {{else if (eq item.value 'dimDivisor')}}
+                <span class='mono'>{{if
+                    @model.dimDivisor
+                    @model.dimDivisor
+                    '—'
+                  }}</span>
+              {{else}}
+                {{if
                   @model.supportedCountries.length
                   (join @model.supportedCountries)
                   '—'
-                }}</dd>
-            </div>
-          </dl>
+                }}
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
       </article>
 
@@ -473,12 +503,12 @@ export class Carrier extends CardDef {
           padding-bottom: var(--boxel-sp);
           border-bottom: 0.125rem solid var(--ful-rule);
         }
-        .code {
-          font-family: var(--font-mono);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.16em;
-          color: var(--muted-foreground);
+        /* Pret UI Token for the carrier code, on the muted ink. The body
+           knob lands the pill at the micro size. */
+        .hd .code {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(var(--t-micro) + 3.5px);
+          margin-inline: 0;
         }
         .name {
           margin: 0.1rem 0 0;
@@ -488,29 +518,12 @@ export class Carrier extends CardDef {
         }
         .hd-stats {
           display: flex;
+          flex-wrap: wrap;
           gap: var(--boxel-sp-lg);
-          margin: 0;
         }
-        .hd-stats div {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-        }
-        .hd-stats dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .hd-stats dd {
-          margin: 0;
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: var(--t-lg);
-          font-weight: 700;
+        /* Pret UI Stat: the knob keeps the figure at the old large size. */
+        .stat {
+          --text-stat: var(--t-lg);
         }
         .sec {
           /* A surface, not just a gap. Sections were told apart only by spacing,
@@ -555,23 +568,11 @@ export class Carrier extends CardDef {
         .svc-head span:nth-child(n + 3) {
           text-align: right;
         }
+        /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-          margin: 0;
-        }
-        .kv div {
-          display: grid;
-          grid-template-columns: 12rem minmax(0, 1fr);
-          gap: var(--boxel-sp-xs);
-        }
-        .kv dt {
-          font-size: var(--t-micro);
-          color: var(--muted-foreground);
-        }
-        .kv dd {
-          margin: 0;
-          font-size: var(--t-sm);
+          --text-ui: var(--t-micro);
+          --text-ui-md: var(--t-sm);
+          --space-6: 1.25rem;
         }
         .mono {
           font-family: var(--font-mono);
@@ -579,15 +580,13 @@ export class Carrier extends CardDef {
         .wrap {
           overflow-wrap: anywhere;
         }
+        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
+           title at the body size. */
         .empty {
-          font-size: var(--t-sm);
-          color: var(--muted-foreground);
-          margin: var(--boxel-sp-xs) 0 0;
-        }
-        @media (width <= 500px) {
-          .kv div {
-            grid-template-columns: minmax(0, 1fr);
-          }
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
+          margin-top: var(--boxel-sp-xs);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
@@ -609,7 +608,7 @@ export class Carrier extends CardDef {
           }
         }
 
-        .hd-stats .alarm dd {
+        .hd-stats .alarm {
           color: var(--destructive-ink);
         }
         .cs-rows {
@@ -626,9 +625,15 @@ export class Carrier extends CardDef {
           border-top: 1px solid var(--ful-rule);
           font-size: var(--t-sm);
         }
-        .cs-num {
-          font-family: var(--font-mono);
-          font-weight: 700;
+        /* Pret UI Token for the shipment number, on the primary ink. */
+        .cs-row .cs-num {
+          --pretui-token-hue: var(--primary-ink);
+          --text-body: calc(var(--t-sm) + 3.5px);
+          justify-self: start;
+          margin-inline: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .cs-svc,
         .cs-dest {
@@ -639,14 +644,10 @@ export class Carrier extends CardDef {
         }
         .cs-state {
           text-align: right;
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
         }
-        .cs-late .cs-state,
-        .cs-late .cs-num {
-          color: var(--destructive-ink);
+        /* A late row's number takes the danger ink. */
+        .cs-row.cs-late .cs-num {
+          --pretui-token-hue: var(--destructive-ink);
         }
 
         .cs-row-li {
@@ -682,40 +683,6 @@ export class Carrier extends CardDef {
             transition: none;
           }
         }
-        /* Skeleton rows hold the height the real rows will take. Motion is
-           opt-in via prefers-reduced-motion; the shape is not. */
-        .sk-rows {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: grid;
-          gap: 0.5rem;
-        }
-        .sk-line {
-          height: 0.875rem;
-          border-radius: 0.1875rem;
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 7%,
-            transparent
-          );
-        }
-        @media (prefers-reduced-motion: no-preference) {
-          .sk-line {
-            animation: sk-pulse 1.4s ease-in-out infinite;
-          }
-        }
-        @keyframes sk-pulse {
-          50% {
-            opacity: 0.45;
-          }
-        }
-        .q-error {
-          margin: 0;
-          padding: var(--boxel-sp-xs) 0;
-          font-size: var(--t-sm);
-          color: var(--destructive-ink);
-        }
       </style>
     </template>
   };
@@ -723,7 +690,10 @@ export class Carrier extends CardDef {
   static embedded = class Embedded extends Component<typeof Carrier> {
     <template>
       <div class='c-emb'>
-        <span class='c-code'>{{@model.code}}</span>
+        <span class='c-code'>{{#if @model.code}}<Token
+              class='c-token'
+              @value={{@model.code}}
+            />{{/if}}</span>
         <span class='c-name'>{{@model.carrierName}}</span>
         <span class='c-slot'>{{#if
             @model.onTimePercent
@@ -739,11 +709,13 @@ export class Carrier extends CardDef {
           font-size: 0.9rem;
         }
         .c-code {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground);
+          min-width: 0;
+        }
+        /* Pret UI Token for the carrier code, on the muted ink. */
+        .c-code .c-token {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.7rem + 3.5px);
+          margin-inline: 0;
         }
         .c-name {
           font-weight: 600;
