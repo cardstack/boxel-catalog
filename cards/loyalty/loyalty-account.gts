@@ -21,42 +21,67 @@ import LoyaltyTierField from './loyalty-tier-field';
 import MemberNumberField from './member-number-field';
 import PointsBalanceField from './points-balance-field';
 import { MembershipStatusField } from './membership-status-field';
-import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
-import { FormatNumber } from '@cardstack/pretui/components/format-number';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Delta } from '@cardstack/pretui/components/delta';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Token } from '@cardstack/pretui/components/token';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
+import {
+  formatDate,
+  formatNumber,
+  toDate,
+} from '@cardstack/pretui/internal/reading-format';
 
-interface SignedPointsSignature {
-  Args: {
-    amount?: number | null;
-    /** Colour the figure by its sign: earns green, deductions red. */
-    toned?: boolean;
-  };
+/** `+1,200`, `-500`, `0`: the sign on earns, through the kit's own number formatter. */
+function signedPoints(n: number): string {
+  return formatNumber(n, undefined, { signDisplay: 'exceptZero' });
+}
+
+// Delta colours a rise with the `--success` fill and has no knob for it, so
+// on the Delta element itself `--success` is re-pointed at its ink token, the
+// colour a status word takes on a neutral surface. A fall reads Delta's own
+// `--pretui-destructive-ink` knob.
+const POINTS_INK = htmlSafe(
+  '--success: var(--success-ink); --pretui-destructive-ink: var(--destructive-ink);',
+);
+
+/** A date fact as the Date field's own long preset prints it; empty when unset, so `Stat` shows its dash. */
+function longDate(value?: Date | null): string {
+  let date = toDate(value ?? undefined);
+  return date ? formatDate(date, undefined, { dateStyle: 'long' }) : '';
+}
+
+const TRANSACTION_FACTS = [
+  { key: 'Occurred', value: 'occurredAt' },
+  { key: 'Expires', value: 'expiresAt' },
+];
+
+interface PointsDeltaSignature {
+  Args: { amount?: number | null };
   Element: HTMLSpanElement;
 }
 
 /**
- * A signed points movement, `+` on earns — the one place every ledger view
- * formats and colours an amount.
+ * A signed points movement: Pret UI `Delta`, earns green and deductions red —
+ * the one place every ledger view formats and colours an amount. Size comes
+ * from Delta's `--text-ui-sm` knob at each call site.
  */
-class SignedPoints extends GlimmerComponent<SignedPointsSignature> {
+class PointsDelta extends GlimmerComponent<PointsDeltaSignature> {
   get value(): number {
     return this.args.amount ?? 0;
   }
 
-  // Token-derived color only — never a user string.
-  get toneStyle() {
-    if (!this.args.toned) {
-      return undefined;
-    }
-    let hue: Hue = this.value > 0 ? 'green' : 'red';
-    return htmlSafe(`color: ${stateColor(hue).fg};`);
-  }
-
   <template>
-    <span style={{this.toneStyle}} ...attributes><FormatNumber
-        @value={{this.value}}
-        @signDisplay='exceptZero'
-      /></span>
+    <Delta
+      @value={{this.value}}
+      @format={{signedPoints}}
+      style={{POINTS_INK}}
+      ...attributes
+    />
   </template>
 }
 
@@ -190,11 +215,11 @@ export class LoyaltyAccount extends CardDef {
     <template>
       <div class='fitted'>
         <div class='top'>
-          <span class='number'>{{if
-              @model.memberNumber
-              @model.memberNumber
-              'No member number'
-            }}</span>
+          {{#if @model.memberNumber}}
+            <Token class='number' @value={{@model.memberNumber}} />
+          {{else}}
+            <span class='number no-number'>No member number</span>
+          {{/if}}
           <span class='tier line-tier'><@fields.tier @format='atom' /></span>
         </div>
         <span class='balance line-balance'><@fields.pointsBalance /></span>
@@ -222,13 +247,17 @@ export class LoyaltyAccount extends CardDef {
           gap: 0.5rem;
           min-width: 0;
         }
+        /* Pret UI Token for the id; it never wraps, so it truncates here. */
         .number {
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
-          letter-spacing: 0.04em;
+          --pretui-token-hue: var(--muted-foreground);
+          min-width: 0;
+          max-width: 100%;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
+        }
+        .no-number {
+          font-size: 0.75rem;
+          color: var(--muted-foreground);
         }
         .tier {
           flex-shrink: 0;
@@ -308,6 +337,23 @@ export class LoyaltyAccount extends CardDef {
       return Boolean(this.ledgerQuery);
     }
 
+    // Stat takes a bare value; an empty string renders its dash.
+    get pointsBalance(): number | string {
+      return this.args.model?.pointsBalance ?? '';
+    }
+
+    get lifetimePoints(): number | string {
+      return this.args.model?.lifetimePoints ?? '';
+    }
+
+    get memberSince(): string {
+      return longDate(this.args.model?.memberSince);
+    }
+
+    get tierSince(): string {
+      return longDate(this.args.model?.tierSince);
+    }
+
     <template>
       <article class='la-page'>
         <header class='lh'>
@@ -328,49 +374,54 @@ export class LoyaltyAccount extends CardDef {
           </div>
         </header>
         <section class='stats'>
-          <div class='stat'>
-            <span class='stat-label'>Points balance</span>
-            <span class='stat-value'><@fields.pointsBalance /></span>
-          </div>
-          <div class='stat'>
-            <span class='stat-label'>Lifetime earned</span>
-            <span class='stat-value'><@fields.lifetimePoints /></span>
-          </div>
-          <div class='stat'>
-            <span class='stat-label'>Member since</span>
-            <span class='stat-value stat-date'>
-              {{#if @model.memberSince}}<@fields.memberSince />{{else}}—{{/if}}
-            </span>
-          </div>
-          <div class='stat'>
-            <span class='stat-label'>Tier since</span>
-            <span class='stat-value stat-date'>
-              {{#if @model.tierSince}}<@fields.tierSince />{{else}}—{{/if}}
-            </span>
-          </div>
+          <Stat
+            class='stat'
+            @label='Points balance'
+            @value={{this.pointsBalance}}
+          />
+          <Stat
+            class='stat'
+            @label='Lifetime earned'
+            @value={{this.lifetimePoints}}
+          />
+          <Stat
+            class='stat stat-date'
+            @label='Member since'
+            @value={{this.memberSince}}
+            @roll={{false}}
+          />
+          <Stat
+            class='stat stat-date'
+            @label='Tier since'
+            @value={{this.tierSince}}
+            @roll={{false}}
+          />
         </section>
         {{#if this.hasLedgerQuery}}
           <section class='panel'>
             <h2>Ledger</h2>
             {{#if this.ledgerLoading}}
-              <p class='ledger-note'>Loading points activity…</p>
+              <LoadingState
+                class='ledger-loading'
+                @label='Loading points activity'
+              />
             {{else if this.ledger.length}}
               <ol class='ledger'>
                 {{#each this.ledger key='id' as |transaction|}}
                   <li class='ledger-row'>
-                    <SignedPoints
+                    <PointsDelta
                       class='ledger-amount'
                       @amount={{transaction.amount}}
-                      @toned={{true}}
                     />
                     <span class='ledger-reason'>{{if
                         transaction.reason
                         transaction.reason
                         'Points adjustment'
                       }}</span>
-                    {{#if transaction.source}}
-                      <span class='ledger-source'>{{transaction.source}}</span>
-                    {{/if}}
+                    <StatePill
+                      class='ledger-source'
+                      @label={{transaction.source}}
+                    />
                     <span class='ledger-when'><FormatDate
                         @date={{transaction.occurredAt}}
                         @month='short'
@@ -382,8 +433,12 @@ export class LoyaltyAccount extends CardDef {
                 {{/each}}
               </ol>
             {{else}}
-              <p class='ledger-note'>No points activity yet — it starts with the
-                first earn.</p>
+              <EmptyState
+                class='ledger-empty'
+                @title='No points activity yet'
+                @message='It starts with the first earn.'
+                @texture={{false}}
+              />
             {{/if}}
           </section>
         {{/if}}
@@ -443,32 +498,18 @@ export class LoyaltyAccount extends CardDef {
           grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
           gap: 0.75rem;
         }
+        /* Pret UI Stat in a bordered tile; its headline size knob sets the
+           tile's 18px figure and 15px date. */
         .stat {
+          --text-stat: 1.125rem;
           border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 0.875rem 1rem;
           background-color: var(--card);
           color: var(--card-foreground);
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-        }
-        .stat-label {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .stat-value {
-          font-size: 1.125rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
         }
         .stat-date {
-          font-size: 0.9375rem;
+          --text-stat: 0.9375rem;
         }
         .panel {
           border: 1px solid var(--border);
@@ -512,10 +553,9 @@ export class LoyaltyAccount extends CardDef {
         /* Constant-width signed column so the ledger reads as a column of
            numbers, not a ragged list. */
         .ledger-amount {
+          --text-ui-sm: 0.8125rem;
           width: 4.25rem;
           text-align: right;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
           flex-shrink: 0;
         }
         .ledger-reason {
@@ -526,15 +566,6 @@ export class LoyaltyAccount extends CardDef {
           white-space: nowrap;
         }
         .ledger-source {
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
           flex-shrink: 0;
         }
         .ledger-when {
@@ -543,11 +574,18 @@ export class LoyaltyAccount extends CardDef {
           white-space: nowrap;
           flex-shrink: 0;
         }
-        .ledger-note {
-          margin: 0;
-          font-size: 0.875rem;
-          font-style: italic;
-          color: var(--muted-foreground);
+        /* Pret UI LoadingState: its dim shimmer stop (--ink-3) falls back to
+           a 2.2:1 grey, so it is pointed at the muted foreground. */
+        .ledger-loading {
+          --ink-3: var(--muted-foreground);
+          --text-ui-md: 0.875rem;
+        }
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well inside the panel. */
+        .ledger-empty {
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
       </style>
     </template>
@@ -585,10 +623,11 @@ export class PointsTransaction extends CardDef {
 
   static atom = class Atom extends Component<typeof PointsTransaction> {
     <template>
-      <span class='ptx-atom'><SignedPoints @amount={{@model.amount}} />
+      <span class='ptx-atom'><PointsDelta @amount={{@model.amount}} />
         pts</span>
       <style scoped>
         .ptx-atom {
+          --text-ui-sm: 0.75rem;
           font-variant-numeric: tabular-nums;
           font-size: 0.75rem;
           font-weight: 600;
@@ -600,20 +639,14 @@ export class PointsTransaction extends CardDef {
   static embedded = class Embedded extends Component<typeof PointsTransaction> {
     <template>
       <div class='ptx'>
-        <SignedPoints
-          class='ptx-amount'
-          @amount={{@model.amount}}
-          @toned={{true}}
-        />
+        <PointsDelta class='ptx-amount' @amount={{@model.amount}} />
         <div class='ptx-what'>
           <span class='ptx-reason'>{{if
               @model.reason
               @model.reason
               'Points adjustment'
             }}</span>
-          {{#if @model.source}}
-            <span class='ptx-source'>{{@model.source}}</span>
-          {{/if}}
+          <StatePill class='ptx-source' @label={{@model.source}} />
         </div>
         <span class='ptx-when'>{{#if @model.occurredAt}}<@fields.occurredAt
             />{{else}}—{{/if}}</span>
@@ -628,10 +661,9 @@ export class PointsTransaction extends CardDef {
         }
         /* Constant-width signed column so ledger rows align. */
         .ptx-amount {
+          --text-ui-sm: 0.8125rem;
           width: 4.25rem;
           text-align: right;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
           flex-shrink: 0;
         }
         .ptx-what {
@@ -647,15 +679,6 @@ export class PointsTransaction extends CardDef {
           white-space: nowrap;
         }
         .ptx-source {
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
           flex-shrink: 0;
         }
         .ptx-when {
@@ -672,11 +695,7 @@ export class PointsTransaction extends CardDef {
     <template>
       <div class='ptx-fitted'>
         <div class='ptx-head'>
-          <SignedPoints
-            class='ptx-amount'
-            @amount={{@model.amount}}
-            @toned={{true}}
-          />
+          <PointsDelta class='ptx-amount' @amount={{@model.amount}} />
           <span class='ptx-unit'>pts</span>
         </div>
         <span class='ptx-reason'>{{if
@@ -685,9 +704,7 @@ export class PointsTransaction extends CardDef {
             'Points adjustment'
           }}</span>
         <div class='ptx-meta'>
-          {{#if @model.source}}
-            <span class='ptx-source'>{{@model.source}}</span>
-          {{/if}}
+          <StatePill @label={{@model.source}} />
           {{#if @model.occurredAt}}
             <span class='ptx-when'><@fields.occurredAt /></span>
           {{/if}}
@@ -709,9 +726,7 @@ export class PointsTransaction extends CardDef {
           gap: 0.25rem;
         }
         .ptx-amount {
-          font-size: 1.25rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
+          --text-ui-sm: 1.25rem;
           line-height: 1;
         }
         .ptx-unit {
@@ -731,16 +746,6 @@ export class PointsTransaction extends CardDef {
           font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
-        .ptx-source {
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-        }
         .ptx-when {
           white-space: nowrap;
         }
@@ -751,7 +756,7 @@ export class PointsTransaction extends CardDef {
             gap: 0.5rem;
           }
           .ptx-amount {
-            font-size: 0.9375rem;
+            --text-ui-sm: 0.9375rem;
           }
           .ptx-meta {
             display: none;
@@ -770,35 +775,28 @@ export class PointsTransaction extends CardDef {
     <template>
       <article class='ptx-page'>
         <header class='ptx-hero'>
-          <SignedPoints
-            class='ptx-amount'
-            @amount={{@model.amount}}
-            @toned={{true}}
-          />
+          <PointsDelta class='ptx-amount' @amount={{@model.amount}} />
           <span class='ptx-unit'>points</span>
           <h1 class='ptx-title'>{{if
               @model.reason
               @model.reason
               'Points adjustment'
             }}</h1>
-          {{#if @model.source}}
-            <span class='ptx-source'>{{@model.source}}</span>
-          {{/if}}
+          <StatePill class='ptx-source' @label={{@model.source}} />
         </header>
         <section class='panel'>
           <h2>When</h2>
-          <dl class='facts'>
-            <div>
-              <dt>Occurred</dt>
-              <dd>{{#if @model.occurredAt}}<@fields.occurredAt
-                  />{{else}}—{{/if}}</dd>
-            </div>
-            <div>
-              <dt>Expires</dt>
-              <dd>{{#if @model.expiresAt}}<@fields.expiresAt
-                  />{{else}}Never{{/if}}</dd>
-            </div>
-          </dl>
+          <KeyValue class='facts' @items={{TRANSACTION_FACTS}}>
+            <:value as |row|>
+              {{#if (eq row.value 'occurredAt')}}
+                {{#if @model.occurredAt}}<@fields.occurredAt />{{else}}—{{/if}}
+              {{else if @model.expiresAt}}
+                <@fields.expiresAt />
+              {{else}}
+                Never
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
         {{#if @model.account}}
           <section class='panel'>
@@ -822,9 +820,7 @@ export class PointsTransaction extends CardDef {
           row-gap: 0.5rem;
         }
         .ptx-amount {
-          font-size: 2.5rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
+          --text-ui-sm: 2.5rem;
           line-height: 1;
         }
         .ptx-unit {
@@ -839,14 +835,6 @@ export class PointsTransaction extends CardDef {
         .ptx-source {
           grid-column: 1 / -1;
           justify-self: start;
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
         }
         .panel {
           border: 1px solid var(--border);
@@ -863,19 +851,11 @@ export class PointsTransaction extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
+        /* Pret UI KeyValue at the panel's label and value sizes */
         .facts {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-          gap: 0.75rem;
-          margin: 0;
-        }
-        .facts dt {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
-        .facts dd {
-          margin: 0;
-          font-size: 0.875rem;
+          --text-ui: 0.75rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1rem;
         }
         .linked {
           border: 1px solid var(--border);
