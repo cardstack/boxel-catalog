@@ -17,6 +17,10 @@ import {
   type FormatDateSignature,
 } from '@cardstack/pretui/components/format-date';
 import { htmlSafe } from '@ember/template';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import { Stat } from '@cardstack/pretui/components/stat';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import { DurationField } from './duration-field';
@@ -25,11 +29,14 @@ import { ScorecardField } from './scorecard-field';
 import { Employee } from './employee';
 import { Candidate } from './candidate';
 import {
+  StatePill,
   stateColor,
   stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { liveCount, pillStyle } from './utils';
+import { liveCount } from './utils';
+import { AVATAR_HUE, hueOf } from './hr-ui';
 
 export const MEETING_TYPES = [
   'interview',
@@ -43,11 +50,26 @@ export const MEETING_TYPES = [
 // identity: interview shares candidate.gts's "interviewing" plum, vendor
 // review shares the brass seal color.
 // Category hues only; the status hues follow the theme's status tokens.
-export const MEETING_TYPE_COLORS: Record<string, StateColor> = {
-  interview: stateColor('purple'),
-  'one-on-one': stateColor('teal'),
-  standup: stateColor('blue'),
-  'vendor-review': stateColor('pink'),
+export const MEETING_TYPE_HUES: Record<string, Hue> = {
+  interview: 'purple',
+  'one-on-one': 'teal',
+  standup: 'blue',
+  'vendor-review': 'pink',
+};
+
+export const MEETING_TYPE_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(MEETING_TYPE_HUES).map(([k, hue]) => [k, stateColor(hue)]),
+  );
+
+type ScoreState = 'scored' | 'awaiting' | 'upcoming';
+
+// Score state carries status meaning, kept apart from the type hue so "whose
+// court is the ball in" never competes with "what kind of meeting is this".
+const SCORE_STATE_HUES: Record<ScoreState, Hue> = {
+  scored: 'green',
+  awaiting: 'red',
+  upcoming: 'slate',
 };
 
 export const MeetingTypeField = enumField(StringField, {
@@ -150,12 +172,12 @@ export class Meeting extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get typeColor() {
-      return stateColorOf(MEETING_TYPE_COLORS, this.args.model?.meetingType);
+    get typeHue() {
+      return hueOf(MEETING_TYPE_HUES, this.args.model?.meetingType);
     }
 
-    get typePillStyle() {
-      return pillStyle(this.typeColor);
+    get scoreHue(): Hue {
+      return SCORE_STATE_HUES[this.scoreState];
     }
 
     get dateObj(): Date | undefined {
@@ -170,7 +192,7 @@ export class Meeting extends CardDef {
     // Derived: the meeting is over and nobody recorded a score. This is the
     // one state a scheduling card can genuinely surface — "the ball is in our
     // court" — and it comes free from date + interviewScore.
-    get scoreState(): 'scored' | 'awaiting' | 'upcoming' {
+    get scoreState(): ScoreState {
       let d = this.dateObj;
       let scored = typeof this.args.model?.interviewScore === 'number';
       if (scored) {
@@ -194,8 +216,7 @@ export class Meeting extends CardDef {
 
     get attendees(): Array<{
       role: string;
-      title?: string | null;
-      initials?: string;
+      title: string;
       photoUrl?: string | null;
     }> {
       let list = [];
@@ -203,8 +224,7 @@ export class Meeting extends CardDef {
       if (candidate) {
         list.push({
           role: 'Candidate',
-          title: candidate.title,
-          initials: candidate.initials,
+          title: candidate.title ?? '',
           photoUrl: candidate.photo?.resolvedUrl,
         });
       }
@@ -212,8 +232,7 @@ export class Meeting extends CardDef {
         if (interviewer) {
           list.push({
             role: 'Interviewer',
-            title: interviewer.title,
-            initials: interviewer.initials,
+            title: interviewer.title ?? '',
             photoUrl: interviewer.photo?.resolvedUrl,
           });
         }
@@ -259,14 +278,16 @@ export class Meeting extends CardDef {
               {{/if}}
             </p>
             <div class='pill-row'>
-              {{#if @model.meetingType}}
-                <span class='pill' style={{this.typePillStyle}}>
-                  <span class='pill-dot'></span>{{@model.meetingType}}
-                </span>
-              {{/if}}
-              <span class='pill {{this.scoreState}}'>
-                <span class='pill-dot'></span>{{this.scoreLabel}}
-              </span>
+              <StatePill
+                @label={{@model.meetingType}}
+                @hue={{this.typeHue}}
+                @dot={{true}}
+              />
+              <StatePill
+                @label={{this.scoreLabel}}
+                @hue={{this.scoreHue}}
+                @dot={{true}}
+              />
             </div>
           </div>
         </header>
@@ -278,28 +299,42 @@ export class Meeting extends CardDef {
               <ul class='attendees'>
                 {{#each this.attendees as |a|}}
                   <li>
-                    {{#if a.photoUrl}}
-                      <img class='av' src={{a.photoUrl}} alt='' />
-                    {{else}}
-                      <span class='av' aria-hidden='true'>{{a.initials}}</span>
-                    {{/if}}
-                    <span class='att-text'>
-                      <span class='att-name'>{{a.title}}</span>
-                      <span class='att-role'>{{a.role}}</span>
-                    </span>
+                    <EntityDisplay
+                      class='attendee'
+                      @title={{a.title}}
+                      @subtitle={{a.role}}
+                      @center={{true}}
+                    >
+                      <:visual>
+                        <Avatar
+                          @name={{if a.title a.title '?'}}
+                          @src={{a.photoUrl}}
+                          @hue={{AVATAR_HUE}}
+                          @size={{28}}
+                          aria-hidden='true'
+                        />
+                      </:visual>
+                    </EntityDisplay>
                   </li>
                 {{/each}}
               </ul>
             {{else}}
-              <p class='empty'>No attendees linked yet.</p>
+              <EmptyState
+                class='empty'
+                @texture={{false}}
+                @title='No attendees linked yet'
+              />
             {{/if}}
 
+            <h2 class='panel-title spaced'>Notes</h2>
             {{#if @model.notes}}
-              <h2 class='panel-title spaced'>Notes</h2>
               <div class='notes'><@fields.notes /></div>
             {{else}}
-              <h2 class='panel-title spaced'>Notes</h2>
-              <p class='empty'>No notes recorded for this meeting.</p>
+              <EmptyState
+                class='empty'
+                @texture={{false}}
+                @title='No notes recorded for this meeting'
+              />
             {{/if}}
 
             {{#if @model.scorecard.criteria.length}}
@@ -316,14 +351,19 @@ export class Meeting extends CardDef {
           <aside class='side'>
             <h2 class='panel-title'>Score</h2>
             <div class='score-block'>
-              <span class='score-num'>{{this.scoreLabel}}</span>
+              <Stat
+                class='score-num'
+                @label='Interview score'
+                @value={{this.scoreLabel}}
+                @roll={{false}}
+              />
               {{#if @model.interviewScore}}
                 <span class='score-sub'><@fields.interviewScore /></span>
               {{/if}}
             </div>
 
             <h2 class='panel-title spaced'>Details</h2>
-            <dl class='facts stacked'>
+            <dl class='stacked'>
               <dt>Type</dt>
               <dd>{{if @model.meetingType @model.meetingType '—'}}</dd>
               <dt>Round</dt>
@@ -358,10 +398,9 @@ export class Meeting extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          --meet-id: var(--primary);
           --meet-strong: color-mix(
             in oklch,
-            var(--meet-id) 45%,
+            var(--primary) 45%,
             var(--foreground)
           );
         }
@@ -430,44 +469,6 @@ export class Meeting extends CardDef {
           gap: var(--boxel-sp-5xs);
           margin-top: var(--boxel-sp-xs);
         }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-        }
-        /* Score state carries semantic colour, kept separate from the type
-           hue so "whose court is the ball in" never competes with "what kind
-           of meeting is this". */
-        .pill.awaiting {
-          background-color: color-mix(
-            in oklab,
-            var(--destructive-ink) 12%,
-            var(--card)
-          );
-          color: var(--destructive-ink);
-        }
-        .pill.scored {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--card)
-          );
-          color: var(--success-ink);
-        }
-        .pill-dot {
-          width: 0.375rem;
-          height: 0.375rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
-        }
         .body {
           display: grid;
           grid-template-columns: 1fr 17rem;
@@ -503,36 +504,12 @@ export class Meeting extends CardDef {
           display: grid;
           gap: var(--boxel-sp-xs);
         }
-        .attendees > li {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-        }
-        .av {
-          flex: none;
-          width: 1.75rem;
-          height: 1.75rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          background-color: var(--meet-strong);
-          color: var(--background);
-          object-fit: cover;
-        }
-        .att-text {
-          min-width: 0;
-        }
-        .att-name {
-          display: block;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 600;
-        }
-        .att-role {
-          display: block;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
+        /* EntityDisplay's name and role keep the sizes the rows had. */
+        .attendee {
+          --pretui-entity-visual-size: 1.75rem;
+          --text-ui-md: var(--boxel-font-size-sm);
+          --text-ui-sm: var(--boxel-font-size-xs);
+          --space-3: var(--boxel-sp-xs);
         }
         .notes {
           font-size: var(--boxel-font-size-sm);
@@ -553,9 +530,9 @@ export class Meeting extends CardDef {
           padding: var(--boxel-sp-xs);
         }
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
+          --space-9: var(--boxel-sp);
+          --space-6: var(--boxel-sp);
+          --text-heading: var(--boxel-font-size);
         }
         .scorecard-wrap {
           border: 1px solid var(--border);
@@ -566,22 +543,17 @@ export class Meeting extends CardDef {
           padding: var(--boxel-sp-xs) 0;
         }
         .score-num {
-          display: block;
-          font-size: 1.5rem;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          line-height: 1.1;
+          --text-stat: 1.5rem;
         }
         .score-sub {
           display: block;
           margin-top: 0.15rem;
         }
-        .facts {
+        .stacked {
           margin: 0;
           display: grid;
-          grid-template-columns: 1fr;
         }
-        .facts dt {
+        .stacked dt {
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -591,7 +563,7 @@ export class Meeting extends CardDef {
           color: var(--muted-foreground);
           padding-top: 0.4rem;
         }
-        .facts dd {
+        .stacked dd {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           overflow-wrap: anywhere;
@@ -610,27 +582,24 @@ export class Meeting extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get typeColor() {
-      return stateColorOf(MEETING_TYPE_COLORS, this.args.model?.meetingType);
-    }
-
-    get typePillStyle() {
-      return pillStyle(this.typeColor);
+    get typeHue() {
+      return hueOf(MEETING_TYPE_HUES, this.args.model?.meetingType);
     }
 
     get accentBorderStyle() {
-      return htmlSafe(`border-left-color: ${this.typeColor.ring};`);
+      let c = stateColorOf(MEETING_TYPE_COLORS, this.args.model?.meetingType);
+      return htmlSafe(`border-left-color: ${c.ring};`);
     }
 
     <template>
       <div class='meeting-embedded' style={{this.accentBorderStyle}}>
         <header>
           <h3>{{@model.title}}</h3>
-          {{#if @model.meetingType}}
-            <span class='type' style={{this.typePillStyle}}>
-              {{@model.meetingType}}
-            </span>
-          {{/if}}
+          <StatePill
+            class='type'
+            @label={{@model.meetingType}}
+            @hue={{this.typeHue}}
+          />
         </header>
         <dl class='meta-list'>
           <div><dt>When</dt><dd><@fields.date /></dd></div>
@@ -672,12 +641,7 @@ export class Meeting extends CardDef {
           font-size: var(--boxel-font-size);
         }
         .type {
-          padding: 0.125rem var(--boxel-sp-4xs);
-          border-radius: 999px;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
           text-transform: capitalize;
-          white-space: nowrap;
         }
         .meta-list {
           margin: var(--boxel-sp-xs) 0 0;
@@ -738,12 +702,8 @@ export class Meeting extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get typeColor() {
-      return stateColorOf(MEETING_TYPE_COLORS, this.args.model?.meetingType);
-    }
-
-    get typePillStyle() {
-      return pillStyle(this.typeColor);
+    get scoreHue(): Hue {
+      return SCORE_STATE_HUES[this.scoreState];
     }
 
     get dateObj(): Date | undefined {
@@ -756,7 +716,7 @@ export class Meeting extends CardDef {
     }
 
     // Same derivation as isolated: over and unscored means we owe an action.
-    get scoreState(): 'scored' | 'awaiting' | 'upcoming' {
+    get scoreState(): ScoreState {
       let d = this.dateObj;
       if (typeof this.args.model?.interviewScore === 'number') {
         return 'scored';
@@ -810,9 +770,12 @@ export class Meeting extends CardDef {
           </div>
           {{! Score state survives to the smallest tier — it is the only
               signal that says whether this meeting still needs something. }}
-          <span class='fit-pill {{this.scoreState}}'>
-            <span class='pill-dot'></span>{{this.scoreShort}}
-          </span>
+          <StatePill
+            class='fit-pill'
+            @label={{this.scoreShort}}
+            @hue={{this.scoreHue}}
+            @dot={{true}}
+          />
         </div>
 
         <div class='fit-mid'>
@@ -850,10 +813,9 @@ export class Meeting extends CardDef {
           overflow: hidden;
           background-color: var(--card);
           color: var(--card-foreground);
-          --meet-id: var(--primary);
           --meet-strong: color-mix(
             in oklch,
-            var(--meet-id) 45%,
+            var(--primary) 45%,
             var(--foreground)
           );
           --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
@@ -920,45 +882,12 @@ export class Meeting extends CardDef {
         .fit-pill {
           flex: none;
           align-self: flex-start;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-        }
-        .fit-pill.awaiting {
-          background-color: color-mix(
-            in oklab,
-            var(--destructive-ink) 12%,
-            var(--card)
-          );
-          color: var(--destructive-ink);
-        }
-        .fit-pill.scored {
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--card)
-          );
-          color: var(--success-ink);
-        }
-        .pill-dot {
-          width: 0.3125rem;
-          height: 0.3125rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
           display: none;
           flex-direction: column;
-          gap: 1px;
+          gap: 0.0625rem;
         }
         .fit-time {
           font-size: var(--fit-small);

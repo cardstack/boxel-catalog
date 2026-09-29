@@ -7,8 +7,13 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import enumField from 'https://cardstack.com/base/enum';
 import TagIcon from '@cardstack/boxel-icons/tag';
-import { stateColor } from '@cardstack/catalog/components/state-pill';
-import { pillStyle } from './utils';
+import {
+  StatePill,
+  stateColor,
+  type Hue,
+  type StateColor,
+} from '@cardstack/catalog/components/state-pill';
+import { hueOf } from './hr-ui';
 
 export const SKILL_CATEGORIES = [
   'language',
@@ -19,23 +24,22 @@ export const SKILL_CATEGORIES = [
 ];
 
 // Category hues only; the status hues follow the theme's status tokens.
-export const SKILL_CATEGORY_COLORS: Record<string, { bg: string; fg: string }> =
-  {
-    language: stateColor('purple'),
-    framework: stateColor('blue'),
-    tool: stateColor('teal'),
-    platform: stateColor('pink'),
-    practice: stateColor('slate'),
-  };
-
-const UNCATEGORISED = {
-  bg: 'var(--muted)',
-  fg: 'var(--muted-foreground)',
+export const SKILL_CATEGORY_HUES: Record<string, Hue> = {
+  language: 'purple',
+  framework: 'blue',
+  tool: 'teal',
+  platform: 'pink',
+  practice: 'slate',
 };
 
-/** The chip colours for a skill's category; an unknown or empty category gets the muted pair. */
-export function skillCategoryStyle(category?: string | null) {
-  return pillStyle(SKILL_CATEGORY_COLORS[category ?? ''] ?? UNCATEGORISED);
+export const SKILL_CATEGORY_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(SKILL_CATEGORY_HUES).map(([k, hue]) => [k, stateColor(hue)]),
+  );
+
+/** The chip hue for a skill's category; an unknown or empty category gets StatePill's slate. */
+export function skillCategoryHue(category?: string | null): Hue | undefined {
+  return hueOf(SKILL_CATEGORY_HUES, category);
 }
 
 export const SkillCategoryField = enumField(StringField, {
@@ -66,14 +70,11 @@ export class Skill extends CardDef {
           <TagIcon class='icon-chip-svg' />
         </span>
         <h1>{{@model.title}}</h1>
-        {{#if @model.category}}
-          <span
-            class='category-chip'
-            style={{skillCategoryStyle @model.category}}
-          >
-            {{@model.category}}
-          </span>
-        {{/if}}
+        <StatePill
+          class='category-chip'
+          @label={{@model.category}}
+          @hue={{skillCategoryHue @model.category}}
+        />
       </article>
       <style scoped>
         .skill-isolated {
@@ -107,10 +108,6 @@ export class Skill extends CardDef {
           letter-spacing: -0.02em;
         }
         .category-chip {
-          padding: 0.25rem 0.75rem;
-          border-radius: 999px;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
           text-transform: capitalize;
         }
       </style>
@@ -119,19 +116,10 @@ export class Skill extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <span class='skill-chip' style={{skillCategoryStyle @model.category}}>
-        {{@model.title}}
-      </span>
-      <style scoped>
-        .skill-chip {
-          display: inline-flex;
-          align-items: center;
-          padding: 0.2rem 0.6rem;
-          border-radius: 999px;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-        }
-      </style>
+      <StatePill
+        @label={{@model.title}}
+        @hue={{skillCategoryHue @model.category}}
+      />
     </template>
   };
 
@@ -150,10 +138,10 @@ export class Skill extends CardDef {
   static fitted = class Fitted extends Component<typeof this> {
     <template>
       <div class='fit'>
-        <span
-          class='chip'
-          style={{skillCategoryStyle @model.category}}
-        >{{@model.title}}</span>
+        <StatePill
+          @label={{@model.title}}
+          @hue={{skillCategoryHue @model.category}}
+        />
       </div>
       <style scoped>
         .fit {
@@ -163,17 +151,6 @@ export class Skill extends CardDef {
           align-items: center;
           padding: 0.25rem 0.5rem;
           overflow: hidden;
-        }
-        .chip {
-          display: inline-flex;
-          align-items: center;
-          padding: 0.2rem 0.6rem;
-          border-radius: 999px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
         }
       </style>
     </template>

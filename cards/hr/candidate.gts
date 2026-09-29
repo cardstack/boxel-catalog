@@ -15,11 +15,20 @@ import enumField from 'https://cardstack.com/base/enum';
 import { FileDef } from 'https://cardstack.com/base/file-api';
 import UserSearchIcon from '@cardstack/boxel-icons/user-search';
 import { htmlSafe } from '@ember/template';
+import { guidFor } from '@ember/object/internals';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
@@ -27,7 +36,7 @@ import { DurationField } from './duration-field';
 import { Employee } from './employee';
 import { Position } from './position';
 import { Offer } from './offer';
-import { Skill } from './skill';
+import { Skill, skillCategoryHue } from './skill';
 import { BackgroundCheckField } from './background-check-field';
 import { InterviewFeedbackField } from './interview-feedback-field';
 import { RejectionReasonField } from './rejection-reason-field';
@@ -35,11 +44,14 @@ import { WorkHistoryEntryField } from './work-history-entry-field';
 import { EducationEntryField } from './education-entry-field';
 import { INTERVIEW_ROUND_OPTIONS } from './interview-round-field';
 import {
+  StatePill,
   stateColor,
   stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { daysBetween, liveCount, pillStyle } from './utils';
+import { daysBetween, liveCount } from './utils';
+import { ALERT_STYLE, AVATAR_HUE, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
 import { ExtractResumeCommand } from './commands/extract-resume-command';
 import { GenerateInterviewQuestionsCommand } from './commands/generate-interview-questions-command';
 import FileDownloadLink from './components/file-download-link';
@@ -55,18 +67,26 @@ export const CANDIDATE_STAGES = [
 
 // Colocated with Candidate — the same map drives the stage pill here, the
 // Kanban board column/card border, and the calendar's meeting-kind chips.
-// Harmonized with the Ledger identity so the color story carries meaning:
-// offer glows brass (the seal color) and hired lands on the same forest
-// green as Employee's "active" status — the pipeline visually resolves into
-// the permanent record.
-export const CANDIDATE_STAGE_COLORS: Record<string, StateColor> = {
-  applied: stateColor('amber'),
-  screening: stateColor('green'),
-  interviewing: stateColor('purple'),
-  offer: stateColor('orange'),
-  hired: stateColor('green'),
-  rejected: stateColor('red'),
+// A stage is a status, so it reads the status hues: green is active work
+// (screening, interviewing) and the hire the pipeline resolves into, the same
+// green as Employee's "active"; offer is orange, the seal going out; rejected
+// is red.
+export const CANDIDATE_STAGE_HUES: Record<string, Hue> = {
+  applied: 'amber',
+  screening: 'green',
+  interviewing: 'green',
+  offer: 'orange',
+  hired: 'green',
+  rejected: 'red',
 };
+
+export const CANDIDATE_STAGE_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(CANDIDATE_STAGE_HUES).map(([k, hue]) => [
+      k,
+      stateColor(hue),
+    ]),
+  );
 
 export const CandidateStatusField = enumField(StringField, {
   options: CANDIDATE_STAGES.map((stage) => ({ value: stage, label: stage })),
@@ -86,30 +106,25 @@ class CandidateIsolated extends Component<typeof Candidate> {
     this.selectedTab = tab;
   };
 
-  // A row of toggle buttons, not a <select> — matches how every other
-  // small fixed-choice control in this app (offersView/directoryView tabs,
-  // setTab above) is a row of `<button>`s bound to `eq` checks rather than
-  // a native select. This is a MODE (which round the next generation call
-  // targets), not a one-shot action, so it carries `aria-pressed` per the
-  // "disable actions, never modes" guidance rather than a disabled state.
+  // A segmented control, not a <select>: all five rounds stay visible. This
+  // is a MODE (which round the next generation call targets), not a one-shot
+  // action, so it is a single-choice radio group rather than a disabled
+  // state.
   roundTypeOptions = INTERVIEW_ROUND_OPTIONS;
 
   setRoundType = (value: string) => {
     this.selectedRoundType = value;
   };
 
-  get stageColor() {
-    return stateColorOf(CANDIDATE_STAGE_COLORS, this.args.model?.status);
+  get stageHue() {
+    return hueOf(CANDIDATE_STAGE_HUES, this.args.model?.status);
   }
 
+  // The stage ring sits on a wrapper: Avatar writes its own inline style, and
+  // a caller's `style` would replace it.
   get avatarRingStyle() {
-    return htmlSafe(
-      `box-shadow: 0 0 0 0.1875rem var(--background), 0 0 0 0.3125rem ${this.stageColor.ring};`,
-    );
-  }
-
-  get stagePillStyle() {
-    return pillStyle(this.stageColor);
+    let ring = stateColorOf(CANDIDATE_STAGE_COLORS, this.args.model?.status);
+    return htmlSafe(`--stage-ring: ${ring.ring}`);
   }
 
   get extractDisabled(): boolean {
@@ -136,6 +151,13 @@ class CandidateIsolated extends Component<typeof Candidate> {
     return v === 0 ? '0/5 · not yet scored' : `${v}/5`;
   }
 
+  get scorePillLabel(): string | undefined {
+    let label = this.overallScoreLabel;
+    return label ? `\u2605 ${label}` : undefined;
+  }
+
+  roundLabelId = `round-label-${guidFor(this)}`;
+
   get matchScoreLabel(): string | undefined {
     let v = this.args.model?.skillMatchPct;
     return v == null ? undefined : `${v}% match`;
@@ -145,8 +167,32 @@ class CandidateIsolated extends Component<typeof Candidate> {
     return (this.args.model?.skills ?? []).slice(0, 6);
   }
 
-  get extraSkillCount(): number {
-    return Math.max(0, liveCount(this.args.model?.skills) - 6);
+  get extraSkillLabel(): string | undefined {
+    let extra = Math.max(0, liveCount(this.args.model?.skills) - 6);
+    return extra ? `+${extra}` : undefined;
+  }
+
+  // The Overview facts as Pret UI `KeyValue` rows; the applied-on row renders
+  // the date field through the `<:value>` block.
+  get overviewFacts(): KeyValueItem[] {
+    let m = this.args.model;
+    return [
+      { key: 'Applied for', value: m?.appliedRole || '—' },
+      { key: 'Applied on', value: m?.appliedDate ? 'appliedDate' : '—' },
+      { key: 'Email', value: m?.email || '—' },
+      { key: 'Notice period', value: this.noticePeriodLabel ?? '—' },
+      { key: 'Overall score', value: this.overallScoreLabel ?? '—' },
+      { key: 'Time to decision', value: m?.timeToHire?.label || '—' },
+    ];
+  }
+
+  get feedbackFacts(): KeyValueItem[] {
+    return (this.args.model?.interviewFeedback ?? []).map((fb) => ({
+      key: fb?.interviewer?.name || 'Unnamed',
+      value: [fb?.rating ? `\u2605 ${fb.rating}` : undefined, fb?.notes]
+        .filter(Boolean)
+        .join(' · '),
+    }));
   }
 
   extractResume = async () => {
@@ -201,19 +247,15 @@ class CandidateIsolated extends Component<typeof Candidate> {
   <template>
     <article class='candidate-isolated'>
       <header class='hero'>
-        {{#if @model.photo.resolvedUrl}}
-          <img
-            class='avatar avatar-photo'
-            style={{this.avatarRingStyle}}
-            src={{@model.photo.resolvedUrl}}
-            alt=''
+        <span class='avatar-ring' style={{this.avatarRingStyle}}>
+          <Avatar
+            @name={{if @model.title @model.title '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{52}}
+            aria-hidden='true'
           />
-        {{else}}
-          <span
-            class='avatar'
-            style={{this.avatarRingStyle}}
-          >{{@model.initials}}</span>
-        {{/if}}
+        </span>
         <div class='hero-text'>
           <h1>{{@model.title}}</h1>
           <p class='byline'>
@@ -225,21 +267,14 @@ class CandidateIsolated extends Component<typeof Candidate> {
             {{/if}}
           </p>
           <div class='pill-row'>
-            {{#if @model.status}}
-              <span class='pill' style={{this.stagePillStyle}}>
-                <span class='pill-dot'></span>{{@model.status}}
-              </span>
-            {{/if}}
-            {{#if this.overallScoreLabel}}
-              <span class='pill neutral'>&#9733;
-                {{this.overallScoreLabel}}</span>
-            {{/if}}
-            {{#if this.matchScoreLabel}}
-              <span class='pill neutral'>{{this.matchScoreLabel}}</span>
-            {{/if}}
-            {{#if this.noticePeriodLabel}}
-              <span class='pill neutral'>{{this.noticePeriodLabel}}</span>
-            {{/if}}
+            <StatePill
+              @label={{@model.status}}
+              @hue={{this.stageHue}}
+              @dot={{true}}
+            />
+            <StatePill @label={{this.scorePillLabel}} />
+            <StatePill @label={{this.matchScoreLabel}} />
+            <StatePill @label={{this.noticePeriodLabel}} />
           </div>
         </div>
       </header>
@@ -247,37 +282,36 @@ class CandidateIsolated extends Component<typeof Candidate> {
       <div class='body'>
         <div class='main'>
           <h2 class='panel-title'>Overview</h2>
-          <dl class='facts'>
-            <dt>Applied for</dt>
-            <dd>{{if @model.appliedRole @model.appliedRole '—'}}</dd>
-            <dt>Applied on</dt>
-            <dd>{{#if @model.appliedDate}}<@fields.appliedDate
-                />{{else}}&mdash;{{/if}}</dd>
-            <dt>Email</dt>
-            <dd>{{if @model.email @model.email '—'}}</dd>
-            <dt>Notice period</dt>
-            <dd>{{if this.noticePeriodLabel this.noticePeriodLabel '—'}}</dd>
-            <dt>Overall score</dt>
-            <dd>{{if this.overallScoreLabel this.overallScoreLabel '—'}}</dd>
-            <dt>Time to decision</dt>
-            <dd>{{#if
-                @model.timeToHire.label
-              }}{{@model.timeToHire.label}}{{else}}&mdash;{{/if}}</dd>
-          </dl>
+          <KeyValue class='facts' @items={{this.overviewFacts}}>
+            <:value as |row|>
+              {{#if (eq row.value 'appliedDate')}}
+                <@fields.appliedDate />
+              {{else}}
+                {{row.value}}
+              {{/if}}
+            </:value>
+          </KeyValue>
 
           <h2 class='panel-title spaced'>Skills</h2>
           {{#if @model.skills.length}}
             <ul class='chips'>
               {{#each this.visibleSkills as |skill|}}
-                <li>{{skill.title}}</li>
+                <li><StatePill
+                    @label={{skill.title}}
+                    @hue={{skillCategoryHue skill.category}}
+                  /></li>
               {{/each}}
-              {{#if this.extraSkillCount}}
-                <li class='more'>+{{this.extraSkillCount}}</li>
+              {{#if this.extraSkillLabel}}
+                <li><StatePill @label={{this.extraSkillLabel}} /></li>
               {{/if}}
             </ul>
           {{else}}
-            <p class='empty'>No skills recorded. Running Extract Resume will
-              match them against the skill library.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No skills recorded'
+              @message='Running Extract Resume will match them against the skill library.'
+            />
           {{/if}}
 
           <h2 class='panel-title spaced'>Work history</h2>
@@ -286,8 +320,12 @@ class CandidateIsolated extends Component<typeof Candidate> {
               <@fields.workHistory />
             </ul>
           {{else}}
-            <p class='empty'>No work history recorded. Running Extract Resume
-              will populate it from the resume text.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No work history recorded'
+              @message='Running Extract Resume will populate it from the resume text.'
+            />
           {{/if}}
 
           <h2 class='panel-title spaced'>Education</h2>
@@ -296,41 +334,40 @@ class CandidateIsolated extends Component<typeof Candidate> {
               <@fields.education />
             </ul>
           {{else}}
-            <p class='empty'>No education recorded. Running Extract Resume will
-              populate it from the resume text.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No education recorded'
+              @message='Running Extract Resume will populate it from the resume text.'
+            />
           {{/if}}
 
           {{#if @model.interviewFeedback.length}}
             <h2 class='panel-title spaced'>Interview feedback</h2>
-            <dl class='facts'>
-              {{#each @model.interviewFeedback as |fb|}}
-                <dt>{{if
-                    fb.interviewer.name
-                    fb.interviewer.name
-                    'Unnamed'
-                  }}</dt>
-                <dd>{{#if fb.score}}&#9733;
-                    {{fb.score}}
-                    &middot;
-                  {{/if}}{{fb.notes}}</dd>
-              {{/each}}
-            </dl>
+            <KeyValue class='facts' @items={{this.feedbackFacts}} />
           {{/if}}
 
           <h2 class='panel-title spaced'>Background check</h2>
           {{#if @model.backgroundCheck.status}}
             <@fields.backgroundCheck />
           {{else}}
-            <p class='empty'>No background check started.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No background check started'
+            />
           {{/if}}
 
+          <h2 class='panel-title spaced'>Interview plan</h2>
           {{#if @model.position.interviewPlan}}
-            <h2 class='panel-title spaced'>Interview plan</h2>
             <@fields.position.interviewPlan @format='embedded' />
           {{else}}
-            <h2 class='panel-title spaced'>Interview plan</h2>
-            <p class='empty'>No interview plan yet — generate questions to
-              create one.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No interview plan yet'
+              @message='Generate questions to create one.'
+            />
           {{/if}}
 
           <h2 class='panel-title spaced'>Resume</h2>
@@ -342,15 +379,21 @@ class CandidateIsolated extends Component<typeof Candidate> {
               <FileDownloadLink @file={{@model.resumeFile}} />
             </div>
           {{else}}
-            <p class='empty'>No resume file attached.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No resume file attached'
+            />
           {{/if}}
           {{#if @model.resumeText}}
             <p class='prose'>{{@model.resumeText}}</p>
           {{else}}
-            <p class='empty'>No resume text on file. Paste it into the
-              <code>resumeText</code>
-              field to enable Extract resume and Generate questions — the AI
-              commands read the text, not the PDF.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No resume text on file'
+              @message='Paste it into the Resume Text field to enable Extract resume and Generate questions — the AI commands read the text, not the PDF.'
+            />
           {{/if}}
         </div>
 
@@ -373,19 +416,15 @@ class CandidateIsolated extends Component<typeof Candidate> {
               >Extract resume</Button>
             </div>
           {{/if}}
-          <p class='act-hint round-label'>Round to generate questions for</p>
-          <div class='round-toggle' role='group' aria-label='Interview round'>
-            {{#each this.roundTypeOptions as |option|}}
-              <Button
-                type='button'
-                @kind='default'
-                @size='auto'
-                class='round-btn'
-                aria-pressed={{eq this.selectedRoundType option.value}}
-                {{on 'click' (fn this.setRoundType option.value)}}
-              >{{option.label}}</Button>
-            {{/each}}
-          </div>
+          <p class='act-hint round-label' id={{this.roundLabelId}}>Round to
+            generate questions for</p>
+          <SegmentedControl
+            class='round-toggle'
+            @options={{this.roundTypeOptions}}
+            @value={{this.selectedRoundType}}
+            @onValueChange={{this.setRoundType}}
+            aria-labelledby={{this.roundLabelId}}
+          />
           <div class='actions'>
             <Button
               type='button'
@@ -399,11 +438,22 @@ class CandidateIsolated extends Component<typeof Candidate> {
             <p class='act-hint'>Paste resume text below before extracting.</p>
           {{/unless}}
           {{#if this.toolMessage}}
-            <p class='act-msg' role='status'>{{this.toolMessage}}</p>
+            <Alert
+              class='notice'
+              @tone='success'
+              style={{ALERT_STYLE.success}}
+            >{{this.toolMessage}}</Alert>
+          {{/if}}
+          {{#if this.toolError}}
+            <Alert
+              class='notice'
+              @tone='danger'
+              style={{ALERT_STYLE.danger}}
+            >{{this.toolError}}</Alert>
           {{/if}}
 
           <h2 class='panel-title spaced'>Related</h2>
-          <dl class='facts stacked'>
+          <dl class='stacked'>
             <dt>Position</dt>
             <dd>{{#if @model.position}}<@fields.position
                   @format='atom'
@@ -450,54 +500,28 @@ class CandidateIsolated extends Component<typeof Candidate> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        --cand-id: var(--primary);
         --cand-strong: color-mix(
           in oklch,
-          var(--cand-id) 45%,
+          var(--primary) 45%,
           var(--foreground)
         );
       }
-      .avatar {
+      .avatar-ring {
         flex: none;
-        width: 3.25rem;
-        height: 3.25rem;
+        display: inline-flex;
         border-radius: 50%;
-        display: grid;
-        place-items: center;
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        background-color: var(--cand-strong);
-        color: var(--background);
-      }
-      .avatar-photo {
-        object-fit: cover;
+        box-shadow:
+          0 0 0 0.1875rem var(--background),
+          0 0 0 0.3125rem var(--stage-ring);
       }
       .entry-list {
         list-style: none;
         margin: 0;
         padding: 0;
       }
-      .chips > li.more {
-        border-style: dashed;
-        color: var(--muted-foreground);
-        background-color: transparent;
-      }
-      .markdown {
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.65;
-        max-height: 20rem;
-        overflow-y: auto;
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius-sm);
-        padding: var(--boxel-sp-xs);
-      }
       .attach {
         font-size: var(--boxel-font-size-sm);
         margin-bottom: var(--boxel-sp-xs);
-      }
-      .empty code {
-        font-family: var(--font-mono);
-        font-size: 0.92em;
       }
       .actions {
         display: grid;
@@ -518,8 +542,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
       .act:disabled {
         cursor: not-allowed;
       }
-      .act-hint,
-      .act-msg {
+      .act-hint {
         margin: 0.4rem 0 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
@@ -527,36 +550,20 @@ class CandidateIsolated extends Component<typeof Candidate> {
       .round-label {
         margin-top: 0.6rem;
       }
+      /* Five rounds do not fit one row of the aside, so the rail wraps;
+         SegmentedControl's highlight measures both axes and follows. */
       .round-toggle {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.3rem;
         margin: 0.3rem 0 0.6rem;
       }
-      .round-btn {
-        --boxel-button-default-background: var(--card);
-        --boxel-button-default-foreground: var(--muted-foreground);
-        --boxel-button-default-border: var(--border);
-        --boxel-button-border-radius: var(--boxel-border-radius-sm);
-        --boxel-button-padding: 0.3rem 0.55rem;
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
-        font: inherit;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-      }
-      .round-btn[aria-pressed='true'] {
-        --boxel-button-color: var(--cand-strong);
-        --boxel-button-text-color: var(--background);
-        --boxel-button-border: 1px solid var(--cand-strong);
+      .notice {
+        margin-top: var(--boxel-sp-xs);
       }
       .side-note {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.6;
-        color: var(--muted-foreground);
-      }
-      .dd-note {
         color: var(--muted-foreground);
       }
       .hero {
@@ -592,43 +599,6 @@ class CandidateIsolated extends Component<typeof Candidate> {
         flex-wrap: wrap;
         gap: var(--boxel-sp-5xs);
         margin-top: var(--boxel-sp-xs);
-      }
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        padding: 0.18em 0.5em;
-        border-radius: 0.1875rem;
-        white-space: nowrap;
-      }
-      .pill.neutral {
-        background-color: var(--muted);
-        color: var(--muted-foreground);
-      }
-      .pill-dot {
-        width: 0.375rem;
-        height: 0.375rem;
-        border-radius: 50%;
-        background-color: currentColor;
-        flex: none;
-      }
-      .hero-money {
-        flex: none;
-        text-align: right;
-      }
-      .money {
-        display: block;
-        font-size: 1.5rem;
-        font-weight: 800;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-        font-variant-numeric: tabular-nums;
-      }
-      .money-label {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
       }
       .body {
         display: grid;
@@ -674,23 +644,24 @@ class CandidateIsolated extends Component<typeof Candidate> {
         flex-wrap: wrap;
         gap: 0.3rem;
       }
-      .chips > li {
-        font-size: var(--boxel-font-size-xs);
-        padding: 0.15em 0.5em;
-        border-radius: 0.1875rem;
-        border: 1px solid var(--border);
-        background-color: var(--card);
-        color: var(--card-foreground);
-      }
       .facts {
+        --text-ui-md: var(--boxel-font-size-sm);
+        --space-6: var(--boxel-sp);
+        font-variant-numeric: tabular-nums;
+      }
+      .facts :deep(dt) {
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+      }
+      .stacked {
         margin: 0;
         display: grid;
-        grid-template-columns: 9rem 1fr;
       }
-      .facts.stacked {
-        grid-template-columns: 1fr;
-      }
-      .facts dt {
+      .stacked dt {
         font-family: var(--boxel-eyebrow-font-family);
         font-size: var(--boxel-eyebrow-font-size);
         font-weight: var(--boxel-eyebrow-font-weight);
@@ -698,28 +669,19 @@ class CandidateIsolated extends Component<typeof Candidate> {
         letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
-        padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-        border-bottom: 1px solid var(--border);
+        padding-top: 0.45rem;
       }
-      .facts.stacked dt {
-        border-bottom: 0;
-        padding-bottom: 0;
-      }
-      .facts dd {
+      .stacked dd {
         margin: 0;
-        padding: 0.45rem 0;
+        padding: 0.1rem 0 0.45rem;
         font-size: var(--boxel-font-size-sm);
         border-bottom: 1px solid var(--border);
         overflow-wrap: anywhere;
-        font-variant-numeric: tabular-nums;
-      }
-      .facts.stacked dd {
-        padding-top: 0.1rem;
       }
       .empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
+        --space-9: var(--boxel-sp);
+        --space-6: var(--boxel-sp);
+        --text-heading: var(--boxel-font-size);
       }
       @container iso (max-width: 40rem) {
         .body {
@@ -731,9 +693,6 @@ class CandidateIsolated extends Component<typeof Candidate> {
         }
         .hero {
           flex-wrap: wrap;
-        }
-        .hero-money {
-          text-align: left;
         }
       }
     </style>
@@ -842,9 +801,8 @@ export class Candidate extends PersonBase {
   static isolated = CandidateIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get stageStyle() {
-      let c = stateColorOf(CANDIDATE_STAGE_COLORS, this.args.model?.status);
-      return pillStyle(c);
+    get stageHue() {
+      return hueOf(CANDIDATE_STAGE_HUES, this.args.model?.status);
     }
     get scoreLabel() {
       let v = this.args.model?.overallScore;
@@ -852,24 +810,28 @@ export class Candidate extends PersonBase {
     }
     <template>
       <div class='candidate-embedded'>
-        {{#if @model.photo.resolvedUrl}}
-          <img class='ce-avatar' src={{@model.photo.resolvedUrl}} alt='' />
-        {{else}}
-          <span class='ce-avatar ce-initials'>{{@model.initials}}</span>
-        {{/if}}
-        <div class='ce-main'>
-          <span class='ce-name'>{{if @model.name @model.name 'Unnamed'}}</span>
-          {{#if @model.appliedRole}}
-            <span class='ce-role'>{{@model.appliedRole}}</span>
-          {{/if}}
-        </div>
+        <EntityDisplay
+          class='entity'
+          @title={{if @model.name @model.name 'Unnamed'}}
+          @subtitle={{@model.appliedRole}}
+          @center={{true}}
+        >
+          <:visual>
+            <Avatar
+              @name={{if @model.name @model.name '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{QUIET_AVATAR_HUE}}
+              @size={{30}}
+              aria-hidden='true'
+            />
+          </:visual>
+        </EntityDisplay>
         <div class='ce-side'>
-          {{#if @model.status}}
-            <span
-              class='ce-stage'
-              style={{this.stageStyle}}
-            >{{@model.status}}</span>
-          {{/if}}
+          <StatePill
+            class='ce-stage'
+            @label={{@model.status}}
+            @hue={{this.stageHue}}
+          />
           {{#if this.scoreLabel}}
             <span class='ce-score'>{{this.scoreLabel}}</span>
           {{/if}}
@@ -883,41 +845,13 @@ export class Candidate extends PersonBase {
           padding: 0.625rem 0.75rem;
           font-size: 0.8125rem;
         }
-        .ce-avatar {
-          width: 1.875rem;
-          height: 1.875rem;
-          border-radius: 50%;
-          object-fit: cover;
-          flex-shrink: 0;
-        }
-        .ce-initials {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          font-size: 0.6875rem;
-          font-weight: 700;
-        }
-        .ce-main {
-          display: flex;
-          flex-direction: column;
-          gap: 0.0625rem;
-          min-width: 0;
+        /* EntityDisplay's name and secondary line keep the row's sizes. */
+        .entity {
           flex: 1;
-        }
-        .ce-name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .ce-role {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          --pretui-entity-visual-size: 1.875rem;
+          --text-ui-md: 0.8125rem;
+          --text-ui-sm: 0.6875rem;
+          --space-3: 0.625rem;
         }
         .ce-side {
           display: flex;
@@ -927,12 +861,7 @@ export class Candidate extends PersonBase {
           flex-shrink: 0;
         }
         .ce-stage {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
+          text-transform: capitalize;
         }
         .ce-score {
           font-size: 0.6875rem;
@@ -975,25 +904,13 @@ export class Candidate extends PersonBase {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get stageColor() {
-      return stateColorOf(CANDIDATE_STAGE_COLORS, this.args.model?.status);
+    get stageHue() {
+      return hueOf(CANDIDATE_STAGE_HUES, this.args.model?.status);
     }
 
     get avatarRingStyle() {
-      return htmlSafe(
-        `box-shadow: 0 0 0 0.125rem var(--background), 0 0 0 0.1875rem ${this.stageColor.ring};`,
-      );
-    }
-
-    get stagePillStyle() {
-      return pillStyle(this.stageColor);
-    }
-
-    get pipelineSteps() {
-      let order = ['applied', 'screening', 'interviewing', 'offer', 'hired'];
-      let status = this.args.model?.status;
-      let idx = status === 'rejected' ? -1 : order.indexOf(status ?? '');
-      return order.map((step, i) => ({ step, done: idx >= 0 && i <= idx }));
+      let ring = stateColorOf(CANDIDATE_STAGE_COLORS, this.args.model?.status);
+      return htmlSafe(`--stage-ring: ${ring.ring}`);
     }
     get daysInPipeline(): number | undefined {
       return daysBetween(this.args.model?.appliedDate);
@@ -1006,19 +923,15 @@ export class Candidate extends PersonBase {
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          {{#if @model.photo.resolvedUrl}}
-            <img
-              class='avatar avatar-photo'
-              style={{this.avatarRingStyle}}
-              src={{@model.photo.resolvedUrl}}
-              alt=''
+          <span class='avatar-ring' style={{this.avatarRingStyle}}>
+            <Avatar
+              @name={{if @model.title @model.title '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{AVATAR_HUE}}
+              @size={{26}}
+              aria-hidden='true'
             />
-          {{else}}
-            <span
-              class='avatar'
-              style={{this.avatarRingStyle}}
-            >{{@model.initials}}</span>
-          {{/if}}
+          </span>
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
             {{#if @model.appliedRole}}
@@ -1027,11 +940,12 @@ export class Candidate extends PersonBase {
           </div>
           {{! Stage pill survives every tier — it is the only thing that says
               where this person is in the pipeline. }}
-          {{#if @model.status}}
-            <span class='fit-pill' style={{this.stagePillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
-          {{/if}}
+          <StatePill
+            class='fit-pill'
+            @label={{@model.status}}
+            @hue={{this.stageHue}}
+            @dot={{true}}
+          />
         </div>
 
         <div class='fit-mid'>
@@ -1075,29 +989,16 @@ export class Candidate extends PersonBase {
           overflow: hidden;
           background-color: var(--card);
           color: var(--card-foreground);
-          --cand-id: var(--primary);
-          --cand-strong: color-mix(
-            in oklch,
-            var(--cand-id) 45%,
-            var(--foreground)
-          );
           --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
           --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
-        .avatar {
+        .avatar-ring {
           flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
+          display: inline-flex;
           border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          background-color: var(--cand-strong);
-          color: var(--background);
-        }
-        .avatar-photo {
-          object-fit: cover;
+          box-shadow:
+            0 0 0 0.125rem var(--background),
+            0 0 0 0.1875rem var(--stage-ring);
         }
         .fit > * {
           min-height: 0;
@@ -1142,27 +1043,12 @@ export class Candidate extends PersonBase {
         .fit-pill {
           flex: none;
           align-self: flex-start;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 0.3125rem;
-          height: 0.3125rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
           display: none;
           flex-direction: column;
-          gap: 1px;
+          gap: 0.0625rem;
         }
         .money {
           font-size: calc(var(--fit-name) * 1.15);

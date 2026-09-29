@@ -10,11 +10,12 @@ import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
 
 import {
+  StatePill,
   stateColor,
-  stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { pillStyle } from './utils';
+import { hueOf } from './hr-ui';
 
 // Background-check lifecycle: not-started → pending → clear | flagged.
 // This field TRACKS the status a human (or an external screening vendor's
@@ -37,12 +38,20 @@ export const BACKGROUND_CHECK_STATUS_LABELS: Record<string, string> = {
 // Same Ledger palette every other status pill in the tracker draws from:
 // gray for a check nobody has ordered yet, amber while the vendor works,
 // green when it comes back clean, red when something needs a human look.
-export const BACKGROUND_CHECK_STATUS_COLORS: Record<string, StateColor> = {
-  'not-started': stateColor('slate'),
-  pending: stateColor('amber'),
-  clear: stateColor('green'),
-  flagged: stateColor('red'),
+export const BACKGROUND_CHECK_STATUS_HUES: Record<string, Hue> = {
+  'not-started': 'slate',
+  pending: 'amber',
+  clear: 'green',
+  flagged: 'red',
 };
+
+export const BACKGROUND_CHECK_STATUS_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(BACKGROUND_CHECK_STATUS_HUES).map(([k, hue]) => [
+      k,
+      stateColor(hue),
+    ]),
+  );
 
 export const BackgroundCheckStatusField = enumField(StringField, {
   options: BACKGROUND_CHECK_STATUSES.map((value) => ({
@@ -66,15 +75,8 @@ export class BackgroundCheckField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(
-        BACKGROUND_CHECK_STATUS_COLORS,
-        this.args.model?.status,
-      );
-    }
-
-    get statusPillStyle() {
-      return pillStyle(this.statusColor);
+    get statusHue() {
+      return hueOf(BACKGROUND_CHECK_STATUS_HUES, this.args.model?.status);
     }
 
     get statusLabel(): string {
@@ -87,9 +89,11 @@ export class BackgroundCheckField extends FieldDef {
     <template>
       <div class='background-check'>
         <div class='bc-head'>
-          <span class='pill' style={{this.statusPillStyle}}>
-            <span class='pill-dot'></span>{{this.statusLabel}}
-          </span>
+          <StatePill
+            @label={{this.statusLabel}}
+            @hue={{this.statusHue}}
+            @dot={{true}}
+          />
           {{#if @model.provider}}
             <span class='bc-provider'>via {{@model.provider}}</span>
           {{/if}}
@@ -124,23 +128,6 @@ export class BackgroundCheckField extends FieldDef {
           align-items: center;
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
-        }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 0.375rem;
-          height: 0.375rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
         }
         .bc-provider {
           font-size: var(--boxel-font-size-xs);
@@ -184,15 +171,8 @@ export class BackgroundCheckField extends FieldDef {
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(
-        BACKGROUND_CHECK_STATUS_COLORS,
-        this.args.model?.status,
-      );
-    }
-
-    get statusPillStyle() {
-      return pillStyle(this.statusColor);
+    get statusHue() {
+      return hueOf(BACKGROUND_CHECK_STATUS_HUES, this.args.model?.status);
     }
 
     get statusLabel(): string {
@@ -203,28 +183,11 @@ export class BackgroundCheckField extends FieldDef {
     }
 
     <template>
-      <span class='bc-atom' style={{this.statusPillStyle}}>
-        <span class='bc-atom-dot'></span>{{this.statusLabel}}
-      </span>
-      <style scoped>
-        .bc-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-        }
-        .bc-atom-dot {
-          width: 0.3125rem;
-          height: 0.3125rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
-        }
-      </style>
+      <StatePill
+        @label={{this.statusLabel}}
+        @hue={{this.statusHue}}
+        @dot={{true}}
+      />
     </template>
   };
 }

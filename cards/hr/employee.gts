@@ -13,16 +13,26 @@ import BriefcaseIcon from '@cardstack/boxel-icons/briefcase';
 import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { tracked } from '@glimmer/tracking';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
 
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 import { DurationField } from './duration-field';
 import {
+  StatePill,
   stateColor,
   stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 import { normalizedDuration } from './duration-field';
-import { daysBetween, pillStyle } from './utils';
+import { daysBetween } from './utils';
+import { AVATAR_HUE, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
 
 export const EMPLOYEE_STATUSES = ['onboarding', 'active', 'offboarded'];
 
@@ -43,11 +53,19 @@ export const ONBOARDING_STATUSES = ['not-started', 'in-progress', 'complete'];
 // Harmonized with the Ledger identity: onboarding = brass (the "just signed"
 // seal color), active = forest green (the primary, "permanent record" color),
 // offboarded = stone (a deliberate muted color, not a blank fallthrough).
-export const EMPLOYEE_STATUS_COLORS: Record<string, StateColor> = {
-  onboarding: stateColor('orange'),
-  active: stateColor('green'),
-  offboarded: stateColor('amber'),
+export const EMPLOYEE_STATUS_HUES: Record<string, Hue> = {
+  onboarding: 'orange',
+  active: 'green',
+  offboarded: 'amber',
 };
+
+export const EMPLOYEE_STATUS_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(EMPLOYEE_STATUS_HUES).map(([k, hue]) => [
+      k,
+      stateColor(hue),
+    ]),
+  );
 
 export const EmployeeStatusField = enumField(StringField, {
   options: EMPLOYEE_STATUSES.map((status) => ({
@@ -82,16 +100,35 @@ class EmployeeIsolated extends Component<typeof Employee> {
     this.selectedTab = tab;
   };
 
-  get statusColor() {
-    return stateColorOf(EMPLOYEE_STATUS_COLORS, this.args.model?.status);
+  get statusHue() {
+    return hueOf(EMPLOYEE_STATUS_HUES, this.args.model?.status);
   }
 
-  get monogramStyle() {
-    return pillStyle(this.statusColor);
+  get tenureInRoleLabel(): string | undefined {
+    let label = this.args.model?.tenure?.label;
+    return label ? `${label} in role` : undefined;
   }
 
-  get statusPillStyle() {
-    return pillStyle(this.statusColor);
+  // The Employment facts as Pret UI `KeyValue` rows; the two date rows render
+  // their fields through the `<:value>` block.
+  get employmentFacts(): KeyValueItem[] {
+    let m = this.args.model;
+    let rows: KeyValueItem[] = [
+      { key: 'Role', value: m?.role || '—' },
+      { key: 'Department', value: m?.department || '—' },
+      { key: 'Started', value: m?.startDate ? 'startDate' : '—' },
+      { key: 'Tenure', value: m?.tenure?.label || '—' },
+      { key: 'Employment', value: m?.employmentType || '—' },
+      { key: 'PTO balance', value: this.ptoBalanceLabel },
+      { key: 'Onboarding', value: m?.onboardingStatus || '—' },
+    ];
+    if (m?.status === 'offboarded') {
+      rows.push({
+        key: 'Left on',
+        value: m?.terminationDate ? 'terminationDate' : '—',
+      });
+    }
+    return rows;
   }
 
   get ptoBalanceLabel(): string {
@@ -110,19 +147,13 @@ class EmployeeIsolated extends Component<typeof Employee> {
   <template>
     <article class='employee-isolated'>
       <header class='hero'>
-        {{#if @model.photo.resolvedUrl}}
-          <img
-            class='avatar avatar-photo'
-            style={{this.monogramStyle}}
-            src={{@model.photo.resolvedUrl}}
-            alt=''
-          />
-        {{else}}
-          <span
-            class='avatar'
-            style={{this.monogramStyle}}
-          >{{@model.initials}}</span>
-        {{/if}}
+        <Avatar
+          @name={{if @model.title @model.title '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          @size={{52}}
+          aria-hidden='true'
+        />
         <div class='hero-text'>
           <h1>{{@model.title}}</h1>
           <p class='byline'>
@@ -133,24 +164,23 @@ class EmployeeIsolated extends Component<typeof Employee> {
             {{/if}}
           </p>
           <div class='pill-row'>
-            {{#if @model.status}}
-              <span class='pill' style={{this.statusPillStyle}}>
-                <span class='pill-dot'></span>{{@model.status}}
-              </span>
-            {{/if}}
-            {{#if @model.employmentType}}
-              <span class='pill neutral'>{{@model.employmentType}}</span>
-            {{/if}}
-            {{#if @model.tenure.label}}
-              <span class='pill neutral'>{{@model.tenure.label}}
-                in role</span>
-            {{/if}}
+            <StatePill
+              @label={{@model.status}}
+              @hue={{this.statusHue}}
+              @dot={{true}}
+            />
+            <StatePill @label={{@model.employmentType}} />
+            <StatePill @label={{this.tenureInRoleLabel}} />
           </div>
         </div>
         {{#if @model.tenure.label}}
           <div class='hero-money'>
-            <span class='money'>{{@model.tenure.label}}</span>
-            <span class='money-label'>tenure</span>
+            <Stat
+              class='money'
+              @label='Tenure'
+              @value={{@model.tenure.label}}
+              @roll={{false}}
+            />
           </div>
         {{/if}}
       </header>
@@ -158,35 +188,22 @@ class EmployeeIsolated extends Component<typeof Employee> {
       <div class='body'>
         <div class='main'>
           <h2 class='panel-title'>Employment</h2>
-          <dl class='facts'>
-            <dt>Role</dt>
-            <dd>{{if @model.role @model.role '—'}}</dd>
-            <dt>Department</dt>
-            <dd>{{if @model.department @model.department '—'}}</dd>
-            <dt>Started</dt>
-            <dd>{{#if @model.startDate}}<@fields.startDate
-                />{{else}}&mdash;{{/if}}</dd>
-            <dt>Tenure</dt>
-            <dd>{{#if
-                @model.tenure.label
-              }}{{@model.tenure.label}}{{else}}&mdash;{{/if}}</dd>
-            <dt>Employment</dt>
-            <dd>{{if @model.employmentType @model.employmentType '—'}}</dd>
-            <dt>PTO balance</dt>
-            <dd>{{this.ptoBalanceLabel}}</dd>
-            <dt>Onboarding</dt>
-            <dd>{{if @model.onboardingStatus @model.onboardingStatus '—'}}</dd>
-            {{#if (eq @model.status 'offboarded')}}
-              <dt>Left on</dt>
-              <dd>{{#if @model.terminationDate}}<@fields.terminationDate
-                  />{{else}}&mdash;{{/if}}</dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='facts' @items={{this.employmentFacts}}>
+            <:value as |row|>
+              {{#if (eq row.value 'startDate')}}
+                <@fields.startDate />
+              {{else if (eq row.value 'terminationDate')}}
+                <@fields.terminationDate />
+              {{else}}
+                {{row.value}}
+              {{/if}}
+            </:value>
+          </KeyValue>
         </div>
 
         <aside class='side'>
           <h2 class='panel-title'>Org position</h2>
-          <dl class='facts stacked'>
+          <dl class='stacked'>
             <dt>Reports to</dt>
             <dd>{{#if @model.manager}}<@fields.manager
                   @format='atom'
@@ -212,31 +229,11 @@ class EmployeeIsolated extends Component<typeof Employee> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        --emp-id: var(--primary);
-        --emp-strong: color-mix(in oklch, var(--emp-id) 45%, var(--foreground));
-      }
-      .avatar {
-        flex: none;
-        width: 3.25rem;
-        height: 3.25rem;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        background-color: var(--emp-strong);
-        color: var(--background);
-      }
-      .avatar-photo {
-        object-fit: cover;
       }
       .side-note {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.6;
-        color: var(--muted-foreground);
-      }
-      .dd-note {
         color: var(--muted-foreground);
       }
       .hero {
@@ -273,42 +270,13 @@ class EmployeeIsolated extends Component<typeof Employee> {
         gap: var(--boxel-sp-5xs);
         margin-top: var(--boxel-sp-xs);
       }
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        padding: 0.18em 0.5em;
-        border-radius: 0.1875rem;
-        white-space: nowrap;
-      }
-      .pill.neutral {
-        background-color: var(--muted);
-        color: var(--muted-foreground);
-      }
-      .pill-dot {
-        width: 0.375rem;
-        height: 0.375rem;
-        border-radius: 50%;
-        background-color: currentColor;
-        flex: none;
-      }
       .hero-money {
         flex: none;
         text-align: right;
       }
       .money {
-        display: block;
-        font-size: 1.5rem;
-        font-weight: 800;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-        font-variant-numeric: tabular-nums;
-      }
-      .money-label {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
+        --text-stat: 1.5rem;
+        justify-items: end;
       }
       .body {
         display: grid;
@@ -338,39 +306,24 @@ class EmployeeIsolated extends Component<typeof Employee> {
       .panel-title.spaced {
         margin-top: var(--boxel-sp-lg);
       }
-      .prose {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.65;
-        max-width: 56ch;
-        max-height: 16rem;
-        overflow-y: auto;
-      }
-      .chips {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.3rem;
-      }
-      .chips > li {
-        font-size: var(--boxel-font-size-xs);
-        padding: 0.15em 0.5em;
-        border-radius: 0.1875rem;
-        border: 1px solid var(--border);
-        background-color: var(--card);
-        color: var(--card-foreground);
-      }
       .facts {
+        --text-ui-md: var(--boxel-font-size-sm);
+        --space-6: var(--boxel-sp);
+        font-variant-numeric: tabular-nums;
+      }
+      .facts :deep(dt) {
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+      }
+      .stacked {
         margin: 0;
         display: grid;
-        grid-template-columns: 9rem 1fr;
       }
-      .facts.stacked {
-        grid-template-columns: 1fr;
-      }
-      .facts dt {
+      .stacked dt {
         font-family: var(--boxel-eyebrow-font-family);
         font-size: var(--boxel-eyebrow-font-size);
         font-weight: var(--boxel-eyebrow-font-weight);
@@ -378,28 +331,14 @@ class EmployeeIsolated extends Component<typeof Employee> {
         letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
-        padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-        border-bottom: 1px solid var(--border);
+        padding-top: 0.45rem;
       }
-      .facts.stacked dt {
-        border-bottom: 0;
-        padding-bottom: 0;
-      }
-      .facts dd {
+      .stacked dd {
         margin: 0;
-        padding: 0.45rem 0;
+        padding: 0.1rem 0 0.45rem;
         font-size: var(--boxel-font-size-sm);
         border-bottom: 1px solid var(--border);
         overflow-wrap: anywhere;
-        font-variant-numeric: tabular-nums;
-      }
-      .facts.stacked dd {
-        padding-top: 0.1rem;
-      }
-      .empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
       }
       @container iso (max-width: 40rem) {
         .body {
@@ -414,6 +353,9 @@ class EmployeeIsolated extends Component<typeof Employee> {
         }
         .hero-money {
           text-align: left;
+        }
+        .money {
+          justify-items: start;
         }
       }
     </style>
@@ -480,31 +422,37 @@ export class Employee extends PersonBase {
   static isolated = EmployeeIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusStyle() {
-      let c = stateColorOf(EMPLOYEE_STATUS_COLORS, this.args.model?.status);
-      return pillStyle(c);
+    get statusHue() {
+      return hueOf(EMPLOYEE_STATUS_HUES, this.args.model?.status);
+    }
+    get roleLine() {
+      let m = this.args.model;
+      let role = m?.role || '—';
+      return m?.department ? `${role} · ${m.department}` : role;
     }
     <template>
       <div class='employee-embedded'>
-        {{#if @model.photo.resolvedUrl}}
-          <img class='ee-avatar' src={{@model.photo.resolvedUrl}} alt='' />
-        {{else}}
-          <span class='ee-avatar ee-initials'>{{@model.initials}}</span>
-        {{/if}}
-        <div class='ee-main'>
-          <span class='ee-name'>{{if @model.name @model.name 'Unnamed'}}</span>
-          <span class='ee-role'>
-            {{if @model.role @model.role '—'}}{{#if @model.department}}
-              ·
-              {{@model.department}}{{/if}}
-          </span>
-        </div>
-        {{#if @model.status}}
-          <span
-            class='ee-status'
-            style={{this.statusStyle}}
-          >{{@model.status}}</span>
-        {{/if}}
+        <EntityDisplay
+          class='entity'
+          @title={{if @model.name @model.name 'Unnamed'}}
+          @subtitle={{this.roleLine}}
+          @center={{true}}
+        >
+          <:visual>
+            <Avatar
+              @name={{if @model.name @model.name '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{QUIET_AVATAR_HUE}}
+              @size={{30}}
+              aria-hidden='true'
+            />
+          </:visual>
+        </EntityDisplay>
+        <StatePill
+          class='ee-status'
+          @label={{@model.status}}
+          @hue={{this.statusHue}}
+        />
       </div>
       <style scoped>
         .employee-embedded {
@@ -514,50 +462,17 @@ export class Employee extends PersonBase {
           padding: 0.625rem 0.75rem;
           font-size: 0.8125rem;
         }
-        .ee-avatar {
-          width: 1.875rem;
-          height: 1.875rem;
-          border-radius: 50%;
-          object-fit: cover;
-          flex-shrink: 0;
-        }
-        .ee-initials {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          font-size: 0.6875rem;
-          font-weight: 700;
-        }
-        .ee-main {
-          display: flex;
-          flex-direction: column;
-          gap: 0.0625rem;
-          min-width: 0;
+        /* EntityDisplay's name and secondary line keep the row's sizes. */
+        .entity {
           flex: 1;
-        }
-        .ee-name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .ee-role {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          --pretui-entity-visual-size: 1.875rem;
+          --text-ui-md: 0.8125rem;
+          --text-ui-sm: 0.6875rem;
+          --space-3: 0.625rem;
         }
         .ee-status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
           flex-shrink: 0;
+          text-transform: capitalize;
         }
       </style>
     </template>
@@ -594,18 +509,15 @@ export class Employee extends PersonBase {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(EMPLOYEE_STATUS_COLORS, this.args.model?.status);
+    get statusHue() {
+      return hueOf(EMPLOYEE_STATUS_HUES, this.args.model?.status);
     }
 
+    // The status ring sits on a wrapper: Avatar writes its own inline style,
+    // and a caller's `style` would replace it.
     get avatarRingStyle() {
-      return htmlSafe(
-        `box-shadow: 0 0 0 0.125rem var(--background), 0 0 0 0.1875rem ${this.statusColor.ring};`,
-      );
-    }
-
-    get statusPillStyle() {
-      return pillStyle(this.statusColor);
+      let ring = stateColorOf(EMPLOYEE_STATUS_COLORS, this.args.model?.status);
+      return htmlSafe(`--status-ring: ${ring.ring}`);
     }
 
     get startYear(): string | undefined {
@@ -619,19 +531,15 @@ export class Employee extends PersonBase {
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          {{#if @model.photo.resolvedUrl}}
-            <img
-              class='avatar avatar-photo'
-              style={{this.avatarRingStyle}}
-              src={{@model.photo.resolvedUrl}}
-              alt=''
+          <span class='avatar-ring' style={{this.avatarRingStyle}}>
+            <Avatar
+              @name={{if @model.title @model.title '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{AVATAR_HUE}}
+              @size={{26}}
+              aria-hidden='true'
             />
-          {{else}}
-            <span
-              class='avatar'
-              style={{this.avatarRingStyle}}
-            >{{@model.initials}}</span>
-          {{/if}}
+          </span>
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
             {{#if @model.role}}
@@ -641,11 +549,12 @@ export class Employee extends PersonBase {
             {{/if}}
           </div>
           {{! Status pill survives every tier. }}
-          {{#if @model.status}}
-            <span class='fit-pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
-          {{/if}}
+          <StatePill
+            class='fit-pill'
+            @label={{@model.status}}
+            @hue={{this.statusHue}}
+            @dot={{true}}
+          />
         </div>
 
         <div class='fit-mid'>
@@ -690,33 +599,16 @@ export class Employee extends PersonBase {
           overflow: hidden;
           background-color: var(--card);
           color: var(--card-foreground);
-          --emp-id: var(--primary);
-          --emp-strong: color-mix(
-            in oklch,
-            var(--emp-id) 45%,
-            var(--foreground)
-          );
           --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
           --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
-        /* Same solid-fill treatment as every other card's fitted avatar.
-           Status used to be encoded as a coloured ring here, which made this
-           one card look unlike its siblings for information the status pill
-           already carries in words. */
-        .avatar {
+        .avatar-ring {
           flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
+          display: inline-flex;
           border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          background-color: var(--emp-strong);
-          color: var(--background);
-        }
-        .avatar-photo {
-          object-fit: cover;
+          box-shadow:
+            0 0 0 0.125rem var(--background),
+            0 0 0 0.1875rem var(--status-ring);
         }
         .fit > * {
           min-height: 0;
@@ -761,27 +653,12 @@ export class Employee extends PersonBase {
         .fit-pill {
           flex: none;
           align-self: flex-start;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 0.3125rem;
-          height: 0.3125rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
           display: none;
           flex-direction: column;
-          gap: 1px;
+          gap: 0.0625rem;
         }
         .money {
           font-size: calc(var(--fit-name) * 1.15);

@@ -15,30 +15,46 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { tracked } from '@glimmer/tracking';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
 
-import { InterviewRoundField } from './interview-round-field';
+import {
+  INTERVIEW_ROUND_LABELS,
+  InterviewRoundField,
+} from './interview-round-field';
 import { Position } from './position';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import {
+  StatePill,
   stateColor,
-  stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { pillStyle } from './utils';
+import { ALERT_STYLE, hueOf } from './hr-ui';
 
 // Colocated with InterviewPlanRoundField — colors each round's pill in the
 // isolated plan list and the embedded/compact previews. Distinct hues from
 // CANDIDATE_STAGE_COLORS/MEETING_TYPE_COLORS (this classifies a PLAN round's
 // content, not a candidate's stage or a meeting's type), but the same
-// stateColor()/stateColorOf() machinery from utils/index.
+// StatePill hue machinery.
 // Category hues only; the status hues follow the theme's status tokens.
-export const INTERVIEW_ROUND_COLORS: Record<string, StateColor> = {
-  'phone-screen': stateColor('slate'),
-  technical: stateColor('purple'),
-  onsite: stateColor('blue'),
-  panel: stateColor('teal'),
-  final: stateColor('pink'),
+export const INTERVIEW_ROUND_HUES: Record<string, Hue> = {
+  'phone-screen': 'slate',
+  technical: 'purple',
+  onsite: 'blue',
+  panel: 'teal',
+  final: 'pink',
 };
+
+export const INTERVIEW_ROUND_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(INTERVIEW_ROUND_HUES).map(([k, hue]) => [
+      k,
+      stateColor(hue),
+    ]),
+  );
 
 function questionsPreview(markdown?: string | null): string {
   if (!markdown) {
@@ -66,9 +82,12 @@ export class InterviewPlanRoundField extends FieldDef {
   @field questions = contains(MarkdownField);
 
   static embedded = class Embedded extends Component<typeof this> {
-    get pillStyle() {
-      let c = stateColorOf(INTERVIEW_ROUND_COLORS, this.args.model?.roundType);
-      return pillStyle(c);
+    get roundHue() {
+      return hueOf(INTERVIEW_ROUND_HUES, this.args.model?.roundType);
+    }
+    get roundLabel() {
+      let round = this.args.model?.roundType;
+      return round ? (INTERVIEW_ROUND_LABELS[round] ?? round) : undefined;
     }
     get preview(): string {
       return questionsPreview(this.args.model?.questions);
@@ -77,9 +96,11 @@ export class InterviewPlanRoundField extends FieldDef {
       <div class='ipr-row'>
         <div class='ipr-top'>
           {{#if @model.roundType}}
-            <span class='ipr-pill' style={{this.pillStyle}}>
-              <span class='ipr-dot'></span>{{@model.roundType}}
-            </span>
+            <StatePill
+              @label={{this.roundLabel}}
+              @hue={{this.roundHue}}
+              @dot={{true}}
+            />
           {{else}}
             <span class='ipr-empty'>No round type set</span>
           {{/if}}
@@ -99,23 +120,6 @@ export class InterviewPlanRoundField extends FieldDef {
         .ipr-top {
           display: flex;
           align-items: center;
-        }
-        .ipr-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-        }
-        .ipr-dot {
-          width: 0.375rem;
-          height: 0.375rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
         }
         .ipr-preview {
           margin: 0;
@@ -213,34 +217,40 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
                   <RoundComponent />
                 </div>
                 <div class='round-actions'>
-                  <button
-                    type='button'
-                    class='reorder'
-                    aria-label='Move round up'
-                    disabled={{this.isFirst index}}
+                  <IconButton
+                    @label='Move round up'
+                    @size='s'
+                    @disabled={{this.isFirst index}}
                     {{on 'click' (fn this.moveRound index -1)}}
-                  >&uarr;</button>
-                  <button
-                    type='button'
-                    class='reorder'
-                    aria-label='Move round down'
-                    disabled={{this.isLast index}}
+                  >&uarr;</IconButton>
+                  <IconButton
+                    @label='Move round down'
+                    @size='s'
+                    @disabled={{this.isLast index}}
                     {{on 'click' (fn this.moveRound index 1)}}
-                  >&darr;</button>
+                  >&darr;</IconButton>
                 </div>
               </li>
             {{/each}}
           </ol>
         {{else}}
-          <p class='empty'>No rounds added yet. Running Generate questions from
-            a candidate linked to this position will create the first round.</p>
+          <EmptyState
+            class='empty'
+            @texture={{false}}
+            @title='No rounds added yet'
+            @message='Running Generate questions from a candidate linked to this position will create the first round.'
+          />
         {{/if}}
         {{#if this.reorderError}}
-          <p class='reorder-error' role='alert'>{{this.reorderError}}</p>
+          <Alert
+            class='notice'
+            @tone='danger'
+            style={{ALERT_STYLE.danger}}
+          >{{this.reorderError}}</Alert>
         {{/if}}
 
         <h2 class='panel-title spaced'>Position</h2>
-        <dl class='facts stacked'>
+        <dl class='stacked'>
           <dt>Requisition</dt>
           <dd>{{#if @model.position}}<@fields.position
                 @format='atom'
@@ -257,8 +267,7 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        --ip-id: var(--primary);
-        --ip-strong: color-mix(in oklch, var(--ip-id) 45%, var(--foreground));
+        --ip-strong: color-mix(in oklch, var(--primary) 45%, var(--foreground));
       }
       .hero {
         flex: none;
@@ -332,42 +341,19 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         flex-direction: column;
         gap: 0.2rem;
       }
-      .reorder {
-        min-width: 1.75rem;
-        min-height: 1.75rem;
-        padding: 0.2rem 0.4rem;
-        border-radius: var(--boxel-border-radius-sm);
-        border: 1px solid var(--border);
-        background-color: var(--card);
-        color: var(--ip-strong);
-        font: inherit;
-        font-size: var(--boxel-font-size-sm);
-        cursor: pointer;
-      }
-      .reorder:focus-visible {
-        outline: 0.125rem solid var(--ring);
-        outline-offset: 0.125rem;
-      }
-      .reorder:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
-      .reorder-error {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--destructive-ink);
+      .notice {
+        margin-top: var(--boxel-sp-xs);
       }
       .empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
+        --space-9: var(--boxel-sp);
+        --space-6: var(--boxel-sp);
+        --text-heading: var(--boxel-font-size);
       }
-      .facts {
+      .stacked {
         margin: 0;
         display: grid;
-        grid-template-columns: 1fr;
       }
-      .facts dt {
+      .stacked dt {
         font-family: var(--boxel-eyebrow-font-family);
         font-size: var(--boxel-eyebrow-font-size);
         font-weight: var(--boxel-eyebrow-font-weight);
@@ -377,7 +363,7 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
         color: var(--muted-foreground);
         padding-top: 0.4rem;
       }
-      .facts dd {
+      .stacked dd {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         overflow-wrap: anywhere;
@@ -413,14 +399,21 @@ export class InterviewPlan extends CardDef {
   static isolated = InterviewPlanIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
+    get roundLine() {
+      let n = this.args.model?.roundTally || '0';
+      return `${n} round${n === '1' ? '' : 's'}`;
+    }
     <template>
       <div class='interview-plan-embedded'>
-        <span class='ipe-icon'><ListChecksIcon class='ipe-icon-svg' /></span>
-        <div class='ipe-main'>
-          <span class='ipe-title'>{{@model.title}}</span>
-          <span class='ipe-sub'>{{if @model.roundTally @model.roundTally '0'}}
-            round{{unless (eq @model.roundTally '1') 's'}}</span>
-        </div>
+        <EntityDisplay
+          class='entity'
+          @variant='thumbnail'
+          @title={{@model.title}}
+          @subtitle={{this.roundLine}}
+          @center={{true}}
+        >
+          <:visual><ListChecksIcon class='entity-icon' /></:visual>
+        </EntityDisplay>
       </div>
       <style scoped>
         .interview-plan-embedded {
@@ -430,36 +423,18 @@ export class InterviewPlan extends CardDef {
           padding: 0.625rem 0.75rem;
           font-size: 0.8125rem;
         }
-        .ipe-icon {
-          display: inline-flex;
-          width: 1.75rem;
-          height: 1.75rem;
-          flex-shrink: 0;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
+        /* EntityDisplay's thumbnail dress holds the type icon; the name and
+           secondary line keep the row's sizes. */
+        .entity {
+          flex: 1;
+          --pretui-entity-visual-size: 1.75rem;
+          --text-ui-md: 0.8125rem;
+          --text-ui-sm: 0.6875rem;
+          --space-3: 0.625rem;
         }
-        .ipe-icon-svg {
+        .entity-icon {
           width: 0.875rem;
           height: 0.875rem;
-        }
-        .ipe-main {
-          display: flex;
-          flex-direction: column;
-          gap: 0.0625rem;
-          min-width: 0;
-          flex: 1;
-        }
-        .ipe-title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .ipe-sub {
-          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
       </style>

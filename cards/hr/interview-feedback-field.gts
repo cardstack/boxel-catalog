@@ -9,6 +9,7 @@ import DateField from 'https://cardstack.com/base/date';
 import NumberField from 'https://cardstack.com/base/number';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 import MessageSquareIcon from '@cardstack/boxel-icons/message-square';
+import { Rating } from '@cardstack/pretui/components/rating';
 
 import { Employee } from './employee';
 
@@ -33,7 +34,13 @@ export class InterviewFeedbackField extends FieldDef {
               'Unknown interviewer'
             }}</span>
           {{#if @model.rating}}
-            <span class='rating'>&#9733; {{@model.rating}}/5</span>
+            <Rating
+              class='rating'
+              @value={{@model.rating}}
+              @max={{5}}
+              @readonly={{true}}
+              @label='Interviewer rating'
+            />
           {{/if}}
         </div>
         {{#if @model.notes}}
@@ -55,10 +62,14 @@ export class InterviewFeedbackField extends FieldDef {
           font-weight: 600;
           font-size: var(--boxel-font-size-sm);
         }
+        /* Rating's default fill (--warning) and track (--boxel-400) fall
+           under 3:1 on the card; the attention ink and the muted ink keep
+           both the filled and the empty stars visible. */
         .rating {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          font-weight: 600;
+          --pretui-rating-size: 0.875rem;
+          --pretui-rating-hue: var(--attention-ink);
+          --pretui-rating-track: var(--muted-foreground);
+          flex: none;
         }
         .notes {
           margin: var(--boxel-sp-5xs) 0 0;

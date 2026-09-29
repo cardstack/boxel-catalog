@@ -13,11 +13,12 @@ import enumField from 'https://cardstack.com/base/enum';
 
 import { Employee } from './employee';
 import {
+  StatePill,
   stateColor,
-  stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { pillStyle } from './utils';
+import { hueOf } from './hr-ui';
 
 export const APPROVAL_DECISIONS = ['pending', 'approved', 'rejected'];
 
@@ -33,11 +34,19 @@ export const APPROVAL_DECISION_LABELS: Record<string, string> = {
 // state, green for a forward decision, red for a stop — the same polarity
 // CANDIDATE_STAGE_COLORS and RECOMMENDATION_COLORS already use for
 // hired/rejected and hire/no-hire.
-export const APPROVAL_DECISION_COLORS: Record<string, StateColor> = {
-  pending: stateColor('amber'),
-  approved: stateColor('green'),
-  rejected: stateColor('red'),
+export const APPROVAL_DECISION_HUES: Record<string, Hue> = {
+  pending: 'amber',
+  approved: 'green',
+  rejected: 'red',
 };
+
+export const APPROVAL_DECISION_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(APPROVAL_DECISION_HUES).map(([k, hue]) => [
+      k,
+      stateColor(hue),
+    ]),
+  );
 
 export const ApprovalDecisionField = enumField(StringField, {
   options: APPROVAL_DECISIONS.map((value) => ({
@@ -140,9 +149,15 @@ export class ApprovalStepField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get pillStyle() {
-      let c = stateColorOf(APPROVAL_DECISION_COLORS, this.args.model?.decision);
-      return pillStyle(c);
+    get decisionHue() {
+      return hueOf(APPROVAL_DECISION_HUES, this.args.model?.decision);
+    }
+
+    get decisionLabel() {
+      let decision = this.args.model?.decision;
+      return decision
+        ? (APPROVAL_DECISION_LABELS[decision] ?? decision)
+        : undefined;
     }
 
     <template>
@@ -153,9 +168,12 @@ export class ApprovalStepField extends FieldDef {
           {{else}}
             <span class='row-empty'>No approver set</span>
           {{/if}}
-          <span class='pill' style={{this.pillStyle}}>
-            <span class='pill-dot'></span>{{@model.decision}}
-          </span>
+          <StatePill
+            class='decision'
+            @label={{this.decisionLabel}}
+            @hue={{this.decisionHue}}
+            @dot={{true}}
+          />
         </div>
         {{#if @model.decidedAt}}
           <span class='row-date'>decided <@fields.decidedAt /></span>
@@ -190,22 +208,7 @@ export class ApprovalStepField extends FieldDef {
           color: var(--muted-foreground);
           line-height: 1.5;
         }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-          flex: none;
-        }
-        .pill-dot {
-          width: 0.375rem;
-          height: 0.375rem;
-          border-radius: 50%;
-          background-color: currentColor;
+        .decision {
           flex: none;
         }
       </style>

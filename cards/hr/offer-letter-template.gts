@@ -7,6 +7,22 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import { Token } from '@cardstack/pretui/components/token';
+
+import { tokenStyle } from './hr-ui';
+
+// A merge field this template's body uses reads in the primary ink; one it
+// does not use stays muted.
+const USED_TOKEN_STYLE = tokenStyle(
+  '--boxel-font-size-xs',
+  'var(--primary-ink)',
+);
+const UNUSED_TOKEN_STYLE = tokenStyle(
+  '--boxel-font-size-xs',
+  'var(--muted-foreground)',
+);
 
 // The merge vocabulary GenerateOfferLetterCommand understands. Kept here —
 // next to the card whose body carries the placeholders — so the template's
@@ -65,10 +81,14 @@ export class OfferLetterTemplate extends CardDef {
 
     get mergeFields() {
       let used = new Set(this.usedPlaceholders);
-      return MERGE_FIELDS.map((f) => ({
-        ...f,
-        used: used.has(f.token.replace(/[{}]/g, '')),
-      }));
+      return MERGE_FIELDS.map((f) => {
+        let isUsed = used.has(f.token.replace(/[{}]/g, ''));
+        return {
+          ...f,
+          used: isUsed,
+          tokenStyle: isUsed ? USED_TOKEN_STYLE : UNUSED_TOKEN_STYLE,
+        };
+      });
     }
 
     <template>
@@ -97,8 +117,12 @@ export class OfferLetterTemplate extends CardDef {
                 <@fields.body />
               </div>
             {{else}}
-              <p class='empty'>No body yet — write the letter in markdown and
-                drop in merge placeholders from the legend.</p>
+              <EmptyState
+                class='empty'
+                @texture={{false}}
+                @title='No body yet'
+                @message='Write the letter in markdown and drop in merge placeholders from the legend.'
+              />
             {{/if}}
           </div>
 
@@ -109,8 +133,12 @@ export class OfferLetterTemplate extends CardDef {
               template's body.</p>
             <ul class='legend'>
               {{#each this.mergeFields as |f|}}
-                <li class='legend-row {{if f.used "used"}}'>
-                  <code>{{f.token}}</code>
+                <li class='legend-row'>
+                  <Token
+                    class='legend-token'
+                    @value={{f.token}}
+                    style={{f.tokenStyle}}
+                  />
                   <span class='legend-src'>{{f.source}}</span>
                 </li>
               {{/each}}
@@ -126,10 +154,9 @@ export class OfferLetterTemplate extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          --tpl-id: var(--primary);
           --tpl-strong: color-mix(
             in oklch,
-            var(--tpl-id) 45%,
+            var(--primary) 45%,
             var(--foreground)
           );
         }
@@ -228,23 +255,18 @@ export class OfferLetterTemplate extends CardDef {
         .legend-row:last-child {
           border-bottom: 0;
         }
-        .legend-row code {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          color: var(--muted-foreground);
-        }
-        .legend-row.used code {
-          color: var(--tpl-strong);
+        .legend-row .legend-token {
+          align-self: flex-start;
+          margin-inline: 0;
         }
         .legend-src {
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
+          --space-9: var(--boxel-sp);
+          --space-6: var(--boxel-sp);
+          --text-heading: var(--boxel-font-size);
         }
         @container iso (max-width: 40rem) {
           .body {
@@ -260,16 +282,21 @@ export class OfferLetterTemplate extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
+    get fieldLine() {
+      let n = this.args.model?.placeholderTally;
+      return n ? `${n} merge fields` : undefined;
+    }
     <template>
       <div class='template-embedded'>
-        <span class='te-icon'><FileTextIcon class='te-icon-svg' /></span>
-        <div class='te-main'>
-          <span class='te-name'>{{@model.title}}</span>
-          {{#if @model.placeholderTally}}
-            <span class='te-sub'>{{@model.placeholderTally}}
-              merge fields</span>
-          {{/if}}
-        </div>
+        <EntityDisplay
+          class='entity'
+          @variant='thumbnail'
+          @title={{@model.title}}
+          @subtitle={{this.fieldLine}}
+          @center={{true}}
+        >
+          <:visual><FileTextIcon class='entity-icon' /></:visual>
+        </EntityDisplay>
       </div>
       <style scoped>
         .template-embedded {
@@ -279,36 +306,18 @@ export class OfferLetterTemplate extends CardDef {
           padding: 0.625rem 0.75rem;
           font-size: 0.8125rem;
         }
-        .te-icon {
-          display: inline-flex;
-          width: 1.75rem;
-          height: 1.75rem;
-          flex-shrink: 0;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
+        /* EntityDisplay's thumbnail dress holds the type icon; the name and
+           secondary line keep the row's sizes. */
+        .entity {
+          flex: 1;
+          --pretui-entity-visual-size: 1.75rem;
+          --text-ui-md: 0.8125rem;
+          --text-ui-sm: 0.6875rem;
+          --space-3: 0.625rem;
         }
-        .te-icon-svg {
+        .entity-icon {
           width: 0.875rem;
           height: 0.875rem;
-        }
-        .te-main {
-          display: flex;
-          flex-direction: column;
-          gap: 0.0625rem;
-          min-width: 0;
-          flex: 1;
-        }
-        .te-name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .te-sub {
-          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
       </style>
@@ -393,10 +402,9 @@ export class OfferLetterTemplate extends CardDef {
           overflow: hidden;
           background-color: var(--card);
           color: var(--card-foreground);
-          --tpl-id: var(--primary);
           --tpl-strong: color-mix(
             in oklch,
-            var(--tpl-id) 45%,
+            var(--primary) 45%,
             var(--foreground)
           );
           --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);

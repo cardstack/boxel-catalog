@@ -16,7 +16,24 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import { BoxelButton } from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { Stat } from '@cardstack/pretui/components/stat';
+import {
+  StepList,
+  type StepItem,
+  type StepState,
+} from '@cardstack/pretui/components/step-list';
 
 import { Candidate } from './candidate';
 import { Position } from './position';
@@ -24,12 +41,13 @@ import { ApprovalChainField } from './approval-chain-field';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
 import { GenerateOfferLetterCommand } from './commands/generate-offer-letter-command';
 import {
+  StatePill,
   stateColor,
-  stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { daysBetween, formatMoney, pillStyle } from './utils';
-import { initialsOf } from '@cardstack/catalog/cards/people/person-base';
+import { daysBetween, formatMoney } from './utils';
+import { ALERT_STYLE, AVATAR_HUE, Money, hueOf, nameProgress } from './hr-ui';
 
 export const OFFER_STATUSES = [
   'draft',
@@ -44,13 +62,30 @@ export const OFFER_STATUSES = [
 // exactly (the same seal going out the door), accepted resolves into the
 // hired/active forest green, declined and rescinded both land on rust —
 // the offer ended without a hire either way.
-export const OFFER_STATUS_COLORS: Record<string, StateColor> = {
-  draft: stateColor('amber'),
-  extended: stateColor('orange'),
-  accepted: stateColor('green'),
-  declined: stateColor('red'),
-  rescinded: stateColor('red'),
+export const OFFER_STATUS_HUES: Record<string, Hue> = {
+  draft: 'amber',
+  extended: 'orange',
+  accepted: 'green',
+  declined: 'red',
+  rescinded: 'red',
 };
+
+export const OFFER_STATUS_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(OFFER_STATUS_HUES).map(([k, hue]) => [k, stateColor(hue)]),
+  );
+
+// The happy path an offer walks. Declined and rescinded are terminal branches
+// off 'extended': an offer can only end that way after it went out.
+const OFFER_PATH = ['draft', 'extended', 'accepted'];
+
+function isTerminal(status?: string | null): boolean {
+  return status === 'declined' || status === 'rescinded';
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 // Display labels for the offer lifecycle. The stored values stay as they are
 // — they are the industry vocabulary and they feed reports and filters — but
@@ -82,20 +117,8 @@ class OfferIsolated extends Component<typeof Offer> {
   get salaryLabel(): string | undefined {
     return formatMoney(this.args.model?.salary);
   }
-  get equityLabel(): string | undefined {
-    let v = this.args.model?.equity;
-    return v != null ? `${v.toLocaleString()} shares` : undefined;
-  }
-  get bonusLabel(): string {
-    let v = this.args.model?.bonus;
-    if (v == null) {
-      return '—';
-    }
-    return v === 0 ? '$0 · confirmed none' : formatMoney(v)!;
-  }
-  get statusStyle() {
-    let c = stateColorOf(OFFER_STATUS_COLORS, this.args.model?.status);
-    return pillStyle(c);
+  get statusHue() {
+    return hueOf(OFFER_STATUS_HUES, this.args.model?.status);
   }
   get statusLabel(): string | undefined {
     let status = this.args.model?.status;
@@ -114,38 +137,58 @@ class OfferIsolated extends Component<typeof Offer> {
     }
     return label;
   }
-  get lifecycleSteps() {
-    // draft/extended/accepted is the happy path; declined/rescinded are
-    // terminal branches. An offer can only be declined or rescinded after
-    // being extended, so those two statuses keep 'draft' and 'extended'
-    // marked done rather than blanking the whole timeline.
-    let order = ['draft', 'extended', 'accepted'];
+  // The lifecycle as Pret UI `StepList` steps. Stages before the reached one
+  // are complete and the reached one is current; reaching 'accepted'
+  // completes the run. A declined or rescinded offer keeps 'draft' and
+  // 'extended' complete and ends on its own terminal stage as an error step,
+  // rather than blanking the whole rail.
+  get lifecycleSteps(): StepItem[] {
     let status = this.args.model?.status;
-    let terminal = status === 'declined' || status === 'rescinded';
-    let idx = terminal
-      ? order.indexOf('extended')
-      : order.indexOf(status ?? '');
-    let label = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-    let steps = order.map((step, i) => ({
-      step,
-      label: label(step),
-      done: idx >= 0 && i <= idx,
-      current: !terminal && idx >= 0 && i === idx,
-      negative: false,
-    }));
+    let terminal = isTerminal(status);
+    let reached = terminal
+      ? OFFER_PATH.indexOf('extended')
+      : OFFER_PATH.indexOf(status ?? '');
+    let last = OFFER_PATH.length - 1;
+    let steps: StepItem[] = OFFER_PATH.map((step, i) => {
+      let state: StepState =
+        reached < 0 || i > reached
+          ? 'upcoming'
+          : i < reached || reached === last || terminal
+            ? 'complete'
+            : 'current';
+      return { label: capitalize(step), state };
+    });
     if (terminal && status) {
-      steps.push({
-        step: status,
-        label: label(status),
-        done: true,
-        current: true,
-        negative: true,
-      });
+      steps.push({ label: capitalize(status), state: 'error' });
     }
     return steps;
   }
-  get initials() {
-    return initialsOf(this.args.model?.candidateName || this.args.model?.title);
+  get avatarName() {
+    return this.args.model?.candidateName || this.args.model?.title || '?';
+  }
+
+  // Compensation and key dates as Pret UI `KeyValue` rows. A row whose value
+  // is a field component carries that field's name; the `<:value>` block
+  // renders it, and every other row prints its text.
+  get compensationFacts(): KeyValueItem[] {
+    let m = this.args.model;
+    return [
+      { key: 'Base salary', value: m?.salary != null ? 'salary' : '—' },
+      { key: 'Equity', value: m?.equity != null ? 'equity' : '—' },
+      { key: 'Signing bonus', value: m?.bonus != null ? 'bonus' : '—' },
+    ];
+  }
+  get dateFacts(): KeyValueItem[] {
+    let m = this.args.model;
+    return [
+      { key: 'Extended', value: m?.extendedDate ? 'extendedDate' : '—' },
+      { key: 'Expires', value: m?.expirationDate ? 'expirationDate' : '—' },
+      { key: 'Start date', value: m?.startDate ? 'startDate' : '—' },
+      {
+        key: 'Decision',
+        value: m?.decisionDate ? 'decisionDate' : '— awaiting response',
+      },
+    ];
   }
 
   get expiresNote(): string | undefined {
@@ -245,7 +288,13 @@ class OfferIsolated extends Component<typeof Offer> {
   <template>
     <article class='offer-isolated'>
       <header class='hero'>
-        <span class='avatar' aria-hidden='true'>{{this.initials}}</span>
+        <Avatar
+          class='avatar'
+          @name={{this.avatarName}}
+          @hue={{AVATAR_HUE}}
+          @size={{52}}
+          aria-hidden='true'
+        />
         <div class='hero-text'>
           <h1>{{@model.title}}</h1>
           <p class='byline'>
@@ -256,21 +305,22 @@ class OfferIsolated extends Component<typeof Offer> {
             {{/if}}
           </p>
           <div class='pill-row'>
-            {{! The status pill the isolated view previously never rendered,
-                even though statusStyle/statusLabel already existed. }}
-            {{#if this.statusLabel}}
-              <span class='pill' style={{this.statusStyle}}>
-                <span class='pill-dot'></span>{{this.statusLabel}}
-              </span>
-            {{/if}}
-            {{#if this.expiresNote}}
-              <span class='pill neutral'>{{this.expiresNote}}</span>
-            {{/if}}
+            <StatePill
+              @label={{this.statusLabel}}
+              @hue={{this.statusHue}}
+              @dot={{true}}
+            />
+            <StatePill @label={{this.expiresNote}} />
           </div>
         </div>
         <div class='hero-money'>
           {{#if this.salaryLabel}}
-            <span class='money'>{{this.salaryLabel}}</span>
+            <Stat
+              class='money'
+              @label='Base salary'
+              @value={{this.salaryLabel}}
+              @roll={{false}}
+            />
           {{/if}}
           {{#if @model.startDate}}
             <span class='money-label'>starts <@fields.startDate /></span>
@@ -281,48 +331,51 @@ class OfferIsolated extends Component<typeof Offer> {
       <div class='body'>
         <div class='main'>
           <h2 class='panel-title'>Progress</h2>
-          <ol class='timeline'>
-            {{#each this.lifecycleSteps as |s|}}
-              <li
-                class='step
-                  {{if s.done "done"}}
-                  {{if s.current "current"}}
-                  {{if s.negative "negative"}}'
-              >
-                <span class='step-dot'></span>
-                <span class='step-label'>{{s.label}}</span>
-              </li>
-            {{/each}}
-          </ol>
+          <StepList
+            class='timeline'
+            @steps={{this.lifecycleSteps}}
+            @variant='track'
+            @label='Offer progress'
+          />
 
           <h2 class='panel-title spaced'>Compensation</h2>
-          <dl class='facts'>
-            <dt>Base salary</dt>
-            <dd>{{if this.salaryLabel this.salaryLabel '—'}}</dd>
-            <dt>Equity</dt>
-            <dd>{{if this.equityLabel this.equityLabel '—'}}</dd>
-            <dt>Signing bonus</dt>
-            <dd>{{this.bonusLabel}}</dd>
-          </dl>
+          <KeyValue class='facts' @items={{this.compensationFacts}}>
+            <:value as |row|>
+              {{#if (eq row.value 'salary')}}
+                <Money @amount={{@model.salary}} />
+              {{else if (eq row.value 'equity')}}
+                <span><FormatNumber @value={{@model.equity}} /> shares</span>
+              {{else if (eq row.value 'bonus')}}
+                <span><Money @amount={{@model.bonus}} />{{#if
+                    (eq @model.bonus 0)
+                  }}
+                    &middot; confirmed none{{/if}}</span>
+              {{else}}
+                {{row.value}}
+              {{/if}}
+            </:value>
+          </KeyValue>
 
           <h2 class='panel-title spaced'>Key dates</h2>
-          <dl class='facts'>
-            <dt>Extended</dt>
-            <dd>{{#if @model.extendedDate}}<@fields.extendedDate
-                />{{else}}&mdash;{{/if}}</dd>
-            <dt>Expires</dt>
-            <dd>{{#if @model.expirationDate}}<@fields.expirationDate />{{#if
-                  this.expiresNote
-                }}<span class='dd-note'>
-                    &middot;
-                    {{this.expiresNote}}</span>{{/if}}{{else}}&mdash;{{/if}}</dd>
-            <dt>Start date</dt>
-            <dd>{{#if @model.startDate}}<@fields.startDate
-                />{{else}}&mdash;{{/if}}</dd>
-            <dt>Decision</dt>
-            <dd>{{#if @model.decisionDate}}<@fields.decisionDate
-                />{{else}}&mdash; awaiting response{{/if}}</dd>
-          </dl>
+          <KeyValue class='facts' @items={{this.dateFacts}}>
+            <:value as |row|>
+              {{#if (eq row.value 'extendedDate')}}
+                <@fields.extendedDate />
+              {{else if (eq row.value 'expirationDate')}}
+                <span><@fields.expirationDate />{{#if this.expiresNote}}<span
+                      class='dd-note'
+                    >
+                      &middot;
+                      {{this.expiresNote}}</span>{{/if}}</span>
+              {{else if (eq row.value 'startDate')}}
+                <@fields.startDate />
+              {{else if (eq row.value 'decisionDate')}}
+                <@fields.decisionDate />
+              {{else}}
+                {{row.value}}
+              {{/if}}
+            </:value>
+          </KeyValue>
 
           <section class='letter-panel'>
             <h2 class='panel-title spaced letter-ui'>Offer letter</h2>
@@ -331,9 +384,12 @@ class OfferIsolated extends Component<typeof Offer> {
                 <@fields.letter />
               </div>
             {{else}}
-              <p class='empty letter-ui'>No letter generated yet — Generate
-                letter merges this offer's values into an Offer Letter Template.
-                Print this page to save the result as a PDF.</p>
+              <EmptyState
+                class='empty letter-ui'
+                @texture={{false}}
+                @title='No letter generated yet'
+                @message="Generate letter merges this offer's values into an Offer Letter Template. Print this page to save the result as a PDF."
+              />
             {{/if}}
             <div class='letter-actions letter-ui'>
               <BoxelButton
@@ -347,12 +403,18 @@ class OfferIsolated extends Component<typeof Offer> {
               </BoxelButton>
             </div>
             {{#if this.letterMessage}}
-              <p class='letter-msg letter-ui' role='status'>
-                {{this.letterMessage}}</p>
+              <Alert
+                class='notice letter-ui'
+                @tone='success'
+                style={{ALERT_STYLE.success}}
+              >{{this.letterMessage}}</Alert>
             {{/if}}
             {{#if this.letterError}}
-              <p class='approval-error letter-ui' role='alert'>
-                {{this.letterError}}</p>
+              <Alert
+                class='notice letter-ui'
+                @tone='danger'
+                style={{ALERT_STYLE.danger}}
+              >{{this.letterError}}</Alert>
             {{/if}}
           </section>
         </div>
@@ -365,12 +427,16 @@ class OfferIsolated extends Component<typeof Offer> {
                 @displayContainer={{false}}
               /></div>
           {{else}}
-            <p class='empty'>No candidate linked — an offer should always point
-              at one.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No candidate linked'
+              @message='An offer should always point at one.'
+            />
           {{/if}}
 
           <h2 class='panel-title spaced'>Approval</h2>
-          <dl class='facts stacked'>
+          <dl class='stacked'>
             <dt>Offer letter</dt>
             <dd>{{#if @model.offerLetterFile}}<@fields.offerLetterFile
                   @format='atom'
@@ -397,7 +463,11 @@ class OfferIsolated extends Component<typeof Offer> {
             </div>
           {{/if}}
           {{#if this.approvalError}}
-            <p class='approval-error' role='alert'>{{this.approvalError}}</p>
+            <Alert
+              class='notice'
+              @tone='danger'
+              style={{ALERT_STYLE.danger}}
+            >{{this.approvalError}}</Alert>
           {{/if}}
         </aside>
       </div>
@@ -425,18 +495,6 @@ class OfferIsolated extends Component<typeof Offer> {
         padding: var(--boxel-sp-lg);
         border-bottom: 1px solid var(--border);
       }
-      .avatar {
-        flex: none;
-        width: 3.25rem;
-        height: 3.25rem;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        background-color: var(--offer-strong);
-        color: var(--background);
-      }
       .hero-text {
         flex: 1;
         min-width: 0;
@@ -463,38 +521,13 @@ class OfferIsolated extends Component<typeof Offer> {
         gap: var(--boxel-sp-5xs);
         margin-top: var(--boxel-sp-xs);
       }
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        padding: 0.18em 0.5em;
-        border-radius: 0.1875rem;
-        white-space: nowrap;
-      }
-      .pill.neutral {
-        background-color: var(--muted);
-        color: var(--muted-foreground);
-      }
-      .pill-dot {
-        width: 0.375rem;
-        height: 0.375rem;
-        border-radius: 50%;
-        background-color: currentColor;
-        flex: none;
-      }
       .hero-money {
         flex: none;
         text-align: right;
       }
       .money {
-        display: block;
-        font-size: 1.6rem;
-        font-weight: 800;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-        font-variant-numeric: tabular-nums;
+        --text-stat: 1.6rem;
+        justify-items: end;
       }
       .money-label {
         font-size: var(--boxel-font-size-xs);
@@ -528,56 +561,34 @@ class OfferIsolated extends Component<typeof Offer> {
       .panel-title.spaced {
         margin-top: var(--boxel-sp-lg);
       }
-      /* Ordered list, because the lifecycle genuinely is a sequence. */
+      /* Every mark on a guaranteed pair: the default current bar (--primary)
+         and error tone (--destructive) are fills that fall under 3:1 on the
+         page, so each takes its ink token. */
       .timeline {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        gap: var(--boxel-sp);
-        flex-wrap: wrap;
-      }
-      .step {
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .step-dot {
-        width: 0.5625rem;
-        height: 0.5625rem;
-        border-radius: 50%;
-        background-color: var(--border);
-        flex: none;
-      }
-      .step.done .step-dot {
-        background-color: var(--offer-id);
-      }
-      .step.done .step-label {
-        color: var(--foreground);
-      }
-      .step.current .step-label {
-        font-weight: 700;
-      }
-      .step.negative .step-dot {
-        background-color: var(--destructive);
-      }
-      .step.negative .step-label {
-        /* --destructive is a fill; red text on the card ground takes the
-           ink token, which stays red-reading and legible in both themes. */
-        color: var(--destructive-ink);
-        font-weight: 700;
+        --pretui-step-current-marker-fg: var(--foreground);
+        --pretui-step-current-bar: var(--primary-ink);
+        --pretui-step-complete-marker-fg: var(--success-ink);
+        --pretui-step-error-tone: var(--destructive-ink);
+        --pretui-step-error-marker-fg: var(--destructive-ink);
       }
       .facts {
+        --text-ui-md: var(--boxel-font-size-sm);
+        --space-6: var(--boxel-sp);
+        font-variant-numeric: tabular-nums;
+      }
+      .facts :deep(dt) {
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+      }
+      .stacked {
         margin: 0;
         display: grid;
-        grid-template-columns: 9rem 1fr;
       }
-      .facts.stacked {
-        grid-template-columns: 1fr;
-      }
-      .facts dt {
+      .stacked dt {
         font-family: var(--boxel-eyebrow-font-family);
         font-size: var(--boxel-eyebrow-font-size);
         font-weight: var(--boxel-eyebrow-font-weight);
@@ -585,23 +596,14 @@ class OfferIsolated extends Component<typeof Offer> {
         letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
-        padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-        border-bottom: 1px solid var(--border);
+        padding-top: 0.45rem;
       }
-      .facts.stacked dt {
-        border-bottom: 0;
-        padding-bottom: 0;
-      }
-      .facts dd {
+      .stacked dd {
         margin: 0;
-        padding: 0.45rem 0;
+        padding: 0.1rem 0 0.45rem;
         font-size: var(--boxel-font-size-sm);
         border-bottom: 1px solid var(--border);
         overflow-wrap: anywhere;
-        font-variant-numeric: tabular-nums;
-      }
-      .facts.stacked dd {
-        padding-top: 0.1rem;
       }
       .dd-note {
         color: var(--muted-foreground);
@@ -614,19 +616,17 @@ class OfferIsolated extends Component<typeof Offer> {
         color: var(--card-foreground);
       }
       .empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
+        --space-9: var(--boxel-sp);
+        --space-6: var(--boxel-sp);
+        --text-heading: var(--boxel-font-size);
       }
       .approval-actions {
         display: flex;
         gap: var(--boxel-sp-xs);
         margin-top: var(--boxel-sp-xs);
       }
-      .approval-error {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--destructive-ink);
+      .notice {
+        margin-top: var(--boxel-sp-xs);
       }
       .letter-doc {
         border: 1px solid var(--border);
@@ -648,11 +648,6 @@ class OfferIsolated extends Component<typeof Offer> {
         --boxel-button-secondary-foreground: var(--offer-strong);
         --boxel-button-secondary-border: var(--offer-strong);
         --boxel-button-border-radius: var(--boxel-border-radius-sm);
-      }
-      .letter-msg {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
       }
       /* Print = the letter's export path. The browser's print-to-PDF is
          the spec's "PDF" pragmatically: everything that is app chrome
@@ -698,6 +693,9 @@ class OfferIsolated extends Component<typeof Offer> {
         }
         .hero-money {
           text-align: left;
+        }
+        .money {
+          justify-items: start;
         }
       }
     </style>
@@ -768,25 +766,25 @@ export class Offer extends CardDef {
   static isolated = OfferIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusStyle() {
-      let c = stateColorOf(OFFER_STATUS_COLORS, this.args.model?.status);
-      return pillStyle(c);
+    get statusHue() {
+      return hueOf(OFFER_STATUS_HUES, this.args.model?.status);
     }
     <template>
       <div class='offer-embedded'>
-        <span class='oe-icon'><HandshakeIcon class='oe-icon-svg' /></span>
-        <div class='oe-main'>
-          <span class='oe-title'>{{@model.title}}</span>
-          {{#if @model.offeredTitle}}
-            <span class='oe-role'>{{@model.offeredTitle}}</span>
-          {{/if}}
-        </div>
-        {{#if @model.status}}
-          <span
-            class='oe-status'
-            style={{this.statusStyle}}
-          >{{@model.status}}</span>
-        {{/if}}
+        <EntityDisplay
+          class='entity'
+          @variant='thumbnail'
+          @title={{@model.title}}
+          @subtitle={{@model.offeredTitle}}
+          @center={{true}}
+        >
+          <:visual><HandshakeIcon class='entity-icon' /></:visual>
+        </EntityDisplay>
+        <StatePill
+          class='oe-status'
+          @label={{@model.status}}
+          @hue={{this.statusHue}}
+        />
       </div>
       <style scoped>
         .offer-embedded {
@@ -796,49 +794,23 @@ export class Offer extends CardDef {
           padding: 0.625rem 0.75rem;
           font-size: 0.8125rem;
         }
-        .oe-icon {
-          display: inline-flex;
-          width: 1.75rem;
-          height: 1.75rem;
-          flex-shrink: 0;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
+        /* EntityDisplay's thumbnail dress holds the type icon; the name and
+           secondary line keep the row's sizes. */
+        .entity {
+          flex: 1;
+          --pretui-entity-visual-size: 1.75rem;
+          --text-ui-md: 0.8125rem;
+          --text-ui-sm: 0.6875rem;
+          --space-3: 0.625rem;
         }
-        .oe-icon-svg {
+        .entity-icon {
           width: 0.875rem;
           height: 0.875rem;
-        }
-        .oe-main {
-          display: flex;
-          flex-direction: column;
-          gap: 0.0625rem;
-          min-width: 0;
-          flex: 1;
-        }
-        .oe-title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .oe-role {
-          font-size: 0.6875rem;
           color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
         }
         .oe-status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
           flex-shrink: 0;
+          text-transform: capitalize;
         }
       </style>
     </template>
@@ -879,45 +851,50 @@ export class Offer extends CardDef {
       return offerStatusLabel(this.args.model?.status);
     }
 
-    get statusColor() {
-      return stateColorOf(OFFER_STATUS_COLORS, this.args.model?.status);
+    get statusHue() {
+      return hueOf(OFFER_STATUS_HUES, this.args.model?.status);
     }
-    get statusPillStyle() {
-      return pillStyle(this.statusColor);
+    // Mirrors the isolated view's rule: declined/rescinded can only happen
+    // after 'extended', so those two statuses keep the earlier stages done and
+    // add a terminal stage, instead of blanking the whole bar.
+    get isTerminal(): boolean {
+      return isTerminal(this.args.model?.status);
     }
-    get salaryLabel(): string | undefined {
-      return formatMoney(this.args.model?.salary);
+    get stageTotal(): number {
+      return OFFER_PATH.length + (this.isTerminal ? 1 : 0);
     }
-    get lifecycleSteps() {
-      // Mirrors the isolated view's rule: declined/rescinded can only happen
-      // after 'extended', so those two statuses keep the earlier steps done
-      // and append a terminated step, instead of blanking the whole bar.
-      let order = ['draft', 'extended', 'accepted'];
-      let status = this.args.model?.status;
-      let terminal = status === 'declined' || status === 'rescinded';
-      let idx = terminal
-        ? order.indexOf('extended')
-        : order.indexOf(status ?? '');
-      let steps = order.map((step, i) => ({
-        step,
-        done: idx >= 0 && i <= idx,
-        terminal: false,
-      }));
-      if (terminal) {
-        steps.push({ step: status!, done: true, terminal: true });
+    get stagesDone(): number {
+      if (this.isTerminal) {
+        return this.stageTotal;
       }
-      return steps;
+      return OFFER_PATH.indexOf(this.args.model?.status ?? '') + 1;
     }
-    get initials() {
-      return initialsOf(
-        this.args.model?.candidateName || this.args.model?.title,
-      );
+    get avatarName() {
+      return this.args.model?.candidateName || this.args.model?.title || '?';
+    }
+    get hasSalary(): boolean {
+      return this.args.model?.salary != null;
     }
 
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          <span class='avatar' aria-hidden='true'>{{this.initials}}</span>
+          {{! Avatar sizes itself from @size, so the smallest tier mounts its
+              own 20px disc and the container queries show one of the two. }}
+          <Avatar
+            class='avatar-lg'
+            @name={{this.avatarName}}
+            @hue={{AVATAR_HUE}}
+            @size={{26}}
+            aria-hidden='true'
+          />
+          <Avatar
+            class='avatar-sm'
+            @name={{this.avatarName}}
+            @hue={{AVATAR_HUE}}
+            @size={{20}}
+            aria-hidden='true'
+          />
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
             {{#if @model.offeredTitle}}
@@ -926,21 +903,25 @@ export class Offer extends CardDef {
           </div>
           {{! Status survives to the smallest tier. Terminal offers must never
               look like a fresh draft, so this is never the first thing cut. }}
-          {{#if @model.status}}
-            <span class='fit-pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{this.statusLabel}}
-            </span>
-          {{/if}}
+          <StatePill
+            class='fit-pill'
+            @label={{this.statusLabel}}
+            @hue={{this.statusHue}}
+            @dot={{true}}
+          />
         </div>
 
         <div class='fit-track'>
-          {{#if this.salaryLabel}}
-            <span class='money'>{{this.salaryLabel}}</span>
+          {{#if this.hasSalary}}
+            <Money class='money' @amount={{@model.salary}} />
           {{/if}}
-          <div class='steps'>
-            {{#each this.lifecycleSteps as |s|}}
-              <i class='{{if s.done "on"}} {{if s.terminal "term"}}'></i>
-            {{/each}}
+          <div class='steps {{if this.isTerminal "term"}}'>
+            <ProgressBar
+              @value={{this.stagesDone}}
+              @max={{this.stageTotal}}
+              @steps={{true}}
+              {{nameProgress 'Offer stages reached'}}
+            />
           </div>
           {{#if @model.expirationDate}}
             <span class='track-label'>Expires
@@ -983,12 +964,6 @@ export class Offer extends CardDef {
           overflow: hidden;
           background-color: var(--card);
           color: var(--card-foreground);
-          --offer-id: var(--primary);
-          --offer-strong: color-mix(
-            in oklch,
-            var(--offer-id) 45%,
-            var(--foreground)
-          );
           --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
           --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
@@ -1003,17 +978,8 @@ export class Offer extends CardDef {
           gap: 0.4rem;
           flex-wrap: wrap;
         }
-        .avatar {
-          flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          background-color: var(--offer-strong);
-          color: var(--background);
+        .fit-top .avatar-sm {
+          display: none;
         }
         .fit-head {
           flex: 1;
@@ -1041,21 +1007,6 @@ export class Offer extends CardDef {
         .fit-pill {
           flex: none;
           align-self: flex-start;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 0.3125rem;
-          height: 0.3125rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
         }
         .fit-track {
           flex: none;
@@ -1068,22 +1019,15 @@ export class Offer extends CardDef {
           letter-spacing: -0.02em;
           font-variant-numeric: tabular-nums;
         }
+        /* ProgressBar's segments read --primary; the ink token keeps them
+           3:1 against the track, and a declined or rescinded offer's run is
+           destructive. */
         .steps {
-          display: flex;
-          gap: 0.1875rem;
           margin-top: 0.2rem;
+          --primary: var(--primary-ink);
         }
-        .steps i {
-          height: 0.25rem;
-          flex: 1;
-          border-radius: 0.125rem;
-          background-color: var(--border);
-        }
-        .steps i.on {
-          background-color: var(--offer-id);
-        }
-        .steps i.term {
-          background-color: var(--destructive);
+        .steps.term {
+          --primary: var(--destructive-ink);
         }
         .track-label {
           display: block;
@@ -1167,9 +1111,11 @@ export class Offer extends CardDef {
           }
         }
         @container fitted-card (height <= 50px) {
-          .avatar {
-            width: 1.25rem;
-            height: 1.25rem;
+          .fit-top .avatar-lg {
+            display: none;
+          }
+          .fit-top .avatar-sm {
+            display: inline-flex;
           }
           .fit-eb {
             display: none;
