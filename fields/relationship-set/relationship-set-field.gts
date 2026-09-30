@@ -137,7 +137,7 @@ export class RelationshipSetField extends FieldDef {
         .relset {
           display: flex;
           flex-wrap: wrap;
-          gap: var(--boxel-sp-4xs);
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .relset :deep(.containsMany-field) {
           display: contents;

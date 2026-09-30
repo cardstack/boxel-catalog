@@ -103,13 +103,14 @@ export class AutomationPolicyField extends FieldDef {
         .policy {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-5xs);
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
         }
         .policy-name {
           font-weight: 500;
           display: flex;
-          gap: var(--boxel-sp-4xs);
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           align-items: baseline;
         }
         .policy-off {

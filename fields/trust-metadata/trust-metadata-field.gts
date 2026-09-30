@@ -129,7 +129,7 @@ export class TrustMetadataField extends FieldDef {
           display: inline-flex;
           flex-wrap: wrap;
           align-items: baseline;
-          gap: var(--boxel-sp-xs);
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           font-size: 0.8125rem;
         }
         .basis,

@@ -239,7 +239,7 @@ export class EffectivePeriodField extends FieldDef {
         .ep-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
           font-size: var(--boxel-font-size-sm);
           font-variant-numeric: tabular-nums;
@@ -311,7 +311,7 @@ export class EffectivePeriodField extends FieldDef {
         .ep {
           display: flex;
           flex-direction: column;
-          gap: 0.35rem;
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
           font-variant-numeric: tabular-nums;
         }
@@ -319,7 +319,7 @@ export class EffectivePeriodField extends FieldDef {
           display: flex;
           align-items: baseline;
           flex-wrap: wrap;
-          gap: 0.35rem 0.6rem;
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .ep-k {
           font-family: var(--boxel-eyebrow-font-family);

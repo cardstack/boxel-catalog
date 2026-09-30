@@ -95,7 +95,7 @@ export class SlaWindowField extends FieldDef {
         .window {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-4xs);
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
         }
         .window-tz {
@@ -106,7 +106,7 @@ export class SlaWindowField extends FieldDef {
         .window-days {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-5xs);
+          gap: var(--boxel-sp-3xs);
         }
         .window-always,
         .window-holidays {

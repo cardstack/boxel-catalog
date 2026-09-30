@@ -150,7 +150,7 @@ export class RecordOwnerField extends FieldDef {
         .owner-edit {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-4xs);
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
         }
         .owner-current {
@@ -162,7 +162,7 @@ export class RecordOwnerField extends FieldDef {
           color: var(--muted-foreground);
         }
         .owner-note {
-          margin: var(--boxel-sp-4xs) 0 0;
+          margin: var(--boxel-sp-3xs) 0 0;
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }

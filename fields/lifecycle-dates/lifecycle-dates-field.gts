@@ -77,13 +77,17 @@ export class LifecycleDatesField extends FieldDef {
         .lifecycle {
           display: flex;
           flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-sm);
           font-size: 0.8125rem;
           font-variant-numeric: tabular-nums;
         }
+        .stamp {
+          display: inline-flex;
+          align-items: baseline;
+          gap: var(--boxel-sp-4xs);
+        }
         .stamp-label {
           color: var(--muted-foreground);
-          margin-right: 0.1875rem;
         }
         .empty {
           color: var(--muted-foreground);

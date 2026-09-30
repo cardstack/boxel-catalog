@@ -85,7 +85,7 @@ export class WorkflowStateField extends FieldDef {
         .wfs {
           display: inline-flex;
           align-items: center;
-          gap: var(--boxel-sp-5xs);
+          gap: var(--boxel-sp-3xs);
           border-radius: var(--boxel-border-radius-pill);
           padding: 0.125rem 0.625rem;
           background-color: var(--wfs-bg);

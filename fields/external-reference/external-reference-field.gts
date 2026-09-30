@@ -69,8 +69,9 @@ export class IntegrationReferenceField extends FieldDef {
       <style scoped>
         .integration {
           display: inline-flex;
+          flex-wrap: wrap;
           align-items: baseline;
-          gap: var(--boxel-sp-4xs);
+          gap: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
         }
         .integration-name {
@@ -145,8 +146,9 @@ export class ExternalReferenceField extends FieldDef {
       <style scoped>
         .xref {
           display: inline-flex;
+          flex-wrap: wrap;
           align-items: baseline;
-          gap: var(--boxel-sp-4xs);
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-3xs);
           font-size: var(--boxel-font-size-xs);
         }
         .xref-sys {
