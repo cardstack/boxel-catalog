@@ -10,14 +10,16 @@ import BooleanField from '@cardstack/base/boolean';
 import DateTimeField from '@cardstack/base/datetime';
 import enumField from '@cardstack/base/enum';
 import ZapIcon from '@cardstack/boxel-icons/zap';
+import { htmlSafe } from '@ember/template';
 import { Token } from '@cardstack/pretui/components/token';
 import { tokenStyle } from '../shared/pretui-token';
 
 // The rule's two halves are machine values, so they read as Pret UI Tokens in
-// the muted hue at the rule line's own size.
-const RULE_TOKEN_STYLE = tokenStyle(
-  '--boxel-font-size-xs',
-  'var(--muted-foreground)',
+// the muted hue at the rule line's own size. Token sets `nowrap`, but a rule
+// half carries free text (a `contains` phrase), so these Tokens wrap and break
+// long words instead of running past a narrow card's edge.
+const RULE_TOKEN_STYLE = htmlSafe(
+  `${tokenStyle('--boxel-font-size-xs', 'var(--muted-foreground)')}; white-space: normal; overflow-wrap: anywhere`,
 );
 
 export const POLICY_OPS = ['is', 'is not', 'gte', 'lte', 'contains'] as const;
@@ -77,6 +79,17 @@ export class AutomationPolicyField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
+    get hasCondition() {
+      let m = this.args.model;
+      return Boolean(m.whenField || m.whenOp || m.whenValue);
+    }
+    get hasAction() {
+      let m = this.args.model;
+      return Boolean(m.action || m.actionParam);
+    }
+    get hasRule() {
+      return this.hasCondition || this.hasAction;
+    }
     <template>
       <div class='policy'>
         <span class='policy-name'>
@@ -85,16 +98,22 @@ export class AutomationPolicyField extends FieldDef {
               class='policy-off'
             >off</span>{{/unless}}
         </span>
-        <span class='policy-rule'>
-          when
-          <Token style={{RULE_TOKEN_STYLE}}>{{@model.whenField}}
-            {{@model.whenOp}}
-            {{@model.whenValue}}</Token>
-          →
-          <Token style={{RULE_TOKEN_STYLE}}>{{@model.action}}{{#if
-              @model.actionParam
-            }}({{@model.actionParam}}){{/if}}</Token>
-        </span>
+        {{#if this.hasRule}}
+          <span class='policy-rule'>
+            when
+            {{#if this.hasCondition}}
+              <Token style={{RULE_TOKEN_STYLE}}>{{@model.whenField}}
+                {{@model.whenOp}}
+                {{@model.whenValue}}</Token>
+            {{/if}}
+            →
+            {{#if this.hasAction}}
+              <Token style={{RULE_TOKEN_STYLE}}>{{@model.action}}{{#if
+                  @model.actionParam
+                }}({{@model.actionParam}}){{/if}}</Token>
+            {{/if}}
+          </span>
+        {{/if}}
         {{#if @model.applyCount}}
           <span class='policy-meta'>applied {{@model.applyCount}}×</span>
         {{/if}}
@@ -121,6 +140,7 @@ export class AutomationPolicyField extends FieldDef {
           padding: 0 0.5rem;
         }
         .policy-rule {
+          min-width: 0;
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }

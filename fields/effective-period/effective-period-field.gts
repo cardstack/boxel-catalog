@@ -344,7 +344,7 @@ export class EffectivePeriodField extends FieldDef {
         }
         .ep-notice.is-live .ep-deadline,
         .ep-notice.is-live .ep-sub {
-          color: var(--attention-ink);
+          color: var(--warning-ink);
         }
         .ep-notice.is-late .ep-deadline,
         .ep-notice.is-late .ep-sub {

@@ -164,7 +164,26 @@ export class ExternalReferenceField extends FieldDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <Token style={{ID_TOKEN_STYLE}}>{{@model.title}}</Token>
+      <span class='xref-atom'>
+        {{#if @model.system.name}}<span
+            class='xref-atom-sys'
+          >{{@model.system.name}}</span>{{/if}}
+        {{#if @model.externalId}}
+          <Token style={{ID_TOKEN_STYLE}}>{{@model.externalId}}</Token>
+        {{else}}
+          {{#unless @model.system.name}}
+            <span class='xref-atom-sys'>External reference</span>
+          {{/unless}}
+        {{/if}}
+      </span>
+      <style scoped>
+        .xref-atom {
+          font-size: var(--boxel-font-size-xs);
+        }
+        .xref-atom-sys {
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }
