@@ -10,6 +10,7 @@ import {
   contains,
   containsMany,
   field,
+  realmURL,
 } from 'https://cardstack.com/base/card-api';
 import CodeRefField from 'https://cardstack.com/base/code-ref';
 import {
@@ -21,6 +22,7 @@ import {
   type PolicyValidation,
 } from 'https://cardstack.com/base/operations';
 import PolicyPredicateField from '@cardstack/catalog/fields/policy-predicate/policy-predicate';
+import { subscribeToRealm } from '@cardstack/runtime-common';
 import StringField from 'https://cardstack.com/base/string';
 import {
   BoxelInput,
@@ -535,7 +537,7 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
 }
 
 // Whether this is a render someone is looking at, rather than the render
-// indexing takes of the card. What an index render shows is served to every
+// indexing takes of a card. What an index render shows is served to every
 // later viewer, and it runs while the card itself is being indexed, so asking
 // the realm what the card compiles to there would answer for the visit before
 // this one.
@@ -624,43 +626,60 @@ export class RealmPolicy extends CardDef {
       return this.args.model.rules ?? [];
     }
 
-    // The rules as the card holds them now. Reloading the card after an edit
-    // changes them, and that asks the realm again.
-    get rulesKey(): string {
-      return JSON.stringify(
-        this.rules.map((rule) => [
-          rule.targetType,
-          (rule.grants ?? []).map((grant) => [grant.operation, grant.where]),
-        ]),
-      );
-    }
+    // Whether someone is looking at this view, decided when it is created. A
+    // page that indexes cards itself can be partway through an index render of
+    // another card when this view asks again.
+    private isLive = isLiveRender();
 
     // What the card compiles to, asked of the realm as soon as someone looks
-    // at it. It is the realm's compile, so it is what a realm naming this card
-    // holds in force.
+    // at it, and again after each index pass of the card's realm, which is
+    // when an edit to the card, or to a type in that realm its rules name,
+    // takes effect. It is the realm's compile, so it is what a realm naming
+    // this card holds in force. Only the latest ask's answer is shown,
+    // whichever order the answers arrive in.
     private validationState = use(
       this,
-      resource(() => {
+      resource(({ on }) => {
         let state = new TrackedObject<ValidationState>({
           validation: undefined,
           failure: undefined,
         });
-        let asked = this.rulesKey;
-        if (!isLiveRender() || !this.args.model.id) {
+        let policy = this.policy;
+        if (!this.isLive || !policy.id) {
           return state;
         }
-        (async () => {
+        let latest = 0;
+        let ask = async () => {
+          let asked = ++latest;
           try {
-            let validation = await operations<typeof RealmPolicy>(
-              this.policy,
-            ).validate();
-            if (asked === this.rulesKey) {
+            let validation =
+              await operations<typeof RealmPolicy>(policy).validate();
+            if (asked === latest) {
               state.validation = validation;
+              state.failure = undefined;
             }
           } catch (err) {
-            state.failure = failureMessage(err);
+            if (asked === latest) {
+              state.validation = undefined;
+              state.failure = failureMessage(err);
+            }
           }
-        })();
+        };
+        ask();
+        let realm = policy[realmURL]?.href;
+        if (realm) {
+          on.cleanup(
+            subscribeToRealm(realm, (event) => {
+              if (
+                event.eventName === 'index' &&
+                (event.indexType === 'incremental' ||
+                  event.indexType === 'full')
+              ) {
+                ask();
+              }
+            }),
+          );
+        }
         return state;
       }),
     );
