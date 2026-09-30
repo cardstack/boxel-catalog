@@ -23,10 +23,7 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { Stat } from '@cardstack/pretui/components/stat';
 import {
@@ -40,14 +37,16 @@ import { Position } from './position';
 import { ApprovalChainField } from './approval-chain-field';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
 import { GenerateOfferLetterCommand } from './commands/generate-offer-letter-command';
-import {
-  StatePill,
-  stateColor,
-  type Hue,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { daysBetween, formatMoney } from './utils';
-import { ALERT_STYLE, AVATAR_HUE, Money, hueOf, nameProgress } from './hr-ui';
+import {
+  ALERT_STYLE,
+  AVATAR_HUE,
+  FactList,
+  Money,
+  hueOf,
+  nameProgress,
+} from './hr-ui';
 
 export const OFFER_STATUSES = [
   'draft',
@@ -69,11 +68,6 @@ export const OFFER_STATUS_HUES: Record<string, Hue> = {
   declined: 'red',
   rescinded: 'red',
 };
-
-export const OFFER_STATUS_COLORS: Record<string, StateColor> =
-  Object.fromEntries(
-    Object.entries(OFFER_STATUS_HUES).map(([k, hue]) => [k, stateColor(hue)]),
-  );
 
 // The happy path an offer walks. Declined and rescinded are terminal branches
 // off 'extended': an offer can only end that way after it went out.
@@ -339,7 +333,7 @@ class OfferIsolated extends Component<typeof Offer> {
           />
 
           <h2 class='panel-title spaced'>Compensation</h2>
-          <KeyValue class='facts' @items={{this.compensationFacts}}>
+          <FactList @items={{this.compensationFacts}}>
             <:value as |row|>
               {{#if (eq row.value 'salary')}}
                 <Money @amount={{@model.salary}} />
@@ -354,10 +348,10 @@ class OfferIsolated extends Component<typeof Offer> {
                 {{row.value}}
               {{/if}}
             </:value>
-          </KeyValue>
+          </FactList>
 
           <h2 class='panel-title spaced'>Key dates</h2>
-          <KeyValue class='facts' @items={{this.dateFacts}}>
+          <FactList @items={{this.dateFacts}}>
             <:value as |row|>
               {{#if (eq row.value 'extendedDate')}}
                 <@fields.extendedDate />
@@ -375,7 +369,7 @@ class OfferIsolated extends Component<typeof Offer> {
                 {{row.value}}
               {{/if}}
             </:value>
-          </KeyValue>
+          </FactList>
 
           <section class='letter-panel'>
             <h2 class='panel-title spaced letter-ui'>Offer letter</h2>
@@ -570,19 +564,6 @@ class OfferIsolated extends Component<typeof Offer> {
         --pretui-step-complete-marker-fg: var(--success-ink);
         --pretui-step-error-tone: var(--destructive-ink);
         --pretui-step-error-marker-fg: var(--destructive-ink);
-      }
-      .facts {
-        --text-ui-md: var(--boxel-font-size-sm);
-        --space-6: var(--boxel-sp);
-        font-variant-numeric: tabular-nums;
-      }
-      .facts :deep(dt) {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
       }
       .stacked {
         margin: 0;
@@ -869,6 +850,19 @@ export class Offer extends CardDef {
       }
       return OFFER_PATH.indexOf(this.args.model?.status ?? '') + 1;
     }
+    // What a screen reader hears for the bar. A terminal offer fills every
+    // segment, so the count alone would announce it as complete; the text
+    // names how it ended and the stage it ended after.
+    get progressText(): string {
+      let status = this.args.model?.status;
+      if (isTerminal(status)) {
+        return `${capitalize(status!)} after extended`;
+      }
+      if (!status || this.stagesDone === 0) {
+        return 'Not started';
+      }
+      return `${capitalize(status)}, stage ${this.stagesDone} of ${this.stageTotal}`;
+    }
     get avatarName() {
       return this.args.model?.candidateName || this.args.model?.title || '?';
     }
@@ -920,7 +914,7 @@ export class Offer extends CardDef {
               @value={{this.stagesDone}}
               @max={{this.stageTotal}}
               @steps={{true}}
-              {{nameProgress 'Offer stages reached'}}
+              {{nameProgress 'Offer stages reached' this.progressText}}
             />
           </div>
           {{#if @model.expirationDate}}

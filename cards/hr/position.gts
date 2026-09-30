@@ -18,10 +18,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Token } from '@cardstack/pretui/components/token';
 import { on } from '@ember/modifier';
@@ -33,16 +30,12 @@ import { Skill } from './skill';
 import { ApprovalChainField } from './approval-chain-field';
 import { InterviewPlan } from './interview-plan';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
-import {
-  StatePill,
-  stateColor,
-  type Hue,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from './utils';
 import {
   ALERT_STYLE,
   AttentionPill,
+  FactList,
   MoneyRange,
   hueOf,
   tokenStyle,
@@ -90,14 +83,6 @@ export const POSITION_STATUS_HUES: Record<string, Hue> = {
   filled: 'green',
   closed: 'red',
 };
-
-export const POSITION_STATUS_COLORS: Record<string, StateColor> =
-  Object.fromEntries(
-    Object.entries(POSITION_STATUS_HUES).map(([k, hue]) => [
-      k,
-      stateColor(hue),
-    ]),
-  );
 
 function salaryRangeLabel(
   min?: number | null,
@@ -289,7 +274,7 @@ class PositionIsolated extends Component<typeof Position> {
       <div class='body'>
         <div class='main'>
           <h2 class='panel-title'>Role</h2>
-          <KeyValue class='facts' @items={{this.roleFacts}}>
+          <FactList @items={{this.roleFacts}}>
             <:value as |row|>
               {{#if (eq row.value 'salary')}}
                 <MoneyRange
@@ -308,7 +293,7 @@ class PositionIsolated extends Component<typeof Position> {
                 {{row.value}}
               {{/if}}
             </:value>
-          </KeyValue>
+          </FactList>
 
           <h2 class='panel-title spaced'>Required skills</h2>
           {{#if @model.requiredSkills.length}}
@@ -507,19 +492,6 @@ class PositionIsolated extends Component<typeof Position> {
         border: 1px solid var(--border);
         background-color: var(--card);
         color: var(--card-foreground);
-      }
-      .facts {
-        --text-ui-md: var(--boxel-font-size-sm);
-        --space-6: var(--boxel-sp);
-        font-variant-numeric: tabular-nums;
-      }
-      .facts :deep(dt) {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
       }
       .stacked {
         margin: 0;

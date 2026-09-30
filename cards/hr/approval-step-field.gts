@@ -12,12 +12,7 @@ import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
 
 import { Employee } from './employee';
-import {
-  StatePill,
-  stateColor,
-  type Hue,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { hueOf } from './hr-ui';
 
 export const APPROVAL_DECISIONS = ['pending', 'approved', 'rejected'];
@@ -32,21 +27,13 @@ export const APPROVAL_DECISION_LABELS: Record<string, string> = {
 // wherever a chain step renders (ApprovalStepField's own embedded format,
 // used by ApprovalChainField's stepper). Amber for the undecided middle
 // state, green for a forward decision, red for a stop — the same polarity
-// CANDIDATE_STAGE_COLORS and RECOMMENDATION_COLORS already use for
-// hired/rejected and hire/no-hire.
+// CANDIDATE_STAGE_HUES and RECOMMENDATION_HUES use for hired/rejected and
+// hire/no-hire.
 export const APPROVAL_DECISION_HUES: Record<string, Hue> = {
   pending: 'amber',
   approved: 'green',
   rejected: 'red',
 };
-
-export const APPROVAL_DECISION_COLORS: Record<string, StateColor> =
-  Object.fromEntries(
-    Object.entries(APPROVAL_DECISION_HUES).map(([k, hue]) => [
-      k,
-      stateColor(hue),
-    ]),
-  );
 
 export const ApprovalDecisionField = enumField(StringField, {
   options: APPROVAL_DECISIONS.map((value) => ({

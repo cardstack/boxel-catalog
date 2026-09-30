@@ -9,12 +9,7 @@ import DateField from 'https://cardstack.com/base/date';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
 
-import {
-  StatePill,
-  stateColor,
-  type Hue,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { hueOf } from './hr-ui';
 
 // Background-check lifecycle: not-started → pending → clear | flagged.
@@ -44,14 +39,6 @@ export const BACKGROUND_CHECK_STATUS_HUES: Record<string, Hue> = {
   clear: 'green',
   flagged: 'red',
 };
-
-export const BACKGROUND_CHECK_STATUS_COLORS: Record<string, StateColor> =
-  Object.fromEntries(
-    Object.entries(BACKGROUND_CHECK_STATUS_HUES).map(([k, hue]) => [
-      k,
-      stateColor(hue),
-    ]),
-  );
 
 export const BackgroundCheckStatusField = enumField(StringField, {
   options: BACKGROUND_CHECK_STATUSES.map((value) => ({

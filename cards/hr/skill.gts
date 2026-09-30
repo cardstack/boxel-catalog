@@ -7,12 +7,7 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import enumField from 'https://cardstack.com/base/enum';
 import TagIcon from '@cardstack/boxel-icons/tag';
-import {
-  StatePill,
-  stateColor,
-  type Hue,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { hueOf } from './hr-ui';
 
 export const SKILL_CATEGORIES = [
@@ -31,11 +26,6 @@ export const SKILL_CATEGORY_HUES: Record<string, Hue> = {
   platform: 'pink',
   practice: 'slate',
 };
-
-export const SKILL_CATEGORY_COLORS: Record<string, StateColor> =
-  Object.fromEntries(
-    Object.entries(SKILL_CATEGORY_HUES).map(([k, hue]) => [k, stateColor(hue)]),
-  );
 
 /** The chip hue for a skill's category; an unknown or empty category gets StatePill's slate. */
 export function skillCategoryHue(category?: string | null): Hue | undefined {

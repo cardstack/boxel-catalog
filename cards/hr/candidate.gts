@@ -24,10 +24,7 @@ import { Alert } from '@cardstack/pretui/components/alert';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
@@ -51,7 +48,13 @@ import {
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 import { daysBetween, liveCount } from './utils';
-import { ALERT_STYLE, AVATAR_HUE, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
+import {
+  ALERT_STYLE,
+  AVATAR_HUE,
+  FactList,
+  QUIET_AVATAR_HUE,
+  hueOf,
+} from './hr-ui';
 import { ExtractResumeCommand } from './commands/extract-resume-command';
 import { GenerateInterviewQuestionsCommand } from './commands/generate-interview-questions-command';
 import FileDownloadLink from './components/file-download-link';
@@ -65,9 +68,9 @@ export const CANDIDATE_STAGES = [
   'rejected',
 ];
 
-// Colocated with Candidate — the same map drives the stage pill here, the
-// Kanban board column/card border, and the calendar's meeting-kind chips.
-// A stage is a status, so it reads the status hues: green is active work
+// Colocated with Candidate — the hue map colours the stage pill, and
+// `CANDIDATE_STAGE_COLORS` below gives the avatar's stage ring the same hue in
+// the isolated and fitted views. A stage is a status, so it reads the status hues: green is active work
 // (screening, interviewing) and the hire the pipeline resolves into, the same
 // green as Employee's "active"; offer is orange, the seal going out; rejected
 // is red.
@@ -186,10 +189,12 @@ class CandidateIsolated extends Component<typeof Candidate> {
     ];
   }
 
+  // Each rating carries its scale, the same `n/5` as the overall score beside
+  // it and the 5-star read-only Rating the feedback field renders.
   get feedbackFacts(): KeyValueItem[] {
     return (this.args.model?.interviewFeedback ?? []).map((fb) => ({
       key: fb?.interviewer?.name || 'Unnamed',
-      value: [fb?.rating ? `\u2605 ${fb.rating}` : undefined, fb?.notes]
+      value: [fb?.rating ? `\u2605 ${fb.rating}/5` : undefined, fb?.notes]
         .filter(Boolean)
         .join(' · '),
     }));
@@ -282,7 +287,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
       <div class='body'>
         <div class='main'>
           <h2 class='panel-title'>Overview</h2>
-          <KeyValue class='facts' @items={{this.overviewFacts}}>
+          <FactList @items={{this.overviewFacts}}>
             <:value as |row|>
               {{#if (eq row.value 'appliedDate')}}
                 <@fields.appliedDate />
@@ -290,7 +295,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
                 {{row.value}}
               {{/if}}
             </:value>
-          </KeyValue>
+          </FactList>
 
           <h2 class='panel-title spaced'>Skills</h2>
           {{#if @model.skills.length}}
@@ -344,7 +349,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
 
           {{#if @model.interviewFeedback.length}}
             <h2 class='panel-title spaced'>Interview feedback</h2>
-            <KeyValue class='facts' @items={{this.feedbackFacts}} />
+            <FactList @items={{this.feedbackFacts}} />
           {{/if}}
 
           <h2 class='panel-title spaced'>Background check</h2>
@@ -643,19 +648,6 @@ class CandidateIsolated extends Component<typeof Candidate> {
         display: flex;
         flex-wrap: wrap;
         gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-      }
-      .facts {
-        --text-ui-md: var(--boxel-font-size-sm);
-        --space-6: var(--boxel-sp);
-        font-variant-numeric: tabular-nums;
-      }
-      .facts :deep(dt) {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
       }
       .stacked {
         margin: 0;

@@ -13,12 +13,7 @@ import enumField from 'https://cardstack.com/base/enum';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
-import {
-  StatePill,
-  stateColor,
-  type Hue,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { hueOf } from './hr-ui';
 
 export const RECOMMENDATIONS = [
@@ -47,11 +42,6 @@ export const RECOMMENDATION_HUES: Record<string, Hue> = {
   'no-hire': 'amber',
   'strong-no-hire': 'red',
 };
-
-export const RECOMMENDATION_COLORS: Record<string, StateColor> =
-  Object.fromEntries(
-    Object.entries(RECOMMENDATION_HUES).map(([k, hue]) => [k, stateColor(hue)]),
-  );
 
 export const RECOMMENDATION_OPTIONS = RECOMMENDATIONS.map((value) => ({
   value,

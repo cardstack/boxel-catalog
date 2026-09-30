@@ -15,10 +15,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { tracked } from '@glimmer/tracking';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
@@ -32,7 +29,7 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import { normalizedDuration } from './duration-field';
 import { daysBetween } from './utils';
-import { AVATAR_HUE, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
+import { AVATAR_HUE, FactList, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
 
 export const EMPLOYEE_STATUSES = ['onboarding', 'active', 'offboarded'];
 
@@ -48,8 +45,8 @@ export const EMPLOYEE_EMPLOYMENT_TYPES = [
 
 export const ONBOARDING_STATUSES = ['not-started', 'in-progress', 'complete'];
 
-// Colocated with Employee — the same map colors the status pill here, the
-// avatar ring on Employee/OrgTree, and reuses the "active" green elsewhere.
+// Colocated with Employee — the hue map colours the status pill, and
+// `EMPLOYEE_STATUS_COLORS` below gives the avatar's status ring the same hue.
 // Harmonized with the Ledger identity: onboarding = brass (the "just signed"
 // seal color), active = forest green (the primary, "permanent record" color),
 // offboarded = stone (a deliberate muted color, not a blank fallthrough).
@@ -188,7 +185,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
       <div class='body'>
         <div class='main'>
           <h2 class='panel-title'>Employment</h2>
-          <KeyValue class='facts' @items={{this.employmentFacts}}>
+          <FactList @items={{this.employmentFacts}}>
             <:value as |row|>
               {{#if (eq row.value 'startDate')}}
                 <@fields.startDate />
@@ -198,7 +195,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
                 {{row.value}}
               {{/if}}
             </:value>
-          </KeyValue>
+          </FactList>
         </div>
 
         <aside class='side'>
@@ -305,19 +302,6 @@ class EmployeeIsolated extends Component<typeof Employee> {
       }
       .panel-title.spaced {
         margin-top: var(--boxel-sp-lg);
-      }
-      .facts {
-        --text-ui-md: var(--boxel-font-size-sm);
-        --space-6: var(--boxel-sp);
-        font-variant-numeric: tabular-nums;
-      }
-      .facts :deep(dt) {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
       }
       .stacked {
         margin: 0;

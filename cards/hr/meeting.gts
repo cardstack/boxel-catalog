@@ -45,8 +45,10 @@ export const MEETING_TYPES = [
   'vendor-review',
 ];
 
-// Colocated with Meeting — the same map colors the type badge here and the
-// event chips in components/calendar.gts. Harmonized with the Ledger
+// Colocated with Meeting — the hue map colours the type badge, and
+// `MEETING_TYPE_COLORS` below gives the embedded view's left border the same
+// hue; it is also the shape components/calendar.gts takes as `@kindColors`.
+// Harmonized with the Ledger
 // identity: interview shares candidate.gts's "interviewing" plum, vendor
 // review shares the brass seal color.
 // Category hues only; the status hues follow the theme's status tokens.
@@ -504,7 +506,7 @@ export class Meeting extends CardDef {
           display: grid;
           gap: var(--boxel-sp-xs);
         }
-        /* EntityDisplay's name and role keep the sizes the rows had. */
+        /* EntityDisplay's name at the small body size and its role at the extra-small size, with a 1.75rem avatar, so each attendee reads as a compact row. */
         .attendee {
           --pretui-entity-visual-size: 1.75rem;
           --text-ui-md: var(--boxel-font-size-sm);

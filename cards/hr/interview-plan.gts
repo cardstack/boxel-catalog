@@ -26,17 +26,12 @@ import {
 } from './interview-round-field';
 import { Position } from './position';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import {
-  StatePill,
-  stateColor,
-  type Hue,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { ALERT_STYLE, hueOf } from './hr-ui';
 
 // Colocated with InterviewPlanRoundField — colors each round's pill in the
 // isolated plan list and the embedded/compact previews. Distinct hues from
-// CANDIDATE_STAGE_COLORS/MEETING_TYPE_COLORS (this classifies a PLAN round's
+// CANDIDATE_STAGE_HUES/MEETING_TYPE_HUES (this classifies a PLAN round's
 // content, not a candidate's stage or a meeting's type), but the same
 // StatePill hue machinery.
 // Category hues only; the status hues follow the theme's status tokens.
@@ -47,14 +42,6 @@ export const INTERVIEW_ROUND_HUES: Record<string, Hue> = {
   panel: 'teal',
   final: 'pink',
 };
-
-export const INTERVIEW_ROUND_COLORS: Record<string, StateColor> =
-  Object.fromEntries(
-    Object.entries(INTERVIEW_ROUND_HUES).map(([k, hue]) => [
-      k,
-      stateColor(hue),
-    ]),
-  );
 
 function questionsPreview(markdown?: string | null): string {
   if (!markdown) {

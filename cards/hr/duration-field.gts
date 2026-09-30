@@ -13,8 +13,8 @@ import { htmlSafe } from '@ember/template';
 import { Chip } from '@cardstack/pretui/components/chip';
 
 // The embedded pill is Pret UI `Chip` in StatePill's slate recipe (14% fill,
-// 62% foreground ink), with its type knob raised to the small body size the
-// pill had, so a duration reads as a value rather than a tag.
+// 62% foreground ink), with its type knob raised to the small body size
+// (`--boxel-font-size-sm`), so a duration reads as a value rather than a tag.
 const DURATION_CHIP_STYLE = htmlSafe(
   '--pretui-chip-hue: var(--muted-foreground); --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; --text-ui-xs: var(--boxel-font-size-sm); max-width: 100%',
 );
