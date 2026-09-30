@@ -833,7 +833,7 @@ export class RealmPolicy extends CardDef {
                         >
                           <span class='grant-body'>
                             {{#let (this.grantComponent grant) as |Grant|}}
-                              <Grant />
+                              <Grant @format='embedded' />
                             {{/let}}
                           </span>
                           {{#if (this.isGrantInactive ruleIndex grantIndex)}}
