@@ -29,14 +29,19 @@ jobs:
         with:
           path: packages/catalog/contents
 
-      # Install before removing experiments-realm: boxel's lockfile records
-      # it as a workspace importer, and a frozen-lockfile install fails when
-      # an importer's directory is missing.
       - uses: ./.github/actions/init
 
-      # Remove experiments-realm so it is excluded from host lint:types
-      - name: Remove experiments-realm
-        run: rm -rf packages/experiments-realm
+      # Host's tsconfig includes boxel's experiments-realm, whose type errors
+      # a catalog change can't cause or fix. Drop that include for this run
+      # instead of deleting the package: the package is a workspace importer
+      # in boxel's lockfile, so deleting it breaks a frozen-lockfile install.
+      - name: Leave experiments-realm out of host lint:types
+        run: |
+          sed -i '\#"\.\./experiments-realm/\*\*/\*",#d' packages/host/tsconfig.json
+          if grep -q 'experiments-realm' packages/host/tsconfig.json; then
+            echo "packages/host/tsconfig.json still includes experiments-realm" >&2
+            exit 1
+          fi
 
       # Boxel UI and Boxel Icons need to be built first so that their
       # linting outputs types are available for projects that depend on them
