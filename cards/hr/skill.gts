@@ -7,8 +7,8 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import enumField from 'https://cardstack.com/base/enum';
 import TagIcon from '@cardstack/boxel-icons/tag';
-import { htmlSafe } from '@ember/template';
-import { stateColor } from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { hueOf } from './hr-ui';
 
 export const SKILL_CATEGORIES = [
   'language',
@@ -18,14 +18,19 @@ export const SKILL_CATEGORIES = [
   'practice',
 ];
 
-export const SKILL_CATEGORY_COLORS: Record<string, { bg: string; fg: string }> =
-  {
-    language: stateColor('purple'),
-    framework: stateColor('blue'),
-    tool: stateColor('amber'),
-    platform: stateColor('pink'),
-    practice: stateColor('green'),
-  };
+// Category hues only; the status hues follow the theme's status tokens.
+export const SKILL_CATEGORY_HUES: Record<string, Hue> = {
+  language: 'purple',
+  framework: 'blue',
+  tool: 'teal',
+  platform: 'pink',
+  practice: 'slate',
+};
+
+/** The chip hue for a skill's category; an unknown or empty category gets StatePill's slate. */
+export function skillCategoryHue(category?: string | null): Hue | undefined {
+  return hueOf(SKILL_CATEGORY_HUES, category);
+}
 
 export const SkillCategoryField = enumField(StringField, {
   options: SKILL_CATEGORIES.map((category) => ({
@@ -49,31 +54,21 @@ export class Skill extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get categoryStyle() {
-      let c = SKILL_CATEGORY_COLORS[this.args.model?.category ?? ''] ?? {
-        bg: 'var(--muted, var(--boxel-100))',
-        fg: 'var(--muted-foreground, var(--boxel-450))',
-      };
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
     <template>
       <article class='skill-isolated'>
         <span class='icon-chip'>
           <TagIcon class='icon-chip-svg' />
         </span>
         <h1>{{@model.title}}</h1>
-        {{#if @model.category}}
-          <span class='category-chip' style={{this.categoryStyle}}>
-            {{@model.category}}
-          </span>
-        {{/if}}
+        <StatePill
+          class='category-chip'
+          @label={{@model.category}}
+          @hue={{skillCategoryHue @model.category}}
+        />
       </article>
       <style scoped>
         .skill-isolated {
           padding: var(--boxel-sp-xl);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
           height: 100%;
           box-sizing: border-box;
           overflow-y: auto;
@@ -85,8 +80,9 @@ export class Skill extends CardDef {
         .icon-chip {
           width: 3rem;
           height: 3rem;
-          border-radius: var(--radius, 0.875rem);
-          background: var(--accent, var(--boxel-100));
+          border-radius: var(--radius);
+          background-color: var(--accent);
+          color: var(--accent-foreground);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -94,20 +90,14 @@ export class Skill extends CardDef {
         .icon-chip-svg {
           width: 1.5rem;
           height: 1.5rem;
-          color: var(--foreground, var(--boxel-dark));
         }
         h1 {
           margin: 0;
           font-weight: 800;
           font-size: var(--boxel-font-size-xl);
           letter-spacing: -0.02em;
-          font-family: var(--font-heading, inherit);
         }
         .category-chip {
-          padding: 0.25rem 0.75rem;
-          border-radius: 999px;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
           text-transform: capitalize;
         }
       </style>
@@ -115,27 +105,11 @@ export class Skill extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get categoryStyle() {
-      let c = SKILL_CATEGORY_COLORS[this.args.model?.category ?? ''] ?? {
-        bg: 'var(--muted, var(--boxel-100))',
-        fg: 'var(--muted-foreground, var(--boxel-450))',
-      };
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
     <template>
-      <span class='skill-chip' style={{this.categoryStyle}}>
-        {{@model.title}}
-      </span>
-      <style scoped>
-        .skill-chip {
-          display: inline-flex;
-          align-items: center;
-          padding: 0.2rem 0.6rem;
-          border-radius: 999px;
-          font-size: var(--boxel-font-size-xs, 0.75rem);
-          font-weight: 600;
-        }
-      </style>
+      <StatePill
+        @label={{@model.title}}
+        @hue={{skillCategoryHue @model.category}}
+      />
     </template>
   };
 
@@ -152,16 +126,12 @@ export class Skill extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get categoryStyle() {
-      let c = SKILL_CATEGORY_COLORS[this.args.model?.category ?? ''] ?? {
-        bg: 'var(--muted, var(--boxel-100))',
-        fg: 'var(--muted-foreground, var(--boxel-450))',
-      };
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
     <template>
       <div class='fit'>
-        <span class='chip' style={{this.categoryStyle}}>{{@model.title}}</span>
+        <StatePill
+          @label={{@model.title}}
+          @hue={{skillCategoryHue @model.category}}
+        />
       </div>
       <style scoped>
         .fit {
@@ -169,19 +139,8 @@ export class Skill extends CardDef {
           height: 100%;
           display: flex;
           align-items: center;
-          padding: 4px 8px;
+          padding: 0.25rem 0.5rem;
           overflow: hidden;
-        }
-        .chip {
-          display: inline-flex;
-          align-items: center;
-          padding: 0.2rem 0.6rem;
-          border-radius: 999px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
         }
       </style>
     </template>

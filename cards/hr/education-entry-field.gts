@@ -47,7 +47,7 @@ export class EducationEntryField extends FieldDef {
       <style scoped>
         .ed-row {
           padding: var(--boxel-sp-xs) 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .ed-row:last-child {
           border-bottom: 0;
@@ -64,13 +64,13 @@ export class EducationEntryField extends FieldDef {
         }
         .ed-year {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .ed-degree {
           display: block;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
