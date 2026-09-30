@@ -546,6 +546,26 @@ function isLiveRender(): boolean {
     .__boxelRenderContext;
 }
 
+// What an issue about the card as a whole means, said of the card itself.
+// The compiler's own message is written for the log of a realm that names the
+// card, so an issue with no wording here reads as the compiler wrote it.
+const CARD_ISSUE_MESSAGES: Partial<Record<string, string>> = {
+  'policy-card-unloadable':
+    "This card's latest index visit failed, so what the index holds of it is an earlier visit's, which may not be what the card holds now. It grants nothing until a visit succeeds.",
+};
+
+// Why a grant that compiled admits nothing, where no issue says so.
+const SNAPSHOT_NOTE =
+  'admits nothing: its condition reads a snapshot, which the gate does not evaluate';
+
+// Whether a realm event says the realm has finished an index pass.
+function isIndexPass(event: { eventName: string; indexType?: string }) {
+  return (
+    event.eventName === 'index' &&
+    (event.indexType === 'incremental' || event.indexType === 'full')
+  );
+}
+
 // What the realm answered when asked what this card compiles to.
 type ValidationState = {
   validation: PolicyValidation | undefined;
@@ -632,11 +652,12 @@ export class RealmPolicy extends CardDef {
     private isLive = isLiveRender();
 
     // What the card compiles to, asked of the realm as soon as someone looks
-    // at it, and again after each index pass of the card's realm, which is
-    // when an edit to the card, or to a type in that realm its rules name,
-    // takes effect. It is the realm's compile, so it is what a realm naming
-    // this card holds in force. Only the latest ask's answer is shown,
-    // whichever order the answers arrive in.
+    // at it, and again after each index pass of a realm the compile read: the
+    // card's own, and each realm a type its rules name lives in. That is when
+    // an edit to the card, or to one of those types, takes effect. It is the
+    // realm's compile, so it is what a realm naming this card holds in force.
+    // Only the latest ask's answer is shown, whichever order the answers
+    // arrive in.
     private validationState = use(
       this,
       resource(({ on }) => {
@@ -649,6 +670,33 @@ export class RealmPolicy extends CardDef {
           return state;
         }
         let latest = 0;
+        let ended = false;
+        let watched = new Map<string, () => void>();
+        // Watches exactly these realms: the card's own until the realm has
+        // answered, then the ones each answer names.
+        let watch = (realms: string[]) => {
+          if (ended) {
+            return;
+          }
+          for (let [realm, unsubscribe] of watched) {
+            if (!realms.includes(realm)) {
+              unsubscribe();
+              watched.delete(realm);
+            }
+          }
+          for (let realm of realms) {
+            if (!watched.has(realm)) {
+              watched.set(
+                realm,
+                subscribeToRealm(realm, (event) => {
+                  if (isIndexPass(event)) {
+                    ask();
+                  }
+                }),
+              );
+            }
+          }
+        };
         let ask = async () => {
           let asked = ++latest;
           try {
@@ -657,6 +705,7 @@ export class RealmPolicy extends CardDef {
             if (asked === latest) {
               state.validation = validation;
               state.failure = undefined;
+              watch(validation.realms);
             }
           } catch (err) {
             if (asked === latest) {
@@ -665,21 +714,16 @@ export class RealmPolicy extends CardDef {
             }
           }
         };
+        on.cleanup(() => {
+          ended = true;
+          for (let unsubscribe of watched.values()) {
+            unsubscribe();
+          }
+          watched.clear();
+        });
+        let ownRealm = policy[realmURL]?.href;
+        watch(ownRealm ? [ownRealm] : []);
         ask();
-        let realm = policy[realmURL]?.href;
-        if (realm) {
-          on.cleanup(
-            subscribeToRealm(realm, (event) => {
-              if (
-                event.eventName === 'index' &&
-                (event.indexType === 'incremental' ||
-                  event.indexType === 'full')
-              ) {
-                ask();
-              }
-            }),
-          );
-        }
         return state;
       }),
     );
@@ -698,9 +742,16 @@ export class RealmPolicy extends CardDef {
 
     // Why the policy did not compile: the issue about the card as a whole.
     get uncompilableReason(): string | undefined {
-      return this.validation?.issues.find((issue) => issue.rule === undefined)
-        ?.message;
+      let issue = this.validation?.issues.find(
+        (issue) => issue.rule === undefined,
+      );
+      return issue ? this.issueMessage(issue) : undefined;
     }
+
+    issueMessage = (issue: PolicyValidation['issues'][number]): string =>
+      (issue.rule === undefined
+        ? CARD_ISSUE_MESSAGES[issue.code]
+        : undefined) ?? issue.message;
 
     get issues(): PolicyValidation['issues'] {
       return this.validation?.issues ?? [];
@@ -720,34 +771,39 @@ export class RealmPolicy extends CardDef {
     isRuleOutOfForce = (ruleIndex: number): boolean =>
       this.uncompilable || this.isRuleInactive(ruleIndex);
 
-    // Where the grant stands, once the realm has answered: live, left out of
-    // what is in force, or live but admitting no search. Undefined before the
-    // realm answers.
+    // The grant as the realm compiled it, or undefined for one that did not
+    // compile.
+    compiledGrant = (
+      ruleIndex: number,
+      grantIndex: number,
+    ): PolicyValidation['rules'][number]['grants'][number] | undefined => {
+      let rulePath = `rules[${ruleIndex}]`;
+      let grantPath = `${rulePath}.grants[${grantIndex}]`;
+      return this.validation?.rules
+        .find((rule) => rule.path === rulePath)
+        ?.grants.find((grant) => grant.path === grantPath);
+    };
+
+    // Where the grant stands, once the realm has answered: live, or inactive
+    // because it did not compile or because it compiled and admits nothing.
+    // Undefined before the realm answers.
     grantStatus = (
       ruleIndex: number,
       grantIndex: number,
-    ): 'live' | 'inactive' | 'not-searchable' | undefined => {
-      let validation = this.validation;
-      if (!validation) {
+    ): 'live' | 'inactive' | undefined => {
+      if (!this.validation) {
         return undefined;
       }
-      let rulePath = `rules[${ruleIndex}]`;
-      let grantPath = `${rulePath}.grants[${grantIndex}]`;
-      let live = validation.rules
-        .find((rule) => rule.path === rulePath)
-        ?.grants.some((grant) => grant.path === grantPath);
-      if (!live) {
-        return 'inactive';
-      }
-      return validation.issues.some(
-        (issue) =>
-          issue.code === 'policy-not-filterable' &&
-          issue.rule === ruleIndex &&
-          issue.grant === grantIndex,
-      )
-        ? 'not-searchable'
-        : 'live';
+      let grant = this.compiledGrant(ruleIndex, grantIndex);
+      return grant && !grant.admitsNothing ? 'live' : 'inactive';
     };
+
+    // Why a grant that compiled admits nothing, where no issue says so. A
+    // query grant with no search filter has its `policy-not-filterable` issue.
+    grantNote = (ruleIndex: number, grantIndex: number): string | undefined =>
+      this.compiledGrant(ruleIndex, grantIndex)?.admitsNothing === 'snapshot'
+        ? SNAPSHOT_NOTE
+        : undefined;
 
     // A grant left out on its own. One in a rule left out, or in a policy
     // that did not compile, is marked where the rule or the policy is.
@@ -758,9 +814,6 @@ export class RealmPolicy extends CardDef {
     isGrantOutOfForce = (ruleIndex: number, grantIndex: number): boolean =>
       this.isRuleOutOfForce(ruleIndex) ||
       this.grantStatus(ruleIndex, grantIndex) === 'inactive';
-
-    isGrantNotSearchable = (ruleIndex: number, grantIndex: number): boolean =>
-      this.grantStatus(ruleIndex, grantIndex) === 'not-searchable';
 
     // The rule and the grant an issue is about, named as the card names them,
     // so an author can find the one bad grant among many.
@@ -857,13 +910,17 @@ export class RealmPolicy extends CardDef {
                               @variant='destructive'
                               data-test-policy-grant-inactive
                             >inactive</Pill>
-                          {{else if
-                            (this.isGrantNotSearchable ruleIndex grantIndex)
-                          }}
-                            <Pill
-                              @variant='secondary'
-                              data-test-policy-grant-not-searchable
-                            >live, not searchable</Pill>
+                            {{#let
+                              (this.grantNote ruleIndex grantIndex)
+                              as |note|
+                            }}
+                              {{#if note}}
+                                <span
+                                  class='grant-note'
+                                  data-test-policy-grant-note
+                                >{{note}}</span>
+                              {{/if}}
+                            {{/let}}
                           {{/if}}
                         </li>
                       {{/each}}
@@ -884,10 +941,8 @@ export class RealmPolicy extends CardDef {
           <section class='section' data-test-realm-policy-issues>
             <h2 class='section-title'>Issues</h2>
             <p class='hint'>
-              What compiling this policy found. A rule or grant with an issue
-              grants nothing, and the rest of the policy applies. A grant on a
-              query that admits no search is the exception: it stays live for
-              everything else.
+              What compiling this policy found. A rule or grant marked inactive
+              grants nothing, and the rest of the policy applies.
             </p>
             <ul class='issues'>
               {{#each this.issues as |issue|}}
@@ -907,7 +962,7 @@ export class RealmPolicy extends CardDef {
                     {{/if}}
                   </header>
                   <p class='issue-message' data-test-policy-issue-message>
-                    {{issue.message}}
+                    {{this.issueMessage issue}}
                   </p>
                 </li>
               {{/each}}
@@ -979,8 +1034,12 @@ export class RealmPolicy extends CardDef {
           font-weight: 600;
         }
         .type-name.missing,
-        .type-module {
+        .type-module,
+        .grant-note {
           color: var(--muted-foreground, var(--boxel-450));
+        }
+        .grant-note {
+          font-size: var(--boxel-font-size-sm);
         }
         .type-module,
         .issue-code,
