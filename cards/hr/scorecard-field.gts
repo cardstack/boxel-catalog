@@ -9,14 +9,12 @@ import {
 import NumberField from 'https://cardstack.com/base/number';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
-import { htmlSafe } from '@ember/template';
+
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
-import {
-  stateColor,
-  stateColorOf,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { hueOf } from './hr-ui';
 
 export const RECOMMENDATIONS = [
   'strong-hire',
@@ -34,13 +32,15 @@ export const RECOMMENDATION_LABELS: Record<string, string> = {
 
 // Colocated with ScorecardField — the same map colors the recommendation pill
 // wherever a scorecard renders (Meeting's isolated view, this field's own
-// embedded format). green/teal read as forward votes, amber/red as against,
-// mirroring the CANDIDATE_STAGE_COLORS convention of hired=green/rejected=red.
-export const RECOMMENDATION_COLORS: Record<string, StateColor> = {
-  'strong-hire': stateColor('green'),
-  hire: stateColor('teal'),
-  'no-hire': stateColor('amber'),
-  'strong-no-hire': stateColor('red'),
+// embedded format). A recommendation is a verdict, so it reads the status
+// hues: green for both votes to hire, amber and red against, mirroring the
+// CANDIDATE_STAGE_HUES convention of hired=green/rejected=red. The label
+// tells the two forward votes apart.
+export const RECOMMENDATION_HUES: Record<string, Hue> = {
+  'strong-hire': 'green',
+  hire: 'green',
+  'no-hire': 'amber',
+  'strong-no-hire': 'red',
 };
 
 export const RECOMMENDATION_OPTIONS = RECOMMENDATIONS.map((value) => ({
@@ -78,7 +78,7 @@ export class ScorecardCriterionField extends FieldDef {
       <style scoped>
         .criterion-row {
           padding: var(--boxel-sp-xs) 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .criterion-row:last-child {
           border-bottom: 0;
@@ -96,7 +96,7 @@ export class ScorecardCriterionField extends FieldDef {
         .criterion-notes {
           margin: var(--boxel-sp-4xs) 0 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.5;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -138,17 +138,13 @@ export class ScorecardField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get recommendationColor() {
-      return stateColorOf(
-        RECOMMENDATION_COLORS,
-        this.args.model?.recommendation,
-      );
+    get recommendationHue() {
+      return hueOf(RECOMMENDATION_HUES, this.args.model?.recommendation);
     }
 
-    get recommendationPillStyle() {
-      return htmlSafe(
-        `background: ${this.recommendationColor.bg}; color: ${this.recommendationColor.fg};`,
-      );
+    get recommendationLabel() {
+      let value = this.args.model?.recommendation;
+      return value ? (RECOMMENDATION_LABELS[value] ?? value) : undefined;
     }
 
     get averageLabel(): string {
@@ -160,14 +156,11 @@ export class ScorecardField extends FieldDef {
       <div class='scorecard'>
         <div class='scorecard-head'>
           <span class='scorecard-avg'>{{this.averageLabel}}</span>
-          {{#if @model.recommendation}}
-            <span class='pill' style={{this.recommendationPillStyle}}>
-              <span class='pill-dot'></span><@fields.recommendation
-                @format='atom'
-                @displayContainer={{false}}
-              />
-            </span>
-          {{/if}}
+          <StatePill
+            @label={{this.recommendationLabel}}
+            @hue={{this.recommendationHue}}
+            @dot={{true}}
+          />
         </div>
 
         {{#if @model.criteria.length}}
@@ -176,7 +169,11 @@ export class ScorecardField extends FieldDef {
             <@fields.criteria />
           </ul>
         {{else}}
-          <p class='empty'>No criteria scored yet.</p>
+          <EmptyState
+            class='empty'
+            @texture={{false}}
+            @title='No criteria scored yet'
+          />
         {{/if}}
 
         {{#if @model.overallNotes}}
@@ -199,23 +196,6 @@ export class ScorecardField extends FieldDef {
           font-size: var(--boxel-font-size-sm);
           font-weight: 700;
         }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
-        }
         .sr-only-heading {
           margin: 0;
           position: absolute;
@@ -230,15 +210,15 @@ export class ScorecardField extends FieldDef {
           padding: 0;
         }
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          --space-9: var(--boxel-sp);
+          --space-6: var(--boxel-sp);
+          --text-heading: var(--boxel-font-size);
         }
         .overall-notes {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.6;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

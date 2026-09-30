@@ -8,13 +8,9 @@ import {
 import DateField from 'https://cardstack.com/base/date';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
-import { htmlSafe } from '@ember/template';
 
-import {
-  stateColor,
-  stateColorOf,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { hueOf } from './hr-ui';
 
 // Background-check lifecycle: not-started → pending → clear | flagged.
 // This field TRACKS the status a human (or an external screening vendor's
@@ -37,11 +33,11 @@ export const BACKGROUND_CHECK_STATUS_LABELS: Record<string, string> = {
 // Same Ledger palette every other status pill in the tracker draws from:
 // gray for a check nobody has ordered yet, amber while the vendor works,
 // green when it comes back clean, red when something needs a human look.
-export const BACKGROUND_CHECK_STATUS_COLORS: Record<string, StateColor> = {
-  'not-started': stateColor('slate'),
-  pending: stateColor('amber'),
-  clear: stateColor('green'),
-  flagged: stateColor('red'),
+export const BACKGROUND_CHECK_STATUS_HUES: Record<string, Hue> = {
+  'not-started': 'slate',
+  pending: 'amber',
+  clear: 'green',
+  flagged: 'red',
 };
 
 export const BackgroundCheckStatusField = enumField(StringField, {
@@ -66,17 +62,8 @@ export class BackgroundCheckField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(
-        BACKGROUND_CHECK_STATUS_COLORS,
-        this.args.model?.status,
-      );
-    }
-
-    get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
+    get statusHue() {
+      return hueOf(BACKGROUND_CHECK_STATUS_HUES, this.args.model?.status);
     }
 
     get statusLabel(): string {
@@ -89,9 +76,11 @@ export class BackgroundCheckField extends FieldDef {
     <template>
       <div class='background-check'>
         <div class='bc-head'>
-          <span class='pill' style={{this.statusPillStyle}}>
-            <span class='pill-dot'></span>{{this.statusLabel}}
-          </span>
+          <StatePill
+            @label={{this.statusLabel}}
+            @hue={{this.statusHue}}
+            @dot={{true}}
+          />
           {{#if @model.provider}}
             <span class='bc-provider'>via {{@model.provider}}</span>
           {{/if}}
@@ -118,9 +107,8 @@ export class BackgroundCheckField extends FieldDef {
         .background-check {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          font-family: var(--font-sans, var(--boxel-font-family));
-          color: var(--foreground, var(--boxel-dark));
+          gap: var(--boxel-sp-2xs);
+          color: var(--foreground);
         }
         .bc-head {
           display: flex;
@@ -128,26 +116,9 @@ export class BackgroundCheckField extends FieldDef {
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
         }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
-        }
         .bc-provider {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .bc-dates {
           margin: 0;
@@ -162,10 +133,13 @@ export class BackgroundCheckField extends FieldDef {
         }
         .bc-dates dt {
           flex: none;
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .bc-dates dd {
           margin: 0;
@@ -177,24 +151,15 @@ export class BackgroundCheckField extends FieldDef {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(
-        BACKGROUND_CHECK_STATUS_COLORS,
-        this.args.model?.status,
-      );
-    }
-
-    get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
+    get statusHue() {
+      return hueOf(BACKGROUND_CHECK_STATUS_HUES, this.args.model?.status);
     }
 
     get statusLabel(): string {
@@ -205,28 +170,11 @@ export class BackgroundCheckField extends FieldDef {
     }
 
     <template>
-      <span class='bc-atom' style={{this.statusPillStyle}}>
-        <span class='bc-atom-dot'></span>{{this.statusLabel}}
-      </span>
-      <style scoped>
-        .bc-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .bc-atom-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
-        }
-      </style>
+      <StatePill
+        @label={{this.statusLabel}}
+        @hue={{this.statusHue}}
+        @dot={{true}}
+      />
     </template>
   };
 }
