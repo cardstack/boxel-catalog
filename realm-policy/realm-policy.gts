@@ -202,6 +202,16 @@ const OUTCOME_LABEL: Record<
   'not-evaluated': 'not evaluated',
 };
 
+// What to tell the author when the realm refuses or fails an operation this
+// card asks of it.
+function failureMessage(err: unknown): string {
+  return err instanceof OperationsError
+    ? (err.detail ?? err.message)
+    : err instanceof Error
+      ? err.message
+      : String(err);
+}
+
 // Asks the realm what this policy decides for one caller, one card and one
 // operation. Nothing is invoked. Only a caller who can read both this card's
 // realm and the card's realm is answered; anyone else is told the card is not
@@ -294,12 +304,7 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
         operation: this.operationName.trim(),
       });
     } catch (err) {
-      this.refusal =
-        err instanceof OperationsError
-          ? (err.detail ?? err.message)
-          : err instanceof Error
-            ? err.message
-            : String(err);
+      this.refusal = failureMessage(err);
     } finally {
       this.running = false;
     }
@@ -537,14 +542,6 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
 function isLiveRender(): boolean {
   return !(globalThis as { __boxelRenderContext?: unknown })
     .__boxelRenderContext;
-}
-
-function failureMessage(err: unknown): string {
-  return err instanceof OperationsError
-    ? (err.detail ?? err.message)
-    : err instanceof Error
-      ? err.message
-      : String(err);
 }
 
 // What the realm answered when asked what this card compiles to.
