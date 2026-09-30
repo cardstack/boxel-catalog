@@ -713,7 +713,8 @@ export class RealmPolicy extends CardDef {
 
   // The policy at a glance, for a card that shows the policy it names, such
   // as a realm's config card: its title, how many rules and grants it holds,
-  // and the card types its rules govern.
+  // and, where there is room, each rule's card type with the operations it
+  // grants.
   static fitted = class Fitted extends Component<typeof RealmPolicy> {
     get rules() {
       return this.args.model.rules ?? [];
@@ -731,16 +732,20 @@ export class RealmPolicy extends CardDef {
       return `${ruleCount} ${ruleCount === 1 ? 'rule' : 'rules'} · ${grantCount} ${grantCount === 1 ? 'grant' : 'grants'}`;
     }
 
-    // The types the rules govern, each once, by name.
-    get governed(): string {
-      let names = new Set<string>();
-      for (let rule of this.rules) {
-        let name = rule?.targetType?.name;
-        if (name) {
-          names.add(name);
-        }
-      }
-      return [...names].join(', ');
+    // Each rule as the type it governs and the operations it grants, each
+    // operation once.
+    get ruleLines(): { type: string; operations: string }[] {
+      return this.rules.map((rule) => ({
+        type: rule?.targetType?.name ?? 'Unnamed type',
+        operations:
+          [
+            ...new Set(
+              (rule?.grants ?? [])
+                .map((grant) => grant?.operation)
+                .filter((operation): operation is string => Boolean(operation)),
+            ),
+          ].join(', ') || 'no grants',
+      }));
     }
 
     <template>
@@ -750,10 +755,15 @@ export class RealmPolicy extends CardDef {
         <span class='f-summary' data-test-realm-policy-fitted-summary>
           {{this.summary}}
         </span>
-        {{#if this.governed}}
-          <span class='f-types' data-test-realm-policy-fitted-types>
-            {{this.governed}}
-          </span>
+        {{#if this.ruleLines.length}}
+          <ul class='f-rules' data-test-realm-policy-fitted-rules>
+            {{#each this.ruleLines as |line|}}
+              <li class='f-rule'>
+                <span class='f-rule-type'>{{line.type}}</span>
+                {{line.operations}}
+              </li>
+            {{/each}}
+          </ul>
         {{/if}}
       </div>
       <style scoped>
@@ -785,25 +795,41 @@ export class RealmPolicy extends CardDef {
           -webkit-line-clamp: 2;
           overflow: hidden;
         }
-        .f-summary,
-        .f-types {
+        .f-summary {
           grid-column: 1 / -1;
+          font-size: var(--boxel-font-size-xs);
+          font-variant-numeric: tabular-nums;
+          color: var(--muted-foreground, var(--boxel-450));
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .f-rules {
+          grid-column: 1 / -1;
+          align-self: start;
+          list-style: none;
+          margin: var(--boxel-sp-4xs) 0 0;
+          padding: 0;
+          display: grid;
+          gap: var(--boxel-sp-5xs);
+          min-height: 0;
+          overflow: hidden;
+        }
+        .f-rule {
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground, var(--boxel-450));
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        .f-summary {
-          font-variant-numeric: tabular-nums;
-        }
-        .f-types {
-          align-self: start;
+        .f-rule-type {
+          font-weight: 600;
+          color: var(--foreground, var(--boxel-dark));
         }
         /* badge: icon and a one-line title only */
         @container fitted-card (width <= 150px) and (height <= 169px) {
           .f-summary,
-          .f-types {
+          .f-rules {
             display: none;
           }
           .f-title {
@@ -823,7 +849,7 @@ export class RealmPolicy extends CardDef {
           .f-summary {
             grid-column: auto;
           }
-          .f-types {
+          .f-rules {
             display: none;
           }
         }
