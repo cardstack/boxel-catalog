@@ -10,6 +10,15 @@ import UrlField from '@cardstack/base/url';
 import enumField from '@cardstack/base/enum';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import PlugIcon from '@cardstack/boxel-icons/plug';
+import { Token } from '@cardstack/pretui/components/token';
+import { tokenStyle } from '../shared/pretui-token';
+
+// The external id is the other system's machine value, so it reads as a Pret
+// UI Token in the muted hue at the reference's own size.
+const ID_TOKEN_STYLE = tokenStyle(
+  '--boxel-font-size-xs',
+  'var(--muted-foreground)',
+);
 
 export const INTEGRATION_KINDS = [
   'ticketing',
@@ -124,11 +133,11 @@ export class ExternalReferenceField extends FieldDef {
             @model.system.name
             '—'
           }}</span>
-        <code class='xref-id'>{{if
-            @model.externalId
-            @model.externalId
-            '—'
-          }}</code>
+        {{#if @model.externalId}}
+          <Token style={{ID_TOKEN_STYLE}}>{{@model.externalId}}</Token>
+        {{else}}
+          <span class='xref-sys'>—</span>
+        {{/if}}
         {{#if @model.state}}<span
             class='xref-state'
           >{{@model.state}}</span>{{/if}}
@@ -138,17 +147,10 @@ export class ExternalReferenceField extends FieldDef {
           display: inline-flex;
           align-items: baseline;
           gap: var(--boxel-sp-4xs);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius-sm);
-          padding: 0.125rem 0.5rem;
           font-size: var(--boxel-font-size-xs);
         }
         .xref-sys {
           color: var(--muted-foreground);
-        }
-        .xref-id {
-          font-family: var(--font-mono);
-          font-weight: 500;
         }
         .xref-state {
           color: var(--muted-foreground);
@@ -160,13 +162,7 @@ export class ExternalReferenceField extends FieldDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <code class='xref-atom'>{{@model.title}}</code>
-      <style scoped>
-        .xref-atom {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-        }
-      </style>
+      <Token style={{ID_TOKEN_STYLE}}>{{@model.title}}</Token>
     </template>
   };
 }

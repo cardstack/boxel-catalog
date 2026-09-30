@@ -430,7 +430,7 @@ EffectivePeriodField.edit = class Edit extends Component<
         color: var(--foreground);
         font-family: var(--font-mono);
       }
-      @container (max-width: 480px) {
+      @container (max-width: 30rem) {
         .ep-dates,
         .ep-renew {
           grid-template-columns: 1fr;

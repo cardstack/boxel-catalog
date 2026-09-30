@@ -10,6 +10,15 @@ import BooleanField from '@cardstack/base/boolean';
 import DateTimeField from '@cardstack/base/datetime';
 import enumField from '@cardstack/base/enum';
 import ZapIcon from '@cardstack/boxel-icons/zap';
+import { Token } from '@cardstack/pretui/components/token';
+import { tokenStyle } from '../shared/pretui-token';
+
+// The rule's two halves are machine values, so they read as Pret UI Tokens in
+// the muted hue at the rule line's own size.
+const RULE_TOKEN_STYLE = tokenStyle(
+  '--boxel-font-size-xs',
+  'var(--muted-foreground)',
+);
 
 export const POLICY_OPS = ['is', 'is not', 'gte', 'lte', 'contains'] as const;
 
@@ -78,13 +87,13 @@ export class AutomationPolicyField extends FieldDef {
         </span>
         <span class='policy-rule'>
           when
-          <code>{{@model.whenField}}
+          <Token style={{RULE_TOKEN_STYLE}}>{{@model.whenField}}
             {{@model.whenOp}}
-            {{@model.whenValue}}</code>
+            {{@model.whenValue}}</Token>
           →
-          <code>{{@model.action}}{{#if
+          <Token style={{RULE_TOKEN_STYLE}}>{{@model.action}}{{#if
               @model.actionParam
-            }}({{@model.actionParam}}){{/if}}</code>
+            }}({{@model.actionParam}}){{/if}}</Token>
         </span>
         {{#if @model.applyCount}}
           <span class='policy-meta'>applied {{@model.applyCount}}×</span>
@@ -107,16 +116,12 @@ export class AutomationPolicyField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           border: 1px solid var(--border);
-          border-radius: 999px;
+          border-radius: var(--boxel-border-radius-pill);
           padding: 0 0.5rem;
         }
         .policy-rule {
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
-        }
-        .policy-rule code {
-          font-family: var(--font-mono);
-          color: var(--foreground);
         }
         .policy-meta {
           font-size: var(--boxel-font-size-xs);

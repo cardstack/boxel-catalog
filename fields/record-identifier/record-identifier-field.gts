@@ -7,7 +7,23 @@ import {
 } from '@cardstack/base/card-api';
 import DateTimeField from '@cardstack/base/datetime';
 import HashIcon from '@cardstack/boxel-icons/hash';
+import { on } from '@ember/modifier';
 import { BoxelInput } from '@cardstack/boxel-ui/components';
+import { CopyButton } from '@cardstack/pretui/components/copy-button';
+import { Token } from '@cardstack/pretui/components/token';
+import { tokenStyle } from '../shared/pretui-token';
+
+function stopPropagation(event: Event) {
+  event.stopPropagation();
+}
+
+// The id is a machine value practitioners quote, so it reads as a Pret UI
+// Token in the muted hue, at the size each format set it in. The embedded view
+// adds a CopyButton beside it; the atom sits inline in other text and does not.
+const ID_TOKEN_STYLE = {
+  sm: tokenStyle('--boxel-font-size-sm', 'var(--muted-foreground)'),
+  xs: tokenStyle('--boxel-font-size-xs', 'var(--muted-foreground)'),
+};
 
 /**
  * The human-readable handle of a record: "CASE-2026-0142".
@@ -40,13 +56,30 @@ export class RecordIdentifierField extends FieldDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <code class='record-id'>{{if @model.value @model.value '—'}}</code>
+      {{#if @model.value}}
+        <span class='record-id'>
+          <Token style={{ID_TOKEN_STYLE.sm}}>{{@model.value}}</Token>
+          {{! The field often renders inside a clickable card; the copy must
+              not also open it. Enter and Space on the button fire click. }}
+          <CopyButton
+            @text={{@model.value}}
+            @label='Copy identifier'
+            @variant='ghost'
+            @size='s'
+            {{on 'click' stopPropagation}}
+          />
+        </span>
+      {{else}}
+        <span class='record-id-none'>—</span>
+      {{/if}}
       <style scoped>
         .record-id {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 500;
-          letter-spacing: 0.02em;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-4xs);
+        }
+        .record-id-none {
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -54,12 +87,15 @@ export class RecordIdentifierField extends FieldDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <code class='record-id-atom'>{{if @model.value @model.value '—'}}</code>
+      {{#if @model.value}}
+        <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.value}}</Token>
+      {{else}}
+        <span class='record-id-none'>—</span>
+      {{/if}}
       <style scoped>
-        .record-id-atom {
-          font-family: var(--font-mono);
+        .record-id-none {
           font-size: var(--boxel-font-size-xs);
-          font-weight: 500;
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -74,11 +110,13 @@ export class RecordIdentifierField extends FieldDef {
       {{! Ids are minted by commands; edit shows the value read-only and lets
           the pattern be corrected only while no value has been minted yet. }}
       <div class='id-edit'>
-        <code class='minted'>{{if
-            @model.value
-            @model.value
-            'not minted yet'
-          }}</code>
+        {{#if @model.value}}
+          <span><Token
+              style={{ID_TOKEN_STYLE.sm}}
+            >{{@model.value}}</Token></span>
+        {{else}}
+          <span class='minted'>not minted yet</span>
+        {{/if}}
         {{#unless @model.value}}
           <BoxelInput
             @value={{@model.pattern}}
@@ -94,7 +132,6 @@ export class RecordIdentifierField extends FieldDef {
           gap: var(--boxel-sp-xs);
         }
         .minted {
-          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }

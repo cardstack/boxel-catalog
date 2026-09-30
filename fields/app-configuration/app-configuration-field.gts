@@ -9,6 +9,11 @@ import {
 import NumberField from '@cardstack/base/number';
 import DateTimeField from '@cardstack/base/datetime';
 import SettingsIcon from '@cardstack/boxel-icons/settings';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
 
 import { SlaWindowField } from '../sla-window/sla-window-field';
 import { IntegrationReferenceField } from '../external-reference/external-reference-field';
@@ -61,46 +66,43 @@ export class AppConfigurationField extends FieldDef {
   }
 
   static embedded = class Embedded extends Component<typeof this> {
+    get items(): KeyValueItem[] {
+      let m = this.args.model;
+      return [
+        { key: 'Ids', value: m?.idPattern ?? '' },
+        { key: 'Hours', value: m?.defaultSlaWindow?.title ?? '' },
+        {
+          key: 'Policies',
+          value: `${m?.policies?.length ?? 0} automation policies`,
+        },
+        { key: 'Setup', value: m?.title ?? '' },
+      ];
+    }
     <template>
-      <div class='cfg'>
-        <div class='cfg-row'>
-          <span class='cfg-k'>Ids</span>
-          <code>{{if @model.idPattern @model.idPattern '—'}}</code>
-        </div>
-        <div class='cfg-row'>
-          <span class='cfg-k'>Hours</span>
-          <span>{{@model.defaultSlaWindow.title}}</span>
-        </div>
-        <div class='cfg-row'>
-          <span class='cfg-k'>Policies</span>
-          <span>{{@model.policies.length}} automation policies</span>
-        </div>
-        <div class='cfg-row'>
-          <span class='cfg-k'>Setup</span>
-          <span>{{@model.title}}</span>
-        </div>
-      </div>
+      <KeyValue class='cfg' @items={{this.items}}>
+        <:value as |item|>
+          {{#if (eq item.key 'Ids')}}
+            <code>{{if item.value item.value '—'}}</code>
+          {{else}}
+            {{item.value}}
+          {{/if}}
+        </:value>
+      </KeyValue>
       <style scoped>
+        /* Pret UI KeyValue at the field's own size, with its keys in the
+           eyebrow role: KeyValue's key takes only a size, so the eyebrow's
+           family, weight, tracking and case reach its dt from here. */
         .cfg {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          font-size: var(--boxel-font-size-sm);
+          --text-ui-md: var(--boxel-font-size-sm);
+          --space-6: var(--boxel-sp-xs);
         }
-        .cfg-row {
-          display: grid;
-          grid-template-columns: 4.5rem 1fr;
-          gap: var(--boxel-sp-xs);
-          align-items: baseline;
-        }
-        .cfg-k {
+        .cfg :deep(dt) {
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground);
         }
         code {
           font-family: var(--font-mono);
