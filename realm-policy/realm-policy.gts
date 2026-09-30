@@ -710,4 +710,124 @@ export class RealmPolicy extends CardDef {
       </style>
     </template>
   };
+
+  // The policy at a glance, for a card that shows the policy it names, such
+  // as a realm's config card: its title, how many rules and grants it holds,
+  // and the card types its rules govern.
+  static fitted = class Fitted extends Component<typeof RealmPolicy> {
+    get rules() {
+      return this.args.model.rules ?? [];
+    }
+
+    get summary(): string {
+      let ruleCount = this.rules.length;
+      if (!ruleCount) {
+        return 'No rules, so it grants nothing';
+      }
+      let grantCount = this.rules.reduce(
+        (count, rule) => count + (rule?.grants?.length ?? 0),
+        0,
+      );
+      return `${ruleCount} ${ruleCount === 1 ? 'rule' : 'rules'} · ${grantCount} ${grantCount === 1 ? 'grant' : 'grants'}`;
+    }
+
+    // The types the rules govern, each once, by name.
+    get governed(): string {
+      let names = new Set<string>();
+      for (let rule of this.rules) {
+        let name = rule?.targetType?.name;
+        if (name) {
+          names.add(name);
+        }
+      }
+      return [...names].join(', ');
+    }
+
+    <template>
+      <div class='fit' data-test-realm-policy-fitted>
+        <ShieldCheckIcon class='f-icon' />
+        <span class='f-title'>{{@model.cardTitle}}</span>
+        <span class='f-summary' data-test-realm-policy-fitted-summary>
+          {{this.summary}}
+        </span>
+        {{#if this.governed}}
+          <span class='f-types' data-test-realm-policy-fitted-types>
+            {{this.governed}}
+          </span>
+        {{/if}}
+      </div>
+      <style scoped>
+        .fit {
+          width: 100%;
+          height: 100%;
+          padding: var(--boxel-sp-xs);
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          grid-template-rows: auto auto minmax(0, 1fr);
+          column-gap: var(--boxel-sp-xs);
+          row-gap: var(--boxel-sp-4xs);
+          align-items: center;
+          overflow: hidden;
+        }
+        .f-icon {
+          width: var(--boxel-icon-sm);
+          height: var(--boxel-icon-sm);
+          flex-shrink: 0;
+          color: var(--foreground, var(--boxel-dark));
+        }
+        .f-title {
+          font-weight: 600;
+          font-size: var(--boxel-font-size-sm);
+          line-height: 1.25;
+          color: var(--foreground, var(--boxel-dark));
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          overflow: hidden;
+        }
+        .f-summary,
+        .f-types {
+          grid-column: 1 / -1;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground, var(--boxel-450));
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .f-summary {
+          font-variant-numeric: tabular-nums;
+        }
+        .f-types {
+          align-self: start;
+        }
+        /* badge: icon and a one-line title only */
+        @container fitted-card (width <= 150px) and (height <= 169px) {
+          .f-summary,
+          .f-types {
+            display: none;
+          }
+          .f-title {
+            -webkit-line-clamp: 1;
+            font-size: var(--boxel-font-size-xs);
+          }
+        }
+        /* strip: one row, the summary beside the title */
+        @container fitted-card (aspect-ratio > 2.0) and (height <= 90px) {
+          .fit {
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            grid-template-rows: none;
+          }
+          .f-title {
+            -webkit-line-clamp: 1;
+          }
+          .f-summary {
+            grid-column: auto;
+          }
+          .f-types {
+            display: none;
+          }
+        }
+      </style>
+    </template>
+  };
 }
