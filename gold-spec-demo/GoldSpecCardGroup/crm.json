@@ -1,0 +1,62 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "CRM",
+      "cardInfo": {
+        "name": null,
+        "summary": "The CRM cluster: one example each of Account, Campaign, Contact, Lead, Opportunity and User.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cards.0": {
+        "links": {
+          "self": "../../cards/crm/Account/acme-industries"
+        }
+      },
+      "cards.1": {
+        "links": {
+          "self": "../../cards/crm/Campaign/always-on-search-ads"
+        }
+      },
+      "cards.2": {
+        "links": {
+          "self": "../../cards/crm/Contact/farah-zulkifli"
+        }
+      },
+      "cards.3": {
+        "links": {
+          "self": "../../cards/crm/Lead/kenji-tanaka"
+        }
+      },
+      "cards.4": {
+        "links": {
+          "self": "../../cards/crm/Opportunity/acme-plant-expansion"
+        }
+      },
+      "cards.5": {
+        "links": {
+          "self": "../../cards/crm/User/dana-whitfield"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../gold-spec-card-group",
+        "name": "GoldSpecCardGroup"
+      }
+    }
+  }
+}

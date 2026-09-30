@@ -9,6 +9,8 @@ import {
 import StringField from 'https://cardstack.com/base/string';
 import NumberField from 'https://cardstack.com/base/number';
 import GaugeIcon from '@cardstack/boxel-icons/gauge';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
 
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 
@@ -43,7 +45,7 @@ export class CapacityAllocationField extends FieldDef {
     <template>
       <span class='alloc'>
         <span class='alloc-name'>{{if @model.name @model.name '—'}}</span>
-        <span class='alloc-qty'>{{formatCount @model.quantity}}</span>
+        <FormatNumber class='alloc-qty' @value={{@model.quantity}} />
       </span>
       <style scoped>
         .alloc {
@@ -52,12 +54,9 @@ export class CapacityAllocationField extends FieldDef {
           align-items: baseline;
           font-size: var(--boxel-font-size-sm);
         }
-        .alloc-name {
-          color: var(--foreground, var(--boxel-dark));
-        }
         .alloc-qty {
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -66,14 +65,9 @@ export class CapacityAllocationField extends FieldDef {
 
 // The segment palette cycles in a fixed order so the same allocation index
 // gets the same hue on every card — a legend the eye can carry between rows.
-const SEGMENT_HUES: Hue[] = [
-  'teal',
-  'blue',
-  'purple',
-  'amber',
-  'pink',
-  'green',
-];
+// Only StatePill's category hues: the status hues follow the theme's status
+// tokens, and an allocation is a category, not a status.
+const SEGMENT_HUES: Hue[] = ['teal', 'blue', 'purple', 'pink', 'slate'];
 
 // Inline styles carry only computed widths and token-derived colors, never
 // user strings.
@@ -81,6 +75,9 @@ function htmlSafeStyle(style: string) {
   return htmlSafe(style);
 }
 
+// For strings only (the computed title, segment tooltips). Templates render
+// counts through Pret UI FormatNumber, which uses the same runtime-default
+// Intl.NumberFormat and the same '—' placeholder, so the two always agree.
 function formatCount(n?: number | null): string {
   if (n == null || Number.isNaN(n)) {
     return '—';
@@ -162,7 +159,7 @@ export default class CapacityField extends FieldDef {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='cap-atom'>
-        {{formatCount @model.total}}{{#if @model.unit}}
+        <FormatNumber @value={{@model.total}} />{{#if @model.unit}}
           <span class='cap-unit'>{{@model.unit}}</span>{{/if}}
       </span>
       <style scoped>
@@ -172,7 +169,7 @@ export default class CapacityField extends FieldDef {
         }
         .cap-unit {
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -193,13 +190,13 @@ export default class CapacityField extends FieldDef {
     }
 
     widthOf = (segment: Segment) => `width: ${segment.percent}%`;
-    swatchOf = (segment: Segment) => `background: ${segment.bg}`;
+    swatchOf = (segment: Segment) => `background-color: ${segment.bg}`;
 
     <template>
       <div class='capacity'>
         {{#if @model.total}}
           <div class='cap-head'>
-            <span class='cap-total'>{{formatCount @model.total}}</span>
+            <FormatNumber class='cap-total' @value={{@model.total}} />
             {{#if @model.unit}}<span
                 class='cap-unit'
               >{{@model.unit}}</span>{{/if}}
@@ -232,28 +229,28 @@ export default class CapacityField extends FieldDef {
                     style={{htmlSafeStyle (this.swatchOf segment)}}
                   />
                   <span class='cap-name'>{{segment.name}}</span>
-                  <span class='cap-qty'>{{formatCount segment.quantity}}</span>
+                  <FormatNumber class='cap-qty' @value={{segment.quantity}} />
                 </li>
               {{/each}}
               {{#if @model.unallocated}}
                 <li class='cap-row cap-row-rest'>
                   <span class='cap-swatch cap-swatch-rest' />
                   <span class='cap-name'>Unallocated</span>
-                  <span class='cap-qty'>{{formatCount
-                      @model.unallocated
-                    }}</span>
+                  <FormatNumber class='cap-qty' @value={{@model.unallocated}} />
                 </li>
               {{/if}}
             </ul>
           {{/if}}
         {{else}}
-          <p class='cap-empty'>No capacity set</p>
+          <EmptyState
+            class='cap-empty'
+            @title='No capacity set'
+            @texture={{false}}
+          />
         {{/if}}
       </div>
       <style scoped>
         .capacity {
-          font-family: var(--font-sans, var(--boxel-font-family));
-          color: var(--foreground, var(--boxel-dark));
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-4xs);
@@ -270,23 +267,23 @@ export default class CapacityField extends FieldDef {
         }
         .cap-unit {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .cap-warning {
           margin-left: auto;
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
-          color: var(--boxel-danger);
+          color: var(--destructive-ink);
         }
         .cap-bar {
           display: flex;
           height: 0.5rem;
           border-radius: 999px;
           overflow: hidden;
-          background: var(--muted, var(--boxel-100));
+          background-color: var(--muted);
         }
         .cap-bar.over {
-          outline: 1px solid var(--boxel-danger);
+          outline: 1px solid var(--destructive-ink);
           outline-offset: 1px;
         }
         .cap-segment {
@@ -296,8 +293,8 @@ export default class CapacityField extends FieldDef {
         .cap-fill {
           display: block;
           height: 100%;
-          /* Full-strength hue would shout; the mix keeps segments legible as
-             a group while staying inside the token system. */
+          /* Full-strength hue would shout; the reduced opacity keeps
+             segments legible as a group. */
           opacity: 0.75;
         }
         .cap-legend {
@@ -306,7 +303,7 @@ export default class CapacityField extends FieldDef {
           padding: 0;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .cap-row {
           display: flex;
@@ -317,29 +314,28 @@ export default class CapacityField extends FieldDef {
         .cap-swatch {
           width: 0.5rem;
           height: 0.5rem;
-          border-radius: 2px;
+          border-radius: 0.125rem;
           flex: none;
           opacity: 0.75;
         }
         .cap-swatch-rest {
-          background: var(--muted, var(--boxel-100));
-          border: 1px solid var(--border, var(--boxel-200));
-        }
-        .cap-name {
-          color: var(--foreground, var(--boxel-dark));
+          background-color: var(--muted);
+          border: 1px solid var(--border);
         }
         .cap-qty {
           margin-left: auto;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .cap-row-rest .cap-name {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to
+           a single quiet line inside the field. */
         .cap-empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          --space-9: 0.75rem;
+          --space-6: 0.75rem;
+          --text-heading: var(--boxel-font-size-sm);
         }
       </style>
     </template>

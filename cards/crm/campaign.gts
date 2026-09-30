@@ -4,7 +4,7 @@ import {
   contains,
   field,
 } from 'https://cardstack.com/base/card-api';
-import { htmlSafe } from '@ember/template';
+import { guidFor } from '@ember/object/internals';
 import StringField from 'https://cardstack.com/base/string';
 import BooleanField from 'https://cardstack.com/base/boolean';
 import NumberField from 'https://cardstack.com/base/number';
@@ -12,7 +12,15 @@ import DateField from 'https://cardstack.com/base/date';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import enumField from 'https://cardstack.com/base/enum';
 import SpeakerphoneIcon from '@cardstack/boxel-icons/speakerphone';
-import { formatMoney } from './utils';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { Money } from './money';
+import { hasNumber, labelProgress } from './utils';
 
 // Mirrors the channels Lead.source names, so a lead's channel and the specific
 // activity it came from describe the same thing at two levels of detail.
@@ -25,6 +33,19 @@ const CampaignStatusField = enumField(StringField, {
   options: ['planned', 'running', 'completed', 'canceled'],
   displayName: 'Campaign Status',
 });
+
+// Status hues for the pill: a live campaign is good news, a canceled one bad
+// news, a planned one still needs attention; a completed one is neutral.
+const STATUS_HUE: Record<string, Hue> = {
+  planned: 'amber',
+  running: 'green',
+  completed: 'slate',
+  canceled: 'red',
+};
+
+function statusHue(status: string | undefined): Hue {
+  return (status && STATUS_HUE[status]) || 'slate';
+}
 
 export class Campaign extends CardDef {
   static displayName = 'Campaign';
@@ -76,12 +97,12 @@ export class Campaign extends CardDef {
           min-width: 0;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .ca-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .ca-name {
@@ -95,12 +116,6 @@ export class Campaign extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof Campaign> {
-    get spendDisplay() {
-      return formatMoney(
-        this.args.model?.spend?.amount,
-        this.args.model?.spend?.currency?.code,
-      );
-    }
     <template>
       <div class='campaign'>
         <SpeakerphoneIcon class='icon' />
@@ -110,14 +125,17 @@ export class Campaign extends CardDef {
             <span class='meta'>{{@model.campaignType}}</span>
           {{/if}}
         </div>
-        <span class='figure'>{{if
-            this.spendDisplay
-            this.spendDisplay
-            '—'
-          }}</span>
-        {{#if @model.status}}
-          <span class='status status-{{@model.status}}'>{{@model.status}}</span>
-        {{/if}}
+        <Money
+          class='figure'
+          @amount={{@model.spend.amount}}
+          @code={{@model.spend.currency.code}}
+        />
+        <span class='status-col'>
+          <StatePill
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+          />
+        </span>
       </div>
       <style scoped>
         .campaign {
@@ -128,9 +146,9 @@ export class Campaign extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .info {
@@ -147,77 +165,53 @@ export class Campaign extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           text-transform: capitalize;
         }
         .figure {
           font-weight: 600;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
         }
-        .status {
+        /* Constant-width slot so rows line up whatever the status. */
+        .status-col {
+          display: flex;
+          justify-content: center;
           width: 6rem;
-          text-align: center;
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
           flex-shrink: 0;
-        }
-        .status-running {
-          background: var(--state-positive-bg, #dcfce7);
-          color: var(--state-positive-fg, #166534);
-        }
-        .status-planned {
-          background: var(--state-partial-bg, #fef3c7);
-          color: var(--state-partial-fg, #92400e);
-        }
-        .status-canceled {
-          background: var(--state-overdue-bg, #fee2e2);
-          color: var(--state-overdue-fg, #991b1b);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof Campaign> {
-    get spendDisplay() {
-      return formatMoney(
-        this.args.model?.spend?.amount,
-        this.args.model?.spend?.currency?.code,
-      );
-    }
-    get budgetNote() {
-      let budget = this.args.model?.budget?.amount;
-      if (!budget) return '';
-      let of = formatMoney(budget, this.args.model?.budget?.currency?.code);
-      return `${this.args.model?.budgetUsedPercent}% of ${of}`;
-    }
     <template>
       <div class='fitted'>
         <div class='top'>
           <SpeakerphoneIcon class='icon' />
-          {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
-          {{/if}}
+          <StatePill
+            class='status'
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+          />
         </div>
         <span class='name'>{{@model.cardTitle}}</span>
-        {{#if this.spendDisplay}}
-          <span class='figure'>{{this.spendDisplay}}</span>
+        {{#if (hasNumber @model.spend.amount)}}
+          <Money
+            class='figure'
+            @amount={{@model.spend.amount}}
+            @code={{@model.spend.currency.code}}
+          />
         {{/if}}
         {{#if @model.campaignType}}
           <span class='meta line-type'>{{@model.campaignType}}</span>
         {{/if}}
-        {{#if this.budgetNote}}
+        {{#if @model.budget.amount}}
           <span
             class='meta line-budget {{if @model.isOverBudget "over"}}'
-          >{{this.budgetNote}}</span>
+          >{{@model.budgetUsedPercent}}% of
+            <Money
+              @amount={{@model.budget.amount}}
+              @code={{@model.budget.currency.code}}
+            /></span>
         {{/if}}
         {{#if @model.endDate}}
           <span class='meta line-dates'>Ran
@@ -238,7 +232,7 @@ export class Campaign extends CardDef {
           flex-direction: column;
           gap: 0.125rem;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .top {
           display: flex;
@@ -246,34 +240,13 @@ export class Campaign extends CardDef {
           gap: 0.375rem;
         }
         .icon {
-          width: 16px;
-          height: 16px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1rem;
+          height: 1rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .status {
           margin-left: auto;
-          font-size: 0.5625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.0625rem 0.375rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-        }
-        .status-running {
-          background: var(--state-positive-bg, #dcfce7);
-          color: var(--state-positive-fg, #166534);
-        }
-        .status-planned {
-          background: var(--state-partial-bg, #fef3c7);
-          color: var(--state-partial-fg, #92400e);
-        }
-        .status-canceled {
-          background: var(--state-overdue-bg, #fee2e2);
-          color: var(--state-overdue-fg, #991b1b);
         }
         .name {
           font-weight: 600;
@@ -284,18 +257,17 @@ export class Campaign extends CardDef {
         }
         .figure {
           font-weight: 700;
-          font-variant-numeric: tabular-nums;
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           text-transform: capitalize;
         }
         .over {
-          color: var(--state-overdue-fg, #991b1b);
+          color: var(--destructive-ink);
           font-weight: 600;
         }
         .line-type,
@@ -323,21 +295,16 @@ export class Campaign extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof Campaign> {
-    get spendDisplay() {
-      return formatMoney(
-        this.args.model?.spend?.amount,
-        this.args.model?.spend?.currency?.code,
-      );
+    noteId = `${guidFor(this)}-budget-note`;
+    get barValue() {
+      return Math.min(this.args.model?.budgetUsedPercent ?? 0, 100);
     }
-    get budgetDisplay() {
-      return formatMoney(
-        this.args.model?.budget?.amount,
-        this.args.model?.budget?.currency?.code,
-      );
-    }
-    get barStyle() {
-      let pct = Math.min(this.args.model?.budgetUsedPercent ?? 0, 100);
-      return htmlSafe(`width: ${pct}%`);
+    get details(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.startDate) rows.push({ key: 'Started', value: 'startDate' });
+      if (m?.endDate) rows.push({ key: 'Ended', value: 'endDate' });
+      return rows;
     }
     <template>
       <article class='campaign-page'>
@@ -351,21 +318,32 @@ export class Campaign extends CardDef {
           </div>
         </header>
 
-        {{#if this.budgetDisplay}}
+        {{#if (hasNumber @model.budget.amount)}}
           <section class='panel'>
             <h2>Budget</h2>
             <div class='spend-row'>
-              <span class='spend'>{{this.spendDisplay}}</span>
-              <span class='of'>of {{this.budgetDisplay}}</span>
+              <Money
+                class='spend'
+                @amount={{@model.spend.amount}}
+                @code={{@model.spend.currency.code}}
+              />
+              <span class='of'>of
+                <Money
+                  @amount={{@model.budget.amount}}
+                  @code={{@model.budget.currency.code}}
+                /></span>
             </div>
-            {{! template-lint-disable no-inline-styles }}
-            <div class='bar'>
-              <div
-                class='bar-fill {{if @model.isOverBudget "bar-over"}}'
-                style={{this.barStyle}}
-              ></div>
-            </div>
-            <p class='bar-note {{if @model.isOverBudget "over"}}'>
+            <ProgressBar
+              class='bar {{if @model.isOverBudget "bar-over"}}'
+              @value={{this.barValue}}
+              @max={{100}}
+              @steps={{false}}
+              {{labelProgress this.noteId}}
+            />
+            <p
+              id={{this.noteId}}
+              class='bar-note {{if @model.isOverBudget "over"}}'
+            >
               {{@model.budgetUsedPercent}}% spent{{#if @model.isOverBudget}}
                 — over budget{{/if}}
             </p>
@@ -374,16 +352,15 @@ export class Campaign extends CardDef {
 
         <section class='panel'>
           <h2>Details</h2>
-          <dl>
-            {{#if @model.startDate}}
-              <dt>Started</dt>
-              <dd><@fields.startDate /></dd>
-            {{/if}}
-            {{#if @model.endDate}}
-              <dt>Ended</dt>
-              <dd><@fields.endDate /></dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='details' @items={{this.details}}>
+            <:value as |row|>
+              {{#if (eq row.value 'startDate')}}
+                <@fields.startDate />
+              {{else}}
+                <@fields.endDate />
+              {{/if}}
+            </:value>
+          </KeyValue>
           <p class='hint'>Leads attributed to this campaign are counted by
             querying leads that point at it — a campaign does not hold a list of
             them.</p>
@@ -397,44 +374,46 @@ export class Campaign extends CardDef {
           display: flex;
           flex-direction: column;
           gap: 1.25rem;
-          color: var(--foreground, #111111);
         }
         .ch {
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
-          font-family: var(--font-heading, inherit);
         }
         .status-line {
           margin: 0.25rem 0 0;
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           text-transform: capitalize;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
-          border-radius: 8px;
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
           padding: 1rem 1.125rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .spend-row {
           display: flex;
@@ -444,54 +423,41 @@ export class Campaign extends CardDef {
         .spend {
           font-size: 1.5rem;
           font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          font-family: var(--font-heading, inherit);
         }
         .of {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
+        /* Pret UI ProgressBar paints its fill with --primary, which measures
+           1.20:1 against the track on a light page, so the bar takes the ink
+           token, and the destructive ink once the campaign is over budget. */
         .bar {
+          --primary: var(--primary-ink);
           margin-top: 0.625rem;
-          height: 8px;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          overflow: hidden;
-        }
-        .bar-fill {
-          height: 100%;
-          background: var(--primary, #111111);
         }
         .bar-over {
-          background: var(--state-overdue-fg, #991b1b);
+          --primary: var(--destructive-ink);
         }
         .bar-note {
           margin: 0.375rem 0 0;
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .over {
-          color: var(--state-overdue-fg, #991b1b);
+          color: var(--destructive-ink);
           font-weight: 600;
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: 7rem 1fr;
-          gap: 0.5rem 1rem;
-          font-size: 0.875rem;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1rem;
         }
         .hint {
           margin: 0.875rem 0 0;
           font-size: 0.75rem;
           line-height: 1.5;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

@@ -4,7 +4,11 @@ import { htmlSafe } from '@ember/template';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { guidFor } from '@ember/object/internals';
+import { modifier } from 'ember-modifier';
+import { Table as PretTable } from '@cardstack/pretui/components/table';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Pagination } from '@cardstack/pretui/components/pagination';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import sortBy from '../utils/sort';
 
@@ -78,6 +82,23 @@ function clickableCell(onRowClick: unknown, index: number): boolean {
   return typeof onRowClick === 'function' && index === 0;
 }
 
+// Pret UI's Table owns the <table> and yields only head and body, so the
+// caption sits just above it and this names the table after it instead:
+// a screen reader still announces "table, <caption>" before the rows.
+const labelledBy = modifier(
+  (element: HTMLElement, [id]: [string | undefined]) => {
+    let table = element.querySelector('table');
+    if (!table) {
+      return;
+    }
+    if (id) {
+      table.setAttribute('aria-labelledby', id);
+    } else {
+      table.removeAttribute('aria-labelledby');
+    }
+  },
+);
+
 interface TableSignature {
   Args: {
     columns: TableColumn[];
@@ -113,6 +134,10 @@ interface TableSignature {
 }
 
 export class Table extends GlimmerComponent<TableSignature> {
+  get captionId(): string | undefined {
+    return this.args.caption ? `${guidFor(this)}-caption` : undefined;
+  }
+
   @tracked sortKey: string | undefined;
   @tracked sortDir: 'asc' | 'desc' = 'asc';
 
@@ -193,21 +218,14 @@ export class Table extends GlimmerComponent<TableSignature> {
     return Math.min(this.rangeStart + this.pagedItems.length - 1, this.total);
   }
 
-  get isFirstPage(): boolean {
-    return this.currentPage === 0;
+  // Pret UI Pagination counts pages from 1; the table stores them from 0.
+  get pageNumber(): number {
+    return this.currentPage + 1;
   }
 
-  get isLastPage(): boolean {
-    return this.currentPage >= this.pageCount - 1;
-  }
-
-  @action prevPage() {
-    this.page = Math.max(0, this.currentPage - 1);
-  }
-
-  @action nextPage() {
-    this.page = Math.min(this.pageCount - 1, this.currentPage + 1);
-  }
+  goToPage = (n: number) => {
+    this.page = Math.min(this.pageCount - 1, Math.max(0, n - 1));
+  };
 
   sortIndicator = (key: string) => {
     if (this.activeSortKey !== key) return '';
@@ -244,11 +262,11 @@ export class Table extends GlimmerComponent<TableSignature> {
 
   <template>
     <div class='table-scroll' ...attributes>
-      <table class='record-table'>
-        {{#if @caption}}
-          <caption class='tbl-caption'>{{@caption}}</caption>
-        {{/if}}
-        <thead>
+      {{#if @caption}}
+        <span class='tbl-caption' id={{this.captionId}}>{{@caption}}</span>
+      {{/if}}
+      <PretTable {{labelledBy this.captionId}}>
+        <:head>
           <tr>
             {{#each @columns as |column|}}
               <th
@@ -273,8 +291,8 @@ export class Table extends GlimmerComponent<TableSignature> {
               </th>
             {{/each}}
           </tr>
-        </thead>
-        <tbody>
+        </:head>
+        <:body>
           {{#each this.pagedItems key=@rowKey as |item|}}
             <tr
               class='{{if @onRowClick "clickable"}}
@@ -312,67 +330,100 @@ export class Table extends GlimmerComponent<TableSignature> {
           {{else}}
             <tr>
               <td class='empty' colspan={{@columns.length}}>
-                {{if @emptyMessage @emptyMessage 'No records'}}
+                <EmptyState
+                  @title={{if @emptyMessage @emptyMessage 'No records'}}
+                  @texture={{false}}
+                />
               </td>
             </tr>
           {{/each}}
-        </tbody>
-      </table>
+        </:body>
+      </PretTable>
     </div>
 
     {{#if this.isPaged}}
-      <nav class='pager' aria-label='Table pages'>
+      {{! Pret UI Pagination brings its own nav landmark, so the range summary
+          sits beside it in a plain wrapper rather than a second nav. }}
+      <div class='pager'>
         <span
           class='pager-range'
           aria-live='polite'
         >{{this.rangeStart}}–{{this.rangeEnd}}
           of
           {{this.total}}</span>
-        <span class='pager-btns'>
-          <button
-            type='button'
-            class='pager-btn'
-            disabled={{this.isFirstPage}}
-            aria-label='Previous page'
-            {{on 'click' this.prevPage}}
-          >←</button>
-          <span class='pager-page'>{{this.pageCount}}
-            {{if (eq this.pageCount 1) 'page' 'pages'}}</span>
-          <button
-            type='button'
-            class='pager-btn'
-            disabled={{this.isLastPage}}
-            aria-label='Next page'
-            {{on 'click' this.nextPage}}
-          >→</button>
-        </span>
-      </nav>
+        <Pagination
+          @page={{this.pageNumber}}
+          @pages={{this.pageCount}}
+          @onPageChange={{this.goToPage}}
+          aria-label='Table pages'
+        />
+      </div>
     {{/if}}
     <style scoped>
-      /* Every fallback is a --boxel-* token, never a literal hex: the semantic
-         token flips in dark mode and a hex fallback cannot. */
+      /* `showAbove` is a container query, so the wrapper has to BE the
+         container: the table sizes to its panel, not to the viewport. */
       .table-scroll {
-        overflow-x: auto;
         width: 100%;
-        /* `showAbove` is a container query, so the wrapper has to BE the
-           container: the table sizes to its panel, not to the viewport. */
         container-type: inline-size;
         container-name: tbl;
       }
+      /* The caption speaks in the eyebrow voice; the header cells take Pret UI
+         Table's own mono header, so the controls inside them inherit it. */
       .tbl-caption {
+        display: block;
         padding: 0 0.5rem 0.4rem;
-        text-align: left;
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-500));
+        color: var(--muted-foreground);
+      }
+      .sort-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        width: 100%;
+        min-height: 100%;
+        padding: 0;
+        border: 0;
+        background-color: transparent;
+        font: inherit;
+        letter-spacing: inherit;
+        text-transform: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+      .sort-btn:focus-visible {
+        outline: 0.125rem solid var(--ring);
+        outline-offset: 0.125rem;
+      }
+      .sort-btn:hover {
+        color: var(--foreground);
+      }
+      .align-right .sort-btn {
+        justify-content: flex-end;
+      }
+      .sort-mark {
+        font-size: 0.5625rem;
+      }
+      .align-right .plain-head {
+        display: block;
+        text-align: right;
+      }
+      /* A column header is a real control: it grows to the 44px touch minimum
+         where a coarse pointer is in use. */
+      @media (pointer: coarse) {
+        .sort-btn {
+          min-height: 2.75rem;
+        }
       }
       .row-btn {
         display: block;
         width: 100%;
         border: 0;
-        background: none;
+        background-color: transparent;
         padding: 0;
         margin: 0;
         font: inherit;
@@ -386,6 +437,7 @@ export class Table extends GlimmerComponent<TableSignature> {
          `position: relative; z-index: 1` to sit above it. */
       tr.clickable {
         position: relative;
+        cursor: pointer;
       }
       .row-btn::after {
         content: '';
@@ -397,11 +449,12 @@ export class Table extends GlimmerComponent<TableSignature> {
         outline: none;
       }
       .row-btn:focus-visible::after {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: -2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
       }
       /* Columns hidden below their own breakpoint. The matching <td> carries
-         the same class as the <th>, or the row shifts. */
+         the same class as the <th>, or the row shifts. The breakpoints stay in
+         px because they are the `showAbove` values themselves. */
       @container tbl (width < 480px) {
         .above-480 {
           display: none;
@@ -422,96 +475,43 @@ export class Table extends GlimmerComponent<TableSignature> {
           display: none;
         }
       }
-      .record-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
-      }
-      th {
-        padding: 0;
-        border-bottom: 1px solid var(--border, var(--boxel-border-color));
-        position: sticky;
-        top: 0;
-        background: var(--card, var(--boxel-light));
-      }
-      .sort-btn {
-        display: inline-flex;
-        align-items: baseline;
-        gap: 0.25rem;
-        width: 100%;
-        /* 44px hit floor: a column header is a real control. */
-        min-height: 44px;
-        padding: 0.5rem;
-        border: 0;
-        background: none;
-        cursor: pointer;
-        font: inherit;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-500));
-      }
-      .sort-btn:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: -2px;
-      }
-      .sort-btn:hover {
-        color: var(--foreground, var(--boxel-dark));
-      }
-      .align-right .sort-btn {
-        justify-content: flex-end;
-      }
-      .sort-mark {
-        font-size: 0.5625rem;
-      }
-      .plain-head {
-        display: inline-block;
-        padding: 0.5rem;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-500));
-      }
-      td {
-        padding: 0.625rem 0.5rem;
-        border-bottom: 1px solid var(--border, var(--boxel-border-color));
-        vertical-align: baseline;
-      }
       .align-right {
         text-align: right;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
-      .align-left {
-        text-align: left;
-      }
       /* Severity stripe at the row edge, applied via `@rowClass`: state read
          before any text, so a scanner finds the overdue rows without parsing a
-         pill mid-line. */
+         pill mid-line. The stripe is an indicator, so it takes the status
+         fill; `sev-cool` has no status token and stays on the fixed palette.
+         Pret UI Table draws each row's divider as the cell's own inset
+         shadow, so the stripe keeps that divider as its second layer. */
       tr.sev-over td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-danger);
+        box-shadow:
+          inset 0.1875rem 0 0 var(--destructive),
+          inset 0 -1px 0 var(--border);
       }
       tr.sev-note td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-warning);
+        box-shadow:
+          inset 0.1875rem 0 0 var(--warning),
+          inset 0 -1px 0 var(--border);
       }
       tr.sev-ok td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-success);
+        box-shadow:
+          inset 0.1875rem 0 0 var(--success),
+          inset 0 -1px 0 var(--border);
       }
       tr.sev-cool td:first-child {
-        box-shadow: inset 3px 0 0 var(--boxel-dark-teal);
+        box-shadow:
+          inset 0.1875rem 0 0 var(--boxel-dark-teal),
+          inset 0 -1px 0 var(--border);
       }
-      tr.clickable {
-        cursor: pointer;
-      }
-      tr.clickable:hover td {
-        background: var(--muted, var(--boxel-100));
-      }
+      /* Pret UI EmptyState, tuned through its own spacing and title knobs to a
+         single quiet line that fits inside a table cell. */
       .empty {
-        text-align: center;
-        color: var(--muted-foreground, var(--boxel-500));
-        padding: 1.5rem;
+        --space-9: 1rem;
+        --space-6: 1rem;
+        --text-heading: var(--boxel-font-size);
       }
       .pager {
         display: flex;
@@ -521,48 +521,29 @@ export class Table extends GlimmerComponent<TableSignature> {
         flex-wrap: wrap;
         padding: 0.5rem 0.5rem 0;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .pager-range {
         font-variant-numeric: tabular-nums;
       }
-      .pager-btns {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+      /* Pret UI Pagination's own knobs, pointed at the contract: the active
+         page reads as ink on the selected surface instead of the --primary
+         fill used as text, and the gap takes the muted ink. */
+      .pager {
+        --pretui-primary-ink: var(--primary-ink);
+        --pretui-selected: var(--selected);
+        --ink-3: var(--muted-foreground);
       }
-      .pager-page {
-        font-variant-numeric: tabular-nums;
+      .pager :deep(.pretui-page:focus-visible) {
+        outline: 0.125rem solid var(--ring);
+        outline-offset: 0.0625rem;
       }
       /* Under the 44px touch minimum on purpose: the target grows only where a
          coarse pointer is in use. */
-      .pager-btn {
-        min-width: 28px;
-        min-height: 28px;
-        padding: 0 0.4rem;
-        border: 1px solid var(--border, var(--boxel-border-color));
-        border-radius: var(--radius, 6px);
-        background: var(--card, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font: inherit;
-        line-height: 1;
-        cursor: pointer;
-      }
-      .pager-btn:hover:not(:disabled) {
-        background: var(--muted, var(--boxel-100));
-      }
-      .pager-btn:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: 1px;
-      }
-      .pager-btn:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
       @media (pointer: coarse) {
-        .pager-btn {
-          min-width: 44px;
-          min-height: 44px;
+        .pager :deep(.pretui-page) {
+          min-width: 2.75rem;
+          height: 2.75rem;
         }
       }
     </style>

@@ -150,6 +150,7 @@ class EscalationEdit extends Component<typeof Escalation> {
     <style scoped>
       .esc-edit {
         container-type: inline-size;
+        padding: var(--boxel-sp);
       }
       .edit-body {
         display: grid;
@@ -171,22 +172,23 @@ class EscalationEdit extends Component<typeof Escalation> {
       .sect {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp-xs);
-        border: 1px solid var(--border, var(--boxel-border-color));
+        gap: var(--boxel-sp-sm);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
-        background: var(--card, var(--boxel-light));
-        padding: var(--boxel-sp-sm);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        padding: var(--boxel-sp);
         scroll-margin-top: var(--boxel-sp);
       }
       .sect.focused {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--ring);
       }
       .sect h3 {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-5xs);
@@ -325,8 +327,6 @@ export class Escalation extends CardDef {
         .esc-page {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
@@ -343,17 +343,18 @@ export class Escalation extends CardDef {
         }
         .esc-subject {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
         }
         .esc-ladder {
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
           padding: var(--boxel-sp-sm);
-          background: var(--card, var(--boxel-light));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .esc-rung {
           display: flex;
@@ -364,12 +365,12 @@ export class Escalation extends CardDef {
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           min-width: 6rem;
         }
         .esc-ack-target {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .esc-facts {
           display: flex;
@@ -384,8 +385,8 @@ export class Escalation extends CardDef {
         .esc-note {
           margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border-left: 0.1875rem solid var(--border, var(--boxel-border-color));
-          color: var(--muted-foreground, var(--boxel-450));
+          border-left: 0.1875rem solid var(--border);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -430,12 +431,12 @@ export class Escalation extends CardDef {
         }
         .esc-level {
           flex: none;
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-weight: 600;
           font-size: var(--boxel-font-size-xs);
           padding: 0.125rem 0.5rem;
           border-radius: var(--boxel-border-radius-sm);
-          background: var(--esc-bg);
+          background-color: var(--esc-bg);
           color: var(--esc-fg);
         }
         .esc-body {
@@ -453,10 +454,10 @@ export class Escalation extends CardDef {
         }
         .esc-meta {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .esc-overdue {
-          color: var(--boxel-danger);
+          color: var(--destructive-ink);
           margin-left: var(--boxel-sp-4xs);
         }
       </style>
@@ -516,12 +517,12 @@ export class Escalation extends CardDef {
         }
         .esc-badge {
           flex: none;
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-weight: 700;
           font-size: var(--boxel-font-size);
           padding: 0.25rem 0.5rem;
           border-radius: var(--boxel-border-radius-sm);
-          background: var(--esc-bg);
+          background-color: var(--esc-bg);
           color: var(--esc-fg);
         }
         .esc-fitted-body {
@@ -539,7 +540,7 @@ export class Escalation extends CardDef {
         }
         .esc-fitted-meta {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -554,7 +555,7 @@ export class Escalation extends CardDef {
             gap: var(--boxel-sp-5xs);
             margin-top: var(--boxel-sp-4xs);
             font-size: var(--boxel-font-size-xs);
-            color: var(--muted-foreground, var(--boxel-450));
+            color: var(--muted-foreground);
           }
           .esc-fitted-note {
             font-style: italic;
