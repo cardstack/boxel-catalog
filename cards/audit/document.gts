@@ -19,6 +19,10 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { DocumentPreview } from './components/document-preview';
 import { shortHash } from './utils/evidence-hash';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { Token } from '@cardstack/pretui/components/token';
+import { AuditFacts, ID_TOKEN_STYLE } from './audit-ui';
 
 export const DOCUMENT_KINDS = [
   'policy',
@@ -42,8 +46,8 @@ export const DOCUMENT_KIND_HUE: Record<string, Hue> = {
   policy: 'purple',
   procedure: 'blue',
   record: 'teal',
-  evidence: 'amber',
-  report: 'green',
+  evidence: 'gold',
+  report: 'pink',
   other: 'slate',
 };
 
@@ -106,6 +110,18 @@ export class Document extends CardDef {
     get tagList() {
       return (this.args.model?.tags ?? []).filter(Boolean);
     }
+    // The rows only: each value renders a field in the `value` block.
+    get facts(): KeyValueItem[] {
+      let model = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (model?.hashedAt) {
+        rows.push({ key: 'Hashed', value: '' });
+      }
+      if (model?.supersedes) {
+        rows.push({ key: 'Supersedes', value: '' });
+      }
+      return rows;
+    }
     <template>
       <article class='doc'>
         <header>
@@ -133,20 +149,17 @@ export class Document extends CardDef {
           <div class='tags'><@fields.tags @format='atom' /></div>
         {{/if}}
 
-        <section class='facts'>
-          {{#if @model.hashedAt}}
-            <div class='fact'>
-              <span class='k'>Hashed</span>
-              <span class='v'><@fields.hashedAt /></span>
-            </div>
-          {{/if}}
-          {{#if @model.supersedes}}
-            <div class='fact'>
-              <span class='k'>Supersedes</span>
-              <span class='v'><@fields.supersedes @format='atom' /></span>
-            </div>
-          {{/if}}
-        </section>
+        {{#if this.facts.length}}
+          <AuditFacts @items={{this.facts}}>
+            <:value as |item|>
+              {{#if (eq item.key 'Hashed')}}
+                <@fields.hashedAt />
+              {{else}}
+                <@fields.supersedes @format='atom' />
+              {{/if}}
+            </:value>
+          </AuditFacts>
+        {{/if}}
 
         {{#if @model.info}}
           <section>
@@ -161,7 +174,6 @@ export class Document extends CardDef {
           display: grid;
           gap: var(--boxel-sp-lg);
           max-width: 52rem;
-          color: var(--foreground, var(--boxel-dark));
         }
         header {
           display: grid;
@@ -169,24 +181,27 @@ export class Document extends CardDef {
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
           font-size: 1.5rem;
-          font-family: var(--font-heading, inherit);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.75rem;
-          font-weight: 700;
-          letter-spacing: 0.06em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .head-meta {
           display: flex;
@@ -196,26 +211,12 @@ export class Document extends CardDef {
           font-size: 0.8125rem;
         }
         .meta {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .tags {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
-        }
-        .facts {
-          display: grid;
-          gap: var(--boxel-sp-sm);
-        }
-        .fact {
-          display: grid;
-          grid-template-columns: 7rem 1fr;
-          gap: var(--boxel-sp-sm);
-          align-items: baseline;
-          font-size: 0.875rem;
-        }
-        .k {
-          color: var(--muted-foreground, var(--boxel-450));
         }
       </style>
     </template>
@@ -235,11 +236,14 @@ export class Document extends CardDef {
       <div class='row'>
         <div class='what'>
           <span class='name'>{{@model.cardTitle}}</span>
-          <span class='sub mono'>{{if
-              this.hashLabel
-              this.hashLabel
-              'not hashed'
-            }}</span>
+          {{#if this.hashLabel}}
+            <span><Token
+                style={{ID_TOKEN_STYLE.xs}}
+                title={{@model.contentHash}}
+              >{{this.hashLabel}}</Token></span>
+          {{else}}
+            <span class='sub'>not hashed</span>
+          {{/if}}
         </div>
         <StatePill @label={{this.kindLabel}} @hue={{this.kindHue}} />
       </div>
@@ -254,7 +258,7 @@ export class Document extends CardDef {
         .what {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .name {
@@ -266,10 +270,7 @@ export class Document extends CardDef {
         }
         .sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -354,7 +355,7 @@ export class Document extends CardDef {
         .fit-kind,
         .row {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -366,19 +367,19 @@ export class Document extends CardDef {
           -webkit-box-orient: vertical;
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         .tier-tile,
         .tier-card {
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-height: 0;
         }
         .tier-tile {
           margin-top: auto;
           padding-top: var(--boxel-sp-5xs);
-          border-top: 1px solid var(--border-subtle, var(--border, #f3f4f6));
+          border-top: 1px solid var(--border);
         }
         @container fitted-card (height <= 65px) {
           .fit {

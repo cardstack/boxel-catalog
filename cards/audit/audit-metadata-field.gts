@@ -71,14 +71,14 @@ export class AuditMetadataField extends FieldDef {
           align-items: baseline;
           gap: var(--boxel-sp-xs);
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         .changed {
           font-weight: 600;
-          color: var(--state-next-fg, var(--foreground, var(--boxel-dark)));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -90,7 +90,7 @@ export class AuditMetadataField extends FieldDef {
       <style scoped>
         .atom {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

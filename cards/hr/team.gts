@@ -8,10 +8,15 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import UsersIcon from '@cardstack/boxel-icons/users';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
 
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { AVATAR_HUE, FactList } from '@cardstack/catalog/cards/hr/hr-ui';
 import { liveCount } from '@cardstack/catalog/cards/hr/utils';
-import { initialsOf } from '@cardstack/catalog/cards/people/person-base';
 
 export class Team extends CardDef {
   static displayName = 'Team';
@@ -50,8 +55,8 @@ export class Team extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get initials() {
-      return initialsOf(this.args.model?.name);
+    get markName() {
+      return this.args.model?.name?.trim() || '?';
     }
 
     get memberCount(): number {
@@ -70,10 +75,12 @@ export class Team extends CardDef {
         let k = (m as any)?.status ?? 'unknown';
         counts[k] = (counts[k] ?? 0) + 1;
       }
-      return Object.entries(counts).map(([status, count]) => ({
-        status,
-        count,
-      }));
+      return Object.entries(counts).map(
+        ([status, count]): KeyValueItem => ({
+          key: status,
+          value: String(count),
+        }),
+      );
     }
 
     get leadName(): string | undefined {
@@ -83,7 +90,13 @@ export class Team extends CardDef {
     <template>
       <article class='team-isolated'>
         <header class='hero'>
-          <span class='avatar' aria-hidden='true'>{{this.initials}}</span>
+          <Avatar
+            class='team-mark'
+            @name={{this.markName}}
+            @hue={{AVATAR_HUE}}
+            @size={{52}}
+            aria-hidden='true'
+          />
           <div class='hero-text'>
             <h1>{{@model.title}}</h1>
             <p class='byline'>
@@ -99,8 +112,12 @@ export class Team extends CardDef {
             {{/if}}
           </div>
           <div class='hero-num'>
-            <span class='num'>{{this.memberCount}}</span>
-            <span class='num-label'>on the team</span>
+            <Stat
+              class='num'
+              @label='On the team'
+              @value={{this.memberCount}}
+              @roll={{false}}
+            />
           </div>
         </header>
 
@@ -117,14 +134,18 @@ export class Team extends CardDef {
                 {{/each}}
               </ul>
             {{else}}
-              <p class='empty'>No members yet. Link an employee to build the
-                team.</p>
+              <EmptyState
+                class='empty'
+                @texture={{false}}
+                @title='No members yet'
+                @message='Link an employee to build the team.'
+              />
             {{/if}}
           </div>
 
           <aside class='side'>
             <h2 class='panel-title'>Composition</h2>
-            <dl class='facts stacked'>
+            <dl class='stacked'>
               <dt>Headcount</dt>
               <dd>{{if @model.headcount @model.headcount '0 members'}}</dd>
               <dt>Lead</dt>
@@ -136,12 +157,7 @@ export class Team extends CardDef {
 
             {{#if this.statusSplit.length}}
               <h2 class='panel-title spaced'>By status</h2>
-              <dl class='facts stacked'>
-                {{#each this.statusSplit as |row|}}
-                  <dt>{{row.status}}</dt>
-                  <dd>{{row.count}}</dd>
-                {{/each}}
-              </dl>
+              <FactList @items={{this.statusSplit}} />
             {{/if}}
           </aside>
         </div>
@@ -154,15 +170,6 @@ export class Team extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --team-id: var(--primary, var(--boxel-highlight));
-          --team-strong: color-mix(
-            in oklch,
-            var(--team-id) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
         }
         .hero {
           flex: none;
@@ -170,19 +177,11 @@ export class Team extends CardDef {
           align-items: flex-start;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
-        .avatar {
-          flex: none;
-          width: 3.25rem;
-          height: 3.25rem;
+        /* A team's mark is square, so it never reads as a person's avatar. */
+        .hero .team-mark {
           border-radius: var(--boxel-border-radius);
-          display: grid;
-          place-items: center;
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-          background: var(--team-strong);
-          color: var(--background, var(--boxel-light));
         }
         .hero-text {
           flex: 1;
@@ -195,12 +194,11 @@ export class Team extends CardDef {
           letter-spacing: -0.02em;
           line-height: 1.2;
           overflow-wrap: anywhere;
-          font-family: var(--font-heading, inherit);
         }
         .byline {
           margin: var(--boxel-sp-5xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sep-dot {
           margin: 0 0.25rem;
@@ -216,16 +214,8 @@ export class Team extends CardDef {
           text-align: right;
         }
         .num {
-          display: block;
-          font-size: 1.9rem;
-          font-weight: 800;
-          line-height: 1;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .num-label {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          --text-stat: 1.9rem;
+          justify-items: end;
         }
         .body {
           display: grid;
@@ -243,8 +233,9 @@ export class Team extends CardDef {
         }
         .side {
           padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border, var(--boxel-200));
-          background: var(--muted, var(--boxel-100));
+          border-left: 1px solid var(--border);
+          background-color: var(--muted);
+          color: var(--foreground);
         }
         .panel-title {
           margin: 0 0 var(--boxel-sp-xs);
@@ -262,28 +253,30 @@ export class Team extends CardDef {
           gap: var(--boxel-sp-xs);
         }
         .member-list > li {
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           overflow: hidden;
         }
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          --space-9: var(--boxel-sp);
+          --space-6: var(--boxel-sp);
+          --text-heading: var(--boxel-font-size);
         }
-        .facts {
+        .stacked {
           margin: 0;
           display: grid;
-          grid-template-columns: 1fr;
         }
-        .facts dt {
-          font-size: var(--boxel-font-size-xs);
+        .stacked dt {
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           padding-top: 0.4rem;
         }
-        .facts dd {
+        .stacked dd {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           overflow-wrap: anywhere;
@@ -295,13 +288,16 @@ export class Team extends CardDef {
           }
           .side {
             border-left: 0;
-            border-top: 1px solid var(--border, var(--boxel-200));
+            border-top: 1px solid var(--border);
           }
           .hero {
             flex-wrap: wrap;
           }
           .hero-num {
             text-align: left;
+          }
+          .num {
+            justify-items: start;
           }
         }
       </style>
@@ -328,9 +324,8 @@ export class Team extends CardDef {
       <style scoped>
         .team-embedded {
           padding: var(--boxel-sp);
-          background: var(--card, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
           transition: box-shadow 0.15s ease-out;
         }
         header {
@@ -345,13 +340,13 @@ export class Team extends CardDef {
         }
         .headcount {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .mission {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .lead {
           margin-top: var(--boxel-sp-xs);
@@ -360,10 +355,13 @@ export class Team extends CardDef {
           gap: var(--boxel-sp-xs);
         }
         .label {
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -382,12 +380,12 @@ export class Team extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .team-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .team-atom-name {
@@ -400,14 +398,29 @@ export class Team extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get initials() {
-      return initialsOf(this.args.model?.name);
+    get markName() {
+      return this.args.model?.name?.trim() || '?';
     }
 
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          <span class='avatar' aria-hidden='true'>{{this.initials}}</span>
+          {{! Avatar sizes itself from @size, so the smallest tier mounts its
+              own 20px mark and the container queries show one of the two. }}
+          <Avatar
+            class='team-mark mark-lg'
+            @name={{this.markName}}
+            @hue={{AVATAR_HUE}}
+            @size={{26}}
+            aria-hidden='true'
+          />
+          <Avatar
+            class='team-mark mark-sm'
+            @name={{this.markName}}
+            @hue={{AVATAR_HUE}}
+            @size={{20}}
+            aria-hidden='true'
+          />
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
             {{#if @model.leadName}}
@@ -415,13 +428,11 @@ export class Team extends CardDef {
             {{/if}}
           </div>
           {{! Headcount rides in the pill slot — it is this card's status. }}
-          <span class='fit-pill'>
-            <span class='pill-dot'></span>{{if
-              @model.headcount
-              @model.headcount
-              '0 members'
-            }}
-          </span>
+          <StatePill
+            class='fit-pill'
+            @label={{if @model.headcount @model.headcount '0 members'}}
+            @dot={{true}}
+          />
         </div>
 
         {{#if @model.mission}}
@@ -452,17 +463,10 @@ export class Team extends CardDef {
           gap: 0.3rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --team-id: var(--primary, var(--boxel-highlight));
-          --team-strong: color-mix(
-            in oklch,
-            var(--team-id) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit > * {
           min-height: 0;
@@ -475,17 +479,11 @@ export class Team extends CardDef {
           gap: 0.4rem;
           flex-wrap: wrap;
         }
-        .avatar {
-          flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
-          border-radius: 4px;
-          display: grid;
-          place-items: center;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          background: var(--team-strong);
-          color: var(--background, var(--boxel-light));
+        .fit-top .team-mark {
+          border-radius: 0.25rem;
+        }
+        .fit-top .mark-sm {
+          display: none;
         }
         .fit-head {
           flex: 1;
@@ -505,38 +503,21 @@ export class Team extends CardDef {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .fit-pill {
           flex: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
           align-self: flex-start;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-          background: var(--muted, var(--boxel-100));
-          color: var(--team-strong);
-        }
-        .pill-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .fit-mission {
           display: none;
           margin: 0;
           font-size: var(--fit-small);
           line-height: 1.5;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -546,7 +527,7 @@ export class Team extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -558,7 +539,7 @@ export class Team extends CardDef {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;
@@ -618,9 +599,11 @@ export class Team extends CardDef {
         }
         /* Smallest: drop the lead, keep the headcount pill. */
         @container fitted-card (height <= 50px) {
-          .avatar {
-            width: 1.25rem;
-            height: 1.25rem;
+          .fit-top .mark-lg {
+            display: none;
+          }
+          .fit-top .mark-sm {
+            display: inline-flex;
           }
           .fit-eb {
             display: none;

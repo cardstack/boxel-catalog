@@ -63,14 +63,14 @@ export class AttributionField extends FieldDef {
           align-items: baseline;
           gap: var(--boxel-sp-xs);
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .source {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .license {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.75rem;
         }
       </style>
@@ -83,7 +83,7 @@ export class AttributionField extends FieldDef {
       <style scoped>
         .atom {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

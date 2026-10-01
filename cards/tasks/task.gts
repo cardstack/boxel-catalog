@@ -15,7 +15,7 @@ import { statusField } from '@cardstack/catalog/fields/status/status';
 import PriorityField from '@cardstack/catalog/fields/priority/priority';
 import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 import CreatedAtField from '@cardstack/catalog/fields/created-at/created-at';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Avatar } from '@cardstack/pretui/components/avatar';
 import { User } from '@cardstack/catalog/cards/crm/user';
 
 /**
@@ -126,7 +126,7 @@ export class Task extends CardDef {
         }
         .t-title {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -136,7 +136,7 @@ export class Task extends CardDef {
         .t-subs {
           font-variant-numeric: tabular-nums;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         /* Trailing data slots stay constant-width and always render, so a
@@ -152,7 +152,7 @@ export class Task extends CardDef {
           flex-shrink: 0;
         }
         .t-empty {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -173,7 +173,7 @@ export class Task extends CardDef {
         }
         .ta-title {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -248,7 +248,7 @@ export class Task extends CardDef {
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
-          border-bottom: 2px solid var(--foreground, var(--boxel-dark));
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .head-row {
@@ -260,7 +260,6 @@ export class Task extends CardDef {
           margin: 0;
           font-size: 1.625rem;
           line-height: 1.15;
-          font-family: var(--font-heading, inherit);
         }
         .meta {
           display: flex;
@@ -275,7 +274,7 @@ export class Task extends CardDef {
           gap: var(--boxel-sp-4xs);
         }
         .muted {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .tags {
           display: flex;
@@ -283,18 +282,20 @@ export class Task extends CardDef {
           flex-wrap: wrap;
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, var(--boxel-light));
+          background-color: var(--card);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: flex;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
@@ -311,14 +312,14 @@ export class Task extends CardDef {
         }
         .subtask-list :deep(.boxel-card-container--boundaries) {
           box-shadow: none;
-          background: transparent;
+          background-color: transparent;
         }
         .subtask-list :deep(.task-row) {
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
         }
         .empty {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
         }
         .details :deep(p:first-child) {
@@ -357,7 +358,15 @@ export class Task extends CardDef {
         </div>
         <div class='f-extra'>
           {{#if @model.assignee}}
-            <StatePill @label={{@model.assignee.name}} @chrome={{true}} />
+            <span class='f-assignee'>
+              <Avatar
+                @name={{if @model.assignee.name @model.assignee.name '?'}}
+                @hue='var(--muted-foreground)'
+                @size={{20}}
+                aria-hidden='true'
+              />
+              <span class='f-assignee-name'>{{@model.assignee.name}}</span>
+            </span>
           {{/if}}
         </div>
       </div>
@@ -381,7 +390,7 @@ export class Task extends CardDef {
           font-weight: 600;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.25;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
@@ -396,13 +405,26 @@ export class Task extends CardDef {
         }
         .f-subs {
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .f-extra {
           display: flex;
           align-items: center;
           min-height: 0;
+        }
+        .f-assignee {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-4xs);
+          min-width: 0;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
+        }
+        .f-assignee-name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         /* badge: status + one-line title only */
         @container fitted-card (width <= 150px) and (height <= 169px) {
