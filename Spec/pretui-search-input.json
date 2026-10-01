@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/search-input",
+        "name": "SearchInput"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { SearchInput } from '@cardstack/pretui/components/search-input';\n```\n",
+      "cardTitle": "SearchInput",
+      "cardDescription": "Search field with magnifier + clear button",
+      "containedExamples": [],
+      "componentName": "SearchInput",
+      "icon": "search",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "boxel-ui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "boxel-ui",
+      "lineage": "BoxelInput",
+      "version": "0.4.0",
+      "brief": "Search field with magnifier + clear button · BoxelInput search core",
+      "refs": "wa-input[type=search] · Spotlight idiom",
+      "buildsOn": "boxel-ui BoxelInput",
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "SearchInput",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/search-input.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/search-input.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

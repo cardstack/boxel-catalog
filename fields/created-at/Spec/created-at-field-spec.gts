@@ -12,12 +12,14 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import CreatedAtField from '../created-at';
 import CodeSnippet from '../../../components/code-snippet';
+import FieldShowcase from '../../../components/field-showcase';
+import FieldShowcaseCard from '../../../components/field-showcase-card';
 
 const standardCode = `@field createdAt = contains(CreatedAtField);`;
 
 class CreatedAtFieldSpecIsolated extends Component<typeof CreatedAtFieldSpec> {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -28,41 +30,21 @@ class CreatedAtFieldSpecIsolated extends Component<typeof CreatedAtFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <article class='example-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardCode}} />
           <@fields.standard />
           <@fields.standard @format='atom' />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .example-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 
 class CreatedAtFieldSpecEdit extends Component<typeof CreatedAtFieldSpec> {
   <template>
-    <article class='container'>
+    <FieldShowcase>
       <SpecHeader @model={{@model}} @isEditMode={{true}}>
         <:title><@fields.cardTitle /></:title>
         <:description><@fields.cardDescription /></:description>
@@ -77,34 +59,14 @@ class CreatedAtFieldSpecEdit extends Component<typeof CreatedAtFieldSpec> {
       </SpecReadmeSection>
 
       <ExamplesWithInteractive>
-        <article class='example-card'>
+        <FieldShowcaseCard>
           <CodeSnippet @code={{standardCode}} />
           <@fields.standard @format='edit' />
-        </article>
+        </FieldShowcaseCard>
       </ExamplesWithInteractive>
 
       <SpecModuleSection @model={{@model}} />
-    </article>
-    <style scoped>
-      .container {
-        --boxel-spec-background-color: #ebeaed;
-        --boxel-spec-code-ref-background-color: #e2e2e2;
-        --boxel-spec-code-ref-text-color: #646464;
-        height: 100%;
-        min-height: max-content;
-        padding: var(--boxel-sp);
-        background-color: var(--boxel-spec-background-color);
-      }
-      .example-card {
-        border: var(--boxel-border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--boxel-100);
-        padding: var(--boxel-sp-xs);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-    </style>
+    </FieldShowcase>
   </template>
 }
 

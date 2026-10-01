@@ -179,7 +179,7 @@ export class KnowledgeArticle extends CardDef {
           <div class='badges'>
             <StatePill
               @label={{if @model.isInternal 'Internal only' 'Public'}}
-              @hue={{if @model.isInternal 'amber' 'green'}}
+              @hue={{if @model.isInternal 'amber' 'teal'}}
             />
             {{#if @model.status}}
               <StatePill @label={{@model.status}} @hue='slate' />
@@ -188,7 +188,7 @@ export class KnowledgeArticle extends CardDef {
           {{#if @model.keywords.length}}
             <ul class='kw'>
               {{#each @model.keywords as |keyword|}}
-                <li>{{keyword}}</li>
+                <li><StatePill @label={{keyword}} @hue='slate' /></li>
               {{/each}}
             </ul>
           {{/if}}
@@ -203,25 +203,21 @@ export class KnowledgeArticle extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .iso-head {
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-xs);
           padding-bottom: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .trail {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
-          font-family: var(--font-heading, inherit);
           font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           letter-spacing: -0.01em;
@@ -240,11 +236,8 @@ export class KnowledgeArticle extends CardDef {
           gap: var(--boxel-sp-4xs);
         }
         .kw li {
-          padding: 0.05em 0.45em;
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: 999px;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          display: flex;
+          max-width: 100%;
         }
         /* This is the one thing on the page meant to be READ rather than
            scanned, so it gets a reading measure instead of the full width. */
@@ -276,13 +269,12 @@ export class KnowledgeArticle extends CardDef {
         .emb {
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 0.1875rem;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .emb-top {
           display: flex;
@@ -291,10 +283,10 @@ export class KnowledgeArticle extends CardDef {
           min-width: 0;
         }
         .emb-icon {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .emb-title {
           font-weight: 700;
@@ -305,12 +297,12 @@ export class KnowledgeArticle extends CardDef {
         }
         .emb-cat {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .emb-ex {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -337,10 +329,10 @@ export class KnowledgeArticle extends CardDef {
           font-weight: 500;
         }
         .atom-icon {
-          width: 13px;
-          height: 13px;
+          width: 0.8125rem;
+          height: 0.8125rem;
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .atom-title {
           overflow: hidden;
@@ -394,14 +386,13 @@ export class KnowledgeArticle extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
-          padding: 7px 9px;
+          gap: 0.125rem;
+          padding: 0.4375rem 0.5625rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --type-base: clamp(9.5px, 2.7cqi, 12px);
-          --type-title: max(11px, calc(var(--type-base) * 1.25));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
+          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
         }
         .fit > * {
           overflow: hidden;
@@ -411,7 +402,7 @@ export class KnowledgeArticle extends CardDef {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         /* fitted-card Rule 2: the anchor. Without it these cells were a title at
@@ -427,9 +418,9 @@ export class KnowledgeArticle extends CardDef {
         .fit-glyph {
           flex: none;
           align-self: center;
-          width: max(11px, 1.1em);
-          height: max(11px, 1.1em);
-          color: var(--muted-foreground, var(--boxel-450));
+          width: max(0.6875rem, 1.1em);
+          height: max(0.6875rem, 1.1em);
+          color: var(--muted-foreground);
         }
         .title {
           flex: 1;
@@ -447,10 +438,10 @@ export class KnowledgeArticle extends CardDef {
         .badge {
           flex: none;
           margin-left: auto;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--type-base);
           font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -458,25 +449,25 @@ export class KnowledgeArticle extends CardDef {
           grid-area: body;
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .aud {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
+          gap: 0.25rem;
           min-width: 0;
           white-space: nowrap;
         }
         .meta-glyph {
           flex: none;
-          width: max(9px, 0.95em);
-          height: max(9px, 0.95em);
+          width: max(0.5625rem, 0.95em);
+          height: max(0.5625rem, 0.95em);
         }
 
         .line {
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -485,7 +476,7 @@ export class KnowledgeArticle extends CardDef {
           display: none;
           margin: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -494,7 +485,7 @@ export class KnowledgeArticle extends CardDef {
           display: none;
           margin-top: auto;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -503,10 +494,10 @@ export class KnowledgeArticle extends CardDef {
           grid-area: meta;
           display: none;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 50px) {
           .fit {
@@ -547,14 +538,14 @@ export class KnowledgeArticle extends CardDef {
         }
         @container fitted-card (width > 300px) and (height <= 130px) {
           .fit {
-            grid-template-columns: minmax(200px, 1fr) auto;
+            grid-template-columns: minmax(12.5rem, 1fr) auto;
             grid-template-areas: 'head meta' 'body meta';
             align-items: center;
           }
           .r-meta {
             flex-direction: column;
             align-items: flex-end;
-            gap: 1px;
+            gap: 0.0625rem;
           }
         }
         @container fitted-card (width <= 170px) {

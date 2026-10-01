@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/progress-bar",
+        "name": "ProgressBar"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ProgressBar } from '@cardstack/pretui/components/progress-bar';\n```\n",
+      "cardTitle": "ProgressBar",
+      "cardDescription": "Quantitative progress, pct or stepped",
+      "containedExamples": [],
+      "componentName": "ProgressBar",
+      "icon": "chart-no-axes-column-increasing",
+      "category": "Feedback",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "feedback",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "ProgressBar",
+      "version": "0.4.0",
+      "brief": "Quantitative progress, pct or stepped · shadcn Progress, wa-progress-bar",
+      "refs": "shadcn Progress · wa-progress-bar · boxel-ui ProgressBar",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "ProgressBar",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/progress-bar.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/progress-bar.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

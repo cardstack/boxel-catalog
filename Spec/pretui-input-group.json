@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/input-group",
+        "name": "InputGroup"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { InputGroup } from '@cardstack/pretui/components/input-group';\n```\n",
+      "cardTitle": "InputGroup",
+      "cardDescription": "Input with accessory slots + contextual Button/Select/Text",
+      "containedExamples": [],
+      "componentName": "InputGroup",
+      "icon": "group",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "boxel-ui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "boxel-ui",
+      "lineage": "BoxelInputGroup",
+      "version": "0.4.0",
+      "brief": "Input with accessory slots + contextual Button/Select/Text · BoxelInputGroup",
+      "refs": null,
+      "buildsOn": "boxel-ui InputGroup",
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "InputGroup",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/input-group.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/input-group.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

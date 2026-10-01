@@ -11,6 +11,7 @@ import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search
 
 import { Offer } from '../offer';
 import { OfferLetterTemplate } from '../offer-letter-template';
+import { formatMoney } from '../utils';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const here: string = import.meta.url;
@@ -107,8 +108,7 @@ export class GenerateOfferLetterCommand extends Command<
       candidateName: offer.candidate.name ?? undefined,
       jobTitle:
         offer.offeredTitle || offer.position?.jobTitle || offer.positionTitle,
-      salary:
-        offer.salary != null ? `$${offer.salary.toLocaleString()}` : undefined,
+      salary: formatMoney(offer.salary),
       startDate: formatDateLong(offer.startDate),
       expiresDate: formatDateLong(offer.expirationDate),
       companyName: input.companyName?.trim() || 'the Company',

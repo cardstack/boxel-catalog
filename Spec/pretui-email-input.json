@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/email-input",
+        "name": "EmailInput"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { EmailInput } from '@cardstack/pretui/components/email-input';\n```\n",
+      "cardTitle": "EmailInput",
+      "cardDescription": "Wrapped boxel-ui EmailInput with format validation",
+      "containedExamples": [],
+      "componentName": "EmailInput",
+      "icon": "mail",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "boxel-ui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "boxel-ui",
+      "lineage": "EmailInput",
+      "version": "0.4.0",
+      "brief": "Wrapped boxel-ui EmailInput with format validation · runtime reuse",
+      "refs": null,
+      "buildsOn": "boxel-ui EmailInput",
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "EmailInput",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/email-input.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/email-input.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

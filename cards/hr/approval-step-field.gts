@@ -10,14 +10,10 @@ import DateTimeField from 'https://cardstack.com/base/datetime';
 import NumberField from 'https://cardstack.com/base/number';
 import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
-import { htmlSafe } from '@ember/template';
 
 import { Employee } from './employee';
-import {
-  stateColor,
-  stateColorOf,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { hueOf } from './hr-ui';
 
 export const APPROVAL_DECISIONS = ['pending', 'approved', 'rejected'];
 
@@ -31,12 +27,12 @@ export const APPROVAL_DECISION_LABELS: Record<string, string> = {
 // wherever a chain step renders (ApprovalStepField's own embedded format,
 // used by ApprovalChainField's stepper). Amber for the undecided middle
 // state, green for a forward decision, red for a stop — the same polarity
-// CANDIDATE_STAGE_COLORS and RECOMMENDATION_COLORS already use for
-// hired/rejected and hire/no-hire.
-export const APPROVAL_DECISION_COLORS: Record<string, StateColor> = {
-  pending: stateColor('amber'),
-  approved: stateColor('green'),
-  rejected: stateColor('red'),
+// CANDIDATE_STAGE_HUES and RECOMMENDATION_HUES use for hired/rejected and
+// hire/no-hire.
+export const APPROVAL_DECISION_HUES: Record<string, Hue> = {
+  pending: 'amber',
+  approved: 'green',
+  rejected: 'red',
 };
 
 export const ApprovalDecisionField = enumField(StringField, {
@@ -140,9 +136,15 @@ export class ApprovalStepField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get pillStyle() {
-      let c = stateColorOf(APPROVAL_DECISION_COLORS, this.args.model?.decision);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get decisionHue() {
+      return hueOf(APPROVAL_DECISION_HUES, this.args.model?.decision);
+    }
+
+    get decisionLabel() {
+      let decision = this.args.model?.decision;
+      return decision
+        ? (APPROVAL_DECISION_LABELS[decision] ?? decision)
+        : undefined;
     }
 
     <template>
@@ -153,9 +155,12 @@ export class ApprovalStepField extends FieldDef {
           {{else}}
             <span class='row-empty'>No approver set</span>
           {{/if}}
-          <span class='pill' style={{this.pillStyle}}>
-            <span class='pill-dot'></span>{{@model.decision}}
-          </span>
+          <StatePill
+            class='decision'
+            @label={{this.decisionLabel}}
+            @hue={{this.decisionHue}}
+            @dot={{true}}
+          />
         </div>
         {{#if @model.decidedAt}}
           <span class='row-date'>decided <@fields.decidedAt /></span>
@@ -168,7 +173,7 @@ export class ApprovalStepField extends FieldDef {
         .approval-step-row {
           display: flex;
           flex-direction: column;
-          gap: 0.2rem;
+          gap: var(--boxel-sp-2xs);
         }
         .row-top {
           display: flex;
@@ -178,34 +183,19 @@ export class ApprovalStepField extends FieldDef {
         }
         .row-empty {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .row-date {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .row-comment {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.5;
         }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-          flex: none;
-        }
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
+        .decision {
           flex: none;
         }
       </style>

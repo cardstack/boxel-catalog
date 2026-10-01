@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/theme-frame",
+        "name": "ThemeFrame"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ThemeFrame } from '@cardstack/pretui/components/theme-frame';\n```\n",
+      "cardTitle": "ThemeFrame",
+      "cardDescription": "Per-page theme island: Auto/Light/Dark switch upper-left",
+      "containedExamples": [],
+      "componentName": "ThemeFrame",
+      "icon": "paintbrush-vertical",
+      "category": "Authoring Tools",
+      "tier": "Runtime",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "freestyle",
+      "stage": "live",
+      "source": "pretui",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Per-page theme island: Auto/Light/Dark switch upper-left · pure boxel-ui machinery",
+      "refs": null,
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "ThemeFrame",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/theme-frame.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/theme-frame.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

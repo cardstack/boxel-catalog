@@ -9,7 +9,10 @@ import {
 import DateTimeField from 'https://cardstack.com/base/datetime';
 import NumberField from 'https://cardstack.com/base/number';
 
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+
 import { ApprovalStepField } from './approval-step-field';
+import { AttentionPill } from './hr-ui';
 import { daysBetween } from './utils';
 
 // A pending step this many days or more past its predecessor's decision (or
@@ -104,9 +107,11 @@ export class ApprovalChainField extends FieldDef {
       return daysBetween(since);
     };
 
-    isBottleneckIndex = (index: number): boolean => {
+    bottleneckLabel = (index: number): string | undefined => {
       let days = this.pendingDaysFor(index);
-      return days != null && days >= BOTTLENECK_THRESHOLD_DAYS;
+      return days != null && days >= BOTTLENECK_THRESHOLD_DAYS
+        ? `pending ${days} days · bottleneck`
+        : undefined;
     };
 
     <template>
@@ -126,18 +131,21 @@ export class ApprovalChainField extends FieldDef {
                     @format='embedded'
                     @displayContainer={{false}}
                   />
-                  {{#if (this.isBottleneckIndex index)}}
-                    <span class='pill bottleneck'>pending
-                      {{this.pendingDaysFor index}}
-                      days · bottleneck</span>
-                  {{/if}}
+                  <AttentionPill
+                    class='bottleneck'
+                    @label={{this.bottleneckLabel index}}
+                  />
                 </div>
               </li>
             {{/each}}
           </ol>
         {{else}}
-          <p class='empty'>No approval chain configured — this record proceeds
-            without a sign-off gate.</p>
+          <EmptyState
+            class='empty'
+            @texture={{false}}
+            @title='No approval chain configured'
+            @message='This record proceeds without a sign-off gate.'
+          />
         {{/if}}
       </div>
       <style scoped>
@@ -167,7 +175,7 @@ export class ApprovalChainField extends FieldDef {
           display: flex;
           gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-xs) 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .step:last-child {
           border-bottom: 0;
@@ -181,12 +189,12 @@ export class ApprovalChainField extends FieldDef {
           place-items: center;
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .step.current .step-index {
-          background: var(--primary, var(--boxel-highlight));
-          color: var(--primary-foreground, var(--boxel-light));
+          background-color: var(--primary);
+          color: var(--primary-foreground);
         }
         .step-body {
           flex: 1;
@@ -195,33 +203,13 @@ export class ApprovalChainField extends FieldDef {
           flex-direction: column;
           gap: 0.3rem;
         }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
+        .bottleneck {
           align-self: flex-start;
         }
-        .pill.bottleneck {
-          background: color-mix(
-            in oklch,
-            var(--boxel-warning) 12%,
-            var(--card, var(--boxel-light))
-          );
-          color: color-mix(
-            in oklch,
-            var(--boxel-warning) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
-        }
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          --space-9: var(--boxel-sp);
+          --space-6: var(--boxel-sp);
+          --text-heading: var(--boxel-font-size);
         }
       </style>
     </template>

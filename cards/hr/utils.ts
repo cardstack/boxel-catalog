@@ -25,16 +25,33 @@ export function liveCount(links: unknown[] | null | undefined): number {
   return (links ?? []).filter(Boolean).length;
 }
 
+/**
+ * The one money format the HR cards use: en-US dollars, no cents on whole
+ * amounts and at most two otherwise. `formatMoney` formats with it and the
+ * `Money` template component hands the same options to Pret UI
+ * `FormatNumber`, so a figure reads identically in a string and in a
+ * template, whatever the browser's locale.
+ */
+export const MONEY_LOCALE = 'en-US';
+export const MONEY_OPTIONS = {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+} as const;
+
+const MONEY_FORMAT = new Intl.NumberFormat(MONEY_LOCALE, MONEY_OPTIONS);
+
 /** `$1,234` or, with `compact`, `$1k` — compact only kicks in at 1,000 so an hourly rate never collapses to `$0k`. */
 export function formatMoney(
   n?: number | null,
   opts?: { compact?: boolean },
 ): string | undefined {
-  if (n == null) {
+  if (n == null || !Number.isFinite(n)) {
     return undefined;
   }
   if (opts?.compact && Math.abs(n) >= 1000) {
     return `$${Math.round(n / 1000)}k`;
   }
-  return `$${n.toLocaleString()}`;
+  return MONEY_FORMAT.format(n);
 }

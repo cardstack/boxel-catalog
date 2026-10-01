@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/select",
+        "name": "Select"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Select } from '@cardstack/pretui/components/select';\n```\n",
+      "cardTitle": "Select",
+      "cardDescription": "Popup-anchored single select with keyboard + typeahead",
+      "containedExamples": [],
+      "componentName": "Select",
+      "icon": "selector",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "BoxelSelect",
+      "version": "0.4.0",
+      "brief": "Popup-anchored single select with keyboard + typeahead · shadcn Select, wa-select",
+      "refs": "shadcn Select · wa-select · radix Select · boxel-ui BoxelSelect",
+      "buildsOn": "boxel-ui BoxelSelect (ember-power-select)",
+      "featured": true,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Select",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/select.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/select.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

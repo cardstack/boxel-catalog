@@ -1,6 +1,10 @@
 import GlimmerComponent from '@glimmer/component';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { nameProgress } from './service-desk-ui';
 
 import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
 import ClockIcon from '@cardstack/boxel-icons/clock';
@@ -30,6 +34,37 @@ const STATE_ICON = {
   breached: CircleXIcon,
   paused: PauseIcon,
 };
+
+interface TimerChipSignature {
+  Args: {
+    chipStyle: ReturnType<typeof htmlSafe>;
+    icon: (typeof STATE_ICON)[keyof typeof STATE_ICON];
+    label?: string;
+  };
+}
+
+/** The badge's Pret UI `Chip`: the state icon and its name. */
+const TimerChip: TemplateOnlyComponent<TimerChipSignature> = <template>
+  <Chip @dot={{false}} style={{@chipStyle}}>
+    <@icon class='sla-icon' role='presentation' />
+    {{! The state name is carried in text as well as colour — a red chip
+        and an amber chip are the same chip to a colourblind agent. }}
+    <span class='sla-text'>{{@label}}</span>
+  </Chip>
+  <style scoped>
+    .sla-icon {
+      width: 0.75rem;
+      height: 0.75rem;
+      flex: none;
+    }
+    .sla-text {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</template>;
 
 interface Signature {
   Args: {
@@ -85,39 +120,49 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
     return stateColor(TIMER_HUE[this.state] as Hue);
   }
 
+  /**
+   * Pret UI `Chip` knobs. The dilute states use StatePill's checked recipe
+   * (14% fill, 62% foreground ink). A breach is the one state allowed to
+   * shout: a solid fill rather than the 14% dilution every other state uses,
+   * because "you have already missed this" should not look like a sibling of
+   * "you have time". Chip's hairline ring is turned off on both branches: a
+   * fill and an outline in the same hue is the same information drawn twice,
+   * around the most-read element on the page. Chip writes its own `@hue` as
+   * an inline style that this `style` replaces, so the hue travels here too.
+   */
   get chipStyle() {
-    let { bg, fg } = this.colors;
-    // A breach is the one state allowed to shout: solid fill rather than the
-    // 14% dilution every other state uses, because "you have already missed
-    // this" should not look like a sibling of "you have time".
-    // No border on either branch: a fill and an outline in the same hue is the
-    // same information drawn twice, around the most-read element on the page.
+    // Chip's own rules and this module's scoped rules tie on specificity, so
+    // every property that differs from Chip's (weight, alignment) rides in
+    // the inline style rather than a class.
+    let shared =
+      'align-self: flex-start; font-weight: 600; box-shadow: none; max-width: 100%';
     if (this.state === 'breached') {
+      // The solid fill is `--destructive-ink` under `--background` text: the
+      // ink moves away from the page colour in both schemes, where the
+      // `--destructive` fill sits too close to it for 4.5:1 in light mode.
       return htmlSafe(
-        `background: ${this.colors.ring}; color: var(--background, var(--boxel-light));`,
+        `--pretui-chip-hue: var(--destructive-ink); ${shared}; --pretui-chip-mix: 100%; color: var(--background)`,
       );
     }
-    return htmlSafe(`background: ${bg}; color: ${fg};`);
+    return htmlSafe(
+      `--pretui-chip-hue: ${this.colors.ring}; ${shared}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%`,
+    );
   }
 
   /**
-   * Hand-rolled, and this one stays hand-rolled — recorded as an upstream gap
-   * rather than a shortcut.
-   *
-   * boxel-ui's `ProgressBar` is the right component and it takes the fill
-   * colour through `--boxel-progress-bar-fill-color`, but its track is a
-   * hard-coded `height: 1.5em` with no variable in front of it. This bar sits
-   * under a chip inside a slab cell and has to be a 4px hairline; getting
-   * there through the library would mean overriding `.progress-bar-container`
-   * from outside, which is reaching into another component's markup — the
-   * fork this app is not allowed to make.
-   *
-   * The fix belongs upstream: a `--boxel-progress-bar-height` knob. Until then
-   * this stays local and declared, not quietly duplicated.
+   * Pret UI `ProgressBar` draws its fill in `--primary`; this bar takes the
+   * timer state's hue instead, through a local variable a scoped rule reads.
    */
   get barStyle() {
-    let pct = this.snapshot.percentRemaining ?? 0;
-    return htmlSafe(`width: ${pct}%; background: ${this.colors.ring};`);
+    return htmlSafe(`--sla-fill: ${this.colors.ring}`);
+  }
+
+  get percentRemaining(): number {
+    return this.snapshot.percentRemaining ?? 0;
+  }
+
+  get barLabel(): string {
+    return `${this.args.caption ?? 'SLA'} time remaining`;
   }
 
   get hasBar() {
@@ -125,89 +170,82 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
   }
 
   <template>
-    <span class='sla' data-sla-state={{this.state}} ...attributes>
-      {{#if @caption}}
-        <span class='sla-caption'>{{@caption}}</span>
-      {{/if}}
-      <span class='sla-chip' style={{this.chipStyle}}>
-        <this.icon class='sla-icon' role='presentation' />
-        {{! The state name is carried in text as well as colour — a red chip
-            and an amber chip are the same chip to a colourblind agent. }}
-        <span class='sla-text'>{{this.snapshot.shortLabel}}</span>
-      </span>
-      {{#if this.hasBar}}
-        <span
+    {{! A div when the bar is drawn, because ProgressBar's root is a div and
+        a span cannot hold one; a span otherwise, so the badge stays phrasing
+        content inside atoms and table cells. }}
+    {{#if this.hasBar}}
+      <div class='sla' data-sla-state={{this.state}} ...attributes>
+        {{#if @caption}}
+          <span class='sla-caption'>{{@caption}}</span>
+        {{/if}}
+        <TimerChip
+          @chipStyle={{this.chipStyle}}
+          @icon={{this.icon}}
+          @label={{this.snapshot.shortLabel}}
+        />
+        <ProgressBar
           class='sla-bar'
-          role='progressbar'
-          aria-valuenow={{this.snapshot.percentRemaining}}
-          aria-valuemin='0'
-          aria-valuemax='100'
-          aria-label='{{if @caption @caption "SLA"}} time remaining'
-        >
-          <span class='sla-bar-fill' style={{this.barStyle}}></span>
-        </span>
-      {{/if}}
-      {{#if (eq this.state 'breached')}}
-        <span class='sr-only'>SLA breached</span>
-      {{/if}}
-    </span>
+          style={{this.barStyle}}
+          @value={{this.percentRemaining}}
+          @max={{100}}
+          @steps={{false}}
+          {{nameProgress this.barLabel}}
+        />
+        {{#if (eq this.state 'breached')}}
+          <span class='sr-only'>SLA breached</span>
+        {{/if}}
+      </div>
+    {{else}}
+      <span class='sla' data-sla-state={{this.state}} ...attributes>
+        {{#if @caption}}
+          <span class='sla-caption'>{{@caption}}</span>
+        {{/if}}
+        <TimerChip
+          @chipStyle={{this.chipStyle}}
+          @icon={{this.icon}}
+          @label={{this.snapshot.shortLabel}}
+        />
+        {{#if (eq this.state 'breached')}}
+          <span class='sr-only'>SLA breached</span>
+        {{/if}}
+      </span>
+    {{/if}}
 
     <style scoped>
       .sla {
         display: inline-flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0.125rem;
         min-width: 0;
-        font-family: var(--font-sans, var(--boxel-font-family));
       }
       .sla-caption {
-        font-size: 0.625rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
-      .sla-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        align-self: flex-start;
-        max-width: 100%;
-        padding: 0.12em 0.42em;
-        border-radius: 4px;
-        font-size: 0.6875rem;
-        font-weight: 600;
-        line-height: 1.4;
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-      }
-      .sla-icon {
-        width: 12px;
-        height: 12px;
-        flex: none;
-      }
-      .sla-text {
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
+      /* Pret UI ProgressBar. Its fill is the timer state's hue, and its track
+         keeps the muted ground it had. Only the width animates, and only in
+         the live view — the tick is once a second, so the ease runs that long
+         and linear; a bar that eases on every re-render looks like the number
+         changed when it did not. */
       .sla-bar {
-        display: block;
-        height: 4px;
         width: 100%;
-        border-radius: 2px;
-        overflow: hidden;
-        background: var(--muted, var(--boxel-200));
+        --pretui-dur-morph: 0.9s;
+        --pretui-ease-morph: linear;
       }
-      .sla-bar-fill {
-        display: block;
-        height: 100%;
-        /* Only the width animates, and only in the live view — a bar that
-           eases on every re-render looks like the number changed when it did
-           not. */
-        transition: width 0.9s linear;
+      .sla-bar :deep(.pretui-progress) {
+        background-color: var(--muted);
+      }
+      .sla-bar :deep(.pretui-progress-fill) {
+        background-color: var(--sla-fill);
       }
       @media (prefers-reduced-motion: reduce) {
-        .sla-bar-fill {
-          transition: none;
+        .sla-bar {
+          --pretui-dur-morph: 0s;
         }
       }
       .sr-only {

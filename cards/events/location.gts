@@ -11,6 +11,15 @@ import WebsiteField from 'https://cardstack.com/base/website';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import GeoPointField from '@cardstack/catalog/fields/geo-point/geo-point';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 /**
  * A named physical place — somewhere things happen, ship to, or are held at.
@@ -63,13 +72,13 @@ export class Location extends CardDef {
           gap: 0.25rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .pin {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex-shrink: 0;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .loc-name {
           overflow: hidden;
@@ -87,73 +96,61 @@ export class Location extends CardDef {
     }
     <template>
       <div class='loc'>
-        <span class='pin-disc'><MapPinIcon class='pin' /></span>
-        <div class='info'>
-          <div class='name'>{{if @model.name @model.name 'Unnamed'}}</div>
-          {{#if this.place}}
-            <div class='meta'>{{this.place}}</div>
-          {{else}}
-            <div class='meta muted-em'>No address on file</div>
-          {{/if}}
-        </div>
-        {{#if @model.kind}}
-          <span class='kind'>{{@model.kind}}</span>
-        {{/if}}
+        <EntityDisplay
+          class='loc-entity'
+          @title={{if @model.name @model.name 'Unnamed'}}
+          @center={{true}}
+        >
+          <:visual>
+            <span class='pin-disc'><MapPinIcon class='pin' /></span>
+          </:visual>
+          <:meta>
+            {{#if this.place}}
+              {{this.place}}
+            {{else}}
+              <span class='muted-em'>No address on file</span>
+            {{/if}}
+          </:meta>
+        </EntityDisplay>
+        <StatePill class='loc-kind' @label={{@model.kind}} />
       </div>
       <style scoped>
+        /* The kind sits outside EntityDisplay, pinned to the row's right
+           edge: EntityDisplay's tag wraps under a long name. */
         .loc {
           display: flex;
           align-items: center;
           gap: 0.625rem;
           padding: 0.625rem 0.875rem;
         }
+        /* Pret UI EntityDisplay: the pin disc in its visual slot, title and
+           meta at the row's sizes. */
+        .loc-entity {
+          --pretui-entity-visual-size: 2rem;
+          --space-3: 0.625rem;
+          --text-ui-md: 0.875rem;
+          --text-ui-sm: 0.75rem;
+          flex: 1;
+        }
+        .loc-kind {
+          flex-shrink: 0;
+        }
+        /* EntityDisplay sizes the slot's svg to 100%, so the disc's padding
+           is what keeps the pin at half the disc. */
         .pin-disc {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 32px;
-          height: 32px;
+          box-sizing: border-box;
+          width: 100%;
+          height: 100%;
+          padding: 25%;
           border-radius: 50%;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          flex-shrink: 0;
-        }
-        .pin {
-          width: 16px;
-          height: 16px;
-        }
-        .info {
-          min-width: 0;
-          flex: 1;
-        }
-        .name {
-          font-weight: 600;
-          font-size: 0.875rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
-          font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          background-color: var(--muted);
+          color: var(--muted-foreground);
         }
         .muted-em {
           font-style: italic;
-        }
-        .kind {
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-          flex-shrink: 0;
         }
       </style>
     </template>
@@ -196,22 +193,22 @@ export class Location extends CardDef {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .pin-disc {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 28px;
-          height: 28px;
+          width: 1.75rem;
+          height: 1.75rem;
           border-radius: 50%;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .pin {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
         }
         .info {
           display: flex;
@@ -228,7 +225,7 @@ export class Location extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -258,8 +255,8 @@ export class Location extends CardDef {
             padding: 0.875rem;
           }
           .pin-disc {
-            width: 36px;
-            height: 36px;
+            width: 2.25rem;
+            height: 2.25rem;
           }
           .line-kind {
             display: block;
@@ -283,8 +280,12 @@ export class Location extends CardDef {
         this.args.model?.geo?.lat != null && this.args.model?.geo?.lon != null
       );
     }
-    get hasReach() {
-      return Boolean(this.args.model?.phone || this.args.model?.website);
+    get reach(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.phone) rows.push({ key: 'Phone', value: 'phone' });
+      if (m?.website) rows.push({ key: 'Website', value: 'website' });
+      return rows;
     }
     <template>
       <article class='loc-page'>
@@ -294,9 +295,7 @@ export class Location extends CardDef {
             <p class='doc-kind'>Location</p>
             <h1>{{this.name}}</h1>
           </div>
-          {{#if @model.kind}}
-            <span class='kind'>{{@model.kind}}</span>
-          {{/if}}
+          <StatePill @label={{@model.kind}} />
         </header>
         {{#if this.hasGeo}}
           <div class='map'><@fields.geo @format='embedded' /></div>
@@ -306,22 +305,25 @@ export class Location extends CardDef {
           {{#if @model.address.fullAddress}}
             <div class='addr'><@fields.address @format='embedded' /></div>
           {{else}}
-            <p class='empty'>No address on file</p>
+            <EmptyState
+              class='empty'
+              @title='No address on file'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
-        {{#if this.hasReach}}
+        {{#if this.reach.length}}
           <section class='panel'>
             <h2>Reach</h2>
-            <dl>
-              {{#if @model.phone}}
-                <dt>Phone</dt>
-                <dd><@fields.phone /></dd>
-              {{/if}}
-              {{#if @model.website}}
-                <dt>Website</dt>
-                <dd><@fields.website /></dd>
-              {{/if}}
-            </dl>
+            <KeyValue class='details' @items={{this.reach}}>
+              <:value as |row|>
+                {{#if (eq row.value 'phone')}}
+                  <@fields.phone />
+                {{else}}
+                  <@fields.website />
+                {{/if}}
+              </:value>
+            </KeyValue>
           </section>
         {{/if}}
         {{#if @model.description}}
@@ -344,23 +346,23 @@ export class Location extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .pin-disc {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 56px;
-          height: 56px;
+          width: 3.5rem;
+          height: 3.5rem;
           border-radius: 50%;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background-color: var(--muted);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .pin {
-          width: 26px;
-          height: 26px;
+          width: 1.625rem;
+          height: 1.625rem;
         }
         .lh-id {
           flex: 1;
@@ -368,68 +370,53 @@ export class Location extends CardDef {
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
-        }
-        .kind {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
         }
         .map {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           overflow: hidden;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
           overflow-wrap: anywhere;
         }
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well inside the panel. */
         .empty {
-          margin: 0;
-          font-size: 0.875rem;
-          font-style: italic;
-          color: var(--muted-foreground, #6b7280);
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
         .about {
           font-size: 0.875rem;
