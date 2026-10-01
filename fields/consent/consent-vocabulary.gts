@@ -190,17 +190,26 @@ export class ConsentGrantField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
+    // A "granted" grant that is no longer in force says why in its text, so
+    // the pill does not rely on colour alone to tell it from a live grant.
     get statusLabel(): string | undefined {
-      return labelFor(CONSENT_STATUS_OPTIONS, this.args.model?.status);
+      let model = this.args.model;
+      if (model?.status === 'granted' && !model.isActive) {
+        return labelFor(
+          CONSENT_STATUS_OPTIONS,
+          model.withdrawnAt ? 'withdrawn' : 'expired',
+        );
+      }
+      return labelFor(CONSENT_STATUS_OPTIONS, model?.status);
     }
 
     get basisLabel(): string | undefined {
       return labelFor(LAWFUL_BASIS_OPTIONS, this.args.model?.lawfulBasis);
     }
 
-    // The pill names the stored status; its hue follows whether the grant is
-    // actually in force, so a "granted" grant past its expiry or withdrawal
-    // date does not read as live.
+    // The hue follows whether the grant is actually in force, like the label
+    // above, so a "granted" grant past its expiry or withdrawal date does not
+    // read as live.
     get statusHue(): Hue {
       let status = this.args.model?.status;
       if (status === 'granted') {
