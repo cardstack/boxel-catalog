@@ -34,12 +34,23 @@ export type Hue = keyof typeof HUE;
 /** Every hue name, in the table's order: the one list to iterate instead of re-typing the names. */
 export const STATE_HUES = Object.keys(HUE) as Hue[];
 
+// The solid (emphatic) fill, where it differs from the hue. The theme's
+// success and destructive fills measure about 3:1 against their own paired
+// foregrounds, so green and red fill with the theme's darker `--*-ink` instead
+// and take card text: 9.2:1 / 6.1:1 for green and 9.6:1 / 5.7:1 for red
+// (light / dark).
+const EMPHATIC_FILL: Partial<Record<Hue, string>> = {
+  green: 'var(--success-ink)',
+  red: 'var(--destructive-ink)',
+};
+
 // Text for the solid (emphatic) fill. A status hue takes its fill's paired
-// foreground from the theme; orange is mostly warning, so it takes warning's.
-// Slate is the page's own muted ink, so it keeps the inverse of the page.
+// foreground from the theme: amber's pair measures 15.1:1, and orange, mostly
+// warning, takes warning's (10.6:1). Slate is the page's own muted ink, so it
+// keeps the inverse of the page (6.9:1 light, 7.6:1 dark).
 const EMPHATIC_FOREGROUND: Partial<Record<Hue, string>> = {
-  green: 'var(--success-foreground)',
-  red: 'var(--destructive-foreground)',
+  green: 'var(--card)',
+  red: 'var(--card)',
   amber: 'var(--warning-foreground)',
   orange: 'var(--warning-foreground)',
   // Fixed category fills take fixed ink, so the pair holds under any theme:
@@ -126,10 +137,11 @@ export class StatePill extends GlimmerComponent<Signature> {
       );
     }
     if (this.args.emphatic) {
-      let ink =
-        EMPHATIC_FOREGROUND[this.args.hue ?? 'slate'] ?? 'var(--background)';
+      let name = this.args.hue ?? 'slate';
+      let fill = EMPHATIC_FILL[name] ?? this.hue;
+      let ink = EMPHATIC_FOREGROUND[name] ?? 'var(--background)';
       return htmlSafe(
-        `${hue}; --pretui-chip-mix: 100%; color: ${ink}; box-shadow: none; max-width: 100%`,
+        `--pretui-chip-hue: ${fill}; --pretui-chip-mix: 100%; color: ${ink}; box-shadow: none; max-width: 100%`,
       );
     }
     return htmlSafe(
