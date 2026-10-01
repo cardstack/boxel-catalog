@@ -1,7 +1,13 @@
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-import { on } from '@ember/modifier';
 import { guidFor } from '@ember/object/internals';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Input } from '@cardstack/pretui/components/input';
+import {
+  RadioGroup,
+  type RadioOption,
+} from '@cardstack/pretui/components/radio-group';
+import { ALERT_STYLE } from '../real-estate-ui';
 
 // Schedule Picker — "publish now" or "publish later". Render-only: the
 // consumer holds the chosen ISO string (or undefined for now) and gets it
@@ -23,27 +29,34 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
   @tracked timePart = this.args.value ? toTimePart(this.args.value) : '';
   @tracked pastWarning = false;
 
-  // One radio group per picker, so two open publish panels do not share it.
-  groupName = `schedule-mode-${guidFor(this)}`;
+  // Pret UI RadioGroup names its own radios per instance, so two open
+  // publish panels never share a group; the id labels this picker's group.
+  legendId = `schedule-legend-${guidFor(this)}`;
 
-  chooseNow = () => {
-    this.mode = 'now';
-    this.args.onChange(undefined);
+  modeOptions: RadioOption[] = [
+    { value: 'now', label: 'Publish now' },
+    { value: 'later', label: 'Schedule for later' },
+  ];
+
+  chooseMode = (value: string) => {
+    if (value === 'now') {
+      this.mode = 'now';
+      this.pastWarning = false;
+      this.args.onChange(undefined);
+    } else {
+      this.mode = 'later';
+      this.emit();
+    }
   };
 
-  chooseLater = () => {
+  onDate = (value: string) => {
+    this.datePart = value;
     this.mode = 'later';
     this.emit();
   };
 
-  onDate = (event: Event) => {
-    this.datePart = (event.target as HTMLInputElement).value;
-    this.mode = 'later';
-    this.emit();
-  };
-
-  onTime = (event: Event) => {
-    this.timePart = (event.target as HTMLInputElement).value;
+  onTime = (value: string) => {
+    this.timePart = value;
     this.mode = 'later';
     this.emit();
   };
@@ -70,96 +83,68 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
 
   <template>
     <fieldset class='schedule' ...attributes>
-      <legend class='legend'>Schedule for later?</legend>
-      <label class='option'>
-        <input
-          type='radio'
-          name={{this.groupName}}
-          checked={{this.isNow}}
-          {{on 'change' this.chooseNow}}
+      <legend class='legend' id={{this.legendId}}>When to publish</legend>
+      <RadioGroup
+        class='modes'
+        @options={{this.modeOptions}}
+        @value={{this.mode}}
+        @onValueChange={{this.chooseMode}}
+        aria-labelledby={{this.legendId}}
+      />
+      {{! picking a date or a time selects "Schedule for later" }}
+      <div class='parts'>
+        <Input
+          @type='date'
+          @value={{this.datePart}}
+          @onInput={{this.onDate}}
+          aria-label='Publish date'
         />
-        <span>Publish now</span>
-      </label>
-      <label class='option'>
-        <input
-          type='radio'
-          name={{this.groupName}}
-          checked={{this.isLater}}
-          {{on 'change' this.chooseLater}}
+        <Input
+          @type='time'
+          @value={{this.timePart}}
+          @onInput={{this.onTime}}
+          aria-label='Publish time'
         />
-        <span>Schedule:</span>
-        <input
-          type='date'
-          class='part'
-          value={{this.datePart}}
-          {{on 'change' this.onDate}}
-        />
-        <input
-          type='time'
-          class='part'
-          value={{this.timePart}}
-          {{on 'change' this.onTime}}
-        />
-      </label>
+      </div>
       {{#if this.pastWarning}}
-        <p class='past' role='status'>That time has passed — choose a future
-          moment, or publish now.</p>
+        <Alert @tone='warning' style={{ALERT_STYLE.attention}}>That time has
+          passed — choose a future moment, or publish now.</Alert>
       {{/if}}
     </fieldset>
     <style scoped>
       .schedule {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm) var(--boxel-sp-sm);
         display: grid;
         gap: var(--boxel-sp-xs);
         margin: 0;
         font-size: 0.8125rem;
-        color: var(--foreground, var(--boxel-dark));
-      }
-      .past {
-        margin: 0;
-        color: var(--destructive, var(--boxel-danger));
+        color: var(--foreground);
       }
       .legend {
-        font-size: 0.6875rem;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         padding: 0 var(--boxel-sp-5xs);
       }
-      .option {
-        display: flex;
-        align-items: center;
+      .modes {
+        --text-ui-md: 0.8125rem;
+      }
+      /* the date and time sit under "Schedule for later", in line with its
+         label */
+      .parts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: var(--boxel-sp-xs);
-        cursor: pointer;
-        flex-wrap: wrap;
-      }
-      .option input[type='radio'] {
-        accent-color: var(--primary, var(--boxel-dark));
-      }
-      .option input:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: 1px;
-      }
-      .part {
-        font: inherit;
-        font-size: 0.8125rem;
-        padding: 2px 6px;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: calc(var(--radius, var(--boxel-border-radius)) / 1.5);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        padding-inline-start: calc(0.9375rem + 0.5rem);
       }
     </style>
   </template>
-
-  get isNow() {
-    return this.mode === 'now';
-  }
-  get isLater() {
-    return this.mode === 'later';
-  }
 }
 
 function toDatePart(iso: string): string {

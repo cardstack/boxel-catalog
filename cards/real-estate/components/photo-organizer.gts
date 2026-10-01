@@ -3,6 +3,9 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/pretui/components/button';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { Input } from '@cardstack/pretui/components/input';
 
 // Photo Organizer — the edit-side companion to PropertyGallery. Reordering,
 // hero selection, and captions all live here so the three stay coupled: a
@@ -168,44 +171,47 @@ export class PhotoOrganizer extends GlimmerComponent<Signature> {
                 <span class='hero-badge'>HERO</span>
               {{/if}}
             </div>
-            <input
-              class='caption-input'
-              type='text'
-              placeholder='Caption'
-              value={{this.captionAt index}}
+            {{! the caption commits on change, as a typed caption is one edit;
+                the listener rides ...attributes onto Input's own <input> }}
+            <Input
+              @value={{this.captionAt index}}
+              @placeholder='Caption'
               aria-label='Caption for photo {{index}}'
               {{on 'change' (fn this.setCaption index)}}
             />
             <div class='controls'>
-              <button
-                type='button'
-                class='ctl'
-                aria-label='Move photo {{index}} left'
-                disabled={{eq index 0}}
+              <IconButton
+                @label='Move photo {{index}} left'
+                @size='s'
+                @disabled={{eq index 0}}
                 {{on 'click' (fn this.moveLeft index)}}
-              >‹</button>
-              <button
-                type='button'
-                class='ctl hero-ctl {{if (eq index this.heroIndex) "is-hero"}}'
-                disabled={{eq index this.heroIndex}}
-                {{on 'click' (fn this.setHero index)}}
-              >
-                {{if (eq index this.heroIndex) 'Hero' 'Set as hero'}}
-              </button>
-              <button
-                type='button'
-                class='ctl'
-                aria-label='Move photo {{index}} right'
-                disabled={{eq index this.lastIndex}}
+              >‹</IconButton>
+              {{#if (eq index this.heroIndex)}}
+                <span class='hero-mark'>Hero</span>
+              {{else}}
+                <Button
+                  class='hero-ctl'
+                  @variant='secondary'
+                  @size='s'
+                  {{on 'click' (fn this.setHero index)}}
+                >Set as hero</Button>
+              {{/if}}
+              <IconButton
+                @label='Move photo {{index}} right'
+                @size='s'
+                @disabled={{eq index this.lastIndex}}
                 {{on 'click' (fn this.moveRight index)}}
-              >›</button>
+              >›</IconButton>
             </div>
           </li>
         {{/each}}
       </ul>
     {{/if}}
     <style scoped>
+      /* Pret UI Input sets its placeholder in --ink-3, which the theme does
+         not declare; the muted ink keeps "Caption" readable */
       .organizer {
+        --ink-3: var(--muted-foreground);
         display: flex;
         gap: var(--boxel-sp-xs);
         overflow-x: auto;
@@ -215,13 +221,14 @@ export class PhotoOrganizer extends GlimmerComponent<Signature> {
       }
       .item {
         flex: 0 0 auto;
-        width: 9.5rem;
+        width: 10rem;
         display: grid;
         gap: var(--boxel-sp-5xs);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp-5xs);
-        background: var(--card, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
         cursor: grab;
       }
       .item.dragging {
@@ -229,10 +236,10 @@ export class PhotoOrganizer extends GlimmerComponent<Signature> {
       }
       .thumb-wrap {
         position: relative;
-        border-radius: calc(var(--radius, var(--boxel-border-radius)) / 1.5);
+        border-radius: calc(var(--radius) / 1.5);
         overflow: hidden;
         aspect-ratio: 16 / 10;
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
       }
       .thumb-wrap img {
         width: 100%;
@@ -242,55 +249,30 @@ export class PhotoOrganizer extends GlimmerComponent<Signature> {
       }
       .hero-badge {
         position: absolute;
-        top: 4px;
-        left: 4px;
+        top: 0.25rem;
+        left: 0.25rem;
         font-size: 0.5625rem;
         font-weight: 700;
         letter-spacing: 0.08em;
-        padding: 1px 6px;
+        padding: 0.0625rem 0.375rem;
         border-radius: 999px;
-        background: var(--foreground, var(--boxel-dark));
-        color: var(--background, var(--boxel-light));
-      }
-      .caption-input {
-        font: inherit;
-        font-size: 0.75rem;
-        padding: 2px 6px;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: calc(var(--radius, var(--boxel-border-radius)) / 2);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        min-width: 0;
+        background-color: var(--foreground);
+        color: var(--background);
       }
       .controls {
         display: flex;
-        gap: var(--boxel-sp-6xs, 2px);
+        gap: 0.125rem;
         align-items: center;
       }
-      .ctl {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: calc(var(--radius, var(--boxel-border-radius)) / 2);
-        background: none;
-        font: inherit;
-        font-size: 0.6875rem;
-        padding: 1px 6px;
-        cursor: pointer;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .ctl:hover:not(:disabled) {
-        color: var(--foreground, var(--boxel-dark));
-      }
-      .ctl:disabled {
-        opacity: 0.45;
-        cursor: default;
-      }
-      .hero-ctl {
+      .hero-ctl,
+      .hero-mark {
         flex: 1;
       }
-      .hero-ctl.is-hero {
-        color: var(--foreground, var(--boxel-dark));
+      .hero-mark {
+        text-align: center;
+        font-size: 0.6875rem;
         font-weight: 600;
-        opacity: 1;
+        color: var(--card-foreground);
       }
     </style>
   </template>

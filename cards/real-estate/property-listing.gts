@@ -19,6 +19,9 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { eq, or } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { Stat } from '@cardstack/pretui/components/stat';
 
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -27,6 +30,7 @@ import { PhotoOrganizer } from './components/photo-organizer';
 import { PublishChecklist } from './components/publish-checklist';
 import { ChannelSelector } from './components/channel-selector';
 import { SchedulePicker } from './components/schedule-picker';
+import { ALERT_STYLE } from './real-estate-ui';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
 import { daysBetween } from '@cardstack/catalog/cards/hr/utils';
@@ -255,11 +259,8 @@ class PropertyListingEdit extends Component<typeof PropertyListing> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        /* this family asserts no brand hue in its other formats — the
-           accent is the theme's foreground */
-        --pl-ink: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
       }
       .edit-body {
         display: grid;
@@ -280,29 +281,34 @@ class PropertyListingEdit extends Component<typeof PropertyListing> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
-      /* the section the rail points at mirrors the rail's active state */
+      /* the section the rail points at mirrors the rail's active state; this
+         family asserts no brand hue in its other formats, so the accent is
+         the theme's foreground */
       .sect.focused {
-        outline-color: var(--pl-ink);
-        box-shadow: 0 0 0 4px
-          color-mix(in oklch, var(--pl-ink) 12%, transparent);
+        outline-color: var(--foreground);
+        box-shadow: 0 0 0 0.25rem
+          color-mix(in oklch, var(--foreground) 12%, transparent);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -324,7 +330,7 @@ class PropertyListingEdit extends Component<typeof PropertyListing> {
       .row.four {
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
-      @container edit (width < 640px) {
+      @container edit (width < 40rem) {
         .row,
         .row.four {
           grid-template-columns: 1fr;
@@ -355,6 +361,7 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
   @tracked selectedChannels: string[] = ['mls', 'zillow', 'realtor', 'redfin'];
   @tracked scheduleIso: string | undefined;
   @tracked publishOutcome: string | undefined;
+  @tracked publishScheduled = false;
 
   get statusHue() {
     return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
@@ -395,6 +402,41 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
     return h?.amount != null
       ? `${formatMoney(h.amount, h.currency?.code)}/mo HOA`
       : undefined;
+  }
+  /** The fact tiles, each a Pret UI `Stat`; optional facts appear only when set. */
+  get facts(): { label: string; value: string }[] {
+    let m = this.args.model;
+    let facts = [
+      { label: 'beds', value: m?.bedrooms != null ? String(m.bedrooms) : '' },
+      {
+        label: 'baths',
+        value: m?.bathrooms != null ? String(m.bathrooms) : '',
+      },
+      { label: 'area', value: this.areaLabel },
+    ];
+    if (m?.yearBuilt) {
+      facts.push({ label: 'built', value: String(m.yearBuilt) });
+    }
+    if (m?.lotSizeSqft) {
+      facts.push({
+        label: 'lot sqft',
+        value: m.lotSizeSqft.toLocaleString('en-US'),
+      });
+    }
+    if (this.pricePerSqftLabel) {
+      facts.push({ label: 'per sqft', value: this.pricePerSqftLabel });
+    }
+    if (this.hoaLabel) {
+      facts.push({ label: 'hoa', value: this.hoaLabel });
+    }
+    return facts;
+  }
+  /** A scheduled publish reads as information; a live one as a success. */
+  get outcomeTone() {
+    return this.publishScheduled ? 'info' : 'success';
+  }
+  get outcomeStyle() {
+    return this.publishScheduled ? ALERT_STYLE.info : ALERT_STYLE.success;
   }
   get publishedLabel() {
     let at = this.args.model?.publishedAt;
@@ -456,6 +498,7 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
           : undefined,
       } as any);
       this.publishOutcome = result?.message;
+      this.publishScheduled = Boolean(result?.scheduled);
       if (!result?.scheduled) {
         this.publishPanelOpen = false;
       }
@@ -495,48 +538,20 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
       />
 
       <div class='facts'>
-        <div class='fact'>
-          <span class='fact-value'>{{@model.bedrooms}}</span>
-          <span class='fact-label'>beds</span>
-        </div>
-        <div class='fact'>
-          <span class='fact-value'>{{@model.bathrooms}}</span>
-          <span class='fact-label'>baths</span>
-        </div>
-        <div class='fact'>
-          <span class='fact-value'>{{this.areaLabel}}</span>
-          <span class='fact-label'>area</span>
-        </div>
-        {{#if @model.yearBuilt}}
-          <div class='fact'>
-            <span class='fact-value'>{{@model.yearBuilt}}</span>
-            <span class='fact-label'>built</span>
-          </div>
-        {{/if}}
-        {{#if @model.lotSizeSqft}}
-          <div class='fact'>
-            <span class='fact-value'>{{@model.lotSizeSqft}}</span>
-            <span class='fact-label'>lot sqft</span>
-          </div>
-        {{/if}}
-        {{#if this.pricePerSqftLabel}}
-          <div class='fact'>
-            <span class='fact-value'>{{this.pricePerSqftLabel}}</span>
-            <span class='fact-label'>per sqft</span>
-          </div>
-        {{/if}}
-        {{#if this.hoaLabel}}
-          <div class='fact'>
-            <span class='fact-value'>{{this.hoaLabel}}</span>
-            <span class='fact-label'>hoa</span>
-          </div>
-        {{/if}}
+        {{#each this.facts as |fact|}}
+          <Stat
+            class='fact'
+            @label={{fact.label}}
+            @value={{fact.value}}
+            @roll={{false}}
+          />
+        {{/each}}
       </div>
 
       {{#if @model.features.length}}
         <ul class='feature-pills'>
           {{#each @model.features as |feature|}}
-            <li class='feature-pill'>{{feature}}</li>
+            <li><StatePill @label={{feature}} @hue='slate' /></li>
           {{/each}}
         </ul>
       {{/if}}
@@ -559,19 +574,22 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
           publish canPublish flips false and the panel unmounts, but the
           agent still needs to read what just happened }}
       {{#if this.publishOutcome}}
-        <p class='publish-outcome'>✓ {{this.publishOutcome}}</p>
+        <Alert
+          @tone={{this.outcomeTone}}
+          style={{this.outcomeStyle}}
+        >{{this.publishOutcome}}</Alert>
       {{/if}}
 
       {{#if this.canPublish}}
         <section class='publish-panel'>
           <div class='publish-row'>
-            <button
-              type='button'
-              class='publish-btn {{if this.publishPanelOpen "quiet"}}'
+            <Button
+              @variant={{if this.publishPanelOpen 'secondary' 'primary'}}
+              @size='l'
               {{on 'click' this.togglePanel}}
             >
               {{if this.publishPanelOpen 'Close' 'Publish Listing'}}
-            </button>
+            </Button>
           </div>
           {{#if this.publishPanelOpen}}
             <div class='publish-body'>
@@ -589,16 +607,19 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
               <div class='publish-col'>
                 <h2>Pre-publish checklist</h2>
                 <PublishChecklist @model={{@model}} />
-                <button
-                  type='button'
-                  class='publish-btn go'
-                  disabled={{this.publishing}}
+                <Button
+                  class='publish-go'
+                  @size='l'
+                  @busy={{this.publishing}}
                   {{on 'click' this.publish}}
                 >
                   {{if this.publishing 'Publishing…' '🚀 Publish'}}
-                </button>
+                </Button>
                 {{#if this.publishProblem}}
-                  <span class='publish-problem'>{{this.publishProblem}}</span>
+                  <Alert
+                    @tone='danger'
+                    style={{ALERT_STYLE.danger}}
+                  >{{this.publishProblem}}</Alert>
                 {{/if}}
               </div>
             </div>
@@ -621,9 +642,8 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
       .listing {
         container-type: inline-size;
         padding: var(--boxel-sp-lg);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, inherit);
+        background-color: var(--background);
+        color: var(--foreground);
         display: grid;
         gap: var(--boxel-sp);
         max-width: 60rem;
@@ -640,11 +660,10 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
         font-size: 0.75rem;
         letter-spacing: 0.06em;
         text-transform: capitalize;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       h1 {
         margin: var(--boxel-sp-5xs) 0 0;
-        font-family: var(--font-heading, inherit);
         font-size: 1.75rem;
         line-height: 1.2;
       }
@@ -664,43 +683,35 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
         gap: var(--boxel-sp);
         flex-wrap: wrap;
       }
+      /* Pret UI Stat in a hairline tile; the figure keeps the tile's size */
       .fact {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        --text-stat: 1.125rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
+        justify-items: center;
         min-width: 5rem;
       }
-      .fact-value {
-        font-size: 1.125rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .fact-label {
-        font-size: 0.6875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
       .panel {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
-        background: var(--card, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       h2 {
         margin: 0 0 var(--boxel-sp-xs);
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .dom {
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .feature-pills {
@@ -710,17 +721,6 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
         margin: 0;
         padding: 0;
         list-style: none;
-      }
-      .feature-pill {
-        font-size: 0.75rem;
-        padding: 2px 10px;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: 999px;
-        background: color-mix(
-          in oklch,
-          var(--muted, var(--boxel-100)) 60%,
-          transparent
-        );
       }
       .publish-panel {
         display: grid;
@@ -735,10 +735,11 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
-        background: var(--card, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .publish-col {
         display: grid;
@@ -746,52 +747,25 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
         align-content: start;
         min-width: 0;
       }
-      .publish-btn.quiet {
-        background: transparent;
-        color: var(--foreground, var(--boxel-dark));
-        border: 1px solid var(--border, var(--boxel-200));
-      }
-      .publish-btn.go {
+      .publish-go {
         justify-self: start;
       }
-      .publish-outcome {
-        font-size: 0.8125rem;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      @container (max-width: 560px) {
+      @container (max-width: 35rem) {
         .publish-body {
           grid-template-columns: 1fr;
         }
-      }
-      .publish-btn {
-        border: 0;
-        border-radius: var(--radius, var(--boxel-border-radius));
-        padding: var(--boxel-sp-xs) var(--boxel-sp-lg);
-        font: inherit;
-        font-weight: 600;
-        cursor: pointer;
-        background: var(--primary, var(--boxel-dark));
-        color: var(--primary-foreground, var(--boxel-light));
-      }
-      .publish-btn:disabled {
-        opacity: 0.6;
-        cursor: default;
-      }
-      .publish-problem {
-        font-size: 0.8125rem;
-        color: var(--destructive, var(--boxel-danger));
       }
       .foot {
         display: flex;
         justify-content: space-between;
         gap: var(--boxel-sp);
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
-        border-top: 1px solid var(--border, var(--boxel-200));
+        color: var(--muted-foreground);
+        border-top: 1px solid var(--border);
         padding-top: var(--boxel-sp-xs);
         font-variant-numeric: tabular-nums;
       }
-      @container (max-width: 560px) {
+      @container (max-width: 35rem) {
         .head {
           flex-direction: column;
         }
@@ -935,15 +909,15 @@ export class PropertyListing extends CardDef {
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
         .thumb {
-          width: 56px;
-          height: 40px;
+          width: 3.5rem;
+          height: 2.5rem;
           object-fit: cover;
-          border-radius: calc(var(--radius, var(--boxel-border-radius)) / 1.5);
+          border-radius: calc(var(--radius) / 1.5);
         }
         .who {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .name {
@@ -955,7 +929,7 @@ export class PropertyListing extends CardDef {
         }
         .meta {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .amount {
           font-weight: 700;
@@ -1031,7 +1005,7 @@ export class PropertyListing extends CardDef {
         }
         .fit-sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-price {
           font-weight: 700;

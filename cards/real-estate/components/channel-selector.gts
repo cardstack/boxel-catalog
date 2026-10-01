@@ -1,6 +1,8 @@
 import GlimmerComponent from '@glimmer/component';
-import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { guidFor } from '@ember/object/internals';
+import { Checkbox } from '@cardstack/pretui/components/checkbox';
+import { describeControl } from '../real-estate-ui';
 
 // The channel vocabulary lives HERE (a leaf module) so both this selector
 // and the publish command can import it without a module cycle — the
@@ -48,27 +50,40 @@ interface ChannelRow {
   required: boolean;
   tag: string;
   subline?: string;
+  tagId: string;
+  sublineId: string;
+  /** the ids of the tag and subline text that describe the row's checkbox */
+  describedBy: string;
 }
 
 export class ChannelSelector extends GlimmerComponent<Signature> {
   channels = PUBLISH_CHANNELS;
+  idPrefix = guidFor(this);
 
   get rows(): ChannelRow[] {
-    return this.channels.map((channel) => ({
-      channel,
-      label: PUBLISH_CHANNEL_LABELS[channel] ?? channel,
-      required: channel === 'mls',
-      tag:
-        channel === 'mls'
-          ? 'Required'
-          : AUTO_SYNCED.includes(channel)
-            ? 'Auto-synced'
-            : 'Optional',
-      subline:
+    return this.channels.map((channel) => {
+      let tagId = `${this.idPrefix}-${channel}-tag`;
+      let sublineId = `${this.idPrefix}-${channel}-subline`;
+      let subline =
         channel === 'mls'
           ? 'Triggers automatic syndication to major portals'
-          : undefined,
-    }));
+          : undefined;
+      return {
+        channel,
+        label: PUBLISH_CHANNEL_LABELS[channel] ?? channel,
+        required: channel === 'mls',
+        tag:
+          channel === 'mls'
+            ? 'Required'
+            : AUTO_SYNCED.includes(channel)
+              ? 'Auto-synced'
+              : 'Optional',
+        subline,
+        tagId,
+        sublineId,
+        describedBy: subline ? `${tagId} ${sublineId}` : tagId,
+      };
+    });
   }
 
   isSelected = (channel: string) =>
@@ -84,24 +99,24 @@ export class ChannelSelector extends GlimmerComponent<Signature> {
   <template>
     <ul class='channels' ...attributes>
       {{#each this.rows as |row|}}
-        <li class='channel'>
-          <label class='channel-row {{if row.required "required"}}'>
-            <input
-              type='checkbox'
-              checked={{this.isSelected row.channel}}
-              disabled={{row.required}}
-              {{on 'change' (fn this.toggle row.channel)}}
-            />
-            <span class='channel-body'>
-              <span class='channel-line'>
-                <span class='channel-label'>{{row.label}}</span>
-                <span class='channel-tag'>{{row.tag}}</span>
-              </span>
-              {{#if row.subline}}
-                <span class='channel-subline'>{{row.subline}}</span>
-              {{/if}}
-            </span>
-          </label>
+        <li
+          class='channel {{if row.required "required"}}'
+          {{describeControl row.describedBy}}
+        >
+          <Checkbox
+            class='channel-check'
+            @label={{row.label}}
+            @checked={{this.isSelected row.channel}}
+            @disabled={{row.required}}
+            @onCheckedChange={{fn this.toggle row.channel}}
+          />
+          <span class='channel-tag' id={{row.tagId}}>{{row.tag}}</span>
+          {{#if row.subline}}
+            <span
+              class='channel-subline'
+              id={{row.sublineId}}
+            >{{row.subline}}</span>
+          {{/if}}
         </li>
       {{/each}}
     </ul>
@@ -111,60 +126,48 @@ export class ChannelSelector extends GlimmerComponent<Signature> {
         padding: 0;
         list-style: none;
         display: grid;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         overflow: hidden;
       }
-      .channel + .channel {
-        border-top: 1px solid var(--border, var(--boxel-200));
-      }
-      .channel-row {
+      /* Pret UI Checkbox carries the box and the channel name; the tag and
+         the subline sit beside it and describe the box */
+      .channel {
         display: flex;
-        align-items: flex-start;
-        gap: var(--boxel-sp-xs);
+        flex-wrap: wrap;
+        align-items: baseline;
+        column-gap: var(--boxel-sp-xs);
+        row-gap: 0.125rem;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        cursor: pointer;
         font-size: 0.8125rem;
       }
-      .channel-row.required {
-        cursor: default;
+      .channel + .channel {
+        border-top: 1px solid var(--border);
       }
-      .channel-row input {
-        margin-top: 2px;
-        accent-color: var(--primary, var(--boxel-dark));
-      }
-      .channel-row input:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: 1px;
-      }
-      .channel-body {
-        display: grid;
-        gap: 2px;
-        min-width: 0;
-      }
-      .channel-line {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .channel-label {
+      .channel-check {
+        --text-ui-md: 0.8125rem;
         font-weight: 500;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
+      }
+      .required .channel-check {
+        cursor: default;
       }
       .channel-tag {
         font-size: 0.6875rem;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .required .channel-tag {
-        color: var(--primary, var(--boxel-dark));
+        color: var(--primary-ink);
         font-weight: 600;
       }
+      /* the subline takes its own line, under the channel name */
       .channel-subline {
+        flex-basis: 100%;
+        padding-inline-start: calc(0.9375rem + var(--boxel-sp-xs));
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
     </style>
   </template>

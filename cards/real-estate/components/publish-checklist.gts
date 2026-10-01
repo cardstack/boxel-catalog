@@ -36,6 +36,13 @@ const GLYPH: Record<ChecklistRow['state'], string> = {
   warn: '!',
 };
 
+// What the glyph says to a screen reader, which hears no colour.
+const STATE_NAME: Record<ChecklistRow['state'], string> = {
+  pass: 'Done',
+  fail: 'Required',
+  warn: 'Recommended',
+};
+
 export class PublishChecklist extends GlimmerComponent<Signature> {
   get rows(): ChecklistRow[] {
     let m = this.args.model;
@@ -88,14 +95,17 @@ export class PublishChecklist extends GlimmerComponent<Signature> {
   }
 
   glyphOf = (state: ChecklistRow['state']) => GLYPH[state];
+  stateNameOf = (state: ChecklistRow['state']) => STATE_NAME[state];
 
   <template>
     <ul class='checklist' ...attributes>
       {{#each this.rows as |row|}}
         <li class='row {{row.state}}'>
-          <span class='glyph' aria-hidden='true'>{{this.glyphOf
-              row.state
-            }}</span>
+          <span
+            class='glyph'
+            role='img'
+            aria-label={{this.stateNameOf row.state}}
+          >{{this.glyphOf row.state}}</span>
           <span class='label'>{{row.label}}</span>
           {{#if row.hint}}
             <span class='hint'>{{row.hint}}</span>
@@ -104,10 +114,9 @@ export class PublishChecklist extends GlimmerComponent<Signature> {
       {{/each}}
     </ul>
     <style scoped>
+      /* pass, fail and warn are statuses: each takes its status token's ink,
+         on a tint of that ink. The --ck-*-color knobs override a state's ink. */
       .checklist {
-        --ck-pass: var(--ck-pass-color, var(--boxel-dark-green));
-        --ck-fail: var(--ck-fail-color, var(--boxel-danger));
-        --ck-warn: var(--ck-warn-color, var(--boxel-warning));
         margin: 0;
         padding: 0;
         list-style: none;
@@ -120,6 +129,15 @@ export class PublishChecklist extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp-xs);
       }
+      .row.pass {
+        --ck-ink: var(--ck-pass-color, var(--success-ink));
+      }
+      .row.fail {
+        --ck-ink: var(--ck-fail-color, var(--destructive-ink));
+      }
+      .row.warn {
+        --ck-ink: var(--ck-warn-color, var(--attention-ink));
+      }
       .glyph {
         flex: 0 0 auto;
         width: 1.25rem;
@@ -131,29 +149,19 @@ export class PublishChecklist extends GlimmerComponent<Signature> {
         font-size: 0.6875rem;
         font-weight: 700;
         line-height: 1;
-      }
-      .row.pass .glyph {
-        color: var(--ck-pass);
-        background: color-mix(in oklab, var(--ck-pass) 14%, transparent);
-      }
-      .row.fail .glyph {
-        color: var(--ck-fail);
-        background: color-mix(in oklab, var(--ck-fail) 14%, transparent);
-      }
-      .row.warn .glyph {
-        color: var(--ck-warn);
-        background: color-mix(in oklab, var(--ck-warn) 18%, transparent);
-      }
-      .row.fail .label {
-        color: var(--ck-fail);
+        color: var(--ck-ink);
+        background-color: color-mix(in oklab, var(--ck-ink) 10%, transparent);
       }
       .label {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
+      }
+      .row.fail .label {
+        color: var(--ck-ink);
       }
       .hint {
         font-size: 0.75rem;
         font-style: italic;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
     </style>
   </template>
