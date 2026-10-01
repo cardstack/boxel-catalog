@@ -173,7 +173,7 @@ const REASONS: Record<PolicyExplanation['reason'], string> = {
   'predicate-threw':
     "A grant's condition ran into an error, so the request fails.",
   'non-grantable':
-    'This operation is marked non-grantable, so no policy can allow it.',
+    "No policy can allow this operation. Either it's marked non-grantable, or it's one no policy can ever grant, such as explain.",
   'query-lane':
     "This operation is a search. It doesn't act on one card: the search returns only the cards this policy's grants on it allow.",
   'authorization-infrastructure':
@@ -564,7 +564,7 @@ function isLiveRender(): boolean {
 // card, so an issue with no wording here reads as the compiler wrote it.
 const CARD_ISSUE_MESSAGES: Partial<Record<string, string>> = {
   'policy-card-unloadable':
-    "This card couldn't be indexed this time, and the index's earlier copy of it may be out of date. It grants nothing until it's indexed again, which editing the card or reindexing the realm does.",
+    "This card couldn't be indexed this time, and the index's earlier copy of it may be out of date. It grants nothing until it's indexed again. The realm tries again on its own, and editing the card or reindexing the realm tries again right away.",
 };
 
 // Whether a realm event says the realm has finished an index pass.
