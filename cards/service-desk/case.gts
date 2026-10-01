@@ -663,6 +663,7 @@ export class Case extends CardDef {
         .fit-head .fit-ref {
           margin-inline: 0;
           flex: none;
+          font-weight: 600;
         }
         .fit-sev {
           font-family: var(--boxel-eyebrow-font-family);
