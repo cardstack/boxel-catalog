@@ -169,6 +169,8 @@ const REASONS: Record<PolicyExplanation['reason'], string> = {
   'predicate-threw':
     "A grant's condition failed while it was evaluated, so the invocation fails.",
   'non-grantable': "This operation is kept out of every policy's reach.",
+  'query-lane':
+    "This operation is a query. It runs in a search rather than on one card, and the search returns only the cards this policy's grants on it admit.",
   'authorization-infrastructure':
     "No grant writes a policy card or the realm's config card, or creates a policy card.",
   'unmatchable-target':
