@@ -15,7 +15,12 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import TargetIcon from '@cardstack/boxel-icons/target';
 import ClockIcon from '@cardstack/boxel-icons/clock';
 import SirenIcon from '@cardstack/boxel-icons/siren';
+import { guidFor } from '@ember/object/internals';
+import { Table } from '@cardstack/pretui/components/table';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 
+import { labelledBy } from './components/service-desk-ui';
 import { Schedule } from './schedule';
 import { TicketPriorityField, ticketPriorityFactor } from './ticket-taxonomy';
 import { formatMinutes, ALWAYS_ON, type BusinessSchedule } from './utils/sla';
@@ -84,10 +89,10 @@ export class PolicyConditionField extends FieldDef {
         .cond {
           display: inline-flex;
           padding: 0.1em 0.5em;
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: 999px;
-          background: var(--muted, var(--boxel-100));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--muted);
+          color: var(--foreground);
           font-size: var(--boxel-font-size-xs);
           white-space: nowrap;
         }
@@ -145,10 +150,9 @@ export class SlaTargetField extends FieldDef {
           display: inline-flex;
           gap: var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .tgt-metric {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .tgt-value {
           font-weight: 600;
@@ -255,6 +259,8 @@ export class SlaPolicy extends CardDef {
   }
 
   static isolated = class Isolated extends Component<typeof this> {
+    targetsId = `sla-targets-${guidFor(this)}`;
+
     get matrix(): MatrixRow[] {
       let model = this.args.model;
       let metrics = ['First response', 'Resolution'];
@@ -275,7 +281,7 @@ export class SlaPolicy extends CardDef {
             <p class='iso-sub'>{{@model.conditionSummary}}</p>
           </div>
           {{#if @model.isDefault}}
-            <span class='iso-flag'>Fallback policy</span>
+            <StatePill @label='Fallback policy' @hue='slate' />
           {{/if}}
         </header>
 
@@ -288,36 +294,39 @@ export class SlaPolicy extends CardDef {
               {{/each}}
             </div>
           {{else}}
-            <p class='empty'>No conditions — this policy matches every ticket.
-              Only one policy should be this permissive, and it should be the
-              fallback.</p>
+            <EmptyState
+              class='empty'
+              @title='No conditions'
+              @message='This policy matches every ticket. Only one policy should be this permissive, and it should be the fallback.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
 
         <section class='sect'>
-          <h2><TargetIcon class='sec-icon' role='presentation' />Targets</h2>
-          <div class='tablewrap'>
-            <table class='matrix'>
-              <caption class='sr-only'>Targets by priority</caption>
-              <thead>
+          <h2 id={{this.targetsId}}><TargetIcon
+              class='sec-icon'
+              role='presentation'
+            />Targets</h2>
+          <Table class='matrix' {{labelledBy this.targetsId}}>
+            <:head>
+              <tr>
+                <th scope='col'>Priority</th>
+                <th scope='col'>First response</th>
+                <th scope='col'>Resolution</th>
+              </tr>
+            </:head>
+            <:body>
+              {{#each this.matrix as |row|}}
                 <tr>
-                  <th scope='col'>Priority</th>
-                  <th scope='col'>First response</th>
-                  <th scope='col'>Resolution</th>
+                  <th scope='row'>{{row.priority}}</th>
+                  {{#each row.cells as |cell|}}
+                    <td>{{cell}}</td>
+                  {{/each}}
                 </tr>
-              </thead>
-              <tbody>
-                {{#each this.matrix as |row|}}
-                  <tr>
-                    <th scope='row'>{{row.priority}}</th>
-                    {{#each row.cells as |cell|}}
-                      <td>{{cell}}</td>
-                    {{/each}}
-                  </tr>
-                {{/each}}
-              </tbody>
-            </table>
-          </div>
+              {{/each}}
+            </:body>
+          </Table>
           <p class='note'>One target per metric, scaled by each priority's
             factor. Stating all four by hand is how a P3 ends up resolving
             faster than a P2.</p>
@@ -328,8 +337,12 @@ export class SlaPolicy extends CardDef {
           {{#if @model.businessHours}}
             <@fields.businessHours @format='embedded' />
           {{else}}
-            <p class='empty'>No schedule linked — the clock ticks around the
-              clock, including weekends and holidays.</p>
+            <EmptyState
+              class='empty'
+              @title='No schedule linked'
+              @message='The clock ticks around the clock, including weekends and holidays.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
 
@@ -346,8 +359,12 @@ export class SlaPolicy extends CardDef {
               {{/each}}
             </ol>
           {{else}}
-            <p class='empty'>Nothing happens on breach. The target is a
-              measurement, not a commitment, until something acts on it.</p>
+            <EmptyState
+              class='empty'
+              @title='Nothing happens on breach'
+              @message='The target is a measurement, not a commitment, until something acts on it.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
       </article>
@@ -361,9 +378,6 @@ export class SlaPolicy extends CardDef {
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .iso-head {
           display: flex;
@@ -371,27 +385,18 @@ export class SlaPolicy extends CardDef {
           gap: var(--boxel-sp);
           align-items: flex-start;
           padding-bottom: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .iso-head h1 {
           margin: 0;
-          font-family: var(--font-heading, inherit);
           font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           letter-spacing: -0.01em;
         }
         .iso-sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
-        }
-        .iso-flag {
-          flex: none;
-          padding: 0.1em 0.5em;
-          border-radius: 3px;
-          background: var(--muted, var(--boxel-100));
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
         }
         .sect {
           display: flex;
@@ -401,70 +406,81 @@ export class SlaPolicy extends CardDef {
         .sect h2 {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           margin: 0;
-          font-size: 0.625rem;
-          letter-spacing: 0.1em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* Rule 5: one icon per section header, quiet by design — muted colour and
            ~1em with a px floor, so it identifies the section without competing
            with it. Same size in every header, which is what makes the card
            scannable by shape on a second visit. */
         .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .chips {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
         }
-        .tablewrap {
-          overflow-x: auto;
-        }
+        /* Pret UI Table: its header band, zebra rows and hover. The matrix
+           sizes to its content and its numbers stay tabular.
+           The P1–P4 row headers are th cells, and Table's header-band rule
+           targets every th, so it would make them sticky, mono and uppercase.
+           The rules below reverse that property by property, restyle them as
+           bold body cells, and give them the body rows' zebra and hover
+           fills. They undo only the properties listed here: Table's
+           white-space, text-align and z-index still apply, and any property
+           Table later adds to its th rule lands on these cells too. */
         .matrix {
-          border-collapse: collapse;
-          font-size: var(--boxel-font-size-sm);
+          align-self: flex-start;
           font-variant-numeric: tabular-nums;
         }
-        .matrix th,
-        .matrix td {
-          border: 1px solid var(--border, var(--boxel-200));
-          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-          text-align: start;
-        }
-        .matrix thead th {
-          background: var(--muted, var(--boxel-100));
-          font-size: 0.625rem;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-        }
-        .matrix tbody th {
+        .matrix :deep(tbody th) {
+          position: static;
+          height: auto;
+          padding: 0.5rem 0.625rem;
+          font-family: inherit;
+          font-size: inherit;
           font-weight: 700;
+          letter-spacing: normal;
+          text-transform: none;
+          color: var(--foreground);
+          background-color: transparent;
+          box-shadow: inset 0 -1px 0 var(--border);
+        }
+        .matrix :deep(tbody tr:nth-child(even) th) {
+          background-color: var(--stripe);
+        }
+        .matrix :deep(tbody tr:hover th) {
+          background-color: var(--hover);
         }
         .actions {
           margin: 0;
           padding-left: 1.2rem;
           font-size: var(--boxel-font-size-sm);
         }
-        .note,
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well beside the section text. */
         .empty {
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
+        }
+        .note {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           max-width: 62ch;
           line-height: 1.6;
-        }
-        .sr-only {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          overflow: hidden;
-          clip: rect(0 0 0 0);
         }
       </style>
     </template>
@@ -481,13 +497,12 @@ export class SlaPolicy extends CardDef {
         .emb {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .emb-name {
           font-weight: 700;
@@ -495,7 +510,7 @@ export class SlaPolicy extends CardDef {
         }
         .emb-cond {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .emb-tgt {
           font-size: var(--boxel-font-size-xs);
@@ -520,7 +535,7 @@ export class SlaPolicy extends CardDef {
         }
         .atom-tgt {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -558,14 +573,13 @@ export class SlaPolicy extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
-          padding: 7px 9px;
+          gap: 0.125rem;
+          padding: 0.4375rem 0.5625rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --type-base: clamp(9.5px, 2.7cqi, 12px);
-          --type-title: max(11px, calc(var(--type-base) * 1.25));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
+          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
         }
         .fit > * {
           overflow: hidden;
@@ -575,7 +589,7 @@ export class SlaPolicy extends CardDef {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         /* fitted-card Rule 2: the anchor. Without it these cells were a title at
@@ -591,9 +605,9 @@ export class SlaPolicy extends CardDef {
         .fit-glyph {
           flex: none;
           align-self: center;
-          width: max(11px, 1.1em);
-          height: max(11px, 1.1em);
-          color: var(--muted-foreground, var(--boxel-450));
+          width: max(0.6875rem, 1.1em);
+          height: max(0.6875rem, 1.1em);
+          color: var(--muted-foreground);
         }
         .title {
           flex: 1;
@@ -611,10 +625,10 @@ export class SlaPolicy extends CardDef {
         .badge {
           flex: none;
           margin-left: auto;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--type-base);
           font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -622,12 +636,12 @@ export class SlaPolicy extends CardDef {
           grid-area: body;
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .line {
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -636,7 +650,7 @@ export class SlaPolicy extends CardDef {
           display: none;
           margin: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -645,7 +659,7 @@ export class SlaPolicy extends CardDef {
           display: none;
           margin-top: auto;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -654,10 +668,10 @@ export class SlaPolicy extends CardDef {
           grid-area: meta;
           display: none;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 50px) {
           .fit {
@@ -698,14 +712,14 @@ export class SlaPolicy extends CardDef {
         }
         @container fitted-card (width > 300px) and (height <= 130px) {
           .fit {
-            grid-template-columns: minmax(200px, 1fr) auto;
+            grid-template-columns: minmax(12.5rem, 1fr) auto;
             grid-template-areas: 'head meta' 'body meta';
             align-items: center;
           }
           .r-meta {
             flex-direction: column;
             align-items: flex-end;
-            gap: 1px;
+            gap: 0.0625rem;
           }
         }
         @container fitted-card (width <= 170px) {

@@ -7,7 +7,9 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import EmailField from 'https://cardstack.com/base/email';
 import UserIcon from '@cardstack/boxel-icons/user';
-import { Avatar } from '@cardstack/boxel-ui/components';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { avatarHue } from './utils';
 
 export class User extends CardDef {
   static displayName = 'User';
@@ -26,10 +28,9 @@ export class User extends CardDef {
     <template>
       <span class='user-atom'>
         <Avatar
-          class='ua-avatar'
-          @userId={{@model.email}}
-          @displayName={{@model.name}}
-          @isReady={{true}}
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{18}}
         />
         <span class='ua-name'>{{if @model.name @model.name 'Unassigned'}}</span>
       </span>
@@ -40,13 +41,7 @@ export class User extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
-        }
-        .ua-avatar {
-          --profile-avatar-icon-size: 18px;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          flex-shrink: 0;
+          color: var(--foreground);
         }
         .ua-name {
           overflow: hidden;
@@ -61,10 +56,9 @@ export class User extends CardDef {
     <template>
       <div class='user'>
         <Avatar
-          class='avatar'
-          @userId={{@model.email}}
-          @displayName={{@model.name}}
-          @isReady={{true}}
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{32}}
         />
         <div class='info'>
           <div class='name'>{{if @model.name @model.name 'Unnamed'}}</div>
@@ -80,12 +74,6 @@ export class User extends CardDef {
           gap: 0.625rem;
           padding: 0.625rem 0.875rem;
         }
-        .avatar {
-          --profile-avatar-icon-size: 32px;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          flex-shrink: 0;
-        }
         .info {
           min-width: 0;
         }
@@ -98,7 +86,7 @@ export class User extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -111,10 +99,16 @@ export class User extends CardDef {
     <template>
       <div class='fitted'>
         <Avatar
-          class='avatar'
-          @userId={{@model.email}}
-          @displayName={{@model.name}}
-          @isReady={{true}}
+          class='avatar-sm'
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{28}}
+        />
+        <Avatar
+          class='avatar-lg'
+          @name={{if @model.name @model.name ''}}
+          @hue={{avatarHue @model.name}}
+          @size={{40}}
         />
         <div class='info'>
           <span class='name'>{{this.name}}</span>
@@ -133,13 +127,13 @@ export class User extends CardDef {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
-        .avatar {
-          --profile-avatar-icon-size: 28px;
-          --profile-avatar-icon-border: 0;
-          font-weight: 700;
-          flex-shrink: 0;
+        /* Pret UI Avatar sizes itself from @size, so each tier mounts its own
+           and the container query shows one. The parent class keeps these
+           rules above Avatar's own display. */
+        .fitted .avatar-lg {
+          display: none;
         }
         .info {
           display: flex;
@@ -156,7 +150,7 @@ export class User extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -176,8 +170,11 @@ export class User extends CardDef {
             justify-content: center;
             padding: 0.875rem;
           }
-          .avatar {
-            --profile-avatar-icon-size: 40px;
+          .fitted .avatar-sm {
+            display: none;
+          }
+          .fitted .avatar-lg {
+            display: inline-flex;
           }
         }
       </style>
@@ -188,14 +185,14 @@ export class User extends CardDef {
     get name() {
       return this.args.model?.name?.trim() || 'Unnamed User';
     }
+    contactRows = [{ key: 'Email', value: 'email' }];
     <template>
       <article class='user-page'>
         <header class='uh'>
           <Avatar
-            class='avatar'
-            @userId={{@model.email}}
-            @displayName={{@model.name}}
-            @isReady={{true}}
+            @name={{if @model.name @model.name ''}}
+            @hue={{avatarHue @model.name}}
+            @size={{56}}
           />
           <div class='uh-id'>
             <p class='doc-kind'>{{@model.constructor.displayName}}</p>
@@ -205,10 +202,9 @@ export class User extends CardDef {
         {{#if @model.email}}
           <section class='panel'>
             <h2>Contact</h2>
-            <dl>
-              <dt>Email</dt>
-              <dd><@fields.email /></dd>
-            </dl>
+            <KeyValue class='details' @items={{this.contactRows}}>
+              <:value><@fields.email /></:value>
+            </KeyValue>
           </section>
         {{/if}}
       </article>
@@ -225,55 +221,45 @@ export class User extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
-        }
-        .avatar {
-          --profile-avatar-icon-size: 56px;
-          font-weight: 700;
-          flex-shrink: 0;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
       </style>
     </template>

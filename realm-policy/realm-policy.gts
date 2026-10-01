@@ -1,3 +1,6 @@
+import { on } from '@ember/modifier';
+import GlimmerComponent from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 import {
   CardDef,
   Component,
@@ -9,10 +12,19 @@ import {
 import CodeRefField from 'https://cardstack.com/base/code-ref';
 import {
   operation,
+  operations,
+  OperationsError,
   type OperationDeclaration,
+  type PolicyExplanation,
 } from 'https://cardstack.com/base/operations';
 import PolicyPredicateField from '@cardstack/catalog/fields/policy-predicate/policy-predicate';
 import StringField from 'https://cardstack.com/base/string';
+import {
+  BoxelInput,
+  Button,
+  FieldContainer,
+  Pill,
+} from '@cardstack/boxel-ui/components';
 import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 
 // A realm's operation policy: which callers may invoke which operations on
@@ -24,7 +36,8 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 // grant for that operation whose `where` predicate, when present, is true.
 // Rule order carries no meaning.
 //
-// These definitions only describe a policy; nothing in them evaluates one.
+// These definitions describe a policy; nothing in them evaluates one. The
+// realm does, and `explain` asks it what it decides.
 
 export class OperationGrant extends FieldDef {
   static displayName = 'Operation Grant';
@@ -144,6 +157,377 @@ export class PolicyRule extends FieldDef {
   };
 }
 
+// What each reason an explanation gives means, in the words a policy author
+// reads it in.
+const REASONS: Record<PolicyExplanation['reason'], string> = {
+  acl: "The realm's own permissions allow this, so the policy is not consulted.",
+  granted: 'A grant in this policy admits it.',
+  'no-grant':
+    "No rule governing the card's type has a grant for this operation.",
+  'predicate-false':
+    'Grants for this operation match the card, and none of their conditions holds.',
+  'predicate-threw':
+    "A grant's condition failed while it was evaluated, so the invocation fails.",
+  'non-grantable': "This operation is kept out of every policy's reach.",
+  'query-lane':
+    "This operation is a query. It runs in a search rather than on one card, and the search returns only the cards this policy's grants on it admit.",
+  'authorization-infrastructure':
+    "No grant writes a policy card or the realm's config card, or creates a policy card.",
+  'unmatchable-target':
+    'No rule can apply to this target for this operation: its index entry records an error, so its type is unknown; it is a file and the operation is not a read of its bytes; or it is module source.',
+  'not-resolved': 'The card does not carry this operation.',
+  'actor-required':
+    'A caller who presents no credentials is refused before the policy is consulted.',
+  'policy-unloadable': "The realm's policy could not be loaded.",
+};
+
+const DECISION_VARIANT: Record<
+  PolicyExplanation['decision'],
+  'primary' | 'destructive' | 'muted'
+> = {
+  allowed: 'primary',
+  denied: 'muted',
+  failed: 'destructive',
+};
+
+const OUTCOME_LABEL: Record<
+  PolicyExplanation['rules'][number]['grants'][number]['outcome'],
+  string
+> = {
+  unconditional: 'always',
+  held: 'held',
+  'did-not-hold': 'did not hold',
+  threw: 'threw',
+  'not-evaluated': 'not evaluated',
+};
+
+// Asks the realm what this policy decides for one caller, one card and one
+// operation. Nothing is invoked. Only a caller who can read both this card's
+// realm and the card's realm is answered; anyone else is told the card is not
+// there, so a caller who cannot read the card's realm learns nothing about it
+// this way.
+interface ExplainPanelSignature {
+  Args: { policy: RealmPolicy };
+}
+
+class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
+  @tracked actor = '';
+  @tracked target = '';
+  @tracked operationName = '';
+  @tracked explanation: PolicyExplanation | undefined;
+  @tracked refusal: string | undefined;
+  @tracked running = false;
+
+  get canAsk(): boolean {
+    return (
+      !this.running &&
+      this.target.trim().length > 0 &&
+      this.operationName.trim().length > 0
+    );
+  }
+
+  get cannotAsk(): boolean {
+    return !this.canAsk;
+  }
+
+  get reason(): string | undefined {
+    return this.explanation ? REASONS[this.explanation.reason] : undefined;
+  }
+
+  // What the realm's own permissions let the actor do. Write without read
+  // is a shape the realm accepts, so it is named rather than read as both.
+  get aclStanding(): string | undefined {
+    let acl = this.explanation?.acl;
+    if (!acl) {
+      return undefined;
+    }
+    if (acl.read && acl.write) {
+      return 'read and write';
+    }
+    if (acl.write) {
+      return 'write, not read';
+    }
+    return acl.read ? 'read' : 'none';
+  }
+
+  get decisionVariant() {
+    return this.explanation
+      ? DECISION_VARIANT[this.explanation.decision]
+      : 'muted';
+  }
+
+  isAdmitting = (ruleIndex: number, grantIndex: number): boolean =>
+    this.explanation?.admittedBy?.rule === ruleIndex &&
+    this.explanation?.admittedBy?.grant === grantIndex;
+
+  outcomeLabel = (
+    outcome: PolicyExplanation['rules'][number]['grants'][number]['outcome'],
+  ) => OUTCOME_LABEL[outcome];
+
+  updateActor = (value: string) => {
+    this.actor = value;
+  };
+
+  updateTarget = (value: string) => {
+    this.target = value;
+  };
+
+  updateOperation = (value: string) => {
+    this.operationName = value;
+  };
+
+  explain = async (event?: Event) => {
+    event?.preventDefault();
+    if (!this.canAsk) {
+      return;
+    }
+    this.running = true;
+    this.refusal = undefined;
+    this.explanation = undefined;
+    try {
+      this.explanation = await operations<typeof RealmPolicy>(
+        this.args.policy,
+      ).explain({
+        actor: this.actor.trim(),
+        target: this.target.trim(),
+        operation: this.operationName.trim(),
+      });
+    } catch (err) {
+      this.refusal =
+        err instanceof OperationsError
+          ? (err.detail ?? err.message)
+          : err instanceof Error
+            ? err.message
+            : String(err);
+    } finally {
+      this.running = false;
+    }
+  };
+
+  <template>
+    <form
+      class='explain'
+      data-test-realm-policy-explain-form
+      {{on 'submit' this.explain}}
+    >
+      <FieldContainer
+        @label='Actor (user id)'
+        @vertical={{true}}
+        @fieldId='explain-actor'
+      >
+        <BoxelInput
+          @id='explain-actor'
+          @value={{this.actor}}
+          @onInput={{this.updateActor}}
+          @placeholder='@teacher:example.org'
+          data-test-explain-actor
+        />
+      </FieldContainer>
+      <FieldContainer
+        @label='Card (URL)'
+        @vertical={{true}}
+        @fieldId='explain-target'
+      >
+        <BoxelInput
+          @id='explain-target'
+          @value={{this.target}}
+          @onInput={{this.updateTarget}}
+          data-test-explain-target
+        />
+      </FieldContainer>
+      <FieldContainer
+        @label='Operation'
+        @vertical={{true}}
+        @fieldId='explain-operation'
+      >
+        <BoxelInput
+          @id='explain-operation'
+          @value={{this.operationName}}
+          @onInput={{this.updateOperation}}
+          @placeholder='read'
+          data-test-explain-operation
+        />
+      </FieldContainer>
+      <Button
+        @kind='primary'
+        @size='small'
+        @loading={{this.running}}
+        @disabled={{this.cannotAsk}}
+        type='submit'
+        data-test-explain-submit
+      >
+        Explain
+      </Button>
+    </form>
+
+    {{#if this.refusal}}
+      <p class='refusal' role='alert' data-test-explain-refusal>
+        {{this.refusal}}
+      </p>
+    {{/if}}
+
+    {{#if this.explanation}}
+      <div class='explanation' data-test-explanation>
+        <header class='verdict'>
+          <Pill
+            @variant={{this.decisionVariant}}
+            data-test-explanation-decision
+          >
+            {{this.explanation.decision}}
+          </Pill>
+          <span class='reason' data-test-explanation-reason>
+            {{this.reason}}
+          </span>
+        </header>
+        <dl class='facts'>
+          <dt>Actor</dt>
+          <dd data-test-explanation-actor>
+            {{if
+              this.explanation.actor
+              this.explanation.actor
+              'no credentials'
+            }}
+          </dd>
+          <dt>Realm permissions</dt>
+          <dd data-test-explanation-acl>{{this.aclStanding}}</dd>
+          {{#if this.explanation.refusal}}
+            <dt>Refused with</dt>
+            <dd data-test-explanation-refusal>
+              {{this.explanation.refusal.status}}
+              <code>{{this.explanation.refusal.code}}</code>
+            </dd>
+          {{/if}}
+        </dl>
+        {{#if this.explanation.rules.length}}
+          <ol class='matched' data-test-explanation-rules>
+            {{#each this.explanation.rules as |rule ruleIndex|}}
+              <li class='matched-rule' data-test-explanation-rule>
+                <span class='type-name'>{{rule.targetType.name}}</span>
+                <span class='type-module'>{{rule.targetType.module}}</span>
+                {{#if rule.grants.length}}
+                  <ul class='matched-grants'>
+                    {{#each rule.grants as |grant grantIndex|}}
+                      <li
+                        class='matched-grant
+                          {{if
+                            (this.isAdmitting ruleIndex grantIndex)
+                            "admitting"
+                          }}'
+                        data-test-explanation-grant={{grant.outcome}}
+                      >
+                        {{#if grant.where}}
+                          <code
+                            class='where'
+                            data-test-explanation-grant-where
+                          >{{grant.where}}</code>
+                          <span class='tier'>reads {{grant.tier}}</span>
+                        {{/if}}
+                        <span class='outcome'>{{this.outcomeLabel
+                            grant.outcome
+                          }}</span>
+                        {{#if (this.isAdmitting ruleIndex grantIndex)}}
+                          <Pill
+                            @variant='primary'
+                            data-test-explanation-admitting
+                          >admitted</Pill>
+                        {{/if}}
+                      </li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class='empty'>No grant for this operation.</p>
+                {{/if}}
+              </li>
+            {{/each}}
+          </ol>
+        {{/if}}
+      </div>
+    {{/if}}
+    <style scoped>
+      .explain {
+        display: grid;
+        gap: var(--boxel-sp-sm);
+        justify-items: start;
+      }
+      .explain > :deep(.boxel-field) {
+        width: 100%;
+      }
+      .refusal {
+        margin: var(--boxel-sp-sm) 0 0;
+        color: var(--destructive, var(--boxel-danger));
+      }
+      .explanation {
+        margin-top: var(--boxel-sp);
+        display: grid;
+        gap: var(--boxel-sp-sm);
+      }
+      .verdict {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-xs);
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: var(--boxel-sp-xxs) var(--boxel-sp);
+        margin: 0;
+      }
+      .facts dt {
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .facts dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+      .matched,
+      .matched-grants {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: var(--boxel-sp-xs);
+      }
+      .matched-grants {
+        padding-left: var(--boxel-sp);
+      }
+      .matched-rule {
+        padding: var(--boxel-sp-sm);
+        border: 1px solid var(--border, var(--boxel-border-color));
+        border-radius: var(--boxel-border-radius);
+      }
+      .matched-grant {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-xs);
+      }
+      .matched-grant.admitting {
+        font-weight: 600;
+      }
+      .type-name {
+        font-weight: 600;
+        margin-right: var(--boxel-sp-xs);
+      }
+      .type-module,
+      .where {
+        font-family: var(--boxel-monospace-font-family, monospace);
+        font-size: var(--boxel-font-size-xs);
+        overflow-wrap: anywhere;
+      }
+      .tier,
+      .outcome,
+      .empty {
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .empty {
+        margin: 0;
+      }
+    </style>
+  </template>
+}
+
 export class RealmPolicy extends CardDef {
   static displayName = 'Realm Policy';
   static icon = ShieldCheckIcon;
@@ -183,7 +567,28 @@ export class RealmPolicy extends CardDef {
     nonGrantable: true,
   } satisfies OperationDeclaration;
 
+  // What this policy decides for one caller, one card and one operation, as
+  // the realm that holds the card decides it, without invoking anything. The
+  // realm answers only for a card whose realm names this policy, and only to a
+  // caller who can read both realms. No policy may grant it, since what it
+  // answers is what a refusal withholds.
+  @operation static explain = {
+    base: 'explain',
+    params: {
+      actor: StringField,
+      target: StringField,
+      operation: StringField,
+    },
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
+
   static isolated = class Isolated extends Component<typeof RealmPolicy> {
+    // `@model` is typed with every field optional, for a card still loading,
+    // and an explain is asked of the loaded card.
+    get policy(): RealmPolicy {
+      return this.args.model as RealmPolicy;
+    }
+
     <template>
       <article class='realm-policy' data-test-realm-policy-isolated>
         <header class='header'>
@@ -203,6 +608,15 @@ export class RealmPolicy extends CardDef {
               This policy has no rules, so it grants nothing.
             </p>
           {{/if}}
+        </section>
+        <section class='section' data-test-realm-policy-explain>
+          <h2 class='section-title'>Explain a decision</h2>
+          <p class='hint'>
+            What this policy decides for one caller, one card and one operation.
+            Nothing is invoked. You can ask only about a card in a realm
+            governed by this policy, and only if you can read both realms.
+          </p>
+          <ExplainPanel @policy={{this.policy}} />
         </section>
       </article>
       <style scoped>
@@ -243,6 +657,10 @@ export class RealmPolicy extends CardDef {
         }
         .empty {
           margin: 0;
+          color: var(--muted-foreground, var(--boxel-450));
+        }
+        .hint {
+          margin: 0 0 var(--boxel-sp-sm);
           color: var(--muted-foreground, var(--boxel-450));
         }
       </style>

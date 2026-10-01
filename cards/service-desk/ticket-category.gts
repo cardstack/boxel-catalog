@@ -11,6 +11,15 @@ import FolderIcon from '@cardstack/boxel-icons/folder';
 import { Queue } from './queue';
 import { TicketPriorityField } from './ticket-taxonomy';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+
+// The two routing defaults as Pret UI KeyValue rows. `value` names which
+// field the isolated view's value block renders for the row.
+const ROUTING_FACTS = [
+  { key: 'New tickets start at', value: 'priority' },
+  { key: 'and land in', value: 'queue' },
+];
 
 /**
  * What kind of problem this is, and what that implies.
@@ -68,28 +77,23 @@ export class TicketCategory extends CardDef {
           <p class='trail'>{{@model.path}}</p>
           <h1>{{@model.title}}</h1>
         </header>
-        <dl class='facts'>
-          <div>
-            <dt>New tickets start at</dt>
-            <dd>
+        {{! Pret UI KeyValue; both values are field renders, so they come
+            through its value block. }}
+        <KeyValue class='facts' @items={{ROUTING_FACTS}}>
+          <:value as |row|>
+            {{#if (eq row.value 'priority')}}
               {{#if @model.defaultPriority}}
                 <@fields.defaultPriority @format='embedded' />
               {{else}}
                 <span class='none'>No default — the agent picks</span>
               {{/if}}
-            </dd>
-          </div>
-          <div>
-            <dt>and land in</dt>
-            <dd>
-              {{#if @model.defaultQueue}}
-                <@fields.defaultQueue @format='atom' />
-              {{else}}
-                <span class='none'>No default queue — they stay unrouted</span>
-              {{/if}}
-            </dd>
-          </div>
-        </dl>
+            {{else if @model.defaultQueue}}
+              <@fields.defaultQueue @format='atom' />
+            {{else}}
+              <span class='none'>No default queue — they stay unrouted</span>
+            {{/if}}
+          </:value>
+        </KeyValue>
         <p class='note'>Both are suggestions. A ticket may override either, and
           the override is deliberate: routing an agent cannot argue with is
           routing they work around by filing things in the wrong category.</p>
@@ -101,48 +105,35 @@ export class TicketCategory extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .trail {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
-          font-family: var(--font-heading, inherit);
           font-size: var(--boxel-font-size-lg);
           font-weight: 700;
         }
+        /* Pret UI KeyValue at the card's 14px text. */
         .facts {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-          gap: var(--boxel-sp);
-          margin: 0;
+          --text-ui: var(--boxel-font-size-sm);
+          --text-ui-md: var(--boxel-font-size-sm);
+          --space-6: var(--boxel-sp);
         }
-        .facts > div {
+        .facts :deep(dd) {
           min-width: 0;
-        }
-        .facts dt {
-          font-size: 0.625rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .facts dd {
-          margin: 0;
           overflow-wrap: anywhere;
         }
         .none {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .note {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           max-width: 62ch;
           line-height: 1.6;
         }
@@ -160,13 +151,12 @@ export class TicketCategory extends CardDef {
         .emb {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .emb-name {
           font-weight: 700;
@@ -174,7 +164,7 @@ export class TicketCategory extends CardDef {
         }
         .emb-path {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -213,14 +203,13 @@ export class TicketCategory extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
-          padding: 7px 9px;
+          gap: 0.125rem;
+          padding: 0.4375rem 0.5625rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --type-base: clamp(9.5px, 2.7cqi, 12px);
-          --type-title: max(11px, calc(var(--type-base) * 1.25));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
+          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
         }
         .fit > * {
           overflow: hidden;
@@ -230,7 +219,7 @@ export class TicketCategory extends CardDef {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         /* fitted-card Rule 2: the anchor. Without it these cells were a title at
@@ -246,9 +235,9 @@ export class TicketCategory extends CardDef {
         .fit-glyph {
           flex: none;
           align-self: center;
-          width: max(11px, 1.1em);
-          height: max(11px, 1.1em);
-          color: var(--muted-foreground, var(--boxel-450));
+          width: max(0.6875rem, 1.1em);
+          height: max(0.6875rem, 1.1em);
+          color: var(--muted-foreground);
         }
         .title {
           flex: 1;
@@ -266,10 +255,10 @@ export class TicketCategory extends CardDef {
         .badge {
           flex: none;
           margin-left: auto;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--type-base);
           font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -277,12 +266,12 @@ export class TicketCategory extends CardDef {
           grid-area: body;
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .line {
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -291,7 +280,7 @@ export class TicketCategory extends CardDef {
           display: none;
           margin: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -300,10 +289,10 @@ export class TicketCategory extends CardDef {
           grid-area: meta;
           display: none;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 50px) {
           .fit {
@@ -341,14 +330,14 @@ export class TicketCategory extends CardDef {
         }
         @container fitted-card (width > 300px) and (height <= 130px) {
           .fit {
-            grid-template-columns: minmax(200px, 1fr) auto;
+            grid-template-columns: minmax(12.5rem, 1fr) auto;
             grid-template-areas: 'head meta' 'body meta';
             align-items: center;
           }
           .r-meta {
             flex-direction: column;
             align-items: flex-end;
-            gap: 1px;
+            gap: 0.0625rem;
           }
         }
         @container fitted-card (width <= 170px) {

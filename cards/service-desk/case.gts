@@ -224,11 +224,6 @@ class CaseEdit extends Component<typeof Case> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        /* the case family asserts no brand hue of its own — the accent is
-           the theme's foreground */
-        --case-ink: var(--foreground, var(--boxel-dark));
       }
       .edit-body {
         display: grid;
@@ -249,8 +244,8 @@ class CaseEdit extends Component<typeof Case> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
@@ -262,16 +257,19 @@ class CaseEdit extends Component<typeof Case> {
       }
       /* the section the rail points at mirrors the rail's active state */
       .sect.focused {
-        outline-color: var(--case-ink);
-        box-shadow: 0 0 0 4px
-          color-mix(in oklch, var(--case-ink) 12%, transparent);
+        outline-color: var(--ring);
+        box-shadow: 0 0 0 0.25rem
+          color-mix(in oklch, var(--ring) 12%, transparent);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -440,9 +438,6 @@ export class Case extends CardDef {
         .case {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
           display: grid;
           gap: var(--boxel-sp);
         }
@@ -451,54 +446,59 @@ export class Case extends CardDef {
           justify-content: space-between;
           align-items: flex-start;
           gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           padding-bottom: var(--boxel-sp);
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
-          letter-spacing: 0.12em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .case-ref {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.02em;
           margin-left: var(--boxel-sp-4xs);
-          color: var(--muted-foreground, var(--boxel-450));
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-family: var(--font-heading, inherit);
           font-size: 1.5rem;
           line-height: 1.25;
         }
         .sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .head-right {
           display: flex;
           flex-direction: column;
           align-items: flex-end;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius);
           padding: var(--boxel-sp);
-          background: var(--card, transparent);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .resolved-panel {
-          border-color: var(--state-green-fg, #15803d);
+          border-color: var(--success-ink);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .body-text {
           margin: 0;
@@ -511,7 +511,7 @@ export class Case extends CardDef {
         }
         .empty {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
           font-size: 0.875rem;
         }
@@ -593,8 +593,11 @@ export class Case extends CardDef {
     get statusHue() {
       return STATUS_HUES[this.args.model?.status ?? 'open'] ?? 'blue';
     }
+    // The stripe takes the hue itself (an indicator); the severity word takes
+    // the pill's checked ink, which clears 4.5:1 on --card where the raw hue
+    // would not.
     get accentStyle() {
-      return `--fit-accent: ${this.severityColor.ring};`;
+      return `--fit-accent: ${this.severityColor.ring}; --fit-accent-ink: ${this.severityColor.fg};`;
     }
     <template>
       {{! The visual anchor is the severity STRIPE — the one thing every size
@@ -635,10 +638,9 @@ export class Case extends CardDef {
           padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-xs)
             calc(var(--boxel-sp-xs) + 0.25rem);
           overflow: hidden;
-          border-left: 0.25rem solid
-            var(--fit-accent, var(--muted, var(--boxel-200)));
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
+          border-left: 0.25rem solid var(--fit-accent);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .fit-head {
           display: flex;
@@ -648,16 +650,18 @@ export class Case extends CardDef {
           font-size: var(--boxel-font-size-xs);
         }
         .fit-ref {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-weight: 600;
           white-space: nowrap;
         }
         .fit-sev {
-          color: var(--fit-accent, var(--muted-foreground, var(--boxel-450)));
-          font-weight: 600;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.06em;
-          font-size: 0.6875rem;
+          color: var(--fit-accent-ink);
         }
         .fit-status {
           margin-left: auto;
@@ -677,7 +681,7 @@ export class Case extends CardDef {
           justify-content: space-between;
           gap: var(--boxel-sp-4xs);
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           min-width: 0;
         }
         .fit-owner,
@@ -687,7 +691,7 @@ export class Case extends CardDef {
           white-space: nowrap;
         }
         .fit-unowned {
-          color: var(--boxel-warning);
+          color: var(--attention-ink);
           font-style: italic;
         }
         /* strips: one row, the subject carries the width */
@@ -750,7 +754,7 @@ export class Case extends CardDef {
   // The form for working a case, grouped by how an investigation actually
   // runs: what is it and how bad (identity) → who reported it and who owns
   // it → what we know → how it ended. cardTitle is computed and never
-  // appears here. Four sections → the EditSectionNav rail. This family asserts no brand
-  // token in its other formats, so the accent is the theme's own foreground.
+  // appears here. Five sections → the EditSectionNav rail; the section the rail
+  // points at takes the theme's focus ring.
   static edit = CaseEdit;
 }

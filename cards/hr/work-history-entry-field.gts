@@ -7,6 +7,31 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import DateField from 'https://cardstack.com/base/date';
 import TextAreaField from 'https://cardstack.com/base/text-area';
+import GlimmerComponent from '@glimmer/component';
+import {
+  FormatDate,
+  type FormatDateSignature,
+} from '@cardstack/pretui/components/format-date';
+
+// "Jan 2020" — a resume's month-and-year precision, in en-US. No long-form
+// hover title: the stored day is not something the resume claims.
+class MonthYear extends GlimmerComponent<{
+  Args: {
+    date?: FormatDateSignature['Args']['date'];
+    placeholder?: string;
+  };
+}> {
+  <template>
+    <FormatDate
+      @date={{@date}}
+      @locale='en-US'
+      @month='short'
+      @year='numeric'
+      @hint={{false}}
+      @placeholder={{@placeholder}}
+    />
+  </template>
+}
 
 // One prior job, as reported on a resume (by a human or transcribed by the
 // Extract Resume command). Composed as `containsMany` on Candidate so a
@@ -22,17 +47,8 @@ export class WorkHistoryEntryField extends FieldDef {
   @field description = contains(TextAreaField);
 
   static embedded = class Embedded extends Component<typeof this> {
-    get rangeLabel(): string | undefined {
-      let start = this.args.model?.startDate;
-      let end = this.args.model?.endDate;
-      if (!start && !end) {
-        return undefined;
-      }
-      let fmt = (d: Date) =>
-        d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      let startLabel = start ? fmt(new Date(start)) : '—';
-      let endLabel = end ? fmt(new Date(end)) : 'Present';
-      return `${startLabel}–${endLabel}`;
+    get hasRange(): boolean {
+      return Boolean(this.args.model?.startDate || this.args.model?.endDate);
     }
 
     <template>
@@ -48,8 +64,13 @@ export class WorkHistoryEntryField extends FieldDef {
               {{@model.company}}</span>
           {{/if}}
         </div>
-        {{#if this.rangeLabel}}
-          <span class='wh-range'>{{this.rangeLabel}}</span>
+        {{#if this.hasRange}}
+          <span class='wh-range'><MonthYear
+              @date={{@model.startDate}}
+            />–<MonthYear
+              @date={{@model.endDate}}
+              @placeholder='Present'
+            /></span>
         {{/if}}
         {{#if @model.description}}
           <p class='wh-desc'>{{@model.description}}</p>
@@ -58,7 +79,7 @@ export class WorkHistoryEntryField extends FieldDef {
       <style scoped>
         .wh-row {
           padding: var(--boxel-sp-xs) 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .wh-row:last-child {
           border-bottom: 0;
@@ -75,18 +96,18 @@ export class WorkHistoryEntryField extends FieldDef {
         }
         .wh-at {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .wh-range {
           display: block;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .wh-desc {
           margin: var(--boxel-sp-4xs) 0 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.5;
           overflow: hidden;
           text-overflow: ellipsis;

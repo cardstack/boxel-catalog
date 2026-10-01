@@ -37,36 +37,32 @@ export default class FileDownloadLink extends Component<Signature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
-        background: var(--card, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--card);
+        color: var(--card-foreground);
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         text-decoration: none;
         max-width: 100%;
         transition:
           border-color 0.15s ease-out,
-          background 0.15s ease-out;
+          background-color 0.15s ease-out;
       }
       .file-download-link:hover,
       .file-download-link:focus-visible {
-        border-color: var(--primary, var(--boxel-highlight));
-        background: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 8%,
-          var(--card, var(--boxel-light))
-        );
+        border-color: var(--primary-ink);
+        background-color: color-mix(in oklch, var(--primary) 8%, var(--card));
       }
       .file-download-link:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: 0.125rem;
       }
       .fdl-icon {
         flex: none;
         width: 1rem;
         height: 1rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .fdl-name {
         overflow: hidden;
@@ -78,7 +74,7 @@ export default class FileDownloadLink extends Component<Signature> {
         width: 0.9375rem;
         height: 0.9375rem;
         margin-left: var(--boxel-sp-4xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
     </style>
   </template>

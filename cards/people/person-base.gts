@@ -9,6 +9,7 @@ import {
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 import EmailField from 'https://cardstack.com/base/email';
 import UserIcon from '@cardstack/boxel-icons/user';
+import { Avatar } from '@cardstack/pretui/components/avatar';
 
 export class PersonBase extends CardDef {
   static displayName = 'Person';
@@ -41,11 +42,18 @@ export class PersonBase extends CardDef {
   > {
     <template>
       <div class='person-row'>
-        {{#if @model.photo.resolvedUrl}}
-          <img class='person-avatar' src={{@model.photo.resolvedUrl}} alt='' />
-        {{else}}
-          <span class='person-avatar person-initials'>{{@model.initials}}</span>
-        {{/if}}
+        {{! Pret UI Avatar: the photo when there is one, falling back to the
+            initials if it fails to load. The hue is --primary-ink, so the
+            initials keep the primary identity and clear 4.5:1 on Avatar's
+            16% tint of it. Hidden from assistive tech, because the name is
+            the next thing read. }}
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue='var(--primary-ink)'
+          @size={{38}}
+          aria-hidden='true'
+        />
         <span class='person-main'>
           <span class='person-name'>{{@model.title}}</span>
           {{#if @model.email}}
@@ -59,37 +67,18 @@ export class PersonBase extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-sm);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--background);
+          color: var(--foreground);
           transition: box-shadow 0.15s ease-out;
-        }
-        .person-avatar {
-          width: 2.375rem;
-          height: 2.375rem;
-          border-radius: 50%;
-          flex: none;
-          object-fit: cover;
-        }
-        .person-initials {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-family: var(--font-serif, serif);
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1;
-          color: var(--primary-foreground, var(--boxel-light));
-          background: var(--primary, var(--boxel-highlight));
         }
         .person-main {
           flex: 1;
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .person-name {
           font-size: var(--boxel-font-size-sm);
@@ -100,7 +89,7 @@ export class PersonBase extends CardDef {
         }
         .person-sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

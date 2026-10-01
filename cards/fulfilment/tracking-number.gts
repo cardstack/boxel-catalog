@@ -5,7 +5,8 @@ import {
   contains,
   field,
 } from 'https://cardstack.com/base/card-api';
-import { CopyButton } from '@cardstack/boxel-ui/components';
+import { CopyButton } from '@cardstack/pretui/components/copy-button';
+import { Token } from '@cardstack/pretui/components/token';
 import BarcodeIcon from '@cardstack/boxel-icons/barcode';
 
 // Tracking Number (TN) — a carrier's reference for a package, plus enough
@@ -56,13 +57,13 @@ export class TrackingNumberField extends FieldDef {
 
       <style scoped>
         .tn-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.9em;
           letter-spacing: 0.02em;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .tn-empty {
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -84,16 +85,17 @@ export class TrackingNumberField extends FieldDef {
                 href={{@model.trackingUrl}}
                 target='_blank'
                 rel='noopener noreferrer'
-              >{{@model.grouped}}</a>
+              ><Token class='tn-token' @value={{@model.grouped}} /></a>
             {{else}}
-              <span class='tn-plain'>{{@model.grouped}}</span>
+              <Token class='tn-token' @value={{@model.grouped}} />
             {{/if}}
           </div>
           <CopyButton
-            @textToCopy={{@model.number}}
-            @tooltipText='Copy tracking number'
-            @ariaLabel='Copy tracking number'
-            @size='extra-small'
+            class='tn-copy'
+            @text={{@model.number}}
+            @label='Copy tracking number'
+            @variant='ghost'
+            @size='xs'
           />
         </div>
       {{else}}
@@ -104,44 +106,55 @@ export class TrackingNumberField extends FieldDef {
         .tn {
           display: flex;
           align-items: center;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
         }
         .tn-main {
           display: flex;
           align-items: baseline;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
         }
         .tn-carrier {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.7rem;
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
-        .tn-link,
-        .tn-plain {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: 0.85rem;
-          letter-spacing: 0.03em;
-          color: var(--foreground, var(--boxel-dark));
+        /* Pret UI Token: a tracking number is an id. The hue is the muted
+           ink, since the number is not an action, and the body knob lands the
+           pill at the old 0.85rem (Token draws at the knob minus 3.5px). */
+        .tn-main .tn-token {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.85rem + 3.5px);
+          margin-inline: 0;
+          min-width: 0;
+          max-width: 100%;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
         }
         .tn-link {
+          display: flex;
+          min-width: 0;
+        }
+        /* Token is an inline block, so the link's underline is drawn on it. */
+        .tn-main .tn-link .tn-token {
           text-decoration: underline;
-          text-underline-offset: 3px;
+          text-underline-offset: 0.1875rem;
           text-decoration-color: color-mix(
             in oklch,
-            var(--foreground, var(--boxel-dark)) 35%,
+            var(--foreground) 35%,
             transparent
           );
         }
+        /* The copied check reads the success ink, not the fill. */
+        .tn-copy :deep(.pretui-copy-check) {
+          color: var(--success-ink);
+        }
         .tn-empty {
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
           font-size: 0.85rem;
         }
       </style>

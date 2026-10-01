@@ -35,6 +35,11 @@ function ticketRefIn(realm: string | undefined) {
 }
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { AVATAR_HUE } from './components/service-desk-ui';
 
 export const AGENT_TIERS = ['L1', 'L2', 'L3'] as const;
 
@@ -130,26 +135,39 @@ export class SupportAgent extends PersonBase {
       return url ? [url.href] : [];
     }
 
+    get facts() {
+      let model = this.args.model;
+      return [
+        ...(model?.email ? [{ key: 'Email', value: model.email }] : []),
+        { key: 'Skills', value: model?.skillSummary ?? '' },
+      ];
+    }
+
     <template>
       <article class='iso'>
         <header class='iso-head'>
-          {{#if @model.photo.resolvedUrl}}
-            <img class='avatar' src={{@model.photo.resolvedUrl}} alt='' />
-          {{else}}
-            <span class='avatar initials'>{{@model.initials}}</span>
-          {{/if}}
+          <Avatar
+            @name={{if @model.name @model.name '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{48}}
+            aria-hidden='true'
+          />
           <div class='who'>
             <h1>{{@model.title}}</h1>
             <p class='org'>{{@model.tierLabel}}</p>
           </div>
         </header>
 
-        <dl class='facts'>
-          {{#if @model.email}}
-            <div><dt>Email</dt><dd><@fields.email /></dd></div>
-          {{/if}}
-          <div><dt>Skills</dt><dd>{{@model.skillSummary}}</dd></div>
-        </dl>
+        <KeyValue class='facts' @items={{this.facts}}>
+          <:value as |row|>
+            {{#if (eq row.key 'Email')}}
+              <@fields.email />
+            {{else}}
+              {{row.value}}
+            {{/if}}
+          </:value>
+        </KeyValue>
 
         {{#if @model.skills.length}}
           <ul class='skills'>
@@ -171,7 +189,11 @@ export class SupportAgent extends PersonBase {
               @format='fitted'
             />
           {{else}}
-            <p class='empty'>Nothing assigned right now.</p>
+            <EmptyState
+              class='empty'
+              @title='Nothing assigned right now'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
       </article>
@@ -183,61 +205,34 @@ export class SupportAgent extends PersonBase {
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .iso-head {
           display: flex;
           align-items: center;
           gap: var(--boxel-sp);
           padding-bottom: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-        }
-        .avatar {
-          width: 3rem;
-          height: 3rem;
-          border-radius: 50%;
-          flex: none;
-          object-fit: cover;
-        }
-        .initials {
-          display: grid;
-          place-items: center;
-          font-weight: 700;
-          background: var(--primary, var(--boxel-highlight));
-          color: var(--primary-foreground, var(--boxel-light));
+          border-bottom: 1px solid var(--border);
         }
         .who h1 {
           margin: 0;
-          font-family: var(--font-heading, inherit);
           font-size: var(--boxel-font-size-lg);
           font-weight: 700;
         }
         .org {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
         }
+        /* Pret UI KeyValue at the card's 14px text, values in bold. A long
+           corporate email wraps inside its column instead of widening it. */
         .facts {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-          gap: var(--boxel-sp-sm);
-          margin: 0;
+          --text-ui: var(--boxel-font-size-xs);
+          --text-ui-md: var(--boxel-font-size-sm);
+          --space-6: var(--boxel-sp);
         }
-        .facts > div {
+        .facts :deep(dd) {
           min-width: 0;
-        }
-        .facts dt {
-          font-size: 0.625rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .facts dd {
-          margin: 0;
           font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
           overflow-wrap: anywhere;
         }
         .skills {
@@ -251,27 +246,32 @@ export class SupportAgent extends PersonBase {
         .work h2 {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.625rem;
-          letter-spacing: 0.1em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* Rule 5: one icon per section header, quiet by design — muted colour and
            ~1em with a px floor, so it identifies the section without competing
            with it. Same size in every header, which is what makes the card
            scannable by shape on a second visit. */
         .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
+        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+           compact well. */
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          --space-9: 1rem;
+          --space-6: 1rem;
+          --text-heading: var(--boxel-font-size);
         }
       </style>
     </template>
@@ -287,7 +287,13 @@ export class SupportAgent extends PersonBase {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <article class='sa-row'>
-        <span class='sa-avatar' aria-hidden='true'>{{@model.initials}}</span>
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue='var(--muted-foreground)'
+          @size={{30}}
+          aria-hidden='true'
+        />
         <span class='sa-main'>
           <span class='sa-line'>
             <span class='sa-name'>{{if
@@ -314,21 +320,7 @@ export class SupportAgent extends PersonBase {
           gap: var(--boxel-sp-xs);
           min-width: 0;
           padding: var(--boxel-sp-4xs) 0;
-          font-family: var(--font-sans, var(--boxel-font-family));
-          color: var(--foreground, var(--boxel-dark));
-        }
-        .sa-avatar {
-          flex: none;
-          width: 1.9rem;
-          height: 1.9rem;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
+          color: var(--foreground);
         }
         .sa-main {
           flex: 1;
@@ -351,7 +343,7 @@ export class SupportAgent extends PersonBase {
         }
         .sa-dim {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -363,7 +355,13 @@ export class SupportAgent extends PersonBase {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='atom'>
-        <span class='atom-av'>{{@model.initials}}</span>
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          @size={{18}}
+          aria-hidden='true'
+        />
         <span class='atom-name'>{{@model.title}}</span>
         {{#if @model.tier}}<span class='atom-tier'>{{@model.tier}}</span>{{/if}}
       </span>
@@ -373,18 +371,6 @@ export class SupportAgent extends PersonBase {
           align-items: center;
           gap: 0.3rem;
           font-size: 0.8125rem;
-        }
-        .atom-av {
-          width: 1.1rem;
-          height: 1.1rem;
-          border-radius: 50%;
-          display: inline-grid;
-          place-items: center;
-          font-size: 0.5625rem;
-          font-weight: 700;
-          background: var(--primary, var(--boxel-highlight));
-          color: var(--primary-foreground, var(--boxel-light));
-          flex: none;
         }
         .atom-name {
           font-weight: 500;
@@ -396,7 +382,7 @@ export class SupportAgent extends PersonBase {
           font-size: 0.5625rem;
           font-weight: 700;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -434,14 +420,13 @@ export class SupportAgent extends PersonBase {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
-          padding: 7px 9px;
+          gap: 0.125rem;
+          padding: 0.4375rem 0.5625rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --type-base: clamp(9.5px, 2.7cqi, 12px);
-          --type-title: max(11px, calc(var(--type-base) * 1.25));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
+          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
         }
         .fit > * {
           overflow: hidden;
@@ -451,7 +436,7 @@ export class SupportAgent extends PersonBase {
           grid-area: head;
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         .av {
@@ -464,8 +449,8 @@ export class SupportAgent extends PersonBase {
           object-fit: cover;
           font-size: var(--type-base);
           font-weight: 700;
-          background: var(--primary, var(--boxel-highlight));
-          color: var(--primary-foreground, var(--boxel-light));
+          background-color: var(--primary);
+          color: var(--primary-foreground);
         }
         .title {
           flex: 1;
@@ -483,10 +468,10 @@ export class SupportAgent extends PersonBase {
         .badge {
           flex: none;
           margin-left: auto;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--type-base);
           font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -494,12 +479,12 @@ export class SupportAgent extends PersonBase {
           grid-area: body;
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .line {
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -508,7 +493,7 @@ export class SupportAgent extends PersonBase {
           display: none;
           margin: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -517,7 +502,7 @@ export class SupportAgent extends PersonBase {
           display: none;
           margin-top: auto;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -526,10 +511,10 @@ export class SupportAgent extends PersonBase {
           grid-area: meta;
           display: none;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 50px) {
           .fit {
@@ -570,14 +555,14 @@ export class SupportAgent extends PersonBase {
         }
         @container fitted-card (width > 300px) and (height <= 130px) {
           .fit {
-            grid-template-columns: minmax(200px, 1fr) auto;
+            grid-template-columns: minmax(12.5rem, 1fr) auto;
             grid-template-areas: 'head meta' 'body meta';
             align-items: center;
           }
           .r-meta {
             flex-direction: column;
             align-items: flex-end;
-            gap: 1px;
+            gap: 0.0625rem;
           }
         }
         @container fitted-card (width <= 170px) {
