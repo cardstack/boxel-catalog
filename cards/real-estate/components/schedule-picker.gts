@@ -62,7 +62,14 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
   };
 
   emit() {
-    if (this.mode !== 'later' || !this.datePart) {
+    if (this.mode !== 'later') {
+      return;
+    }
+    // A cleared date is no schedule: drop the stored time and its warning
+    // rather than keep publishing at the last one picked.
+    if (!this.datePart) {
+      this.pastWarning = false;
+      this.args.onChange(undefined);
       return;
     }
     let [y, m, d] = this.datePart.split('-').map(Number);

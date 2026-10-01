@@ -37,6 +37,15 @@ export const SCRIM_BUTTON_STYLE = htmlSafe(
 );
 
 /**
+ * The slideshow Pause/Resume button: the scrim button knobs plus its ring.
+ * The ring is inline because Pret UI's ghost Button rules out-rank a scoped
+ * `box-shadow` on the same element.
+ */
+export const PAUSE_BUTTON_STYLE = htmlSafe(
+  `${SCRIM_BUTTON_STYLE}; box-shadow: 0 0 0 1px color-mix(in oklch, white 40%, transparent)`,
+);
+
+/**
  * Points the form control a Pret UI component renders inside this element at
  * the elements that describe it (`ids` is a space-separated id list), for the
  * components (`Checkbox`) whose `...attributes` land on the wrapping label

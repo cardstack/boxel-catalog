@@ -7,7 +7,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
-import { SCRIM_BUTTON_STYLE } from '../real-estate-ui';
+import { PAUSE_BUTTON_STYLE, SCRIM_BUTTON_STYLE } from '../real-estate-ui';
 
 // Property Gallery — the listing's photo showcase. Render-only and
 // domain-neutral about storage: the consumer hands it resolved image URLs
@@ -356,7 +356,7 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
                 @variant='ghost'
                 @size='s'
                 class='lb-pause'
-                style={{SCRIM_BUTTON_STYLE}}
+                style={{PAUSE_BUTTON_STYLE}}
                 {{on 'click' this.toggleSlideshowPause}}
               >{{if this.slideshowPaused 'Resume' 'Pause'}}</Button>
             {{/if}}
@@ -568,12 +568,13 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
         top: var(--boxel-sp);
         right: var(--boxel-sp);
       }
+      /* Centred with the translate property, which composes with the
+         transform Pret UI's Button sets on press instead of being replaced. */
       .lb-pause {
         position: absolute;
         bottom: var(--boxel-sp);
         left: 50%;
-        transform: translateX(-50%);
-        box-shadow: 0 0 0 1px color-mix(in oklch, white 40%, transparent);
+        translate: -50% 0;
       }
       .empty {
         border: 1px dashed var(--border);
