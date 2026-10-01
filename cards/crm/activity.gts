@@ -15,6 +15,8 @@ import PhoneIcon from '@cardstack/boxel-icons/phone';
 import MailIcon from '@cardstack/boxel-icons/mail';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import ArrowRightIcon from '@cardstack/boxel-icons/arrow-right';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import { Panel } from '@cardstack/pretui/components/panel';
 import { User } from '@cardstack/catalog/cards/crm/user';
 
 const ActivityTypeField = enumField(StringField, {
@@ -62,12 +64,12 @@ export class Activity extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .aa-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .aa-name {
@@ -85,25 +87,24 @@ export class Activity extends CardDef {
     }
     <template>
       <div class='activity-row'>
-        <span class='marker'>
-          <this.typeIcon class='type-icon' />
-        </span>
-        <div class='content'>
-          <div class='head'>
-            <span class='summary'>{{@model.cardTitle}}</span>
-            {{#if @model.occurredAt}}
-              <span class='when'><@fields.occurredAt /></span>
-            {{/if}}
-          </div>
-          <div class='sub'>
+        <EntityDisplay
+          class='entity'
+          @variant='thumbnail'
+          @title={{@model.cardTitle}}
+        >
+          <:visual><this.typeIcon class='type-icon' /></:visual>
+          <:meta>
             {{#if @model.activityType}}
               <span class='type'>{{@model.activityType}}</span>
             {{/if}}
             {{#if @model.author.name}}
-              <span class='author'>· {{@model.author.name}}</span>
+              <span>· {{@model.author.name}}</span>
             {{/if}}
-          </div>
-        </div>
+          </:meta>
+        </EntityDisplay>
+        {{#if @model.occurredAt}}
+          <span class='when'><@fields.occurredAt /></span>
+        {{/if}}
       </div>
       <style scoped>
         .activity-row {
@@ -112,51 +113,29 @@ export class Activity extends CardDef {
           gap: 0.625rem;
           padding: 0.625rem 0.875rem;
         }
-        .marker {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 26px;
-          height: 26px;
-          border-radius: 50%;
-          background: var(--muted, #eef2f7);
-          flex-shrink: 0;
-          margin-top: 0.0625rem;
+        /* EntityDisplay's thumbnail dress holds the type icon; the summary
+           and secondary line keep the row's sizes. */
+        .entity {
+          flex: 1;
+          --pretui-entity-visual-size: 1.625rem;
+          --text-ui-md: 0.8125rem;
+          --text-ui-sm: 0.6875rem;
+          --space-3: 0.625rem;
         }
         .type-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
         }
-        .content {
-          min-width: 0;
-          flex: 1;
-        }
-        .head {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 0.75rem;
-        }
-        .summary {
-          font-weight: 600;
-          font-size: 0.8125rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .when {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-        }
-        .sub {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+        .type {
           text-transform: capitalize;
         }
-        .author {
-          text-transform: none;
+        .when {
+          flex-shrink: 0;
+          font-size: 0.6875rem;
+          line-height: 1.625rem;
+          color: var(--muted-foreground);
+          white-space: nowrap;
         }
       </style>
     </template>
@@ -193,7 +172,7 @@ export class Activity extends CardDef {
           padding: 0.625rem 0.75rem;
           box-sizing: border-box;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .top {
           display: flex;
@@ -202,17 +181,19 @@ export class Activity extends CardDef {
           gap: 0.5rem;
         }
         .icon {
-          width: 16px;
-          height: 16px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1rem;
+          height: 1rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .type {
-          font-size: 0.625rem;
-          font-weight: 600;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.04em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .summary {
@@ -224,7 +205,7 @@ export class Activity extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -269,15 +250,10 @@ export class Activity extends CardDef {
           </div>
         </header>
         {{#if @model.body}}
-          <section class='panel'>
-            <div class='body'><@fields.body /></div>
-          </section>
+          <Panel class='body'><@fields.body /></Panel>
         {{/if}}
         {{#if @model.about}}
-          <section class='panel'>
-            <h2>About</h2>
-            <div class='about'><@fields.about @format='atom' /></div>
-          </section>
+          <Panel @title='About'><@fields.about @format='atom' /></Panel>
         {{/if}}
       </article>
       <style scoped>
@@ -293,31 +269,33 @@ export class Activity extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .marker {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 48px;
-          height: 48px;
+          width: 3rem;
+          height: 3rem;
           border-radius: 50%;
-          background: var(--muted, #eef2f7);
+          background-color: var(--muted);
           flex-shrink: 0;
         }
         .type-icon {
-          width: 22px;
-          height: 22px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.375rem;
+          height: 1.375rem;
+          color: var(--muted-foreground);
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
@@ -328,27 +306,10 @@ export class Activity extends CardDef {
         .byline {
           margin: 0.25rem 0 0;
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .panel {
-          border: 1px solid var(--border, #e5e7eb);
-          border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
-        }
-        h2 {
-          margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .body {
           font-size: 0.875rem;
-        }
-        .about {
-          margin: 0;
         }
       </style>
     </template>
