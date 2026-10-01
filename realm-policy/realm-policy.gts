@@ -731,7 +731,8 @@ export class RealmPolicy extends CardDef {
       // leave it out, so it is not counted.
       let grantCount = this.rules.reduce(
         (count, rule) =>
-          count + (rule?.grants ?? []).filter((grant) => grant?.operation).length,
+          count +
+          (rule?.grants ?? []).filter((grant) => grant?.operation).length,
         0,
       );
       return `${ruleCount} ${ruleCount === 1 ? 'rule' : 'rules'} · ${grantCount} ${grantCount === 1 ? 'grant' : 'grants'}`;
