@@ -9,14 +9,12 @@ import {
 
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import { loadListingLinks } from './listing-links';
+import { loadListingInput, loadListingLinks } from './listing-links';
 import { loadCommandModule, getLoaderService } from './utils';
 
 import CopyCardToRealmCommand from '@cardstack/boxel-host/commands/copy-card';
 import ExecuteAtomicOperationsCommand from '@cardstack/boxel-host/commands/execute-atomic-operations';
 import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
-
-import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
 export default class ListingUseCommand extends Command<
   typeof BaseCommandModule.ListingInstallInput
@@ -34,9 +32,9 @@ export default class ListingUseCommand extends Command<
   protected async run(
     input: BaseCommandModule.ListingInstallInput,
   ): Promise<undefined> {
-    let { realm, listing: listingInput } = input;
+    let { realm } = input;
 
-    const listing = listingInput as Listing;
+    const listing = await loadListingInput(input);
 
     let { realmIdentifier: realmUrl } = await new ValidateRealmCommand(
       this.commandContext,

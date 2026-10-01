@@ -124,25 +124,15 @@ export function runTests() {
 
       test('"use": a broken spec link fails with an error naming the spec', async function (assert) {
         const listingId = mockCatalogURL + 'Listing/broken-spec';
-        try {
-          await executeCommand(
-            ListingUseCommand,
-            listingId,
-            testDestinationRealmURL,
-          );
-          assert.ok(false, 'expected "use" to fail');
-        } catch (e: any) {
-          assert.notOk(
-            e instanceof TypeError,
-            `error is not a TypeError: ${e?.message}`,
-          );
-          assert.ok(
+        await assert.rejects(
+          executeCommand(ListingUseCommand, listingId, testDestinationRealmURL),
+          (e: Error) =>
+            !(e instanceof TypeError) &&
             e.message.includes(
               `Listing spec "${mockCatalogURL}Spec/does-not-exist"`,
             ),
-            `error names the broken spec: ${e.message}`,
-          );
-        }
+          'the error names the broken spec, not a TypeError',
+        );
       });
 
       test('"use" is successful even if target realm does not have a trailing slash', async function (assert) {

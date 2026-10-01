@@ -23,7 +23,7 @@ import type {
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import { loadListingLinks } from './listing-links';
+import { loadListingInput, loadListingLinks } from './listing-links';
 import { getLoaderService, loadCommandModule } from './utils';
 
 import ExecuteAtomicOperationsCommand from '@cardstack/boxel-host/commands/execute-atomic-operations';
@@ -34,8 +34,6 @@ import ReadSourceCommand from '@cardstack/boxel-host/commands/read-source';
 import WriteBinaryFileCommand from '@cardstack/boxel-host/commands/write-binary-file';
 import SerializeCardCommand from '@cardstack/boxel-host/commands/serialize-card';
 import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
-
-import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
 const log = logger('catalog:install');
 
@@ -100,14 +98,13 @@ export default class ListingInstallCommand extends Command<
   protected async run(
     input: BaseCommandModule.ListingInstallInput,
   ): Promise<BaseCommandModule.ListingInstallResult> {
-    let { realm, listing: listingInput } = input;
+    let { realm } = input;
 
     let { realmIdentifier: realmUrl } = await new ValidateRealmCommand(
       this.commandContext,
     ).execute({ realmIdentifier: realm });
 
-    // this is intentionally to type because base command cannot interpret Listing type from catalog
-    const listing = listingInput as Listing;
+    const listing = await loadListingInput(input);
 
     const { specs, examples, supportingCards, skills } =
       await loadListingLinks(listing);
