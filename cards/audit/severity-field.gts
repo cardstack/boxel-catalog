@@ -80,8 +80,8 @@ export class SeverityField extends FieldDef {
           gap: var(--boxel-sp-xs);
         }
         .note {
-          font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

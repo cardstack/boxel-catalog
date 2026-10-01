@@ -13,6 +13,8 @@ import { RegimeMetadataField } from './regime-metadata-field';
 import { SeverityField } from '@cardstack/catalog/cards/audit/severity-field';
 import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE } from './audit-ui';
 import {
   RULE_KINDS,
   RULE_KIND_LABELS,
@@ -91,7 +93,7 @@ export class ValidationRuleField extends FieldDef {
       <div class='rule'>
         <div class='head'>
           {{#if @model.ruleId}}
-            <span class='rid mono'>{{@model.ruleId}}</span>
+            <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.ruleId}}</Token>
           {{/if}}
           <StatePill @label={{@model.kindLabel}} @hue='blue' />
           {{#if @model.severityIfFailed.level}}
@@ -114,7 +116,7 @@ export class ValidationRuleField extends FieldDef {
 
         <div class='mechanics'>
           {{#if @model.fieldPath}}
-            <span class='mono'>{{@model.fieldPath}}</span>
+            <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.fieldPath}}</Token>
           {{/if}}
           {{#if @model.parameters}}
             <span class='mono params'>{{@model.parameters}}</span>
@@ -139,15 +141,11 @@ export class ValidationRuleField extends FieldDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
         }
-        .rid {
-          font-size: 0.8125rem;
-          font-weight: 700;
-        }
         .statement {
           margin: 0;
           font-size: 0.875rem;
           line-height: 1.5;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .mechanics {
           display: flex;
@@ -155,13 +153,13 @@ export class ValidationRuleField extends FieldDef {
           align-items: baseline;
           gap: var(--boxel-sp-xs);
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .params {
           overflow-wrap: anywhere;
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         .hint {
           font-style: italic;
@@ -173,7 +171,9 @@ export class ValidationRuleField extends FieldDef {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='atom'>
-        {{#if @model.ruleId}}<span class='mono'>{{@model.ruleId}}</span>{{/if}}
+        {{#if @model.ruleId}}<Token
+            style={{ID_TOKEN_STYLE.xs}}
+          >{{@model.ruleId}}</Token>{{/if}}
         <span class='st'>{{@model.statement}}</span>
       </span>
       <style scoped>
@@ -183,10 +183,6 @@ export class ValidationRuleField extends FieldDef {
           gap: var(--boxel-sp-5xs);
           font-size: 0.8125rem;
           min-width: 0;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-weight: 700;
         }
         .st {
           overflow: hidden;

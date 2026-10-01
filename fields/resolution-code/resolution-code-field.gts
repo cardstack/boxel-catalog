@@ -92,12 +92,13 @@ export class ResolutionCodeField extends FieldDef {
       <style scoped>
         .resolution {
           display: inline-flex;
+          flex-wrap: wrap;
           align-items: center;
-          gap: var(--boxel-sp-xs);
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .note {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

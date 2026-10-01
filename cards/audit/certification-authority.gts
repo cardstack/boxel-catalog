@@ -11,7 +11,18 @@ import BuildingIcon from '@cardstack/boxel-icons/building';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Token } from '@cardstack/pretui/components/token';
+
 import { SectionedEdit } from '../../components/sectioned-edit';
+import { AuditFacts, AVATAR_HUE, ID_TOKEN_STYLE } from './audit-ui';
+
+// Each value renders in the `value` block, which picks the row by key.
+const HERO_FACTS = [
+  { key: 'Numbering', value: '' },
+  { key: 'Issued', value: '' },
+];
 
 /**
  * The body whose name stands behind a certificate — the
@@ -57,13 +68,14 @@ export class CertificationAuthority extends CardDef {
     <template>
       <article class='authority'>
         <header class='hero'>
-          {{#if @model.seal.resolvedUrl}}
-            <img class='seal' src={{@model.seal.resolvedUrl}} alt='' />
-          {{else}}
-            <span class='seal seal-empty' aria-hidden='true'>{{initial
-                @model.name
-              }}</span>
-          {{/if}}
+          <Avatar
+            class='seal'
+            @name={{sealName @model.name}}
+            @src={{@model.seal.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{80}}
+            aria-hidden='true'
+          />
           <div class='hero-text'>
             <span class='eyebrow'>Certification authority</span>
             <h1>{{@model.cardTitle}}</h1>
@@ -73,14 +85,19 @@ export class CertificationAuthority extends CardDef {
                   {{@model.signatoryTitle}}{{/if}}</p>
             {{/if}}
           </div>
-          <dl class='facts'>
-            <div><dt>Numbering</dt><dd class='mono'>{{if
-                  @model.numberPrefix
-                  @model.numberPrefix
-                  'CERT'
-                }}-YYYY-000000</dd></div>
-            <div><dt>Issued</dt><dd>{{@model.issuedCount}}</dd></div>
-          </dl>
+          <AuditFacts class='facts' @items={{HERO_FACTS}}>
+            <:value as |item|>
+              {{#if (eq item.key 'Numbering')}}
+                <Token style={{ID_TOKEN_STYLE.sm}}>{{if
+                    @model.numberPrefix
+                    @model.numberPrefix
+                    'CERT'
+                  }}-YYYY-000000</Token>
+              {{else}}
+                {{@model.issuedCount}}
+              {{/if}}
+            </:value>
+          </AuditFacts>
         </header>
         <section class='verify'>
           <h2>Verification</h2>
@@ -103,8 +120,6 @@ export class CertificationAuthority extends CardDef {
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
         }
         .hero {
           display: grid;
@@ -112,70 +127,49 @@ export class CertificationAuthority extends CardDef {
           gap: var(--boxel-sp);
           align-items: center;
         }
-        .seal {
-          width: 5rem;
-          height: 5rem;
-          border-radius: 50%;
-          object-fit: cover;
+        .hero .seal {
           box-shadow:
-            0 0 0 3px var(--card, var(--boxel-light)),
-            0 0 0 4px var(--primary, var(--boxel-highlight));
-        }
-        .seal-empty {
-          display: grid;
-          place-items: center;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 700 1.75rem var(--font-heading, var(--boxel-font-family));
+            0 0 0 0.1875rem var(--card),
+            0 0 0 0.25rem var(--primary);
         }
         .eyebrow {
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15
-            var(--font-heading, var(--boxel-font-family));
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 700;
+          line-height: 1.15;
         }
         .sig {
           margin: var(--boxel-sp-xs) 0 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .facts {
           margin: 0;
-          display: grid;
-          gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-sm) var(--boxel-sp);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
-        }
-        dt {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          letter-spacing: 0.03em;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background-color: var(--card);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .empty {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
         @container (width <= 600px) {
@@ -193,11 +187,13 @@ export class CertificationAuthority extends CardDef {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <div class='row'>
-        {{#if @model.seal.resolvedUrl}}
-          <img class='seal' src={{@model.seal.resolvedUrl}} alt='' />
-        {{else}}
-          <span class='seal seal-empty'>{{initial @model.name}}</span>
-        {{/if}}
+        <Avatar
+          @name={{sealName @model.name}}
+          @src={{@model.seal.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          @size={{36}}
+          aria-hidden='true'
+        />
         <div class='text'>
           <span class='title'>{{@model.cardTitle}}</span>
           <span class='sub'>{{if
@@ -216,22 +212,6 @@ export class CertificationAuthority extends CardDef {
           align-items: center;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
-        .seal {
-          width: 2.25rem;
-          height: 2.25rem;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-        .seal-empty {
-          display: grid;
-          place-items: center;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font-weight: 700;
-        }
         .text {
           display: grid;
           min-width: 0;
@@ -245,7 +225,7 @@ export class CertificationAuthority extends CardDef {
         .sub,
         .count {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .count {
           white-space: nowrap;
@@ -330,11 +310,13 @@ export class CertificationAuthority extends CardDef {
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          {{#if @model.seal.resolvedUrl}}
-            <img class='seal' src={{@model.seal.resolvedUrl}} alt='' />
-          {{else}}
-            <span class='seal seal-empty'>{{initial @model.name}}</span>
-          {{/if}}
+          <Avatar
+            @name={{sealName @model.name}}
+            @src={{@model.seal.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{32}}
+            aria-hidden='true'
+          />
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.cardTitle}}</h3>
             <span class='fit-eb'>{{@model.issuedCount}}
@@ -366,23 +348,6 @@ export class CertificationAuthority extends CardDef {
           align-items: flex-start;
           min-width: 0;
         }
-        .seal {
-          flex: none;
-          width: 2rem;
-          height: 2rem;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-        .seal-empty {
-          display: grid;
-          place-items: center;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font-weight: 700;
-        }
         .fit-head {
           min-width: 0;
         }
@@ -397,8 +362,8 @@ export class CertificationAuthority extends CardDef {
           overflow: hidden;
         }
         .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
         }
         .fit-add {
           display: none;
@@ -409,18 +374,18 @@ export class CertificationAuthority extends CardDef {
           display: flex;
           justify-content: space-between;
           gap: var(--boxel-sp-xs);
-          padding: 2px 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
+          padding: 0.125rem 0;
+          border-top: 1px solid var(--border);
         }
         dt {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;
           font-weight: 600;
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         @container fitted-card (height <= 80px) {
           .fit-top {
@@ -461,8 +426,10 @@ export class CertificationAuthority extends CardDef {
   };
 }
 
-function initial(name?: string | null): string {
-  return (name?.trim()?.[0] ?? '?').toUpperCase();
+// The seal's initials come from the authority's own name; an unnamed one
+// shows `?` rather than the "Unnamed authority" title's initials.
+function sealName(name?: string | null): string {
+  return name?.trim() || '?';
 }
 
 export default CertificationAuthority;

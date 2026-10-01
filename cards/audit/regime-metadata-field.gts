@@ -10,6 +10,8 @@ import UrlField from '@cardstack/base/url';
 import ScaleIcon from '@cardstack/boxel-icons/scale';
 
 import { CertificationAuthority } from './certification-authority';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE } from './audit-ui';
 
 /**
  * Which rule-set, which edition, which clause. A control means nothing
@@ -39,7 +41,9 @@ export class RegimeMetadataField extends FieldDef {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <div class='regime'>
-        <span class='ref mono'>{{@model.reference}}</span>
+        {{#if @model.reference}}
+          <Token style={{ID_TOKEN_STYLE.sm}}>{{@model.reference}}</Token>
+        {{/if}}
         {{#if @model.clauseTitle}}
           <span class='title'>{{@model.clauseTitle}}</span>
         {{/if}}
@@ -48,7 +52,12 @@ export class RegimeMetadataField extends FieldDef {
             <@fields.authority @format='atom' /></span>
         {{/if}}
         {{#if @model.url}}
-          <a class='link' href={{@model.url}} target='_blank' rel='noopener'>
+          <a
+            class='link'
+            href={{@model.url}}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
             clause text</a>
         {{/if}}
       </div>
@@ -60,21 +69,15 @@ export class RegimeMetadataField extends FieldDef {
           gap: var(--boxel-sp-xs);
           font-size: 0.875rem;
         }
-        .ref {
-          font-weight: 600;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-        }
         .title,
         .auth {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .link {
           font-size: 0.75rem;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           text-decoration: underline;
-          text-underline-offset: 2px;
+          text-underline-offset: 0.125rem;
         }
       </style>
     </template>
@@ -82,16 +85,9 @@ export class RegimeMetadataField extends FieldDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom mono'>{{@model.reference}}</span>
-      <style scoped>
-        .atom {
-          font-size: 0.8125rem;
-          font-weight: 600;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-        }
-      </style>
+      {{#if @model.reference}}
+        <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.reference}}</Token>
+      {{/if}}
     </template>
   };
 }

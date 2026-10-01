@@ -94,12 +94,12 @@ export class EscalationLevelField extends FieldDef {
           gap: var(--boxel-sp-4xs);
           border-radius: var(--boxel-border-radius-sm);
           padding: 0.125rem 0.5rem;
-          background: var(--level-bg);
+          background-color: var(--level-bg);
           color: var(--level-fg);
           font-size: var(--boxel-font-size-xs);
         }
         .level-key {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-weight: 600;
         }
       </style>
@@ -111,7 +111,7 @@ export class EscalationLevelField extends FieldDef {
       <span class='level-atom'>{{if @model.key @model.key 'L1'}}</span>
       <style scoped>
         .level-atom {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }

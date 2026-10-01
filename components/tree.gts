@@ -5,6 +5,7 @@ import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import type { SafeString } from '@ember/template';
 import type { CardDef } from '@cardstack/base/card-api';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
 
 import { type TreeNode } from '../utils/build-tree';
 
@@ -126,13 +127,14 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
       {{#each this.rows key='key' as |row|}}
         <li class='tree-row' style={{row.indent}}>
           {{#if row.meta.hasChildren}}
-            <button
-              type='button'
+            <IconButton
+              @label={{if row.meta.expanded 'Collapse' 'Expand'}}
+              @variant='ghost'
+              @size='xs'
               class='caret {{if row.meta.expanded "open"}}'
               aria-expanded='{{if row.meta.expanded "true" "false"}}'
-              aria-label='{{if row.meta.expanded "Collapse" "Expand"}}'
               {{on 'click' (fn this.toggleRow row)}}
-            >▸</button>
+            ><span class='caret-glyph' aria-hidden='true'>▸</span></IconButton>
           {{else}}
             <span class='caret-spacer'></span>
           {{/if}}
@@ -156,10 +158,10 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
     </ul>
     <style scoped>
       .tree {
+        --tree-caret: 1.5rem;
         margin: 0;
         padding: 0;
-        font-family: var(--font-sans, var(--boxel-font-family));
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .tree-row {
         list-style: none;
@@ -171,23 +173,26 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
         border-radius: var(--boxel-border-radius-sm);
       }
       .tree-row:hover {
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
       }
+      /* The caret and the spacer share one width, the minimum target size,
+         so leaf rows line up with their expandable siblings. Only the glyph
+         turns, so the button's focus ring stays square. */
       .caret {
-        border: none;
-        background: none;
-        cursor: pointer;
-        color: var(--muted-foreground, var(--boxel-450));
-        width: 1rem;
+        --pretui-button-h: var(--tree-caret);
+        width: var(--tree-caret);
         flex: none;
-        padding: 0;
+        color: var(--muted-foreground);
+      }
+      .caret-glyph {
+        display: inline-block;
         transition: transform 0.15s ease-out;
       }
-      .caret.open {
+      .caret.open .caret-glyph {
         transform: rotate(90deg);
       }
       .caret-spacer {
-        width: 1rem;
+        width: var(--tree-caret);
         flex: none;
       }
       .tree-content {
@@ -198,11 +203,11 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
       }
       .tree-empty {
         list-style: none;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
       }
       @media (prefers-reduced-motion: reduce) {
-        .caret {
+        .caret-glyph {
           transition: none;
         }
       }

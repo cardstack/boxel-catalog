@@ -1224,4 +1224,172 @@ export class RealmPolicy extends CardDef {
       </style>
     </template>
   };
+
+  // The policy at a glance, for a card that shows the policy it names, such
+  // as a realm's config card: its title, how many rules and grants it holds,
+  // and, where there is room, each rule's card type with the operations it
+  // grants.
+  static fitted = class Fitted extends Component<typeof RealmPolicy> {
+    get rules() {
+      return this.args.model.rules ?? [];
+    }
+
+    get summary(): string {
+      let ruleCount = this.rules.length;
+      if (!ruleCount) {
+        return 'No rules, so it grants nothing';
+      }
+      // A grant that names no operation grants nothing, and the rule lines
+      // leave it out, so it is not counted.
+      let grantCount = this.rules.reduce(
+        (count, rule) =>
+          count +
+          (rule?.grants ?? []).filter((grant) => grant?.operation).length,
+        0,
+      );
+      return `${ruleCount} ${ruleCount === 1 ? 'rule' : 'rules'} · ${grantCount} ${grantCount === 1 ? 'grant' : 'grants'}`;
+    }
+
+    // Each rule as the type it governs and the operations it grants, each
+    // operation once.
+    get ruleLines(): { type: string; operations: string }[] {
+      return this.rules.map((rule) => ({
+        type: rule?.targetType?.name ?? 'No target type',
+        operations:
+          [
+            ...new Set(
+              (rule?.grants ?? [])
+                .map((grant) => grant?.operation)
+                .filter((operation): operation is string => Boolean(operation)),
+            ),
+          ].join(', ') || 'no grants',
+      }));
+    }
+
+    <template>
+      <div class='fit' data-test-realm-policy-fitted>
+        <ShieldCheckIcon class='f-icon' aria-hidden='true' />
+        <span class='f-title' data-test-realm-policy-fitted-title>
+          {{@model.cardTitle}}
+        </span>
+        <span class='f-summary' data-test-realm-policy-fitted-summary>
+          {{this.summary}}
+        </span>
+        {{#if this.ruleLines.length}}
+          <ul class='f-rules' data-test-realm-policy-fitted-rules>
+            {{#each this.ruleLines as |line|}}
+              <li class='f-rule'>
+                <span class='f-rule-type'>{{line.type}}</span>
+                {{line.operations}}
+              </li>
+            {{/each}}
+          </ul>
+        {{/if}}
+      </div>
+      <style scoped>
+        .fit {
+          width: 100%;
+          height: 100%;
+          padding: var(--boxel-sp-xs);
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          grid-template-rows: auto auto minmax(0, 1fr);
+          column-gap: var(--boxel-sp-xs);
+          row-gap: var(--boxel-sp-4xs);
+          align-items: center;
+          overflow: hidden;
+        }
+        .f-icon {
+          width: var(--boxel-icon-sm);
+          height: var(--boxel-icon-sm);
+          color: var(--foreground, var(--boxel-dark));
+        }
+        .f-title {
+          font-weight: 600;
+          font-size: var(--boxel-font-size-sm);
+          line-height: var(--boxel-line-height-sm);
+          color: var(--foreground, var(--boxel-dark));
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          overflow: hidden;
+        }
+        .f-summary {
+          grid-column: 1 / -1;
+          font-size: var(--boxel-font-size-xs);
+          font-variant-numeric: tabular-nums;
+          color: var(--muted-foreground, var(--boxel-450));
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        /* The list fills what is left of the card. Lines that don't fit wrap
+           into a column beyond its edge, so only whole lines show. */
+        .f-rules {
+          grid-column: 1 / -1;
+          align-self: stretch;
+          list-style: none;
+          margin: var(--boxel-sp-4xs) 0 0;
+          padding: 0;
+          display: flex;
+          flex-flow: column wrap;
+          align-content: flex-start;
+          gap: var(--boxel-sp-5xs) var(--boxel-sp);
+          min-height: 0;
+          overflow: hidden;
+        }
+        .f-rule {
+          width: 100%;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground, var(--boxel-450));
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .f-rule-type {
+          font-weight: 600;
+          color: var(--foreground, var(--boxel-dark));
+        }
+        /* badge: icon and a one-line title only, in one row */
+        @container fitted-card (max-width: 150px) and (max-height: 169px) {
+          .fit {
+            grid-template-rows: none;
+          }
+          .f-summary,
+          .f-rules {
+            display: none;
+          }
+          .f-title {
+            display: block;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: var(--boxel-font-size-xs);
+          }
+        }
+        /* strip: one row, the summary beside the title. Both columns grow
+           from nothing toward their content, so they share the row rather
+           than the summary taking all it wants first, and neither grows past
+           its content, so the row stays packed against the icon. */
+        @container fitted-card (min-width: 151px) and (max-height: 169px) {
+          .fit {
+            grid-template-columns:
+              max-content minmax(0, max-content)
+              minmax(0, max-content);
+            grid-template-rows: none;
+          }
+          .f-title {
+            display: block;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+          .f-summary {
+            grid-column: auto;
+          }
+          .f-rules {
+            display: none;
+          }
+        }
+      </style>
+    </template>
+  };
 }
