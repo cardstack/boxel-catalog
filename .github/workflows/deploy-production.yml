@@ -51,10 +51,6 @@ jobs:
   deploy:
     name: Deploy to production
     runs-on: ubuntu-latest
-    env:
-      MATRIX_URL: https://matrix.boxel.ai
-      MATRIX_USERNAME: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_USERNAME }}
-      MATRIX_PASSWORD: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_PASSWORD }}
 
     steps:
       - name: Resolve the revision
@@ -147,8 +143,13 @@ jobs:
         if: steps.check.outputs.action == 'deploy'
         run: npm install -g @cardstack/boxel-cli@latest
 
+      # The only step that sees the production Matrix credentials.
       - name: Configure Boxel profile
         if: steps.check.outputs.action == 'deploy'
+        env:
+          MATRIX_URL: https://matrix.boxel.ai
+          MATRIX_USERNAME: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_USERNAME }}
+          MATRIX_PASSWORD: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_PASSWORD }}
         run: |
           boxel profile add \
             --user "@${MATRIX_USERNAME}:boxel.ai" \
