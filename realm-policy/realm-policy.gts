@@ -1033,7 +1033,11 @@ export class RealmPolicy extends CardDef {
             </ul>
           </section>
         {{else if this.validationFailure}}
-          <p class='refusal' data-test-realm-policy-validate-failure>
+          <p
+            class='refusal'
+            role='alert'
+            data-test-realm-policy-validate-failure
+          >
             This policy could not be checked:
             {{this.validationFailure}}
           </p>
