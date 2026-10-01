@@ -165,25 +165,25 @@ export class PolicyRule extends FieldDef {
 // What each reason an explanation gives means, in the words a policy author
 // reads it in.
 const REASONS: Record<PolicyExplanation['reason'], string> = {
-  acl: "The realm's own permissions allow this, so the policy is not consulted.",
-  granted: 'A grant in this policy admits it.',
-  'no-grant':
-    "No rule governing the card's type has a grant for this operation.",
+  acl: "The realm's own permissions already allow this, so the policy isn't needed.",
+  granted: 'A grant in this policy allows it.',
+  'no-grant': "No rule for this card's type grants this operation.",
   'predicate-false':
-    'Grants for this operation match the card, and none of their conditions holds.',
+    'This policy has grants for this operation on this card, but none of their conditions is met.',
   'predicate-threw':
-    "A grant's condition failed while it was evaluated, so the invocation fails.",
-  'non-grantable': "This operation is kept out of every policy's reach.",
+    "A grant's condition ran into an error, so the request fails.",
+  'non-grantable':
+    'This operation is marked non-grantable, so no policy can allow it.',
   'query-lane':
-    "This operation is a query. It runs in a search rather than on one card, and the search returns only the cards this policy's grants on it admit.",
+    "This operation is a search. It doesn't act on one card: the search returns only the cards this policy's grants on it allow.",
   'authorization-infrastructure':
-    "No grant writes a policy card or the realm's config card, or creates a policy card.",
+    "No policy can allow changing a policy card or the realm's settings card, or creating a policy card.",
   'unmatchable-target':
-    'No rule can apply to this target for this operation: its index entry records an error, so its type is unknown; it is a file and the operation is not a read of its bytes; or it is module source.',
-  'not-resolved': 'The card does not carry this operation.',
+    "No rule can apply here. Either the card has an error, so its type isn't known; it is a file and this operation isn't a download of it; or it is a code file.",
+  'not-resolved': "This card doesn't have this operation.",
   'actor-required':
-    'A caller who presents no credentials is refused before the policy is consulted.',
-  'policy-unloadable': "The realm's policy could not be loaded.",
+    "Someone who isn't signed in is turned away before the policy is checked.",
+  'policy-unloadable': "The realm's policy couldn't be loaded.",
 };
 
 const DECISION_VARIANT: Record<
@@ -199,11 +199,20 @@ const OUTCOME_LABEL: Record<
   PolicyExplanation['rules'][number]['grants'][number]['outcome'],
   string
 > = {
-  unconditional: 'always',
-  held: 'held',
-  'did-not-hold': 'did not hold',
-  threw: 'threw',
-  'not-evaluated': 'not evaluated',
+  unconditional: 'always applies',
+  held: 'condition met',
+  'did-not-hold': 'condition not met',
+  threw: 'condition failed with an error',
+  'not-evaluated': 'not checked',
+};
+
+// Which copy of the card a grant's condition checked.
+const TIER_LABEL: Record<
+  NonNullable<PolicyExplanation['rules'][number]['grants'][number]['tier']>,
+  string
+> = {
+  stored: 'checks the saved card',
+  snapshot: "checks the index's copy",
 };
 
 // What to tell the author when the realm refuses or fails an operation this
@@ -275,6 +284,10 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
     this.explanation?.admittedBy?.rule === ruleIndex &&
     this.explanation?.admittedBy?.grant === grantIndex;
 
+  tierLabel = (
+    tier: PolicyExplanation['rules'][number]['grants'][number]['tier'],
+  ) => (tier ? TIER_LABEL[tier] : undefined);
+
   outcomeLabel = (
     outcome: PolicyExplanation['rules'][number]['grants'][number]['outcome'],
   ) => OUTCOME_LABEL[outcome];
@@ -321,7 +334,7 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
       {{on 'submit' this.explain}}
     >
       <FieldContainer
-        @label='Actor (user id)'
+        @label='Person (user ID)'
         @vertical={{true}}
         @fieldId='explain-actor'
       >
@@ -390,18 +403,14 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
           </span>
         </header>
         <dl class='facts'>
-          <dt>Actor</dt>
+          <dt>Person</dt>
           <dd data-test-explanation-actor>
-            {{if
-              this.explanation.actor
-              this.explanation.actor
-              'no credentials'
-            }}
+            {{if this.explanation.actor this.explanation.actor 'not signed in'}}
           </dd>
           <dt>Realm permissions</dt>
           <dd data-test-explanation-acl>{{this.aclStanding}}</dd>
           {{#if this.explanation.refusal}}
-            <dt>Refused with</dt>
+            <dt>Turned away with</dt>
             <dd data-test-explanation-refusal>
               {{this.explanation.refusal.status}}
               <code>{{this.explanation.refusal.code}}</code>
@@ -430,7 +439,9 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
                             class='where'
                             data-test-explanation-grant-where
                           >{{grant.where}}</code>
-                          <span class='tier'>reads {{grant.tier}}</span>
+                          <span class='tier'>{{this.tierLabel
+                              grant.tier
+                            }}</span>
                         {{/if}}
                         <span class='outcome'>{{this.outcomeLabel
                             grant.outcome
@@ -439,7 +450,7 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
                           <Pill
                             @variant='primary'
                             data-test-explanation-admitting
-                          >admitted</Pill>
+                          >allowed it</Pill>
                         {{/if}}
                       </li>
                     {{/each}}
@@ -553,7 +564,7 @@ function isLiveRender(): boolean {
 // card, so an issue with no wording here reads as the compiler wrote it.
 const CARD_ISSUE_MESSAGES: Partial<Record<string, string>> = {
   'policy-card-unloadable':
-    "This card's latest index visit failed, so what the index holds of it is an earlier visit's, which may not be what the card holds now. It grants nothing until a visit succeeds.",
+    "This card couldn't be indexed this time, and the index's earlier copy of it may be out of date. It grants nothing until it's indexed again, which editing the card or reindexing the realm does.",
 };
 
 // Whether a realm event says the realm has finished an index pass.
@@ -866,9 +877,9 @@ export class RealmPolicy extends CardDef {
               data-test-realm-policy-uncompilable
             >
               <strong>Not in force.</strong>
-              This policy could not be compiled, so it grants nothing, and a
-              realm that names it refuses every caller its own permissions do
-              not admit.
+              This policy has a problem that stops it from working, so it grants
+              nothing. A realm that uses it turns away everyone its own
+              permissions don't already allow.
               {{this.uncompilableReason}}
             </p>
           {{/if}}
@@ -972,10 +983,10 @@ export class RealmPolicy extends CardDef {
           <section class='section' data-test-realm-policy-issues>
             <h2 class='section-title'>Issues</h2>
             <p class='hint'>
-              What compiling this policy found. A rule or grant marked inactive
-              grants nothing, and the rest of the policy applies. A warning
-              leaves its grant live, and says something its author should know
-              about what that grant hands over.
+              Problems found in this policy. A rule or grant marked inactive
+              doesn't grant anything, but the rest of the policy still works. A
+              warning doesn't turn its grant off: it points out something the
+              grant shares that you might not expect.
             </p>
             <ul class='issues'>
               {{#each this.issues as |issue|}}
@@ -1016,16 +1027,17 @@ export class RealmPolicy extends CardDef {
             role='alert'
             data-test-realm-policy-validate-failure
           >
-            This policy could not be checked:
+            This policy couldn't be checked:
             {{this.validationFailure}}
           </p>
         {{/if}}
         <section class='section' data-test-realm-policy-explain>
           <h2 class='section-title'>Explain a decision</h2>
           <p class='hint'>
-            What this policy decides for one caller, one card and one operation.
-            Nothing is invoked. You can ask only about a card in a realm
-            governed by this policy, and only if you can read both realms.
+            Check whether this policy lets a given person do something to a
+            given card. Nothing is actually done to the card. You can ask only
+            about cards in a realm that uses this policy, and only if you can
+            read both that realm and this one.
           </p>
           <ExplainPanel @policy={{this.policy}} />
         </section>
