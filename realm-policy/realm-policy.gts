@@ -172,12 +172,11 @@ const REASONS: Record<PolicyExplanation['reason'], string> = {
     'This policy has grants for this operation on this card, but none of their conditions is met.',
   'predicate-threw':
     "A grant's condition ran into an error, so the request fails.",
-  'non-grantable':
-    "No policy can allow this operation. Either it's marked non-grantable, or it's one no policy can ever grant, such as explain.",
+  'non-grantable': 'No policy can allow this operation.',
   'query-lane':
     "This operation is a search. It doesn't act on one card: the search returns only the cards this policy's grants on it allow.",
   'authorization-infrastructure':
-    "No policy can allow changing a policy card or the realm's settings card, or creating a policy card.",
+    "No policy can allow anything on a policy card or the realm's settings card, including reading them, or creating a policy card.",
   'unmatchable-target':
     "No rule can apply here. Either the card has an error, so its type isn't known; it is a file and this operation isn't a download of it; or it is a code file.",
   'not-resolved': "This card doesn't have this operation.",
