@@ -725,8 +725,11 @@ export class RealmPolicy extends CardDef {
       if (!ruleCount) {
         return 'No rules, so it grants nothing';
       }
+      // A grant that names no operation grants nothing, and the rule lines
+      // leave it out, so it is not counted.
       let grantCount = this.rules.reduce(
-        (count, rule) => count + (rule?.grants?.length ?? 0),
+        (count, rule) =>
+          count + (rule?.grants ?? []).filter((grant) => grant?.operation).length,
         0,
       );
       return `${ruleCount} ${ruleCount === 1 ? 'rule' : 'rules'} · ${grantCount} ${grantCount === 1 ? 'grant' : 'grants'}`;
@@ -736,7 +739,7 @@ export class RealmPolicy extends CardDef {
     // operation once.
     get ruleLines(): { type: string; operations: string }[] {
       return this.rules.map((rule) => ({
-        type: rule?.targetType?.name ?? 'Unnamed type',
+        type: rule?.targetType?.name ?? 'No target type',
         operations:
           [
             ...new Set(
@@ -750,8 +753,10 @@ export class RealmPolicy extends CardDef {
 
     <template>
       <div class='fit' data-test-realm-policy-fitted>
-        <ShieldCheckIcon class='f-icon' />
-        <span class='f-title'>{{@model.cardTitle}}</span>
+        <ShieldCheckIcon class='f-icon' aria-hidden='true' />
+        <span class='f-title' data-test-realm-policy-fitted-title>
+          {{@model.cardTitle}}
+        </span>
         <span class='f-summary' data-test-realm-policy-fitted-summary>
           {{this.summary}}
         </span>
@@ -782,13 +787,12 @@ export class RealmPolicy extends CardDef {
         .f-icon {
           width: var(--boxel-icon-sm);
           height: var(--boxel-icon-sm);
-          flex-shrink: 0;
           color: var(--foreground, var(--boxel-dark));
         }
         .f-title {
           font-weight: 600;
           font-size: var(--boxel-font-size-sm);
-          line-height: 1.25;
+          line-height: var(--boxel-line-height-sm);
           color: var(--foreground, var(--boxel-dark));
           display: -webkit-box;
           -webkit-box-orient: vertical;
@@ -804,18 +808,23 @@ export class RealmPolicy extends CardDef {
           overflow: hidden;
           text-overflow: ellipsis;
         }
+        /* The list fills what is left of the card. Lines that don't fit wrap
+           into a column beyond its edge, so only whole lines show. */
         .f-rules {
           grid-column: 1 / -1;
-          align-self: start;
+          align-self: stretch;
           list-style: none;
           margin: var(--boxel-sp-4xs) 0 0;
           padding: 0;
-          display: grid;
-          gap: var(--boxel-sp-5xs);
+          display: flex;
+          flex-flow: column wrap;
+          align-content: flex-start;
+          gap: var(--boxel-sp-5xs) var(--boxel-sp);
           min-height: 0;
           overflow: hidden;
         }
         .f-rule {
+          width: 100%;
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground, var(--boxel-450));
           white-space: nowrap;
@@ -827,24 +836,33 @@ export class RealmPolicy extends CardDef {
           color: var(--foreground, var(--boxel-dark));
         }
         /* badge: icon and a one-line title only */
-        @container fitted-card (width <= 150px) and (height <= 169px) {
+        @container fitted-card (max-width: 150px) and (max-height: 169px) {
           .f-summary,
           .f-rules {
             display: none;
           }
           .f-title {
-            -webkit-line-clamp: 1;
+            display: block;
+            white-space: nowrap;
+            text-overflow: ellipsis;
             font-size: var(--boxel-font-size-xs);
           }
         }
-        /* strip: one row, the summary beside the title */
-        @container fitted-card (aspect-ratio > 2.0) and (height <= 90px) {
+        /* strip: one row, the summary beside the title. Both columns grow
+           from nothing toward their content, so they share the row rather
+           than the summary taking all it wants first, and neither grows past
+           its content, so the row stays packed against the icon. */
+        @container fitted-card (min-width: 151px) and (max-height: 169px) {
           .fit {
-            grid-template-columns: auto minmax(0, 1fr) auto;
+            grid-template-columns:
+              max-content minmax(0, max-content)
+              minmax(0, max-content);
             grid-template-rows: none;
           }
           .f-title {
-            -webkit-line-clamp: 1;
+            display: block;
+            white-space: nowrap;
+            text-overflow: ellipsis;
           }
           .f-summary {
             grid-column: auto;
