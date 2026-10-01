@@ -149,7 +149,7 @@ export class Application extends PersonBase {
         <header class='hero'>
           <span class='avatar-ring' style={{this.avatarRingStyle}}>
             <Avatar
-              @name={{if @model.title @model.title '?'}}
+              @name={{if @model.name @model.name '?'}}
               @src={{@model.photo.resolvedUrl}}
               @hue={{AVATAR_HUE}}
               @size={{52}}
@@ -507,7 +507,7 @@ export class Application extends PersonBase {
       <article class='fit'>
         <div class='fit-top'>
           <Avatar
-            @name={{if @model.title @model.title '?'}}
+            @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
             @hue={{AVATAR_HUE}}
             @size={{26}}
@@ -676,8 +676,8 @@ export class Application extends PersonBase {
             display: flex;
           }
         }
-        /* TIER 4 — width-driven extra facts. Previously absent entirely,
-           which is why a 500x400 tile showed the same as a 200x140 one. */
+        /* TIER 4 — width-driven extra facts, so a large tile shows more
+           than a small one. */
         @container fitted-card (height > 150px) and (width > 180px) {
           .fit-add {
             display: grid;

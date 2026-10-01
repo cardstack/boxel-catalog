@@ -56,7 +56,7 @@ export class Team extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     get markName() {
-      return this.args.model?.title || '?';
+      return this.args.model?.name?.trim() || '?';
     }
 
     get memberCount(): number {
@@ -399,7 +399,7 @@ export class Team extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     get markName() {
-      return this.args.model?.title || '?';
+      return this.args.model?.name?.trim() || '?';
     }
 
     <template>
