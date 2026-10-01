@@ -14,6 +14,9 @@ import AddressField from '@cardstack/base/address';
 import enumField from '@cardstack/base/enum';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE, LegalFacts } from './legal-ui';
 import { EditSectionNav } from '../../components/edit-section-nav';
 
 export const LEGAL_ENTITY_TYPES = [
@@ -158,12 +161,12 @@ class LegalEntityEdit extends Component<typeof LegalEntity> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
         /* the legal family asserts no brand hue in CSS — the theme's own
            foreground/background pair is the accent */
-        --le-ink: var(--foreground, var(--boxel-dark));
-        --le-ink-fg: var(--background, var(--boxel-light));
+        --le-ink: var(--foreground);
+        --le-ink-fg: var(--background);
       }
       .edit-body {
         display: grid;
@@ -185,30 +188,33 @@ class LegalEntityEdit extends Component<typeof LegalEntity> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       /* the section the rail points at mirrors the rail's active state,
          same ink, diluted for the halo */
       .sect.focused {
         outline-color: var(--le-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--le-ink) 12%, transparent);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -298,6 +304,26 @@ export class LegalEntity extends CardDef {
     get typeLabel() {
       return LEGAL_ENTITY_TYPE_LABELS[this.args.model?.entityType ?? ''] ?? '—';
     }
+    get registrationFacts(): KeyValueItem[] {
+      let m = this.args.model;
+      return [
+        { key: 'Reg. number', value: '' },
+        { key: 'Tax ID', value: '' },
+        { key: 'Jurisdiction', value: m?.jurisdiction ?? '' },
+        {
+          key: 'Registered at',
+          value: m?.registeredAddress?.fullAddress ?? '',
+        },
+      ];
+    }
+    get signatoryFacts(): KeyValueItem[] {
+      let m = this.args.model;
+      return [
+        { key: 'Name', value: m?.signatoryName ?? '' },
+        { key: 'Title', value: m?.signatoryTitle ?? '' },
+        { key: 'Email', value: '' },
+      ];
+    }
     <template>
       <article class='entity'>
         <header class='head'>
@@ -315,27 +341,39 @@ export class LegalEntity extends CardDef {
         <div class='grid'>
           <section class='panel'>
             <h2>Registration</h2>
-            <dl>
-              <div><dt>Reg. number</dt><dd
-                  class='mono'
-                >{{@model.registrationNumber}}</dd></div>
-              <div><dt>Tax ID</dt><dd
-                  class='mono'
-                >{{@model.maskedTaxId}}</dd></div>
-              <div><dt>Jurisdiction</dt><dd>{{@model.jurisdiction}}</dd></div>
-              <div><dt>Registered at</dt><dd
-                >{{@model.registeredAddress.fullAddress}}</dd></div>
-            </dl>
+            <LegalFacts @items={{this.registrationFacts}}>
+              <:value as |row|>
+                {{#if (eq row.key 'Reg. number')}}
+                  {{#if @model.registrationNumber}}
+                    <Token
+                      @value={{@model.registrationNumber}}
+                      style={{ID_TOKEN_STYLE.sm}}
+                    />
+                  {{/if}}
+                {{else if (eq row.key 'Tax ID')}}
+                  {{#if @model.maskedTaxId}}
+                    <Token
+                      @value={{@model.maskedTaxId}}
+                      style={{ID_TOKEN_STYLE.sm}}
+                    />
+                  {{/if}}
+                {{else}}
+                  {{row.value}}
+                {{/if}}
+              </:value>
+            </LegalFacts>
           </section>
           <section class='panel'>
             <h2>Authorized Signatory</h2>
-            <dl>
-              <div><dt>Name</dt><dd>{{@model.signatoryName}}</dd></div>
-              <div><dt>Title</dt><dd>{{@model.signatoryTitle}}</dd></div>
-              <div><dt>Email</dt><dd>{{#if
-                    @model.signatoryEmail
-                  }}<@fields.signatoryEmail />{{/if}}</dd></div>
-            </dl>
+            <LegalFacts @items={{this.signatoryFacts}}>
+              <:value as |row|>
+                {{#if (eq row.key 'Email')}}
+                  {{#if @model.signatoryEmail}}<@fields.signatoryEmail />{{/if}}
+                {{else}}
+                  {{row.value}}
+                {{/if}}
+              </:value>
+            </LegalFacts>
           </section>
           {{#if @model.notes}}
             <section class='panel span'>
@@ -349,34 +387,33 @@ export class LegalEntity extends CardDef {
         .entity {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         .head {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
           gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           padding-bottom: var(--boxel-sp);
           margin-bottom: var(--boxel-sp);
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
-          letter-spacing: 0.12em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-family: var(--font-heading, inherit);
           font-size: 1.5rem;
         }
         .sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .grid {
           display: grid;
@@ -384,43 +421,23 @@ export class LegalEntity extends CardDef {
           gap: var(--boxel-sp);
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp);
-          background: var(--card, transparent);
+          background-color: var(--card);
         }
         .panel.span {
           grid-column: 1 / -1;
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dl {
-          margin: 0;
-          display: grid;
-          gap: var(--boxel-sp-xxs);
-        }
-        dl > div {
-          display: grid;
-          grid-template-columns: 7.5rem 1fr;
-          gap: var(--boxel-sp-xs);
-          align-items: baseline;
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: 0.8125rem;
-        }
-        dd {
-          margin: 0;
-          font-size: 0.875rem;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
+          color: var(--muted-foreground);
         }
         .notes {
           margin: 0;
@@ -451,7 +468,12 @@ export class LegalEntity extends CardDef {
             ·
             {{@model.jurisdiction}}</span>
         </div>
-        <span class='reg mono'>{{@model.registrationNumber}}</span>
+        {{#if @model.registrationNumber}}
+          <Token
+            @value={{@model.registrationNumber}}
+            style={{ID_TOKEN_STYLE.xs}}
+          />
+        {{/if}}
       </div>
       <style scoped>
         .row {
@@ -464,7 +486,7 @@ export class LegalEntity extends CardDef {
         .who {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .name {
@@ -473,12 +495,7 @@ export class LegalEntity extends CardDef {
         }
         .meta {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -527,7 +544,7 @@ export class LegalEntity extends CardDef {
         }
         .fit-sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

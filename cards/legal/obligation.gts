@@ -19,8 +19,6 @@ import RecurringPatternField from '@cardstack/catalog/fields/recurring-pattern/r
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 import HistoryIcon from '@cardstack/boxel-icons/history';
-import TriangleAlertIcon from '@cardstack/boxel-icons/triangle-alert';
-import BanknoteIcon from '@cardstack/boxel-icons/banknote';
 import ScrollTextIcon from '@cardstack/boxel-icons/scroll-text';
 
 import { Contract } from './contract';
@@ -31,6 +29,17 @@ import { tracked } from '@glimmer/tracking';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EditSectionNav } from '../../components/edit-section-nav';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+  ID_TOKEN_STYLE,
+  LegalFacts,
+} from './legal-ui';
 
 /**
  * A promise a contract compels, with a date and an owner.
@@ -190,7 +199,11 @@ export class ObligationCompletionField extends FieldDef {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <div class='oc-row'>
-        <span class='oc-period'>{{@model.period}}</span>
+        <Token
+          class='oc-period'
+          @value={{@model.period}}
+          style={{ID_TOKEN_STYLE.xs}}
+        />
         {{#if @model.evidenceUrl}}
           <a
             class='oc-link'
@@ -206,15 +219,15 @@ export class ObligationCompletionField extends FieldDef {
         .oc-row {
           display: flex;
           align-items: center;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-xs);
         }
-        .oc-period {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
+        /* Doubled class so the flush margin outranks Token's own. */
+        .oc-period.oc-period {
+          margin-inline: 0;
         }
         .oc-none {
-          color: var(--boxel-danger);
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -339,8 +352,8 @@ class ObligationEdit extends Component<typeof Obligation> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
       }
       .edit-body {
         display: grid;
@@ -360,32 +373,31 @@ class ObligationEdit extends Component<typeof Obligation> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
-        outline-color: var(--foreground, var(--boxel-dark));
-        box-shadow: 0 0 0 4px
-          color-mix(
-            in oklch,
-            var(--foreground, var(--boxel-dark)) 12%,
-            transparent
-          );
+        outline-color: var(--foreground);
+        box-shadow: 0 0 0 0.25rem
+          color-mix(in oklch, var(--foreground) 12%, transparent);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -401,7 +413,7 @@ class ObligationEdit extends Component<typeof Obligation> {
       .hint {
         margin: 0.25rem 0 0;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .row {
         display: grid;
@@ -608,6 +620,13 @@ export class Obligation extends CardDef {
     get isOverdueNow() {
       return this.args.model?.status === 'overdue';
     }
+    get glanceFacts(): KeyValueItem[] {
+      return [
+        { key: 'Next due', value: this.args.model?.nextDueDate || '—' },
+        { key: 'Amount', value: '—' },
+        { key: 'Owner', value: 'Unassigned' },
+      ];
+    }
     <template>
       <article class='ob-page'>
         <header class='hero'>
@@ -623,46 +642,41 @@ export class Obligation extends CardDef {
               @dot={{true}}
             />
           </div>
-          <div class='hero-figure {{if this.isOverdueNow "is-late"}}'>
-            <span class='fig-n'>{{this.countdown.n}}</span>
-            <span class='fig-u'>{{this.countdown.unit}}</span>
-          </div>
+          <Stat
+            class='hero-figure {{if this.isOverdueNow "is-late"}}'
+            @label={{this.countdown.unit}}
+            @value={{this.countdown.n}}
+            @roll={{false}}
+          />
         </header>
 
         {{#if @model.consequence}}
-          <p class='consequence'>
-            <TriangleAlertIcon role='presentation' />
-            {{@model.consequence}}
-          </p>
+          {{! What breach costs is standing context, so it is a note rather
+              than an alert that interrupts. }}
+          <Alert
+            class='consequence'
+            role='note'
+            @tone='danger'
+            style={{ALERT_STYLE.danger}}
+          >{{@model.consequence}}</Alert>
         {{/if}}
 
-        <dl class='glance'>
-          <div>
-            <dt>Next due</dt>
-            <dd class='val'>{{if
-                @model.nextDueDate
-                @model.nextDueDate
-                '—'
-              }}</dd>
-          </div>
-          <div>
-            <dt>Amount</dt>
-            <dd class='val'>
+        <LegalFacts @items={{this.glanceFacts}}>
+          <:value as |row|>
+            {{#if (eq row.key 'Next due')}}
+              <span class='val'>{{row.value}}</span>
+            {{else if (eq row.key 'Amount')}}
               {{#if @model.amount.amount}}<@fields.amount
                   @format='atom'
                 />{{else}}—{{/if}}
-            </dd>
-          </div>
-          <div>
-            <dt>Owner</dt>
-            <dd>
+            {{else if (eq row.key 'Owner')}}
               {{#if @model.owner}}<@fields.owner
                   @format='atom'
                   @displayContainer={{false}}
                 />{{else}}Unassigned{{/if}}
-            </dd>
-          </div>
-        </dl>
+            {{/if}}
+          </:value>
+        </LegalFacts>
 
         <section class='panel'>
           <h2><CalendarClockIcon role='presentation' />Schedule</h2>
@@ -675,11 +689,12 @@ export class Obligation extends CardDef {
           {{#if this.periods.length}}
             <@fields.completions />
           {{else}}
-            <p class='empty'>
-              <BanknoteIcon role='presentation' />
-              No period has been discharged yet. Attach proof when one is — a
-              completed obligation with no evidence is a claim, not a record.
-            </p>
+            <EmptyState
+              @title='No period has been discharged yet'
+              @message='Attach proof when one is — a completed obligation with no evidence is a claim, not a record.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -698,13 +713,9 @@ export class Obligation extends CardDef {
           container-type: inline-size;
           container-name: ob-page;
 
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #111) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
 
           height: 100%;
           overflow-y: auto;
@@ -712,36 +723,37 @@ export class Obligation extends CardDef {
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
-          color: var(--foreground, #111);
-          font-family: var(--font-sans, inherit);
         }
         .hero {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: var(--boxel-sp-lg);
-          border-bottom: 2px solid var(--foreground, #111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: var(--boxel-sp);
         }
         .hero-id {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
         }
         .kicker {
           margin: 0;
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.12em;
+          gap: 0.375rem;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .kicker :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
         }
         /* The heading is the one shout. The figure on the right supports it
            and is deliberately smaller — a card is opened for the thing it IS,
@@ -753,73 +765,21 @@ export class Obligation extends CardDef {
           line-height: 1.15;
           letter-spacing: -0.015em;
         }
-        /* The one dominant element: nothing else on the card comes near it. */
+        /* The figure supports the heading: Pret UI Stat, its eyebrow naming
+           the unit. A late obligation's count reads in the destructive ink. */
         .hero-figure {
           flex: none;
-          text-align: right;
-          line-height: 1;
         }
-        .fig-n {
-          display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
-          font-size: 1.45rem;
-          font-weight: 600;
-          letter-spacing: -0.03em;
+        .is-late :deep(.pretui-stat-value) {
+          color: var(--destructive-ink);
         }
-        .fig-u {
-          display: block;
-          margin-top: 4px;
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .is-late .fig-n {
-          color: var(--boxel-danger, #b3261e);
-        }
-
         .consequence {
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-xs);
-          margin: 0;
-          padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
-          background: color-mix(
-            in oklch,
-            var(--boxel-danger, #b3261e) 8%,
-            transparent
-          );
           font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
         }
-        .consequence :deep(svg) {
-          width: max(16px, 1em);
-          height: max(16px, 1em);
-          flex: none;
-          color: var(--boxel-danger, #b3261e);
-        }
 
-        .glance {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-          gap: var(--boxel-sp);
-          margin: 0;
-        }
-        .glance dt {
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .glance dd {
-          margin: 2px 0 0;
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 600;
-        }
         .val {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -829,54 +789,35 @@ export class Obligation extends CardDef {
         .panel {
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .panel h2 {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          letter-spacing: 0.04em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
         }
         .panel h2 :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
-          color: var(--muted-foreground, #6b7280);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
+          color: var(--muted-foreground);
         }
         .count {
           margin-left: auto;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          color: var(--muted-foreground, #6b7280);
+          font-family: var(--font-mono);
+          color: var(--muted-foreground);
         }
-        .empty {
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-xs);
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.5;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .empty :deep(svg) {
-          width: max(16px, 1em);
-          height: max(16px, 1em);
-          flex: none;
-        }
-
         @container ob-page (width < 560px) {
           .hero {
             flex-direction: column;
             align-items: flex-start;
             gap: var(--boxel-sp);
-          }
-          .hero-figure {
-            text-align: left;
-          }
-          .fig-n {
-            font-size: 2.4rem;
           }
         }
       </style>
@@ -913,32 +854,34 @@ export class Obligation extends CardDef {
           --type-ratio: 1.24;
           --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(10px, calc(var(--type-base) / var(--type-ratio)));
+          --meta-size: max(
+            0.625rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
           --anchor-size: max(
-            11px,
+            0.6875rem,
             min(
               calc(var(--type-base) * var(--type-ratio) * var(--type-ratio)),
               26cqb
             )
           );
-          --glyph: max(11px, min(3cqi, 14cqb));
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --glyph: max(0.6875rem, min(3cqi, 14cqb));
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
 
           width: 100%;
           height: 100%;
           box-sizing: border-box;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .r-head,
         .r-body,
@@ -949,19 +892,22 @@ export class Obligation extends CardDef {
         .r-head {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .r-head > :deep(svg) {
           width: var(--glyph);
           height: var(--glyph);
           flex: none;
-          color: var(--accent, var(--boxel-highlight));
+          color: var(--accent);
         }
         .eyebrow {
-          font-size: max(9px, calc(var(--meta-size) * 0.85));
-          letter-spacing: 0.12em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -973,7 +919,7 @@ export class Obligation extends CardDef {
         .r-body {
           display: grid;
           align-content: start;
-          gap: 2px;
+          gap: 0.125rem;
         }
         /* The anchor: loudest thing at every size, and the only survivor at badge. */
         .anchor {
@@ -990,7 +936,7 @@ export class Obligation extends CardDef {
         .sub {
           font-size: var(--meta-size);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -999,17 +945,17 @@ export class Obligation extends CardDef {
         .r-meta {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           font-size: var(--meta-size);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* Values are all-or-nothing: hidden at a quantum, never ellipsised. */
         .val {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 600;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
           white-space: nowrap;
         }
         .tail {
@@ -1143,7 +1089,7 @@ export class Obligation extends CardDef {
            text sits flush against the pill the host draws. */
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           display: grid;
-          grid-template-columns: minmax(0, 1fr) 96px 92px auto;
+          grid-template-columns: minmax(0, 1fr) 6rem 5.75rem auto;
           gap: var(--boxel-sp-xs);
           align-items: center;
         }
@@ -1156,13 +1102,13 @@ export class Obligation extends CardDef {
         .ob-sub {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .ob-cons {
-          margin: 2px 0 0;
+          margin: 0.125rem 0 0;
           font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
-          color: var(--boxel-danger);
+          color: var(--destructive-ink);
         }
         .ob-slot {
           display: flex;
@@ -1172,17 +1118,20 @@ export class Obligation extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .ob-lbl {
-          font-size: 9px;
-          letter-spacing: 0.1em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .ob-due {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-weight: 600;
         }
         .ob-dash {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container (width < 480px) {
           .ob-row {

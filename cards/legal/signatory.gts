@@ -23,6 +23,7 @@ import { tracked } from '@glimmer/tracking';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EditSectionNav } from '../../components/edit-section-nav';
+import { Stat } from '@cardstack/pretui/components/stat';
 
 /**
  * Who may legally bind the company, and up to what number.
@@ -128,8 +129,8 @@ class SignatoryEdit extends Component<typeof Signatory> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
       }
       .edit-body {
         display: grid;
@@ -149,32 +150,31 @@ class SignatoryEdit extends Component<typeof Signatory> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
-        outline-color: var(--foreground, var(--boxel-dark));
-        box-shadow: 0 0 0 4px
-          color-mix(
-            in oklch,
-            var(--foreground, var(--boxel-dark)) 12%,
-            transparent
-          );
+        outline-color: var(--foreground);
+        box-shadow: 0 0 0 0.25rem
+          color-mix(in oklch, var(--foreground) 12%, transparent);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -190,7 +190,7 @@ class SignatoryEdit extends Component<typeof Signatory> {
       .hint {
         margin: 0.25rem 0 0;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .row {
         display: grid;
@@ -370,17 +370,19 @@ export class Signatory extends CardDef {
               <StatePill @label='Inactive' @hue='red' @dot={{true}} />
             {{/if}}
           </div>
-          <div class='hero-figure'>
-            <span class='fig-n'>{{this.cap}}</span>
-            <span class='fig-u'>maximum, inclusive</span>
-          </div>
+          <Stat
+            class='hero-figure'
+            @label='Maximum, inclusive'
+            @value={{this.cap}}
+            @roll={{false}}
+          />
         </header>
 
         <section class='panel'>
           <h2><ScaleIcon role='presentation' />May sign</h2>
           <ul class='scope'>
             {{#each this.scopeLabels as |label|}}
-              <li>{{label}}</li>
+              <li><StatePill @label={{label}} /></li>
             {{/each}}
           </ul>
         </section>
@@ -413,49 +415,46 @@ export class Signatory extends CardDef {
         .sg-page {
           container-type: inline-size;
           container-name: sg-page;
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #111) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
-          color: var(--foreground, #111);
-          font-family: var(--font-sans, inherit);
         }
         .hero {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: var(--boxel-sp-lg);
-          border-bottom: 2px solid var(--foreground, #111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: var(--boxel-sp);
         }
         .hero-id {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
         }
         .kicker {
           margin: 0;
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.12em;
+          gap: 0.375rem;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .kicker :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
         }
         /* The heading is the one shout. The figure on the right supports it
            and is deliberately smaller — a card is opened for the thing it IS,
@@ -470,49 +469,33 @@ export class Signatory extends CardDef {
         .who {
           font-size: var(--boxel-font-size-sm);
         }
-        .hero-figure {
-          flex: none;
-          text-align: right;
-          line-height: 1;
-        }
         /* Money keeps its minor units — a signing ceiling missing a digit is
            the difference between $250,000 and $25,000. */
-        .fig-n {
-          display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
-          font-size: 1.45rem;
-          font-weight: 600;
-          letter-spacing: -0.03em;
+        .hero-figure {
+          flex: none;
           white-space: nowrap;
-        }
-        .fig-u {
-          display: block;
-          margin-top: 4px;
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
         }
         .panel {
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .panel h2 {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          letter-spacing: 0.04em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
         }
         .panel h2 :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
-          color: var(--muted-foreground, #6b7280);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
+          color: var(--muted-foreground);
         }
         .scope {
           list-style: none;
@@ -520,18 +503,7 @@ export class Signatory extends CardDef {
           padding: 0;
           display: flex;
           flex-wrap: wrap;
-          gap: 6px;
-        }
-        .scope li {
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 600;
-          padding: 3px 10px;
-          border-radius: 4px;
-          background: color-mix(
-            in oklch,
-            var(--foreground, #111) 7%,
-            transparent
-          );
+          gap: 0.375rem;
         }
         .guidance {
           margin: 0;
@@ -547,12 +519,6 @@ export class Signatory extends CardDef {
             flex-direction: column;
             align-items: flex-start;
             gap: var(--boxel-sp);
-          }
-          .hero-figure {
-            text-align: left;
-          }
-          .fig-n {
-            font-size: 2.1rem;
           }
         }
       </style>
@@ -579,33 +545,32 @@ export class Signatory extends CardDef {
       </article>
       <style scoped>
         .sg-fit {
-          --pad: clamp(6px, calc(2px + 1.7cqi), 13px);
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.8125rem);
           width: 100%;
           height: 100%;
           padding: var(--pad);
           overflow: hidden;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 3px;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          gap: 0.1875rem;
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .sf-head {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
         }
         .sf-icon {
-          width: clamp(12px, 3cqi, 16px);
-          height: clamp(12px, 3cqi, 16px);
+          width: clamp(0.75rem, 3cqi, 1rem);
+          height: clamp(0.75rem, 3cqi, 1rem);
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sf-title {
           margin: 0;
-          font-size: clamp(12px, min(4.2cqi, 15cqb), 17px);
+          font-size: clamp(0.75rem, min(4.2cqi, 15cqb), 1.0625rem);
           font-weight: 600;
           line-height: 1.15;
           overflow: hidden;
@@ -614,22 +579,22 @@ export class Signatory extends CardDef {
         }
         .sf-scope {
           margin: 0;
-          font-size: max(10px, min(3cqi, 12px));
+          font-size: max(0.625rem, min(3cqi, 0.75rem));
           line-height: 1.35;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
         .sf-foot {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
-          font-size: max(10px, min(3cqi, 12px));
+          font-size: max(0.625rem, min(3cqi, 0.75rem));
           font-weight: 600;
         }
         .sf-none {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-weight: 400;
         }
         /* Badge tier: the title alone still identifies the row. */
@@ -673,13 +638,13 @@ export class Signatory extends CardDef {
           gap: var(--boxel-sp-xxxs);
         }
         .sg-icon {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sg-none {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -722,14 +687,14 @@ export class Signatory extends CardDef {
            text sits flush against the pill the host draws. */
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           display: grid;
-          grid-template-columns: minmax(0, 1fr) 108px;
+          grid-template-columns: minmax(0, 1fr) 6.75rem;
           gap: var(--boxel-sp-xs);
           align-items: center;
         }
         .sg-title {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sg-slot {
           display: flex;
@@ -739,19 +704,22 @@ export class Signatory extends CardDef {
           font-size: var(--boxel-font-size-xs);
         }
         .sg-lbl {
-          font-size: 9px;
-          letter-spacing: 0.1em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sg-dash {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sg-scope {
           grid-column: 1 / -1;
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
