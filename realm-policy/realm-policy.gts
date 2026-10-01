@@ -1,8 +1,6 @@
 import { on } from '@ember/modifier';
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-import { resource, use } from 'ember-resources';
-import { TrackedObject } from 'tracked-built-ins';
 import {
   CardDef,
   Component,
@@ -10,7 +8,6 @@ import {
   contains,
   containsMany,
   field,
-  realmURL,
 } from 'https://cardstack.com/base/card-api';
 import CodeRefField from 'https://cardstack.com/base/code-ref';
 import {
@@ -19,10 +16,8 @@ import {
   OperationsError,
   type OperationDeclaration,
   type PolicyExplanation,
-  type PolicyValidation,
 } from 'https://cardstack.com/base/operations';
 import PolicyPredicateField from '@cardstack/catalog/fields/policy-predicate/policy-predicate';
-import { subscribeToRealm } from '@cardstack/runtime-common';
 import StringField from 'https://cardstack.com/base/string';
 import {
   BoxelInput,
@@ -206,16 +201,6 @@ const OUTCOME_LABEL: Record<
   'not-evaluated': 'not evaluated',
 };
 
-// What to tell the author when the realm refuses or fails an operation this
-// card asks of it.
-function failureMessage(err: unknown): string {
-  return err instanceof OperationsError
-    ? (err.detail ?? err.message)
-    : err instanceof Error
-      ? err.message
-      : String(err);
-}
-
 // Asks the realm what this policy decides for one caller, one card and one
 // operation. Nothing is invoked. Only a caller who can read both this card's
 // realm and the card's realm is answered; anyone else is told the card is not
@@ -308,7 +293,12 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
         operation: this.operationName.trim(),
       });
     } catch (err) {
-      this.refusal = failureMessage(err);
+      this.refusal =
+        err instanceof OperationsError
+          ? (err.detail ?? err.message)
+          : err instanceof Error
+            ? err.message
+            : String(err);
     } finally {
       this.running = false;
     }
@@ -538,42 +528,6 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
   </template>
 }
 
-// Whether this is a render someone is looking at, rather than the render
-// indexing takes of a card. What an index render shows is served to every
-// later viewer, and it runs while the card itself is being indexed, so asking
-// the realm what the card compiles to there would answer for the visit before
-// this one.
-function isLiveRender(): boolean {
-  return !(globalThis as { __boxelRenderContext?: unknown })
-    .__boxelRenderContext;
-}
-
-// What an issue about the card as a whole means, said of the card itself.
-// The compiler's own message is written for the log of a realm that names the
-// card, so an issue with no wording here reads as the compiler wrote it.
-const CARD_ISSUE_MESSAGES: Partial<Record<string, string>> = {
-  'policy-card-unloadable':
-    "This card's latest index visit failed, so what the index holds of it is an earlier visit's, which may not be what the card holds now. It grants nothing until a visit succeeds.",
-};
-
-// Why a grant that compiled admits nothing, where no issue says so.
-const SNAPSHOT_NOTE =
-  'admits nothing: its condition reads a snapshot, which the gate does not evaluate';
-
-// Whether a realm event says the realm has finished an index pass.
-function isIndexPass(event: { eventName: string; indexType?: string }) {
-  return (
-    event.eventName === 'index' &&
-    (event.indexType === 'incremental' || event.indexType === 'full')
-  );
-}
-
-// What the realm answered when asked what this card compiles to.
-type ValidationState = {
-  validation: PolicyValidation | undefined;
-  failure: string | undefined;
-};
-
 export class RealmPolicy extends CardDef {
   static displayName = 'Realm Policy';
   static icon = ShieldCheckIcon;
@@ -628,215 +582,12 @@ export class RealmPolicy extends CardDef {
     nonGrantable: true,
   } satisfies OperationDeclaration;
 
-  // What this policy compiles to, as a realm that names it compiles it: every
-  // issue compiling records, and the rules and grants that compile, which are
-  // the ones in force. Nothing is invoked or activated. No policy may grant
-  // it, since only a caller who can read this card may learn what it holds.
-  @operation static validate = {
-    base: 'validate',
-    nonGrantable: true,
-  } satisfies OperationDeclaration;
-
   static isolated = class Isolated extends Component<typeof RealmPolicy> {
     // `@model` is typed with every field optional, for a card still loading,
     // and an explain is asked of the loaded card.
     get policy(): RealmPolicy {
       return this.args.model as RealmPolicy;
     }
-
-    get rules(): PolicyRule[] {
-      return this.args.model.rules ?? [];
-    }
-
-    // Whether someone is looking at this view, decided when it is created. A
-    // page that indexes cards itself can be partway through an index render of
-    // another card when this view asks again.
-    private isLive = isLiveRender();
-
-    // What the card compiles to, asked of the realm as soon as someone looks
-    // at it, and again after each index pass of a realm the compile read: the
-    // card's own, and each realm a type its rules name lives in. That is when
-    // an edit to the card, or to one of those types, takes effect. It is the
-    // realm's compile, so it is what a realm naming this card holds in force.
-    // Only the latest ask's answer is shown, whichever order the answers
-    // arrive in.
-    private validationState = use(
-      this,
-      resource(({ on }) => {
-        let state = new TrackedObject<ValidationState>({
-          validation: undefined,
-          failure: undefined,
-        });
-        let policy = this.policy;
-        if (!this.isLive || !policy.id) {
-          return state;
-        }
-        let latest = 0;
-        let ended = false;
-        let watched = new Map<string, () => void>();
-        // Watches exactly these realms: the card's own until the realm has
-        // answered, then the ones each answer names.
-        let watch = (realms: string[]) => {
-          if (ended) {
-            return;
-          }
-          for (let [realm, unsubscribe] of watched) {
-            if (!realms.includes(realm)) {
-              unsubscribe();
-              watched.delete(realm);
-            }
-          }
-          for (let realm of realms) {
-            if (!watched.has(realm)) {
-              watched.set(
-                realm,
-                subscribeToRealm(realm, (event) => {
-                  if (isIndexPass(event)) {
-                    ask();
-                  }
-                }),
-              );
-            }
-          }
-        };
-        let ask = async () => {
-          let asked = ++latest;
-          try {
-            let validation =
-              await operations<typeof RealmPolicy>(policy).validate();
-            if (asked === latest) {
-              state.validation = validation;
-              state.failure = undefined;
-              watch(validation.realms);
-            }
-          } catch (err) {
-            if (asked === latest) {
-              state.validation = undefined;
-              state.failure = failureMessage(err);
-            }
-          }
-        };
-        on.cleanup(() => {
-          ended = true;
-          for (let unsubscribe of watched.values()) {
-            unsubscribe();
-          }
-          watched.clear();
-        });
-        let ownRealm = policy[realmURL]?.href;
-        watch(ownRealm ? [ownRealm] : []);
-        ask();
-        return state;
-      }),
-    );
-
-    get validation(): PolicyValidation | undefined {
-      return this.validationState.current.validation;
-    }
-
-    get validationFailure(): string | undefined {
-      return this.validationState.current.failure;
-    }
-
-    get uncompilable(): boolean {
-      return this.validation?.uncompilable === true;
-    }
-
-    // Why the policy did not compile: the issue about the card as a whole.
-    get uncompilableReason(): string | undefined {
-      let issue = this.validation?.issues.find(
-        (issue) => issue.rule === undefined,
-      );
-      return issue ? this.issueMessage(issue) : undefined;
-    }
-
-    issueMessage = (issue: PolicyValidation['issues'][number]): string =>
-      (issue.rule === undefined
-        ? CARD_ISSUE_MESSAGES[issue.code]
-        : undefined) ?? issue.message;
-
-    get issues(): PolicyValidation['issues'] {
-      return this.validation?.issues ?? [];
-    }
-
-    // A rule that did not compile, with every grant in it. An uncompilable
-    // policy says so once, above the rules, rather than on each of them.
-    isRuleInactive = (ruleIndex: number): boolean => {
-      let validation = this.validation;
-      return (
-        validation !== undefined &&
-        !validation.uncompilable &&
-        !validation.rules.some((rule) => rule.path === `rules[${ruleIndex}]`)
-      );
-    };
-
-    isRuleOutOfForce = (ruleIndex: number): boolean =>
-      this.uncompilable || this.isRuleInactive(ruleIndex);
-
-    // The grant as the realm compiled it, or undefined for one that did not
-    // compile.
-    compiledGrant = (
-      ruleIndex: number,
-      grantIndex: number,
-    ): PolicyValidation['rules'][number]['grants'][number] | undefined => {
-      let rulePath = `rules[${ruleIndex}]`;
-      let grantPath = `${rulePath}.grants[${grantIndex}]`;
-      return this.validation?.rules
-        .find((rule) => rule.path === rulePath)
-        ?.grants.find((grant) => grant.path === grantPath);
-    };
-
-    // Where the grant stands, once the realm has answered: live, or inactive
-    // because it did not compile or because it compiled and admits nothing.
-    // Undefined before the realm answers.
-    grantStatus = (
-      ruleIndex: number,
-      grantIndex: number,
-    ): 'live' | 'inactive' | undefined => {
-      if (!this.validation) {
-        return undefined;
-      }
-      let grant = this.compiledGrant(ruleIndex, grantIndex);
-      return grant && !grant.admitsNothing ? 'live' : 'inactive';
-    };
-
-    // Why a grant that compiled admits nothing, where no issue says so. A
-    // query grant with no search filter has its `policy-not-filterable` issue.
-    grantNote = (ruleIndex: number, grantIndex: number): string | undefined =>
-      this.compiledGrant(ruleIndex, grantIndex)?.admitsNothing === 'snapshot'
-        ? SNAPSHOT_NOTE
-        : undefined;
-
-    // A grant left out on its own. One in a rule left out, or in a policy
-    // that did not compile, is marked where the rule or the policy is.
-    isGrantInactive = (ruleIndex: number, grantIndex: number): boolean =>
-      !this.isRuleOutOfForce(ruleIndex) &&
-      this.grantStatus(ruleIndex, grantIndex) === 'inactive';
-
-    isGrantOutOfForce = (ruleIndex: number, grantIndex: number): boolean =>
-      this.isRuleOutOfForce(ruleIndex) ||
-      this.grantStatus(ruleIndex, grantIndex) === 'inactive';
-
-    // The rule and the grant an issue is about, named as the card names them,
-    // so an author can find the one bad grant among many.
-    issueRuleName = (
-      issue: PolicyValidation['issues'][number],
-    ): string | undefined =>
-      issue.rule === undefined
-        ? undefined
-        : (this.rules[issue.rule]?.targetType?.name ??
-          `rule ${issue.rule + 1}`);
-
-    issueOperation = (
-      issue: PolicyValidation['issues'][number],
-    ): string | undefined =>
-      issue.rule === undefined || issue.grant === undefined
-        ? undefined
-        : this.rules[issue.rule]?.grants?.[issue.grant]?.operation ||
-          `grant ${issue.grant + 1}`;
-
-    grantComponent = (grant: OperationGrant) =>
-      (grant.constructor as typeof OperationGrant).getComponent(grant);
 
     <template>
       <article class='realm-policy' data-test-realm-policy-isolated>
@@ -846,91 +597,10 @@ export class RealmPolicy extends CardDef {
         </header>
         <section class='section'>
           <h2 class='section-title'>Rules</h2>
-          {{#if this.uncompilable}}
-            <p
-              class='not-in-force'
-              role='alert'
-              data-test-realm-policy-uncompilable
-            >
-              <strong>Not in force.</strong>
-              This policy could not be compiled, so it grants nothing, and a
-              realm that names it refuses every caller its own permissions do
-              not admit.
-              {{this.uncompilableReason}}
-            </p>
-          {{/if}}
-          {{#if this.rules.length}}
+          {{#if @model.rules.length}}
             <ol class='rules' data-test-realm-policy-rules>
-              {{#each this.rules as |rule ruleIndex|}}
-                <li
-                  class='rule
-                    {{if (this.isRuleOutOfForce ruleIndex) "inactive"}}'
-                  data-test-policy-rule
-                >
-                  <header class='target'>
-                    {{#if rule.targetType}}
-                      <span class='type-name' data-test-policy-rule-type-name>
-                        {{rule.targetType.name}}
-                      </span>
-                      <span
-                        class='type-module'
-                        data-test-policy-rule-type-module
-                      >
-                        {{rule.targetType.module}}
-                      </span>
-                    {{else}}
-                      <span class='type-name missing'>No target type</span>
-                    {{/if}}
-                    {{#if (this.isRuleInactive ruleIndex)}}
-                      <Pill
-                        @variant='destructive'
-                        data-test-policy-rule-inactive
-                      >inactive</Pill>
-                    {{/if}}
-                  </header>
-                  {{#if rule.grants.length}}
-                    <ul class='grants'>
-                      {{#each rule.grants as |grant grantIndex|}}
-                        <li
-                          class='grant
-                            {{if
-                              (this.isGrantOutOfForce ruleIndex grantIndex)
-                              "inactive"
-                            }}'
-                          data-test-policy-grant-status={{this.grantStatus
-                            ruleIndex
-                            grantIndex
-                          }}
-                        >
-                          <span class='grant-body'>
-                            {{#let (this.grantComponent grant) as |Grant|}}
-                              <Grant @format='embedded' />
-                            {{/let}}
-                          </span>
-                          {{#if (this.isGrantInactive ruleIndex grantIndex)}}
-                            <Pill
-                              @variant='destructive'
-                              data-test-policy-grant-inactive
-                            >inactive</Pill>
-                            {{#let
-                              (this.grantNote ruleIndex grantIndex)
-                              as |note|
-                            }}
-                              {{#if note}}
-                                <span
-                                  class='grant-note'
-                                  data-test-policy-grant-note
-                                >{{note}}</span>
-                              {{/if}}
-                            {{/let}}
-                          {{/if}}
-                        </li>
-                      {{/each}}
-                    </ul>
-                  {{else}}
-                    <p class='empty' data-test-policy-rule-no-grants>No grants.</p>
-                  {{/if}}
-                </li>
+              {{#each @fields.rules as |Rule|}}
+                <li class='rule'><Rule /></li>
               {{/each}}
             </ol>
           {{else}}
@@ -939,47 +609,6 @@ export class RealmPolicy extends CardDef {
             </p>
           {{/if}}
         </section>
-        {{#if this.issues.length}}
-          <section class='section' data-test-realm-policy-issues>
-            <h2 class='section-title'>Issues</h2>
-            <p class='hint'>
-              What compiling this policy found. A rule or grant marked inactive
-              grants nothing, and the rest of the policy applies.
-            </p>
-            <ul class='issues'>
-              {{#each this.issues as |issue|}}
-                <li class='issue' data-test-policy-issue={{issue.code}}>
-                  <header class='issue-heading'>
-                    <code class='issue-code'>{{issue.code}}</code>
-                    {{#if (this.issueRuleName issue)}}
-                      <span class='type-name' data-test-policy-issue-rule>
-                        {{this.issueRuleName issue}}
-                      </span>
-                    {{/if}}
-                    {{#if (this.issueOperation issue)}}
-                      <code
-                        class='issue-operation'
-                        data-test-policy-issue-operation
-                      >{{this.issueOperation issue}}</code>
-                    {{/if}}
-                  </header>
-                  <p class='issue-message' data-test-policy-issue-message>
-                    {{this.issueMessage issue}}
-                  </p>
-                </li>
-              {{/each}}
-            </ul>
-          </section>
-        {{else if this.validationFailure}}
-          <p
-            class='refusal'
-            role='alert'
-            data-test-realm-policy-validate-failure
-          >
-            This policy could not be checked:
-            {{this.validationFailure}}
-          </p>
-        {{/if}}
         <section class='section' data-test-realm-policy-explain>
           <h2 class='section-title'>Explain a decision</h2>
           <p class='hint'>
@@ -1025,68 +654,6 @@ export class RealmPolicy extends CardDef {
           padding: var(--boxel-sp-sm);
           border: 1px solid var(--border, var(--boxel-border-color));
           border-radius: var(--boxel-border-radius);
-          display: grid;
-          gap: var(--boxel-sp-xs);
-        }
-        .target,
-        .grant,
-        .issue-heading {
-          display: flex;
-          align-items: baseline;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
-        }
-        .type-name {
-          font-weight: 600;
-        }
-        .type-name.missing,
-        .type-module,
-        .grant-note {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .grant-note {
-          font-size: var(--boxel-font-size-sm);
-        }
-        .type-module,
-        .issue-code,
-        .issue-operation {
-          font-family: var(--boxel-monospace-font-family, monospace);
-          font-size: var(--boxel-font-size-xs);
-          overflow-wrap: anywhere;
-        }
-        .grants,
-        .issues {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          gap: var(--boxel-sp-xxs);
-        }
-        .grants {
-          padding-left: var(--boxel-sp);
-        }
-        .issues {
-          gap: var(--boxel-sp-sm);
-        }
-        .rule.inactive > .target > .type-name,
-        .rule.inactive > .target > .type-module,
-        .grant.inactive > .grant-body {
-          opacity: 0.55;
-          text-decoration: line-through;
-        }
-        .not-in-force,
-        .refusal {
-          margin: 0 0 var(--boxel-sp-sm);
-          color: var(--destructive, var(--boxel-danger));
-        }
-        .issue {
-          padding: var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-border-color));
-          border-radius: var(--boxel-border-radius);
-        }
-        .issue-message {
-          margin: var(--boxel-sp-xxs) 0 0;
-          overflow-wrap: anywhere;
         }
         .empty {
           margin: 0;
