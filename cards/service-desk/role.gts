@@ -11,11 +11,13 @@ import {
 import UsersIcon from '@cardstack/boxel-icons/users';
 
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { initialsOf } from '@cardstack/catalog/cards/people/person-base';
 import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Token } from '@cardstack/pretui/components/token';
+import { AVATAR_HUE, tokenStyle } from './components/service-desk-ui';
 
 class RoleEdit extends Component<typeof Role> {
   @tracked activeSection = 'identity';
@@ -177,7 +179,16 @@ export class Role extends CardDef {
           <section>
             <h2>Grants (informational)</h2>
             <div class='role-grants'>
-              {{#each @model.permissions as |p|}}<code>{{p}}</code>{{/each}}
+              {{#each @model.permissions as |p|}}
+                <Token
+                  class='role-grant'
+                  @value={{p}}
+                  style={{tokenStyle
+                    '--boxel-font-size-xs'
+                    'var(--muted-foreground)'
+                  }}
+                />
+              {{/each}}
             </div>
           </section>
         {{/if}}
@@ -219,20 +230,16 @@ export class Role extends CardDef {
           flex-wrap: wrap;
           gap: var(--boxel-sp-4xs);
         }
-        code {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius-sm);
-          padding: 0.125rem 0.5rem;
+        .role-grants .role-grant {
+          margin-inline: 0;
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get dutyInitials() {
-      return initialsOf(this.args.model.onDuty?.title as string | undefined);
+    get dutyName() {
+      return this.args.model.onDuty?.name || '?';
     }
     <template>
       <div class='role-embedded'>
@@ -240,7 +247,15 @@ export class Role extends CardDef {
         <span class='role-meta'>
           {{@model.members.length}}
           member(s)
-          {{#if @model.onDuty}}· on duty {{this.dutyInitials}}{{/if}}
+          {{#if @model.onDuty}}· on duty
+            <Avatar
+              @name={{this.dutyName}}
+              @src={{@model.onDuty.photo.resolvedUrl}}
+              @hue={{AVATAR_HUE}}
+              @size={{18}}
+              aria-hidden='true'
+            />
+            <span class='role-sr'>{{this.dutyName}}</span>{{/if}}
         </span>
       </div>
       <style scoped>
@@ -253,8 +268,23 @@ export class Role extends CardDef {
           font-weight: 600;
         }
         .role-meta {
+          display: inline-flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-5xs);
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
+        }
+        /* The avatar's initials are hidden from assistive tech, so the full
+           name is read instead. */
+        .role-sr {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+          white-space: nowrap;
         }
       </style>
     </template>
