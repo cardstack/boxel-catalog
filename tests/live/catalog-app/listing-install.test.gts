@@ -356,6 +356,9 @@ export function runTests() {
                     ),
                     name: 'CardListing',
                   },
+                  // A listing served by a realm carries its realm, which the
+                  // install planner needs to place the copied files.
+                  realmURL: mockCatalogURL,
                 },
               },
             })) as CardDef;
