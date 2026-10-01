@@ -10,6 +10,8 @@ import NumberField from '@cardstack/base/number';
 import UrlField from '@cardstack/base/url';
 import enumField from '@cardstack/base/enum';
 import { dueDays } from '@cardstack/catalog/fields/due-date/due-date';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Component } from '@cardstack/base/card-api';
 
 // The consent vocabulary — permission to use someone's data, and permission
@@ -21,6 +23,32 @@ import { Component } from '@cardstack/base/card-api';
 // Enum values are migrations. Never rename or remove one — instances carry
 // these strings, and a renamed value silently reads as unset.
 
+interface Option {
+  value: string;
+  label: string;
+}
+
+// The option's label for display; an unknown value shows as stored rather
+// than disappearing, and an empty one shows nothing.
+function labelFor(
+  options: readonly Option[],
+  value?: string | null,
+): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  return options.find((o) => o.value === value)?.label ?? value;
+}
+
+const LAWFUL_BASIS_OPTIONS: Option[] = [
+  { value: 'consent', label: 'Consent' },
+  { value: 'contract', label: 'Performance of a contract' },
+  { value: 'legal-obligation', label: 'Legal obligation' },
+  { value: 'vital-interests', label: 'Vital interests' },
+  { value: 'public-task', label: 'Public task' },
+  { value: 'legitimate-interests', label: 'Legitimate interests' },
+];
+
 /**
  * The lawful basis for processing. Consent is only one of six, and treating
  * it as the only one is how a system ends up asking for permission it does
@@ -28,35 +56,40 @@ import { Component } from '@cardstack/base/card-api';
  * the person can say no.
  */
 export const LawfulBasisField = enumField(StringField, {
-  options: [
-    { value: 'consent', label: 'Consent' },
-    { value: 'contract', label: 'Performance of a contract' },
-    { value: 'legal-obligation', label: 'Legal obligation' },
-    { value: 'vital-interests', label: 'Vital interests' },
-    { value: 'public-task', label: 'Public task' },
-    { value: 'legitimate-interests', label: 'Legitimate interests' },
-  ],
+  options: LAWFUL_BASIS_OPTIONS,
 });
+
+const CONSENT_STATUS_OPTIONS: Option[] = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'granted', label: 'Granted' },
+  { value: 'withdrawn', label: 'Withdrawn' },
+  { value: 'expired', label: 'Expired' },
+];
 
 export const ConsentStatusField = enumField(StringField, {
-  options: [
-    { value: 'pending', label: 'Pending' },
-    { value: 'granted', label: 'Granted' },
-    { value: 'withdrawn', label: 'Withdrawn' },
-    { value: 'expired', label: 'Expired' },
-  ],
+  options: CONSENT_STATUS_OPTIONS,
 });
 
+const CHANNEL_OPTIONS: Option[] = [
+  { value: 'email', label: 'Email' },
+  { value: 'sms', label: 'SMS' },
+  { value: 'phone', label: 'Phone' },
+  { value: 'post', label: 'Post' },
+  { value: 'push', label: 'Push notification' },
+  { value: 'in-app', label: 'In-app' },
+];
+
 export const ChannelField = enumField(StringField, {
-  options: [
-    { value: 'email', label: 'Email' },
-    { value: 'sms', label: 'SMS' },
-    { value: 'phone', label: 'Phone' },
-    { value: 'post', label: 'Post' },
-    { value: 'push', label: 'Push notification' },
-    { value: 'in-app', label: 'In-app' },
-  ],
+  options: CHANNEL_OPTIONS,
 });
+
+const SUPPRESSION_REASON_OPTIONS: Option[] = [
+  { value: 'hard-bounce', label: 'Hard bounce' },
+  { value: 'spam-complaint', label: 'Spam complaint' },
+  { value: 'do-not-contact-list', label: 'Do-not-contact list' },
+  { value: 'invalid-address', label: 'Invalid address' },
+  { value: 'manual', label: 'Manual' },
+];
 
 /**
  * Why a channel cannot be used, when the reason is not the person's choice.
@@ -68,13 +101,7 @@ export const ChannelField = enumField(StringField, {
  * overstates how many people opted out.
  */
 export const SuppressionReasonField = enumField(StringField, {
-  options: [
-    { value: 'hard-bounce', label: 'Hard bounce' },
-    { value: 'spam-complaint', label: 'Spam complaint' },
-    { value: 'do-not-contact-list', label: 'Do-not-contact list' },
-    { value: 'invalid-address', label: 'Invalid address' },
-    { value: 'manual', label: 'Suppressed manually' },
-  ],
+  options: SUPPRESSION_REASON_OPTIONS,
 });
 
 // ── Consent Grant ───────────────────────────────────────────────────────────
@@ -163,6 +190,25 @@ export class ConsentGrantField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
+    get statusLabel(): string | undefined {
+      return labelFor(CONSENT_STATUS_OPTIONS, this.args.model?.status);
+    }
+
+    get basisLabel(): string | undefined {
+      return labelFor(LAWFUL_BASIS_OPTIONS, this.args.model?.lawfulBasis);
+    }
+
+    // The pill names the stored status; its hue follows whether the grant is
+    // actually in force, so a "granted" grant past its expiry or withdrawal
+    // date does not read as live.
+    get statusHue(): Hue {
+      let status = this.args.model?.status;
+      if (status === 'granted') {
+        return this.args.model?.isActive ? 'green' : 'slate';
+      }
+      return status === 'pending' ? 'amber' : 'slate';
+    }
+
     // 0 is "today", not falsy; a past date reads "expired" rather than a
     // negative count, whatever the stored status still says.
     get expiryLabel(): string | undefined {
@@ -182,40 +228,42 @@ export class ConsentGrantField extends FieldDef {
           {{if @model.purpose @model.purpose 'No purpose set'}}
         </span>
         <span class='meta'>
-          {{@model.status}}
-          {{#if @model.lawfulBasis}} · {{@model.lawfulBasis}}{{/if}}
-          {{#if this.expiryLabel}}
-            ·
-            {{this.expiryLabel}}
-          {{/if}}
+          <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
+          {{#if this.basisLabel}}<span>{{this.basisLabel}}</span>{{/if}}
+          {{#if this.expiryLabel}}<span>{{this.expiryLabel}}</span>{{/if}}
         </span>
         {{#if @model.needsEvidence}}
           {{! A consent-based grant with no policy version cannot be
             audited — the fix is a re-ask, so this is surfaced not hidden. }}
-          <span class='warn'>no policy version — not auditable</span>
+          <StatePill
+            @label='No policy version — not auditable'
+            @hue='amber'
+            @dot={{true}}
+          />
         {{/if}}
       </div>
       <style scoped>
         .grant {
           display: flex;
           flex-direction: column;
-          gap: 1px;
-          color: var(--foreground, var(--boxel-dark));
+          align-items: flex-start;
+          gap: var(--boxel-sp-4xs);
+          color: var(--foreground);
         }
         .purpose {
           font: 600 var(--boxel-font-sm);
         }
         .purpose.off {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           text-decoration: line-through;
         }
         .meta {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-3xs);
           font: var(--boxel-font-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .warn {
-          font: var(--boxel-font-xs);
-          color: var(--warning, #b7791f);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -295,13 +343,13 @@ export class ChannelConsentField extends FieldDef {
   @field blockedReason = contains(StringField, {
     computeVia: function (this: ChannelConsentField) {
       if (this.suppressionReason) {
-        return `Suppressed: ${this.suppressionReason}`;
+        return `Suppressed: ${labelFor(SUPPRESSION_REASON_OPTIONS, this.suppressionReason)}`;
       }
       if (this.optedOutAt) {
         return 'Opted out';
       }
       if (this.status !== 'granted') {
-        return `Not granted (${this.status ?? 'unset'})`;
+        return `Not granted (${labelFor(CONSENT_STATUS_OPTIONS, this.status) ?? 'unset'})`;
       }
       if (this.requiresDoubleOptIn && !this.doubleOptInConfirmedAt) {
         return 'Awaiting double opt-in confirmation';
@@ -311,35 +359,55 @@ export class ChannelConsentField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
+    get channelLabel(): string | undefined {
+      return labelFor(CHANNEL_OPTIONS, this.args.model?.channel);
+    }
+
+    // Same order as blockedReason: suppression is the hard stop; a channel
+    // waiting on someone (a pending grant, an unconfirmed opt-in) is amber;
+    // a person's own choice to stop (opted out, withdrawn, expired) is
+    // neutral rather than an error.
+    get hue(): Hue {
+      let m = this.args.model;
+      if (m?.isContactable) {
+        return 'green';
+      }
+      if (m?.isSuppressed) {
+        return 'red';
+      }
+      if (m?.optedOutAt) {
+        return 'slate';
+      }
+      if (m?.status === 'granted' || m?.status === 'pending') {
+        return 'amber';
+      }
+      return 'slate';
+    }
+
     <template>
       <div class='chan'>
-        <span class='name {{if @model.isContactable "ok" "no"}}'>
-          {{@model.channel}}
+        <span class='name'>
+          {{if this.channelLabel this.channelLabel 'No channel set'}}
         </span>
         {{! blockedReason orders its causes by what the reader can act on —
           suppression first, because that is the one they cannot fix by
           asking again. }}
-        <span class='why'>
-          {{if @model.isContactable 'contactable' @model.blockedReason}}
-        </span>
+        <StatePill
+          @label={{if @model.isContactable 'Contactable' @model.blockedReason}}
+          @hue={{this.hue}}
+          @dot={{true}}
+        />
       </div>
       <style scoped>
         .chan {
           display: flex;
-          align-items: baseline;
+          flex-wrap: wrap;
+          align-items: center;
           gap: var(--boxel-sp-xxs);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .name {
           font: 600 var(--boxel-font-sm);
-          text-transform: capitalize;
-        }
-        .name.no {
-          color: var(--destructive, var(--boxel-danger));
-        }
-        .why {
-          font: var(--boxel-font-xs);
-          color: var(--muted-foreground, var(--boxel-450));
         }
       </style>
     </template>
