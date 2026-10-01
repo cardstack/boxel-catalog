@@ -838,8 +838,11 @@ export class RealmPolicy extends CardDef {
           font-weight: 600;
           color: var(--foreground, var(--boxel-dark));
         }
-        /* badge: icon and a one-line title only */
+        /* badge: icon and a one-line title only, in one row */
         @container fitted-card (max-width: 150px) and (max-height: 169px) {
+          .fit {
+            grid-template-rows: none;
+          }
           .f-summary,
           .f-rules {
             display: none;
