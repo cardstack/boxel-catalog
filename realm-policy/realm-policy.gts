@@ -1100,8 +1100,10 @@ export class RealmPolicy extends CardDef {
           width: fit-content;
         }
         .grant-warning-messages {
+          list-style: none;
           margin: var(--boxel-sp-xxs) 0 0;
-          padding-left: var(--boxel-sp);
+          padding: 0 0 0 var(--boxel-sp-xs);
+          border-left: 0.1875rem solid var(--warning, var(--boxel-warning));
           display: grid;
           gap: var(--boxel-sp-xxs);
           font-size: var(--boxel-font-size-sm);
