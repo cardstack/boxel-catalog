@@ -642,9 +642,10 @@ export default class ListingCreateCommand extends Command<
 
     let imageDefUrl: string | undefined;
     try {
-      const result = await new CaptureCardCommand(
-        this.commandContext,
-      ).execute({ card: firstExample, format: 'isolated' });
+      const result = await new CaptureCardCommand(this.commandContext).execute({
+        card: firstExample,
+        format: 'isolated',
+      });
       imageDefUrl = (result as any)?.imageDefUrl;
     } catch (error) {
       console.warn('autoScreenshotExample: screenshot failed', {
