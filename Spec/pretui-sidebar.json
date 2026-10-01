@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/sidebar",
+        "name": "Sidebar"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Sidebar } from '@cardstack/pretui/components/sidebar';\n```\n",
+      "cardTitle": "Sidebar",
+      "cardDescription": "Collapsible app nav rail with mobile Sheet fallback",
+      "containedExamples": [],
+      "componentName": "Sidebar",
+      "icon": "layout-sidebar",
+      "category": "Navigation",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Collapsible app nav rail with mobile Sheet fallback · shadcn Sidebar",
+      "refs": "shadcn Sidebar · Mantine AppShell.Navbar · Ant Layout.Sider · MUI Drawer(permanent)",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 5,
+      "cardInfo": {
+        "name": "Sidebar",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/sidebar.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/sidebar.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

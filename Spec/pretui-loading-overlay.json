@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/loading-overlay",
+        "name": "LoadingOverlay"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { LoadingOverlay } from '@cardstack/pretui/components/loading-overlay';\n```\n",
+      "cardTitle": "LoadingOverlay",
+      "cardDescription": "Scrim + spinner over a region that is still there — not Skeleton, not Spinner",
+      "containedExamples": [],
+      "componentName": "LoadingOverlay",
+      "icon": "loader-2",
+      "category": "Feedback",
+      "tier": "Element",
+      "tags": [
+        "async"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "feedback",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Scrim + spinner over a region that is still there — not Skeleton, not Spinner",
+      "refs": "Mantine LoadingOverlay · Ant Spin(spinning) · Chakra (composition)",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 4,
+      "cardInfo": {
+        "name": "LoadingOverlay",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/loading-overlay.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/loading-overlay.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
