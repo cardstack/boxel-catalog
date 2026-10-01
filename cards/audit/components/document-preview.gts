@@ -100,10 +100,12 @@ export class DocumentPreview extends GlimmerComponent<Signature> {
   <template>
     <div class='doc-preview' ...attributes>
       <div class='stage'>
-        {{#if @fileField}}
-          <@fileField @format={{this.format}} />
-        {{else if this.hasFile}}
-          <FileDownloadLink @file={{this.doc.file}} />
+        {{#if this.hasFile}}
+          {{#if @fileField}}
+            <@fileField @format={{this.format}} />
+          {{else}}
+            <FileDownloadLink @file={{this.doc.file}} />
+          {{/if}}
         {{else}}
           <EmptyState
             @title='No file attached'

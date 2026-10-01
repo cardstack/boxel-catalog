@@ -55,6 +55,12 @@ export const AuditFacts: TemplateOnlyComponent<AuditFactsSignature> = <template>
     <KeyValue class='audit-facts' @items={{@items}} ...attributes />
   {{/if}}
   <style scoped>
+    /* Doubled class so the alignment outranks KeyValue's own centring
+       whatever the stylesheet order: a label sits on its value's first
+       line when the value wraps. */
+    .audit-facts.audit-facts {
+      align-items: baseline;
+    }
     .audit-facts {
       --text-ui: var(--boxel-font-size-sm);
       --text-ui-md: var(--boxel-font-size-sm);
