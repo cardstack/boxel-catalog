@@ -1,4 +1,4 @@
-name: Sync to Workspace
+name: Deploy to staging
 
 # Syncs catalog main to the staging catalog realm on every merge. Staging runs
 # boxel main, which keeps up with catalog main. Production gets the catalog from

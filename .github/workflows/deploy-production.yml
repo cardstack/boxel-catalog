@@ -1,6 +1,6 @@
-name: Deploy catalog to production
+name: Deploy to production
 # boxel's deploy finds the run it started by the marker its reason leads with.
-run-name: Deploy catalog to production ${{ inputs.reason }}
+run-name: Deploy to production ${{ inputs.reason }}
 
 # Deploys a catalog main revision to the production catalog realm. It runs in
 # two ways:
@@ -70,7 +70,7 @@ jobs:
           fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           {
-            echo "### Deploy catalog to production"
+            echo "### Deploy to production"
             echo "**Revision:** $sha"
             if [ -n "$REASON" ]; then echo "**Reason:** $REASON"; fi
             echo ""
