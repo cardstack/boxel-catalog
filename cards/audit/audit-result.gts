@@ -22,6 +22,10 @@ import { ProofField } from './proof-field';
 import { AuditMetadataField } from './audit-metadata-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { AuditFacts, COMPACT_EMPTY_STYLE } from './audit-ui';
 
 /**
  * One rule, one subject, one verdict — the atom an audit is made of.
@@ -75,6 +79,19 @@ export class AuditResult extends CardDef {
     get hue() {
       return EVALUATION_HUE[this.args.model?.status?.status ?? ''] ?? 'slate';
     }
+    // Clause renders the rule's atom in the `value` block; the other rows are
+    // plain strings.
+    get facts(): KeyValueItem[] {
+      let model = this.args.model;
+      let rows: KeyValueItem[] = [
+        { key: 'Required', value: model?.rule?.statement ?? '' },
+        { key: 'Observed', value: model?.observedValue ?? '' },
+      ];
+      if (model?.rule?.regime?.reference) {
+        rows.push({ key: 'Clause', value: '' });
+      }
+      return rows;
+    }
     <template>
       <article class='result'>
         <header>
@@ -96,22 +113,17 @@ export class AuditResult extends CardDef {
           </div>
         </header>
 
-        <section class='facts'>
-          <div class='fact'>
-            <span class='k'>Required</span>
-            <span class='v'>{{@model.rule.statement}}</span>
-          </div>
-          <div class='fact'>
-            <span class='k'>Observed</span>
-            <span class='v mono'>{{@model.observedValue}}</span>
-          </div>
-          {{#if @model.rule.regime.reference}}
-            <div class='fact'>
-              <span class='k'>Clause</span>
-              <span class='v'><@fields.rule @format='atom' /></span>
-            </div>
-          {{/if}}
-        </section>
+        <AuditFacts @items={{this.facts}}>
+          <:value as |item|>
+            {{#if (eq item.key 'Clause')}}
+              <@fields.rule @format='atom' />
+            {{else if (eq item.key 'Observed')}}
+              <span class='mono'>{{item.value}}</span>
+            {{else}}
+              {{item.value}}
+            {{/if}}
+          </:value>
+        </AuditFacts>
 
         {{#if @model.hasFinding}}
           <section>
@@ -126,10 +138,12 @@ export class AuditResult extends CardDef {
             <@fields.evidence />
           </section>
         {{else if @model.rule.evidenceRequired}}
-          <p class='empty'>No evidence attached. A rule that requires proof
-            reads
-            <strong>unproven</strong>
-            rather than pass.</p>
+          <EmptyState
+            @title='No evidence attached'
+            @message='A rule that requires proof reads unproven rather than pass.'
+            @texture={{false}}
+            style={{COMPACT_EMPTY_STYLE}}
+          />
         {{/if}}
 
         {{#if @model.meta}}
@@ -142,7 +156,6 @@ export class AuditResult extends CardDef {
           display: grid;
           gap: var(--boxel-sp-lg);
           max-width: 52rem;
-          color: var(--foreground, var(--boxel-dark));
         }
         header {
           display: grid;
@@ -150,24 +163,27 @@ export class AuditResult extends CardDef {
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
           font-size: 1.375rem;
-          font-family: var(--font-heading, inherit);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.75rem;
-          font-weight: 700;
-          letter-spacing: 0.06em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .head-meta {
           display: flex;
@@ -176,34 +192,15 @@ export class AuditResult extends CardDef {
           gap: var(--boxel-sp-xs);
           font-size: 0.8125rem;
         }
-        .meta,
-        .empty {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .empty {
-          margin: 0;
-          font-size: 0.875rem;
-        }
-        .facts {
-          display: grid;
-          gap: var(--boxel-sp-sm);
-        }
-        .fact {
-          display: grid;
-          grid-template-columns: 6rem minmax(0, 1fr);
-          gap: var(--boxel-sp-sm);
-          align-items: baseline;
-          font-size: 0.875rem;
-        }
-        .k {
-          color: var(--muted-foreground, var(--boxel-450));
+        .meta {
+          color: var(--muted-foreground);
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           overflow-wrap: anywhere;
         }
         .trail {
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
           padding-top: var(--boxel-sp-sm);
         }
       </style>
@@ -255,13 +252,13 @@ export class AuditResult extends CardDef {
         }
         .sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -312,21 +309,21 @@ export class AuditResult extends CardDef {
         .fit-sub,
         .row {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         .tier-tile {
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           margin-top: auto;
           padding-top: var(--boxel-sp-5xs);
-          border-top: 1px solid var(--border-subtle, var(--border, #f3f4f6));
+          border-top: 1px solid var(--border);
         }
         @container fitted-card (height <= 65px) {
           .fit {

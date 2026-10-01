@@ -1,7 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import type { BoxComponent, Format } from '@cardstack/base/card-api';
 import type { FileDef } from '@cardstack/base/file-api';
-import FileTextIcon from '@cardstack/boxel-icons/file-text';
 
 import FileDownloadLink from '@cardstack/catalog/cards/hr/components/file-download-link';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -12,6 +11,9 @@ import {
   type Integrity,
 } from '../utils/evidence-hash';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Token } from '@cardstack/pretui/components/token';
+import { COMPACT_EMPTY_STYLE, ID_TOKEN_STYLE } from '../audit-ui';
 
 // Structural, not the Document class: importing the card here would close a
 // module cycle (the card's isolated view renders this component). Same
@@ -103,18 +105,23 @@ export class DocumentPreview extends GlimmerComponent<Signature> {
         {{else if this.hasFile}}
           <FileDownloadLink @file={{this.doc.file}} />
         {{else}}
-          <div class='no-file'>
-            <FileTextIcon class='nf-icon' aria-hidden='true' />
-            <span>No file attached — the record exists, the artefact does not.</span>
-          </div>
+          <EmptyState
+            @title='No file attached'
+            @message='The record exists, the artefact does not.'
+            @texture={{false}}
+            style={{COMPACT_EMPTY_STYLE}}
+          />
         {{/if}}
       </div>
 
       {{#unless @bare}}
         <div class='provenance'>
           {{#if this.hashLabel}}
-            <span class='hash mono' title={{this.doc.contentHash}}>sha256
-              {{this.hashLabel}}</span>
+            <span>sha256
+              <Token
+                style={{ID_TOKEN_STYLE.xs}}
+                title={{this.doc.contentHash}}
+              >{{this.hashLabel}}</Token></span>
           {{/if}}
           <StatePill
             @label={{this.integrityLabel}}
@@ -142,34 +149,13 @@ export class DocumentPreview extends GlimmerComponent<Signature> {
         overflow: hidden;
         border-radius: var(--boxel-border-radius-sm);
       }
-      .no-file {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-sm);
-        border: 1px dashed var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm);
-        font-size: 0.8125rem;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .nf-icon {
-        width: 16px;
-        height: 16px;
-        flex: none;
-      }
       .provenance {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: var(--boxel-sp-xs);
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .hash {
-        font-weight: 600;
-      }
-      .mono {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        color: var(--muted-foreground);
       }
     </style>
   </template>
