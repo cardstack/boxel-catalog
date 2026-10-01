@@ -17,7 +17,7 @@ import { Alert } from '@cardstack/pretui/components/alert';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Token } from '@cardstack/pretui/components/token';
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EditSectionNav } from '../../components/edit-section-nav';
 import { codeRef, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
@@ -36,11 +36,8 @@ import { Opportunity } from '@cardstack/catalog/cards/crm/opportunity';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
-import {
-  ContractStatusField,
-  contractStatusLabel,
-  contractStatusOption,
-} from './contract-status';
+import { ContractStatusField, contractStatusLabel } from './contract-status';
+import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { RiskRatingField } from './contract-risk';
 import { LegalPartyRoleField } from './legal-party-role-field';
 import { SignatureBlockField } from './signature-block-field';
@@ -109,9 +106,6 @@ export const SignatureStatusField = enumField(StringField, {
 });
 
 /** The status's hue from the contract lifecycle table; slate when unknown. */
-function statusHue(status?: string | null): Hue {
-  return (contractStatusOption(status)?.hue as Hue | undefined) ?? 'slate';
-}
 
 class ContractIsolated extends Component<typeof Contract> {
   // Clauses and obligations link UP to their contract; there is no link array
@@ -1156,7 +1150,7 @@ export class Contract extends CardDef {
           <StatePill
             class='status'
             @label={{contractStatusLabel @model.status}}
-            @hue={{statusHue @model.status}}
+            @hue={{statusHue ContractStatusField @model.status}}
             @dot={{true}}
           />
         {{/if}}
@@ -1223,7 +1217,7 @@ export class Contract extends CardDef {
             <StatePill
               class='status'
               @label={{contractStatusLabel @model.status}}
-              @hue={{statusHue @model.status}}
+              @hue={{statusHue ContractStatusField @model.status}}
             />
           {{/if}}
         </div>

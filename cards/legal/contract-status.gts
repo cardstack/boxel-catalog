@@ -47,7 +47,7 @@ export const CONTRACT_STATUSES: StatusOption[] = [
   {
     value: 'approved',
     label: 'Approved',
-    hue: 'green',
+    hue: 'blue',
     meaning: 'Every internal approver has signed off. Not yet binding.',
   },
   {
@@ -65,7 +65,7 @@ export const CONTRACT_STATUSES: StatusOption[] = [
   {
     value: 'expired',
     label: 'Expired',
-    hue: 'slate',
+    hue: 'amber',
     meaning: 'The term ran out. Renewable, but nothing is in force today.',
   },
   {

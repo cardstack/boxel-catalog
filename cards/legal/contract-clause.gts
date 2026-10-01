@@ -640,7 +640,10 @@ export class ContractClause extends CardDef {
         }
         .eyebrow {
           font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: max(
+            var(--boxel-eyebrow-font-size),
+            calc(var(--meta-size) * 0.85)
+          );
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
