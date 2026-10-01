@@ -113,8 +113,8 @@ export class Activity extends CardDef {
           gap: 0.625rem;
           padding: 0.625rem 0.875rem;
         }
-        /* EntityDisplay's thumbnail dress holds the type icon; the summary
-           and secondary line keep the row's sizes. */
+        /* EntityDisplay's thumbnail dress holds the type icon; these knobs
+           size the visual, title, meta line and gap to the row's scale. */
         .entity {
           flex: 1;
           --pretui-entity-visual-size: 1.625rem;
