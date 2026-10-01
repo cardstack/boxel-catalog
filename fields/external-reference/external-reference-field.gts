@@ -10,6 +10,15 @@ import UrlField from '@cardstack/base/url';
 import enumField from '@cardstack/base/enum';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import PlugIcon from '@cardstack/boxel-icons/plug';
+import { Token } from '@cardstack/pretui/components/token';
+import { tokenStyle } from '../shared/pretui-token';
+
+// The external id is the other system's machine value, so it reads as a Pret
+// UI Token in the muted hue at the reference's own size.
+const ID_TOKEN_STYLE = tokenStyle(
+  '--boxel-font-size-xs',
+  'var(--muted-foreground)',
+);
 
 export const INTEGRATION_KINDS = [
   'ticketing',
@@ -60,8 +69,9 @@ export class IntegrationReferenceField extends FieldDef {
       <style scoped>
         .integration {
           display: inline-flex;
+          flex-wrap: wrap;
           align-items: baseline;
-          gap: var(--boxel-sp-4xs);
+          gap: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
         }
         .integration-name {
@@ -69,7 +79,7 @@ export class IntegrationReferenceField extends FieldDef {
         }
         .integration-kind {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -124,11 +134,11 @@ export class ExternalReferenceField extends FieldDef {
             @model.system.name
             '—'
           }}</span>
-        <code class='xref-id'>{{if
-            @model.externalId
-            @model.externalId
-            '—'
-          }}</code>
+        {{#if @model.externalId}}
+          <Token style={{ID_TOKEN_STYLE}}>{{@model.externalId}}</Token>
+        {{else}}
+          <span class='xref-sys'>—</span>
+        {{/if}}
         {{#if @model.state}}<span
             class='xref-state'
           >{{@model.state}}</span>{{/if}}
@@ -136,22 +146,16 @@ export class ExternalReferenceField extends FieldDef {
       <style scoped>
         .xref {
           display: inline-flex;
+          flex-wrap: wrap;
           align-items: baseline;
-          gap: var(--boxel-sp-4xs);
-          border: 1px solid var(--border, var(--boxel-border-color));
-          border-radius: var(--boxel-border-radius-sm);
-          padding: 0.125rem 0.5rem;
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-3xs);
           font-size: var(--boxel-font-size-xs);
         }
         .xref-sys {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .xref-id {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
-          font-weight: 500;
+          color: var(--muted-foreground);
         }
         .xref-state {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -160,11 +164,24 @@ export class ExternalReferenceField extends FieldDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <code class='xref-atom'>{{@model.title}}</code>
+      <span class='xref-atom'>
+        {{#if @model.system.name}}<span
+            class='xref-atom-sys'
+          >{{@model.system.name}}</span>{{/if}}
+        {{#if @model.externalId}}
+          <Token style={{ID_TOKEN_STYLE}}>{{@model.externalId}}</Token>
+        {{else}}
+          {{#unless @model.system.name}}
+            <span class='xref-atom-sys'>External reference</span>
+          {{/unless}}
+        {{/if}}
+      </span>
       <style scoped>
         .xref-atom {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
           font-size: var(--boxel-font-size-xs);
+        }
+        .xref-atom-sys {
+          color: var(--muted-foreground);
         }
       </style>
     </template>
