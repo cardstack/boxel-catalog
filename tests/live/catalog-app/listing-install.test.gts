@@ -1,7 +1,11 @@
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import { identifyCard, isResolvedCodeRef } from '@cardstack/runtime-common';
+import {
+  identifyCard,
+  isResolvedCodeRef,
+  rri,
+} from '@cardstack/runtime-common';
 
 import ListingInstallCommand from '../../../commands/listing-install';
 
@@ -347,7 +351,9 @@ export function runTests() {
                 },
                 meta: {
                   adoptsFrom: {
-                    module: `${catalogRealmURL}catalog-app/listing/listing`,
+                    module: rri(
+                      `${catalogRealmURL}catalog-app/listing/listing`,
+                    ),
                     name: 'CardListing',
                   },
                 },
