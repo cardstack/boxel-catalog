@@ -556,10 +556,6 @@ const CARD_ISSUE_MESSAGES: Partial<Record<string, string>> = {
     "This card's latest index visit failed, so what the index holds of it is an earlier visit's, which may not be what the card holds now. It grants nothing until a visit succeeds.",
 };
 
-// Why a grant that compiled admits nothing, where no issue says so.
-const SNAPSHOT_NOTE =
-  'admits nothing: its condition reads a snapshot, which the gate does not evaluate';
-
 // Whether a realm event says the realm has finished an index pass.
 function isIndexPass(event: { eventName: string; indexType?: string }) {
   return (
@@ -800,13 +796,6 @@ export class RealmPolicy extends CardDef {
       return grant && !grant.admitsNothing ? 'live' : 'inactive';
     };
 
-    // Why a grant that compiled admits nothing, where no issue says so. A
-    // query grant with no search filter has its `policy-not-filterable` issue.
-    grantNote = (ruleIndex: number, grantIndex: number): string | undefined =>
-      this.compiledGrant(ruleIndex, grantIndex)?.admitsNothing === 'snapshot'
-        ? SNAPSHOT_NOTE
-        : undefined;
-
     // A grant left out on its own. One in a rule left out, or in a policy
     // that did not compile, is marked where the rule or the policy is.
     isGrantInactive = (ruleIndex: number, grantIndex: number): boolean =>
@@ -936,17 +925,6 @@ export class RealmPolicy extends CardDef {
                               @variant='destructive'
                               data-test-policy-grant-inactive
                             >inactive</Pill>
-                            {{#let
-                              (this.grantNote ruleIndex grantIndex)
-                              as |note|
-                            }}
-                              {{#if note}}
-                                <span
-                                  class='grant-note'
-                                  data-test-policy-grant-note
-                                >{{note}}</span>
-                              {{/if}}
-                            {{/let}}
                           {{/if}}
                           {{#let
                             (this.grantWarnings ruleIndex grantIndex)
@@ -1102,12 +1080,8 @@ export class RealmPolicy extends CardDef {
           font-weight: 600;
         }
         .type-name.missing,
-        .type-module,
-        .grant-note {
+        .type-module {
           color: var(--muted-foreground, var(--boxel-450));
-        }
-        .grant-note {
-          font-size: var(--boxel-font-size-sm);
         }
         .grant-warnings[open] {
           flex-basis: 100%;
