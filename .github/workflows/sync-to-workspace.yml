@@ -15,7 +15,7 @@ env:
 
 jobs:
   sync-staging:
-    name: Sync to Staging
+    name: Deploy to staging
     runs-on: ubuntu-latest
     env:
       MATRIX_URL: https://matrix-staging.stack.cards
@@ -48,7 +48,7 @@ jobs:
             --password "${MATRIX_PASSWORD}" \
             --matrix-url "${MATRIX_URL}"
 
-      - name: Sync to staging workspace
+      - name: Push to the staging realm
         id: sync
         run: |
           echo "Starting sync to staging workspace..."
