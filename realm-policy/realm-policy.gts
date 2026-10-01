@@ -815,6 +815,27 @@ export class RealmPolicy extends CardDef {
       this.isRuleOutOfForce(ruleIndex) ||
       this.grantStatus(ruleIndex, grantIndex) === 'inactive';
 
+    // The warnings on a live grant: what it hands over that its author should
+    // know about, such as cards of a type no rule grants. A warning leaves its
+    // grant live, so it is marked only on a grant that is. One on a grant that
+    // admits nothing describes cards that grant never hands over, and is only
+    // listed with the issues.
+    grantWarnings = (
+      ruleIndex: number,
+      grantIndex: number,
+    ): PolicyValidation['issues'] =>
+      this.grantStatus(ruleIndex, grantIndex) === 'live'
+        ? this.issues.filter(
+            (issue) =>
+              issue.severity === 'warning' &&
+              issue.rule === ruleIndex &&
+              issue.grant === grantIndex,
+          )
+        : [];
+
+    warningLabel = (warnings: PolicyValidation['issues']): string =>
+      warnings.length === 1 ? 'warning' : `${warnings.length} warnings`;
+
     // The rule and the grant an issue is about, named as the card names them,
     // so an author can find the one bad grant among many.
     issueRuleName = (
@@ -922,6 +943,32 @@ export class RealmPolicy extends CardDef {
                               {{/if}}
                             {{/let}}
                           {{/if}}
+                          {{#let
+                            (this.grantWarnings ruleIndex grantIndex)
+                            as |warnings|
+                          }}
+                            {{#if warnings.length}}
+                              <details
+                                class='grant-warnings'
+                                data-test-policy-grant-warning
+                              >
+                                <summary class='grant-warnings-summary'>
+                                  <Pill
+                                    @pillBackgroundColor='var(--warning, var(--boxel-warning))'
+                                    @pillBorderColor='var(--warning, var(--boxel-warning))'
+                                    @pillFontColor='var(--warning-foreground, var(--boxel-dark))'
+                                  >{{this.warningLabel warnings}}</Pill>
+                                </summary>
+                                <ul class='grant-warning-messages'>
+                                  {{#each warnings as |warning|}}
+                                    <li
+                                      data-test-policy-grant-warning-message={{warning.code}}
+                                    >{{this.issueMessage warning}}</li>
+                                  {{/each}}
+                                </ul>
+                              </details>
+                            {{/if}}
+                          {{/let}}
                         </li>
                       {{/each}}
                     </ul>
@@ -942,7 +989,9 @@ export class RealmPolicy extends CardDef {
             <h2 class='section-title'>Issues</h2>
             <p class='hint'>
               What compiling this policy found. A rule or grant marked inactive
-              grants nothing, and the rest of the policy applies.
+              grants nothing, and the rest of the policy applies. A grant marked
+              with a warning is live, and the warning says something its author
+              should know about what it grants.
             </p>
             <ul class='issues'>
               {{#each this.issues as |issue|}}
@@ -1040,6 +1089,21 @@ export class RealmPolicy extends CardDef {
         }
         .grant-note {
           font-size: var(--boxel-font-size-sm);
+        }
+        .grant-warnings[open] {
+          flex-basis: 100%;
+        }
+        .grant-warnings-summary {
+          cursor: pointer;
+          width: fit-content;
+        }
+        .grant-warning-messages {
+          margin: var(--boxel-sp-xxs) 0 0;
+          padding-left: var(--boxel-sp);
+          display: grid;
+          gap: var(--boxel-sp-xxs);
+          font-size: var(--boxel-font-size-sm);
+          overflow-wrap: anywhere;
         }
         .type-module,
         .issue-code,
