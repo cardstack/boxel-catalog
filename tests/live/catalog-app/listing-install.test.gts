@@ -339,6 +339,9 @@ export function runTests() {
             // is the state that crashed the planner on `undefined` entries.
             let listing = (await store.addWithoutPersisting({
               data: {
+                // card-api only keeps `meta` (and so the realm) for a resource
+                // with an id, as every realm-served listing has.
+                id: `${mockCatalogURL}Listing/author-unloaded`,
                 type: 'card',
                 attributes: { name: 'Author', cardTitle: 'Author' },
                 relationships: {
@@ -356,8 +359,8 @@ export function runTests() {
                     ),
                     name: 'CardListing',
                   },
-                  // A listing served by a realm carries its realm, which the
-                  // install planner needs to place the copied files.
+                  // The install planner places copied files by the listing's
+                  // realm.
                   realmURL: mockCatalogURL,
                 },
               },
