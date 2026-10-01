@@ -12,18 +12,29 @@ import enumField from '@cardstack/base/enum';
 import { FileDef } from '@cardstack/base/file-api';
 import InboxIcon from '@cardstack/boxel-icons/inbox';
 import { htmlSafe } from '@ember/template';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import { Stat } from '@cardstack/pretui/components/stat';
 
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 import { Position } from '@cardstack/catalog/cards/hr/position';
 import {
+  StatePill,
   stateColor,
   stateColorOf,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 import { daysBetween } from '@cardstack/catalog/cards/hr/utils';
+import {
+  AVATAR_HUE,
+  AttentionPill,
+  QUIET_AVATAR_HUE,
+  hueOf,
+} from '@cardstack/catalog/cards/hr/hr-ui';
 import FileDownloadLink from '@cardstack/catalog/cards/hr/components/file-download-link';
 
-// How long this application has been sitting. Shared by both formats.
 export const APPLICATION_STATUSES = [
   'new',
   'reviewing',
@@ -31,22 +42,26 @@ export const APPLICATION_STATUSES = [
   'rejected',
 ];
 
-// Colocated with Application — the front porch of the same story Candidate
-// tells: "new" reuses the applied stage's brass, "reviewing" reuses
-// screening's green, "converted" resolves into the hired/active forest
-// green (this applicant became a Candidate), "rejected" shares the rust.
-export const APPLICATION_STATUS_COLORS: Record<string, StateColor> = {
-  new: stateColor('amber'),
-  reviewing: stateColor('green'),
-  converted: stateColor('green'),
-  rejected: stateColor('red'),
+// Colocated with Application — the hue map colours the status pill, and
+// `APPLICATION_STATUS_COLORS` below gives the avatar's status ring the same
+// hue. A status reads the status hues, matching Candidate's stages: "new" is
+// amber like an applied candidate, "reviewing" is green like screening,
+// "converted" is the green of a hire (this applicant became a Candidate), and
+// "rejected" is red.
+export const APPLICATION_STATUS_HUES: Record<string, Hue> = {
+  new: 'amber',
+  reviewing: 'green',
+  converted: 'green',
+  rejected: 'red',
 };
 
-// Inline fill + ink for the status pill, shared by every format.
-function statusPillStyle(status?: string | null) {
-  let c = stateColorOf(APPLICATION_STATUS_COLORS, status);
-  return htmlSafe(`background-color: ${c.bg}; color: ${c.fg};`);
-}
+export const APPLICATION_STATUS_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(APPLICATION_STATUS_HUES).map(([k, hue]) => [
+      k,
+      stateColor(hue),
+    ]),
+  );
 
 export const ApplicationStatusField = enumField(StringField, {
   options: APPLICATION_STATUSES.map((status) => ({
@@ -97,16 +112,18 @@ export class Application extends PersonBase {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(APPLICATION_STATUS_COLORS, this.args.model?.status);
+    get statusHue() {
+      return hueOf(APPLICATION_STATUS_HUES, this.args.model?.status);
     }
-    get statusPillStyle() {
-      return statusPillStyle(this.args.model?.status);
-    }
+    // The status ring sits on a wrapper: Avatar writes its own inline style,
+    // and a caller's `style` would replace it.
     get avatarRingStyle() {
-      return htmlSafe(
-        `box-shadow: 0 0 0 0.1875rem var(--background), 0 0 0 0.3125rem ${this.statusColor.ring};`,
-      );
+      let c = stateColorOf(APPLICATION_STATUS_COLORS, this.args.model?.status);
+      return htmlSafe(`--status-ring: ${c.ring}`);
+    }
+    get referrerLabel(): string | undefined {
+      let name = this.args.model?.referrerName;
+      return name ? `referred by ${name}` : undefined;
     }
     get resumeWordCount(): number | undefined {
       let text = this.args.model?.resumeText?.trim();
@@ -130,19 +147,15 @@ export class Application extends PersonBase {
     <template>
       <article class='application-isolated'>
         <header class='hero'>
-          {{#if @model.photo.resolvedUrl}}
-            <img
-              class='avatar avatar-photo'
-              style={{this.avatarRingStyle}}
-              src={{@model.photo.resolvedUrl}}
-              alt=''
+          <span class='avatar-ring' style={{this.avatarRingStyle}}>
+            <Avatar
+              @name={{if @model.title @model.title '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{AVATAR_HUE}}
+              @size={{52}}
+              aria-hidden='true'
             />
-          {{else}}
-            <span
-              class='avatar'
-              style={{this.avatarRingStyle}}
-            >{{@model.initials}}</span>
-          {{/if}}
+          </span>
           <div class='hero-text'>
             <h1>{{@model.title}}</h1>
             <p class='byline'>
@@ -154,30 +167,27 @@ export class Application extends PersonBase {
               {{/if}}
             </p>
             <div class='pill-row'>
-              {{#if @model.status}}
-                <span class='pill' style={{this.statusPillStyle}}>
-                  <span class='pill-dot'></span>{{@model.status}}
-                </span>
-              {{/if}}
+              <StatePill
+                @label={{@model.status}}
+                @hue={{this.statusHue}}
+                @dot={{true}}
+              />
               {{#if this.needsScreening}}
-                {{#if this.waitLabel}}
-                  <span class='pill stale'>
-                    <span class='pill-dot'></span>{{this.waitLabel}}
-                  </span>
-                {{/if}}
-              {{else if this.waitLabel}}
-                <span class='pill neutral'>{{this.waitLabel}}</span>
+                <AttentionPill @label={{this.waitLabel}} />
+              {{else}}
+                <StatePill @label={{this.waitLabel}} />
               {{/if}}
-              {{#if @model.referrerName}}
-                <span class='pill neutral'>referred by
-                  {{@model.referrerName}}</span>
-              {{/if}}
+              <StatePill @label={{this.referrerLabel}} />
             </div>
           </div>
           {{#if this.resumeWordCount}}
             <div class='hero-money'>
-              <span class='money'>{{this.resumeWordCount}}</span>
-              <span class='money-label'>words of resume</span>
+              <Stat
+                class='money'
+                @label='Resume words'
+                @value={{this.resumeWordCount}}
+                @roll={{false}}
+              />
             </div>
           {{/if}}
         </header>
@@ -190,14 +200,21 @@ export class Application extends PersonBase {
                 <FileDownloadLink @file={{@model.resumeFile}} />
               </div>
             {{else}}
-              <p class='empty'>No resume file attached.</p>
+              <EmptyState
+                class='empty'
+                @texture={{false}}
+                @title='No resume file attached'
+              />
             {{/if}}
             {{#if @model.resumeText}}
               <p class='prose'>{{@model.resumeText}}</p>
             {{else}}
-              <p class='empty'>No resume text on file — this is what a Screen
-                conversion and any later AI parsing on the resulting Candidate
-                both read.</p>
+              <EmptyState
+                class='empty'
+                @texture={{false}}
+                @title='No resume text on file'
+                @message='This is what a Screen conversion and any later AI parsing on the resulting Candidate both read.'
+              />
             {{/if}}
 
             <h2 class='panel-title spaced'>Cover letter</h2>
@@ -206,13 +223,17 @@ export class Application extends PersonBase {
                 <FileDownloadLink @file={{@model.coverLetterFile}} />
               </div>
             {{else}}
-              <p class='empty'>No cover letter attached.</p>
+              <EmptyState
+                class='empty'
+                @texture={{false}}
+                @title='No cover letter attached'
+              />
             {{/if}}
           </div>
 
           <aside class='side'>
             <h2 class='panel-title'>Applicant</h2>
-            <dl class='facts stacked'>
+            <dl class='stacked'>
               <dt>Email</dt>
               <dd>{{if @model.email @model.email '—'}}</dd>
               <dt>Phone</dt>
@@ -225,7 +246,7 @@ export class Application extends PersonBase {
             </dl>
 
             <h2 class='panel-title spaced'>Requisition</h2>
-            <dl class='facts stacked'>
+            <dl class='stacked'>
               <dt>Position</dt>
               <dd>{{#if @model.position}}<@fields.position
                     @format='atom'
@@ -248,27 +269,14 @@ export class Application extends PersonBase {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          --app-id: var(--primary);
-          --app-strong: color-mix(
-            in oklch,
-            var(--app-id) 45%,
-            var(--foreground)
-          );
         }
-        .avatar {
+        .avatar-ring {
           flex: none;
-          width: 3.25rem;
-          height: 3.25rem;
+          display: inline-flex;
           border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-          background-color: var(--app-strong);
-          color: var(--background);
-        }
-        .avatar-photo {
-          object-fit: cover;
+          box-shadow:
+            0 0 0 0.1875rem var(--background),
+            0 0 0 0.3125rem var(--status-ring);
         }
         .attach {
           font-size: var(--boxel-font-size-sm);
@@ -307,50 +315,13 @@ export class Application extends PersonBase {
           gap: var(--boxel-sp-5xs);
           margin-top: var(--boxel-sp-xs);
         }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-        }
-        .pill.neutral {
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-        }
-        .pill.stale {
-          background-color: color-mix(
-            in oklab,
-            var(--attention-ink) 12%,
-            var(--card)
-          );
-          color: var(--attention-ink);
-        }
-        .pill-dot {
-          width: 0.375rem;
-          height: 0.375rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
-        }
         .hero-money {
           flex: none;
           text-align: right;
         }
         .money {
-          display: block;
-          font-size: 1.5rem;
-          font-weight: 800;
-          line-height: 1.1;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .money-label {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
+          --text-stat: 1.5rem;
+          justify-items: end;
         }
         .body {
           display: grid;
@@ -388,15 +359,11 @@ export class Application extends PersonBase {
           max-height: 16rem;
           overflow-y: auto;
         }
-        .facts {
+        .stacked {
           margin: 0;
           display: grid;
-          grid-template-columns: 9rem 1fr;
         }
-        .facts.stacked {
-          grid-template-columns: 1fr;
-        }
-        .facts dt {
+        .stacked dt {
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -404,28 +371,20 @@ export class Application extends PersonBase {
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
-          padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-          border-bottom: 1px solid var(--border);
+          padding: 0.45rem var(--boxel-sp-xs) 0 0;
         }
-        .facts.stacked dt {
-          border-bottom: 0;
-          padding-bottom: 0;
-        }
-        .facts dd {
+        .stacked dd {
           margin: 0;
-          padding: 0.45rem 0;
+          padding: 0.1rem 0 0.45rem;
           font-size: var(--boxel-font-size-sm);
           border-bottom: 1px solid var(--border);
           overflow-wrap: anywhere;
           font-variant-numeric: tabular-nums;
         }
-        .facts.stacked dd {
-          padding-top: 0.1rem;
-        }
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
+          --space-9: var(--boxel-sp);
+          --space-6: var(--boxel-sp);
+          --text-heading: var(--boxel-font-size);
         }
         @container iso (max-width: 40rem) {
           .body {
@@ -441,34 +400,45 @@ export class Application extends PersonBase {
           .hero-money {
             text-align: left;
           }
+          .money {
+            justify-items: start;
+          }
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusStyle() {
-      return statusPillStyle(this.args.model?.status);
+    get statusHue() {
+      return hueOf(APPLICATION_STATUS_HUES, this.args.model?.status);
+    }
+    get sourceLine() {
+      let source = this.args.model?.source;
+      return source ? `via ${source}` : undefined;
     }
     <template>
       <div class='application-embedded'>
-        {{#if @model.photo.resolvedUrl}}
-          <img class='ae-avatar' src={{@model.photo.resolvedUrl}} alt='' />
-        {{else}}
-          <span class='ae-avatar ae-initials'>{{@model.initials}}</span>
-        {{/if}}
-        <div class='ae-main'>
-          <span class='ae-name'>{{@model.title}}</span>
-          {{#if @model.source}}
-            <span class='ae-source'>via {{@model.source}}</span>
-          {{/if}}
-        </div>
-        {{#if @model.status}}
-          <span
-            class='ae-status'
-            style={{this.statusStyle}}
-          >{{@model.status}}</span>
-        {{/if}}
+        <EntityDisplay
+          class='entity'
+          @title={{@model.title}}
+          @subtitle={{this.sourceLine}}
+          @center={{true}}
+        >
+          <:visual>
+            <Avatar
+              @name={{if @model.name @model.name '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{QUIET_AVATAR_HUE}}
+              @size={{30}}
+              aria-hidden='true'
+            />
+          </:visual>
+        </EntityDisplay>
+        <StatePill
+          class='ae-status'
+          @label={{@model.status}}
+          @hue={{this.statusHue}}
+        />
       </div>
       <style scoped>
         .application-embedded {
@@ -478,50 +448,17 @@ export class Application extends PersonBase {
           padding: 0.625rem 0.75rem;
           font-size: 0.8125rem;
         }
-        .ae-avatar {
-          width: 1.875rem;
-          height: 1.875rem;
-          border-radius: 50%;
-          flex-shrink: 0;
-          object-fit: cover;
-        }
-        .ae-initials {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          font-size: 0.6875rem;
-          font-weight: 700;
-        }
-        .ae-main {
-          display: flex;
-          flex-direction: column;
-          gap: 0.0625rem;
-          min-width: 0;
+        /* EntityDisplay's name and secondary line keep the row's sizes. */
+        .entity {
           flex: 1;
-        }
-        .ae-name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .ae-source {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          --pretui-entity-visual-size: 1.875rem;
+          --text-ui-md: 0.8125rem;
+          --text-ui-sm: 0.6875rem;
+          --space-3: 0.625rem;
         }
         .ae-status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
           flex-shrink: 0;
+          text-transform: capitalize;
         }
       </style>
     </template>
@@ -558,14 +495,8 @@ export class Application extends PersonBase {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get statusPillStyle() {
-      return statusPillStyle(this.args.model?.status);
-    }
-    get pipelineSteps() {
-      let order = ['new', 'reviewing', 'converted'];
-      let status = this.args.model?.status;
-      let idx = status === 'rejected' ? -1 : order.indexOf(status ?? '');
-      return order.map((step, i) => ({ step, done: idx >= 0 && i <= idx }));
+    get statusHue() {
+      return hueOf(APPLICATION_STATUS_HUES, this.args.model?.status);
     }
     get waitLabel(): string | undefined {
       let d = daysBetween(this.args.model?.appliedDate);
@@ -575,15 +506,13 @@ export class Application extends PersonBase {
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          {{#if @model.photo.resolvedUrl}}
-            <img
-              class='avatar avatar-photo'
-              src={{@model.photo.resolvedUrl}}
-              alt=''
-            />
-          {{else}}
-            <span class='avatar' aria-hidden='true'>{{@model.initials}}</span>
-          {{/if}}
+          <Avatar
+            @name={{if @model.title @model.title '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{26}}
+            aria-hidden='true'
+          />
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
             {{! Reads the denormalized own-attribute, not position.title —
@@ -593,11 +522,12 @@ export class Application extends PersonBase {
               <span class='fit-eb'>{{@model.positionTitle}}</span>
             {{/if}}
           </div>
-          {{#if @model.status}}
-            <span class='fit-pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
-          {{/if}}
+          <StatePill
+            class='fit-pill'
+            @label={{@model.status}}
+            @hue={{this.statusHue}}
+            @dot={{true}}
+          />
         </div>
 
         <div class='fit-mid'>
@@ -639,29 +569,8 @@ export class Application extends PersonBase {
           overflow: hidden;
           background-color: var(--card);
           color: var(--card-foreground);
-          --app-id: var(--primary);
-          --app-strong: color-mix(
-            in oklch,
-            var(--app-id) 45%,
-            var(--foreground)
-          );
           --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
           --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .avatar {
-          flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          background-color: var(--app-strong);
-          color: var(--background);
-        }
-        .avatar-photo {
-          object-fit: cover;
         }
         .fit > * {
           min-height: 0;
@@ -700,27 +609,12 @@ export class Application extends PersonBase {
         .fit-pill {
           flex: none;
           align-self: flex-start;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 0.3125rem;
-          height: 0.3125rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
           display: none;
           flex-direction: column;
-          gap: 1px;
+          gap: 0.0625rem;
         }
         .money {
           font-size: calc(var(--fit-name) * 1.15);

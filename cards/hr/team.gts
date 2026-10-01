@@ -8,10 +8,15 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import UsersIcon from '@cardstack/boxel-icons/users';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
 
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { AVATAR_HUE, FactList } from '@cardstack/catalog/cards/hr/hr-ui';
 import { liveCount } from '@cardstack/catalog/cards/hr/utils';
-import { initialsOf } from '@cardstack/catalog/cards/people/person-base';
 
 export class Team extends CardDef {
   static displayName = 'Team';
@@ -50,8 +55,8 @@ export class Team extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get initials() {
-      return initialsOf(this.args.model?.name);
+    get markName() {
+      return this.args.model?.title || '?';
     }
 
     get memberCount(): number {
@@ -70,10 +75,12 @@ export class Team extends CardDef {
         let k = (m as any)?.status ?? 'unknown';
         counts[k] = (counts[k] ?? 0) + 1;
       }
-      return Object.entries(counts).map(([status, count]) => ({
-        status,
-        count,
-      }));
+      return Object.entries(counts).map(
+        ([status, count]): KeyValueItem => ({
+          key: status,
+          value: String(count),
+        }),
+      );
     }
 
     get leadName(): string | undefined {
@@ -83,7 +90,13 @@ export class Team extends CardDef {
     <template>
       <article class='team-isolated'>
         <header class='hero'>
-          <span class='avatar' aria-hidden='true'>{{this.initials}}</span>
+          <Avatar
+            class='team-mark'
+            @name={{this.markName}}
+            @hue={{AVATAR_HUE}}
+            @size={{52}}
+            aria-hidden='true'
+          />
           <div class='hero-text'>
             <h1>{{@model.title}}</h1>
             <p class='byline'>
@@ -99,8 +112,12 @@ export class Team extends CardDef {
             {{/if}}
           </div>
           <div class='hero-num'>
-            <span class='num'>{{this.memberCount}}</span>
-            <span class='num-label'>on the team</span>
+            <Stat
+              class='num'
+              @label='On the team'
+              @value={{this.memberCount}}
+              @roll={{false}}
+            />
           </div>
         </header>
 
@@ -117,14 +134,18 @@ export class Team extends CardDef {
                 {{/each}}
               </ul>
             {{else}}
-              <p class='empty'>No members yet. Link an employee to build the
-                team.</p>
+              <EmptyState
+                class='empty'
+                @texture={{false}}
+                @title='No members yet'
+                @message='Link an employee to build the team.'
+              />
             {{/if}}
           </div>
 
           <aside class='side'>
             <h2 class='panel-title'>Composition</h2>
-            <dl class='facts stacked'>
+            <dl class='stacked'>
               <dt>Headcount</dt>
               <dd>{{if @model.headcount @model.headcount '0 members'}}</dd>
               <dt>Lead</dt>
@@ -136,12 +157,7 @@ export class Team extends CardDef {
 
             {{#if this.statusSplit.length}}
               <h2 class='panel-title spaced'>By status</h2>
-              <dl class='facts stacked'>
-                {{#each this.statusSplit as |row|}}
-                  <dt>{{row.status}}</dt>
-                  <dd>{{row.count}}</dd>
-                {{/each}}
-              </dl>
+              <FactList @items={{this.statusSplit}} />
             {{/if}}
           </aside>
         </div>
@@ -154,12 +170,6 @@ export class Team extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          --team-id: var(--primary);
-          --team-strong: color-mix(
-            in oklch,
-            var(--team-id) 45%,
-            var(--foreground)
-          );
         }
         .hero {
           flex: none;
@@ -169,17 +179,9 @@ export class Team extends CardDef {
           padding: var(--boxel-sp-lg);
           border-bottom: 1px solid var(--border);
         }
-        .avatar {
-          flex: none;
-          width: 3.25rem;
-          height: 3.25rem;
+        /* A team's mark is square, so it never reads as a person's avatar. */
+        .hero .team-mark {
           border-radius: var(--boxel-border-radius);
-          display: grid;
-          place-items: center;
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-          background-color: var(--team-strong);
-          color: var(--background);
         }
         .hero-text {
           flex: 1;
@@ -212,16 +214,8 @@ export class Team extends CardDef {
           text-align: right;
         }
         .num {
-          display: block;
-          font-size: 1.9rem;
-          font-weight: 800;
-          line-height: 1;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .num-label {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
+          --text-stat: 1.9rem;
+          justify-items: end;
         }
         .body {
           display: grid;
@@ -264,16 +258,15 @@ export class Team extends CardDef {
           overflow: hidden;
         }
         .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
+          --space-9: var(--boxel-sp);
+          --space-6: var(--boxel-sp);
+          --text-heading: var(--boxel-font-size);
         }
-        .facts {
+        .stacked {
           margin: 0;
           display: grid;
-          grid-template-columns: 1fr;
         }
-        .facts dt {
+        .stacked dt {
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -283,7 +276,7 @@ export class Team extends CardDef {
           color: var(--muted-foreground);
           padding-top: 0.4rem;
         }
-        .facts dd {
+        .stacked dd {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           overflow-wrap: anywhere;
@@ -302,6 +295,9 @@ export class Team extends CardDef {
           }
           .hero-num {
             text-align: left;
+          }
+          .num {
+            justify-items: start;
           }
         }
       </style>
@@ -402,14 +398,29 @@ export class Team extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get initials() {
-      return initialsOf(this.args.model?.name);
+    get markName() {
+      return this.args.model?.title || '?';
     }
 
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          <span class='avatar' aria-hidden='true'>{{this.initials}}</span>
+          {{! Avatar sizes itself from @size, so the smallest tier mounts its
+              own 20px mark and the container queries show one of the two. }}
+          <Avatar
+            class='team-mark mark-lg'
+            @name={{this.markName}}
+            @hue={{AVATAR_HUE}}
+            @size={{26}}
+            aria-hidden='true'
+          />
+          <Avatar
+            class='team-mark mark-sm'
+            @name={{this.markName}}
+            @hue={{AVATAR_HUE}}
+            @size={{20}}
+            aria-hidden='true'
+          />
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
             {{#if @model.leadName}}
@@ -417,13 +428,11 @@ export class Team extends CardDef {
             {{/if}}
           </div>
           {{! Headcount rides in the pill slot — it is this card's status. }}
-          <span class='fit-pill'>
-            <span class='pill-dot'></span>{{if
-              @model.headcount
-              @model.headcount
-              '0 members'
-            }}
-          </span>
+          <StatePill
+            class='fit-pill'
+            @label={{if @model.headcount @model.headcount '0 members'}}
+            @dot={{true}}
+          />
         </div>
 
         {{#if @model.mission}}
@@ -456,12 +465,6 @@ export class Team extends CardDef {
           overflow: hidden;
           background-color: var(--card);
           color: var(--card-foreground);
-          --team-id: var(--primary);
-          --team-strong: color-mix(
-            in oklch,
-            var(--team-id) 45%,
-            var(--foreground)
-          );
           --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
           --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
@@ -476,17 +479,11 @@ export class Team extends CardDef {
           gap: 0.4rem;
           flex-wrap: wrap;
         }
-        .avatar {
-          flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
+        .fit-top .team-mark {
           border-radius: 0.25rem;
-          display: grid;
-          place-items: center;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          background-color: var(--team-strong);
-          color: var(--background);
+        }
+        .fit-top .mark-sm {
+          display: none;
         }
         .fit-head {
           flex: 1;
@@ -513,24 +510,7 @@ export class Team extends CardDef {
         }
         .fit-pill {
           flex: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
           align-self: flex-start;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 0.1875rem;
-          white-space: nowrap;
-          background-color: var(--muted);
-          color: var(--team-strong);
-        }
-        .pill-dot {
-          width: 0.3125rem;
-          height: 0.3125rem;
-          border-radius: 50%;
-          background-color: currentColor;
-          flex: none;
         }
         .fit-mission {
           display: none;
@@ -619,9 +599,11 @@ export class Team extends CardDef {
         }
         /* Smallest: drop the lead, keep the headcount pill. */
         @container fitted-card (height <= 50px) {
-          .avatar {
-            width: 1.25rem;
-            height: 1.25rem;
+          .fit-top .mark-lg {
+            display: none;
+          }
+          .fit-top .mark-sm {
+            display: inline-flex;
           }
           .fit-eb {
             display: none;
