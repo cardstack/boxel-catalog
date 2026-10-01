@@ -87,6 +87,9 @@ export class AutomationPolicyField extends FieldDef {
       let m = this.args.model;
       return Boolean(m.action || m.actionParam);
     }
+    get hasConditionAndAction() {
+      return this.hasCondition && this.hasAction;
+    }
     get hasRule() {
       return this.hasCondition || this.hasAction;
     }
@@ -100,13 +103,15 @@ export class AutomationPolicyField extends FieldDef {
         </span>
         {{#if this.hasRule}}
           <span class='policy-rule'>
-            when
             {{#if this.hasCondition}}
+              when
               <Token style={{RULE_TOKEN_STYLE}}>{{@model.whenField}}
                 {{@model.whenOp}}
                 {{@model.whenValue}}</Token>
             {{/if}}
-            →
+            {{#if this.hasConditionAndAction}}
+              →
+            {{/if}}
             {{#if this.hasAction}}
               <Token style={{RULE_TOKEN_STYLE}}>{{@model.action}}{{#if
                   @model.actionParam
