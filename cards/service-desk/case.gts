@@ -13,7 +13,7 @@ import TextAreaField from '@cardstack/base/text-area';
 import MarkdownField from '@cardstack/base/markdown';
 import enumField from '@cardstack/base/enum';
 import { tracked } from '@glimmer/tracking';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 
 import { Ticket } from '@cardstack/catalog/cards/service-desk/ticket';
@@ -354,6 +354,19 @@ export class Case extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
+    // The sub-line under the title shows only the parts that are set, with a
+    // separator between shown parts and none leading.
+    get hasSubline() {
+      let m = this.args.model;
+      return Boolean(m?.openedOn || m?.account || m?.owner);
+    }
+    get accountNeedsSeparator() {
+      return Boolean(this.args.model?.openedOn);
+    }
+    get ownerNeedsSeparator() {
+      let m = this.args.model;
+      return Boolean(m?.openedOn || m?.account);
+    }
     get statusHue() {
       return STATUS_HUES[this.args.model?.status ?? 'open'] ?? 'blue';
     }
@@ -385,8 +398,8 @@ export class Case extends CardDef {
                 />{{/if}}</p>
             <h1>{{@model.subject}}</h1>
             {{! A missing open date drops the "opened …" fragment rather than
-                printing a placeholder; the separators follow what is shown. }}
-            {{#if (or @model.openedOn @model.account @model.owner)}}
+                printing a placeholder. }}
+            {{#if this.hasSubline}}
               <p class='sub'>
                 {{#if @model.openedOn}}opened
                   <FormatDate
@@ -396,9 +409,9 @@ export class Case extends CardDef {
                     @day='numeric'
                     @year='numeric'
                   />{{/if}}
-                {{#if @model.account}}{{#if @model.openedOn}}·
+                {{#if @model.account}}{{#if this.accountNeedsSeparator}}·
                   {{/if}}<@fields.account @format='atom' />{{/if}}
-                {{#if @model.owner}}{{#if (or @model.openedOn @model.account)}}·
+                {{#if @model.owner}}{{#if this.ownerNeedsSeparator}}·
                   {{/if}}owned by
                   <@fields.owner @format='atom' />{{/if}}</p>
             {{/if}}
