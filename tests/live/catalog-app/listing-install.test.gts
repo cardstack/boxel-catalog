@@ -26,6 +26,7 @@ import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 import {
   makeMockCatalogContents,
+  makeLinkEdgeCaseListingContents,
   makeDestinationRealmContents,
 } from '../../helpers/test-fixtures';
 
@@ -39,6 +40,8 @@ const testDestinationRealmURL = `http://test-realm/test2/`;
 const authorListingId = `${mockCatalogURL}Listing/author`;
 const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;
 const photoPostListingId = `${mockCatalogURL}Listing/photo-post`;
+const brokenSpecListingId = `${mockCatalogURL}Listing/broken-spec`;
+const baseSpecOnlyListingId = `${mockCatalogURL}Listing/base-spec-only`;
 
 export function runTests() {
   module(
@@ -70,6 +73,7 @@ export function runTests() {
           contents: {
             ...SYSTEM_CARD_FIXTURE_CONTENTS,
             ...makeMockCatalogContents(mockCatalogURL, catalogRealmURL),
+            ...makeLinkEdgeCaseListingContents(mockCatalogURL, catalogRealmURL),
           },
         });
         await setupAcceptanceTestRealm({
@@ -97,6 +101,32 @@ export function runTests() {
           realm,
           listing,
         });
+      }
+
+      // Build the input the way an AI tool call does: the listing arrives as a
+      // relationship on a freshly added input card, so nothing has loaded its
+      // linked specs or examples yet.
+      async function executeCommandFromToolCall(
+        listingUrl: string,
+        realm: string,
+      ) {
+        const commandService = getService('tool-service');
+        const store = getService('store');
+
+        const command = new ListingInstallCommand(
+          commandService.commandContext,
+        );
+        const InputType = await command.getInputType();
+        const input = await store.addWithoutPersisting({
+          data: {
+            type: 'card',
+            meta: { adoptsFrom: identifyCard(InputType)! },
+            attributes: { realm },
+            relationships: { listing: { links: { self: listingUrl } } },
+          },
+        });
+
+        return command.execute(input as any);
       }
 
       module('listing commands', function (hooks) {
@@ -267,6 +297,72 @@ export function runTests() {
             let instancePath = `${outerFolder}Skill/pirate-speak.json`;
             await openDir(assert, instancePath);
             await verifyFileInFileTree(assert, instancePath);
+          });
+        });
+
+        module('linked cards', function () {
+          test('a listing from a tool call installs once its links load', async function (assert) {
+            const listingName = 'author';
+
+            let result = await executeCommandFromToolCall(
+              authorListingId,
+              testDestinationRealmURL,
+            );
+            assert.ok(result.exampleCardId, 'the example card is installed');
+
+            await visitOperatorMode({
+              submode: 'code',
+              fileView: 'browser',
+              codePath: `${testDestinationRealmURL}index`,
+            });
+            let outerFolder = await verifyFolderWithUUIDInFileTree(
+              assert,
+              listingName,
+            );
+            let gtsFilePath = `${outerFolder}${listingName}/author.gts`;
+            await openDir(assert, gtsFilePath);
+            await verifyFileInFileTree(assert, gtsFilePath);
+            let examplePath = `${outerFolder}${listingName}/Author/example.json`;
+            await openDir(assert, examplePath);
+            await verifyFileInFileTree(assert, examplePath);
+          });
+
+          test('a broken spec link fails with an error naming the spec', async function (assert) {
+            try {
+              await executeCommandFromToolCall(
+                brokenSpecListingId,
+                testDestinationRealmURL,
+              );
+              assert.ok(false, 'expected the install to fail');
+            } catch (e: any) {
+              assert.notOk(
+                e instanceof TypeError,
+                `error is not a TypeError: ${e?.message}`,
+              );
+              assert.ok(
+                e.message.includes(
+                  `Listing spec "${mockCatalogURL}Spec/does-not-exist"`,
+                ),
+                `error names the broken spec: ${e.message}`,
+              );
+              assert.ok(
+                e.message.includes('Update Specs'),
+                `error tells the user how to fix it: ${e.message}`,
+              );
+            }
+          });
+
+          test('a listing whose only spec is a base-realm def installs without a code ref', async function (assert) {
+            let result = await executeCommand(
+              ListingInstallCommand,
+              baseSpecOnlyListingId,
+              testDestinationRealmURL,
+            );
+            assert.strictEqual(
+              result.selectedCodeRef,
+              undefined,
+              'no module was copied, so there is no code ref to select',
+            );
           });
         });
 

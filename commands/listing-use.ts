@@ -7,11 +7,9 @@ import {
   rri,
 } from '@cardstack/runtime-common';
 
-import type * as CardAPI from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import type { Skill } from 'https://cardstack.com/base/skill';
-
+import { loadListingLinks } from './listing-links';
 import { loadCommandModule, getLoaderService } from './utils';
 
 import CopyCardToRealmCommand from '@cardstack/boxel-host/commands/copy-card';
@@ -44,8 +42,9 @@ export default class ListingUseCommand extends Command<
       this.commandContext,
     ).execute({ realmIdentifier: realm });
 
-    const specsToCopy = listing.specs ?? [];
-    const specsWithoutFields = specsToCopy.filter(
+    const { specs, examples, supportingCards, skills } =
+      await loadListingLinks(listing);
+    const specsWithoutFields = specs.filter(
       (spec) => spec.specType !== 'field',
     );
 
@@ -87,10 +86,10 @@ export default class ListingUseCommand extends Command<
 
     const sourceCards = [
       ...new Map(
-        [
-          ...((listing.examples ?? []) as CardAPI.CardDef[]),
-          ...((listing.supportingCards ?? []) as CardAPI.CardDef[]),
-        ].map((card) => [card.id ?? card, card]),
+        [...examples, ...supportingCards].map((card) => [
+          card.id ?? card,
+          card,
+        ]),
       ).values(),
     ];
     for (const card of sourceCards) {
@@ -101,16 +100,14 @@ export default class ListingUseCommand extends Command<
       });
     }
 
-    if ('skills' in listing && Array.isArray(listing.skills)) {
-      await Promise.all(
-        listing.skills.map((skill: Skill) =>
-          new CopyCardToRealmCommand(this.commandContext).execute({
-            sourceCard: skill,
-            targetRealm: realmUrl,
-            localDir,
-          }),
-        ),
-      );
-    }
+    await Promise.all(
+      skills.map((skill) =>
+        new CopyCardToRealmCommand(this.commandContext).execute({
+          sourceCard: skill,
+          targetRealm: realmUrl,
+          localDir,
+        }),
+      ),
+    );
   }
 }
