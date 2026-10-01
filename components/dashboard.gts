@@ -1,6 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { concat, fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { Stat } from '@cardstack/pretui/components/stat';
 
@@ -78,7 +78,10 @@ export class Dashboard extends GlimmerComponent<Signature> {
             <button
               type='button'
               class='tile-open'
-              aria-label='{{tile.label}}: {{tile.value}}'
+              aria-label='{{tile.label}}: {{tile.value}}{{if
+                tile.detail
+                (concat ". " tile.detail)
+              }}'
               {{on 'click' (fn this.openTile tile)}}
             ><span class='tile-cue' aria-hidden='true'>›</span></button>
           {{/if}}
@@ -92,7 +95,7 @@ export class Dashboard extends GlimmerComponent<Signature> {
       }
       .tile {
         /* Stat's hint reads --ink-3, which boxel's theme leaves at a pale
-           grey; the detail line keeps the muted ink it had. */
+           grey; this points it at the muted ink for the detail line. */
         --ink-3: var(--muted-foreground);
         position: relative;
         border: 1px solid transparent;
