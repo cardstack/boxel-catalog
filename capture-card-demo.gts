@@ -11,12 +11,12 @@ import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 
-import ScreenshotCardCommand from '@cardstack/boxel-host/commands/screenshot-card';
+import CaptureCardCommand from '@cardstack/boxel-host/commands/capture-card';
 import { Button } from '@cardstack/boxel-ui/components';
 
-type ScreenshotFormat = 'isolated' | 'embedded';
+type OnDemandCaptureFormat = 'isolated' | 'embedded';
 
-interface ScreenshotResult {
+interface CaptureResult {
   id: string;
   title: string;
   imageUrl?: string;
@@ -27,13 +27,13 @@ interface ScreenshotResult {
 // edit view renders a BoxelSelect dropdown of the configured options.
 const FormatField = enumField(StringField, {
   options: ['isolated', 'embedded'],
-  displayName: 'Screenshot Format',
+  displayName: 'Capture Format',
 });
 
-class Isolated extends Component<typeof ScreenshotCardDemo> {
+class Isolated extends Component<typeof CaptureCardDemo> {
   @tracked isRunning = false;
   @tracked errorMessage: string | null = null;
-  @tracked results: ScreenshotResult[] = [];
+  @tracked results: CaptureResult[] = [];
   @tracked processedCount = 0;
 
   get hasCommandContext() {
@@ -53,21 +53,21 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
     return this.isRunning || !this.hasCommandContext || !this.hasLinkedCards;
   }
 
-  get effectiveFormat(): ScreenshotFormat {
+  get effectiveFormat(): OnDemandCaptureFormat {
     let raw = (this.args.model as any)?.format?.trim?.();
     return raw === 'embedded' ? 'embedded' : 'isolated';
   }
 
   get buttonLabel() {
     if (this.isRunning) {
-      return `Taking screenshots… ${this.processedCount}/${this.linkedCards.length}`;
+      return `Taking captures… ${this.processedCount}/${this.linkedCards.length}`;
     }
     let count = this.linkedCards.length;
-    return count > 1 ? `Take ${count} Screenshots` : 'Take Screenshot';
+    return count > 1 ? `Take ${count} Captures` : 'Take Capture';
   }
 
   @action
-  async takeScreenshots() {
+  async takeCaptures() {
     let commandContext = this.args.context?.commandContext;
     let cards = this.linkedCards;
     if (!commandContext) {
@@ -76,7 +76,7 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
       return;
     }
     if (!cards.length) {
-      this.errorMessage = 'Link at least one card before taking screenshots.';
+      this.errorMessage = 'Link at least one card before taking captures.';
       return;
     }
 
@@ -85,11 +85,11 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
     this.results = [];
     this.processedCount = 0;
 
-    let collected: ScreenshotResult[] = [];
+    let collected: CaptureResult[] = [];
     for (let card of cards) {
       let title = card?.title ?? card?.id ?? 'Untitled';
       try {
-        let result = await new ScreenshotCardCommand(commandContext).execute({
+        let result = await new CaptureCardCommand(commandContext).execute({
           card,
           format: this.effectiveFormat,
         });
@@ -115,18 +115,18 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
   }
 
   <template>
-    <article class='screenshot-card-demo'>
+    <article class='capture-card-demo'>
       <header>
-        <h2>Screenshot Card Demo</h2>
+        <h2>Capture Card Demo</h2>
         <p>
           Link one or more cards and pick a format, then capture a settled PNG
           for each into its own realm under
-          <code>Screenshots/</code>.
+          <code>Captures/</code>.
         </p>
       </header>
 
       <section class='field'>
-        <label>Cards to screenshot</label>
+        <label>Cards to capture</label>
         <@fields.cards />
       </section>
 
@@ -137,9 +137,9 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
 
       <section class='actions'>
         <Button
-          data-test-take-screenshot
+          data-test-take-capture
           @disabled={{this.isDisabled}}
-          {{on 'click' this.takeScreenshots}}
+          {{on 'click' this.takeCaptures}}
         >
           {{this.buttonLabel}}
         </Button>
@@ -152,7 +152,7 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
               <p class='result-title'>{{result.title}}</p>
               {{#if result.imageUrl}}
                 <code class='url'>{{result.imageUrl}}</code>
-                <img src={{result.imageUrl}} alt='Card screenshot' />
+                <img src={{result.imageUrl}} alt='Card capture' />
               {{else}}
                 <p class='status status--error'>{{result.error}}</p>
               {{/if}}
@@ -167,7 +167,7 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
     </article>
 
     <style scoped>
-      .screenshot-card-demo {
+      .capture-card-demo {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-lg);
@@ -233,8 +233,8 @@ class Isolated extends Component<typeof ScreenshotCardDemo> {
   </template>
 }
 
-export class ScreenshotCardDemo extends CardDef {
-  static displayName = 'Screenshot Card Demo';
+export class CaptureCardDemo extends CardDef {
+  static displayName = 'Capture Card Demo';
 
   @field cards = linksToMany(CardDef);
   @field format = contains(FormatField);
