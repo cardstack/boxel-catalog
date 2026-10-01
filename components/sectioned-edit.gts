@@ -39,33 +39,33 @@ export class EditSection extends GlimmerComponent<SectionSignature> {
     </section>
     <style scoped>
       .sect {
-        --se-ink: var(
-          --edit-section-nav-ink,
-          var(--foreground, var(--boxel-dark))
-        );
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        --se-ink: var(--edit-section-nav-ink, var(--foreground));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
-        background: var(--card, var(--boxel-light));
+        background-color: var(--card);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
         outline-color: var(--se-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklab, var(--se-ink) 12%, transparent);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -166,8 +166,8 @@ export class SectionedEdit extends GlimmerComponent<Signature> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
       }
       .edit-body {
         display: grid;
