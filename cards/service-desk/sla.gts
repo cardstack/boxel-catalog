@@ -25,6 +25,8 @@ import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from './components/service-desk-ui';
 
 /**
  * A pause on the clock, as an EVENT — never a boolean. While the ball is with
@@ -276,8 +278,12 @@ export class Sla extends CardDef {
               @showBar={{true}}
             />
           {{else}}
-            <p class='sla-none'>No clocks running — apply a policy to start
-              them.</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @title='No clocks running'
+              @message='Apply a policy to start them.'
+              @texture={{false}}
+            />
           {{/each}}
         </section>
         <section class='sla-meta'>
