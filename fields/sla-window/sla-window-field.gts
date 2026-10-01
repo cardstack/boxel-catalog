@@ -95,23 +95,23 @@ export class SlaWindowField extends FieldDef {
         .window {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-4xs);
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
         }
         .window-tz {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .window-days {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-5xs);
+          gap: var(--boxel-sp-3xs);
         }
         .window-always,
         .window-holidays {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -123,7 +123,7 @@ export class SlaWindowField extends FieldDef {
       <style scoped>
         .window-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

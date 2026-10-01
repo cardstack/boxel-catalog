@@ -6,6 +6,7 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import DateTimeField from '@cardstack/base/datetime';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 // The lifecycle stamps any record card carries — when it was created,
 // activated, suspended, last reviewed. Whether a record is archived is Record
@@ -55,14 +56,19 @@ export class LifecycleDatesField extends FieldDef {
       let m = this.args.model;
       return STAMPS.map((s) => ({
         label: s.label,
-        value: fmt(m?.[s.key] as Date | undefined),
-      })).filter((s) => s.value);
+        at: m?.[s.key] as Date | undefined,
+      })).filter((s) => s.at);
     }
     <template>
       <div class='lifecycle'>
         {{#each this.stamps as |s|}}
           <span class='stamp'><span class='stamp-label'>{{s.label}}</span>
-            {{s.value}}</span>
+            <FormatDate
+              @date={{s.at}}
+              @locale='en-US'
+              @month='short'
+              @day='numeric'
+            /></span>
         {{else}}
           <span class='empty'>no lifecycle events yet</span>
         {{/each}}
@@ -71,16 +77,20 @@ export class LifecycleDatesField extends FieldDef {
         .lifecycle {
           display: flex;
           flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-sm);
           font-size: 0.8125rem;
           font-variant-numeric: tabular-nums;
         }
+        .stamp {
+          display: inline-flex;
+          align-items: baseline;
+          gap: var(--boxel-sp-4xs);
+        }
         .stamp-label {
-          color: var(--muted-foreground, var(--boxel-450));
-          margin-right: 3px;
+          color: var(--muted-foreground);
         }
         .empty {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -93,7 +103,7 @@ export class LifecycleDatesField extends FieldDef {
       <style scoped>
         .lifecycle-atom {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>

@@ -10,6 +10,8 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
@@ -82,6 +84,23 @@ export function formatDay(d?: Date | string | null): string {
     year: 'numeric',
   });
 }
+
+// `formatDay` as rendered markup: the same "15 Jul 2026" on a <time> element,
+// with the long form as its hover title. Strings built for labels keep
+// calling `formatDay`.
+const Day: TemplateOnlyComponent<{
+  Args: { date?: Date | string | null };
+  Element: HTMLTimeElement;
+}> = <template>
+  <FormatDate
+    @date={{toDate @date}}
+    @locale='en-GB'
+    @day='numeric'
+    @month='short'
+    @year='numeric'
+    ...attributes
+  />
+</template>;
 
 /**
  * Where the period stands today. Ordered by urgency for anyone sorting a
@@ -220,17 +239,16 @@ export class EffectivePeriodField extends FieldDef {
         .ep-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
           font-variant-numeric: tabular-nums;
         }
         .ep-icon {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .ep-range {
           white-space: nowrap;
@@ -263,9 +281,9 @@ export class EffectivePeriodField extends FieldDef {
       <div class='ep'>
         <div class='ep-row'>
           <span class='ep-k'>Effective</span>
-          <span class='ep-v'>{{formatDay @model.effectiveDate}}</span>
+          <Day class='ep-v' @date={{@model.effectiveDate}} />
           <span class='ep-k'>Ends</span>
-          <span class='ep-v'>{{formatDay @model.endDate}}</span>
+          <Day class='ep-v' @date={{@model.endDate}} />
           {{#if @model.termMonths}}
             <span class='ep-term'>{{@model.termMonths}} mo</span>
           {{/if}}
@@ -280,9 +298,7 @@ export class EffectivePeriodField extends FieldDef {
               {{if (eqState this.state "notice window") "is-live"}}'
           >
             <span class='ep-k'>Notice by</span>
-            <span class='ep-v ep-deadline'>{{formatDay
-                @model.noticeDeadline
-              }}</span>
+            <Day class='ep-v ep-deadline' @date={{@model.noticeDeadline}} />
             <span class='ep-sub'>{{this.noticeLine}}</span>
           </div>
         {{else}}
@@ -293,54 +309,46 @@ export class EffectivePeriodField extends FieldDef {
       </div>
       <style scoped>
         .ep {
-          --ep-warn-fg: color-mix(
-            in oklch,
-            var(--boxel-warning) 65%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --ep-late-fg: color-mix(
-            in oklch,
-            var(--boxel-danger) 70%,
-            var(--foreground, var(--boxel-dark))
-          );
           display: flex;
           flex-direction: column;
-          gap: 0.35rem;
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
           font-variant-numeric: tabular-nums;
         }
         .ep-row {
           display: flex;
           align-items: baseline;
           flex-wrap: wrap;
-          gap: 0.35rem 0.6rem;
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .ep-k {
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .ep-v {
           font-weight: 600;
         }
         .ep-term {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .ep-deadline {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         .ep-sub {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .ep-notice.is-live .ep-deadline,
         .ep-notice.is-live .ep-sub {
-          color: var(--ep-warn-fg);
+          color: var(--warning-ink);
         }
         .ep-notice.is-late .ep-deadline,
         .ep-notice.is-late .ep-sub {
-          color: var(--ep-late-fg);
+          color: var(--destructive-ink);
           font-weight: 600;
         }
       </style>
@@ -387,7 +395,7 @@ EffectivePeriodField.edit = class Edit extends Component<
       <p class='ep-derived'>
         {{#if @model.noticeDeadline}}
           Notice deadline
-          <strong>{{formatDay @model.noticeDeadline}}</strong>
+          <strong><Day @date={{@model.noticeDeadline}} /></strong>
           {{#if @model.termMonths}}· {{@model.termMonths}}-month term{{/if}}
           — computed; not stored.
         {{else}}
@@ -415,14 +423,14 @@ EffectivePeriodField.edit = class Edit extends Component<
       .ep-derived {
         margin: 0;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .ep-derived strong {
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-mono, ui-monospace, monospace);
+        color: var(--foreground);
+        font-family: var(--font-mono);
       }
-      @container (max-width: 480px) {
+      @container (max-width: 30rem) {
         .ep-dates,
         .ep-renew {
           grid-template-columns: 1fr;

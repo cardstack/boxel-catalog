@@ -10,6 +10,17 @@ import BooleanField from '@cardstack/base/boolean';
 import DateTimeField from '@cardstack/base/datetime';
 import enumField from '@cardstack/base/enum';
 import ZapIcon from '@cardstack/boxel-icons/zap';
+import { htmlSafe } from '@ember/template';
+import { Token } from '@cardstack/pretui/components/token';
+import { tokenStyle } from '../shared/pretui-token';
+
+// The rule's two halves are machine values, so they read as Pret UI Tokens in
+// the muted hue at the rule line's own size. Token sets `nowrap`, but a rule
+// half carries free text (a `contains` phrase), so these Tokens wrap and break
+// long words instead of running past a narrow card's edge.
+const RULE_TOKEN_STYLE = htmlSafe(
+  `${tokenStyle('--boxel-font-size-xs', 'var(--muted-foreground)')}; white-space: normal; overflow-wrap: anywhere`,
+);
 
 export const POLICY_OPS = ['is', 'is not', 'gte', 'lte', 'contains'] as const;
 
@@ -68,6 +79,20 @@ export class AutomationPolicyField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
+    get hasCondition() {
+      let m = this.args.model;
+      return Boolean(m.whenField || m.whenOp || m.whenValue);
+    }
+    get hasAction() {
+      let m = this.args.model;
+      return Boolean(m.action || m.actionParam);
+    }
+    get hasConditionAndAction() {
+      return this.hasCondition && this.hasAction;
+    }
+    get hasRule() {
+      return this.hasCondition || this.hasAction;
+    }
     <template>
       <div class='policy'>
         <span class='policy-name'>
@@ -76,16 +101,24 @@ export class AutomationPolicyField extends FieldDef {
               class='policy-off'
             >off</span>{{/unless}}
         </span>
-        <span class='policy-rule'>
-          when
-          <code>{{@model.whenField}}
-            {{@model.whenOp}}
-            {{@model.whenValue}}</code>
-          →
-          <code>{{@model.action}}{{#if
-              @model.actionParam
-            }}({{@model.actionParam}}){{/if}}</code>
-        </span>
+        {{#if this.hasRule}}
+          <span class='policy-rule'>
+            {{#if this.hasCondition}}
+              when
+              <Token style={{RULE_TOKEN_STYLE}}>{{@model.whenField}}
+                {{@model.whenOp}}
+                {{@model.whenValue}}</Token>
+            {{/if}}
+            {{#if this.hasConditionAndAction}}
+              →
+            {{/if}}
+            {{#if this.hasAction}}
+              <Token style={{RULE_TOKEN_STYLE}}>{{@model.action}}{{#if
+                  @model.actionParam
+                }}({{@model.actionParam}}){{/if}}</Token>
+            {{/if}}
+          </span>
+        {{/if}}
         {{#if @model.applyCount}}
           <span class='policy-meta'>applied {{@model.applyCount}}×</span>
         {{/if}}
@@ -94,33 +127,31 @@ export class AutomationPolicyField extends FieldDef {
         .policy {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-5xs);
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
         }
         .policy-name {
           font-weight: 500;
           display: flex;
-          gap: var(--boxel-sp-4xs);
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           align-items: baseline;
         }
         .policy-off {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-          border: 1px solid var(--border, var(--boxel-border-color));
-          border-radius: 999px;
+          color: var(--muted-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius-pill);
           padding: 0 0.5rem;
         }
         .policy-rule {
+          min-width: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .policy-rule code {
-          font-family: var(--font-mono, var(--boxel-monospace-font-family));
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--muted-foreground);
         }
         .policy-meta {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
