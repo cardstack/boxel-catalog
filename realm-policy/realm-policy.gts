@@ -806,6 +806,30 @@ export class RealmPolicy extends CardDef {
       this.isRuleOutOfForce(ruleIndex) ||
       this.grantStatus(ruleIndex, grantIndex) === 'inactive';
 
+    // The warnings on a live grant: what it hands over that its author should
+    // know about, such as cards of a type no rule grants. A warning leaves its
+    // grant live, so it is marked only on a grant that is. One on a grant that
+    // admits nothing describes cards that grant never hands over, and is only
+    // listed with the issues.
+    grantWarnings = (
+      ruleIndex: number,
+      grantIndex: number,
+    ): PolicyValidation['issues'] =>
+      this.grantStatus(ruleIndex, grantIndex) === 'live'
+        ? this.issues.filter(
+            (issue) =>
+              this.isWarning(issue) &&
+              issue.rule === ruleIndex &&
+              issue.grant === grantIndex,
+          )
+        : [];
+
+    warningLabel = (warnings: PolicyValidation['issues']): string =>
+      warnings.length === 1 ? 'warning' : `${warnings.length} warnings`;
+
+    isWarning = (issue: PolicyValidation['issues'][number]): boolean =>
+      issue.severity === 'warning';
+
     // The rule and the grant an issue is about, named as the card names them,
     // so an author can find the one bad grant among many.
     issueRuleName = (
@@ -902,6 +926,33 @@ export class RealmPolicy extends CardDef {
                               data-test-policy-grant-inactive
                             >inactive</Pill>
                           {{/if}}
+                          {{#let
+                            (this.grantWarnings ruleIndex grantIndex)
+                            as |warnings|
+                          }}
+                            {{#if warnings.length}}
+                              <details
+                                class='grant-warnings'
+                                data-test-policy-grant-warning
+                              >
+                                <summary class='grant-warnings-summary'>
+                                  <Pill
+                                    @tag='span'
+                                    @pillBackgroundColor='var(--warning, var(--boxel-warning))'
+                                    @pillBorderColor='var(--warning, var(--boxel-warning))'
+                                    @pillFontColor='var(--warning-foreground, var(--boxel-dark))'
+                                  >{{this.warningLabel warnings}}</Pill>
+                                </summary>
+                                <ul class='grant-warning-messages'>
+                                  {{#each warnings as |warning|}}
+                                    <li
+                                      data-test-policy-grant-warning-message={{warning.code}}
+                                    >{{this.issueMessage warning}}</li>
+                                  {{/each}}
+                                </ul>
+                              </details>
+                            {{/if}}
+                          {{/let}}
                         </li>
                       {{/each}}
                     </ul>
@@ -922,7 +973,9 @@ export class RealmPolicy extends CardDef {
             <h2 class='section-title'>Issues</h2>
             <p class='hint'>
               What compiling this policy found. A rule or grant marked inactive
-              grants nothing, and the rest of the policy applies.
+              grants nothing, and the rest of the policy applies. A warning
+              leaves its grant live, and says something its author should know
+              about what that grant hands over.
             </p>
             <ul class='issues'>
               {{#each this.issues as |issue|}}
@@ -939,6 +992,15 @@ export class RealmPolicy extends CardDef {
                         class='issue-operation'
                         data-test-policy-issue-operation
                       >{{this.issueOperation issue}}</code>
+                    {{/if}}
+                    {{#if (this.isWarning issue)}}
+                      <Pill
+                        @tag='span'
+                        @pillBackgroundColor='var(--warning, var(--boxel-warning))'
+                        @pillBorderColor='var(--warning, var(--boxel-warning))'
+                        @pillFontColor='var(--warning-foreground, var(--boxel-dark))'
+                        data-test-policy-issue-warning
+                      >warning</Pill>
                     {{/if}}
                   </header>
                   <p class='issue-message' data-test-policy-issue-message>
@@ -1020,6 +1082,23 @@ export class RealmPolicy extends CardDef {
         .type-name.missing,
         .type-module {
           color: var(--muted-foreground, var(--boxel-450));
+        }
+        .grant-warnings[open] {
+          flex-basis: 100%;
+        }
+        .grant-warnings-summary {
+          cursor: pointer;
+          width: fit-content;
+        }
+        .grant-warning-messages {
+          list-style: none;
+          margin: var(--boxel-sp-xxs) 0 0;
+          padding: 0 0 0 var(--boxel-sp-xs);
+          border-left: 0.1875rem solid var(--warning, var(--boxel-warning));
+          display: grid;
+          gap: var(--boxel-sp-xxs);
+          font-size: var(--boxel-font-size-sm);
+          overflow-wrap: anywhere;
         }
         .type-module,
         .issue-code,
