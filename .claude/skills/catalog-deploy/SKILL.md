@@ -7,7 +7,7 @@ description: How a change in this repository reaches staging and production, and
 
 - **Staging** syncs catalog `main` on every merge (`.github/workflows/sync-to-workspace.yml`). Staging runs boxel `main`.
 - **Production** gets the catalog only from **Deploy catalog to production** (`.github/workflows/deploy-production.yml`):
-  - **In lockstep with boxel.** Manual Deploy [boxel] to production ends by running it with the catalog revision the deployed boxel pins. It does nothing when production's catalog is already at or past that pin.
+  - **In lockstep with boxel.** Manual Deploy [boxel] to production runs it with the catalog revision the deployed boxel pins, once before its release and once after. The run before ships what the new boxel needs; the run after ships the rest. It never moves production's catalog backwards.
   - **Ahead of boxel, by hand.** Run it from the Actions tab with `revision` empty to deploy `main`'s head, for changes that need nothing new from boxel.
 
 Before it changes anything, the deploy checks every pull request merged since production's last catalog deploy that changes a deployed file. Dot paths, `README.md`, `AGENTS.md`, `scripts`, `tests` and the rest of `.boxelignore` aren't deployed. If one says `Merges after: cardstack/boxel#N` and production doesn't run #N yet, the deploy **refuses** and names both pull requests:
@@ -15,7 +15,7 @@ Before it changes anything, the deploy checks every pull request merged since pr
 - "which production doesn't run yet": run Manual Deploy [boxel] to production. It deploys the catalog when it finishes.
 - "which hasn't merged yet": merge the boxel pull request, then deploy boxel to production.
 
-Pull requests closed without merging don't count. A `Merges after:` line naming a closed boxel pull request holds nothing back, and the deploy only warns about it.
+Pull requests closed without merging don't count, and a boxel pull request merged into a branch other than `main` holds until it reaches `main`. A `Merges after:` line naming a closed boxel pull request holds nothing back, and the deploy only warns about it.
 
 ## Declare what you need from boxel
 

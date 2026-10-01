@@ -1,12 +1,16 @@
 name: Deploy catalog to production
+# boxel's deploy finds the run it started by the marker its reason leads with.
+run-name: Deploy catalog to production ${{ inputs.reason }}
 
 # Deploys a catalog main revision to the production catalog realm. It runs in
 # two ways:
 #
 #   * By hand, from the Actions tab, to ship catalog work ahead of boxel.
 #     Leave `revision` empty to deploy main's head.
-#   * From boxel's Manual Deploy [boxel] to production, once the platform is
-#     live, with `revision` set to the catalog revision that boxel commit pins.
+#   * From boxel's Manual Deploy [boxel] to production, with `revision` set to
+#     the catalog revision that boxel commit pins: once before its release,
+#     which ships what the boxel production runs already supports, and once
+#     after it, which ships the rest. boxel waits for each run's result.
 #
 # Before it changes anything, boxel main's catalog-deploy-check.ts compares the
 # revision with the one production last got, recorded as a GitHub deployment
@@ -32,9 +36,13 @@ concurrency:
   group: catalog-deploy-production
   cancel-in-progress: false
 
+# The check reads pull requests, and the Actions run history for the catalog
+# revision production got before deployments were recorded.
 permissions:
+  actions: read
   contents: read
   deployments: write
+  pull-requests: read
 
 env:
   PRODUCTION_WORKSPACE_URL: https://app.boxel.ai/catalog/
