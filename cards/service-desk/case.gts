@@ -13,7 +13,7 @@ import TextAreaField from '@cardstack/base/text-area';
 import MarkdownField from '@cardstack/base/markdown';
 import enumField from '@cardstack/base/enum';
 import { tracked } from '@glimmer/tracking';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 
 import { Ticket } from '@cardstack/catalog/cards/service-desk/ticket';
@@ -384,17 +384,24 @@ export class Case extends CardDef {
                   }}
                 />{{/if}}</p>
             <h1>{{@model.subject}}</h1>
-            <p class='sub'>opened
-              <FormatDate
-                @date={{@model.openedOn}}
-                @locale='en-US'
-                @month='short'
-                @day='numeric'
-                @year='numeric'
-              />
-              {{#if @model.account}}· <@fields.account @format='atom' />{{/if}}
-              {{#if @model.owner}}· owned by
-                <@fields.owner @format='atom' />{{/if}}</p>
+            {{! A missing open date drops the "opened …" fragment rather than
+                printing a placeholder; the separators follow what is shown. }}
+            {{#if (or @model.openedOn @model.account @model.owner)}}
+              <p class='sub'>
+                {{#if @model.openedOn}}opened
+                  <FormatDate
+                    @date={{@model.openedOn}}
+                    @locale='en-US'
+                    @month='short'
+                    @day='numeric'
+                    @year='numeric'
+                  />{{/if}}
+                {{#if @model.account}}{{#if @model.openedOn}}·
+                  {{/if}}<@fields.account @format='atom' />{{/if}}
+                {{#if @model.owner}}{{#if (or @model.openedOn @model.account)}}·
+                  {{/if}}owned by
+                  <@fields.owner @format='atom' />{{/if}}</p>
+            {{/if}}
           </div>
           <div class='head-right'>
             <StatePill
