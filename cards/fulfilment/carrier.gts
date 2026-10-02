@@ -25,7 +25,10 @@ import { Shipment } from './shipment';
 import { isShipmentException } from './shipment-status';
 import StatusChip from './fulfilment-status-chip';
 import { LoadingRows } from './fulfilment-ui';
-import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
@@ -394,6 +397,7 @@ export class Carrier extends CardDef {
           {{else}}
             <EmptyState
               class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @texture={{false}}
               @title='Nothing with this carrier right now'
             />
@@ -413,6 +417,7 @@ export class Carrier extends CardDef {
           {{else}}
             <EmptyState
               class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @texture={{false}}
               @title='No services configured'
               @message='Rate shopping will skip this carrier until at least one service has a base rate.'
@@ -583,12 +588,8 @@ export class Carrier extends CardDef {
         .wrap {
           overflow-wrap: anywhere;
         }
-        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
-           title at the body size. */
+        /* Room between a compact EmptyState and what sits above it. */
         .empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
           margin-top: var(--boxel-sp-xs);
         }
 

@@ -33,6 +33,7 @@ import { money } from './fulfilment-format';
 import { Money, lifecycleSteps } from './fulfilment-ui';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { StepList } from '@cardstack/pretui/components/step-list';
@@ -333,7 +334,7 @@ export class FulfilmentOrder extends CardDef {
             <KeyValue class='totals' @items={{this.totalsFacts}} />
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @texture={{false}}
               @title='No line items'
               @message='An order with no lines cannot be picked — add at least one before allocating.'
@@ -575,13 +576,6 @@ export class FulfilmentOrder extends CardDef {
           --text-ui: var(--t-micro);
           --text-ui-md: var(--t-sm);
           --space-6: 1.25rem;
-        }
-        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
-           title at the body size. */
-        .empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the

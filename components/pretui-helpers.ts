@@ -13,6 +13,7 @@ import { modifier } from 'ember-modifier';
 // the glyph disc's mark is the card colour. The body text is the ink as well,
 // except for info: `--info-ink` is 4.79:1 on the dark card before any tint,
 // so an info body reads `--foreground`.
+// Pret UI gap, tracked in CS-13378.
 function alertStyle(ink: string, body = ink) {
   return htmlSafe(
     `--pretui-alert-hue: var(${ink}); --pretui-chip-mix: 10%; --pretui-on-neutral: var(--card); color: var(${body})`,
@@ -32,12 +33,15 @@ export const ALERT_STYLE = {
  * its initials at 80% of it, so a fill token as the hue leaves pale initials
  * on a pale disc. `--primary-ink` keeps the primary identity and clears 4.5:1
  * in both schemes.
+ * A catalog design choice rather than a Pret UI gap: it stays when Pret UI
+ * changes.
  */
 export const AVATAR_HUE = 'var(--primary-ink)';
 
 /**
  * Pret UI `EmptyState` tuned through its spacing and title knobs to a compact
  * well, for an empty list inside a section rather than a whole page.
+ * Pret UI gap, tracked in CS-13420.
  */
 export const COMPACT_EMPTY_STYLE = htmlSafe(
   '--space-9: 1rem; --space-6: 1rem; --text-heading: var(--boxel-font-size)',
@@ -45,6 +49,7 @@ export const COMPACT_EMPTY_STYLE = htmlSafe(
 
 // Pret UI `Token` sets its text at `--text-body` minus this offset, so a
 // Token that should read at a given size takes that size plus the offset.
+// Pret UI gap, tracked in CS-13267.
 const TOKEN_TEXT_OFFSET = '3.5px';
 
 /**
@@ -52,6 +57,7 @@ const TOKEN_TEXT_OFFSET = '3.5px';
  * (a font-size custom property such as `--boxel-font-size-xs`). Token writes
  * `@hue` as its own inline style, which a caller's `style` would replace, so
  * the hue travels in this style instead of through `@hue`.
+ * Pret UI gap, tracked in CS-13267.
  */
 export function tokenStyle(size: string, hue: string) {
   return htmlSafe(
@@ -62,6 +68,7 @@ export function tokenStyle(size: string, hue: string) {
 /**
  * Pret UI `Token` for a machine value (an id, a reference, a field path, a
  * hash) in the muted hue, at the small or extra-small size.
+ * Pret UI gap, tracked in CS-13267.
  */
 export const ID_TOKEN_STYLE = {
   sm: tokenStyle('--boxel-font-size-sm', 'var(--muted-foreground)'),
@@ -74,6 +81,7 @@ export const ID_TOKEN_STYLE = {
  * The optional value text replaces the bare "N of M" a screen reader would
  * otherwise announce, for a bar whose count alone would mislead (a run that
  * ended early fills every segment).
+ * Pret UI gap, tracked in CS-13265.
  */
 export const nameProgress = modifier(
   (element: HTMLElement, [label, valueText]: [string, string?]) => {
@@ -89,9 +97,18 @@ export const nameProgress = modifier(
 );
 
 /**
- * Pret UI's `Table` has no caption slot, so a table is named by the heading
- * above it: this points the rendered `<table>` at that heading's id.
+ * Pret UI's `Table` has no caption slot, so a table is named by the text
+ * above it: this points the rendered `<table>` at that text's id, and
+ * drops the attribute when there is no id to point at.
+ * Pret UI gap, tracked in CS-13266.
  */
-export const labelledBy = modifier((element: HTMLElement, [id]: [string]) => {
-  element.querySelector('table')?.setAttribute('aria-labelledby', id);
-});
+export const labelledBy = modifier(
+  (element: HTMLElement, [id]: [string | undefined]) => {
+    let table = element.querySelector('table');
+    if (id) {
+      table?.setAttribute('aria-labelledby', id);
+    } else {
+      table?.removeAttribute('aria-labelledby');
+    }
+  },
+);

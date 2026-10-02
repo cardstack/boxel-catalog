@@ -32,7 +32,10 @@ import Boxes from '@cardstack/boxel-icons/boxes';
 // binding is only read inside the constructor, not at module evaluation.
 import { InventoryStock } from './inventory-stock';
 import { LoadingRows, StatusPill, type StatusHue } from './fulfilment-ui';
-import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -346,7 +349,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
               stock rows here are above their reorder point.</p>
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @texture={{false}}
               @title='No stock rows reference this warehouse yet'
             />
@@ -506,13 +509,6 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         --text-ui: var(--t-micro);
         --text-ui-md: var(--t-sm);
         --space-6: 1.25rem;
-      }
-      /* Pret UI EmptyState, compact: no texture, 1rem padding, and the title
-         at the body size. */
-      .empty {
-        --space-9: 1rem;
-        --space-6: 1rem;
-        --text-heading: var(--boxel-font-size);
       }
       .mono {
         font-family: var(--font-mono);

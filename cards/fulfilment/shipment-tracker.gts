@@ -2,6 +2,7 @@ import GlimmerComponent from '@glimmer/component';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 import { StepList } from '@cardstack/pretui/components/step-list';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { lifecycleSteps } from './fulfilment-ui';
 import {
   SHIPMENT_PIPELINE,
@@ -176,7 +177,7 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
         </ol>
       {{else}}
         <EmptyState
-          class='empty'
+          style={{COMPACT_EMPTY_STYLE}}
           @texture={{false}}
           @title={{if @emptyMessage @emptyMessage 'No carrier scans yet'}}
           @message={{unless
@@ -266,13 +267,6 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
       .where {
         font-size: 0.78rem;
         color: var(--muted-foreground);
-      }
-      /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
-         title at the body size. */
-      .empty {
-        --space-9: 1rem;
-        --space-6: 1rem;
-        --text-heading: var(--boxel-font-size);
       }
     </style>
   </template>
