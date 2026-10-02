@@ -437,6 +437,13 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
     tier: PolicyExplanation['rules'][number]['grants'][number]['tier'],
   ) => (tier ? TIER_LABEL[tier] : undefined);
 
+  // Whether a search-lane grant gives the search a filter, spelled out, since
+  // an attribute bound to `false` is left off the element.
+  filterableState = (
+    grant: PolicyExplanation['rules'][number]['grants'][number],
+  ): string | undefined =>
+    grant.filterable === undefined ? undefined : String(grant.filterable);
+
   // On the search lane a grant's condition is never checked card by card:
   // the search runs it as a filter, so what matters is whether it has one.
   grantLabel = (
@@ -523,7 +530,9 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
                           "admitting"
                         }}'
                       data-test-explanation-grant={{grant.outcome}}
-                      data-test-explanation-grant-filterable={{grant.filterable}}
+                      data-test-explanation-grant-filterable={{this.filterableState
+                        grant
+                      }}
                     >
                       {{#if grant.where}}
                         <code
@@ -648,6 +657,12 @@ const MODES: { id: ExplainMode; label: string }[] = [
   { id: 'search', label: 'A search' },
   { id: 'listing', label: 'Every card in a realm' },
 ];
+
+// A search's filter as a search request writes it: here, every card of one
+// type.
+const FILTER_PLACEHOLDER = asJson({
+  'item.on': { module: 'https://…/classroom', name: 'Classroom' },
+});
 
 // How many cards one page of a listing explains.
 const LISTING_PAGE_SIZE = 10;
@@ -1098,6 +1113,7 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
               @type='textarea'
               @value={{this.searchFilter}}
               @onInput={{this.updateSearchFilter}}
+              @placeholder={{FILTER_PLACEHOLDER}}
               data-test-explain-search-filter
             />
           </FieldContainer>
