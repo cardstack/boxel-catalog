@@ -21,7 +21,7 @@
       },
       "defaultModelConfiguration": {
         "links": {
-          "self": "../ModelConfiguration/anthropic-claude-sonnet-46"
+          "self": "../ModelConfiguration/openai-gpt-6-luna"
         }
       },
       "modelConfigurations.0": {
