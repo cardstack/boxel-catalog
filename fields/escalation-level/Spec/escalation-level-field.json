@@ -10,7 +10,7 @@
       "isCard": false,
       "isField": true,
       "isComponent": false,
-      "readMe": "## Escalation Level\n\nL1/L2/L3/exec with rank, target role and `ackTargetMinutes` \u2014 an unacknowledged escalation is invisible risk, so the ack clock is first-class. `LEVEL_HUES` is exported beside the enum so every consumer colors the ladder alike.\n\n```ts\nimport { EscalationLevelField } from '@cardstack/catalog/fields/escalation-level/escalation-level-field';\n\n@field level = contains(EscalationLevelField);\n```\n\n### Non-goals\n\nNot the escalation event itself \u2014 the consumer's escalation record owns that. Not an on-call rotation.",
+      "readMe": "## Escalation Level\n\nL1/L2/L3/exec with rank, target role and `ackTargetMinutes` \u2014 an unacknowledged escalation is invisible risk, so the ack clock is first-class. `LEVEL_HUES` (and `levelHue(key)`) is exported beside the enum so every consumer colors the ladder alike; the embedded view is a `StatePill` holding the key and its label.\n\n```ts\nimport { EscalationLevelField } from '@cardstack/catalog/fields/escalation-level/escalation-level-field';\n\n@field level = contains(EscalationLevelField);\n```\n\n### Non-goals\n\nNot the escalation event itself \u2014 the consumer's escalation record owns that. Not an on-call rotation.",
       "cardInfo": {
         "name": "Escalation Level",
         "summary": "One rung of the ladder: who answers, and how fast they must acknowledge."

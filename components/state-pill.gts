@@ -98,6 +98,13 @@ interface Signature {
      */
     chrome?: boolean;
   };
+  /**
+   * Structured content for a pill of several styled parts (a key and its
+   * label, a relation and its target). Rendered only when `@label` is empty,
+   * with the same hue and recipe; the parts inherit the pill's ink, and the
+   * pill's accessible text is the block's text.
+   */
+  Blocks: { default: [] };
   Element: HTMLElement;
 }
 
@@ -141,6 +148,10 @@ export class StatePill extends GlimmerComponent<Signature> {
     {{#if @label}}
       <Chip @dot={{if @dot true false}} style={{this.style}} ...attributes>
         <span class='state-label'>{{@label}}</span>
+      </Chip>
+    {{else if (has-block)}}
+      <Chip @dot={{if @dot true false}} style={{this.style}} ...attributes>
+        <span class='state-label'>{{yield}}</span>
       </Chip>
     {{/if}}
 
