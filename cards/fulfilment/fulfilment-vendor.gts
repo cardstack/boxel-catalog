@@ -14,7 +14,8 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import FactoryIcon from '@cardstack/boxel-icons/building-factory';
 import MapPin from '@cardstack/boxel-icons/map-pin';
 import User from '@cardstack/boxel-icons/user';
-import { ALERT_STYLE, LoadingRows, Money, amountText } from './fulfilment-ui';
+import { LoadingRows, Money, amountText } from './fulfilment-ui';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';

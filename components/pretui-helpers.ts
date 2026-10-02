@@ -1,0 +1,97 @@
+import { htmlSafe } from '@ember/template';
+import { modifier } from 'ember-modifier';
+
+// The Pret UI settings the catalog's cards and fields share, kept in one
+// module so every alert, avatar, id token, compact empty state, progress bar
+// and table renders the same way in every cluster. Settings that belong to
+// one cluster stay in that cluster's own module.
+
+// Pret UI `Alert` paints its tone from the fill tokens, whose text mixes fall
+// under 4.5:1 on some grounds, and its info tone reads a token boxel's theme
+// does not declare. Alert writes its hue as an inline style, so the override
+// is inline too: the hue is the tone's `--*-ink` token, the tint is 10%, and
+// the glyph disc's mark is the card colour. The body text is the ink as well,
+// except for info: `--info-ink` is 4.79:1 on the dark card before any tint,
+// so an info body reads `--foreground`.
+function alertStyle(ink: string, body = ink) {
+  return htmlSafe(
+    `--pretui-alert-hue: var(${ink}); --pretui-chip-mix: 10%; --pretui-on-neutral: var(--card); color: var(${body})`,
+  );
+}
+
+/** Inline style for a Pret UI `Alert`, per tone. */
+export const ALERT_STYLE = {
+  danger: alertStyle('--destructive-ink'),
+  success: alertStyle('--success-ink'),
+  info: alertStyle('--info-ink', '--foreground'),
+  attention: alertStyle('--attention-ink'),
+};
+
+/**
+ * The hue for Pret UI `Avatar`. Avatar tints its disc 16% of the hue and sets
+ * its initials at 80% of it, so a fill token as the hue leaves pale initials
+ * on a pale disc. `--primary-ink` keeps the primary identity and clears 4.5:1
+ * in both schemes.
+ */
+export const AVATAR_HUE = 'var(--primary-ink)';
+
+/**
+ * Pret UI `EmptyState` tuned through its spacing and title knobs to a compact
+ * well, for an empty list inside a section rather than a whole page.
+ */
+export const COMPACT_EMPTY_STYLE = htmlSafe(
+  '--space-9: 1rem; --space-6: 1rem; --text-heading: var(--boxel-font-size)',
+);
+
+// Pret UI `Token` sets its text at `--text-body` minus this offset, so a
+// Token that should read at a given size takes that size plus the offset.
+const TOKEN_TEXT_OFFSET = '3.5px';
+
+/**
+ * Inline style for a Pret UI `Token` drawn in `hue` with its text at `size`
+ * (a font-size custom property such as `--boxel-font-size-xs`). Token writes
+ * `@hue` as its own inline style, which a caller's `style` would replace, so
+ * the hue travels in this style instead of through `@hue`.
+ */
+export function tokenStyle(size: string, hue: string) {
+  return htmlSafe(
+    `--pretui-token-hue: ${hue}; --text-body: calc(var(${size}) + ${TOKEN_TEXT_OFFSET})`,
+  );
+}
+
+/**
+ * Pret UI `Token` for a machine value (an id, a reference, a field path, a
+ * hash) in the muted hue, at the small or extra-small size.
+ */
+export const ID_TOKEN_STYLE = {
+  sm: tokenStyle('--boxel-font-size-sm', 'var(--muted-foreground)'),
+  xs: tokenStyle('--boxel-font-size-xs', 'var(--muted-foreground)'),
+};
+
+/**
+ * Pret UI's `ProgressBar` renders its `role='progressbar'` element with no
+ * accessible name and no minimum, so this names it and states the 0 floor.
+ * The optional value text replaces the bare "N of M" a screen reader would
+ * otherwise announce, for a bar whose count alone would mislead (a run that
+ * ended early fills every segment).
+ */
+export const nameProgress = modifier(
+  (element: HTMLElement, [label, valueText]: [string, string?]) => {
+    let bar = element.querySelector('[role="progressbar"]');
+    bar?.setAttribute('aria-label', label);
+    bar?.setAttribute('aria-valuemin', '0');
+    if (valueText) {
+      bar?.setAttribute('aria-valuetext', valueText);
+    } else {
+      bar?.removeAttribute('aria-valuetext');
+    }
+  },
+);
+
+/**
+ * Pret UI's `Table` has no caption slot, so a table is named by the heading
+ * above it: this points the rendered `<table>` at that heading's id.
+ */
+export const labelledBy = modifier((element: HTMLElement, [id]: [string]) => {
+  element.querySelector('table')?.setAttribute('aria-labelledby', id);
+});

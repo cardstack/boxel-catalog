@@ -16,7 +16,11 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Token } from '@cardstack/pretui/components/token';
 
 import { SectionedEdit } from '../../components/sectioned-edit';
-import { AuditFacts, AVATAR_HUE, ID_TOKEN_STYLE } from './audit-ui';
+import { AuditFacts } from './audit-ui';
+import {
+  AVATAR_HUE,
+  ID_TOKEN_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 // Each value renders in the `value` block, which picks the row by key.
 const HERO_FACTS = [

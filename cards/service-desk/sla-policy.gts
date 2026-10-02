@@ -20,7 +20,10 @@ import { Table } from '@cardstack/pretui/components/table';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 
-import { labelledBy } from './components/service-desk-ui';
+import {
+  COMPACT_EMPTY_STYLE,
+  labelledBy,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { Schedule } from './schedule';
 import { TicketPriorityField, ticketPriorityFactor } from './ticket-taxonomy';
 import { formatMinutes, ALWAYS_ON, type BusinessSchedule } from './utils/sla';
@@ -295,7 +298,7 @@ export class SlaPolicy extends CardDef {
             </div>
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @title='No conditions'
               @message='This policy matches every ticket. Only one policy should be this permissive, and it should be the fallback.'
               @texture={{false}}
@@ -338,7 +341,7 @@ export class SlaPolicy extends CardDef {
             <@fields.businessHours @format='embedded' />
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @title='No schedule linked'
               @message='The clock ticks around the clock, including weekends and holidays.'
               @texture={{false}}
@@ -360,7 +363,7 @@ export class SlaPolicy extends CardDef {
             </ol>
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @title='Nothing happens on breach'
               @message='The target is a measurement, not a commitment, until something acts on it.'
               @texture={{false}}
@@ -467,13 +470,6 @@ export class SlaPolicy extends CardDef {
           margin: 0;
           padding-left: 1.2rem;
           font-size: var(--boxel-font-size-sm);
-        }
-        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
-           compact well beside the section text. */
-        .empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
         }
         .note {
           margin: 0;

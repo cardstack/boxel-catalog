@@ -32,19 +32,11 @@ import { InterviewPlan } from './interview-plan';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from './utils';
+import { AttentionPill, FactList, MoneyRange, hueOf } from './hr-ui';
 import {
   ALERT_STYLE,
-  AttentionPill,
-  FactList,
-  MoneyRange,
-  hueOf,
-  tokenStyle,
-} from './hr-ui';
-
-const REQUISITION_TOKEN_STYLE = tokenStyle(
-  '--boxel-font-size-sm',
-  'var(--muted-foreground)',
-);
+  ID_TOKEN_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -242,7 +234,7 @@ class PositionIsolated extends Component<typeof Position> {
               <span class='sep-dot'>&middot;</span>
               <Token
                 @value={{@model.requisitionCode}}
-                style={{REQUISITION_TOKEN_STYLE}}
+                style={{ID_TOKEN_STYLE.sm}}
               />
             {{/if}}
           </p>

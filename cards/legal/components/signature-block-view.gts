@@ -19,7 +19,10 @@ import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals'
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Token } from '@cardstack/pretui/components/token';
-import { ALERT_STYLE, ID_TOKEN_STYLE } from '../legal-ui';
+import {
+  ALERT_STYLE,
+  ID_TOKEN_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 interface Signature {
   Args: {

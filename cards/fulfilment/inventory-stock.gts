@@ -21,12 +21,8 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import Network from '@cardstack/boxel-icons/git-fork';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  ALERT_STYLE,
-  LoadingRows,
-  StatusPill,
-  type StatusHue,
-} from './fulfilment-ui';
+import { LoadingRows, StatusPill, type StatusHue } from './fulfilment-ui';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';

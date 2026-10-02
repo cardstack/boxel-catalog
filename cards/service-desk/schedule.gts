@@ -15,6 +15,7 @@ import CalendarCogIcon from '@cardstack/boxel-icons/calendar-cog';
 import CalendarOffIcon from '@cardstack/boxel-icons/calendar-off';
 import { htmlSafe } from '@ember/template';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Stat } from '@cardstack/pretui/components/stat';
 
 import type { BusinessSchedule, DayWindow } from './utils/sla';
@@ -357,7 +358,7 @@ export class Schedule extends CardDef {
             </ul>
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @title='No holidays set'
               @message='The clock will tick on public holidays — add them here so it stops.'
               @texture={{false}}
@@ -503,13 +504,6 @@ export class Schedule extends CardDef {
           border-radius: 0.1875rem;
           font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
-        }
-        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
-           compact well. */
-        .empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
         }
         .sr-only {
           position: absolute;

@@ -23,7 +23,7 @@ import {
 } from './utils/evidence-hash';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Token } from '@cardstack/pretui/components/token';
-import { ID_TOKEN_STYLE } from './audit-ui';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const PROOF_KINDS = [
   'document',

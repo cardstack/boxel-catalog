@@ -12,7 +12,7 @@ import enumField from '@cardstack/base/enum';
 import ZapIcon from '@cardstack/boxel-icons/zap';
 import { htmlSafe } from '@ember/template';
 import { Token } from '@cardstack/pretui/components/token';
-import { tokenStyle } from '../shared/pretui-token';
+import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
 
 // The rule's two halves are machine values, so they read as Pret UI Tokens in
 // the muted hue at the rule line's own size. Token sets `nowrap`, but a rule

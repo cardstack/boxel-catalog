@@ -31,12 +31,8 @@ import Boxes from '@cardstack/boxel-icons/boxes';
 // Cyclic with inventory-stock.gts (it links to Warehouse); safe because the
 // binding is only read inside the constructor, not at module evaluation.
 import { InventoryStock } from './inventory-stock';
-import {
-  ALERT_STYLE,
-  LoadingRows,
-  StatusPill,
-  type StatusHue,
-} from './fulfilment-ui';
+import { LoadingRows, StatusPill, type StatusHue } from './fulfilment-ui';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';

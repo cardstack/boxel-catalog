@@ -13,7 +13,7 @@ import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 
 import { ScorecardCriterionField } from '@cardstack/catalog/cards/hr/scorecard-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { nameProgress } from './legal-ui';
+import { nameProgress } from '@cardstack/catalog/components/pretui-helpers';
 import {
   stateColor,
   stateColorOf,

@@ -48,7 +48,11 @@ import {
 } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { GoverningLawField } from './governing-law-field';
 import { SignatureBlockView } from './components/signature-block-view';
-import { ALERT_STYLE, ID_TOKEN_STYLE, LegalFacts } from './legal-ui';
+import { LegalFacts } from './legal-ui';
+import {
+  ALERT_STYLE,
+  ID_TOKEN_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 import { ContractTypeField, contractTypeLabel } from './contract-type';
 

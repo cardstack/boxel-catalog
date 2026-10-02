@@ -4,7 +4,7 @@ import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { nameProgress } from './service-desk-ui';
+import { nameProgress } from '@cardstack/catalog/components/pretui-helpers';
 
 import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
 import ClockIcon from '@cardstack/boxel-icons/clock';

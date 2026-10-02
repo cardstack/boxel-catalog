@@ -26,7 +26,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { COMPACT_EMPTY_STYLE } from './components/service-desk-ui';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * A pause on the clock, as an EVENT — never a boolean. While the ball is with

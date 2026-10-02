@@ -11,7 +11,7 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
 import { Token } from '@cardstack/pretui/components/token';
 
-import { tokenStyle } from './hr-ui';
+import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
 
 // A merge field this template's body uses reads in the primary ink; one it
 // does not use stays muted.

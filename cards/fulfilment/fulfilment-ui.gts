@@ -9,8 +9,9 @@ import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { money } from './fulfilment-format';
 
 // The Pret UI settings the fulfilment cards share, kept in one module so the
-// six isolated views that show a query error, a loading list, a money figure or
-// a stock or capacity pill all render them the same way.
+// six isolated views that show a loading list, a money figure or a stock or
+// capacity pill all render them the same way. The settings every cluster
+// shares live in `components/pretui-helpers`.
 
 interface MoneySignature {
   Args: {
@@ -43,26 +44,6 @@ export const Money: TemplateOnlyComponent<MoneySignature> = <template>
 export function amountText(amount?: number | null, code?: string | null) {
   return amount ? money(amount, code ?? undefined) : '';
 }
-
-// Pret UI `Alert` paints its tone from the fill tokens, whose text mixes fall
-// under 4.5:1 on some grounds, and its info tone reads a token boxel's theme
-// does not declare. Alert writes its hue as an inline style, so the override
-// is inline too: the hue is the tone's `--*-ink` token, the tint is 10%, and
-// the glyph disc's mark is the card colour. The body text is the ink as well,
-// except for info: `--info-ink` is 4.79:1 on the dark card before any tint,
-// so an info body reads `--foreground`.
-function alertStyle(ink: string, body = ink) {
-  return htmlSafe(
-    `--pretui-alert-hue: var(${ink}); --pretui-chip-mix: 10%; --pretui-on-neutral: var(--card); color: var(${body})`,
-  );
-}
-
-export const ALERT_STYLE = {
-  danger: alertStyle('--destructive-ink'),
-  success: alertStyle('--success-ink'),
-  info: alertStyle('--info-ink', '--foreground'),
-  attention: alertStyle('--attention-ink'),
-};
 
 // A status pill hue: one of StatePill's, or `attention` for the low / tight
 // state. That state reads `--attention` everywhere it is drawn. Its bars and

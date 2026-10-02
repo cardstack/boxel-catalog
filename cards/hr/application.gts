@@ -28,11 +28,11 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import { daysBetween } from '@cardstack/catalog/cards/hr/utils';
 import {
-  AVATAR_HUE,
   AttentionPill,
   QUIET_AVATAR_HUE,
   hueOf,
 } from '@cardstack/catalog/cards/hr/hr-ui';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import FileDownloadLink from '@cardstack/catalog/cards/hr/components/file-download-link';
 
 export const APPLICATION_STATUSES = [

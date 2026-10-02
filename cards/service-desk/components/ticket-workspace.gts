@@ -35,7 +35,10 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { LinkPicker } from './link-picker';
 import { EnumSelect } from './enum-select';
 import { Feed, type FeedEntry } from './feed';
-import { ALERT_STYLE, tokenStyle } from './service-desk-ui';
+import {
+  ALERT_STYLE,
+  tokenStyle,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Kbd } from '@cardstack/pretui/components/kbd';

@@ -45,6 +45,7 @@ import {
 import { SlaPolicy } from './sla-policy';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
 
 function liveCount(links: unknown[] | null | undefined): number {
@@ -205,7 +206,7 @@ export class Queue extends CardDef {
                         surface where nothing was searched for. }}
                     <li class='q-clear'>
                       <EmptyState
-                        class='q-empty'
+                        style={{COMPACT_EMPTY_STYLE}}
                         @title='Nothing waiting in this queue'
                         @message='Everything routed here has been answered. New work lands at the top of this list.'
                         @texture={{false}}
@@ -218,7 +219,7 @@ export class Queue extends CardDef {
           {{/let}}
         {{else}}
           <EmptyState
-            class='empty'
+            style={{COMPACT_EMPTY_STYLE}}
             @title='No live list here'
             @message='Open this queue in the console to see its live list.'
             @texture={{false}}
@@ -236,7 +237,7 @@ export class Queue extends CardDef {
             </ul>
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @title='Nobody is assigned to this queue yet'
               @message='Tickets routed here will sit unclaimed — and their clocks keep running.'
               @texture={{false}}
@@ -332,14 +333,6 @@ export class Queue extends CardDef {
           border-inline-start: 0.1875rem solid var(--success);
           border-radius: var(--boxel-border-radius-sm);
           overflow: hidden;
-        }
-        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
-           compact well. */
-        .q-empty,
-        .empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
         }
         .team h2 {
           display: flex;
