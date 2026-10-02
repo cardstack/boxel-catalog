@@ -76,11 +76,11 @@ export const ID_TOKEN_STYLE = {
 };
 
 /**
- * Pret UI's `ProgressBar` renders its `role='progressbar'` element with no
- * accessible name and no minimum, so this names it and states the 0 floor.
- * The optional value text replaces the bare "N of M" a screen reader would
- * otherwise announce, for a bar whose count alone would mislead (a run that
- * ended early fills every segment).
+ * Names a Pret UI `ProgressBar`: gives its `role='progressbar'` element a
+ * fixed `aria-label` and states the 0 floor with `aria-valuemin`. The optional
+ * value text becomes `aria-valuetext`, for a bar whose count alone would
+ * mislead (a run that ended early fills every segment); without it the
+ * modifier leaves `aria-valuetext` as the component set it.
  * It names the element it is applied to when that element carries the role,
  * and otherwise its first descendant that does, so it covers both ProgressBar
  * layouts: the role on the component root, and the role on an inner track.
@@ -88,18 +88,25 @@ export const ID_TOKEN_STYLE = {
  */
 export const nameProgress = modifier(
   (element: HTMLElement, [label, valueText]: [string, string?]) => {
-    let bar = element.matches('[role="progressbar"]')
-      ? element
-      : element.querySelector('[role="progressbar"]');
+    let bar = progressbarOf(element);
     bar?.setAttribute('aria-label', label);
     bar?.setAttribute('aria-valuemin', '0');
     if (valueText) {
       bar?.setAttribute('aria-valuetext', valueText);
-    } else {
-      bar?.removeAttribute('aria-valuetext');
     }
   },
 );
+
+/**
+ * The `role='progressbar'` element of a Pret UI `ProgressBar` a modifier is
+ * applied to: the element itself when it carries the role, otherwise its
+ * first descendant that does.
+ */
+export function progressbarOf(element: Element): Element | null {
+  return element.matches('[role="progressbar"]')
+    ? element
+    : element.querySelector('[role="progressbar"]');
+}
 
 /**
  * Pret UI's `Table` has no caption slot, so a table is named by the text
