@@ -746,8 +746,18 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
     return !this.canAsk;
   }
 
-  get draftIssues() {
+  // What compiling the draft recorded, where the answer was asked of one. An
+  // empty list is an answer too: the draft compiled cleanly.
+  get draftIssues(): DraftIssue[] | undefined {
     return (this.explanation ?? this.listing)?.draft?.issues;
+  }
+
+  get answeredAgainstDraft(): boolean {
+    return this.draftIssues !== undefined;
+  }
+
+  get draftIssueList(): DraftIssue[] {
+    return this.draftIssues ?? [];
   }
 
   get pageSummary(): string | undefined {
@@ -1161,8 +1171,8 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
       </p>
     {{/if}}
 
-    {{#if this.draftIssues}}
-      <DraftIssues @issues={{this.draftIssues}} />
+    {{#if this.answeredAgainstDraft}}
+      <DraftIssues @issues={{this.draftIssueList}} />
     {{/if}}
 
     {{#if this.explanation}}
