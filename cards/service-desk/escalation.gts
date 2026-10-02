@@ -16,6 +16,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   EscalationLevelField,
   levelColor,
+  levelHue,
 } from '@cardstack/catalog/fields/escalation-level/escalation-level-field';
 import {
   stateColor,
@@ -418,20 +419,21 @@ export class Escalation extends CardDef {
     get statusHue() {
       return escalationStatusHue(this.args.model.status);
     }
-    get toColor() {
-      let c = levelColor(this.args.model.toLevel?.key);
-      return `--esc-fg: ${c.fg}; --esc-bg: ${c.bg};`;
+    get levelHue() {
+      return levelHue(this.args.model.toLevel?.key);
     }
     get raisedLabel() {
       return relativeStamp(this.args.model.raisedAt ?? undefined);
     }
     <template>
-      <div class='esc-row' style={{this.toColor}}>
-        <span class='esc-level'>{{if
-            @model.toLevel.key
-            @model.toLevel.key
-            '?'
-          }}</span>
+      <div class='esc-row'>
+        <StatePill @hue={{this.levelHue}}>
+          <span class='esc-level-key'>{{if
+              @model.toLevel.key
+              @model.toLevel.key
+              '?'
+            }}</span>
+        </StatePill>
         <span class='esc-body'>
           <span class='esc-title'>{{@model.title}} · {{@model.reason}}</span>
           <span class='esc-meta'>{{this.raisedLabel}}
@@ -451,15 +453,9 @@ export class Escalation extends CardDef {
           min-width: 0;
           width: 100%;
         }
-        .esc-level {
-          flex: none;
+        .esc-level-key {
           font-family: var(--font-mono);
           font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          padding: 0.125rem 0.5rem;
-          border-radius: var(--boxel-border-radius-sm);
-          background-color: var(--esc-bg);
-          color: var(--esc-fg);
         }
         .esc-body {
           display: flex;
