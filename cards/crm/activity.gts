@@ -301,7 +301,6 @@ export class Activity extends CardDef {
           margin: 0;
           font-size: 1.5rem;
           line-height: 1.15;
-          font-family: var(--font-heading, inherit);
         }
         .byline {
           margin: 0.25rem 0 0;

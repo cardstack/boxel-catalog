@@ -213,7 +213,6 @@ export class TaxJurisdiction extends CardDef {
           margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .rate-line {
           font-size: 1.125rem;
