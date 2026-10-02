@@ -182,7 +182,6 @@ export class Deal extends Opportunity {
           margin: 0;
           font-size: 1.75rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .value-block {
           display: flex;

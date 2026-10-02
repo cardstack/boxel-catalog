@@ -358,7 +358,6 @@ export class Quote extends CardDef {
           margin: 0;
           font-size: 1.75rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .status {
           font-size: 0.6875rem;

@@ -280,7 +280,6 @@ export class Project extends CardDef {
           letter-spacing: -0.02em;
           line-height: 1.2;
           overflow-wrap: anywhere;
-          font-family: var(--font-heading, inherit);
         }
         .byline {
           margin: var(--boxel-sp-5xs) 0 0;
