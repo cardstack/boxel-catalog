@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/emoji-picker",
+        "name": "EmojiPicker"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { EmojiPicker } from '@cardstack/pretui/components/emoji-picker';\n```\n",
+      "cardTitle": "EmojiPicker",
+      "cardDescription": "Search, categories, skin tone, recents — no network, one tab stop",
+      "containedExamples": [],
+      "componentName": "EmojiPicker",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Search, categories, skin tone, recents — no network, one tab stop",
+      "refs": "emoji-picker-element (Apache-2.0) ported, not vendored",
+      "buildsOn": null,
+      "icon": "icons",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "EmojiPicker",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/emoji-picker.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/emoji-picker.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

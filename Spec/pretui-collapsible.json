@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/collapsible",
+        "name": "Collapsible"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Collapsible } from '@cardstack/pretui/components/collapsible';\n```\n",
+      "cardTitle": "Collapsible",
+      "cardDescription": "Single disclosure panel — Accordion is N of these, Fold is the agentic one",
+      "containedExamples": [],
+      "componentName": "Collapsible",
+      "category": "Containers",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Single disclosure panel — Accordion is N of these, Fold is the agentic one",
+      "refs": "shadcn Collapsible · radix Collapsible · Mantine Collapse · React Aria Disclosure · Chakra Collapsible",
+      "buildsOn": null,
+      "icon": "panel-top-close",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Collapsible",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/collapsible.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/collapsible.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/doc-report",
+        "name": "DocReport"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { DocReport } from '@cardstack/pretui/components/doc-report';\n```\n",
+      "cardTitle": "DocReport",
+      "cardDescription": "Agent output as a document: machine-facts strip, cited-card pills, full-report disclosure",
+      "containedExamples": [],
+      "componentName": "DocReport",
+      "category": "Agentic",
+      "tier": "Block",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "agentic",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Agent output as a document: machine-facts strip, cited-card pills, full-report disclosure",
+      "refs": null,
+      "buildsOn": null,
+      "icon": "file-chart-column",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "DocReport",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/doc-report.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/doc-report.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

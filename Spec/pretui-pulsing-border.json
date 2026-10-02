@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/pulsing-border",
+        "name": "PulsingBorder"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { PulsingBorder } from '@cardstack/pretui/components/pulsing-border';\n```\n",
+      "cardTitle": "PulsingBorder",
+      "cardDescription": "Liveness ring: pulsing hairline and halo with a required text marker",
+      "containedExamples": [],
+      "componentName": "PulsingBorder",
+      "category": "Foundations",
+      "tier": "Primitive",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "texture",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Liveness ring: pulsing hairline and halo with a required text marker",
+      "refs": "react-bits ElectricBorder · react-bits StarBorder · motion-primitives BorderTrail",
+      "buildsOn": null,
+      "icon": "activity-heartbeat",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "PulsingBorder",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/pulsing-border.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/pulsing-border.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

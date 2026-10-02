@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/alert-dialog",
+        "name": "AlertDialog"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { AlertDialog } from '@cardstack/pretui/components/alert-dialog';\n```\n",
+      "cardTitle": "AlertDialog",
+      "cardDescription": "Confirm / destructive decision dialog",
+      "containedExamples": [],
+      "componentName": "AlertDialog",
+      "category": "Overlays",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Confirm / destructive decision dialog · shadcn AlertDialog, Radix AlertDialog, Ant Popconfirm's modal form",
+      "refs": "shadcn AlertDialog · radix AlertDialog · MUI Dialog(maxWidth) · Ant Modal.confirm · Chakra Dialog",
+      "buildsOn": null,
+      "icon": "alert-triangle",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "AlertDialog",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/alert-dialog.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/alert-dialog.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

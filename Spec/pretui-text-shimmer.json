@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/text-shimmer",
+        "name": "TextShimmer"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { TextShimmer } from '@cardstack/pretui/components/text-shimmer';\n```\n",
+      "cardTitle": "TextShimmer",
+      "cardDescription": "Gradient sheen sweeping across text",
+      "containedExamples": [],
+      "componentName": "TextShimmer",
+      "category": "Motion & Effects",
+      "tier": "Primitive",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "motion",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Gradient sheen sweeping across text · CSS gradient-drivable",
+      "refs": "motion-primitives TextShimmer/ShimmerWave · react-bits",
+      "buildsOn": null,
+      "icon": "sparkles",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "TextShimmer",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/text-shimmer.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/text-shimmer.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

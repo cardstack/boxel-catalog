@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/value-input",
+        "name": "ValueInput"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ValueInput } from '@cardstack/pretui/components/value-input';\n```\n",
+      "cardTitle": "ValueInput",
+      "cardDescription": "One control chosen by a kind discriminator, uniform value/onChange",
+      "containedExamples": [],
+      "componentName": "ValueInput",
+      "category": "Authoring Tools",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "One control chosen by a kind discriminator, uniform value/onChange",
+      "refs": "boxel-catalog top-ten · replaces twelve propskit elements",
+      "buildsOn": null,
+      "icon": "brackets-contain-end",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "ValueInput",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/value-input.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/value-input.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

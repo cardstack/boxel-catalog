@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/aspect-ratio",
+        "name": "AspectRatio"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { AspectRatio } from '@cardstack/pretui/components/aspect-ratio';\n```\n",
+      "cardTitle": "AspectRatio",
+      "cardDescription": "Reserved-ratio box so media cannot shift layout (Law 8)",
+      "containedExamples": [],
+      "componentName": "AspectRatio",
+      "category": "Layout",
+      "tier": "Primitive",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Reserved-ratio box so media cannot shift layout (Law 8)",
+      "refs": "shadcn AspectRatio · radix AspectRatio · Mantine AspectRatio · Chakra AspectRatio",
+      "buildsOn": null,
+      "icon": "aspect-ratio",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "AspectRatio",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/aspect-ratio.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/aspect-ratio.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/slide-over",
+        "name": "SlideOver"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { SlideOver } from '@cardstack/pretui/components/slide-over';\n```\n",
+      "cardTitle": "SlideOver",
+      "cardDescription": "ALIAS of Drawer — what shadcn calls Sheet (Pretui Sheet is a spreadsheet)",
+      "containedExamples": [],
+      "componentName": "SlideOver",
+      "category": "Overlays",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "ALIAS of Drawer — what shadcn calls Sheet (Pretui Sheet is a spreadsheet)",
+      "refs": "shadcn Sheet · MUI Drawer · Ant Drawer · wa-drawer",
+      "buildsOn": null,
+      "icon": "panel-right",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": false,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "SlideOver",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/slide-over.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/slide-over.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/dropzone",
+        "name": "Dropzone"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Dropzone } from '@cardstack/pretui/components/dropzone';\n```\n",
+      "cardTitle": "Dropzone",
+      "cardDescription": "Drag-and-drop file target with hover states",
+      "containedExamples": [],
+      "componentName": "Dropzone",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [
+        "drag-drop",
+        "form-associated"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Drag-and-drop file target with hover states",
+      "refs": "react-spectrum Dropzone",
+      "buildsOn": null,
+      "icon": "cloud-upload",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "Dropzone",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/dropzone.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/dropzone.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

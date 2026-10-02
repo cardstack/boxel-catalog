@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/contact-link",
+        "name": "ContactLink"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ContactLink } from '@cardstack/pretui/components/contact-link';\n```\n",
+      "cardTitle": "ContactLink",
+      "cardDescription": "Contact channel rendered as a validated href — every scheme built, never interpolated",
+      "containedExamples": [],
+      "componentName": "ContactLink",
+      "category": "Foundations",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "ink",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Contact channel rendered as a validated href — every scheme built, never interpolated",
+      "refs": "fields-configuration contact-link",
+      "buildsOn": null,
+      "icon": "contact",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "ContactLink",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/contact-link.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/contact-link.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

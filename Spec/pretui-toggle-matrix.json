@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/toggle-matrix",
+        "name": "ToggleMatrix"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ToggleMatrix } from '@cardstack/pretui/components/toggle-matrix';\n```\n",
+      "cardTitle": "ToggleMatrix",
+      "cardDescription": "Two-dimensional toggle grid with real header semantics and two-axis keys",
+      "containedExamples": [],
+      "componentName": "ToggleMatrix",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Two-dimensional toggle grid with real header semantics and two-axis keys",
+      "refs": "boxel-catalog beat-maker step grid",
+      "buildsOn": null,
+      "icon": "grid-2x2-check",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "ToggleMatrix",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/toggle-matrix.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/toggle-matrix.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

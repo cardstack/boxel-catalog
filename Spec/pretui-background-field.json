@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/background-field",
+        "name": "BackgroundField"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { BackgroundField } from '@cardstack/pretui/components/background-field';\n```\n",
+      "cardTitle": "BackgroundField",
+      "cardDescription": "One component, many compiled ambient fields — grid, wave, particle",
+      "containedExamples": [],
+      "componentName": "BackgroundField",
+      "category": "Foundations",
+      "tier": "Primitive",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "texture",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "One component, many compiled ambient fields — grid, wave, particle",
+      "refs": "react-bits 55 backgrounds · cult-ui bg-*/hero-* · fancy AnimatedGradientWithSvg",
+      "buildsOn": null,
+      "icon": "grid-pattern",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "BackgroundField",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/background-field.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/background-field.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

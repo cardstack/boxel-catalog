@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/transmute",
+        "name": "Transmute"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Transmute } from '@cardstack/pretui/components/transmute';\n```\n",
+      "cardTitle": "Transmute",
+      "cardDescription": "VERB→LABEL→CALL morph via grid-fr",
+      "containedExamples": [],
+      "componentName": "Transmute",
+      "category": "Agentic",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "agentic",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "VERB→LABEL→CALL morph via grid-fr · unique to Pretui",
+      "refs": null,
+      "buildsOn": null,
+      "icon": "wand-sparkles",
+      "demand": null,
+      "featured": true,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "Transmute",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/transmute.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/transmute.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
