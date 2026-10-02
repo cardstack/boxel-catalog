@@ -18,6 +18,9 @@ import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Token } from '@cardstack/pretui/components/token';
+import { COMPACT_EMPTY_STYLE, tokenStyle } from './components/service-desk-ui';
 
 export const TRANSITION_GUARDS = [
   'none',
@@ -50,13 +53,10 @@ export class TransitionField extends FieldDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <code class='transition'>{{@model.title}}</code>
-      <style scoped>
-        .transition {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-        }
-      </style>
+      <Token
+        @value={{@model.title}}
+        style={{tokenStyle '--boxel-font-size-xs' 'var(--muted-foreground)'}}
+      />
     </template>
   };
 }
@@ -232,12 +232,23 @@ export class Workflow extends CardDef {
           {{#if @model.transitions.length}}
             <ul class='wf-transitions'>
               {{#each @model.transitions as |t|}}
-                <li><code>{{t.title}}</code></li>
+                <li><Token
+                    class='wf-transition'
+                    @value={{t.title}}
+                    style={{tokenStyle
+                      '--boxel-font-size-sm'
+                      'var(--muted-foreground)'
+                    }}
+                  /></li>
               {{/each}}
             </ul>
           {{else}}
-            <p class='wf-none'>No transitions defined — every move will be
-              refused until some are.</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @title='No transitions defined'
+              @message='Every move will be refused until some are.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
       </article>
@@ -281,15 +292,11 @@ export class Workflow extends CardDef {
           flex-direction: column;
           gap: var(--boxel-sp-4xs);
         }
-        code {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .wf-none {
-          margin: 0;
-          color: var(--muted-foreground);
-          font-style: italic;
-          font-size: var(--boxel-font-size-sm);
+        /* a long guarded transition wraps instead of overflowing the list */
+        .wf-transitions .wf-transition {
+          margin-inline: 0;
+          white-space: normal;
+          overflow-wrap: anywhere;
         }
       </style>
     </template>

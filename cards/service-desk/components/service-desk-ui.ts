@@ -21,6 +21,14 @@ export const ALERT_STYLE = {
 };
 
 /**
+ * Pret UI `EmptyState` tuned through its spacing and title knobs to a compact
+ * well, for an empty list inside a record view rather than a whole page.
+ */
+export const COMPACT_EMPTY_STYLE = htmlSafe(
+  '--space-9: 1rem; --space-6: 1rem; --text-heading: var(--boxel-font-size)',
+);
+
+/**
  * The hue for Pret UI `Avatar`. Avatar tints its disc 16% of the hue and sets
  * its initials at 80% of it, so a fill token as the hue leaves pale initials
  * on a pale disc. `--primary-ink` keeps the primary identity the initials had

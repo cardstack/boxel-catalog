@@ -30,6 +30,10 @@ import { RecordOwnerField } from '@cardstack/catalog/fields/record-owner/record-
 import { RelationshipSetField } from '@cardstack/catalog/fields/relationship-set/relationship-set-field';
 import { ExternalReferenceField } from '@cardstack/catalog/fields/external-reference/external-reference-field';
 import { WorkflowStateField } from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { Token } from '@cardstack/pretui/components/token';
+import { COMPACT_EMPTY_STYLE, tokenStyle } from './components/service-desk-ui';
 
 export const CASE_STATUSES = [
   'open',
@@ -350,6 +354,19 @@ export class Case extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
+    // The sub-line under the title shows only the parts that are set, with a
+    // separator between shown parts and none leading.
+    get hasSubline() {
+      let m = this.args.model;
+      return Boolean(m?.openedOn || m?.account || m?.owner);
+    }
+    get accountNeedsSeparator() {
+      return Boolean(this.args.model?.openedOn);
+    }
+    get ownerNeedsSeparator() {
+      let m = this.args.model;
+      return Boolean(m?.openedOn || m?.account);
+    }
     get statusHue() {
       return STATUS_HUES[this.args.model?.status ?? 'open'] ?? 'blue';
     }
@@ -358,16 +375,6 @@ export class Case extends CardDef {
     }
     get severityHue() {
       return SEVERITY_HUES[this.args.model?.severity ?? 'low'] ?? 'slate';
-    }
-    get openedLabel() {
-      let d = this.args.model?.openedOn;
-      return d
-        ? d.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })
-        : '—';
     }
     get ticketCount() {
       try {
@@ -381,13 +388,33 @@ export class Case extends CardDef {
         <header class='head'>
           <div>
             <p class='kicker'>Support Case{{#if @model.caseId.value}}
-                <code class='case-ref'>{{@model.caseId.value}}</code>{{/if}}</p>
+                <Token
+                  class='case-ref'
+                  @value={{@model.caseId.value}}
+                  style={{tokenStyle
+                    '--boxel-font-size-xs'
+                    'var(--muted-foreground)'
+                  }}
+                />{{/if}}</p>
             <h1>{{@model.subject}}</h1>
-            <p class='sub'>opened
-              {{this.openedLabel}}
-              {{#if @model.account}}· <@fields.account @format='atom' />{{/if}}
-              {{#if @model.owner}}· owned by
-                <@fields.owner @format='atom' />{{/if}}</p>
+            {{! A missing open date drops the "opened …" fragment rather than
+                printing a placeholder. }}
+            {{#if this.hasSubline}}
+              <p class='sub'>
+                {{#if @model.openedOn}}opened
+                  <FormatDate
+                    @date={{@model.openedOn}}
+                    @locale='en-US'
+                    @month='short'
+                    @day='numeric'
+                    @year='numeric'
+                  />{{/if}}
+                {{#if @model.account}}{{#if this.accountNeedsSeparator}}·
+                  {{/if}}<@fields.account @format='atom' />{{/if}}
+                {{#if @model.owner}}{{#if this.ownerNeedsSeparator}}·
+                  {{/if}}owned by
+                  <@fields.owner @format='atom' />{{/if}}</p>
+            {{/if}}
           </div>
           <div class='head-right'>
             <StatePill
@@ -414,8 +441,12 @@ export class Case extends CardDef {
             {{#each @fields.relatedTickets as |T|}}
               <T @format='embedded' />
             {{else}}
-              <p class='empty'>No tickets linked yet — a case usually starts
-                from at least one.</p>
+              <EmptyState
+                style={{COMPACT_EMPTY_STYLE}}
+                @title='No tickets linked yet'
+                @message='A case usually starts from at least one.'
+                @texture={{false}}
+              />
             {{/each}}
           </div>
         </section>
@@ -459,10 +490,11 @@ export class Case extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .case-ref {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.02em;
+        /* Pret UI Token sets the case id in the muted hue, as the ticket
+           reference is; the kicker's uppercase and tracking stay off it. */
+        .kicker .case-ref {
+          text-transform: none;
+          letter-spacing: normal;
           margin-left: var(--boxel-sp-4xs);
         }
         h1 {
@@ -508,12 +540,6 @@ export class Case extends CardDef {
         .tickets {
           display: grid;
           gap: var(--boxel-sp-xs);
-        }
-        .empty {
-          margin: 0;
-          color: var(--muted-foreground);
-          font-style: italic;
-          font-size: 0.875rem;
         }
         @container (max-width: 560px) {
           .head {
@@ -604,9 +630,14 @@ export class Case extends CardDef {
           keeps — so a grid of cases reads as a heat map before a word is read. }}
       <div class='fit' style={{this.accentStyle}}>
         <span class='fit-head'>
-          {{#if @model.caseId.value}}<code
+          {{#if @model.caseId.value}}<Token
               class='fit-ref'
-            >{{@model.caseId.value}}</code>{{/if}}
+              @value={{@model.caseId.value}}
+              style={{tokenStyle
+                '--boxel-font-size-xs'
+                'var(--muted-foreground)'
+              }}
+            />{{/if}}
           <span class='fit-sev'>{{@model.severity}}</span>
           <StatePill
             @label={{this.statusLabel}}
@@ -649,10 +680,10 @@ export class Case extends CardDef {
           min-width: 0;
           font-size: var(--boxel-font-size-xs);
         }
-        .fit-ref {
-          font-family: var(--font-mono);
+        .fit-head .fit-ref {
+          margin-inline: 0;
+          flex: none;
           font-weight: 600;
-          white-space: nowrap;
         }
         .fit-sev {
           font-family: var(--boxel-eyebrow-font-family);
