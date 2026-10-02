@@ -4,6 +4,10 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { modifier } from 'ember-modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { PAUSE_BUTTON_STYLE, SCRIM_BUTTON_STYLE } from '../real-estate-ui';
 
 // Property Gallery — the listing's photo showcase. Render-only and
 // domain-neutral about storage: the consumer hands it resolved image URLs
@@ -205,11 +209,11 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
       {{#if this.urls.length}}
         {{#if (eq this.mode 'grid')}}
           <div class='grid-head'>
-            <button
-              type='button'
-              class='mode-btn'
+            <Button
+              @variant='ghost'
+              @size='s'
               {{on 'click' (fn this.setMode 'hero')}}
-            >‹ Hero view</button>
+            >‹ Hero view</Button>
             <span class='grid-count'>{{this.urls.length}} photos</span>
           </div>
           <div class='grid'>
@@ -272,21 +276,21 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
               {{/each}}
             </div>
             <div class='modes'>
-              <button
-                type='button'
-                class='mode-btn'
+              <Button
+                @variant='ghost'
+                @size='s'
                 {{on 'click' (fn this.setMode 'grid')}}
-              >Grid view</button>
-              <button
-                type='button'
-                class='mode-btn'
+              >Grid view</Button>
+              <Button
+                @variant='ghost'
+                @size='s'
                 {{on 'click' (fn this.setMode 'slideshow')}}
-              >Slideshow</button>
-              <button
-                type='button'
-                class='mode-btn'
+              >Slideshow</Button>
+              <Button
+                @variant='ghost'
+                @size='s'
                 {{on 'click' (fn this.setMode 'fullscreen')}}
-              >Fullscreen</button>
+              >Fullscreen</Button>
             </div>
           {{/if}}
         {{/if}}
@@ -304,19 +308,23 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
             {{on 'cancel' this.onDialogCancel}}
             {{on 'close' this.onDialogClose}}
           >
-            <button
-              type='button'
+            <IconButton
+              @label='Close'
+              @variant='ghost'
+              @size='xl'
               class='lb-close'
-              aria-label='Close'
+              style={{SCRIM_BUTTON_STYLE}}
               {{on 'click' this.closeOverlay}}
-            >✕</button>
+            >✕</IconButton>
             {{#if this.hasMultiple}}
-              <button
-                type='button'
+              <IconButton
+                @label='Previous photo'
+                @variant='ghost'
+                @size='xl'
                 class='lb-nav lb-prev'
-                aria-label='Previous photo'
+                style={{SCRIM_BUTTON_STYLE}}
                 {{on 'click' this.previous}}
-              >‹</button>
+              >‹</IconButton>
             {{/if}}
             <figure class='lb-figure'>
               <img
@@ -334,27 +342,33 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
               </figcaption>
             </figure>
             {{#if this.hasMultiple}}
-              <button
-                type='button'
+              <IconButton
+                @label='Next photo'
+                @variant='ghost'
+                @size='xl'
                 class='lb-nav lb-next'
-                aria-label='Next photo'
+                style={{SCRIM_BUTTON_STYLE}}
                 {{on 'click' this.next}}
-              >›</button>
+              >›</IconButton>
             {{/if}}
             {{#if (eq this.mode 'slideshow')}}
-              <button
-                type='button'
+              <Button
+                @variant='ghost'
+                @size='s'
                 class='lb-pause'
+                style={{PAUSE_BUTTON_STYLE}}
                 {{on 'click' this.toggleSlideshowPause}}
-              >{{if this.slideshowPaused 'Resume' 'Pause'}}</button>
+              >{{if this.slideshowPaused 'Resume' 'Pause'}}</Button>
             {{/if}}
           </dialog>
         {{/if}}
       {{else}}
-        <div class='empty'>
-          <span class='empty-glyph' aria-hidden='true'>🏠</span>
-          <p>No photos yet — a listing without photos does not get viewings.</p>
-        </div>
+        <EmptyState
+          class='empty'
+          @title='No photos yet'
+          @message='A listing without photos does not get viewings.'
+          @texture={{false}}
+        />
       {{/if}}
     </div>
     <style scoped>
@@ -365,10 +379,10 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
       .hero {
         margin: 0;
         position: relative;
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border-radius: var(--radius);
         overflow: hidden;
         aspect-ratio: 16 / 10;
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
       }
       .hero-img {
         width: 100%;
@@ -385,52 +399,44 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
           opacity: 1;
         }
       }
-      .hero-caption {
+      /* caption and counter sit on the photo, so they ride a black scrim
+         with white text in both schemes */
+      .hero-caption,
+      .counter {
         position: absolute;
-        left: var(--boxel-sp-xs);
         bottom: var(--boxel-sp-xs);
-        max-width: 60%;
-        background: color-mix(
-          in oklch,
-          var(--boxel-dark, black) 55%,
-          transparent
-        );
-        color: var(--boxel-light, white);
+        background-color: color-mix(in oklch, transparent, black 55%);
+        color: white;
         font-size: 0.75rem;
-        padding: 2px 10px;
         border-radius: 999px;
+      }
+      .hero-caption {
+        left: var(--boxel-sp-xs);
+        max-width: 60%;
+        padding: 0.125rem 0.625rem;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .counter {
-        position: absolute;
         right: var(--boxel-sp-xs);
-        bottom: var(--boxel-sp-xs);
-        background: color-mix(
-          in oklch,
-          var(--boxel-dark, black) 55%,
-          transparent
-        );
-        color: var(--boxel-light, white);
-        font-size: 0.75rem;
-        padding: 2px 8px;
-        border-radius: 999px;
+        padding: 0.125rem 0.5rem;
         font-variant-numeric: tabular-nums;
       }
       .strip {
         display: flex;
         gap: var(--boxel-sp-5xs);
         overflow-x: auto;
-        padding-bottom: 2px;
+        padding-bottom: 0.125rem;
       }
+      /* reset: a bare image button, no UA fill */
       .thumb {
         flex: 0 0 auto;
-        width: 72px;
-        height: 48px;
+        width: 4.5rem;
+        height: 3rem;
         padding: 0;
-        border: 2px solid transparent;
-        border-radius: calc(var(--radius, var(--boxel-border-radius)) / 1.5);
+        border: 0.125rem solid transparent;
+        border-radius: calc(var(--radius) / 1.5);
         overflow: hidden;
         cursor: pointer;
         background: none;
@@ -443,7 +449,7 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
         display: block;
       }
       .thumb.active {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary);
         opacity: 1;
       }
       .thumb:hover {
@@ -453,20 +459,6 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
         display: flex;
         gap: var(--boxel-sp-xs);
       }
-      .mode-btn {
-        border: 0;
-        background: none;
-        padding: 2px var(--boxel-sp-5xs);
-        font: inherit;
-        font-size: 0.75rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
-        cursor: pointer;
-      }
-      .mode-btn:hover {
-        color: var(--foreground, var(--boxel-dark));
-      }
       .grid-head {
         display: flex;
         justify-content: space-between;
@@ -474,25 +466,26 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
       }
       .grid-count {
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr));
         gap: var(--boxel-sp-xs);
       }
       .tile {
         margin: 0;
         display: grid;
-        gap: var(--boxel-sp-6xs, 2px);
+        gap: var(--boxel-sp-6xs);
       }
+      /* reset: a bare image button, no UA fill */
       .tile-btn {
         padding: 0;
         border: 0;
         background: none;
         cursor: pointer;
-        border-radius: calc(var(--radius, var(--boxel-border-radius)) / 1.5);
+        border-radius: calc(var(--radius) / 1.5);
         overflow: hidden;
         aspect-ratio: 16 / 10;
       }
@@ -504,15 +497,17 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
       }
       .tile-caption {
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       /* a top-layer modal <dialog>: override the UA's fit-content box so it
-         covers the whole viewport, and paint the dark ground on the dialog
-         itself (the ::backdrop stays transparent) */
+         covers the whole viewport, and paint the photo viewer's black scrim
+         on the dialog itself (the ::backdrop stays transparent). The scrim
+         and its white text hold in both schemes. */
       .lightbox {
+        --pretui-size-xl: 1.75rem;
         width: 100vw;
         height: 100vh;
         max-width: 100vw;
@@ -524,16 +519,12 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-lg);
-        background: color-mix(
-          in oklch,
-          var(--boxel-dark, black) 90%,
-          transparent
-        );
-        color: var(--boxel-light, white);
+        background-color: color-mix(in oklch, transparent, black 90%);
+        color: white;
         outline: none;
       }
       .lightbox::backdrop {
-        background: transparent;
+        background-color: transparent;
       }
       .lb-figure {
         grid-column: 2;
@@ -547,13 +538,12 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
         max-width: 90vw;
         max-height: 85vh;
         object-fit: contain;
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border-radius: var(--radius);
       }
       .lb-caption {
         display: flex;
         gap: var(--boxel-sp-sm);
         align-items: baseline;
-        color: var(--boxel-light, white);
         font-size: 0.8125rem;
         max-width: 90vw;
       }
@@ -567,19 +557,6 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
         opacity: 0.7;
         flex: 0 0 auto;
       }
-      .lb-nav {
-        border: 0;
-        background: none;
-        color: var(--boxel-light, white);
-        font-size: 2.5rem;
-        line-height: 1;
-        padding: var(--boxel-sp-xs);
-        cursor: pointer;
-        opacity: 0.8;
-      }
-      .lb-nav:hover {
-        opacity: 1;
-      }
       .lb-prev {
         grid-column: 1;
       }
@@ -590,49 +567,17 @@ export class PropertyGallery extends GlimmerComponent<Signature> {
         position: absolute;
         top: var(--boxel-sp);
         right: var(--boxel-sp);
-        border: 0;
-        background: none;
-        color: var(--boxel-light, white);
-        font-size: 1.25rem;
-        cursor: pointer;
-        opacity: 0.8;
       }
-      .lb-close:hover {
-        opacity: 1;
-      }
+      /* Centred with the translate property, which composes with the
+         transform Pret UI's Button sets on press instead of being replaced. */
       .lb-pause {
         position: absolute;
         bottom: var(--boxel-sp);
         left: 50%;
-        transform: translateX(-50%);
-        border: 1px solid
-          color-mix(in oklch, var(--boxel-light, white) 40%, transparent);
-        border-radius: 999px;
-        background: none;
-        color: var(--boxel-light, white);
-        font: inherit;
-        font-size: 0.75rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        padding: 4px 14px;
-        cursor: pointer;
+        translate: -50% 0;
       }
       .empty {
-        border: 1px dashed var(--border, var(--boxel-300));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        padding: var(--boxel-sp-xl);
-        text-align: center;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .empty-glyph {
-        font-size: 1.75rem;
-        display: block;
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .empty p {
-        margin: 0;
-        font-size: 0.875rem;
-        font-style: italic;
+        border: 1px dashed var(--border);
       }
       @media (prefers-reduced-motion: reduce) {
         .hero-img {
