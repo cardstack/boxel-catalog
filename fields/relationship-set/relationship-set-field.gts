@@ -11,6 +11,8 @@ import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
 import Link2Icon from '@cardstack/boxel-icons/link-2';
 
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+
 export const RELATION_KINDS = [
   'duplicate-of',
   'caused-by',
@@ -56,7 +58,7 @@ export class RelationEntryField extends FieldDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <span class='rel'>
+      <StatePill>
         <span class='rel-kind'>{{if
             @model.kind
             @model.kind
@@ -67,29 +69,13 @@ export class RelationEntryField extends FieldDef {
             @model.targetTitle
             '—'
           }}</span>
-      </span>
+      </StatePill>
       <style scoped>
-        .rel {
-          display: inline-flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-4xs);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius-sm);
-          padding: 0.125rem 0.5rem;
-          font-size: var(--boxel-font-size-xs);
-          max-width: 100%;
-        }
         .rel-kind {
           font-family: var(--font-mono);
-          color: var(--muted-foreground);
-          white-space: nowrap;
         }
         .rel-target {
-          font-weight: 500;
-          color: var(--foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          font-weight: 600;
         }
       </style>
     </template>
