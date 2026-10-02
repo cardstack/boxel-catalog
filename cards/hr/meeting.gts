@@ -764,9 +764,10 @@ export class Meeting extends CardDef {
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          {{! The tile's parts and the time line come and go with the card's
-              size, so they are hidden from assistive tech and one visually
-              hidden date and time stands in for them at every tier. }}
+          {{! The weekday and the time line come and go with the card's size,
+              so the tile's parts and the time line are all hidden from
+              assistive tech. One visually hidden date and time after the
+              title stands in for them at every tier. }}
           <div class='datebox'>
             {{#if this.dateObj}}
               <FormatDate
@@ -790,6 +791,13 @@ export class Meeting extends CardDef {
                 @weekday='short'
                 aria-hidden='true'
               />
+            {{else}}
+              <UnsetMarker class='db-day' @label='No date' />
+            {{/if}}
+          </div>
+          <div class='fit-head'>
+            <h3 class='fit-name'>{{@model.title}}</h3>
+            {{#if this.dateObj}}
               <VisuallyHidden><FormatDate
                   @date={{@model.date}}
                   @locale='en-US'
@@ -800,12 +808,7 @@ export class Meeting extends CardDef {
                   @hour='numeric'
                   @minute='2-digit'
                 /></VisuallyHidden>
-            {{else}}
-              <UnsetMarker class='db-day' @label='No date' />
             {{/if}}
-          </div>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
             {{#if this.eyebrow}}
               <span class='fit-eb'>{{this.eyebrow}}</span>
             {{/if}}
