@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../three-way-match",
+        "name": "matchLines"
+      },
+      "specType": null,
+      "readMe": "# Three-Way Match\n\n## Summary\nThe three-way match as data and pure functions: pay only when what the vendor invoiced equals what was ordered and what actually arrived, within tolerance. `matchLines(poLines, receivedQuantities, invoiceLines, resolvedLineNumbers)` compares a Purchase Order's lines, the quantities received and a vendor Invoice's lines, position by position, and returns a `LineMatch` per line with its state; `openVarianceCount(rows)` counts the lines still failing without a resolution. The tolerance defaults are `PRICE_TOLERANCE_PCT` (±2%) and `PRICE_TOLERANCE_ABS` (±$25), whichever is larger. `VarianceResolutionField` (with `VarianceActionField`: accept, short-pay, reject-line) is the one thing stored, on the invoice, because a resolution is a human decision rather than a derivation.\n\n## Usage\n```ts\nimport { matchLines, openVarianceCount } from '@cardstack/catalog/cards/procurement/three-way-match';\n\nlet rows = matchLines(\n  purchaseOrder.lineItems,\n  receivedQuantities,\n  invoice.lineItems,\n  new Set(resolvedLineNumbers),\n);\nif (openVarianceCount(rows) > 0) { /* hold the invoice */ }\n```\n\nThe Three-Way Match Panel renders these rows and Approve Invoice for Payment refuses while any variance is open.\n\n## Non-goals\nNothing here is stored except resolutions: a match is always re-derived from the three documents so it cannot drift from them. No per-invoice tolerance overrides.",
+      "cardTitle": "Three-Way Match",
+      "cardDescription": "Purchase order, receipt and vendor invoice compared line by line within tolerance, with the variance resolutions that are stored.",
+      "cardInfo": {
+        "name": "Three-Way Match",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
