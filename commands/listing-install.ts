@@ -23,6 +23,7 @@ import type {
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
+import { loadListingInput, loadListingLinks } from './listing-links';
 import { getLoaderService, loadCommandModule } from './utils';
 
 import ExecuteAtomicOperationsCommand from '@cardstack/boxel-host/commands/execute-atomic-operations';
@@ -33,8 +34,6 @@ import ReadSourceCommand from '@cardstack/boxel-host/commands/read-source';
 import WriteBinaryFileCommand from '@cardstack/boxel-host/commands/write-binary-file';
 import SerializeCardCommand from '@cardstack/boxel-host/commands/serialize-card';
 import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
-
-import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
 const log = logger('catalog:install');
 
@@ -99,21 +98,20 @@ export default class ListingInstallCommand extends Command<
   protected async run(
     input: BaseCommandModule.ListingInstallInput,
   ): Promise<BaseCommandModule.ListingInstallResult> {
-    let { realm, listing: listingInput } = input;
+    let { realm } = input;
 
     let { realmIdentifier: realmUrl } = await new ValidateRealmCommand(
       this.commandContext,
     ).execute({ realmIdentifier: realm });
 
-    // this is intentionally to type because base command cannot interpret Listing type from catalog
-    const listing = listingInput as Listing;
+    const listing = await loadListingInput(input);
+
+    const { specs, examples, supportingCards, skills } =
+      await loadListingLinks(listing);
 
     // seed examples first so the primary example stays the first planned instance
-    let hasPrimaryExamples = (listing.examples?.length ?? 0) > 0;
-    let examplesToInstall = [
-      ...(listing.examples ?? []),
-      ...(listing.supportingCards ?? []),
-    ];
+    let hasPrimaryExamples = examples.length > 0;
+    let examplesToInstall = [...examples, ...supportingCards];
     if (examplesToInstall.length) {
       examplesToInstall = await this.expandInstances(examplesToInstall);
     }
@@ -129,12 +127,14 @@ export default class ListingInstallCommand extends Command<
     const builder = new PlanBuilder(realmUrl, listing, virtualNetwork);
 
     builder
-      .addIf(listing.specs?.length > 0, (resolver: ListingPathResolver) => {
-        let r = planModuleInstall(listing.specs, resolver, virtualNetwork);
-        selectedCodeRef = r.modulesCopy[0].targetCodeRef;
+      .addIf(specs.length > 0, (resolver: ListingPathResolver) => {
+        let r = planModuleInstall(specs, resolver, virtualNetwork);
+        // No module is planned when every spec is a base-realm def or lacks a
+        // ref; the primary example below supplies the code ref in that case.
+        selectedCodeRef = r.modulesCopy[0]?.targetCodeRef;
         return r;
       })
-      .addIf(examplesToInstall?.length > 0, (resolver: ListingPathResolver) => {
+      .addIf(examplesToInstall.length > 0, (resolver: ListingPathResolver) => {
         let r = planInstanceInstall(
           examplesToInstall,
           resolver,
@@ -147,8 +147,8 @@ export default class ListingInstallCommand extends Command<
         }
         return r;
       })
-      .addIf(listing.skills?.length > 0, (resolver: ListingPathResolver) => {
-        let r = planInstanceInstall(listing.skills, resolver, virtualNetwork);
+      .addIf(skills.length > 0, (resolver: ListingPathResolver) => {
+        let r = planInstanceInstall(skills, resolver, virtualNetwork);
         skillCardId = join(realmUrl, r.instancesCopy[0].lid);
         return r;
       });
@@ -207,21 +207,23 @@ export default class ListingInstallCommand extends Command<
       ),
     ];
 
-    let atomicResults;
-    try {
-      ({ results: atomicResults } = await new ExecuteAtomicOperationsCommand(
-        this.commandContext,
-      ).execute({ realmIdentifier: realmUrl, operations }));
-    } catch (e: any) {
-      if (
-        typeof e?.message === 'string' &&
-        e.message.includes('filter refers to a nonexistent type')
-      ) {
-        throw new Error(
-          'Please click "Update Specs" on the listing and make sure all specs are linked.',
-        );
+    let atomicResults: unknown[] = [];
+    if (operations.length > 0) {
+      try {
+        ({ results: atomicResults } = await new ExecuteAtomicOperationsCommand(
+          this.commandContext,
+        ).execute({ realmIdentifier: realmUrl, operations }));
+      } catch (e: any) {
+        if (
+          typeof e?.message === 'string' &&
+          e.message.includes('filter refers to a nonexistent type')
+        ) {
+          throw new Error(
+            'Please click "Update Specs" on the listing and make sure all specs are linked.',
+          );
+        }
+        throw e;
       }
-      throw e;
     }
 
     let writtenFiles = (atomicResults as Array<Record<string, any>>)

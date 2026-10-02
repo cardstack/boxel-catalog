@@ -1,11 +1,18 @@
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import { identifyCard, isResolvedCodeRef } from '@cardstack/runtime-common';
+import {
+  identifyCard,
+  isResolvedCodeRef,
+  rri,
+} from '@cardstack/runtime-common';
 
 import ListingInstallCommand from '../../../commands/listing-install';
 
-import type { CardDef } from '@cardstack/base/card-api';
+import {
+  getRelationshipMembershipState,
+  type CardDef,
+} from '@cardstack/base/card-api';
 
 import {
   setupLocalIndexing,
@@ -26,6 +33,7 @@ import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 import {
   makeMockCatalogContents,
+  makeLinkEdgeCaseListingContents,
   makeDestinationRealmContents,
 } from '../../helpers/test-fixtures';
 
@@ -39,6 +47,8 @@ const testDestinationRealmURL = `http://test-realm/test2/`;
 const authorListingId = `${mockCatalogURL}Listing/author`;
 const blogPostListingId = `${mockCatalogURL}Listing/blog-post`;
 const photoPostListingId = `${mockCatalogURL}Listing/photo-post`;
+const brokenSpecListingId = `${mockCatalogURL}Listing/broken-spec`;
+const baseSpecOnlyListingId = `${mockCatalogURL}Listing/base-spec-only`;
 
 export function runTests() {
   module(
@@ -70,6 +80,7 @@ export function runTests() {
           contents: {
             ...SYSTEM_CARD_FIXTURE_CONTENTS,
             ...makeMockCatalogContents(mockCatalogURL, catalogRealmURL),
+            ...makeLinkEdgeCaseListingContents(mockCatalogURL, catalogRealmURL),
           },
         });
         await setupAcceptanceTestRealm({
@@ -97,6 +108,31 @@ export function runTests() {
           realm,
           listing,
         });
+      }
+
+      // Build the input the way an AI tool call does: the listing arrives as a
+      // bare link on a freshly added input card, so the command has to load it.
+      async function executeCommandFromToolCall(
+        listingUrl: string,
+        realm: string,
+      ) {
+        const commandService = getService('tool-service');
+        const store = getService('store');
+
+        const command = new ListingInstallCommand(
+          commandService.commandContext,
+        );
+        const InputType = await command.getInputType();
+        const input = await store.addWithoutPersisting({
+          data: {
+            type: 'card',
+            meta: { adoptsFrom: identifyCard(InputType)! },
+            attributes: { realm },
+            relationships: { listing: { links: { self: listingUrl } } },
+          },
+        });
+
+        return command.execute(input as any);
       }
 
       module('listing commands', function (hooks) {
@@ -267,6 +303,143 @@ export function runTests() {
             let instancePath = `${outerFolder}Skill/pirate-speak.json`;
             await openDir(assert, instancePath);
             await verifyFileInFileTree(assert, instancePath);
+          });
+        });
+
+        module('linked cards', function () {
+          test('a listing from a tool call installs once it loads', async function (assert) {
+            const listingName = 'author';
+
+            let result = await executeCommandFromToolCall(
+              authorListingId,
+              testDestinationRealmURL,
+            );
+            assert.ok(result.exampleCardId, 'the example card is installed');
+
+            await visitOperatorMode({
+              submode: 'code',
+              fileView: 'browser',
+              codePath: `${testDestinationRealmURL}index`,
+            });
+            let outerFolder = await verifyFolderWithUUIDInFileTree(
+              assert,
+              listingName,
+            );
+            let gtsFilePath = `${outerFolder}${listingName}/author.gts`;
+            await openDir(assert, gtsFilePath);
+            await verifyFileInFileTree(assert, gtsFilePath);
+          });
+
+          test('a listing whose spec and example links have not loaded installs once they load', async function (assert) {
+            const listingName = 'author';
+            const commandService = getService('tool-service');
+            const store = getService('store');
+
+            // A document without `included` leaves every link unloaded, which
+            // is the state that crashed the planner on `undefined` entries.
+            let listing = (await store.addWithoutPersisting({
+              data: {
+                // card-api only keeps `meta` (and so the realm) for a resource
+                // with an id, as every realm-served listing has.
+                id: `${mockCatalogURL}Listing/author-unloaded`,
+                type: 'card',
+                attributes: { name: 'Author', cardTitle: 'Author' },
+                relationships: {
+                  'specs.0': {
+                    links: { self: `${mockCatalogURL}Spec/author` },
+                  },
+                  'examples.0': {
+                    links: { self: `${mockCatalogURL}author/Author/example` },
+                  },
+                },
+                meta: {
+                  adoptsFrom: {
+                    module: rri(
+                      `${catalogRealmURL}catalog-app/listing/listing`,
+                    ),
+                    name: 'CardListing',
+                  },
+                  // The install planner places copied files by the listing's
+                  // realm.
+                  realmURL: mockCatalogURL,
+                },
+              },
+            })) as CardDef;
+            for (let fieldName of ['specs', 'examples']) {
+              assert.deepEqual(
+                getRelationshipMembershipState(
+                  listing,
+                  fieldName,
+                ).membership?.map((slot) => slot.kind),
+                ['not-loaded'],
+                `${fieldName} starts out not loaded`,
+              );
+            }
+
+            let result = await new ListingInstallCommand(
+              commandService.commandContext,
+            ).execute({ realm: testDestinationRealmURL, listing });
+            assert.ok(result.exampleCardId, 'the example card is installed');
+            assert.ok(result.selectedCodeRef, 'a code ref is selected');
+
+            await visitOperatorMode({
+              submode: 'code',
+              fileView: 'browser',
+              codePath: `${testDestinationRealmURL}index`,
+            });
+            let outerFolder = await verifyFolderWithUUIDInFileTree(
+              assert,
+              listingName,
+            );
+            let gtsFilePath = `${outerFolder}${listingName}/author.gts`;
+            await openDir(assert, gtsFilePath);
+            await verifyFileInFileTree(assert, gtsFilePath);
+            let examplePath = `${outerFolder}${listingName}/Author/example.json`;
+            await openDir(assert, examplePath);
+            await verifyFileInFileTree(assert, examplePath);
+          });
+
+          test('a tool call naming a missing listing fails with an error naming it', async function (assert) {
+            const missingListingId = `${mockCatalogURL}Listing/does-not-exist`;
+            await assert.rejects(
+              executeCommandFromToolCall(
+                missingListingId,
+                testDestinationRealmURL,
+              ),
+              (e: Error) =>
+                !(e instanceof TypeError) &&
+                e.message.includes(`Listing "${missingListingId}"`),
+              'the error names the listing, not a TypeError',
+            );
+          });
+
+          test('a broken spec link fails with an error naming the spec', async function (assert) {
+            await assert.rejects(
+              executeCommandFromToolCall(
+                brokenSpecListingId,
+                testDestinationRealmURL,
+              ),
+              (e: Error) =>
+                !(e instanceof TypeError) &&
+                e.message.includes(
+                  `Listing spec "${mockCatalogURL}Spec/does-not-exist"`,
+                ) &&
+                e.message.includes('Update Specs'),
+              'the error names the broken spec and how to fix it, not a TypeError',
+            );
+          });
+
+          test('a listing whose only spec is a base-realm def installs without a code ref', async function (assert) {
+            let result = await executeCommand(
+              ListingInstallCommand,
+              baseSpecOnlyListingId,
+              testDestinationRealmURL,
+            );
+            assert.strictEqual(
+              result.selectedCodeRef,
+              undefined,
+              'no module was copied, so there is no code ref to select',
+            );
           });
         });
 
