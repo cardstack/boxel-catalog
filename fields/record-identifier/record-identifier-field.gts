@@ -11,19 +11,11 @@ import { on } from '@ember/modifier';
 import { BoxelInput } from '@cardstack/boxel-ui/components';
 import { CopyButton } from '@cardstack/pretui/components/copy-button';
 import { Token } from '@cardstack/pretui/components/token';
-import { tokenStyle } from '../shared/pretui-token';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 function stopPropagation(event: Event) {
   event.stopPropagation();
 }
-
-// The id is a machine value practitioners quote, so it reads as a Pret UI
-// Token in the muted hue, at the size each format set it in. The embedded view
-// adds a CopyButton beside it; the atom sits inline in other text and does not.
-const ID_TOKEN_STYLE = {
-  sm: tokenStyle('--boxel-font-size-sm', 'var(--muted-foreground)'),
-  xs: tokenStyle('--boxel-font-size-xs', 'var(--muted-foreground)'),
-};
 
 /**
  * The human-readable handle of a record: "CASE-2026-0142".

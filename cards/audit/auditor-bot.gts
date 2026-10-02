@@ -18,7 +18,8 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { parametersAreValid } from './utils/rule-evaluation';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { AuditFacts, COMPACT_EMPTY_STYLE } from './audit-ui';
+import { AuditFacts } from './audit-ui';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Each value renders in the `value` block, which picks the row by key.
 const FACTS = [

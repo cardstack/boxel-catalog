@@ -14,7 +14,7 @@ import { SeverityField } from '@cardstack/catalog/cards/audit/severity-field';
 import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Token } from '@cardstack/pretui/components/token';
-import { ID_TOKEN_STYLE } from './audit-ui';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import {
   RULE_KINDS,
   RULE_KIND_LABELS,

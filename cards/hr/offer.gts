@@ -39,14 +39,12 @@ import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
 import { GenerateOfferLetterCommand } from './commands/generate-offer-letter-command';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { daysBetween, formatMoney } from './utils';
+import { FactList, Money, hueOf } from './hr-ui';
 import {
   ALERT_STYLE,
   AVATAR_HUE,
-  FactList,
-  Money,
-  hueOf,
   nameProgress,
-} from './hr-ui';
+} from '@cardstack/catalog/components/pretui-helpers';
 
 export const OFFER_STATUSES = [
   'draft',

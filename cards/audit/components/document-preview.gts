@@ -13,7 +13,10 @@ import {
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Token } from '@cardstack/pretui/components/token';
-import { COMPACT_EMPTY_STYLE, ID_TOKEN_STYLE } from '../audit-ui';
+import {
+  COMPACT_EMPTY_STYLE,
+  ID_TOKEN_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 // Structural, not the Document class: importing the card here would close a
 // module cycle (the card's isolated view renders this component). Same

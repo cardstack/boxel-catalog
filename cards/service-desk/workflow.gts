@@ -20,7 +20,10 @@ import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Token } from '@cardstack/pretui/components/token';
-import { COMPACT_EMPTY_STYLE, tokenStyle } from './components/service-desk-ui';
+import {
+  COMPACT_EMPTY_STYLE,
+  tokenStyle,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 export const TRANSITION_GUARDS = [
   'none',

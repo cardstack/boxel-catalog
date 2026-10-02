@@ -27,7 +27,8 @@ import { EditSectionNav } from '../../components/edit-section-nav';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { COMPACT_EMPTY_STYLE, LegalFacts } from './legal-ui';
+import { LegalFacts } from './legal-ui';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 class ContractVersionEdit extends Component<typeof ContractVersion> {
   @tracked activeSection = 'snapshot';

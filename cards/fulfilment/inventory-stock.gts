@@ -21,12 +21,11 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import Network from '@cardstack/boxel-icons/git-fork';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { LoadingRows, StatusPill, type StatusHue } from './fulfilment-ui';
 import {
   ALERT_STYLE,
-  LoadingRows,
-  StatusPill,
-  type StatusHue,
-} from './fulfilment-ui';
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
@@ -506,7 +505,7 @@ export class InventoryStock extends CardDef {
             </ul>
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @texture={{false}}
               @title='This is the only place this product is stocked'
               @message='A short pick here cannot be covered from another bin.'
@@ -773,13 +772,6 @@ export class InventoryStock extends CardDef {
           --text-ui-md: var(--t-sm);
           --space-6: 1.25rem;
           font-variant-numeric: tabular-nums;
-        }
-        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
-           title at the body size. */
-        .empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the

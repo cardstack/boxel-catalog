@@ -19,7 +19,7 @@ import { ProofField } from './proof-field';
 import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Token } from '@cardstack/pretui/components/token';
-import { ID_TOKEN_STYLE } from './audit-ui';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * A finding raised in the physical world: on a site, at an asset, by a person

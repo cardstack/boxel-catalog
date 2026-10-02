@@ -25,7 +25,8 @@ import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severit
 import { eq } from '@cardstack/boxel-ui/helpers';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { AuditFacts, COMPACT_EMPTY_STYLE } from './audit-ui';
+import { AuditFacts } from './audit-ui';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * One rule, one subject, one verdict — the atom an audit is made of.

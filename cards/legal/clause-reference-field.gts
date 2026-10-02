@@ -14,7 +14,7 @@ import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { Clause, clauseTypeLabel } from './clause';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Token } from '@cardstack/pretui/components/token';
-import { ID_TOKEN_STYLE } from './legal-ui';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * Clause Reference (CR) — a pointer from a document into the clause library:

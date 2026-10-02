@@ -33,7 +33,10 @@ import { WorkflowStateField } from '@cardstack/catalog/fields/workflow-state/wor
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 import { Token } from '@cardstack/pretui/components/token';
-import { COMPACT_EMPTY_STYLE, tokenStyle } from './components/service-desk-ui';
+import {
+  COMPACT_EMPTY_STYLE,
+  tokenStyle,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 export const CASE_STATUSES = [
   'open',

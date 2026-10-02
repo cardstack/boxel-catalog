@@ -3,27 +3,8 @@ import { modifier } from 'ember-modifier';
 
 // The Pret UI settings the Property Listing blocks share, kept in one module
 // so the listing page, the publish panel and the photo viewer render their
-// messages and controls the same way.
-
-// Pret UI `Alert` paints its tone from the fill tokens, whose text mixes fall
-// under 4.5:1 on some grounds, and its info tone reads a token boxel's theme
-// does not declare. Alert writes its hue as an inline style, so the override
-// is inline too: the hue is the tone's `--*-ink` token, the tint is 10%, and
-// the glyph disc's mark is the card colour. The body text is the ink as well,
-// except for info: `--info-ink` is 4.79:1 on the dark card before any tint,
-// so an info body reads `--foreground`.
-function alertStyle(ink: string, body = ink) {
-  return htmlSafe(
-    `--pretui-alert-hue: var(${ink}); --pretui-chip-mix: 10%; --pretui-on-neutral: var(--card); color: var(${body})`,
-  );
-}
-
-export const ALERT_STYLE = {
-  danger: alertStyle('--destructive-ink'),
-  success: alertStyle('--success-ink'),
-  info: alertStyle('--info-ink', '--foreground'),
-  attention: alertStyle('--attention-ink'),
-};
+// controls the same way. The settings every cluster shares live in
+// `components/pretui-helpers`.
 
 /**
  * Pret UI's ghost `Button` / `IconButton` on the photo viewer's black scrim.
