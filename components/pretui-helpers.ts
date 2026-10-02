@@ -81,11 +81,16 @@ export const ID_TOKEN_STYLE = {
  * The optional value text replaces the bare "N of M" a screen reader would
  * otherwise announce, for a bar whose count alone would mislead (a run that
  * ended early fills every segment).
+ * It names the element it is applied to when that element carries the role,
+ * and otherwise its first descendant that does, so it covers both ProgressBar
+ * layouts: the role on the component root, and the role on an inner track.
  * Pret UI gap, tracked in CS-13265.
  */
 export const nameProgress = modifier(
   (element: HTMLElement, [label, valueText]: [string, string?]) => {
-    let bar = element.querySelector('[role="progressbar"]');
+    let bar = element.matches('[role="progressbar"]')
+      ? element
+      : element.querySelector('[role="progressbar"]');
     bar?.setAttribute('aria-label', label);
     bar?.setAttribute('aria-valuemin', '0');
     if (valueText) {
