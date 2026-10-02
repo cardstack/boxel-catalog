@@ -198,6 +198,8 @@ const SEARCH_REASONS: Partial<Record<PolicyExplanation['reason'], string>> = {
     'Grants in this policy let this search return the cards their conditions match, and no others.',
   'no-grant':
     'No grant in this policy can narrow this search for this person, so it returns no cards. A grant whose condition a search can’t use doesn’t count.',
+  'not-resolved':
+    "This search couldn't be resolved: the card type doesn't declare a search by this name, or the filter isn't one a search accepts.",
 };
 
 const DECISION_VARIANT: Record<
@@ -444,6 +446,13 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
   ): string | undefined =>
     grant.filterable === undefined ? undefined : String(grant.filterable);
 
+  // Which copy of a card a condition reads matters only where it is checked
+  // card by card. A search runs it as a filter over the index, whose lag the
+  // answer reports instead.
+  showsTier = (
+    grant: PolicyExplanation['rules'][number]['grants'][number],
+  ): boolean => grant.filterable === undefined && grant.tier !== undefined;
+
   // On the search lane a grant's condition is never checked card by card:
   // the search runs it as a filter, so what matters is whether it has one.
   grantLabel = (
@@ -539,7 +548,11 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
                           class='where'
                           data-test-explanation-grant-where
                         >{{grant.where}}</code>
-                        <span class='tier'>{{this.tierLabel grant.tier}}</span>
+                        {{#if (this.showsTier grant)}}
+                          <span class='tier'>{{this.tierLabel
+                              grant.tier
+                            }}</span>
+                        {{/if}}
                       {{/if}}
                       <span
                         class='outcome'
@@ -812,7 +825,12 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
     return this.running || this.isLastPage;
   }
 
+  // The mode can't change while an ask is out: its answer belongs to the
+  // form that asked it.
   chooseMode = (mode: ExplainMode) => {
+    if (this.running) {
+      return;
+    }
     this.mode = mode;
     this.clearAnswer();
   };
@@ -999,6 +1017,7 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
         @items={{MODES}}
         @name='explain-mode'
         @checkedId={{this.mode}}
+        @disabled={{this.running}}
         @orientation='horizontal'
         as |item|
       >
