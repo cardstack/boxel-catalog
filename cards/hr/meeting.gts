@@ -80,7 +80,8 @@ export const MeetingTypeField = enumField(StringField, {
 });
 
 // The clock time a meeting starts at, as the header and the tile show it
-// ("9:30 AM"). en-US like the date tile beside it.
+// ("9:30 AM"). en-US like the date tile beside it. Callers render it only
+// when the meeting has a date.
 class MeetingTime extends GlimmerComponent<{
   Args: { date?: FormatDateSignature['Args']['date'] };
   Element: HTMLTimeElement;
@@ -91,7 +92,6 @@ class MeetingTime extends GlimmerComponent<{
       @locale='en-US'
       @hour='numeric'
       @minute='2-digit'
-      @placeholder='—'
       ...attributes
     />
   </template>
@@ -191,6 +191,16 @@ export class Meeting extends CardDef {
       return isNaN(date.getTime()) ? undefined : date;
     }
 
+    // The byline shows only the parts that are set, with the dot only
+    // between two shown parts.
+    get hasByline(): boolean {
+      return Boolean(this.dateObj || this.args.model?.duration?.label);
+    }
+
+    get durationNeedsSeparator(): boolean {
+      return this.dateObj !== undefined;
+    }
+
     // Derived: the meeting is over and nobody recorded a score. This is the
     // one state a scheduling card can genuinely surface — "the ball is in our
     // court" — and it comes free from date + interviewScore.
@@ -248,37 +258,44 @@ export class Meeting extends CardDef {
           {{! A meeting's first question is always "when", so the date gets a
               block of its own rather than a line in the subtitle. }}
           <div class='datebox'>
-            <FormatDate
-              class='db-month'
-              @date={{@model.date}}
-              @locale='en-US'
-              @month='short'
-              @placeholder=''
-            />
-            <FormatDate
-              class='db-day'
-              @date={{@model.date}}
-              @locale='en-US'
-              @day='numeric'
-              @placeholder='–'
-            />
-            <FormatDate
-              class='db-weekday'
-              @date={{@model.date}}
-              @locale='en-US'
-              @weekday='short'
-              @placeholder=''
-            />
+            {{#if this.dateObj}}
+              <FormatDate
+                class='db-month'
+                @date={{@model.date}}
+                @locale='en-US'
+                @month='short'
+              />
+              <FormatDate
+                class='db-day'
+                @date={{@model.date}}
+                @locale='en-US'
+                @day='numeric'
+              />
+              <FormatDate
+                class='db-weekday'
+                @date={{@model.date}}
+                @locale='en-US'
+                @weekday='short'
+              />
+            {{else}}
+              <span class='db-day unset' aria-label='No date'>—</span>
+            {{/if}}
           </div>
           <div class='hero-text'>
             <h1>{{@model.title}}</h1>
-            <p class='byline'>
-              <MeetingTime @date={{@model.date}} />
-              {{#if @model.duration.label}}
-                <span class='sep-dot'>&middot;</span>
-                {{@model.duration.label}}
-              {{/if}}
-            </p>
+            {{#if this.hasByline}}
+              <p class='byline'>
+                {{#if this.dateObj}}
+                  <MeetingTime @date={{@model.date}} />
+                {{/if}}
+                {{#if @model.duration.label}}
+                  {{#if this.durationNeedsSeparator}}
+                    <span class='sep-dot'>&middot;</span>
+                  {{/if}}
+                  {{@model.duration.label}}
+                {{/if}}
+              </p>
+            {{/if}}
             <div class='pill-row'>
               <StatePill
                 @label={{@model.meetingType}}
@@ -443,6 +460,9 @@ export class Meeting extends CardDef {
         .db-weekday {
           display: block;
           font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
+        }
+        .unset {
           color: var(--muted-foreground);
         }
         .hero-text {
@@ -738,27 +758,28 @@ export class Meeting extends CardDef {
       <article class='fit'>
         <div class='fit-top'>
           <div class='datebox' aria-hidden='true'>
-            <FormatDate
-              class='db-month'
-              @date={{@model.date}}
-              @locale='en-US'
-              @month='short'
-              @placeholder=''
-            />
-            <FormatDate
-              class='db-day'
-              @date={{@model.date}}
-              @locale='en-US'
-              @day='numeric'
-              @placeholder='–'
-            />
-            <FormatDate
-              class='db-weekday'
-              @date={{@model.date}}
-              @locale='en-US'
-              @weekday='short'
-              @placeholder=''
-            />
+            {{#if this.dateObj}}
+              <FormatDate
+                class='db-month'
+                @date={{@model.date}}
+                @locale='en-US'
+                @month='short'
+              />
+              <FormatDate
+                class='db-day'
+                @date={{@model.date}}
+                @locale='en-US'
+                @day='numeric'
+              />
+              <FormatDate
+                class='db-weekday'
+                @date={{@model.date}}
+                @locale='en-US'
+                @weekday='short'
+              />
+            {{else}}
+              <span class='db-day unset'>—</span>
+            {{/if}}
           </div>
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
@@ -781,7 +802,9 @@ export class Meeting extends CardDef {
         </div>
 
         <div class='fit-mid'>
-          <MeetingTime class='fit-time' @date={{@model.date}} />
+          {{#if this.dateObj}}
+            <MeetingTime class='fit-time' @date={{@model.date}} />
+          {{/if}}
           {{#if @model.candidateName}}
             <span class='fit-who'>{{@model.candidateName}}</span>
           {{/if}}
@@ -856,6 +879,9 @@ export class Meeting extends CardDef {
         .db-weekday {
           display: none;
           font-size: var(--fit-small);
+          color: var(--muted-foreground);
+        }
+        .unset {
           color: var(--muted-foreground);
         }
         .fit-head {
