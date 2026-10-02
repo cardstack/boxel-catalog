@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/cta-band",
+        "name": "CtaBand"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { CtaBand } from '@cardstack/pretui/components/cta-band';\n```\n",
+      "cardTitle": "CtaBand",
+      "cardDescription": "Closing call-to-action band across the full tone x appearance grid",
+      "containedExamples": [],
+      "componentName": "CtaBand",
+      "icon": "speakerphone",
+      "category": "Actions",
+      "tier": "Block",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Closing call-to-action band across the full tone x appearance grid",
+      "refs": "boxel-catalog storefront-footer",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 2,
+      "cardInfo": {
+        "name": "CtaBand",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/cta-band.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/cta-band.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

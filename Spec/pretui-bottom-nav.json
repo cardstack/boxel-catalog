@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/bottom-nav",
+        "name": "BottomNav"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { BottomNav } from '@cardstack/pretui/components/bottom-nav';\n```\n",
+      "cardTitle": "BottomNav",
+      "cardDescription": "Mobile tab bar anchored to the pane bottom",
+      "containedExamples": [],
+      "componentName": "BottomNav",
+      "icon": "layout-bottombar",
+      "category": "Navigation",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Mobile tab bar anchored to the pane bottom",
+      "refs": "MUI BottomNavigation · HeroUI Tabs(bottom) · origin-ui",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 3,
+      "cardInfo": {
+        "name": "BottomNav",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/bottom-nav.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/bottom-nav.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

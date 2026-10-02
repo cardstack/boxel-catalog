@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/navigation-menu",
+        "name": "NavigationMenu"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { NavigationMenu } from '@cardstack/pretui/components/navigation-menu';\n```\n",
+      "cardTitle": "NavigationMenu",
+      "cardDescription": "Site mega-nav with flyouts and viewport — not a command Menu",
+      "containedExamples": [],
+      "componentName": "NavigationMenu",
+      "icon": "navigation",
+      "category": "Navigation",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Site mega-nav with flyouts and viewport — not a command Menu",
+      "refs": "shadcn NavigationMenu · radix NavigationMenu · Base UI NavigationMenu",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 4,
+      "cardInfo": {
+        "name": "NavigationMenu",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/navigation-menu.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/navigation-menu.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

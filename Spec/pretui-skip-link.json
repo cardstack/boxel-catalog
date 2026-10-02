@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/skip-link",
+        "name": "SkipLink"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { SkipLink } from '@cardstack/pretui/components/skip-link';\n```\n",
+      "cardTitle": "SkipLink",
+      "cardDescription": "First-focus 'skip to content' link — WCAG 2.4.1",
+      "containedExamples": [],
+      "componentName": "SkipLink",
+      "icon": "skip-forward",
+      "category": "Navigation",
+      "tier": "Primitive",
+      "tags": [
+        "accessible-utility"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "First-focus 'skip to content' link — WCAG 2.4.1",
+      "refs": "Chakra SkipNav · React Spectrum · radix VisuallyHidden pattern",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 3,
+      "cardInfo": {
+        "name": "SkipLink",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/skip-link.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/skip-link.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
