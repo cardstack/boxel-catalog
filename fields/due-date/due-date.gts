@@ -4,6 +4,7 @@ import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 import { StatePill, type Hue } from '../../components/state-pill';
+import { UnsetMarker } from '../../components/unset-marker';
 import { validDate } from '../../utils/valid-date';
 
 /**
@@ -111,7 +112,7 @@ export class DueDateField extends DateField {
           />
         </span>
       {{else}}
-        <span class='unset' aria-label='No due date'>—</span>
+        <UnsetMarker @label='No due date' />
       {{/if}}
       <style scoped>
         .due {
@@ -121,9 +122,6 @@ export class DueDateField extends DateField {
         }
         .date {
           font-size: var(--boxel-font-size-sm);
-        }
-        .unset {
-          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -155,13 +153,8 @@ export class DueDateField extends DateField {
           />
         </span>
       {{else}}
-        <span class='unset' aria-label='No due date'>—</span>
+        <UnsetMarker @label='No due date' />
       {{/if}}
-      <style scoped>
-        .unset {
-          color: var(--muted-foreground);
-        }
-      </style>
     </template>
   };
 }

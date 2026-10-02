@@ -18,6 +18,7 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import { DurationField } from './duration-field';
@@ -32,6 +33,7 @@ import {
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { UnsetMarker } from '@cardstack/catalog/components/unset-marker';
 import { liveCount } from './utils';
 import { AVATAR_HUE, hueOf } from './hr-ui';
 
@@ -284,7 +286,7 @@ export class Meeting extends CardDef {
                 @weekday='short'
               />
             {{else}}
-              <span class='db-day unset' aria-label='No date'>—</span>
+              <UnsetMarker class='db-day' @label='No date' />
             {{/if}}
           </div>
           <div class='hero-text'>
@@ -464,9 +466,6 @@ export class Meeting extends CardDef {
         .db-weekday {
           display: block;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .unset {
           color: var(--muted-foreground);
         }
         .hero-text {
@@ -753,41 +752,62 @@ export class Meeting extends CardDef {
       return this.scoreState === 'awaiting' ? 'Unscored' : 'Upcoming';
     }
 
+    // The tier-2 line: type and duration, whichever are set.
+    get eyebrow(): string | undefined {
+      let parts = [
+        this.args.model?.meetingType,
+        this.args.model?.duration?.label,
+      ].filter(Boolean);
+      return parts.length ? parts.join(' · ') : undefined;
+    }
+
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          <div class='datebox' aria-hidden='true'>
+          {{! The tile's parts and the time line come and go with the card's
+              size, so they are hidden from assistive tech and one visually
+              hidden date and time stands in for them at every tier. }}
+          <div class='datebox'>
             {{#if this.dateObj}}
               <FormatDate
                 class='db-month'
                 @date={{@model.date}}
                 @locale='en-US'
                 @month='short'
+                aria-hidden='true'
               />
               <FormatDate
                 class='db-day'
                 @date={{@model.date}}
                 @locale='en-US'
                 @day='numeric'
+                aria-hidden='true'
               />
               <FormatDate
                 class='db-weekday'
                 @date={{@model.date}}
                 @locale='en-US'
                 @weekday='short'
+                aria-hidden='true'
               />
+              <VisuallyHidden><FormatDate
+                  @date={{@model.date}}
+                  @locale='en-US'
+                  @weekday='long'
+                  @month='long'
+                  @day='numeric'
+                  @year='numeric'
+                  @hour='numeric'
+                  @minute='2-digit'
+                /></VisuallyHidden>
             {{else}}
-              <span class='db-day unset'>—</span>
+              <UnsetMarker class='db-day' @label='No date' />
             {{/if}}
           </div>
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
-            {{#if @model.meetingType}}
-              <span class='fit-eb'>{{@model.meetingType}}{{#if
-                  @model.duration.label
-                }}
-                  &middot;
-                  {{@model.duration.label}}{{/if}}</span>
+            {{#if this.eyebrow}}
+              <span class='fit-eb'>{{this.eyebrow}}</span>
             {{/if}}
           </div>
           {{! Score state survives to the smallest tier — it is the only
@@ -801,7 +821,11 @@ export class Meeting extends CardDef {
         </div>
 
         <div class='fit-mid'>
-          <MeetingTime class='fit-time' @date={{this.dateObj}} />
+          <MeetingTime
+            class='fit-time'
+            @date={{this.dateObj}}
+            aria-hidden='true'
+          />
           {{#if @model.candidateName}}
             <span class='fit-who'>{{@model.candidateName}}</span>
           {{/if}}
@@ -876,9 +900,6 @@ export class Meeting extends CardDef {
         .db-weekday {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground);
-        }
-        .unset {
           color: var(--muted-foreground);
         }
         .fit-head {
