@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/scrub-input",
+        "name": "ScrubInput"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ScrubInput } from '@cardstack/pretui/components/scrub-input';\n```\n",
+      "cardTitle": "ScrubInput",
+      "cardDescription": "Numeric field you drag to change — the atom of every design tool",
+      "containedExamples": [],
+      "componentName": "ScrubInput",
+      "category": "Authoring Tools",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Numeric field you drag to change — the atom of every design tool",
+      "refs": "figui3 fig-input-number · modifier steps + full keyboard",
+      "buildsOn": null,
+      "icon": "rewind-forward-15",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "ScrubInput",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/scrub-input.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/scrub-input.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

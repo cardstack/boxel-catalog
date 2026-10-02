@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/popconfirm",
+        "name": "Popconfirm"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Popconfirm } from '@cardstack/pretui/components/popconfirm';\n```\n",
+      "cardTitle": "Popconfirm",
+      "cardDescription": "Inline confirm attached to a trigger — smaller than AlertDialog",
+      "containedExamples": [],
+      "componentName": "Popconfirm",
+      "category": "Overlays",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Inline confirm attached to a trigger — smaller than AlertDialog",
+      "refs": "Ant Popconfirm · Mantine (none) · Chakra Popover+Dialog hybrid",
+      "buildsOn": null,
+      "icon": "help-circle",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Popconfirm",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/popconfirm.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/popconfirm.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

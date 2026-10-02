@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/mentions",
+        "name": "Mentions"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Mentions } from '@cardstack/pretui/components/mentions';\n```\n",
+      "cardTitle": "Mentions",
+      "cardDescription": "Textarea that inserts @refs as tokens — comments, composers, captions",
+      "containedExamples": [],
+      "componentName": "Mentions",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Textarea that inserts @refs as tokens — comments, composers, captions",
+      "refs": "Ant Mentions · (no shadcn primitive)",
+      "buildsOn": null,
+      "icon": "at-sign",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Mentions",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/mentions.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/mentions.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

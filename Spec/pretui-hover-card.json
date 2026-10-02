@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/hover-card",
+        "name": "HoverCard"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { HoverCard } from '@cardstack/pretui/components/hover-card';\n```\n",
+      "cardTitle": "HoverCard",
+      "cardDescription": "Rich preview that opens on hover/focus — not a tooltip",
+      "containedExamples": [],
+      "componentName": "HoverCard",
+      "category": "Overlays",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Rich preview that opens on hover/focus — not a tooltip",
+      "refs": "shadcn HoverCard · radix HoverCard · Mantine HoverCard · Base UI PreviewCard · React Aria PreviewTrigger",
+      "buildsOn": null,
+      "icon": "eye-dotted",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "HoverCard",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/hover-card.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/hover-card.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

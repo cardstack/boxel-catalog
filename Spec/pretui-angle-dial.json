@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/angle-dial",
+        "name": "AngleDial"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { AngleDial } from '@cardstack/pretui/components/angle-dial';\n```\n",
+      "cardTitle": "AngleDial",
+      "cardDescription": "Angle with winding, as a real slider",
+      "containedExamples": [],
+      "componentName": "AngleDial",
+      "category": "Authoring Tools",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Angle with winding, as a real slider",
+      "refs": "figui3 fig-input-angle",
+      "buildsOn": null,
+      "icon": "gauge",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "AngleDial",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/angle-dial.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/angle-dial.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/composer",
+        "name": "Composer"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Composer } from '@cardstack/pretui/components/composer';\n```\n",
+      "cardTitle": "Composer",
+      "cardDescription": "The agent input surface: modes, attachments, settings",
+      "containedExamples": [],
+      "componentName": "Composer",
+      "category": "Agentic",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "agentic",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "The agent input surface: modes, attachments, settings · Claude composer",
+      "refs": null,
+      "buildsOn": null,
+      "icon": "pen-line",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Composer",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/composer.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/composer.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

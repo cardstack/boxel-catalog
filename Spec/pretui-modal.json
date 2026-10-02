@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/modal",
+        "name": "Modal"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Modal } from '@cardstack/pretui/components/modal';\n```\n",
+      "cardTitle": "Modal",
+      "cardDescription": "ALIAS of Dialog — Ant/Mantine/MUI name",
+      "containedExamples": [],
+      "componentName": "Modal",
+      "category": "Overlays",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "ALIAS of Dialog — Ant/Mantine/MUI name",
+      "refs": "Ant Modal · Mantine Modal · MUI Modal · React Aria Modal",
+      "buildsOn": null,
+      "icon": "window",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": false,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Modal",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/modal.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/modal.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

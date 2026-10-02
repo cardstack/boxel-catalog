@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/tour",
+        "name": "Tour"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Tour } from '@cardstack/pretui/components/tour';\n```\n",
+      "cardTitle": "Tour",
+      "cardDescription": "Anchored walkthrough steps over a live UI — Onboarding's in-product form",
+      "containedExamples": [],
+      "componentName": "Tour",
+      "category": "Overlays",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Anchored walkthrough steps over a live UI — Onboarding's in-product form",
+      "refs": "Ant Tour · Mantine (none) · origin-ui · Shepherd/driver.js pattern",
+      "buildsOn": null,
+      "icon": "route-square",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Tour",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/tour.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/tour.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

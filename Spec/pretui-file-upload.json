@@ -1,0 +1,81 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/file-upload",
+        "name": "FileUpload"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { FileUpload } from '@cardstack/pretui/components/file-upload';\n```\n",
+      "cardTitle": "FileUpload",
+      "cardDescription": "File list with progress, retry, remove — FileTrigger+Dropzone are the intake",
+      "containedExamples": [],
+      "componentName": "FileUpload",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [
+        "drag-drop",
+        "form-associated",
+        "async"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "File list with progress, retry, remove — FileTrigger+Dropzone are the intake",
+      "refs": "Ant Upload · Chakra FileUpload · Mantine FileInput · React Aria FileTrigger",
+      "buildsOn": null,
+      "icon": "file-up",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "FileUpload",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/file-upload.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/file-upload.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

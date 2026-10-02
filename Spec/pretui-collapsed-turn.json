@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/collapsed-turn",
+        "name": "CollapsedTurn"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { CollapsedTurn } from '@cardstack/pretui/components/collapsed-turn';\n```\n",
+      "cardTitle": "CollapsedTurn",
+      "cardDescription": "Folded conversation turn with receipt counts",
+      "containedExamples": [],
+      "componentName": "CollapsedTurn",
+      "category": "Agentic",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "agentic",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Folded conversation turn with receipt counts · Claude collapsed turns",
+      "refs": null,
+      "buildsOn": null,
+      "icon": "chevrons-down",
+      "demand": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "CollapsedTurn",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/collapsed-turn.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/collapsed-turn.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

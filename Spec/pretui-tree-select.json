@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/tree-select",
+        "name": "TreeSelect"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { TreeSelect } from '@cardstack/pretui/components/tree-select';\n```\n",
+      "cardTitle": "TreeSelect",
+      "cardDescription": "Select whose popup is a tree — checked keys are the value",
+      "containedExamples": [],
+      "componentName": "TreeSelect",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Select whose popup is a tree — checked keys are the value",
+      "refs": "Ant TreeSelect · Mantine TreeSelect · Chakra TreeView+Select",
+      "buildsOn": null,
+      "icon": "network",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "TreeSelect",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/tree-select.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/tree-select.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

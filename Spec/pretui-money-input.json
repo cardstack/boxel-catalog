@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/money-input",
+        "name": "MoneyInput"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { MoneyInput } from '@cardstack/pretui/components/money-input';\n```\n",
+      "cardTitle": "MoneyInput",
+      "cardDescription": "Currency amount placed by Intl.formatToParts on the locale's own side",
+      "containedExamples": [],
+      "componentName": "MoneyInput",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Currency amount placed by Intl.formatToParts on the locale's own side",
+      "refs": "fields-configuration amount-with-currency",
+      "buildsOn": null,
+      "icon": "banknote",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "MoneyInput",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/money-input.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/money-input.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/edit-in-place",
+        "name": "EditInPlace"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { EditInPlace } from '@cardstack/pretui/components/edit-in-place';\n```\n",
+      "cardTitle": "EditInPlace",
+      "cardDescription": "Display value that becomes an editable field and commits or cancels",
+      "containedExamples": [],
+      "componentName": "EditInPlace",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Display value that becomes an editable field and commits or cancels",
+      "refs": "boxel-catalog blog-app editable-field",
+      "buildsOn": null,
+      "icon": "pencil",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "EditInPlace",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/edit-in-place.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/edit-in-place.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

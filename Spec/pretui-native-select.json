@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/native-select",
+        "name": "NativeSelect"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { NativeSelect } from '@cardstack/pretui/components/native-select';\n```\n",
+      "cardTitle": "NativeSelect",
+      "cardDescription": "Styled <select> — no popup library, form-native, mobile-honest",
+      "containedExamples": [],
+      "componentName": "NativeSelect",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Styled <select> — no popup library, form-native, mobile-honest",
+      "refs": "shadcn NativeSelect · Mantine NativeSelect · MUI NativeSelect · Tremor SelectNative",
+      "buildsOn": null,
+      "icon": "chevron-down",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "NativeSelect",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/native-select.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/native-select.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

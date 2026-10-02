@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/property-sheet",
+        "name": "PropertySheet"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { PropertySheet } from '@cardstack/pretui/components/property-sheet';\n```\n",
+      "cardTitle": "PropertySheet",
+      "cardDescription": "A sheet of PropertyRows driven by a value spec",
+      "containedExamples": [],
+      "componentName": "PropertySheet",
+      "category": "Authoring Tools",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "A sheet of PropertyRows driven by a value spec",
+      "refs": "figui3 propskit",
+      "buildsOn": null,
+      "icon": "table-properties",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "PropertySheet",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/property-sheet.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/property-sheet.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
