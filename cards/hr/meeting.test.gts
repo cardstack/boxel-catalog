@@ -41,6 +41,18 @@ export function runTests() {
           'the full date is spoken right after the title',
         )
         .containsText('9:30 AM', 'with the start time');
+      assert
+        .dom('.fit-eb')
+        .hasText('interview', 'the tier-2 line shows only the meeting type');
+    });
+
+    test('fitted meeting with neither type nor duration has no tier-2 line', async function (assert) {
+      let meeting = new Meeting({ name: 'Untitled sync' });
+      await renderCard(getLoader(), meeting, 'fitted');
+
+      assert
+        .dom('.fit-eb')
+        .doesNotExist('no tier-2 line when neither type nor duration is set');
     });
 
     test('fitted meeting with only a duration shows it on the tier-2 line', async function (assert) {

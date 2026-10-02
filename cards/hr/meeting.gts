@@ -752,11 +752,14 @@ export class Meeting extends CardDef {
       return this.scoreState === 'awaiting' ? 'Unscored' : 'Upcoming';
     }
 
-    // The tier-2 line: type and duration, whichever are set.
+    // The tier-2 line: type and duration, whichever are set. An unset
+    // duration is still a DurationField whose label is the '—' placeholder,
+    // so the duration counts only when it has a value.
     get eyebrow(): string | undefined {
+      let duration = this.args.model?.duration;
       let parts = [
         this.args.model?.meetingType,
-        this.args.model?.duration?.label,
+        duration?.value != null ? duration.label : undefined,
       ].filter(Boolean);
       return parts.length ? parts.join(' · ') : undefined;
     }
