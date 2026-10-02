@@ -23,6 +23,10 @@ import { tracked } from '@glimmer/tracking';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EditSectionNav } from '../../components/edit-section-nav';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { ALERT_STYLE, COMPACT_EMPTY_STYLE } from './legal-ui';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 /**
@@ -207,8 +211,8 @@ class ClauseEdit extends Component<typeof Clause> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
       }
       .edit-body {
         display: grid;
@@ -228,32 +232,31 @@ class ClauseEdit extends Component<typeof Clause> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
-        outline-color: var(--foreground, var(--boxel-dark));
-        box-shadow: 0 0 0 4px
-          color-mix(
-            in oklch,
-            var(--foreground, var(--boxel-dark)) 12%,
-            transparent
-          );
+        outline-color: var(--foreground);
+        box-shadow: 0 0 0 0.25rem
+          color-mix(in oklch, var(--foreground) 12%, transparent);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -269,7 +272,7 @@ class ClauseEdit extends Component<typeof Clause> {
       .hint {
         margin: 0.25rem 0 0;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .row {
         display: grid;
@@ -410,6 +413,9 @@ export class Clause extends CardDef {
     get deviations() {
       return this.usages.filter((u) => u.isDeviation);
     }
+    get deviationLabel() {
+      return `${this.deviations.length} deviating`;
+    }
     get hue(): Hue {
       return CLAUSE_RISK_HUE[this.args.model?.riskLevel ?? ''] ?? 'slate';
     }
@@ -444,10 +450,13 @@ export class Clause extends CardDef {
               {{/if}}
             </div>
           </div>
-          <div class='hero-figure'>
-            <span class='fig-n'>{{this.usages.length}}</span>
-            <span class='fig-u'>in force</span>
-          </div>
+          {{! Fed from a live query, so the digits do not roll. }}
+          <Stat
+            class='hero-figure'
+            @label='In force'
+            @value={{this.usages.length}}
+            @roll={{false}}
+          />
         </header>
 
         <section class='panel prose-panel'>
@@ -465,13 +474,20 @@ export class Clause extends CardDef {
         <section class='panel'>
           <h2><HistoryIcon role='presentation' />Where it is used
             {{#if this.deviations.length}}
-              <span class='warn'>{{this.deviations.length}} deviating</span>
+              <StatePill
+                class='warn'
+                @label={{this.deviationLabel}}
+                @hue='red'
+              />
             {{/if}}
           </h2>
           {{#if this.lookupFailed}}
-            <p class='empty' role='status'>Could not look up where this clause
-              is used. This is a failed query, not an unused clause — reload
-              before concluding it is safe to change.</p>
+            <Alert
+              @tone='danger'
+              @title='Could not look up where this clause is used'
+              style={{ALERT_STYLE.danger}}
+            >This is a failed query, not an unused clause — reload before
+              concluding it is safe to change.</Alert>
           {{else if this.isCounting}}
             <p class='empty' role='status'>Counting contracts…</p>
           {{else if this.usages.length}}
@@ -482,7 +498,12 @@ export class Clause extends CardDef {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>Not yet used in any contract. Safe to revise.</p>
+            <EmptyState
+              @title='Not yet used in any contract'
+              @message='Safe to revise.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
       </article>
@@ -491,54 +512,51 @@ export class Clause extends CardDef {
         .cl-page {
           container-type: inline-size;
           container-name: cl-page;
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #111) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
-          color: var(--foreground, #111);
-          font-family: var(--font-sans, inherit);
         }
         .hero {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: var(--boxel-sp-lg);
-          border-bottom: 2px solid var(--foreground, #111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: var(--boxel-sp);
         }
         .hero-id {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
         }
         .hero-pills {
           display: flex;
           flex-wrap: wrap;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .kicker {
           margin: 0;
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.12em;
+          gap: 0.375rem;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .kicker :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
         }
         /* The heading is the one shout. The figure on the right supports it
            and is deliberately smaller — a card is opened for the thing it IS,
@@ -552,53 +570,35 @@ export class Clause extends CardDef {
         }
         .hero-figure {
           flex: none;
-          text-align: right;
-          line-height: 1;
-        }
-        .fig-n {
-          display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
-          font-size: 1.45rem;
-          font-weight: 600;
-          letter-spacing: -0.03em;
-        }
-        .fig-u {
-          display: block;
-          margin-top: 4px;
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
         }
         .panel {
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .panel h2 {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          letter-spacing: 0.04em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
         }
         .panel h2 :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
-          color: var(--muted-foreground, #6b7280);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
+          color: var(--muted-foreground);
         }
         .warn {
           margin-left: auto;
-          color: var(--boxel-danger, #b3261e);
-          font-family: var(--font-mono, ui-monospace, monospace);
         }
         /* Legal prose gets a serif and a real measure — it is read, not scanned. */
         .prose {
-          font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+          font-family: var(--font-serif);
           font-size: var(--boxel-font-size);
           line-height: 1.6;
           max-width: 68ch;
@@ -614,27 +614,27 @@ export class Clause extends CardDef {
           margin: 0;
           padding: 0;
           display: grid;
-          gap: 4px;
+          gap: 0.25rem;
         }
         .uses li {
           display: flex;
           align-items: baseline;
-          gap: 8px;
+          gap: 0.5rem;
           font-size: var(--boxel-font-size-sm);
-          padding: 4px 0;
-          border-bottom: 1px solid var(--border, #e5e7eb);
+          padding: 0.25rem 0;
+          border-bottom: 1px solid var(--border);
         }
         .uses li:last-child {
           border-bottom: 0;
         }
         .use-note {
           margin-left: auto;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .empty {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           line-height: 1.5;
         }
         @container cl-page (width < 560px) {
@@ -642,12 +642,6 @@ export class Clause extends CardDef {
             flex-direction: column;
             align-items: flex-start;
             gap: var(--boxel-sp);
-          }
-          .hero-figure {
-            text-align: left;
-          }
-          .fig-n {
-            font-size: 2.4rem;
           }
         }
       </style>
@@ -681,32 +675,34 @@ export class Clause extends CardDef {
           --type-ratio: 1.24;
           --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(10px, calc(var(--type-base) / var(--type-ratio)));
+          --meta-size: max(
+            0.625rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
           --anchor-size: max(
-            11px,
+            0.6875rem,
             min(
               calc(var(--type-base) * var(--type-ratio) * var(--type-ratio)),
               26cqb
             )
           );
-          --glyph: max(11px, min(3cqi, 14cqb));
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --glyph: max(0.6875rem, min(3cqi, 14cqb));
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
 
           width: 100%;
           height: 100%;
           box-sizing: border-box;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .r-head,
         .r-body,
@@ -717,19 +713,25 @@ export class Clause extends CardDef {
         .r-head {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .r-head > :deep(svg) {
           width: var(--glyph);
           height: var(--glyph);
           flex: none;
-          color: var(--accent, var(--boxel-highlight));
+          color: var(--accent);
         }
         .eyebrow {
-          font-size: max(9px, calc(var(--meta-size) * 0.85));
-          letter-spacing: 0.12em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: max(
+            var(--boxel-eyebrow-font-size),
+            calc(var(--meta-size) * 0.85)
+          );
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -741,7 +743,7 @@ export class Clause extends CardDef {
         .r-body {
           display: grid;
           align-content: start;
-          gap: 2px;
+          gap: 0.125rem;
         }
         /* The anchor: loudest thing at every size, and the only survivor at badge. */
         .anchor {
@@ -758,7 +760,7 @@ export class Clause extends CardDef {
         .sub {
           font-size: var(--meta-size);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -767,17 +769,17 @@ export class Clause extends CardDef {
         .r-meta {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           font-size: var(--meta-size);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* Values are all-or-nothing: hidden at a quantum, never ellipsised. */
         .val {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 600;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
           white-space: nowrap;
         }
         .tail {
@@ -851,10 +853,10 @@ export class Clause extends CardDef {
           max-width: 100%;
         }
         .cl-icon {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .cl-name {
           overflow: hidden;
@@ -913,19 +915,22 @@ export class Clause extends CardDef {
         }
         .ce-type {
           margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.06em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* Legal prose, not UI copy — it gets a serif and room to breathe, and
            it is clamped rather than ellipsised so the reader can see it is a
            paragraph and not a truncated label. */
         .ce-text {
-          font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+          font-family: var(--font-serif);
           font-size: var(--boxel-font-size-sm);
           line-height: 1.55;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
           display: -webkit-box;
           -webkit-line-clamp: 4;
           -webkit-box-orient: vertical;

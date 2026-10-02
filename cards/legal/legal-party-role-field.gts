@@ -12,6 +12,8 @@ import { FieldContainer } from '@cardstack/boxel-ui/components';
 
 import { LegalEntity } from './legal-entity';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE } from './legal-ui';
 
 /**
  * Legal Party Role (LP) — one side of an agreement: WHICH legal person, in
@@ -92,7 +94,7 @@ export class LegalPartyRoleField extends FieldDef {
           gap: 0.4rem;
           min-width: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .lp-name {
           font-weight: 600;
@@ -103,7 +105,7 @@ export class LegalPartyRoleField extends FieldDef {
         .lp-missing {
           font-weight: 400;
           font-style: italic;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -132,7 +134,11 @@ export class LegalPartyRoleField extends FieldDef {
                 {{@model.entity.jurisdiction}}{{/if}}
             </span>
             {{#if @model.entity.registrationNumber}}
-              <span class='lp-reg'>{{@model.entity.registrationNumber}}</span>
+              <Token
+                class='lp-reg'
+                @value={{@model.entity.registrationNumber}}
+                style={{ID_TOKEN_STYLE.xs}}
+              />
             {{/if}}
           </div>
         {{else}}
@@ -151,15 +157,17 @@ export class LegalPartyRoleField extends FieldDef {
           display: flex;
           align-items: center;
           gap: 0.35rem;
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.08em;
-          font-weight: 700;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .lp-icon {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           flex: none;
         }
         .lp-entity {
@@ -168,9 +176,9 @@ export class LegalPartyRoleField extends FieldDef {
           grid-template-columns: minmax(0, 1fr) auto;
           gap: 0.1rem 0.75rem;
           padding: 0.55rem 0.7rem;
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--boxel-border-radius-sm, 4px);
-          background: var(--muted, var(--boxel-100));
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius-sm);
+          background-color: var(--muted);
         }
         .lp-name {
           font-weight: 600;
@@ -181,22 +189,19 @@ export class LegalPartyRoleField extends FieldDef {
         .lp-meta {
           grid-column: 1;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           text-transform: capitalize;
         }
         .lp-reg {
           grid-column: 2;
           grid-row: 1 / span 2;
           align-self: center;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
         }
         .lp-missing {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           font-style: italic;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

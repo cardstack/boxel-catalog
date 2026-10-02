@@ -35,37 +35,37 @@ export const CONTRACT_STATUSES: StatusOption[] = [
   {
     value: 'negotiating',
     label: 'Negotiating',
-    hue: 'purple',
+    hue: 'amber',
     meaning: 'With the counterparty. Terms are still moving.',
   },
   {
     value: 'in review',
     label: 'In review',
-    hue: 'purple',
+    hue: 'amber',
     meaning: 'Legal is checking it for risk and non-standard language.',
   },
   {
     value: 'approved',
     label: 'Approved',
-    hue: 'teal',
+    hue: 'blue',
     meaning: 'Every internal approver has signed off. Not yet binding.',
   },
   {
     value: 'out for signature',
     label: 'Out for signature',
-    hue: 'teal',
+    hue: 'amber',
     meaning: 'Sent to the signatories. Waiting on someone outside this app.',
   },
   {
     value: 'signed',
     label: 'Signed & in force',
-    hue: 'blue',
+    hue: 'green',
     meaning: 'Executed and binding. Its obligations are live and owned.',
   },
   {
     value: 'expired',
     label: 'Expired',
-    hue: 'slate',
+    hue: 'amber',
     meaning: 'The term ran out. Renewable, but nothing is in force today.',
   },
   {

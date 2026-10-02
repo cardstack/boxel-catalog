@@ -23,6 +23,8 @@ import { tracked } from '@glimmer/tracking';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EditSectionNav } from '../../components/edit-section-nav';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from './legal-ui';
 
 /**
  * What THIS contract actually says for one provision, next to what it was
@@ -170,8 +172,8 @@ class ContractClauseEdit extends Component<typeof ContractClause> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
       }
       .edit-body {
         display: grid;
@@ -191,32 +193,31 @@ class ContractClauseEdit extends Component<typeof ContractClause> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
-        outline-color: var(--foreground, var(--boxel-dark));
-        box-shadow: 0 0 0 4px
-          color-mix(
-            in oklch,
-            var(--foreground, var(--boxel-dark)) 12%,
-            transparent
-          );
+        outline-color: var(--foreground);
+        box-shadow: 0 0 0 0.25rem
+          color-mix(in oklch, var(--foreground) 12%, transparent);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -232,7 +233,7 @@ class ContractClauseEdit extends Component<typeof ContractClause> {
       .hint {
         margin: 0.25rem 0 0;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .row {
         display: grid;
@@ -405,9 +406,12 @@ export class ContractClause extends CardDef {
             {{#if @model.standardClause}}
               <@fields.standardClause @format='embedded' />
             {{else}}
-              <p class='empty'>No approved standard is linked. Bespoke language
-                nobody has signed off is an unreviewed exposure — link a clause
-                from the library, or record why none applies.</p>
+              <EmptyState
+                @title='No approved standard is linked'
+                @message='Bespoke language nobody has signed off is an unreviewed exposure — link a clause from the library, or record why none applies.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
           </section>
         </div>
@@ -424,54 +428,51 @@ export class ContractClause extends CardDef {
         .cc-page {
           container-type: inline-size;
           container-name: cc-page;
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #111) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
-          color: var(--foreground, #111);
-          font-family: var(--font-sans, inherit);
         }
         .hero {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: var(--boxel-sp-lg);
-          border-bottom: 2px solid var(--foreground, #111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: var(--boxel-sp);
         }
         .hero-id {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
         }
         .hero-pills {
           display: flex;
           flex-wrap: wrap;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .kicker {
           margin: 0;
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.12em;
+          gap: 0.375rem;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .kicker :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
         }
         /* The heading is the one shout. The figure on the right supports it
            and is deliberately smaller — a card is opened for the thing it IS,
@@ -488,68 +489,65 @@ export class ContractClause extends CardDef {
           display: flex;
           flex-direction: column;
           align-items: flex-end;
-          gap: 6px;
+          gap: 0.375rem;
           text-align: right;
         }
         .hero-figure :deep(svg) {
-          width: 34px;
-          height: 34px;
+          width: 2.125rem;
+          height: 2.125rem;
         }
         .is-dev :deep(svg) {
-          color: var(--boxel-danger, #b3261e);
+          color: var(--destructive-ink);
         }
         .fig-u {
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .compare {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
           gap: var(--boxel-sp);
         }
         .panel {
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .note {
-          background: color-mix(
+          background-color: color-mix(
             in oklch,
-            var(--boxel-warning, #b8860b) 10%,
+            var(--warning) 10%,
             transparent
           );
         }
         .panel h2 {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          letter-spacing: 0.04em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
         }
         .panel h2 :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
-          color: var(--muted-foreground, #6b7280);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
+          color: var(--muted-foreground);
         }
         .prose {
-          font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+          font-family: var(--font-serif);
           font-size: var(--boxel-font-size);
           line-height: 1.6;
         }
         .guidance,
-        .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.55;
-        }
-        .empty {
-          color: var(--muted-foreground, #6b7280);
-        }
         @container cc-page (width < 560px) {
           .hero {
             flex-direction: column;
@@ -594,32 +592,34 @@ export class ContractClause extends CardDef {
           --type-ratio: 1.24;
           --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(10px, calc(var(--type-base) / var(--type-ratio)));
+          --meta-size: max(
+            0.625rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
           --anchor-size: max(
-            11px,
+            0.6875rem,
             min(
               calc(var(--type-base) * var(--type-ratio) * var(--type-ratio)),
               26cqb
             )
           );
-          --glyph: max(11px, min(3cqi, 14cqb));
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --glyph: max(0.6875rem, min(3cqi, 14cqb));
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
 
           width: 100%;
           height: 100%;
           box-sizing: border-box;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .r-head,
         .r-body,
@@ -630,19 +630,25 @@ export class ContractClause extends CardDef {
         .r-head {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .r-head > :deep(svg) {
           width: var(--glyph);
           height: var(--glyph);
           flex: none;
-          color: var(--accent, var(--boxel-highlight));
+          color: var(--accent);
         }
         .eyebrow {
-          font-size: max(9px, calc(var(--meta-size) * 0.85));
-          letter-spacing: 0.12em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: max(
+            var(--boxel-eyebrow-font-size),
+            calc(var(--meta-size) * 0.85)
+          );
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -654,7 +660,7 @@ export class ContractClause extends CardDef {
         .r-body {
           display: grid;
           align-content: start;
-          gap: 2px;
+          gap: 0.125rem;
         }
         /* The anchor: loudest thing at every size, and the only survivor at badge. */
         .anchor {
@@ -671,7 +677,7 @@ export class ContractClause extends CardDef {
         .sub {
           font-size: var(--meta-size);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -680,17 +686,17 @@ export class ContractClause extends CardDef {
         .r-meta {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           font-size: var(--meta-size);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* Values are all-or-nothing: hidden at a quantum, never ellipsised. */
         .val {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 600;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
           white-space: nowrap;
         }
         .tail {
@@ -822,7 +828,7 @@ export class ContractClause extends CardDef {
           margin-left: auto;
         }
         .cc-text {
-          font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+          font-family: var(--font-serif);
           font-size: var(--boxel-font-size-sm);
           line-height: 1.55;
           display: -webkit-box;
@@ -834,7 +840,7 @@ export class ContractClause extends CardDef {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

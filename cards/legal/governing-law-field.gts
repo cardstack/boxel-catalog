@@ -8,6 +8,17 @@ import {
 import TextAreaField from '@cardstack/base/text-area';
 import GavelIcon from '@cardstack/boxel-icons/gavel';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { htmlSafe } from '@ember/template';
+import { Chip } from '@cardstack/pretui/components/chip';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { LegalFacts } from './legal-ui';
+
+// The neutral chip recipe StatePill uses for slate (14% fill, 62% foreground
+// ink). StatePill takes a label only, and this chip leads with the gavel icon,
+// so it sets the same knobs on Pret UI `Chip` directly.
+const CHIP_STYLE = htmlSafe(
+  '--pretui-chip-hue: var(--muted-foreground); --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; max-width: 100%',
+);
 
 /**
  * Governing Law (GL) — which law reads the contract, and where a dispute is
@@ -51,32 +62,23 @@ export class GoverningLawField extends FieldDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='gl-chip' title={{@model.notes}}>
+      <Chip
+        class='gl-chip'
+        @dot={{false}}
+        style={{CHIP_STYLE}}
+        title={{@model.notes}}
+      >
         <GavelIcon class='gl-icon' role='presentation' />
         <span class='gl-text'>{{@model.label}}</span>
-      </span>
+      </Chip>
       <style scoped>
         .gl-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.35rem;
-          padding: 0.15em 0.55em;
-          border-radius: 999px;
-          border: 1px solid var(--border, var(--boxel-200));
-          background: var(--muted, var(--boxel-100));
-          color: var(--foreground, var(--boxel-dark));
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-          letter-spacing: 0.01em;
-          white-space: nowrap;
-          max-width: 100%;
           min-width: 0;
         }
         .gl-icon {
-          width: 12px;
-          height: 12px;
+          width: 0.75rem;
+          height: 0.75rem;
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
         }
         .gl-text {
           overflow: hidden;
@@ -87,16 +89,18 @@ export class GoverningLawField extends FieldDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
+    get facts(): KeyValueItem[] {
+      let m = this.args.model;
+      return [
+        { key: 'Governing law', value: m?.jurisdiction || '—' },
+        { key: 'Venue', value: m?.venue || '—' },
+      ];
+    }
     <template>
       <div class='gl'>
         <GavelIcon class='gl-icon' role='presentation' />
         <div class='gl-body'>
-          <dl class='gl-grid'>
-            <dt>Governing law</dt>
-            <dd>{{if @model.jurisdiction @model.jurisdiction '—'}}</dd>
-            <dt>Venue</dt>
-            <dd>{{if @model.venue @model.venue '—'}}</dd>
-          </dl>
+          <LegalFacts @items={{this.facts}} />
           {{#if @model.notes}}
             <p class='gl-notes'>{{@model.notes}}</p>
           {{/if}}
@@ -108,38 +112,22 @@ export class GoverningLawField extends FieldDef {
           gap: 0.6rem;
           align-items: flex-start;
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .gl-icon {
-          width: 18px;
-          height: 18px;
+          width: 1.125rem;
+          height: 1.125rem;
           flex: none;
           margin-top: 0.1rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .gl-body {
           min-width: 0;
           flex: 1;
         }
-        .gl-grid {
-          margin: 0;
-          display: grid;
-          grid-template-columns: max-content 1fr;
-          gap: 0.2rem 0.75rem;
-        }
-        .gl-grid dt {
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .gl-grid dd {
-          margin: 0;
-          font-weight: 600;
-        }
         .gl-notes {
           margin: 0.4rem 0 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.5;
           white-space: pre-line;
         }
