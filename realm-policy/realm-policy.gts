@@ -1,3 +1,4 @@
+import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
@@ -11,14 +12,17 @@ import {
   containsMany,
   field,
   realmURL,
+  serializeCard,
 } from 'https://cardstack.com/base/card-api';
 import CodeRefField from 'https://cardstack.com/base/code-ref';
+import { JsonField } from 'https://cardstack.com/base/json-field';
 import {
   operation,
   operations,
   OperationsError,
   type OperationDeclaration,
   type PolicyExplanation,
+  type PolicyExplanationListing,
   type PolicyValidation,
 } from 'https://cardstack.com/base/operations';
 import PolicyPredicateField from '@cardstack/catalog/fields/policy-predicate/policy-predicate';
@@ -29,6 +33,7 @@ import {
   Button,
   FieldContainer,
   Pill,
+  RadioInput,
 } from '@cardstack/boxel-ui/components';
 import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 
@@ -185,6 +190,16 @@ const REASONS: Record<PolicyExplanation['reason'], string> = {
   'policy-unloadable': "The realm's policy couldn't be loaded.",
 };
 
+// A search returns rows rather than admitting or refusing a card, so the
+// reasons that read differently for one are said in its terms.
+const SEARCH_REASONS: Partial<Record<PolicyExplanation['reason'], string>> = {
+  acl: "The realm's own permissions let this person search it, so the search returns every card it matches and the policy isn't needed.",
+  granted:
+    'Grants in this policy let this search return the cards their conditions match, and no others.',
+  'no-grant':
+    'No grant in this policy can narrow this search for this person, so it returns no cards. A grant whose condition a search can’t use doesn’t count.',
+};
+
 const DECISION_VARIANT: Record<
   PolicyExplanation['decision'],
   'primary' | 'destructive' | 'muted'
@@ -224,46 +239,145 @@ function failureMessage(err: unknown): string {
       : String(err);
 }
 
-// Asks the realm what this policy decides for one caller, one card and one
-// operation. Nothing is invoked. Only a caller who can read both this card's
-// realm and the card's realm is answered; anyone else is told the card is not
-// there, so a caller who cannot read the card's realm learns nothing about it
-// this way.
-interface ExplainPanelSignature {
-  Args: { policy: RealmPolicy };
+function decisionVariant(decision: PolicyExplanation['decision']) {
+  return DECISION_VARIANT[decision];
 }
 
-class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
-  @tracked actor = '';
-  @tracked target = '';
-  @tracked operationName = '';
-  @tracked explanation: PolicyExplanation | undefined;
-  @tracked refusal: string | undefined;
-  @tracked running = false;
+function asJson(value: unknown): string {
+  return JSON.stringify(value, null, 2);
+}
 
-  get canAsk(): boolean {
-    return (
-      !this.running &&
-      this.target.trim().length > 0 &&
-      this.operationName.trim().length > 0
-    );
+// A JSON object the author typed, or an error saying what is wrong with it.
+function parseObject(text: string, what: string): Record<string, unknown> {
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch (err) {
+    throw new Error(`${what} isn't valid JSON: ${failureMessage(err)}`);
+  }
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${what} must be a JSON object.`);
+  }
+  return value as Record<string, unknown>;
+}
+
+// A draft to start from: the rules this card holds, as the card stores them.
+function startingDraft(policy: RealmPolicy): string {
+  let rules = serializeCard(policy, {}).data.attributes?.rules ?? [];
+  return asJson({ rules });
+}
+
+function durationLabel(ms: number): string {
+  return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
+}
+
+// An issue compiling a draft recorded, in the shape a policy's own issues take.
+type DraftIssue = NonNullable<PolicyExplanation['draft']>['issues'][number];
+
+// What compiling a draft recorded against it. An empty list says the draft
+// compiled cleanly, which is what an author editing one wants to know too.
+interface DraftIssuesSignature {
+  Args: { issues: DraftIssue[] };
+}
+
+class DraftIssues extends GlimmerComponent<DraftIssuesSignature> {
+  <template>
+    <div class='draft-issues' data-test-explanation-draft>
+      <h3 class='draft-title'>Answered against your draft</h3>
+      {{#if @issues.length}}
+        <ul class='draft-issue-list'>
+          {{#each @issues as |issue|}}
+            <li data-test-explanation-draft-issue={{issue.code}}>
+              <code class='issue-code'>{{issue.code}}</code>
+              {{#if issue.path}}
+                <code class='issue-path'>{{issue.path}}</code>
+              {{/if}}
+              <Pill
+                @variant={{if
+                  (eqWarning issue.severity)
+                  'secondary'
+                  'destructive'
+                }}
+              >{{issue.severity}}</Pill>
+              <p class='issue-message'>{{issue.message}}</p>
+            </li>
+          {{/each}}
+        </ul>
+      {{else}}
+        <p class='empty' data-test-explanation-draft-clean>
+          The draft has no problems.
+        </p>
+      {{/if}}
+    </div>
+    <style scoped>
+      .draft-issues {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-sm);
+        border: 1px dashed var(--border, var(--boxel-border-color));
+        border-radius: var(--boxel-border-radius);
+      }
+      .draft-title {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
+      }
+      .draft-issue-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: var(--boxel-sp-xs);
+      }
+      .draft-issue-list li {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+      }
+      .issue-code,
+      .issue-path {
+        font-family: var(--boxel-monospace-font-family, monospace);
+        font-size: var(--boxel-font-size-xs);
+      }
+      .issue-message {
+        flex-basis: 100%;
+        margin: 0;
+      }
+      .empty {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+    </style>
+  </template>
+}
+
+function eqWarning(severity: DraftIssue['severity']): boolean {
+  return severity === 'warning';
+}
+
+// One explanation: the decision and why, the realm permissions it started
+// from, and the rules and grants it read. For a search, also what the policy
+// composes into it and how far behind the index the search reads is.
+interface ExplanationViewSignature {
+  Args: { explanation: PolicyExplanation };
+}
+
+class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
+  get explanation() {
+    return this.args.explanation;
   }
 
-  get cannotAsk(): boolean {
-    return !this.canAsk;
-  }
-
-  get reason(): string | undefined {
-    return this.explanation ? REASONS[this.explanation.reason] : undefined;
+  get reason(): string {
+    let { reason, search } = this.explanation;
+    return (search ? SEARCH_REASONS[reason] : undefined) ?? REASONS[reason];
   }
 
   // What the realm's own permissions let the actor do. Write without read
   // is a shape the realm accepts, so it is named rather than read as both.
-  get aclStanding(): string | undefined {
-    let acl = this.explanation?.acl;
-    if (!acl) {
-      return undefined;
-    }
+  get aclStanding(): string {
+    let { acl } = this.explanation;
     if (acl.read && acl.write) {
       return 'read and write';
     }
@@ -274,210 +388,173 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
   }
 
   get decisionVariant() {
-    return this.explanation
-      ? DECISION_VARIANT[this.explanation.decision]
-      : 'muted';
+    return DECISION_VARIANT[this.explanation.decision];
+  }
+
+  get searchTypes(): string {
+    let types = this.explanation.search?.types ?? [];
+    return types.length
+      ? types
+          .map((type) => ('name' in type ? type.name : asJson(type)))
+          .join(', ')
+      : 'none: the filter names no card type, so no grant can reach it';
+  }
+
+  get searchFilter(): string | undefined {
+    let filter = this.explanation.search?.filter;
+    return filter ? asJson(filter) : undefined;
+  }
+
+  get fragment(): string | undefined {
+    let fragment = this.explanation.search?.fragment;
+    return fragment ? asJson(fragment) : undefined;
+  }
+
+  get indexLag(): string | undefined {
+    let index = this.explanation.search?.index;
+    if (!index) {
+      return undefined;
+    }
+    if (index.pending === 0) {
+      return 'Up to date.';
+    }
+    let passes =
+      index.pending === 1
+        ? '1 indexing pass has'
+        : `${index.pending} indexing passes have`;
+    let waited =
+      index.oldestPendingMs !== undefined
+        ? ` The oldest has waited ${durationLabel(index.oldestPendingMs)}.`
+        : '';
+    return `${passes} yet to land, so the search can answer from cards as they were before those changes.${waited}`;
   }
 
   isAdmitting = (ruleIndex: number, grantIndex: number): boolean =>
-    this.explanation?.admittedBy?.rule === ruleIndex &&
-    this.explanation?.admittedBy?.grant === grantIndex;
+    this.explanation.admittedBy?.rule === ruleIndex &&
+    this.explanation.admittedBy?.grant === grantIndex;
 
   tierLabel = (
     tier: PolicyExplanation['rules'][number]['grants'][number]['tier'],
   ) => (tier ? TIER_LABEL[tier] : undefined);
 
-  outcomeLabel = (
-    outcome: PolicyExplanation['rules'][number]['grants'][number]['outcome'],
-  ) => OUTCOME_LABEL[outcome];
-
-  updateActor = (value: string) => {
-    this.actor = value;
-  };
-
-  updateTarget = (value: string) => {
-    this.target = value;
-  };
-
-  updateOperation = (value: string) => {
-    this.operationName = value;
-  };
-
-  explain = async (event?: Event) => {
-    event?.preventDefault();
-    if (!this.canAsk) {
-      return;
-    }
-    this.running = true;
-    this.refusal = undefined;
-    this.explanation = undefined;
-    try {
-      this.explanation = await operations<typeof RealmPolicy>(
-        this.args.policy,
-      ).explain({
-        actor: this.actor.trim(),
-        target: this.target.trim(),
-        operation: this.operationName.trim(),
-      });
-    } catch (err) {
-      this.refusal = failureMessage(err);
-    } finally {
-      this.running = false;
-    }
-  };
+  // On the search lane a grant's condition is never checked card by card:
+  // the search runs it as a filter, so what matters is whether it has one.
+  grantLabel = (
+    grant: PolicyExplanation['rules'][number]['grants'][number],
+  ): string =>
+    grant.filterable === undefined
+      ? OUTCOME_LABEL[grant.outcome]
+      : grant.filterable
+        ? 'narrows the search'
+        : "a search can't use its condition, so it adds nothing";
 
   <template>
-    <form
-      class='explain'
-      data-test-realm-policy-explain-form
-      {{on 'submit' this.explain}}
-    >
-      <FieldContainer
-        @label='Person (user ID)'
-        @vertical={{true}}
-        @fieldId='explain-actor'
-      >
-        <BoxelInput
-          @id='explain-actor'
-          @value={{this.actor}}
-          @onInput={{this.updateActor}}
-          @placeholder='@teacher:example.org'
-          data-test-explain-actor
-        />
-      </FieldContainer>
-      <FieldContainer
-        @label='Card (URL)'
-        @vertical={{true}}
-        @fieldId='explain-target'
-      >
-        <BoxelInput
-          @id='explain-target'
-          @value={{this.target}}
-          @onInput={{this.updateTarget}}
-          data-test-explain-target
-        />
-      </FieldContainer>
-      <FieldContainer
-        @label='Operation'
-        @vertical={{true}}
-        @fieldId='explain-operation'
-      >
-        <BoxelInput
-          @id='explain-operation'
-          @value={{this.operationName}}
-          @onInput={{this.updateOperation}}
-          @placeholder='read'
-          data-test-explain-operation
-        />
-      </FieldContainer>
-      <Button
-        @kind='primary'
-        @size='small'
-        @loading={{this.running}}
-        @disabled={{this.cannotAsk}}
-        type='submit'
-        data-test-explain-submit
-      >
-        Explain
-      </Button>
-    </form>
-
-    {{#if this.refusal}}
-      <p class='refusal' role='alert' data-test-explain-refusal>
-        {{this.refusal}}
-      </p>
-    {{/if}}
-
-    {{#if this.explanation}}
-      <div class='explanation' data-test-explanation>
-        <header class='verdict'>
-          <Pill
-            @variant={{this.decisionVariant}}
-            data-test-explanation-decision
-          >
-            {{this.explanation.decision}}
-          </Pill>
-          <span class='reason' data-test-explanation-reason>
-            {{this.reason}}
-          </span>
-        </header>
-        <dl class='facts'>
-          <dt>Person</dt>
-          <dd data-test-explanation-actor>
-            {{if this.explanation.actor this.explanation.actor 'not signed in'}}
+    <div class='explanation' data-test-explanation>
+      <header class='verdict'>
+        <Pill @variant={{this.decisionVariant}} data-test-explanation-decision>
+          {{this.explanation.decision}}
+        </Pill>
+        <span class='reason' data-test-explanation-reason>
+          {{this.reason}}
+        </span>
+      </header>
+      <dl class='facts'>
+        <dt>Person</dt>
+        <dd data-test-explanation-actor>
+          {{if this.explanation.actor this.explanation.actor 'not signed in'}}
+        </dd>
+        <dt>Realm permissions</dt>
+        <dd data-test-explanation-acl>{{this.aclStanding}}</dd>
+        {{#if this.explanation.refusal}}
+          <dt>Turned away with</dt>
+          <dd data-test-explanation-refusal>
+            {{this.explanation.refusal.status}}
+            <code>{{this.explanation.refusal.code}}</code>
           </dd>
-          <dt>Realm permissions</dt>
-          <dd data-test-explanation-acl>{{this.aclStanding}}</dd>
-          {{#if this.explanation.refusal}}
-            <dt>Turned away with</dt>
-            <dd data-test-explanation-refusal>
-              {{this.explanation.refusal.status}}
-              <code>{{this.explanation.refusal.code}}</code>
+        {{/if}}
+      </dl>
+      {{#if this.explanation.search}}
+        <dl class='facts search' data-test-explanation-search>
+          <dt>Search</dt>
+          <dd data-test-explanation-search-operation>
+            <code>{{this.explanation.search.operation}}</code>
+          </dd>
+          <dt>Card types</dt>
+          <dd data-test-explanation-search-types>{{this.searchTypes}}</dd>
+          {{#if this.searchFilter}}
+            <dt>The search's own filter</dt>
+            <dd>
+              <pre
+                class='json'
+                data-test-explanation-search-filter
+              >{{this.searchFilter}}</pre>
             </dd>
           {{/if}}
+          <dt>What this policy adds</dt>
+          <dd>
+            {{#if this.fragment}}
+              <p class='note'>The search returns only cards that also match
+                this.</p>
+              <pre
+                class='json'
+                data-test-explanation-search-fragment
+              >{{this.fragment}}</pre>
+            {{else}}
+              <span data-test-explanation-search-no-fragment>Nothing.</span>
+            {{/if}}
+          </dd>
+          <dt>Index</dt>
+          <dd data-test-explanation-search-index>{{this.indexLag}}</dd>
         </dl>
-        {{#if this.explanation.rules.length}}
-          <ol class='matched' data-test-explanation-rules>
-            {{#each this.explanation.rules as |rule ruleIndex|}}
-              <li class='matched-rule' data-test-explanation-rule>
-                <span class='type-name'>{{rule.targetType.name}}</span>
-                <span class='type-module'>{{rule.targetType.module}}</span>
-                {{#if rule.grants.length}}
-                  <ul class='matched-grants'>
-                    {{#each rule.grants as |grant grantIndex|}}
-                      <li
-                        class='matched-grant
-                          {{if
-                            (this.isAdmitting ruleIndex grantIndex)
-                            "admitting"
-                          }}'
-                        data-test-explanation-grant={{grant.outcome}}
-                      >
-                        {{#if grant.where}}
-                          <code
-                            class='where'
-                            data-test-explanation-grant-where
-                          >{{grant.where}}</code>
-                          <span class='tier'>{{this.tierLabel
-                              grant.tier
-                            }}</span>
-                        {{/if}}
-                        <span class='outcome'>{{this.outcomeLabel
-                            grant.outcome
-                          }}</span>
-                        {{#if (this.isAdmitting ruleIndex grantIndex)}}
-                          <Pill
-                            @variant='primary'
-                            data-test-explanation-admitting
-                          >allowed it</Pill>
-                        {{/if}}
-                      </li>
-                    {{/each}}
-                  </ul>
-                {{else}}
-                  <p class='empty'>No grant for this operation.</p>
-                {{/if}}
-              </li>
-            {{/each}}
-          </ol>
-        {{/if}}
-      </div>
-    {{/if}}
+      {{/if}}
+      {{#if this.explanation.rules.length}}
+        <ol class='matched' data-test-explanation-rules>
+          {{#each this.explanation.rules as |rule ruleIndex|}}
+            <li class='matched-rule' data-test-explanation-rule>
+              <span class='type-name'>{{rule.targetType.name}}</span>
+              <span class='type-module'>{{rule.targetType.module}}</span>
+              {{#if rule.grants.length}}
+                <ul class='matched-grants'>
+                  {{#each rule.grants as |grant grantIndex|}}
+                    <li
+                      class='matched-grant
+                        {{if
+                          (this.isAdmitting ruleIndex grantIndex)
+                          "admitting"
+                        }}'
+                      data-test-explanation-grant={{grant.outcome}}
+                      data-test-explanation-grant-filterable={{grant.filterable}}
+                    >
+                      {{#if grant.where}}
+                        <code
+                          class='where'
+                          data-test-explanation-grant-where
+                        >{{grant.where}}</code>
+                        <span class='tier'>{{this.tierLabel grant.tier}}</span>
+                      {{/if}}
+                      <span
+                        class='outcome'
+                        data-test-explanation-grant-label
+                      >{{this.grantLabel grant}}</span>
+                      {{#if (this.isAdmitting ruleIndex grantIndex)}}
+                        <Pill
+                          @variant='primary'
+                          data-test-explanation-admitting
+                        >allowed it</Pill>
+                      {{/if}}
+                    </li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class='empty'>No grant for this operation.</p>
+              {{/if}}
+            </li>
+          {{/each}}
+        </ol>
+      {{/if}}
+    </div>
     <style scoped>
-      .explain {
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        justify-items: start;
-      }
-      .explain > :deep(.boxel-field) {
-        width: 100%;
-      }
-      .refusal {
-        margin: var(--boxel-sp-sm) 0 0;
-        color: var(--destructive, var(--boxel-danger));
-      }
       .explanation {
-        margin-top: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
       }
@@ -498,7 +575,21 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
       }
       .facts dd {
         margin: 0;
+        min-width: 0;
         overflow-wrap: anywhere;
+      }
+      .json {
+        margin: 0;
+        padding: var(--boxel-sp-xs);
+        background-color: var(--muted, var(--boxel-100));
+        border-radius: var(--boxel-border-radius-sm);
+        font-family: var(--boxel-monospace-font-family, monospace);
+        font-size: var(--boxel-font-size-xs);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .note {
+        margin: 0 0 var(--boxel-sp-xxs);
       }
       .matched,
       .matched-grants {
@@ -548,6 +639,664 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
   </template>
 }
 
+// What the panel asks about: one card, a search a realm runs, or a page of
+// the cards in a realm.
+type ExplainMode = 'card' | 'search' | 'listing';
+
+const MODES: { id: ExplainMode; label: string }[] = [
+  { id: 'card', label: 'One card' },
+  { id: 'search', label: 'A search' },
+  { id: 'listing', label: 'Every card in a realm' },
+];
+
+// How many cards one page of a listing explains.
+const LISTING_PAGE_SIZE = 10;
+
+// A listing question as it was last asked, so paging through it asks the same
+// question of the next page whatever has been typed since.
+interface AskedListing {
+  question: { actor: string; target: string; operation: string };
+  on?: { module: string; name: string };
+  draft?: Record<string, unknown>;
+}
+
+// Asks the realm what this policy decides, without invoking anything: for one
+// caller, one card and one operation; for what a search would return to a
+// caller; or for every card on one page of a realm. Each can be asked of a
+// draft instead of the policy in force. Only a caller who can read both this
+// card's realm and the realm asked about is answered; anyone else is told the
+// target is not there, so a caller who cannot read a realm learns nothing
+// about it this way.
+interface ExplainPanelSignature {
+  Args: { policy: RealmPolicy };
+}
+
+class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
+  @tracked mode: ExplainMode = 'card';
+  @tracked actor = '';
+  @tracked target = '';
+  @tracked realmTarget: string | undefined;
+  @tracked operationName = '';
+  @tracked typeModule = '';
+  @tracked typeName = '';
+  @tracked searchParams = '';
+  @tracked searchFilter = '';
+  @tracked useDraft = false;
+  @tracked draft = '';
+  @tracked explanation: PolicyExplanation | undefined;
+  @tracked listing: PolicyExplanationListing | undefined;
+  @tracked refusal: string | undefined;
+  @tracked running = false;
+  private askedListing: AskedListing | undefined;
+
+  get isCard() {
+    return this.mode === 'card';
+  }
+
+  get isSearch() {
+    return this.mode === 'search';
+  }
+
+  get isListing() {
+    return this.mode === 'listing';
+  }
+
+  // A search or a listing runs in a realm, which starts as this card's own.
+  get realmTargetValue(): string {
+    return this.realmTarget ?? this.args.policy[realmURL]?.href ?? '';
+  }
+
+  // An ad-hoc search runs under the reserved name `query` and is named by its
+  // filter. Any other search is a named query, named by the type that
+  // declares it.
+  get isAdHocSearch() {
+    return this.operationName.trim() === 'query';
+  }
+
+  get hasType(): boolean {
+    return this.typeModule.trim().length > 0 && this.typeName.trim().length > 0;
+  }
+
+  get canAsk(): boolean {
+    if (this.running || this.operationName.trim().length === 0) {
+      return false;
+    }
+    switch (this.mode) {
+      case 'card':
+        return this.target.trim().length > 0;
+      case 'search':
+        return (
+          this.realmTargetValue.trim().length > 0 &&
+          (this.isAdHocSearch
+            ? this.searchFilter.trim().length > 0
+            : this.hasType)
+        );
+      case 'listing':
+        // A listing names a type or none, never half of one.
+        return (
+          this.realmTargetValue.trim().length > 0 &&
+          (this.hasType ||
+            (this.typeModule.trim().length === 0 &&
+              this.typeName.trim().length === 0))
+        );
+    }
+  }
+
+  get cannotAsk(): boolean {
+    return !this.canAsk;
+  }
+
+  get draftIssues() {
+    return (this.explanation ?? this.listing)?.draft?.issues;
+  }
+
+  get pageSummary(): string | undefined {
+    let listing = this.listing;
+    if (!listing) {
+      return undefined;
+    }
+    let { number, size, total } = listing.page;
+    if (listing.explanations.length === 0) {
+      return total === 0
+        ? 'There are no cards to explain.'
+        : `There are no cards on this page. The realm has ${total}.`;
+    }
+    let first = number * size + 1;
+    let last = number * size + listing.explanations.length;
+    return `Cards ${first} to ${last} of ${total}`;
+  }
+
+  get isFirstPage(): boolean {
+    return !this.listing || this.listing.page.number === 0;
+  }
+
+  get isLastPage(): boolean {
+    let listing = this.listing;
+    if (!listing) {
+      return true;
+    }
+    let { number, size, total } = listing.page;
+    return (number + 1) * size >= total;
+  }
+
+  get noEarlierPage() {
+    return this.running || this.isFirstPage;
+  }
+
+  get noLaterPage() {
+    return this.running || this.isLastPage;
+  }
+
+  chooseMode = (mode: ExplainMode) => {
+    this.mode = mode;
+    this.clearAnswer();
+  };
+
+  updateActor = (value: string) => {
+    this.actor = value;
+  };
+
+  updateTarget = (value: string) => {
+    this.target = value;
+  };
+
+  updateRealmTarget = (value: string) => {
+    this.realmTarget = value;
+  };
+
+  updateOperation = (value: string) => {
+    this.operationName = value;
+  };
+
+  updateTypeModule = (value: string) => {
+    this.typeModule = value;
+  };
+
+  updateTypeName = (value: string) => {
+    this.typeName = value;
+  };
+
+  updateSearchParams = (value: string) => {
+    this.searchParams = value;
+  };
+
+  updateSearchFilter = (value: string) => {
+    this.searchFilter = value;
+  };
+
+  updateDraft = (value: string) => {
+    this.draft = value;
+  };
+
+  // A draft starts as this card's own rules, the usual place to start
+  // changing them from.
+  toggleDraft = (event: Event) => {
+    this.useDraft = (event.target as HTMLInputElement).checked;
+    if (this.useDraft && this.draft.trim().length === 0) {
+      this.draft = startingDraft(this.args.policy);
+    }
+  };
+
+  resetDraft = () => {
+    this.draft = startingDraft(this.args.policy);
+  };
+
+  private clearAnswer() {
+    this.refusal = undefined;
+    this.explanation = undefined;
+    this.listing = undefined;
+  }
+
+  private get question() {
+    return {
+      actor: this.actor.trim(),
+      target: this.isCard ? this.target.trim() : this.realmTargetValue.trim(),
+      operation: this.operationName.trim(),
+    };
+  }
+
+  private get type() {
+    return this.hasType
+      ? { module: this.typeModule.trim(), name: this.typeName.trim() }
+      : undefined;
+  }
+
+  private get searchQuestion(): Record<string, unknown> {
+    if (this.isAdHocSearch) {
+      return { filter: parseObject(this.searchFilter, 'The filter') };
+    }
+    let params = this.searchParams.trim();
+    return {
+      on: this.type,
+      ...(params.length > 0
+        ? { params: parseObject(params, 'The params') }
+        : {}),
+    };
+  }
+
+  private get draftDocument(): Record<string, unknown> | undefined {
+    return this.useDraft ? parseObject(this.draft, 'The draft') : undefined;
+  }
+
+  // Runs one ask, showing what the realm answered or why it refused. The
+  // answer to an earlier ask is cleared first, so it is never shown as the
+  // answer to this one.
+  private async run(ask: () => Promise<void>) {
+    this.running = true;
+    this.clearAnswer();
+    try {
+      await ask();
+    } catch (err) {
+      this.refusal = failureMessage(err);
+    } finally {
+      this.running = false;
+    }
+  }
+
+  explain = async (event?: Event) => {
+    event?.preventDefault();
+    if (!this.canAsk) {
+      return;
+    }
+    await this.run(async () => {
+      let ops = operations<typeof RealmPolicy>(this.args.policy);
+      let question = this.question;
+      let draft = this.draftDocument;
+      switch (this.mode) {
+        case 'card':
+          this.explanation = draft
+            ? await ops.explainDraft({ ...question, draft })
+            : await ops.explain(question);
+          return;
+        case 'search': {
+          let search = this.searchQuestion;
+          this.explanation = draft
+            ? await ops.explainDraftSearch({ ...question, search, draft })
+            : await ops.explainSearch({ ...question, search });
+          return;
+        }
+        case 'listing': {
+          let on = this.type;
+          this.askedListing = {
+            question,
+            ...(on ? { on } : {}),
+            ...(draft ? { draft } : {}),
+          };
+          this.listing = await this.askListing(this.askedListing, 0);
+          return;
+        }
+      }
+    });
+  };
+
+  private async askListing(
+    asked: AskedListing,
+    number: number,
+  ): Promise<PolicyExplanationListing> {
+    let ops = operations<typeof RealmPolicy>(this.args.policy);
+    let list = {
+      ...(asked.on ? { on: asked.on } : {}),
+      page: { number, size: LISTING_PAGE_SIZE },
+    };
+    return asked.draft
+      ? await ops.explainDraftListing({
+          ...asked.question,
+          list,
+          draft: asked.draft,
+        })
+      : await ops.explainListing({ ...asked.question, list });
+  }
+
+  private turnPage = async (by: number) => {
+    let asked = this.askedListing;
+    let current = this.listing;
+    if (!asked || !current || this.running) {
+      return;
+    }
+    let number = current.page.number + by;
+    await this.run(async () => {
+      this.listing = await this.askListing(asked, number);
+    });
+  };
+
+  previousPage = () => this.turnPage(-1);
+
+  nextPage = () => this.turnPage(1);
+
+  <template>
+    <form
+      class='explain'
+      data-test-realm-policy-explain-form
+      {{on 'submit' this.explain}}
+    >
+      <RadioInput
+        @groupDescription='Ask about'
+        @items={{MODES}}
+        @name='explain-mode'
+        @checkedId={{this.mode}}
+        @orientation='horizontal'
+        as |item|
+      >
+        <item.component
+          @onChange={{fn this.chooseMode item.data.id}}
+          data-test-explain-mode={{item.data.id}}
+        >
+          {{item.data.label}}
+        </item.component>
+      </RadioInput>
+      <FieldContainer
+        @label='Person (user ID)'
+        @vertical={{true}}
+        @fieldId='explain-actor'
+      >
+        <BoxelInput
+          @id='explain-actor'
+          @value={{this.actor}}
+          @onInput={{this.updateActor}}
+          @placeholder='@teacher:example.org'
+          data-test-explain-actor
+        />
+      </FieldContainer>
+      {{#if this.isCard}}
+        <FieldContainer
+          @label='Card (URL)'
+          @vertical={{true}}
+          @fieldId='explain-target'
+        >
+          <BoxelInput
+            @id='explain-target'
+            @value={{this.target}}
+            @onInput={{this.updateTarget}}
+            data-test-explain-target
+          />
+        </FieldContainer>
+      {{else}}
+        <FieldContainer
+          @label='Realm (URL)'
+          @vertical={{true}}
+          @fieldId='explain-realm'
+        >
+          <BoxelInput
+            @id='explain-realm'
+            @value={{this.realmTargetValue}}
+            @onInput={{this.updateRealmTarget}}
+            data-test-explain-realm
+          />
+        </FieldContainer>
+      {{/if}}
+      <FieldContainer
+        @label={{if this.isSearch 'Search operation' 'Operation'}}
+        @vertical={{true}}
+        @fieldId='explain-operation'
+      >
+        <BoxelInput
+          @id='explain-operation'
+          @value={{this.operationName}}
+          @onInput={{this.updateOperation}}
+          @placeholder={{if this.isSearch 'query' 'read'}}
+          data-test-explain-operation
+        />
+      </FieldContainer>
+      {{#if this.isSearch}}
+        <p class='hint'>
+          Name a search a card type declares, or
+          <code>query</code>
+          for a search by filter.
+        </p>
+      {{/if}}
+      {{#if (showType this.mode this.isAdHocSearch)}}
+        <div class='type-fields'>
+          <FieldContainer
+            @label={{if
+              this.isSearch
+              'Card type that declares it (module URL)'
+              'Only cards of this type (module URL, optional)'
+            }}
+            @vertical={{true}}
+            @fieldId='explain-type-module'
+          >
+            <BoxelInput
+              @id='explain-type-module'
+              @value={{this.typeModule}}
+              @onInput={{this.updateTypeModule}}
+              data-test-explain-type-module
+            />
+          </FieldContainer>
+          <FieldContainer
+            @label='Type name'
+            @vertical={{true}}
+            @fieldId='explain-type-name'
+          >
+            <BoxelInput
+              @id='explain-type-name'
+              @value={{this.typeName}}
+              @onInput={{this.updateTypeName}}
+              data-test-explain-type-name
+            />
+          </FieldContainer>
+        </div>
+      {{/if}}
+      {{#if this.isSearch}}
+        {{#if this.isAdHocSearch}}
+          <FieldContainer
+            @label='Filter (JSON)'
+            @vertical={{true}}
+            @fieldId='explain-search-filter'
+          >
+            <BoxelInput
+              @id='explain-search-filter'
+              @type='textarea'
+              @value={{this.searchFilter}}
+              @onInput={{this.updateSearchFilter}}
+              data-test-explain-search-filter
+            />
+          </FieldContainer>
+        {{else}}
+          <FieldContainer
+            @label='Params (JSON, optional)'
+            @vertical={{true}}
+            @fieldId='explain-search-params'
+          >
+            <BoxelInput
+              @id='explain-search-params'
+              @type='textarea'
+              @value={{this.searchParams}}
+              @onInput={{this.updateSearchParams}}
+              data-test-explain-search-params
+            />
+          </FieldContainer>
+        {{/if}}
+      {{/if}}
+      <label class='draft-toggle'>
+        <input
+          type='checkbox'
+          checked={{this.useDraft}}
+          {{on 'change' this.toggleDraft}}
+          data-test-explain-use-draft
+        />
+        Answer against a draft of this policy
+      </label>
+      {{#if this.useDraft}}
+        <FieldContainer
+          @label='Draft (JSON)'
+          @vertical={{true}}
+          @fieldId='explain-draft'
+        >
+          <BoxelInput
+            @id='explain-draft'
+            @type='textarea'
+            @value={{this.draft}}
+            @onInput={{this.updateDraft}}
+            class='draft-input'
+            data-test-explain-draft
+          />
+        </FieldContainer>
+        <p class='hint'>
+          The draft is checked as if this card held it, for this answer only.
+          The policy in force doesn't change.
+          <Button
+            @kind='text-only'
+            @size='extra-small'
+            type='button'
+            {{on 'click' this.resetDraft}}
+            data-test-explain-draft-reset
+          >Start again from this card's rules</Button>
+        </p>
+      {{/if}}
+      <Button
+        @kind='primary'
+        @size='small'
+        @loading={{this.running}}
+        @disabled={{this.cannotAsk}}
+        type='submit'
+        data-test-explain-submit
+      >
+        Explain
+      </Button>
+    </form>
+
+    {{#if this.refusal}}
+      <p class='refusal' role='alert' data-test-explain-refusal>
+        {{this.refusal}}
+      </p>
+    {{/if}}
+
+    {{#if this.draftIssues}}
+      <DraftIssues @issues={{this.draftIssues}} />
+    {{/if}}
+
+    {{#if this.explanation}}
+      <div class='answer'>
+        <ExplanationView @explanation={{this.explanation}} />
+      </div>
+    {{/if}}
+
+    {{#if this.listing}}
+      <div class='answer listing' data-test-explanation-listing>
+        <p class='page' data-test-explanation-listing-page>
+          {{this.pageSummary}}
+        </p>
+        {{#if this.listing.explanations.length}}
+          <ol class='listed'>
+            {{#each this.listing.explanations as |entry|}}
+              <li data-test-explanation-listed={{entry.target}}>
+                <details class='listed-entry'>
+                  <summary class='listed-summary'>
+                    <Pill
+                      @tag='span'
+                      @variant={{decisionVariant entry.decision}}
+                      data-test-explanation-listed-decision
+                    >{{entry.decision}}</Pill>
+                    <span class='listed-target'>{{entry.target}}</span>
+                  </summary>
+                  <ExplanationView @explanation={{entry}} />
+                </details>
+              </li>
+            {{/each}}
+          </ol>
+        {{/if}}
+        <nav class='pager' aria-label='Pages'>
+          <Button
+            @size='extra-small'
+            @disabled={{this.noEarlierPage}}
+            {{on 'click' this.previousPage}}
+            data-test-explanation-listing-previous
+          >Previous</Button>
+          <Button
+            @size='extra-small'
+            @disabled={{this.noLaterPage}}
+            {{on 'click' this.nextPage}}
+            data-test-explanation-listing-next
+          >Next</Button>
+        </nav>
+      </div>
+    {{/if}}
+    <style scoped>
+      .explain {
+        display: grid;
+        gap: var(--boxel-sp-sm);
+        justify-items: start;
+      }
+      .explain > :deep(.boxel-field),
+      .explain > :deep(.boxel-radio-fieldset),
+      .type-fields {
+        width: 100%;
+      }
+      .type-fields {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+        gap: var(--boxel-sp-sm);
+      }
+      .hint {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .draft-toggle {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .draft-input {
+        font-family: var(--boxel-monospace-font-family, monospace);
+        font-size: var(--boxel-font-size-xs);
+        min-height: 12rem;
+      }
+      .refusal {
+        margin: var(--boxel-sp-sm) 0 0;
+        color: var(--destructive, var(--boxel-danger));
+      }
+      .answer {
+        margin-top: var(--boxel-sp);
+      }
+      .listing {
+        display: grid;
+        gap: var(--boxel-sp-sm);
+      }
+      .page {
+        margin: 0;
+        font-weight: 600;
+      }
+      .listed {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: var(--boxel-sp-xs);
+      }
+      .listed-entry {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border: 1px solid var(--border, var(--boxel-border-color));
+        border-radius: var(--boxel-border-radius);
+      }
+      .listed-entry[open] > .listed-summary {
+        margin-bottom: var(--boxel-sp-sm);
+      }
+      .listed-summary {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        cursor: pointer;
+      }
+      .listed-target {
+        font-family: var(--boxel-monospace-font-family, monospace);
+        font-size: var(--boxel-font-size-xs);
+        overflow-wrap: anywhere;
+      }
+      .pager {
+        display: flex;
+        gap: var(--boxel-sp-xs);
+      }
+    </style>
+  </template>
+}
+
+// A named query and a listing name a card type; an ad-hoc search names its
+// types in its filter instead.
+function showType(mode: ExplainMode, adHoc: boolean): boolean {
+  return mode === 'listing' || (mode === 'search' && !adHoc);
+}
+
 // Whether this is a render someone is looking at, rather than the render
 // indexing takes of a card. What an index render shows is served to every
 // later viewer, and it runs while the card itself is being indexed, so asking
@@ -578,6 +1327,15 @@ function isIndexPass(event: { eventName: string; indexType?: string }) {
 type ValidationState = {
   validation: PolicyValidation | undefined;
   failure: string | undefined;
+};
+
+// What every explain asks: what this policy decides for `actor`, a user id
+// or an empty string for a caller who isn't signed in, invoking `operation` on
+// `target`.
+const EXPLAIN_QUESTION = {
+  actor: StringField,
+  target: StringField,
+  operation: StringField,
 };
 
 export class RealmPolicy extends CardDef {
@@ -626,11 +1384,57 @@ export class RealmPolicy extends CardDef {
   // answers is what a refusal withholds.
   @operation static explain = {
     base: 'explain',
-    params: {
-      actor: StringField,
-      target: StringField,
-      operation: StringField,
-    },
+    params: EXPLAIN_QUESTION,
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
+
+  // The forms below ask what a single question against the policy in force
+  // can't. Each is its own declaration because a declared param is always
+  // required, and each is typed for what it answers. None of them may be
+  // granted, for the reason `explain` may not be.
+  //
+  // `explain`, answered against `draft`: a policy document holding the
+  // `rules` this card holds, which the realm compiles in this card's place
+  // for this answer alone. A relative module in it resolves against this
+  // card. Nothing caches the draft and the policy in force doesn't change.
+  // The answer carries what compiling the draft recorded. The realm answers
+  // only a caller who can read every realm the draft's types live in.
+  @operation static explainDraft = {
+    base: 'explain',
+    params: { ...EXPLAIN_QUESTION, draft: JsonField },
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
+
+  // What a search would return to a caller, asked of the realm it runs in,
+  // which is the `target`. `search` is `{ on, params }` for a named query, by
+  // the type that declares it, or `{ filter }` for an ad-hoc search, asked
+  // as `query`. The answer says what this policy composes into the search
+  // and how far behind its source the index the search reads is.
+  @operation static explainSearch = {
+    base: 'explain',
+    params: { ...EXPLAIN_QUESTION, search: JsonField },
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
+
+  @operation static explainDraftSearch = {
+    base: 'explain',
+    params: { ...EXPLAIN_QUESTION, search: JsonField, draft: JsonField },
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
+
+  // One page of the cards in the realm that is the `target`, each explained
+  // as its own question. `list` is `{ on?, page?: { number?, size? } }`: the
+  // type to list, or every type, and a page of at most 100 cards, which is
+  // also the most explanations one request may ask for, a batch included.
+  @operation static explainListing = {
+    base: 'explain',
+    params: { ...EXPLAIN_QUESTION, list: JsonField },
+    nonGrantable: true,
+  } satisfies OperationDeclaration;
+
+  @operation static explainDraftListing = {
+    base: 'explain',
+    params: { ...EXPLAIN_QUESTION, list: JsonField, draft: JsonField },
     nonGrantable: true,
   } satisfies OperationDeclaration;
 
@@ -1034,8 +1838,10 @@ export class RealmPolicy extends CardDef {
           <h2 class='section-title'>Explain a decision</h2>
           <p class='hint'>
             Check whether this policy lets a given person do something to a
-            given card. Nothing is actually done to the card. You can ask only
-            about cards in a realm that uses this policy, and only if you can
+            given card, what a search would return to them, or what it lets them
+            do to each card in a realm. You can ask about a draft of this policy
+            before you save it. Nothing is actually done to any card. You can
+            ask only about a realm that uses this policy, and only if you can
             read both that realm and this one.
           </p>
           <ExplainPanel @policy={{this.policy}} />
