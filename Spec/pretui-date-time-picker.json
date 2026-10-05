@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/date-time-picker",
+        "name": "DateTimePicker"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { DateTimePicker } from '@cardstack/pretui/components/date-time-picker';\n```\n",
+      "cardTitle": "DateTimePicker",
+      "cardDescription": "Date and time in one control — Calendar + TimeInput composed",
+      "containedExamples": [],
+      "componentName": "DateTimePicker",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Date and time in one control — Calendar + TimeInput composed",
+      "refs": "Mantine DateTimePicker · Ant DatePicker(showTime) · MUI DateTimePicker · React Aria DatePicker",
+      "buildsOn": null,
+      "icon": "calendar-clock",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "DateTimePicker",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/date-time-picker.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/date-time-picker.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

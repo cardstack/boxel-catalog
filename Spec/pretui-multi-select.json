@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/multi-select",
+        "name": "MultiSelect"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { MultiSelect } from '@cardstack/pretui/components/multi-select';\n```\n",
+      "cardTitle": "MultiSelect",
+      "cardDescription": "Multi-select on the Popup primitive with removable chips",
+      "containedExamples": [],
+      "componentName": "MultiSelect",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [
+        "selection"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "BoxelMultiSelect",
+      "version": "0.4.0",
+      "brief": "Multi-select on the Popup primitive with removable chips · shadcn MultiSelect, boxel-ui BoxelMultiSelect",
+      "refs": "shadcn MultiSelect patterns · wa-select multiple · boxel-ui BoxelMultiSelect",
+      "buildsOn": "Popup",
+      "icon": "list-checks",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "MultiSelect",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/multi-select.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/multi-select.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
