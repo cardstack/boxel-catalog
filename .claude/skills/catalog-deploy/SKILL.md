@@ -1,14 +1,14 @@
 ---
 name: catalog-deploy
-description: How a change in this repository reaches staging and production, and how to deploy it to production — staging syncs catalog main on every merge; production gets the catalog only from the "Deploy to production" workflow, run by hand to ship catalog work ahead of boxel, or by boxel's production deploy with the catalog revision that boxel pins. Covers the check that runs before any change (a catalog pull request saying `Merges after: cardstack/boxel#N` holds the deploy until production runs #N), reading its refusal, and declaring a boxel dependency so the check can see it. Use when asked to deploy, release or ship the catalog, when a merged change isn't in production, when "Deploy to production" fails, or before merging a change that needs boxel code production doesn't run yet.
+description: How a change in this repository reaches staging and production, and how to deploy it to production — staging syncs catalog main on every merge; production gets the catalog only from the "Deploy to production" workflow, run by hand (from Discord's `/deploy app:catalog` or the Actions tab) to ship catalog work ahead of boxel, or by boxel's production deploy with the catalog revision that boxel pins. Covers the check that runs before any change (a catalog pull request saying `Merges after: cardstack/boxel#N` holds the deploy until production runs #N), reading its refusal, and declaring a boxel dependency so the check can see it. Use when asked to deploy, release or ship the catalog, when a merged change isn't in production, when "Deploy to production" fails, or before merging a change that needs boxel code production doesn't run yet.
 ---
 
 # Deploying the catalog
 
-- **Staging** syncs catalog `main` on every merge (**Deploy to staging**, `.github/workflows/sync-to-workspace.yml`). Staging runs boxel `main`.
+- **Staging** syncs catalog `main` on every merge (**Deploy to staging**, `.github/workflows/sync-to-workspace.yml`). Staging runs boxel `main`. To re-run a sync that failed or flaked, use `/deploy app:catalog environment:staging` in Discord.
 - **Production** gets the catalog only from **Deploy to production** (`.github/workflows/deploy-production.yml`):
   - **In lockstep with boxel.** Manual Deploy [boxel] to production runs it with the catalog revision the deployed boxel pins, once before its release and once after. The run before ships what the new boxel needs; the run after ships the rest. It never moves production's catalog backwards.
-  - **Ahead of boxel, by hand.** Run it from the Actions tab with `revision` empty to deploy `main`'s head, for changes that need nothing new from boxel.
+  - **Ahead of boxel, by hand.** For changes that need nothing new from boxel, run `/deploy app:catalog environment:production` in Discord, which deploys `main`'s head. Add `revision:<sha>` to deploy a specific `main` commit. You can also run it from the Actions tab, with `revision` empty for `main`'s head. In Discord, the bot links the run, and when the run fails it posts the deploy's errors, including a refusal's pull requests.
 
 Before it changes anything, the deploy checks every pull request merged since production's last catalog deploy that changes a deployed file. Dot paths, `README.md`, `AGENTS.md`, `scripts`, `tests` and the rest of `.boxelignore` aren't deployed. If one says `Merges after: cardstack/boxel#N` and production doesn't run #N yet, the deploy **refuses** and names both pull requests:
 
