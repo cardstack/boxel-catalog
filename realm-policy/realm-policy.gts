@@ -393,6 +393,7 @@ class MessageText extends GlimmerComponent<MessageTextSignature> {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-xs);
+        overflow-wrap: anywhere;
       }
       .message-paragraph {
         margin: 0;
@@ -1490,8 +1491,8 @@ function isLiveRender(): boolean {
 }
 
 // What an issue about the card as a whole means, said of the card itself.
-// The compiler's own message is written for the log of a realm that names the
-// card, so an issue with no wording here reads as the compiler wrote it.
+// The compiler writes its message about any policy card that names it, so an
+// issue with no wording here reads as the compiler wrote it.
 const CARD_ISSUE_MESSAGES: Partial<Record<string, string>> = {
   'policy-card-unloadable':
     "This card couldn't be indexed this time, and the index's earlier copy of it may be out of date. It grants nothing until it's indexed again.\n\nThe realm tries again on its own, and editing the card or reindexing the realm tries again right away.",
