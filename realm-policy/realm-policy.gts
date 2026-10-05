@@ -273,6 +273,55 @@ function durationLabel(ms: number): string {
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
 }
 
+// A policy issue's message, as the compiler writes it for a realm's log as
+// well as for this card: each identifier in it is marked as code with
+// backticks, as markdown marks it. Here each marked identifier renders as code
+// and the rest as text, and nothing in a message is ever read as markup. A
+// backtick with no partner is text.
+const BACKTICK = String.fromCharCode(96);
+
+type MessagePart = { text: string; code: boolean };
+
+function messageParts(message: string | undefined): MessagePart[] {
+  if (!message) {
+    return [];
+  }
+  let segments = message.split(BACKTICK);
+  let parts: MessagePart[] = [];
+  segments.forEach((text, index) => {
+    let opensSpan = index % 2 === 1;
+    if (opensSpan && index === segments.length - 1) {
+      // The last backtick opened a span nothing closed.
+      parts.push({ text: BACKTICK + text, code: false });
+    } else if (text) {
+      parts.push({ text, code: opensSpan });
+    }
+  });
+  return parts;
+}
+
+interface MessageTextSignature {
+  Args: { message: string | undefined };
+}
+
+class MessageText extends GlimmerComponent<MessageTextSignature> {
+  <template>
+    {{~#each (messageParts @message) as |part|~}}
+      {{~#if part.code~}}
+        <code class='message-code'>{{part.text}}</code>
+      {{~else~}}
+        {{part.text}}
+      {{~/if~}}
+    {{~/each~}}
+    <style scoped>
+      .message-code {
+        font-family: var(--boxel-monospace-font-family, monospace);
+        font-size: 0.9em;
+      }
+    </style>
+  </template>
+}
+
 // An issue compiling a draft recorded, in the shape a policy's own issues take.
 type DraftIssue = NonNullable<PolicyExplanation['draft']>['issues'][number];
 
@@ -301,7 +350,9 @@ class DraftIssues extends GlimmerComponent<DraftIssuesSignature> {
                   'destructive'
                 }}
               >{{issue.severity}}</Pill>
-              <p class='issue-message'>{{issue.message}}</p>
+              <p class='issue-message'><MessageText
+                  @message={{issue.message}}
+                /></p>
             </li>
           {{/each}}
         </ul>
@@ -1806,7 +1857,9 @@ export class RealmPolicy extends CardDef {
                                   {{#each warnings as |warning|}}
                                     <li
                                       data-test-policy-grant-warning-message={{warning.code}}
-                                    >{{this.issueMessage warning}}</li>
+                                    ><MessageText
+                                        @message={{this.issueMessage warning}}
+                                      /></li>
                                   {{/each}}
                                 </ul>
                               </details>
@@ -1863,7 +1916,7 @@ export class RealmPolicy extends CardDef {
                     {{/if}}
                   </header>
                   <p class='issue-message' data-test-policy-issue-message>
-                    {{this.issueMessage issue}}
+                    <MessageText @message={{this.issueMessage issue}} />
                   </p>
                 </li>
               {{/each}}
