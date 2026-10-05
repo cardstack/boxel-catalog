@@ -273,13 +273,13 @@ function durationLabel(ms: number): string {
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
 }
 
-// A policy issue's message, as the compiler writes it for a realm's log as
-// well as for this card. Each identifier in it is marked as code with
-// backticks, as markdown marks it; a blank line separates one idea from the
-// next; and the fixes an author can choose between are a list, one per line
-// beginning `- `. Here each idea is a paragraph, the fixes are a bulleted list,
-// and each marked identifier renders as code. Nothing in a message is ever
-// read as markup, and a backtick with no partner is text.
+// A policy issue's message, as the compiler writes it for this card and for a
+// `validate` answer. Each identifier in it is marked as code with backticks,
+// as markdown marks it; a blank line separates one idea from the next; and a
+// set of alternatives is a list, one per line beginning `- `. Here each idea
+// is a paragraph, the alternatives are a bulleted list, and each marked
+// identifier renders as code. Nothing in a message is ever read as markup, and
+// a backtick with no partner is text.
 const BACKTICK = String.fromCharCode(96);
 const LIST_ITEM = '- ';
 
@@ -303,25 +303,39 @@ function messageParts(text: string): MessagePart[] {
   return parts;
 }
 
+// The paragraphs and lists a message is laid out as, in the order it writes
+// them. Within a paragraph, a single line break is a space.
 function messageBlocks(message: string | undefined): MessageBlock[] {
   let blocks: MessageBlock[] = [];
-  for (let chunk of (message ?? '').split('\n\n')) {
-    let prose: string[] = [];
-    let items: string[] = [];
-    for (let line of chunk.split('\n')) {
-      if (line.startsWith(LIST_ITEM)) {
-        items.push(line.slice(LIST_ITEM.length));
-      } else if (line.trim()) {
-        prose.push(line.trim());
-      }
-    }
+  let prose: string[] = [];
+  let items: string[] = [];
+  let flush = () => {
     if (prose.length) {
       blocks.push({ paragraph: messageParts(prose.join(' ')) });
+      prose = [];
     }
     if (items.length) {
       blocks.push({ items: items.map(messageParts) });
+      items = [];
+    }
+  };
+  for (let line of (message ?? '').split('\n')) {
+    let trimmed = line.trim();
+    if (!trimmed) {
+      flush();
+    } else if (trimmed.startsWith(LIST_ITEM)) {
+      if (prose.length) {
+        flush();
+      }
+      items.push(trimmed.slice(LIST_ITEM.length));
+    } else {
+      if (items.length) {
+        flush();
+      }
+      prose.push(trimmed);
     }
   }
+  flush();
   return blocks;
 }
 
@@ -346,7 +360,8 @@ class MessageParts extends GlimmerComponent<MessagePartsSignature> {
         color: var(--foreground, var(--boxel-dark));
         font-family: var(--boxel-monospace-font-family, monospace);
         font-size: 0.875em;
-        white-space: nowrap;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
       }
     </style>
   </template>
@@ -1479,7 +1494,7 @@ function isLiveRender(): boolean {
 // card, so an issue with no wording here reads as the compiler wrote it.
 const CARD_ISSUE_MESSAGES: Partial<Record<string, string>> = {
   'policy-card-unloadable':
-    "This card couldn't be indexed this time, and the index's earlier copy of it may be out of date. It grants nothing until it's indexed again. The realm tries again on its own, and editing the card or reindexing the realm tries again right away.",
+    "This card couldn't be indexed this time, and the index's earlier copy of it may be out of date. It grants nothing until it's indexed again.\n\nThe realm tries again on its own, and editing the card or reindexing the realm tries again right away.",
 };
 
 // Whether a realm event says the realm has finished an index pass.
