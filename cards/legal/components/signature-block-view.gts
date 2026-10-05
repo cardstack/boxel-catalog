@@ -17,6 +17,12 @@ import {
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Token } from '@cardstack/pretui/components/token';
+import {
+  ALERT_STYLE,
+  ID_TOKEN_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 interface Signature {
   Args: {
@@ -242,7 +248,12 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
                   {{#if l.when}}<span class='cl-when'>{{l.when}}</span>{{/if}}
                 </p>
                 {{#if l.block.signatureRef}}
-                  <p class='cl-ref'>{{l.block.signatureRef}}</p>
+                  <Token
+                    class='cl-ref'
+                    @value={{l.block.signatureRef}}
+                    title={{l.block.signatureRef}}
+                    style={{ID_TOKEN_STYLE.xs}}
+                  />
                 {{/if}}
                 {{#if l.problems.length}}
                   <ul class='cl-problems'>
@@ -256,63 +267,37 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
       {{/if}}
 
       {{#unless @compact}}
-        <footer class='cy-foot {{if this.clean "is-clean" "is-blocked"}}'>
-          <span class='cy-seal' aria-hidden='true'>
-            {{#if this.clean}}
-              <CircleCheckIcon class='cy-mark' role='presentation' />
-            {{else}}
-              <CircleXIcon class='cy-mark' role='presentation' />
-            {{/if}}
-          </span>
-          <p class='cy-verdict'>{{this.verdict}}</p>
+        {{! A standing verdict, not an interruption: role='status' keeps a
+            blocked ceremony from being announced as an alert on every render. }}
+        <Alert
+          class='cy-foot'
+          role='status'
+          @tone={{if this.clean 'success' 'danger'}}
+          @title={{this.verdict}}
+          style={{if this.clean ALERT_STYLE.success ALERT_STYLE.danger}}
+        >
           {{#if (and this.globalFindings.length this.lines.length)}}
             <ul class='cy-global'>
               {{#each this.globalFindings as |f|}}<li
                 >{{f.message}}</li>{{/each}}
             </ul>
           {{/if}}
-        </footer>
+        </Alert>
       {{/unless}}
     </section>
     <style scoped>
       .ceremony {
-        /* Status hues are data: green means signed and red means blocked
-           whatever the theme. Text is pulled toward the card's own foreground
-           so the pair survives a dark theme. */
-        --cy-ok-fg: color-mix(
-          in oklch,
-          var(--boxel-success) 65%,
-          var(--foreground, var(--boxel-dark))
-        );
-        --cy-ok-bg: color-mix(
-          in oklch,
-          var(--cy-ok-fg) 10%,
-          var(--background, var(--boxel-light))
-        );
-        --cy-bad-fg: color-mix(
-          in oklch,
-          var(--boxel-danger) 70%,
-          var(--foreground, var(--boxel-dark))
-        );
-        --cy-bad-bg: color-mix(
-          in oklch,
-          var(--cy-bad-fg) 10%,
-          var(--background, var(--boxel-light))
-        );
-        --cy-seal: color-mix(
-          in oklch,
-          var(--boxel-purple) 55%,
-          var(--foreground, var(--boxel-dark))
-        );
+        /* The seal is the strip's one accent: the theme's primary, as ink. */
+        --cy-seal: var(--primary-ink);
         display: flex;
         flex-direction: column;
         gap: 0.9rem;
         padding: 1rem 1.1rem 0.9rem;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-top: 3px solid var(--cy-seal);
-        border-radius: var(--boxel-border-radius, 6px);
-        background: var(--card, var(--boxel-light));
-        color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
+        border: 1px solid var(--border);
+        border-top: 0.1875rem solid var(--cy-seal);
+        border-radius: var(--boxel-border-radius);
+        background-color: var(--card);
+        color: var(--card-foreground);
         container-type: inline-size;
       }
       .cy-head {
@@ -321,18 +306,19 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         gap: 0.6rem;
       }
       .cy-icon {
-        width: 18px;
-        height: 18px;
+        width: 1.125rem;
+        height: 1.125rem;
         color: var(--cy-seal);
         flex: none;
       }
       .cy-title {
         margin: 0;
         flex: 1;
-        font-family: var(--font-heading, inherit);
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
       }
       .cy-lines {
@@ -340,7 +326,7 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         margin: 0;
         padding: 0;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
         gap: 0.9rem;
       }
       .cy-line {
@@ -357,7 +343,7 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
       @keyframes cy-rise {
         from {
           opacity: 0;
-          transform: translateY(10px);
+          transform: translateY(0.625rem);
         }
         to {
           opacity: 1;
@@ -388,18 +374,21 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         display: flex;
         align-items: baseline;
         gap: 0.4rem;
-        font-size: var(--boxel-font-size-xs);
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .cl-order {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-weight: 700;
       }
       .cl-entity {
         font-weight: 700;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .cl-role {
         text-transform: none;
@@ -410,29 +399,29 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         flex-direction: column;
         gap: 0.3rem;
         padding: 0.7rem 0.8rem;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 4px);
-        background: var(--background, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+        background-color: var(--background);
         min-height: 6.5rem;
       }
       .cy-line.is-signed .cl-card {
-        border-color: color-mix(
-          in oklch,
-          var(--boxel-success) 45%,
-          var(--border, var(--boxel-200))
-        );
+        border-color: color-mix(in oklch, var(--success) 45%, var(--border));
       }
       .cy-line.has-problem .cl-card {
         border-color: color-mix(
           in oklch,
-          var(--boxel-danger) 55%,
-          var(--border, var(--boxel-200))
+          var(--destructive) 55%,
+          var(--border)
         );
-        background: var(--cy-bad-bg);
+        background-color: color-mix(
+          in oklch,
+          var(--destructive) 8%,
+          var(--background)
+        );
       }
       .cl-signer {
+        font-family: var(--boxel-heading-font-family);
         margin: 0;
-        font-family: var(--font-heading, inherit);
         font-size: 1.05rem;
         line-height: 1.3;
       }
@@ -440,7 +429,7 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         font-weight: 600;
       }
       .cl-title {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .cl-auth {
         margin: 0;
@@ -449,21 +438,21 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         gap: 0.3rem;
         font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .cl-auth.ok {
-        color: var(--cy-ok-fg);
+        color: var(--success-ink);
       }
       .cl-auth.fail {
-        color: var(--cy-bad-fg);
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .cl-auth.external {
         font-style: italic;
       }
       .cl-mark {
-        width: 13px;
-        height: 13px;
+        width: 0.8125rem;
+        height: 0.8125rem;
         flex: none;
       }
       .cl-status {
@@ -472,64 +461,25 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         align-items: center;
         gap: 0.5rem;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
-      .cl-ref {
-        margin: 0;
-        font-family: var(--font-mono, ui-monospace, monospace);
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+      /* Doubled class so the flush margin outranks Token's own. A long
+         envelope id clips with an ellipsis; the title holds the full value. */
+      .cl-ref.cl-ref {
+        margin-inline: 0;
+        align-self: flex-start;
+        max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
       }
       .cl-problems {
         margin: 0.2rem 0 0;
         padding-left: 1rem;
         font-size: var(--boxel-font-size-xs);
-        color: var(--cy-bad-fg);
+        color: var(--destructive-ink);
         line-height: 1.45;
       }
-      .cy-foot {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        align-items: center;
-        gap: 0.2rem 0.7rem;
-        padding: 0.6rem 0.75rem;
-        border-radius: var(--boxel-border-radius-sm, 4px);
-        font-size: var(--boxel-font-size-sm);
-      }
-      .cy-foot.is-clean {
-        background: var(--cy-ok-bg);
-        color: var(--cy-ok-fg);
-      }
-      .cy-foot.is-blocked {
-        background: var(--cy-bad-bg);
-        color: var(--cy-bad-fg);
-      }
-      /* The seal: a ringed mark, the one ceremonial flourish on the strip. */
-      .cy-seal {
-        display: inline-grid;
-        place-items: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        border: 1.5px solid currentColor;
-        box-shadow:
-          inset 0 0 0 3px var(--card, var(--boxel-light)),
-          inset 0 0 0 4px currentColor;
-        flex: none;
-      }
-      .cy-mark {
-        width: 15px;
-        height: 15px;
-      }
-      .cy-verdict {
-        margin: 0;
-        font-weight: 600;
-      }
       .cy-global {
-        grid-column: 2;
         margin: 0;
         padding-left: 1rem;
         line-height: 1.45;

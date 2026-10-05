@@ -278,7 +278,6 @@ export class Proposal extends CardDef {
           margin: 0;
           font-size: 1.75rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .deal-chip {
           margin-top: 0.25rem;

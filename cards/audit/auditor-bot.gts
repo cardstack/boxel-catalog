@@ -16,6 +16,17 @@ import { RegimeMetadataField } from './regime-metadata-field';
 import { ValidationRuleField } from './validation-rule-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { parametersAreValid } from './utils/rule-evaluation';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { AuditFacts } from './audit-ui';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+
+// Each value renders in the `value` block, which picks the row by key.
+const FACTS = [
+  { key: 'Runs as', value: '' },
+  { key: 'Last run', value: '' },
+  { key: 'Subjects', value: '' },
+];
 
 /**
  * A configured evaluation: which rules, over which subjects, answerable to whom.
@@ -93,51 +104,43 @@ export class AuditorBot extends CardDef {
           </div>
         </header>
 
-        <section class='facts'>
-          <div class='fact'>
-            <span class='k'>Runs as</span>
-            <span class='v'>
+        <AuditFacts @items={{FACTS}}>
+          <:value as |item|>
+            {{#if (eq item.key 'Runs as')}}
               {{#if @model.runsAs}}
                 <@fields.runsAs @format='atom' />
               {{else}}
-                <span class='warn'>Nobody — an automated result still needs a
-                  name against it.</span>
+                <span>Nobody — an automated result still needs a name against
+                  it.</span>
               {{/if}}
-            </span>
-          </div>
-          <div class='fact'>
-            <span class='k'>Last run</span>
-            <span class='v'>
+            {{else if (eq item.key 'Last run')}}
               {{#if @model.lastRunAt}}
                 <@fields.lastRunAt />
               {{else}}
                 <span class='muted'>Never</span>
               {{/if}}
-            </span>
-          </div>
-          <div class='fact'>
-            <span class='k'>Subjects</span>
-            <span class='v'>
-              {{#if @model.subjectQuery}}
-                <code class='mono'>{{@model.subjectQuery}}</code>
-                {{#unless this.queryValid}}
-                  <StatePill @label='not valid JSON' @hue='red' />
-                {{/unless}}
-              {{else}}
-                <span class='muted'>No subject query — nothing would be
-                  evaluated.</span>
-              {{/if}}
-            </span>
-          </div>
-        </section>
+            {{else if @model.subjectQuery}}
+              <code class='mono'>{{@model.subjectQuery}}</code>
+              {{#unless this.queryValid}}
+                <StatePill @label='not valid JSON' @hue='red' />
+              {{/unless}}
+            {{else}}
+              <span class='muted'>No subject query — nothing would be evaluated.</span>
+            {{/if}}
+          </:value>
+        </AuditFacts>
 
         <section>
           <h2>Rules</h2>
           {{#if @model.rules.length}}
             <@fields.rules />
           {{else}}
-            <p class='muted'>No rules yet. A bot with no rules passes
-              everything, which is worse than no bot.</p>
+            <EmptyState
+              @title='No rules yet'
+              @message='A bot with no rules passes everything, which is worse than no bot.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
       </article>
@@ -147,7 +150,6 @@ export class AuditorBot extends CardDef {
           display: grid;
           gap: var(--boxel-sp-lg);
           max-width: 52rem;
-          color: var(--foreground, var(--boxel-dark));
         }
         header {
           display: grid;
@@ -155,24 +157,27 @@ export class AuditorBot extends CardDef {
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
           font-size: 1.5rem;
-          font-family: var(--font-heading, inherit);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.75rem;
-          font-weight: 700;
-          letter-spacing: 0.06em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .head-meta {
           display: flex;
@@ -183,27 +188,10 @@ export class AuditorBot extends CardDef {
         }
         .meta,
         .muted {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .warn {
-          color: var(--state-next-fg, var(--foreground, var(--boxel-dark)));
-        }
-        .facts {
-          display: grid;
-          gap: var(--boxel-sp-sm);
-        }
-        .fact {
-          display: grid;
-          grid-template-columns: 7rem minmax(0, 1fr);
-          gap: var(--boxel-sp-sm);
-          align-items: baseline;
-          font-size: 0.875rem;
-        }
-        .k {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.8125rem;
           overflow-wrap: anywhere;
         }
@@ -234,8 +222,8 @@ export class AuditorBot extends CardDef {
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
         .ic {
-          width: 18px;
-          height: 18px;
+          width: 1.125rem;
+          height: 1.125rem;
           flex: none;
         }
         .what {
@@ -251,7 +239,7 @@ export class AuditorBot extends CardDef {
         }
         .sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -310,7 +298,7 @@ export class AuditorBot extends CardDef {
         .fit-sub,
         .row {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -318,10 +306,10 @@ export class AuditorBot extends CardDef {
         .tier-tile {
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           margin-top: auto;
           padding-top: var(--boxel-sp-5xs);
-          border-top: 1px solid var(--border-subtle, var(--border, #f3f4f6));
+          border-top: 1px solid var(--border);
         }
         @container fitted-card (height <= 65px) {
           .fit {

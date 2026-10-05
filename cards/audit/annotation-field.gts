@@ -14,6 +14,8 @@ import MessageSquareQuoteIcon from '@cardstack/boxel-icons/message-square-quote'
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const ANNOTATION_KINDS = ['note', 'concern', 'question'] as const;
 
@@ -74,7 +76,7 @@ export class AnnotationField extends FieldDef {
       <div class='annotation'>
         <div class='head'>
           {{#if @model.anchor}}
-            <span class='anchor mono'>{{@model.anchor}}</span>
+            <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.anchor}}</Token>
           {{/if}}
           <StatePill @label={{@model.label}} @hue={{this.hue}} @dot={{true}} />
           {{#if @model.author}}
@@ -97,23 +99,15 @@ export class AnnotationField extends FieldDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
         }
-        .anchor {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-        }
         .who {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .text {
           margin: 0;
           font-size: 0.8125rem;
           line-height: 1.5;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -126,22 +120,15 @@ export class AnnotationField extends FieldDef {
     <template>
       <span class='atom'>
         <StatePill @label={{@model.label}} @hue={{this.hue}} />
-        {{#if @model.anchor}}<span
-            class='a mono'
-          >{{@model.anchor}}</span>{{/if}}
+        {{#if @model.anchor}}<Token
+            style={{ID_TOKEN_STYLE.xs}}
+          >{{@model.anchor}}</Token>{{/if}}
       </span>
       <style scoped>
         .atom {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-5xs);
-        }
-        .a {
-          font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
         }
       </style>
     </template>

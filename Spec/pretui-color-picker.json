@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/color-picker",
+        "name": "ColorPicker"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ColorPicker } from '@cardstack/pretui/components/color-picker';\n```\n",
+      "cardTitle": "ColorPicker",
+      "cardDescription": "Wrapped boxel-ui ColorPicker: native input + hex",
+      "containedExamples": [],
+      "componentName": "ColorPicker",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "ColorPicker",
+      "version": "0.4.0",
+      "brief": "Wrapped boxel-ui ColorPicker: native input + hex · runtime reuse",
+      "refs": "wa-color-picker · boxel-ui ColorPicker",
+      "buildsOn": "boxel-ui ColorPicker",
+      "icon": "pipette",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "ColorPicker",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/color-picker.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/color-picker.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -10,6 +10,7 @@ import enumField from '@cardstack/base/enum';
 import TrendingUpIcon from '@cardstack/boxel-icons/trending-up';
 
 import {
+  StatePill,
   stateColor,
   type Hue,
   type StateColor,
@@ -33,8 +34,12 @@ export const LEVEL_HUES: Record<string, Hue> = {
   exec: 'red',
 };
 
+export function levelHue(key?: string | null): Hue {
+  return LEVEL_HUES[key ?? 'L1'] ?? 'slate';
+}
+
 export function levelColor(key?: string | null): StateColor {
-  return stateColor(LEVEL_HUES[key ?? 'L1'] ?? 'slate');
+  return stateColor(levelHue(key));
 }
 
 export function levelRank(key?: string | null): number {
@@ -76,28 +81,15 @@ export class EscalationLevelField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get chipStyle() {
-      let c = levelColor(this.args.model.key);
-      return `--level-fg: ${c.fg}; --level-bg: ${c.bg};`;
+    get hue(): Hue {
+      return levelHue(this.args.model.key);
     }
     <template>
-      <span class='level' style={{this.chipStyle}}>
+      <StatePill @hue={{this.hue}}>
         <span class='level-key'>{{if @model.key @model.key 'L1'}}</span>
-        {{#if @model.label}}<span
-            class='level-label'
-          >{{@model.label}}</span>{{/if}}
-      </span>
+        {{#if @model.label}}<span>{{@model.label}}</span>{{/if}}
+      </StatePill>
       <style scoped>
-        .level {
-          display: inline-flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-4xs);
-          border-radius: var(--boxel-border-radius-sm);
-          padding: 0.125rem 0.5rem;
-          background-color: var(--level-bg);
-          color: var(--level-fg);
-          font-size: var(--boxel-font-size-xs);
-        }
         .level-key {
           font-family: var(--font-mono);
           font-weight: 600;

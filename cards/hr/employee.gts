@@ -29,7 +29,8 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import { normalizedDuration } from './duration-field';
 import { daysBetween } from './utils';
-import { AVATAR_HUE, FactList, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
+import { FactList, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const EMPLOYEE_STATUSES = ['onboarding', 'active', 'offboarded'];
 

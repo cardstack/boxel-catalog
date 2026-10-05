@@ -10,7 +10,7 @@ import Popover from '@cardstack/catalog/46f065-popover/popover';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
-import { ALERT_STYLE } from './service-desk-ui';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import {
   identifyCard,
   type Filter,

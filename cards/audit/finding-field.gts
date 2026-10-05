@@ -31,6 +31,8 @@ import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severit
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { closureGap } from './utils/finding-closure';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const FINDING_STATES = ['open', 'in-remediation', 'closed'] as const;
 
@@ -179,7 +181,7 @@ export class FindingField extends FieldDef {
       <div class='finding'>
         <div class='head'>
           {{#if @model.findingId}}
-            <span class='fid mono'>{{@model.findingId}}</span>
+            <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.findingId}}</Token>
           {{/if}}
           {{#if @model.severity.level}}
             <SeverityBadge @level={{@model.severity.level}} />
@@ -245,17 +247,10 @@ export class FindingField extends FieldDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
         }
-        .fid {
-          font-size: 0.8125rem;
-          font-weight: 700;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-        }
         .required {
           margin: 0;
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .observed {
           margin: 0;
@@ -267,7 +262,7 @@ export class FindingField extends FieldDef {
           flex-wrap: wrap;
           gap: var(--boxel-sp-sm);
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .acceptance {
           padding-top: var(--boxel-sp-5xs);
@@ -278,7 +273,7 @@ export class FindingField extends FieldDef {
           margin: 0;
           font-size: 0.8125rem;
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -290,18 +285,15 @@ export class FindingField extends FieldDef {
         {{#if @model.severity.level}}
           <SeverityBadge @level={{@model.severity.level}} @compact={{true}} />
         {{/if}}
-        <span class='mono'>{{@model.findingId}}</span>
+        {{#if @model.findingId}}
+          <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.findingId}}</Token>
+        {{/if}}
       </span>
       <style scoped>
         .atom {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-5xs);
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: 0.75rem;
-          font-weight: 700;
         }
       </style>
     </template>

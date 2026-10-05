@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/defer",
+        "name": "Defer"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Defer } from '@cardstack/pretui/components/defer';\n```\n",
+      "cardTitle": "Defer",
+      "cardDescription": "Render gate — hold a subtree until in-view, idle, intent or a flag; the placeholder reserves the final space",
+      "containedExamples": [],
+      "componentName": "Defer",
+      "category": "Motion & Effects",
+      "tier": "Primitive",
+      "tags": [
+        "async"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "motion",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Render gate — hold a subtree until in-view, idle, intent or a flag; the placeholder reserves the final space",
+      "refs": "boxel-catalog card-with-hydration",
+      "buildsOn": null,
+      "icon": "clock-pause",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "Defer",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/defer.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/defer.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

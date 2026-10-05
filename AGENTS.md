@@ -21,3 +21,7 @@ To change a file the manifest lists, or to add one:
 4. **Re-pin boxel after this repo merges.** In the boxel PR, run `pnpm --dir packages/catalog catalog:test-subset --bump`. If no boxel PR is paired with the change, open one that only bumps the pin. Until boxel bumps, its tests keep running against the old definition, and its next PR that touches the manifest fails its pin check.
 
 The full procedure, including how to test a change in this repo against boxel's tests before either side merges, is boxel's `catalog-test-subset` skill (`.claude/skills/catalog-test-subset/SKILL.md` in cardstack/boxel).
+
+## How a change reaches staging and production
+
+Staging syncs `main` on every merge. Production gets the catalog only from the **Deploy to production** workflow. Boxel's production deploy runs it with the catalog revision boxel pins, before and after its release, and anyone can run it by hand to ship `main` ahead of boxel. It refuses while a pull request it would deploy says `Merges after: cardstack/boxel#N` and production doesn't run #N yet. So when a change needs boxel code, declare that line even if no check requires it. The `catalog-deploy` skill (`.claude/skills/catalog-deploy/SKILL.md`) covers deploying and reading a refusal.

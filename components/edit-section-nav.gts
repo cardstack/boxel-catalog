@@ -64,48 +64,42 @@ export class EditSectionNav extends GlimmerComponent<Signature> {
         /* consumer knobs first, then the theme's inverted fg/bg pair —
            both halves of the chip come from ONE pair, so they can't
            come apart under any theme */
-        --nav-ink: var(
-          --edit-section-nav-ink,
-          var(--foreground, var(--boxel-dark))
-        );
-        --nav-ink-fg: var(
-          --edit-section-nav-ink-fg,
-          var(--background, var(--boxel-light))
-        );
-        --nav-muted: var(--muted-foreground, var(--boxel-450));
-        --nav-rail: var(--border, var(--boxel-200));
+        --nav-ink: var(--edit-section-nav-ink, var(--foreground));
+        --nav-ink-fg: var(--edit-section-nav-ink-fg, var(--background));
+        --nav-muted: var(--muted-foreground);
+        --nav-rail: var(--border);
         position: relative;
         display: flex;
         flex-direction: column;
-        gap: 2px;
-        padding-left: 2px;
+        gap: 0.125rem;
+        padding-left: 0.125rem;
       }
       /* the rail the stops sit on */
       .section-nav::before {
         content: '';
         position: absolute;
-        left: 13px;
-        top: 10px;
-        bottom: 10px;
+        left: 0.8125rem;
+        top: 0.625rem;
+        bottom: 0.625rem;
         width: 1px;
-        background: var(--nav-rail);
+        background-color: var(--nav-rail);
       }
       .stop {
         position: relative;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 0.625rem;
         border: none;
-        background: none;
+        background-color: transparent;
         font: inherit;
         text-align: left;
-        padding: 5px 8px 5px 0;
+        padding: 0.3125rem 0.5rem 0.3125rem 0;
         cursor: pointer;
-        border-radius: 6px;
+        border-radius: 0.375rem;
       }
       .stop-num {
-        width: 22px;
-        height: 22px;
+        width: 1.375rem;
+        height: 1.375rem;
         flex: 0 0 auto;
         display: grid;
         place-content: center;
@@ -113,7 +107,7 @@ export class EditSectionNav extends GlimmerComponent<Signature> {
         font-variant-numeric: tabular-nums;
         letter-spacing: 0.04em;
         color: var(--nav-muted);
-        background: var(--background, var(--boxel-light));
+        background-color: var(--background);
         border: 1px solid var(--nav-rail);
         border-radius: 999px;
         transition:
@@ -132,23 +126,23 @@ export class EditSectionNav extends GlimmerComponent<Signature> {
       }
       .stop:hover .stop-label,
       .stop:focus-visible .stop-label {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .stop:hover .stop-num {
         border-color: var(--nav-ink);
         color: var(--nav-ink);
       }
       .stop:focus-visible {
-        outline: 2px solid var(--nav-ink);
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--nav-ink);
+        outline-offset: 0.125rem;
       }
       /* the active stop: number inverts into a filled ink chip */
       .stop.active .stop-num {
-        background: var(--nav-ink);
+        background-color: var(--nav-ink);
         border-color: var(--nav-ink);
         color: var(--nav-ink-fg);
         transform: scale(1.12);
-        box-shadow: 0 2px 8px -3px
+        box-shadow: 0 0.125rem 0.5rem -0.1875rem
           color-mix(in oklch, var(--nav-ink) 60%, transparent);
       }
       .stop.active .stop-label {

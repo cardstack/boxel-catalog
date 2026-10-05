@@ -1,6 +1,5 @@
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { htmlSafe } from '@ember/template';
-import { modifier } from 'ember-modifier';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import {
@@ -11,8 +10,13 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { MONEY_LOCALE, MONEY_OPTIONS } from './utils';
 
 // The Pret UI settings the HR cards share, kept in one module so every card
-// that shows a command error, an avatar, a money figure, a code token or an
-// attention pill renders it the same way.
+// that shows a muted avatar, a money figure, a fact list or an attention pill
+// renders it the same way. The settings every cluster shares live in
+// `components/pretui-helpers`.
+
+// The shared Avatar hue, re-exported for the HR cards that read it beside
+// this module's settings.
+export { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 
 /** A value's hue in one of the cards' `value → Hue` maps; unknown or empty values get StatePill's slate. */
 export function hueOf(
@@ -22,67 +26,8 @@ export function hueOf(
   return (key && map[key]) || undefined;
 }
 
-// Pret UI `Alert` paints its tone from the fill tokens, whose text mixes fall
-// under 4.5:1 on some grounds. Alert writes its hue as an inline style, so the
-// override is inline too: the hue is the tone's `--*-ink` token, the tint is
-// 10%, the glyph disc's mark is the card colour, and the body text is the ink.
-function alertStyle(ink: string) {
-  return htmlSafe(
-    `--pretui-alert-hue: var(${ink}); --pretui-chip-mix: 10%; --pretui-on-neutral: var(--card); color: var(${ink})`,
-  );
-}
-
-export const ALERT_STYLE = {
-  danger: alertStyle('--destructive-ink'),
-  success: alertStyle('--success-ink'),
-};
-
-/**
- * The hue for Pret UI `Avatar`. Avatar tints its disc 16% of the hue and sets
- * its initials at 80% of it, so a fill token as the hue leaves pale initials
- * on a pale disc. `--primary-ink` keeps the primary identity the initials had
- * and clears 4.5:1 in both schemes.
- */
-export const AVATAR_HUE = 'var(--primary-ink)';
-
 /** The Avatar hue for a secondary row, where the initials read as muted text. */
 export const QUIET_AVATAR_HUE = 'var(--muted-foreground)';
-
-/**
- * Pret UI's `ProgressBar` renders its `role='progressbar'` element with no
- * accessible name and no minimum, so this names it and states the 0 floor.
- * The optional value text replaces the bare "N of M" a screen reader would
- * otherwise announce, for a bar whose count alone would mislead (a run that
- * ended early fills every segment).
- */
-export const nameProgress = modifier(
-  (element: HTMLElement, [label, valueText]: [string, string?]) => {
-    let bar = element.querySelector('[role="progressbar"]');
-    bar?.setAttribute('aria-label', label);
-    bar?.setAttribute('aria-valuemin', '0');
-    if (valueText) {
-      bar?.setAttribute('aria-valuetext', valueText);
-    } else {
-      bar?.removeAttribute('aria-valuetext');
-    }
-  },
-);
-
-// Pret UI `Token` sets its text at `--text-body` minus this offset, so a
-// Token that should read at a given size takes that size plus the offset.
-const TOKEN_TEXT_OFFSET = '3.5px';
-
-/**
- * Inline style for a Pret UI `Token` drawn in `hue` with its text at `size`
- * (a font-size custom property such as `--boxel-font-size-xs`). Token writes
- * `@hue` as its own inline style, which a caller's `style` would replace, so
- * the hue travels in this style instead of through `@hue`.
- */
-export function tokenStyle(size: string, hue: string) {
-  return htmlSafe(
-    `--pretui-token-hue: ${hue}; --text-body: calc(var(${size}) + ${TOKEN_TEXT_OFFSET})`,
-  );
-}
 
 // The attention pill: a waiting application, an ageing requisition, a
 // bottlenecked approval step. `--attention` reads as "needs a look" where

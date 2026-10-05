@@ -9,9 +9,11 @@ import {
 import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
 import { htmlSafe } from '@ember/template';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 
 import { ScorecardCriterionField } from '@cardstack/catalog/cards/hr/scorecard-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { nameProgress } from '@cardstack/catalog/components/pretui-helpers';
 import {
   stateColor,
   stateColorOf,
@@ -222,9 +224,11 @@ export class RiskRatingField extends FieldDef {
       return gradeHue(this.args.model?.grade);
     }
 
+    // ProgressBar fills from `--primary` and has no fill knob of its own, so
+    // the wrapper re-scopes it to the grade's ink, the colour the score is
+    // printed in. The raw hue (amber above all) washes out on the track.
     get barStyle() {
-      let pct = this.args.model?.score ?? 0;
-      return htmlSafe(`width: ${pct}%; background: ${this.color.ring};`);
+      return htmlSafe(`--primary: ${this.color.fg}`);
     }
 
     get headStyle() {
@@ -245,16 +249,11 @@ export class RiskRatingField extends FieldDef {
         </header>
 
         {{#if @model.score}}
-          <div
-            class='risk-track'
-            role='progressbar'
-            aria-valuenow={{@model.score}}
-            aria-valuemin='0'
-            aria-valuemax='100'
-            aria-label='Composite risk score'
-          >
-            <span class='risk-fill' style={{this.barStyle}}></span>
-          </div>
+          <ProgressBar
+            @value={{@model.score}}
+            style={{this.barStyle}}
+            {{nameProgress 'Composite risk score'}}
+          />
         {{/if}}
 
         {{#if @model.criteria.length}}
@@ -288,38 +287,23 @@ export class RiskRatingField extends FieldDef {
         .risk-of {
           font-weight: 400;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .risk-none {
           margin-left: auto;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .risk-track {
-          height: 8px;
-          border-radius: 3px;
-          background: color-mix(
-            in oklch,
-            var(--foreground, var(--boxel-dark)) 8%,
-            transparent
-          );
-          overflow: hidden;
-        }
-        .risk-track > .risk-fill {
-          display: block;
-          height: 100%;
-          border-radius: 3px;
+          color: var(--muted-foreground);
         }
         .risk-factors {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .risk-notes {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

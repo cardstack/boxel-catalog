@@ -4,6 +4,9 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { eq, gt } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/pretui/components/button';
+import { ButtonGroup } from '@cardstack/pretui/components/button-group';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
 
 import {
   monthGrid,
@@ -161,7 +164,7 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
 
   chipStyle = (event: CalendarEvent) => {
     let color = stateColorOf(this.args.kindColors ?? {}, event.kind);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
+    return htmlSafe(`background-color: ${color.bg}; color: ${color.fg};`);
   };
 
   get isDraggable(): string {
@@ -300,19 +303,23 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
     <div class='calendar' ...attributes>
       <header class='calendar-toolbar'>
         <h3 class='calendar-title'>{{this.monthTitle}}</h3>
-        <div class='calendar-nav'>
-          <button
-            type='button'
-            aria-label='Previous month'
+        <ButtonGroup @label='Change month' @size='s'>
+          <IconButton
+            @label='Previous month'
+            @size='s'
             {{on 'click' (fn this.shiftMonth -1)}}
-          >‹</button>
-          <button type='button' {{on 'click' this.goToday}}>Today</button>
-          <button
-            type='button'
-            aria-label='Next month'
+          >‹</IconButton>
+          <Button
+            @variant='secondary'
+            @size='s'
+            {{on 'click' this.goToday}}
+          >Today</Button>
+          <IconButton
+            @label='Next month'
+            @size='s'
             {{on 'click' (fn this.shiftMonth 1)}}
-          >›</button>
-        </div>
+          >›</IconButton>
+        </ButtonGroup>
       </header>
       <table class='calendar-grid {{if this.isTransitioning "fading"}}'>
         <thead>
@@ -340,13 +347,15 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
                   <div class='day-head'>
                     <span class='day-number'>{{day.dayNumber}}</span>
                     {{#if @onAddEvent}}
-                      <button
-                        type='button'
+                      <Button
+                        @variant='ghost'
+                        @size='xs'
+                        @busy={{this.isAdding day}}
                         class='add-meeting'
                         aria-label='Add event'
                         title='Add event'
                         {{on 'click' (fn this.addEventOn day)}}
-                      >+</button>
+                      >+</Button>
                     {{/if}}
                   </div>
                   <div class='day-events'>
@@ -421,13 +430,12 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
            still clears 4.5:1 for the palest hues boxel ships. */
         --cal-brand-text: color-mix(
           in oklch,
-          var(--primary, var(--boxel-highlight)) 38%,
-          var(--foreground, var(--boxel-dark))
+          var(--primary) 38%,
+          var(--foreground)
         );
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
-        border: 1px solid var(--border, var(--boxel-200));
+        background-color: var(--background);
+        color: var(--foreground);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
       }
@@ -436,28 +444,11 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
         align-items: center;
         justify-content: space-between;
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .calendar-title {
         margin: 0;
         font-size: var(--boxel-font-size);
-      }
-      .calendar-nav {
-        display: flex;
-        gap: var(--boxel-sp-4xs);
-      }
-      .calendar-nav button {
-        border: 1px solid var(--border, var(--boxel-200));
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        border-radius: var(--boxel-border-radius-sm);
-        padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-        cursor: pointer;
-        font-size: var(--boxel-font-size-sm);
-        transition: background-color 0.15s ease-out;
-      }
-      .calendar-nav button:hover {
-        background: var(--muted, var(--boxel-100));
       }
       .calendar-grid {
         width: 100%;
@@ -480,31 +471,32 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
         font-size: var(--boxel-font-size-xs);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         padding: var(--boxel-sp-4xs);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .day {
         vertical-align: top;
         height: 5.75rem;
         padding: var(--boxel-sp-5xs);
-        border: 1px solid var(--border, var(--boxel-100));
+        border: 1px solid var(--border);
         transition: background-color 0.15s ease-out;
       }
       .day:hover {
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
       }
-      .day:hover .add-meeting {
+      .day:hover .add-meeting,
+      .add-meeting:focus-visible,
+      .add-meeting[aria-busy='true'] {
         opacity: 1;
       }
       .day.drag-over {
-        background: color-mix(
+        background-color: color-mix(
           in oklch,
-          var(--primary, var(--boxel-highlight)) 12%,
-          var(--background, var(--boxel-light))
+          var(--primary) 12%,
+          var(--background)
         );
-        box-shadow: inset 0 0 0 0.09375rem
-          var(--primary, var(--boxel-highlight));
+        box-shadow: inset 0 0 0 0.09375rem var(--primary);
       }
       .day-head {
         display: flex;
@@ -516,55 +508,27 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
       }
+      /* A square ghost Button at the minimum target size. It stays in the
+         layout while hidden, so revealing it on hover never reflows the
+         cell; its busy spinner marks the day being created. */
       .add-meeting {
-        border: none;
-        background: none;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1;
-        padding: 0 var(--boxel-sp-5xs);
-        cursor: pointer;
+        --pretui-button-h: 1.5rem;
+        --pretui-button-px: 0;
+        width: var(--pretui-button-h);
+        color: var(--muted-foreground);
         opacity: 0;
-        transition:
-          opacity 0.15s ease-out,
-          color 0.15s ease-out;
+        transition: opacity 0.15s ease-out;
       }
       .add-meeting:hover {
         color: var(--cal-brand-text);
       }
-      /* Spinner rather than a text swap: the + occupies a fixed 1rem box, so
-         swapping in a glyph would jitter the day cell. */
-      .spinner {
-        display: block;
-        width: 0.7rem;
-        height: 0.7rem;
-        border-radius: 50%;
-        border: 2px solid currentColor;
-        border-top-color: transparent;
-        animation: cal-spin 0.6s linear infinite;
-      }
-      @keyframes cal-spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .add-meeting.is-adding {
-        opacity: 1;
-        cursor: progress;
-      }
-      .add-meeting:disabled {
-        pointer-events: none;
-      }
       @media (prefers-reduced-motion: reduce) {
-        .spinner {
-          animation-duration: 2s;
-        }
         .add-meeting {
           transition: none;
         }
       }
       .out-month .day-number {
-        color: var(--muted-foreground, var(--boxel-300));
+        color: var(--muted-foreground);
         font-weight: 400;
       }
       .today {
@@ -572,18 +536,18 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
            cannot drift apart and the ring stays visible: a raw --primary ring
            computes 1.31:1 against a light cell, which fails even the 3:1 floor
            for a non-text mark that carries meaning. */
-        background: color-mix(
+        background-color: color-mix(
           in oklch,
           var(--cal-brand-text) 10%,
-          var(--background, var(--boxel-light))
+          var(--background)
         );
         box-shadow: inset 0 0 0 0.09375rem var(--cal-brand-text);
       }
       .today:hover {
-        background: color-mix(
+        background-color: color-mix(
           in oklch,
-          var(--primary, var(--boxel-highlight)) 14%,
-          var(--background, var(--boxel-light))
+          var(--primary) 14%,
+          var(--background)
         );
       }
       .today .day-number {
@@ -627,55 +591,43 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
         left: 0;
         right: 0;
         bottom: 100%;
-        height: 2px;
-        border-radius: 2px;
-        background: var(--primary, var(--boxel-highlight));
+        height: 0.125rem;
+        border-radius: 0.125rem;
+        background-color: var(--primary);
       }
       /* projected / disabled / density */
       .projected-chip {
-        background: transparent !important;
+        background-color: transparent !important;
         border: 1px dashed currentColor;
         opacity: 0.75;
         cursor: default;
       }
       .disabled-day {
-        background: repeating-linear-gradient(
+        background-image: repeating-linear-gradient(
           -45deg,
-          transparent 0 6px,
-          var(--muted, var(--boxel-100)) 6px 7px
+          transparent 0 0.375rem,
+          var(--muted) 0.375rem 0.4375rem
         );
       }
       .disabled-day .day-number {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .density-1 {
         box-shadow: inset 0 0 0 999px
-          color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 6%,
-            transparent
-          );
+          color-mix(in oklab, var(--primary) 6%, transparent);
       }
       .density-2 {
         box-shadow: inset 0 0 0 999px
-          color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 12%,
-            transparent
-          );
+          color-mix(in oklab, var(--primary) 12%, transparent);
       }
       .density-3 {
         box-shadow: inset 0 0 0 999px
-          color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 20%,
-            transparent
-          );
+          color-mix(in oklab, var(--primary) 20%, transparent);
       }
       .overflow {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-        background: none;
+        color: var(--muted-foreground);
+        background-color: transparent;
         border: none;
         padding: 0;
         text-align: left;

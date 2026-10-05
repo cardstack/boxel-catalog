@@ -12,15 +12,13 @@ import MarkdownField from 'https://cardstack.com/base/markdown';
 import enumField from 'https://cardstack.com/base/enum';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import GlimmerComponent from '@glimmer/component';
-import {
-  FormatDate,
-  type FormatDateSignature,
-} from '@cardstack/pretui/components/format-date';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 import { htmlSafe } from '@ember/template';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import { DurationField } from './duration-field';
@@ -35,6 +33,7 @@ import {
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { UnsetMarker } from '@cardstack/catalog/components/unset-marker';
 import { liveCount } from './utils';
 import { AVATAR_HUE, hueOf } from './hr-ui';
 
@@ -79,21 +78,35 @@ export const MeetingTypeField = enumField(StringField, {
   displayName: 'Meeting Type',
 });
 
+// A meeting's date as a Date, or undefined when it is unset or unparseable,
+// so every render site gates on the same check.
+function parseMeetingDate(
+  value: Date | string | null | undefined,
+): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+  let date = new Date(value);
+  return isNaN(date.getTime()) ? undefined : date;
+}
+
 // The clock time a meeting starts at, as the header and the tile show it
-// ("9:30 AM"). en-US like the date tile beside it.
+// ("9:30 AM"). en-US like the date tile beside it. Renders nothing when the
+// meeting has no date.
 class MeetingTime extends GlimmerComponent<{
-  Args: { date?: FormatDateSignature['Args']['date'] };
+  Args: { date?: Date };
   Element: HTMLTimeElement;
 }> {
   <template>
-    <FormatDate
-      @date={{@date}}
-      @locale='en-US'
-      @hour='numeric'
-      @minute='2-digit'
-      @placeholder='—'
-      ...attributes
-    />
+    {{#if @date}}
+      <FormatDate
+        @date={{@date}}
+        @locale='en-US'
+        @hour='numeric'
+        @minute='2-digit'
+        ...attributes
+      />
+    {{/if}}
   </template>
 }
 
@@ -183,12 +196,17 @@ export class Meeting extends CardDef {
     }
 
     get dateObj(): Date | undefined {
-      let value = this.args.model?.date;
-      if (!value) {
-        return undefined;
-      }
-      let date = new Date(value);
-      return isNaN(date.getTime()) ? undefined : date;
+      return parseMeetingDate(this.args.model?.date);
+    }
+
+    // The byline shows only the parts that are set, with the dot only
+    // between two shown parts.
+    get hasByline(): boolean {
+      return Boolean(this.dateObj || this.args.model?.duration?.label);
+    }
+
+    get durationNeedsSeparator(): boolean {
+      return this.dateObj !== undefined;
     }
 
     // Derived: the meeting is over and nobody recorded a score. This is the
@@ -248,37 +266,42 @@ export class Meeting extends CardDef {
           {{! A meeting's first question is always "when", so the date gets a
               block of its own rather than a line in the subtitle. }}
           <div class='datebox'>
-            <FormatDate
-              class='db-month'
-              @date={{@model.date}}
-              @locale='en-US'
-              @month='short'
-              @placeholder=''
-            />
-            <FormatDate
-              class='db-day'
-              @date={{@model.date}}
-              @locale='en-US'
-              @day='numeric'
-              @placeholder='–'
-            />
-            <FormatDate
-              class='db-weekday'
-              @date={{@model.date}}
-              @locale='en-US'
-              @weekday='short'
-              @placeholder=''
-            />
+            {{#if this.dateObj}}
+              <FormatDate
+                class='db-month'
+                @date={{@model.date}}
+                @locale='en-US'
+                @month='short'
+              />
+              <FormatDate
+                class='db-day'
+                @date={{@model.date}}
+                @locale='en-US'
+                @day='numeric'
+              />
+              <FormatDate
+                class='db-weekday'
+                @date={{@model.date}}
+                @locale='en-US'
+                @weekday='short'
+              />
+            {{else}}
+              <UnsetMarker class='db-day' @label='No date' />
+            {{/if}}
           </div>
           <div class='hero-text'>
             <h1>{{@model.title}}</h1>
-            <p class='byline'>
-              <MeetingTime @date={{@model.date}} />
-              {{#if @model.duration.label}}
-                <span class='sep-dot'>&middot;</span>
-                {{@model.duration.label}}
-              {{/if}}
-            </p>
+            {{#if this.hasByline}}
+              <p class='byline'>
+                <MeetingTime @date={{this.dateObj}} />
+                {{#if @model.duration.label}}
+                  {{#if this.durationNeedsSeparator}}
+                    <span class='sep-dot'>&middot;</span>
+                  {{/if}}
+                  {{@model.duration.label}}
+                {{/if}}
+              </p>
+            {{/if}}
             <div class='pill-row'>
               <StatePill
                 @label={{@model.meetingType}}
@@ -709,12 +732,7 @@ export class Meeting extends CardDef {
     }
 
     get dateObj(): Date | undefined {
-      let value = this.args.model?.date;
-      if (!value) {
-        return undefined;
-      }
-      let d = new Date(value);
-      return isNaN(d.getTime()) ? undefined : d;
+      return parseMeetingDate(this.args.model?.date);
     }
 
     // Same derivation as isolated: over and unscored means we owe an action.
@@ -734,40 +752,68 @@ export class Meeting extends CardDef {
       return this.scoreState === 'awaiting' ? 'Unscored' : 'Upcoming';
     }
 
+    // The tier-2 line: type and duration, whichever are set. An unset
+    // duration is still a DurationField whose label is the '—' placeholder,
+    // so the duration counts only when it has a value.
+    get eyebrow(): string | undefined {
+      let duration = this.args.model?.duration;
+      let parts = [
+        this.args.model?.meetingType,
+        duration?.value != null ? duration.label : undefined,
+      ].filter(Boolean);
+      return parts.length ? parts.join(' · ') : undefined;
+    }
+
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          <div class='datebox' aria-hidden='true'>
-            <FormatDate
-              class='db-month'
-              @date={{@model.date}}
-              @locale='en-US'
-              @month='short'
-              @placeholder=''
-            />
-            <FormatDate
-              class='db-day'
-              @date={{@model.date}}
-              @locale='en-US'
-              @day='numeric'
-              @placeholder='–'
-            />
-            <FormatDate
-              class='db-weekday'
-              @date={{@model.date}}
-              @locale='en-US'
-              @weekday='short'
-              @placeholder=''
-            />
+          {{! The weekday and the time line come and go with the card's size,
+              so the tile's parts and the time line are all hidden from
+              assistive tech. One visually hidden date and time after the
+              title stands in for them at every tier. }}
+          <div class='datebox'>
+            {{#if this.dateObj}}
+              <FormatDate
+                class='db-month'
+                @date={{@model.date}}
+                @locale='en-US'
+                @month='short'
+                aria-hidden='true'
+              />
+              <FormatDate
+                class='db-day'
+                @date={{@model.date}}
+                @locale='en-US'
+                @day='numeric'
+                aria-hidden='true'
+              />
+              <FormatDate
+                class='db-weekday'
+                @date={{@model.date}}
+                @locale='en-US'
+                @weekday='short'
+                aria-hidden='true'
+              />
+            {{else}}
+              <UnsetMarker class='db-day' @label='No date' />
+            {{/if}}
           </div>
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
-            {{#if @model.meetingType}}
-              <span class='fit-eb'>{{@model.meetingType}}{{#if
-                  @model.duration.label
-                }}
-                  &middot;
-                  {{@model.duration.label}}{{/if}}</span>
+            {{#if this.dateObj}}
+              <VisuallyHidden><FormatDate
+                  @date={{@model.date}}
+                  @locale='en-US'
+                  @weekday='long'
+                  @month='long'
+                  @day='numeric'
+                  @year='numeric'
+                  @hour='numeric'
+                  @minute='2-digit'
+                /></VisuallyHidden>
+            {{/if}}
+            {{#if this.eyebrow}}
+              <span class='fit-eb'>{{this.eyebrow}}</span>
             {{/if}}
           </div>
           {{! Score state survives to the smallest tier — it is the only
@@ -781,7 +827,11 @@ export class Meeting extends CardDef {
         </div>
 
         <div class='fit-mid'>
-          <MeetingTime class='fit-time' @date={{@model.date}} />
+          <MeetingTime
+            class='fit-time'
+            @date={{this.dateObj}}
+            aria-hidden='true'
+          />
           {{#if @model.candidateName}}
             <span class='fit-who'>{{@model.candidateName}}</span>
           {{/if}}

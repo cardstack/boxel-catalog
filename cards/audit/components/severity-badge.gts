@@ -1,5 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
-import { Pill } from '@cardstack/boxel-ui/components';
+import { htmlSafe } from '@ember/template';
+import { Chip } from '@cardstack/pretui/components/chip';
 
 import { stateColor } from '@cardstack/catalog/components/state-pill';
 import {
@@ -22,6 +23,11 @@ interface Signature {
 // Severity is read from across a room, so it is the one place an audit view
 // spends saturated colour — and the three-segment meter carries the rank
 // on its own, so the badge still reads when colour does not.
+//
+// The chrome is Pret UI's `Chip`, set to StatePill's checked recipe (14% fill,
+// 62% foreground ink). Critical is a solid `--destructive-ink` fill with card
+// text: the theme's destructive / destructive-foreground pair measures under
+// 3:1, and the darker ink clears 4.5:1 in both schemes.
 export class SeverityBadge extends GlimmerComponent<Signature> {
   get level() {
     return this.args.level ?? '';
@@ -38,19 +44,16 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
   get segments() {
     return [1, 2, 3].map((n) => n <= this.rank);
   }
-  get colors() {
-    return stateColor(SEVERITY_HUE[this.level] ?? 'slate');
-  }
-  get pillArgs() {
-    let { bg, fg, ring } = this.colors;
+  get chipStyle() {
     if (this.level === 'critical') {
-      return {
-        background: ring,
-        font: 'var(--background, var(--boxel-light))',
-        border: ring,
-      };
+      return htmlSafe(
+        '--pretui-chip-hue: var(--destructive-ink); --pretui-chip-mix: 100%; color: var(--card); box-shadow: none',
+      );
     }
-    return { background: bg, font: fg, border: bg };
+    let hue = stateColor(SEVERITY_HUE[this.level] ?? 'slate').ring;
+    return htmlSafe(
+      `--pretui-chip-hue: ${hue}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%`,
+    );
   }
   get title() {
     let base = `Severity: ${this.label}`;
@@ -59,55 +62,46 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
 
   <template>
     {{#if this.known}}
-      <Pill
+      <Chip
         class='severity-badge {{if @compact "compact"}}'
-        @pillBackgroundColor={{this.pillArgs.background}}
-        @pillFontColor={{this.pillArgs.font}}
-        @pillBorderColor={{this.pillArgs.border}}
+        @dot={{false}}
+        style={{this.chipStyle}}
         title={{this.title}}
         ...attributes
       >
-        <:default>
-          <span class='meter' aria-hidden='true'>
-            {{#each this.segments as |on|}}
-              <i class='seg {{if on "on"}}'></i>
-            {{/each}}
-          </span>
-          {{#unless @compact}}
-            <span class='label'>{{this.label}}</span>
-          {{/unless}}
-          {{#if @count}}
-            <span class='count'>{{@count}}</span>
-          {{/if}}
-        </:default>
-      </Pill>
+        <span class='meter' aria-hidden='true'>
+          {{#each this.segments as |on|}}
+            <i class='seg {{if on "on"}}'></i>
+          {{/each}}
+        </span>
+        {{! compact hides the word, not its meaning: the meter is decorative }}
+        <span class={{if @compact 'boxel-sr-only'}}>{{this.label}}</span>
+        {{#if @count}}
+          <span class='count'>{{@count}}</span>
+        {{/if}}
+      </Chip>
     {{/if}}
 
     <style scoped>
       .severity-badge {
-        --boxel-pill-gap: 0.35rem;
-        --boxel-pill-padding: 0.1em 0.5em;
-        --boxel-pill-border-radius: 3px;
-        --boxel-pill-font: 700 var(--boxel-font-size-xs) / 1.45
-          var(--font-sans, var(--boxel-font-family));
-        --boxel-lsp-xs: 0.02em;
+        font-weight: 700;
         text-transform: uppercase;
-        white-space: nowrap;
+        letter-spacing: 0.02em;
       }
       .compact {
-        --boxel-pill-padding: 0.1em 0.4em;
+        padding-inline: 0.4em;
       }
       .meter {
         display: inline-flex;
-        gap: 2px;
+        gap: 0.125rem;
         align-items: center;
       }
       .seg {
         display: inline-block;
-        width: 4px;
-        height: 9px;
+        width: 0.25rem;
+        height: 0.5625rem;
         border-radius: 1px;
-        background: currentColor;
+        background-color: currentColor;
         opacity: 0.28;
       }
       .seg.on {

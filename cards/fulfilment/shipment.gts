@@ -13,7 +13,11 @@ import BooleanField from 'https://cardstack.com/base/boolean';
 import DatetimeField from 'https://cardstack.com/base/datetime';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import { htmlSafe } from '@ember/template';
-import { ALERT_STYLE, Money } from './fulfilment-ui';
+import { Money } from './fulfilment-ui';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
@@ -540,7 +544,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
             <@fields.lineItems @format='embedded' />
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @texture={{false}}
               @title='No contents recorded on this shipment'
             />
@@ -843,13 +847,6 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .muted {
         color: var(--muted-foreground);
-      }
-      /* Pret UI EmptyState, compact: no texture, 1rem padding, and the title
-         at the body size. */
-      .empty {
-        --space-9: 1rem;
-        --space-6: 1rem;
-        --text-heading: var(--boxel-font-size);
       }
 
       /* Section icons: one size, one muted colour, everywhere. They make the

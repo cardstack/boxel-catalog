@@ -39,7 +39,10 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { AVATAR_HUE } from './components/service-desk-ui';
+import {
+  COMPACT_EMPTY_STYLE,
+  AVATAR_HUE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 export const CUSTOMER_TIERS = ['VIP', 'Standard', 'Trial'] as const;
 
@@ -157,7 +160,7 @@ export class SupportContact extends PersonBase {
             />
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @title='No tickets yet'
               @message='When they write in, everything they have asked before will be here — which is the difference between support and a stranger asking you to explain it again.'
               @texture={{false}}
@@ -233,13 +236,6 @@ export class SupportContact extends PersonBase {
           height: max(0.875rem, 1em);
           flex: 0 0 auto;
           color: var(--muted-foreground);
-        }
-        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
-           compact well. */
-        .empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
         }
       </style>
     </template>

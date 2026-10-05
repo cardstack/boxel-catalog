@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/autocomplete",
+        "name": "Autocomplete"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Autocomplete } from '@cardstack/pretui/components/autocomplete';\n```\n",
+      "cardTitle": "Autocomplete",
+      "cardDescription": "Suggest-as-you-type over a list; value may be free text",
+      "containedExamples": [],
+      "componentName": "Autocomplete",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Suggest-as-you-type over a list; value may be free text · Combobox's looser sibling",
+      "refs": "Mantine Autocomplete · MUI Autocomplete · Ant AutoComplete · Base UI Autocomplete · React Aria Autocomplete",
+      "buildsOn": null,
+      "icon": "search-check",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Autocomplete",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/autocomplete.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/autocomplete.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

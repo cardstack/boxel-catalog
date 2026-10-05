@@ -12,13 +12,13 @@ import DateTimeField from 'https://cardstack.com/base/datetime';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/boxel-ui/components';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Token } from '@cardstack/pretui/components/token';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { Contact } from '@cardstack/catalog/cards/crm/contact';
 import { Money } from '@cardstack/catalog/cards/crm/money';
@@ -58,15 +58,6 @@ export const BookingPaymentStatusField = statusField({
     Refunded: [],
   },
 });
-
-// Pret UI Alert's danger tone, pointed at the destructive ink: the ink is
-// the hue, so the glyph disc and the text share one token and the glyph takes
-// the card as its foreground. Body 7.99:1 light / 4.71:1 dark on the 10% tint,
-// glyph 9.56:1 / 5.65:1. Alert sets its hue inline, so the override is inline
-// too; every value is a token, never caller data.
-const PROBLEM_STYLE = htmlSafe(
-  '--pretui-alert-hue: var(--destructive-ink); --pretui-chip-mix: 10%; --pretui-on-neutral: var(--card); color: var(--destructive-ink)',
-);
 
 function placesOf(quantity?: number | null): string {
   let q = quantity ?? 1;
@@ -147,8 +138,6 @@ class BookingIsolated extends Component<typeof Booking> {
     void this.runCommand('check-in');
   };
 
-  problemStyle = PROBLEM_STYLE;
-
   <template>
     <article class='bk-page'>
       <header class='bh'>
@@ -211,7 +200,7 @@ class BookingIsolated extends Component<typeof Booking> {
           />
         {{/if}}
         {{#if this.actionProblem}}
-          <Alert class='problem' @tone='danger' style={{this.problemStyle}}>
+          <Alert class='problem' @tone='danger' style={{ALERT_STYLE.danger}}>
             {{this.actionProblem}}
           </Alert>
         {{/if}}

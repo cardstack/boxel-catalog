@@ -21,7 +21,7 @@
       },
       "defaultModelConfiguration": {
         "links": {
-          "self": "../ModelConfiguration/anthropic-claude-sonnet-46"
+          "self": "../ModelConfiguration/openai-gpt-6-luna"
         }
       },
       "modelConfigurations.0": {
@@ -51,50 +51,55 @@
       },
       "modelConfigurations.5": {
         "links": {
-          "self": "../ModelConfiguration/openai-gpt-56-sol"
+          "self": "../ModelConfiguration/openai-gpt-6-luna"
         }
       },
       "modelConfigurations.6": {
         "links": {
-          "self": "../ModelConfiguration/openai-gpt-56-terra"
+          "self": "../ModelConfiguration/openai-gpt-56-sol"
         }
       },
       "modelConfigurations.7": {
         "links": {
-          "self": "../ModelConfiguration/openai-gpt-56-luna"
+          "self": "../ModelConfiguration/openai-gpt-56-terra"
         }
       },
       "modelConfigurations.8": {
         "links": {
-          "self": "../ModelConfiguration/openai-gpt-55"
+          "self": "../ModelConfiguration/openai-gpt-56-luna"
         }
       },
       "modelConfigurations.9": {
         "links": {
-          "self": "../ModelConfiguration/google-gemini-31-pro"
+          "self": "../ModelConfiguration/openai-gpt-55"
         }
       },
       "modelConfigurations.10": {
         "links": {
-          "self": "../ModelConfiguration/google-gemini-35-flash"
+          "self": "../ModelConfiguration/google-gemini-31-pro"
         }
       },
       "modelConfigurations.11": {
         "links": {
-          "self": "../ModelConfiguration/x-ai-grok-47"
+          "self": "../ModelConfiguration/google-gemini-35-flash"
         }
       },
       "modelConfigurations.12": {
         "links": {
-          "self": "../ModelConfiguration/x-ai-grok-46"
+          "self": "../ModelConfiguration/x-ai-grok-47"
         }
       },
       "modelConfigurations.13": {
         "links": {
-          "self": "../ModelConfiguration/deepseek-deepseek-v4-pro"
+          "self": "../ModelConfiguration/x-ai-grok-46"
         }
       },
       "modelConfigurations.14": {
+        "links": {
+          "self": "../ModelConfiguration/deepseek-deepseek-v4-pro"
+        }
+      },
+      "modelConfigurations.15": {
         "links": {
           "self": "../ModelConfiguration/moonshotai-kimi-k2-7-code"
         }

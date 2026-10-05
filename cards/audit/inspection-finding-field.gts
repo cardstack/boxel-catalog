@@ -18,6 +18,8 @@ import {
 import { ProofField } from './proof-field';
 import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * A finding raised in the physical world: on a site, at an asset, by a person
@@ -58,7 +60,7 @@ export class InspectionFindingField extends FindingField {
       <div class='finding'>
         <div class='head'>
           {{#if @model.findingId}}
-            <span class='fid mono'>{{@model.findingId}}</span>
+            <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.findingId}}</Token>
           {{/if}}
           {{#if @model.severity.level}}
             <SeverityBadge @level={{@model.severity.level}} />
@@ -98,13 +100,6 @@ export class InspectionFindingField extends FindingField {
           align-items: center;
           gap: var(--boxel-sp-xs);
         }
-        .fid {
-          font-size: 0.8125rem;
-          font-weight: 700;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-        }
         .where {
           font-size: 0.8125rem;
           font-weight: 600;
@@ -119,7 +114,7 @@ export class InspectionFindingField extends FindingField {
           flex-wrap: wrap;
           gap: var(--boxel-sp-sm);
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

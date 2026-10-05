@@ -22,6 +22,8 @@ import {
   type Integrity,
 } from './utils/evidence-hash';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const PROOF_KINDS = [
   'document',
@@ -116,10 +118,10 @@ export class ProofField extends FieldDef {
         <div class='head'>
           <span class='kind'>{{@model.label}}</span>
           {{#if this.hashLabel}}
-            <span
-              class='hash mono'
+            <Token
+              style={{ID_TOKEN_STYLE.xs}}
               title={{@model.sha256}}
-            >{{this.hashLabel}}</span>
+            >{{this.hashLabel}}</Token>
           {{/if}}
           <StatePill
             @label={{this.integrityLabel}}
@@ -135,7 +137,7 @@ export class ProofField extends FieldDef {
             class='artefact-link'
             href={{@model.url}}
             target='_blank'
-            rel='noopener'
+            rel='noopener noreferrer'
           >{{@model.url}}</a>
         {{else if @model.statement}}
           <p class='statement'>{{@model.statement}}</p>
@@ -167,23 +169,16 @@ export class ProofField extends FieldDef {
           font-size: 0.8125rem;
           font-weight: 600;
         }
-        .hash {
-          font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-        }
         .artefact {
           min-width: 0;
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
         }
         .artefact-link {
           font-size: 0.8125rem;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           text-decoration: underline;
-          text-underline-offset: 2px;
+          text-underline-offset: 0.125rem;
           overflow-wrap: anywhere;
         }
         .statement {
@@ -192,7 +187,7 @@ export class ProofField extends FieldDef {
           line-height: 1.5;
         }
         .empty {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .line {
           min-width: 0;

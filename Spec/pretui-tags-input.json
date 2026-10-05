@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/tags-input",
+        "name": "TagsInput"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { TagsInput } from '@cardstack/pretui/components/tags-input';\n```\n",
+      "cardTitle": "TagsInput",
+      "cardDescription": "Type and commit chips — free strings, not record references",
+      "containedExamples": [],
+      "componentName": "TagsInput",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [
+        "selection"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Type and commit chips — free strings, not record references",
+      "refs": "Mantine TagsInput/PillsInput · Chakra TagsInput · React Aria TagGroup+TokenField · Ant Select(mode=tags)",
+      "buildsOn": null,
+      "icon": "tags",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "TagsInput",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/tags-input.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/tags-input.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

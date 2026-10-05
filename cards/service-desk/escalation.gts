@@ -16,6 +16,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   EscalationLevelField,
   levelColor,
+  levelHue,
 } from '@cardstack/catalog/fields/escalation-level/escalation-level-field';
 import {
   stateColor,
@@ -28,6 +29,10 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { tracked } from '@glimmer/tracking';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
 
 export const ESCALATION_REASONS = [
   'sla-risk',
@@ -69,6 +74,11 @@ export const ESCALATION_STATUS_COLORS: Record<string, StateColor> =
 
 export function escalationStatusHue(status?: string | null): Hue {
   return ESCALATION_STATUS_HUES[status ?? 'open'] ?? 'slate';
+}
+
+/** "2h ago by Dana", leaving out whichever half is missing. */
+function stampBy(stamp?: string, name?: string | null): string {
+  return [stamp, name ? `by ${name}` : ''].filter(Boolean).join(' ');
 }
 
 class EscalationEdit extends Component<typeof Escalation> {
@@ -279,6 +289,29 @@ export class Escalation extends CardDef {
     get ackLabel() {
       return relativeStamp(this.args.model.acknowledgedAt ?? undefined);
     }
+    // The two rungs render their level field in the KeyValue value block,
+    // so their rows carry no value text of their own.
+    ladder: KeyValueItem[] = [
+      { key: 'From', value: '' },
+      { key: 'To', value: '' },
+    ];
+    get facts(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [
+        { key: 'Reason', value: m.reason ?? '' },
+        { key: 'Raised', value: stampBy(this.raisedLabel, m.raisedByName) },
+      ];
+      if (m.acknowledgedAt) {
+        rows.push({
+          key: 'Acknowledged',
+          value: stampBy(this.ackLabel, m.acknowledgedByName),
+        });
+      }
+      if (m.cancelledReason) {
+        rows.push({ key: 'Cancelled', value: m.cancelledReason });
+      }
+      return rows;
+    }
     <template>
       <article class='esc-page' style={{this.statusColor}}>
         <header class='esc-head'>
@@ -287,40 +320,30 @@ export class Escalation extends CardDef {
         </header>
         <p class='esc-subject'>on <@fields.subject @format='atom' /></p>
         <section class='esc-ladder'>
-          <div class='esc-rung'>
-            <span class='esc-k'>From</span><@fields.fromLevel
-              @format='embedded'
-            />
-          </div>
-          <div class='esc-rung'>
-            <span class='esc-k'>To</span><@fields.toLevel @format='embedded' />
-            {{#if @model.toLevel.ackTargetMinutes}}
-              <span class='esc-ack-target'>ack target
-                {{@model.toLevel.ackTargetMinutes}}m</span>
-            {{/if}}
-          </div>
+          <KeyValue class='esc-kv' @items={{this.ladder}}>
+            <:value as |row|>
+              {{#if (eq row.key 'From')}}
+                <@fields.fromLevel @format='embedded' />
+              {{else}}
+                <@fields.toLevel @format='embedded' />
+                {{#if @model.toLevel.ackTargetMinutes}}
+                  <span class='esc-ack-target'>ack target
+                    {{@model.toLevel.ackTargetMinutes}}m</span>
+                {{/if}}
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
         <section class='esc-facts'>
-          <div><span class='esc-k'>Reason</span> {{@model.reason}}</div>
-          <div><span class='esc-k'>Raised</span>
-            {{this.raisedLabel}}
-            by
-            {{@model.raisedByName}}</div>
-          {{#if @model.acknowledgedAt}}
-            <div><span class='esc-k'>Acknowledged</span>
-              {{this.ackLabel}}
-              by
-              {{@model.acknowledgedByName}}</div>
-          {{else if @model.toLevel.ackTargetMinutes}}
-            <div class='esc-await'>Awaiting acknowledgement{{#if
-                (eq @model.ackOverdue 'yes')
-              }} — OVERDUE{{/if}}</div>
-          {{/if}}
+          <KeyValue class='esc-kv' @items={{this.facts}} />
+          {{#unless @model.acknowledgedAt}}
+            {{#if @model.toLevel.ackTargetMinutes}}
+              <div class='esc-await'>Awaiting acknowledgement{{#if
+                  (eq @model.ackOverdue 'yes')
+                }} — OVERDUE{{/if}}</div>
+            {{/if}}
+          {{/unless}}
           {{#if @model.note}}<p class='esc-note'>{{@model.note}}</p>{{/if}}
-          {{#if @model.cancelledReason}}
-            <div><span class='esc-k'>Cancelled</span>
-              {{@model.cancelledReason}}</div>
-          {{/if}}
         </section>
       </article>
       <style scoped>
@@ -356,17 +379,17 @@ export class Escalation extends CardDef {
           background-color: var(--card);
           color: var(--card-foreground);
         }
-        .esc-rung {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
+        /* Pret UI KeyValue at the card's text sizes: keys at the extra-small
+           label size, values at the facts' small size. */
+        .esc-kv {
+          --text-ui: var(--boxel-font-size-xs);
+          --text-ui-md: var(--boxel-font-size-sm);
+          --space-6: var(--boxel-sp);
         }
-        .esc-k {
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          min-width: 6rem;
+        .esc-kv :deep(dd) {
+          min-width: 0;
+          flex-wrap: wrap;
+          overflow-wrap: anywhere;
         }
         .esc-ack-target {
           font-size: var(--boxel-font-size-xs);
@@ -396,20 +419,21 @@ export class Escalation extends CardDef {
     get statusHue() {
       return escalationStatusHue(this.args.model.status);
     }
-    get toColor() {
-      let c = levelColor(this.args.model.toLevel?.key);
-      return `--esc-fg: ${c.fg}; --esc-bg: ${c.bg};`;
+    get levelHue() {
+      return levelHue(this.args.model.toLevel?.key);
     }
     get raisedLabel() {
       return relativeStamp(this.args.model.raisedAt ?? undefined);
     }
     <template>
-      <div class='esc-row' style={{this.toColor}}>
-        <span class='esc-level'>{{if
-            @model.toLevel.key
-            @model.toLevel.key
-            '?'
-          }}</span>
+      <div class='esc-row'>
+        <StatePill @hue={{this.levelHue}}>
+          <span class='esc-level-key'>{{if
+              @model.toLevel.key
+              @model.toLevel.key
+              '?'
+            }}</span>
+        </StatePill>
         <span class='esc-body'>
           <span class='esc-title'>{{@model.title}} · {{@model.reason}}</span>
           <span class='esc-meta'>{{this.raisedLabel}}
@@ -429,15 +453,9 @@ export class Escalation extends CardDef {
           min-width: 0;
           width: 100%;
         }
-        .esc-level {
-          flex: none;
+        .esc-level-key {
           font-family: var(--font-mono);
           font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          padding: 0.125rem 0.5rem;
-          border-radius: var(--boxel-border-radius-sm);
-          background-color: var(--esc-bg);
-          color: var(--esc-fg);
         }
         .esc-body {
           display: flex;
