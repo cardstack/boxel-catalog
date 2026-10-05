@@ -3,6 +3,7 @@ import DateTimeField from 'https://cardstack.com/base/datetime';
 import CalendarPlusIcon from '@cardstack/boxel-icons/calendar-plus';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 
+import { UnsetMarker } from '../../components/unset-marker';
 import { validDate } from '../../utils/valid-date';
 
 const UNITS: [limitSeconds: number, divisorSeconds: number, suffix: string][] =
@@ -90,14 +91,13 @@ export class CreatedAtField extends DateTimeField {
           <span class='relative'>({{this.relative}})</span>
         </span>
       {{else}}
-        <span class='unset' aria-label='No creation time'>—</span>
+        <UnsetMarker @label='No creation time' />
       {{/if}}
       <style scoped>
         .stamp {
           font-size: var(--boxel-font-size-sm);
         }
-        .relative,
-        .unset {
+        .relative {
           color: var(--muted-foreground);
         }
       </style>
@@ -122,16 +122,13 @@ export class CreatedAtField extends DateTimeField {
           title={{this.absolute}}
         >{{this.relative}}</time>
       {{else}}
-        <span class='unset' aria-label='No creation time'>—</span>
+        <UnsetMarker @label='No creation time' />
       {{/if}}
       <style scoped>
         .stamp-atom {
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           white-space: nowrap;
-        }
-        .unset {
-          color: var(--muted-foreground);
         }
       </style>
     </template>
