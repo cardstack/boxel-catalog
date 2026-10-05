@@ -1779,7 +1779,7 @@ export class RealmPolicy extends CardDef {
               This policy has a problem that stops it from working, so it grants
               nothing. A realm that uses it turns away everyone its own
               permissions don't already allow.
-              {{this.uncompilableReason}}
+              <MessageText @message={{this.uncompilableReason}} />
             </p>
           {{/if}}
           {{#if this.rules.length}}
