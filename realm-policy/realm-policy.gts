@@ -62,19 +62,19 @@ export class OperationGrant extends FieldDef {
   @field where = contains(PolicyPredicateField);
   // Whether the grant also admits a caller who isn't signed in. Off, it
   // admits only signed-in callers, so a grant written before anonymous
-  // callers could reach a policy never starts admitting them. Only a grant
-  // on a base operation may set it. Such a caller has no actor, so a `where`
-  // that reads `actor()` never holds for them: an anonymous grant is scoped by
-  // what the target holds. How hard anonymous callers may use the realm, and
-  // which addresses it refuses, are the governed realm's own settings, not
-  // the policy's.
+  // callers could reach a policy never starts admitting them. Only a grant on
+  // a base operation under its own name (`read`, `update`, …) may set it, not
+  // one on a custom operation or a named query. The realm doesn't evaluate a
+  // `where` that reads `actor()` for such a caller, so a grant whose `where`
+  // does never admits one: an anonymous grant is scoped by what the target
+  // holds. How hard anonymous callers may use the realm, and which addresses
+  // it refuses, are the governed realm's own settings, not the policy's.
   @field anonymous = contains(BooleanField);
-  // For an anonymous grant on a write: the key, in the governed realm's
-  // `realm.json` settings, whose value is the user the write is made as.
-  // That user must be able to write the realm themselves. The realm names
-  // the user rather than the policy, because the policy can live in another
-  // realm and its writers must not decide whose identity this realm's writes
-  // carry.
+  // For an anonymous grant on a write: the key, exactly as written, in the
+  // governed realm's `realm.json` settings, whose value is the user the write
+  // is made as. The realm names the user rather than the policy, because the
+  // policy can live in another realm and its writers must not decide whose
+  // identity this realm's writes carry.
   @field actingUser = contains(StringField);
 
   static embedded = class Embedded extends Component<typeof OperationGrant> {
@@ -92,7 +92,7 @@ export class OperationGrant extends FieldDef {
           </span>
         {{/if}}
         {{#if @model.anonymous}}
-          <Pill class='anonymous' data-test-operation-grant-anonymous>
+          <Pill data-test-operation-grant-anonymous>
             anyone
           </Pill>
           {{#if @model.actingUser}}
