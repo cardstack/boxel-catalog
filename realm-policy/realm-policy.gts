@@ -273,6 +273,142 @@ function durationLabel(ms: number): string {
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
 }
 
+// A policy issue's message, as the compiler writes it for this card and for a
+// `validate` answer. Each identifier in it is marked as code with backticks,
+// as markdown marks it; a blank line separates one idea from the next; and a
+// set of alternatives is a list, one per line beginning `- `. Here each idea
+// is a paragraph, the alternatives are a bulleted list, and each marked
+// identifier renders as code. Nothing in a message is ever read as markup, and
+// a backtick with no partner is text.
+const BACKTICK = String.fromCharCode(96);
+const LIST_ITEM = '- ';
+
+type MessagePart = { text: string; code: boolean };
+type MessageBlock =
+  | { paragraph: MessagePart[]; items?: undefined }
+  | { items: MessagePart[][]; paragraph?: undefined };
+
+function messageParts(text: string): MessagePart[] {
+  let segments = text.split(BACKTICK);
+  let parts: MessagePart[] = [];
+  segments.forEach((segment, index) => {
+    let opensSpan = index % 2 === 1;
+    if (opensSpan && index === segments.length - 1) {
+      // The last backtick opened a span nothing closed.
+      parts.push({ text: BACKTICK + segment, code: false });
+    } else if (segment) {
+      parts.push({ text: segment, code: opensSpan });
+    }
+  });
+  return parts;
+}
+
+// The paragraphs and lists a message is laid out as, in the order it writes
+// them. Within a paragraph, a single line break is a space.
+function messageBlocks(message: string | undefined): MessageBlock[] {
+  let blocks: MessageBlock[] = [];
+  let prose: string[] = [];
+  let items: string[] = [];
+  let flush = () => {
+    if (prose.length) {
+      blocks.push({ paragraph: messageParts(prose.join(' ')) });
+      prose = [];
+    }
+    if (items.length) {
+      blocks.push({ items: items.map(messageParts) });
+      items = [];
+    }
+  };
+  for (let line of (message ?? '').split('\n')) {
+    let trimmed = line.trim();
+    if (!trimmed) {
+      flush();
+    } else if (trimmed.startsWith(LIST_ITEM)) {
+      if (prose.length) {
+        flush();
+      }
+      items.push(trimmed.slice(LIST_ITEM.length));
+    } else {
+      if (items.length) {
+        flush();
+      }
+      prose.push(trimmed);
+    }
+  }
+  flush();
+  return blocks;
+}
+
+interface MessagePartsSignature {
+  Args: { parts: MessagePart[] };
+}
+
+class MessageParts extends GlimmerComponent<MessagePartsSignature> {
+  <template>
+    {{~#each @parts as |part|~}}
+      {{~#if part.code~}}
+        <code class='message-code'>{{part.text}}</code>
+      {{~else~}}
+        {{part.text}}
+      {{~/if~}}
+    {{~/each~}}
+    <style scoped>
+      .message-code {
+        padding: 0.05em 0.35em;
+        border-radius: var(--boxel-border-radius-xs, 3px);
+        background-color: var(--muted, var(--boxel-100));
+        color: var(--foreground, var(--boxel-dark));
+        font-family: var(--boxel-monospace-font-family, monospace);
+        font-size: 0.875em;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+      }
+    </style>
+  </template>
+}
+
+interface MessageTextSignature {
+  Args: { message: string | undefined };
+}
+
+class MessageText extends GlimmerComponent<MessageTextSignature> {
+  <template>
+    <div class='message'>
+      {{#each (messageBlocks @message) as |block|}}
+        {{#if block.items}}
+          <ul class='message-list'>
+            {{#each block.items as |item|}}
+              <li><MessageParts @parts={{item}} /></li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p class='message-paragraph'><MessageParts
+              @parts={{block.paragraph}}
+            /></p>
+        {{/if}}
+      {{/each}}
+    </div>
+    <style scoped>
+      .message {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        overflow-wrap: anywhere;
+      }
+      .message-paragraph {
+        margin: 0;
+      }
+      .message-list {
+        margin: 0;
+        padding-left: var(--boxel-sp-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs, 0.25rem);
+      }
+    </style>
+  </template>
+}
+
 // An issue compiling a draft recorded, in the shape a policy's own issues take.
 type DraftIssue = NonNullable<PolicyExplanation['draft']>['issues'][number];
 
@@ -301,7 +437,9 @@ class DraftIssues extends GlimmerComponent<DraftIssuesSignature> {
                   'destructive'
                 }}
               >{{issue.severity}}</Pill>
-              <p class='issue-message'>{{issue.message}}</p>
+              <div class='issue-message'><MessageText
+                  @message={{issue.message}}
+                /></div>
             </li>
           {{/each}}
         </ul>
@@ -1353,11 +1491,11 @@ function isLiveRender(): boolean {
 }
 
 // What an issue about the card as a whole means, said of the card itself.
-// The compiler's own message is written for the log of a realm that names the
-// card, so an issue with no wording here reads as the compiler wrote it.
+// The compiler writes its message about any policy card that names it, so an
+// issue with no wording here reads as the compiler wrote it.
 const CARD_ISSUE_MESSAGES: Partial<Record<string, string>> = {
   'policy-card-unloadable':
-    "This card couldn't be indexed this time, and the index's earlier copy of it may be out of date. It grants nothing until it's indexed again. The realm tries again on its own, and editing the card or reindexing the realm tries again right away.",
+    "This card couldn't be indexed this time, and the index's earlier copy of it may be out of date. It grants nothing until it's indexed again.\n\nThe realm tries again on its own, and editing the card or reindexing the realm tries again right away.",
 };
 
 // Whether a realm event says the realm has finished an index pass.
@@ -1719,17 +1857,19 @@ export class RealmPolicy extends CardDef {
         <section class='section'>
           <h2 class='section-title'>Rules</h2>
           {{#if this.uncompilable}}
-            <p
+            <div
               class='not-in-force'
               role='alert'
               data-test-realm-policy-uncompilable
             >
-              <strong>Not in force.</strong>
-              This policy has a problem that stops it from working, so it grants
-              nothing. A realm that uses it turns away everyone its own
-              permissions don't already allow.
-              {{this.uncompilableReason}}
-            </p>
+              <p class='not-in-force-summary'>
+                <strong>Not in force.</strong>
+                This policy has a problem that stops it from working, so it
+                grants nothing. A realm that uses it turns away everyone its own
+                permissions don't already allow.
+              </p>
+              <MessageText @message={{this.uncompilableReason}} />
+            </div>
           {{/if}}
           {{#if this.rules.length}}
             <ol class='rules' data-test-realm-policy-rules>
@@ -1806,7 +1946,9 @@ export class RealmPolicy extends CardDef {
                                   {{#each warnings as |warning|}}
                                     <li
                                       data-test-policy-grant-warning-message={{warning.code}}
-                                    >{{this.issueMessage warning}}</li>
+                                    ><MessageText
+                                        @message={{this.issueMessage warning}}
+                                      /></li>
                                   {{/each}}
                                 </ul>
                               </details>
@@ -1862,9 +2004,9 @@ export class RealmPolicy extends CardDef {
                       >warning</Pill>
                     {{/if}}
                   </header>
-                  <p class='issue-message' data-test-policy-issue-message>
-                    {{this.issueMessage issue}}
-                  </p>
+                  <div class='issue-message' data-test-policy-issue-message>
+                    <MessageText @message={{this.issueMessage issue}} />
+                  </div>
                 </li>
               {{/each}}
             </ul>
@@ -1993,6 +2135,14 @@ export class RealmPolicy extends CardDef {
         .refusal {
           margin: 0 0 var(--boxel-sp-sm);
           color: var(--destructive, var(--boxel-danger));
+        }
+        .not-in-force {
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-xs);
+        }
+        .not-in-force-summary {
+          margin: 0;
         }
         .issue {
           padding: var(--boxel-sp-sm);
