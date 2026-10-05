@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/scroll-area",
+        "name": "ScrollArea"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { ScrollArea } from '@cardstack/pretui/components/scroll-area';\n```\n",
+      "cardTitle": "ScrollArea",
+      "cardDescription": "Custom-scrollbar viewport with overflow shadows — Scroller's cousin",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
+      "componentName": "ScrollArea",
+      "category": "Layout",
       "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
-      "adoptionStatus": "in-use",
+      "adoptionStatus": "demo-ready",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "structure",
       "stage": "live",
-      "source": "design-v1",
+      "source": "react-ecosystem",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "Custom-scrollbar viewport with overflow shadows — Scroller's cousin",
+      "refs": "shadcn ScrollArea · radix ScrollArea · Mantine ScrollArea · Base UI ScrollArea · Chakra ScrollArea",
       "buildsOn": null,
+      "icon": "scroll",
+      "demand": 4,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "liveInUse": false,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "ScrollArea",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/scroll-area.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/scroll-area.md"
         }
       },
       "linkedExamples": {

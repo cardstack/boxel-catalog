@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/gallery",
+        "name": "Gallery"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { Gallery } from '@cardstack/pretui/components/gallery';\n```\n",
+      "cardTitle": "Gallery",
+      "cardDescription": "Explicit thumb-navigation over a known set — hero stage plus an intrinsic-ratio rail",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
-      "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "componentName": "Gallery",
+      "category": "Media",
+      "tier": "Element",
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
-      "adoptionStatus": "in-use",
+      "adoptionStatus": "experimental",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "media",
       "stage": "live",
       "source": "design-v1",
       "lineage": null,
-      "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "version": "0.2.0",
+      "brief": "Explicit thumb-navigation over a known set — hero stage plus an intrinsic-ratio rail",
+      "refs": "boxel-catalog multi-image-source-editor · image-carousel",
       "buildsOn": null,
+      "icon": "gallery-horizontal",
+      "demand": 4,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "liveInUse": false,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "Gallery",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/gallery.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/gallery.md"
         }
       },
       "linkedExamples": {

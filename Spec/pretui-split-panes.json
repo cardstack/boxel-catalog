@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/split-panes",
+        "name": "SplitPanes"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { SplitPanes } from '@cardstack/pretui/components/split-panes';\n```\n",
+      "cardTitle": "SplitPanes",
+      "cardDescription": "Draggable split-pane regions, percent constraints",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
+      "componentName": "SplitPanes",
+      "category": "Layout",
       "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "structure",
       "stage": "live",
       "source": "design-v1",
-      "lineage": null,
+      "lineage": "ResizablePanelGroup",
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
-      "buildsOn": null,
+      "brief": "Draggable split-pane regions, percent constraints · boxel-ui ResizablePanelGroup core",
+      "refs": "shadcn Resizable · Allotment · wa-split-panel",
+      "buildsOn": "boxel-ui ResizablePanelGroup",
+      "icon": "columns-2",
+      "demand": null,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "liveInUse": false,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "SplitPanes",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/split-panes.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/split-panes.md"
         }
       },
       "linkedExamples": {

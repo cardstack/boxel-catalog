@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/copy-fit",
+        "name": "CopyFit"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { CopyFit } from '@cardstack/pretui/components/copy-fit';\n```\n",
+      "cardTitle": "CopyFit",
+      "cardDescription": "The copy-fitting layout mechanism behind the fitted format's badge/strip/tile/card quantums",
+      "containedExamples": [],
+      "componentName": "CopyFit",
+      "category": "Layout",
+      "tier": "Compound",
+      "tags": ["fitted", "responsive", "container-query", "copy-fitting"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "fitted",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "BasicFitted, FittedCard, FittedCardContainer",
+      "version": "0.4.0",
+      "brief": "The copy-fitting layout mechanism behind the fitted format's badge/strip/tile/card quantums · was FittedCard · boxel-ui FittedCard re-cut",
+      "refs": "boxel-ui FittedCard · container queries · catalog-taxonomy.md CopyFit naming",
+      "buildsOn": null,
+      "icon": "scan",
+      "demand": null,
+      "featured": true,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "CopyFit",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/copy-fit.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/copy-fit.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
