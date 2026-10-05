@@ -7,7 +7,7 @@ import {
   RadioGroup,
   type RadioOption,
 } from '@cardstack/pretui/components/radio-group';
-import { ALERT_STYLE } from '../real-estate-ui';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Schedule Picker — "publish now" or "publish later". Render-only: the
 // consumer holds the chosen ISO string (or undefined for now) and gets it

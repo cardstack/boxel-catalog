@@ -11,14 +11,7 @@ import enumField from '@cardstack/base/enum';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import PlugIcon from '@cardstack/boxel-icons/plug';
 import { Token } from '@cardstack/pretui/components/token';
-import { tokenStyle } from '../shared/pretui-token';
-
-// The external id is the other system's machine value, so it reads as a Pret
-// UI Token in the muted hue at the reference's own size.
-const ID_TOKEN_STYLE = tokenStyle(
-  '--boxel-font-size-xs',
-  'var(--muted-foreground)',
-);
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const INTEGRATION_KINDS = [
   'ticketing',
@@ -135,7 +128,7 @@ export class ExternalReferenceField extends FieldDef {
             '—'
           }}</span>
         {{#if @model.externalId}}
-          <Token style={{ID_TOKEN_STYLE}}>{{@model.externalId}}</Token>
+          <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.externalId}}</Token>
         {{else}}
           <span class='xref-sys'>—</span>
         {{/if}}
@@ -169,7 +162,7 @@ export class ExternalReferenceField extends FieldDef {
             class='xref-atom-sys'
           >{{@model.system.name}}</span>{{/if}}
         {{#if @model.externalId}}
-          <Token style={{ID_TOKEN_STYLE}}>{{@model.externalId}}</Token>
+          <Token style={{ID_TOKEN_STYLE.xs}}>{{@model.externalId}}</Token>
         {{else}}
           {{#unless @model.system.name}}
             <span class='xref-atom-sys'>External reference</span>

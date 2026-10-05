@@ -22,7 +22,8 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Token } from '@cardstack/pretui/components/token';
-import { AuditFacts, ID_TOKEN_STYLE } from './audit-ui';
+import { AuditFacts } from './audit-ui';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const DOCUMENT_KINDS = [
   'policy',

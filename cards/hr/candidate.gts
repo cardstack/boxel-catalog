@@ -48,13 +48,11 @@ import {
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 import { daysBetween, liveCount } from './utils';
+import { FactList, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
 import {
   ALERT_STYLE,
   AVATAR_HUE,
-  FactList,
-  QUIET_AVATAR_HUE,
-  hueOf,
-} from './hr-ui';
+} from '@cardstack/catalog/components/pretui-helpers';
 import { ExtractResumeCommand } from './commands/extract-resume-command';
 import { GenerateInterviewQuestionsCommand } from './commands/generate-interview-questions-command';
 import FileDownloadLink from './components/file-download-link';

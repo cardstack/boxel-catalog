@@ -24,7 +24,7 @@ import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EditSectionNav } from '../../components/edit-section-nav';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { COMPACT_EMPTY_STYLE } from './legal-ui';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * What THIS contract actually says for one provision, next to what it was

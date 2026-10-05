@@ -24,12 +24,11 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // tolerate because the binding is only read inside the constructor, never at
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
+import { LoadingRows, StatusPill, amountText } from './fulfilment-ui';
 import {
   ALERT_STYLE,
-  LoadingRows,
-  StatusPill,
-  amountText,
-} from './fulfilment-ui';
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -291,7 +290,7 @@ export class FulfilmentProduct extends CardDef {
             </ul>
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @texture={{false}}
               @title='No stock rows reference this product yet'
               @message='Add one from the Inventory tab to start tracking it.'
@@ -536,13 +535,6 @@ export class FulfilmentProduct extends CardDef {
           --text-ui: var(--t-micro);
           --text-ui-md: var(--t-sm);
           --space-6: 1.25rem;
-        }
-        /* Pret UI EmptyState, compact: no texture, 1rem padding, and the
-           title at the body size. */
-        .empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
         }
         /* Section icons: one size, one muted colour, everywhere. They make the
            card scannable by shape; they must never compete with the heading. */

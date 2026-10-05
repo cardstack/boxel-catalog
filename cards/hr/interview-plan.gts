@@ -27,7 +27,8 @@ import {
 import { Position } from './position';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import { ALERT_STYLE, hueOf } from './hr-ui';
+import { hueOf } from './hr-ui';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Colocated with InterviewPlanRoundField — colors each round's pill in the
 // isolated plan list and the embedded/compact previews. Distinct hues from

@@ -30,7 +30,7 @@ import { PhotoOrganizer } from './components/photo-organizer';
 import { PublishChecklist } from './components/publish-checklist';
 import { ChannelSelector } from './components/channel-selector';
 import { SchedulePicker } from './components/schedule-picker';
-import { ALERT_STYLE } from './real-estate-ui';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
 import { daysBetween } from '@cardstack/catalog/cards/hr/utils';

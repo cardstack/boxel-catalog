@@ -26,7 +26,10 @@ import { EditSectionNav } from '../../components/edit-section-nav';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { ALERT_STYLE, COMPACT_EMPTY_STYLE } from './legal-ui';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 /**

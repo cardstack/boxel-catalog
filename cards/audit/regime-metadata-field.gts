@@ -11,7 +11,7 @@ import ScaleIcon from '@cardstack/boxel-icons/scale';
 
 import { CertificationAuthority } from './certification-authority';
 import { Token } from '@cardstack/pretui/components/token';
-import { ID_TOKEN_STYLE } from './audit-ui';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * Which rule-set, which edition, which clause. A control means nothing

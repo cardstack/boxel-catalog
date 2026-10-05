@@ -15,7 +15,8 @@ import { Stat } from '@cardstack/pretui/components/stat';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { AVATAR_HUE, FactList } from '@cardstack/catalog/cards/hr/hr-ui';
+import { FactList } from '@cardstack/catalog/cards/hr/hr-ui';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import { liveCount } from '@cardstack/catalog/cards/hr/utils';
 
 export class Team extends CardDef {

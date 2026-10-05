@@ -5,10 +5,10 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { guidFor } from '@ember/object/internals';
-import { modifier } from 'ember-modifier';
 import { Table as PretTable } from '@cardstack/pretui/components/table';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Pagination } from '@cardstack/pretui/components/pagination';
+import { COMPACT_EMPTY_STYLE, labelledBy } from './pretui-helpers';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import sortBy from '../utils/sort';
 
@@ -81,23 +81,6 @@ function isSortable(column: TableColumn): boolean {
 function clickableCell(onRowClick: unknown, index: number): boolean {
   return typeof onRowClick === 'function' && index === 0;
 }
-
-// Pret UI's Table owns the <table> and yields only head and body, so the
-// caption sits just above it and this names the table after it instead:
-// a screen reader still announces "table, <caption>" before the rows.
-const labelledBy = modifier(
-  (element: HTMLElement, [id]: [string | undefined]) => {
-    let table = element.querySelector('table');
-    if (!table) {
-      return;
-    }
-    if (id) {
-      table.setAttribute('aria-labelledby', id);
-    } else {
-      table.removeAttribute('aria-labelledby');
-    }
-  },
-);
 
 interface TableSignature {
   Args: {
@@ -329,8 +312,9 @@ export class Table extends GlimmerComponent<TableSignature> {
             </tr>
           {{else}}
             <tr>
-              <td class='empty' colspan={{@columns.length}}>
+              <td colspan={{@columns.length}}>
                 <EmptyState
+                  style={{COMPACT_EMPTY_STYLE}}
                   @title={{if @emptyMessage @emptyMessage 'No records'}}
                   @texture={{false}}
                 />
@@ -505,13 +489,6 @@ export class Table extends GlimmerComponent<TableSignature> {
         box-shadow:
           inset 0.1875rem 0 0 var(--boxel-dark-teal),
           inset 0 -1px 0 var(--border);
-      }
-      /* Pret UI EmptyState, tuned through its own spacing and title knobs to a
-         single quiet line that fits inside a table cell. */
-      .empty {
-        --space-9: 1rem;
-        --space-6: 1rem;
-        --text-heading: var(--boxel-font-size);
       }
       .pager {
         display: flex;

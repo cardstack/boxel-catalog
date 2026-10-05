@@ -4,6 +4,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 
 /**
@@ -153,7 +154,7 @@ export class Feed extends GlimmerComponent<Signature> {
         </ol>
       {{else}}
         <EmptyState
-          class='feed-empty'
+          style={{COMPACT_EMPTY_STYLE}}
           @title='Nothing here yet'
           @message={{if
             @emptyMessage
@@ -247,13 +248,6 @@ export class Feed extends GlimmerComponent<Signature> {
       }
       .feed-system-meta {
         font-variant-numeric: tabular-nums;
-      }
-      /* Pret UI EmptyState, tuned through its spacing and title knobs to a
-         compact well where the thread would be. */
-      .feed-empty {
-        --space-9: 1rem;
-        --space-6: 1rem;
-        --text-heading: var(--boxel-font-size);
       }
     </style>
   </template>

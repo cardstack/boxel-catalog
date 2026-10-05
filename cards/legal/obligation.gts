@@ -34,12 +34,12 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Token } from '@cardstack/pretui/components/token';
+import { LegalFacts } from './legal-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
   ID_TOKEN_STYLE,
-  LegalFacts,
-} from './legal-ui';
+} from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * A promise a contract compels, with a date and an owner.

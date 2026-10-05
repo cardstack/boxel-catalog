@@ -1,5 +1,6 @@
 import { modifier } from 'ember-modifier';
 import { statusHue } from '@cardstack/pretui/internal/ink';
+import { progressbarOf } from '@cardstack/catalog/components/pretui-helpers';
 
 /** "$12,000.00" from an amount and an ISO 4217 code; a bare number when the code is missing or unknown. */
 export function formatMoney(amount: number | undefined, code?: string): string {
@@ -39,12 +40,15 @@ export function avatarHue(name: string | null | undefined): string {
 }
 
 /**
- * Pret UI's `ProgressBar` renders its `role='progressbar'` element with no
- * accessible name, so this names it after an element on the page instead.
+ * Names a Pret UI `ProgressBar` after an element on the page, by pointing its
+ * `role='progressbar'` element's `aria-labelledby` at that element's id, and
+ * drops the attribute when there is no id to point at. It finds the bar the
+ * way `nameProgress` does, so it covers both ProgressBar layouts: the role on
+ * the component root, and the role on an inner track.
  */
 export const labelProgress = modifier(
   (element: HTMLElement, [id]: [string | undefined]) => {
-    let bar = element.querySelector('[role="progressbar"]');
+    let bar = progressbarOf(element);
     if (!bar) {
       return;
     }

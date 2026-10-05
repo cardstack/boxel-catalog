@@ -17,7 +17,10 @@ import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Token } from '@cardstack/pretui/components/token';
-import { AVATAR_HUE, tokenStyle } from './components/service-desk-ui';
+import {
+  AVATAR_HUE,
+  tokenStyle,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 class RoleEdit extends Component<typeof Role> {
   @tracked activeSection = 'identity';

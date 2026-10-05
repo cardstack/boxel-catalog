@@ -35,7 +35,7 @@ import { SlaTimerBadge } from './components/sla-timer-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Feed, type FeedEntry } from './components/feed';
 import { TicketWorkspace } from './components/ticket-workspace';
-import { tokenStyle } from './components/service-desk-ui';
+import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
 import { timerSnapshot, urgencyRank, type TimerSnapshot } from './utils/sla';

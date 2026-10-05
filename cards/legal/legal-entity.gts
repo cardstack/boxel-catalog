@@ -16,7 +16,8 @@ import enumField from '@cardstack/base/enum';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Token } from '@cardstack/pretui/components/token';
-import { ID_TOKEN_STYLE, LegalFacts } from './legal-ui';
+import { LegalFacts } from './legal-ui';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { EditSectionNav } from '../../components/edit-section-nav';
 
 export const LEGAL_ENTITY_TYPES = [
