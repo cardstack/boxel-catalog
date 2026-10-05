@@ -28,6 +28,7 @@ import {
 import PolicyPredicateField from '@cardstack/catalog/fields/policy-predicate/policy-predicate';
 import { subscribeToRealm } from '@cardstack/runtime-common';
 import StringField from 'https://cardstack.com/base/string';
+import BooleanField from 'https://cardstack.com/base/boolean';
 import {
   BoxelInput,
   Button,
@@ -59,6 +60,22 @@ export class OperationGrant extends FieldDef {
   // A BXL boolean expression over the caller and the target. Absent means
   // the grant is unconditional.
   @field where = contains(PolicyPredicateField);
+  // Whether the grant also admits a caller who isn't signed in. Off, it
+  // admits only signed-in callers, so a grant written before anonymous
+  // callers could reach a policy never starts admitting them. Only a grant
+  // on a base operation may set it. Such a caller has no actor, so a `where`
+  // that reads `actor()` never holds for them: an anonymous grant is scoped by
+  // what the target holds. How hard anonymous callers may use the realm, and
+  // which addresses it refuses, are the governed realm's own settings, not
+  // the policy's.
+  @field anonymous = contains(BooleanField);
+  // For an anonymous grant on a write: the key, in the governed realm's
+  // `realm.json` settings, whose value is the user the write is made as.
+  // That user must be able to write the realm themselves. The realm names
+  // the user rather than the policy, because the policy can live in another
+  // realm and its writers must not decide whose identity this realm's writes
+  // carry.
+  @field actingUser = contains(StringField);
 
   static embedded = class Embedded extends Component<typeof OperationGrant> {
     <template>
@@ -73,6 +90,18 @@ export class OperationGrant extends FieldDef {
           <span class='unconditional' data-test-operation-grant-unconditional>
             always
           </span>
+        {{/if}}
+        {{#if @model.anonymous}}
+          <Pill class='anonymous' data-test-operation-grant-anonymous>
+            anyone
+          </Pill>
+          {{#if @model.actingUser}}
+            <span class='keyword'>as</span>
+            <code
+              class='acting-user'
+              data-test-operation-grant-acting-user
+            >config.{{@model.actingUser}}</code>
+          {{/if}}
         {{/if}}
       </div>
       <style scoped>
@@ -90,6 +119,10 @@ export class OperationGrant extends FieldDef {
         .unconditional {
           font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground, var(--boxel-450));
+        }
+        .acting-user {
+          font-family: var(--boxel-monospace-font-family, monospace);
+          font-size: var(--boxel-font-size-sm);
         }
       </style>
     </template>
