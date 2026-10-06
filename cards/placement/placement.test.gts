@@ -121,16 +121,20 @@ export function runTests() {
     setupRenderingTest(hooks);
     setupBaseRealm(hooks);
 
+    // A card's title is its cardInfo.name; the palette and menus name items by it.
+    function person(slug: string, name: string) {
+      let p = new PersonBase({ id: `https://example.test/Tech/${slug}`, name });
+      p.cardInfo.name = name;
+      return p;
+    }
+
     function board() {
       return new PlacementBoard({
         zones: [
           new PlacementZoneField({ key: 'm', label: 'Mechanical' }),
           new PlacementZoneField({ key: 'b', label: 'Bench' }),
         ],
-        pool: [
-          new PersonBase({ id: 'https://example.test/Tech/a', name: 'A' }),
-          new PersonBase({ id: 'https://example.test/Tech/b', name: 'B' }),
-        ],
+        pool: [person('a', 'A'), person('b', 'B')],
         draft: [],
         placements: [],
       });
