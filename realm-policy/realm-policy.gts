@@ -50,6 +50,71 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 // These definitions describe a policy; nothing in them evaluates one. The
 // realm does, and `explain` asks it what it decides.
 
+// A grant in one line: its operation, then its condition (or `always`), then
+// whether it admits callers who aren't signed in. A grant reads the same in
+// every listing, so an edit form can be matched up with the policy's view.
+class OperationGrantView extends Component<typeof OperationGrant> {
+  <template>
+    <span class='operation-grant' data-test-operation-grant>
+      {{#if @model.operation}}
+        <code class='operation' data-test-operation-grant-operation>
+          {{@model.operation}}
+        </code>
+      {{else}}
+        <span class='missing' data-test-operation-grant-no-operation>
+          No operation
+        </span>
+      {{/if}}
+      {{#if @model.where}}
+        <span class='keyword'>where</span>
+        <@fields.where />
+      {{else}}
+        <span class='unconditional' data-test-operation-grant-unconditional>
+          always
+        </span>
+      {{/if}}
+      {{#if @model.anonymous}}
+        <Pill data-test-operation-grant-anonymous>
+          anyone
+        </Pill>
+        {{#if @model.actingUser}}
+          <span class='keyword'>as</span>
+          <code
+            class='acting-user'
+            data-test-operation-grant-acting-user
+          >config.{{@model.actingUser}}</code>
+        {{/if}}
+      {{/if}}
+    </span>
+    <style scoped>
+      .operation-grant {
+        display: inline-flex;
+        max-width: 100%;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-xs);
+      }
+      .operation {
+        font-family: var(--boxel-monospace-font-family, monospace);
+        font-weight: 600;
+      }
+      .keyword,
+      .unconditional {
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .missing {
+        font-style: italic;
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .acting-user {
+        font-family: var(--boxel-monospace-font-family, monospace);
+        font-size: var(--boxel-font-size-sm);
+      }
+    </style>
+  </template>
+}
+
 export class OperationGrant extends FieldDef {
   static displayName = 'Operation Grant';
 
@@ -77,56 +142,8 @@ export class OperationGrant extends FieldDef {
   // identity this realm's writes carry.
   @field actingUser = contains(StringField);
 
-  static embedded = class Embedded extends Component<typeof OperationGrant> {
-    <template>
-      <div class='operation-grant' data-test-operation-grant>
-        <code class='operation' data-test-operation-grant-operation>
-          {{@model.operation}}
-        </code>
-        {{#if @model.where}}
-          <span class='keyword'>where</span>
-          <@fields.where />
-        {{else}}
-          <span class='unconditional' data-test-operation-grant-unconditional>
-            always
-          </span>
-        {{/if}}
-        {{#if @model.anonymous}}
-          <Pill data-test-operation-grant-anonymous>
-            anyone
-          </Pill>
-          {{#if @model.actingUser}}
-            <span class='keyword'>as</span>
-            <code
-              class='acting-user'
-              data-test-operation-grant-acting-user
-            >config.{{@model.actingUser}}</code>
-          {{/if}}
-        {{/if}}
-      </div>
-      <style scoped>
-        .operation-grant {
-          display: flex;
-          align-items: baseline;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
-        }
-        .operation {
-          font-family: var(--boxel-monospace-font-family, monospace);
-          font-weight: 600;
-        }
-        .keyword,
-        .unconditional {
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .acting-user {
-          font-family: var(--boxel-monospace-font-family, monospace);
-          font-size: var(--boxel-font-size-sm);
-        }
-      </style>
-    </template>
-  };
+  static embedded = OperationGrantView;
+  static atom = OperationGrantView;
 }
 
 export class PolicyRule extends FieldDef {
@@ -135,6 +152,105 @@ export class PolicyRule extends FieldDef {
   // The card type this rule governs. It also governs that type's subtypes.
   @field targetType = contains(CodeRefField);
   @field grants = containsMany(OperationGrant);
+
+  // Base doesn't edit a list of fields held inside another field, so the rule
+  // lists its own grants. Each grant opens with the line the policy's view
+  // shows for it, then its editable parts.
+  static edit = class Edit extends Component<typeof PolicyRule> {
+    private addGrant = () => {
+      this.args.model.grants?.push(new OperationGrant());
+    };
+
+    private removeGrant = (index: number) => {
+      this.args.model.grants?.splice(index, 1);
+    };
+
+    <template>
+      <div class='policy-rule-edit' data-test-policy-rule-edit>
+        <FieldContainer @label='Target Type' @vertical={{true}}>
+          <@fields.targetType />
+        </FieldContainer>
+        <FieldContainer @label='Grants' @vertical={{true}}>
+          <div class='grants-edit'>
+            {{#if @model.grants.length}}
+              <ol class='grants'>
+                {{#each @fields.grants as |Grant index|}}
+                  <li class='grant' data-test-policy-rule-grant={{index}}>
+                    <header class='grant-header'>
+                      <Grant @format='atom' />
+                      {{#if @canEdit}}
+                        <Button
+                          class='remove-grant'
+                          @kind='text-only'
+                          @size='extra-small'
+                          {{on 'click' (fn this.removeGrant index)}}
+                          data-test-policy-rule-remove-grant={{index}}
+                        >
+                          Remove grant
+                        </Button>
+                      {{/if}}
+                    </header>
+                    <Grant @format='edit' />
+                  </li>
+                {{/each}}
+              </ol>
+            {{else}}
+              <p class='empty' data-test-policy-rule-no-grants>No grants.</p>
+            {{/if}}
+            {{#if @canEdit}}
+              <Button
+                class='add-grant'
+                @kind='secondary'
+                @size='small'
+                {{on 'click' this.addGrant}}
+                data-test-policy-rule-add-grant
+              >
+                Add grant
+              </Button>
+            {{/if}}
+          </div>
+        </FieldContainer>
+      </div>
+      <style scoped>
+        .policy-rule-edit,
+        .grants-edit {
+          display: grid;
+          gap: var(--boxel-sp);
+        }
+        .grants {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: grid;
+          gap: var(--boxel-sp);
+        }
+        .grant {
+          display: grid;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-sm);
+          border: 1px solid var(--border, var(--boxel-border-color));
+          border-radius: var(--boxel-border-radius);
+        }
+        .grant-header {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: var(--boxel-sp-xs);
+          min-width: 0;
+        }
+        .remove-grant {
+          flex-shrink: 0;
+        }
+        .add-grant {
+          justify-self: start;
+        }
+        .empty {
+          margin: 0;
+          color: var(--muted-foreground, var(--boxel-450));
+        }
+      </style>
+    </template>
+  };
 
   static embedded = class Embedded extends Component<typeof PolicyRule> {
     <template>
