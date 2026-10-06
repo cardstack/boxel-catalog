@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/affix",
+        "name": "Affix"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { Affix } from '@cardstack/pretui/components/affix';\n```\n",
+      "cardTitle": "Affix",
+      "cardDescription": "Pin a child when it scrolls past a threshold — sticky with a callback",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
-      "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "componentName": "Affix",
+      "category": "Layout",
+      "tier": "Primitive",
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
-      "adoptionStatus": "in-use",
+      "adoptionStatus": "demo-ready",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "structure",
       "stage": "live",
-      "source": "design-v1",
+      "source": "react-ecosystem",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "Pin a child when it scrolls past a threshold — sticky with a callback",
+      "refs": "Ant Affix · Mantine Affix · MUI useScrollTrigger · Chakra Sticky",
       "buildsOn": null,
+      "icon": "pin",
+      "demand": 3,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "liveInUse": false,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "Affix",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/affix.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/affix.md"
         }
       },
       "linkedExamples": {

@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/transfer",
+        "name": "Transfer"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { Transfer } from '@cardstack/pretui/components/transfer';\n```\n",
+      "cardTitle": "Transfer",
+      "cardDescription": "ALIAS of DuelingPicklist — Ant name",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
-      "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "componentName": "Transfer",
+      "category": "Forms",
+      "tier": "Element",
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
-      "adoptionStatus": "in-use",
+      "adoptionStatus": "demo-ready",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "forms",
       "stage": "live",
-      "source": "design-v1",
+      "source": "react-ecosystem",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "ALIAS of DuelingPicklist — Ant name",
+      "refs": "Ant Transfer · Mantine (none) · SLDS dueling-picklist",
       "buildsOn": null,
+      "icon": "arrow-left-right",
+      "demand": 3,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
-      "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "hasExamples": false,
+      "liveInUse": false,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "Transfer",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/transfer.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/transfer.md"
         }
       },
       "linkedExamples": {

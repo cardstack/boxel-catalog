@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/node-canvas",
+        "name": "NodeCanvas"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { NodeCanvas } from '@cardstack/pretui/components/node-canvas';\n```\n",
+      "cardTitle": "NodeCanvas",
+      "cardDescription": "Infinite pan/zoom node canvas — nodes, edges, minimap",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
+      "componentName": "NodeCanvas",
+      "category": "Data Display",
       "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "structure",
       "stage": "live",
       "source": "design-v1",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "Infinite pan/zoom node canvas — nodes, edges, minimap · unique to Boxel",
+      "refs": "surfaces/boxel-canvas (xyflow port) · React Flow",
       "buildsOn": null,
+      "icon": "chart-network",
+      "demand": 4,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
-      "demand": null,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "NodeCanvas",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/node-canvas.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/node-canvas.md"
         }
       },
       "linkedExamples": {

@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/data-table",
+        "name": "DataTable"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { DataTable } from '@cardstack/pretui/components/data-table';\n```\n",
+      "cardTitle": "DataTable",
+      "cardDescription": "Headless-table pattern: sort, filter, select, paginate, column visibility",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
-      "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "componentName": "DataTable",
+      "category": "Data Display",
+      "tier": "Element",
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
-      "adoptionStatus": "in-use",
+      "adoptionStatus": "demo-ready",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "reading",
       "stage": "live",
-      "source": "design-v1",
+      "source": "react-ecosystem",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "Headless-table pattern: sort, filter, select, paginate, column visibility",
+      "refs": "shadcn Data Table (TanStack) · Ant Table · MUI DataGrid · Tremor Table · Mantine Table",
       "buildsOn": null,
+      "icon": "rows-4",
+      "demand": 5,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "liveInUse": false,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "DataTable",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/data-table.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/data-table.md"
         }
       },
       "linkedExamples": {

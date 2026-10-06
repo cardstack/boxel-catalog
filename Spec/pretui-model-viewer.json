@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/model-viewer",
+        "name": "ModelViewer"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { ModelViewer } from '@cardstack/pretui/components/model-viewer';\n```\n",
+      "cardTitle": "ModelViewer",
+      "cardDescription": "GLTF/GLB with orbit, environment and AR",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
-      "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "componentName": "ModelViewer",
+      "category": "Media",
+      "tier": "Element",
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "media",
       "stage": "live",
       "source": "design-v1",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "GLTF/GLB with orbit, environment and AR",
+      "refs": "@google/model-viewer (Apache-2.0) — chosen over React Three Fiber, which cannot run here",
       "buildsOn": null,
+      "icon": "cube",
+      "demand": 3,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
-      "demand": null,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "ModelViewer",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/model-viewer.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/model-viewer.md"
         }
       },
       "linkedExamples": {

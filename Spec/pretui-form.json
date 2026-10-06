@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/form",
+        "name": "Form"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { Form } from '@cardstack/pretui/components/form';\n```\n",
+      "cardTitle": "Form",
+      "cardDescription": "The form host — submit / live / record commit modes, issue routing, focus-first-error",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
+      "componentName": "Form",
+      "category": "Forms",
       "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "forms",
       "stage": "live",
       "source": "design-v1",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "The form host — submit / live / record commit modes, issue routing, focus-first-error",
+      "refs": "react-spectrum Form · SLDS form-layout",
       "buildsOn": null,
+      "icon": "clipboard-list",
+      "demand": 5,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "liveInUse": false,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "Form",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/form.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/form.md"
         }
       },
       "linkedExamples": {

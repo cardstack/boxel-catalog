@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/lookup",
+        "name": "Lookup"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { Lookup } from '@cardstack/pretui/components/lookup';\n```\n",
+      "cardTitle": "Lookup",
+      "cardDescription": "Record-reference control — type to search, results listbox, removable pills",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
-      "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "componentName": "Lookup",
+      "category": "Forms",
+      "tier": "Element",
+      "tags": ["selection"],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "forms",
       "stage": "live",
       "source": "design-v1",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "Record-reference control — type to search, results listbox, removable pills",
+      "refs": "SLDS lookups · react-spectrum ComboBox",
       "buildsOn": null,
+      "icon": "search-code",
+      "demand": 4,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
-      "demand": null,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "Lookup",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/lookup.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/lookup.md"
         }
       },
       "linkedExamples": {

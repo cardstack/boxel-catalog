@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/fieldset",
+        "name": "Fieldset"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { Fieldset } from '@cardstack/pretui/components/fieldset';\n```\n",
+      "cardTitle": "Fieldset",
+      "cardDescription": "Native fieldset+legend wrapper with disabled inheritance — FormSection's thinner sibling",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
-      "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "componentName": "Fieldset",
+      "category": "Forms",
+      "tier": "Element",
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
-      "adoptionStatus": "in-use",
+      "adoptionStatus": "demo-ready",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "forms",
       "stage": "live",
-      "source": "design-v1",
+      "source": "react-ecosystem",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "Native fieldset+legend wrapper with disabled inheritance — FormSection's thinner sibling",
+      "refs": "shadcn Field · Base UI Fieldset · Mantine Fieldset · Chakra Fieldset · React Aria",
       "buildsOn": null,
+      "icon": "rows-3",
+      "demand": 3,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
-      "liveInUse": true,
-      "demand": null,
+      "liveInUse": false,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "Fieldset",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/fieldset.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/fieldset.md"
         }
       },
       "linkedExamples": {

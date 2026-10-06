@@ -3,39 +3,39 @@
     "type": "card",
     "attributes": {
       "ref": {
-        "module": "@cardstack/pretui/components/command-palette",
-        "name": "CommandPalette"
+        "module": "@cardstack/pretui/components/scroller",
+        "name": "Scroller"
       },
       "specType": "component",
-      "readMe": "```gts\nimport { CommandPalette } from '@cardstack/pretui/components/command-palette';\n```\n",
-      "cardTitle": "CommandPalette",
-      "cardDescription": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
+      "readMe": "```gts\nimport { Scroller } from '@cardstack/pretui/components/scroller';\n```\n",
+      "cardTitle": "Scroller",
+      "cardDescription": "Scroll container with edge-visibility affordances",
       "containedExamples": [],
-      "componentName": "CommandPalette",
-      "icon": "square-terminal",
-      "category": "Overlays",
+      "componentName": "Scroller",
+      "category": "Layout",
       "tier": "Surface",
-      "tags": ["keyboard-navigation"],
+      "tags": [],
       "ownership": "pretui",
       "implementationStatus": "implemented",
       "adoptionStatus": "in-use",
       "introducedVersion": "0.4.0",
-      "territory": "controls",
+      "territory": "structure",
       "stage": "live",
       "source": "design-v1",
       "lineage": null,
       "version": "0.4.0",
-      "brief": "The ⌘K palette: a search field over the same command tree Menu renders, opened by a global shortcut",
-      "refs": null,
+      "brief": "Scroll container with edge-visibility affordances",
+      "refs": "wa-scroller",
       "buildsOn": null,
+      "icon": "arrows-down-up",
+      "demand": 2,
       "featured": false,
       "isNew": true,
       "hasDesign": true,
       "hasExamples": true,
       "liveInUse": true,
-      "demand": null,
       "cardInfo": {
-        "name": "CommandPalette",
+        "name": "Scroller",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -44,11 +44,11 @@
     "relationships": {
       "writeup": {
         "links": {
-          "self": "@cardstack/pretui/components/command-palette.md"
+          "self": "@cardstack/pretui/components/scroller.md"
         },
         "data": {
           "type": "file-meta",
-          "id": "@cardstack/pretui/components/command-palette.md"
+          "id": "@cardstack/pretui/components/scroller.md"
         }
       },
       "linkedExamples": {
