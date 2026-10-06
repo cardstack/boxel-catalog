@@ -63,13 +63,15 @@ export class OperationGrant extends FieldDef {
   // Whether the grant also admits a caller who isn't signed in. Off, it
   // admits only signed-in callers, so a grant written before anonymous
   // callers could reach a policy never starts admitting them. A grant on a
-  // base operation (`read`, `update`, …) may set it, and so may one on an
-  // operation a card declares on one of them, but not one on a named query.
-  // Such a caller has no actor, so a grant whose `where` reads `actor()`, or
-  // whose operation does, never admits one: an anonymous grant is scoped by
-  // what the target holds. How hard anonymous callers may use the realm, and
-  // which addresses it refuses, are the governed realm's own settings, not
-  // the policy's.
+  // base operation other than `explain` or `validate` may set it, and so may
+  // one on an operation a card declares on such a base. A grant on a named
+  // query may not: setting it there leaves the whole grant out, for
+  // signed-in callers too. Such a caller has no actor, so a grant whose
+  // `where` reads `actor()`, or whose operation does, never admits one,
+  // though it still applies to signed-in callers: an anonymous grant is
+  // scoped by what the target holds. How hard anonymous callers may use the
+  // realm, and which addresses it refuses, are the governed realm's own
+  // settings, not the policy's.
   @field anonymous = contains(BooleanField);
   // For an anonymous grant on a write: the key, exactly as written, in the
   // governed realm's `realm.json` settings, whose value is the user the write
