@@ -27,6 +27,7 @@ import {
 import {
   PlacementPalette,
   type PlacementItem,
+  type PlacementMenuItems,
 } from '@cardstack/catalog/components/placement-palette';
 import { PlacementDropZone } from './components/placement-drop-zone';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
@@ -144,8 +145,22 @@ export class PlacementBoard extends CardDef {
         }));
     }
 
+    // Built once per pool: every zone looks up each of its placements here
+    // on every render.
+    private itemCache:
+      | { pool: unknown; byKey: Map<string, PlacementItem> }
+      | undefined;
+
     itemFor = (itemId: string): PlacementItem | undefined => {
-      return this.items.find((i) => sameItem(i.id, itemId));
+      let pool = this.args.model.pool;
+      let cache = this.itemCache;
+      if (!cache || cache.pool !== pool) {
+        cache = this.itemCache = {
+          pool,
+          byKey: new Map(this.items.map((i) => [itemKey(i.id), i])),
+        };
+      }
+      return cache.byKey.get(itemKey(itemId));
     };
 
     // Clicking a chip — in the rail or in a zone — opens the real card.
@@ -180,6 +195,7 @@ export class PlacementBoard extends CardDef {
     // from the old zone" step for the user to forget.
     place = (itemId: string, zoneKey: string) => {
       let key = itemKey(itemId);
+      let existing = this.draft.find((p) => itemKey(p.itemId) === key);
       let rest = this.draft.filter((p) => itemKey(p.itemId) !== key);
       this.args.model.draft = [
         ...rest,
@@ -188,6 +204,7 @@ export class PlacementBoard extends CardDef {
           zoneKey,
           seq: nextSeq(zoneKey, rest),
           placedAt: new Date(),
+          note: existing?.note,
         }),
       ];
     };
@@ -201,6 +218,7 @@ export class PlacementBoard extends CardDef {
       if (key === beforeKey) {
         return;
       }
+      let existing = this.draft.find((p) => itemKey(p.itemId) === key);
       let others = this.draft.filter((p) => itemKey(p.itemId) !== key);
       let zoneRows = placementsIn(zoneKey, others);
       let index = zoneRows.findIndex((p) => itemKey(p.itemId) === beforeKey);
@@ -213,6 +231,7 @@ export class PlacementBoard extends CardDef {
         zoneKey,
         seq: 0,
         placedAt: new Date(),
+        note: existing?.note,
       });
       zoneRows.splice(index, 0, moved);
       let renumbered = zoneRows.map(
@@ -237,6 +256,61 @@ export class PlacementBoard extends CardDef {
       this.args.model.draft = this.draft.filter(
         (p) => itemKey(p.itemId) !== key,
       );
+    };
+
+    // ── Keyboard placement ──────────────────────────────────────────────
+    // Every drag has a menu equivalent, so placing never needs a pointer.
+
+    zoneLabel(zone: PlacementZoneField): string {
+      return zone.displayLabel || zone.label || zone.key || 'Untitled zone';
+    }
+
+    get placeableZones(): PlacementZoneField[] {
+      return (this.args.model.zones ?? []).filter((z) => z?.key);
+    }
+
+    paletteMenu = (item: PlacementItem): PlacementMenuItems =>
+      this.placeableZones.map((zone) => ({
+        label: `Place in ${this.zoneLabel(zone)}`,
+        onSelect: () => this.place(item.id, zone.key!),
+      }));
+
+    placedMenu = (item: PlacementItem): PlacementMenuItems => {
+      let key = itemKey(item.id);
+      let zoneKey =
+        this.draft.find((p) => itemKey(p.itemId) === key)?.zoneKey ?? '';
+      let rows = placementsIn(zoneKey, this.draft);
+      let index = rows.findIndex((p) => itemKey(p.itemId) === key);
+      let previous = rows[index - 1]?.itemId;
+      let next = rows[index + 1]?.itemId;
+      return [
+        {
+          label: 'Move up',
+          disabled: !previous,
+          onSelect: () => previous && this.reorder(item.id, previous, zoneKey),
+        },
+        {
+          label: 'Move down',
+          disabled: !next,
+          onSelect: () => next && this.reorder(next, item.id, zoneKey),
+        },
+        {
+          kind: 'submenu',
+          label: 'Move to',
+          items: this.placeableZones
+            .filter((zone) => zone.key !== zoneKey)
+            .map((zone) => ({
+              label: this.zoneLabel(zone),
+              onSelect: () => this.place(item.id, zone.key!),
+            })),
+        },
+        '---',
+        {
+          label: 'Remove',
+          destructive: true,
+          onSelect: () => this.unplace(item.id),
+        },
+      ];
     };
 
     get statusLabel(): string {
@@ -280,6 +354,7 @@ export class PlacementBoard extends CardDef {
             @searchable={{true}}
             @heading={{if @model.noun @model.noun 'To place'}}
             @onSelect={{this.openItem}}
+            @menuFor={{this.paletteMenu}}
           />
 
           <div class='zone-grid'>
@@ -292,6 +367,7 @@ export class PlacementBoard extends CardDef {
                 @onReorder={{this.reorder}}
                 @onRemove={{this.unplace}}
                 @onSelect={{this.openItem}}
+                @menuFor={{this.placedMenu}}
               />
             {{/each}}
           </div>

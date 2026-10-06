@@ -5,6 +5,8 @@ import { fn } from '@ember/helper';
 import { guidFor } from '@ember/object/internals';
 import { gt, eq } from '@cardstack/boxel-ui/helpers';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { Menu, type MenuSignature } from '@cardstack/pretui/components/menu';
 
 import { StatePill } from './state-pill';
 
@@ -13,6 +15,9 @@ import {
   placedItemIds,
   itemKey,
 } from '../fields/placement/placement-vocabulary';
+
+/** The entries of a Pret UI `Menu`, as the Placement family builds them. */
+export type PlacementMenuItems = MenuSignature['Args']['items'];
 
 // One candidate the palette can offer. Deliberately a plain shape rather
 // than a CardDef: the Placement family works for things that are not cards
@@ -40,6 +45,12 @@ interface PalettePaletteSignature {
     keepPlaced?: boolean;
     onDragStart?: (item: PlacementItem, event: DragEvent) => void;
     onSelect?: (item: PlacementItem) => void;
+    /**
+     * Keyboard-operable actions for an item, shown as a menu beside its chip.
+     * A board passes "place in <zone>" entries here so placing never needs a
+     * pointer drag.
+     */
+    menuFor?: (item: PlacementItem) => PlacementMenuItems;
     groupBy?: boolean;
     searchable?: boolean;
     emptyLabel?: string;
@@ -199,7 +210,7 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
             {{/if}}
             <ul class='chip-list'>
               {{#each group.items key='id' as |item|}}
-                <li>
+                <li class='chip-row'>
                   <button
                     type='button'
                     class='chip
@@ -221,6 +232,23 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
                       {{/if}}
                     {{/if}}
                   </button>
+                  {{#if @menuFor}}
+                    <Menu
+                      @items={{@menuFor item}}
+                      @label='Place {{item.title}}'
+                      @align='end'
+                    >
+                      <:trigger as |_open toggle|>
+                        <IconButton
+                          class='chip-menu'
+                          @label='Place {{item.title}}'
+                          @variant='ghost'
+                          @size='xs'
+                          {{on 'click' toggle}}
+                        >⋯</IconButton>
+                      </:trigger>
+                    </Menu>
+                  {{/if}}
                 </li>
               {{/each}}
             </ul>
@@ -278,7 +306,17 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
         flex-direction: column;
         gap: var(--boxel-sp-xxxs);
       }
+      .chip-row {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-4xs);
+      }
+      .chip-menu {
+        flex: none;
+      }
       .chip {
+        flex: 1;
+        min-width: 0;
         width: 100%;
         display: flex;
         flex-direction: column;

@@ -12,9 +12,11 @@ import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
 import { PlacementBoard } from '../placement-board';
 import {
+  PlacementField,
   overCapacityZones,
   placedItemIds,
   isDirty,
+  itemKey,
 } from '@cardstack/catalog/fields/placement/placement-vocabulary';
 
 export class CommitPlacementInput extends CardDef {
@@ -28,6 +30,7 @@ export class CommitPlacementInput extends CardDef {
 
 export class CommitPlacementResult extends CardDef {
   @field placedCount = contains(NumberField);
+  @field addedCount = contains(NumberField);
   @field movedCount = contains(NumberField);
   @field removedCount = contains(NumberField);
   @field message = contains(StringField);
@@ -79,6 +82,26 @@ export class CommitPlacementCommand extends Command<
       );
     }
 
+    // The arrangement must be one: each item once, in a zone that exists. A
+    // duplicate would also count twice toward capacity.
+    let zoneKeys = new Set((board.zones ?? []).map((z) => z?.key));
+    let seen = new Set<string>();
+    for (let p of draft) {
+      let key = itemKey(p?.itemId);
+      if (!key) {
+        continue;
+      }
+      if (seen.has(key)) {
+        throw new Error(`Refused: ${key} is placed more than once.`);
+      }
+      seen.add(key);
+      if (!zoneKeys.has(p.zoneKey)) {
+        throw new Error(
+          `Refused: ${key} is placed in "${p.zoneKey ?? ''}", which is not a zone on this board.`,
+        );
+      }
+    }
+
     let conflicts = overCapacityZones(board.zones ?? [], draft);
     if (conflicts.length > 0 && !input.allowOverCapacity) {
       let detail = conflicts
@@ -92,20 +115,21 @@ export class CommitPlacementCommand extends Command<
     // Movement stats, computed before the write so the message describes the
     // change rather than the end state — "12 placed" tells you nothing about
     // what this commit did.
-    let before = new Map(
-      committed
-        .filter((p) => p?.itemId)
-        .map((p) => [p.itemId as string, p.zoneKey ?? '']),
-    );
-    let after = new Map(
-      draft
-        .filter((p) => p?.itemId)
-        .map((p) => [p.itemId as string, p.zoneKey ?? '']),
-    );
+    let byItem = (rows: PlacementField[]) =>
+      new Map(
+        rows
+          .filter((p) => itemKey(p?.itemId))
+          .map((p) => [itemKey(p.itemId), p.zoneKey ?? '']),
+      );
+    let before = byItem(committed);
+    let after = byItem(draft);
 
+    let addedCount = 0;
     let movedCount = 0;
     for (let [itemId, zoneKey] of after) {
-      if (before.get(itemId) !== zoneKey) {
+      if (!before.has(itemId)) {
+        addedCount++;
+      } else if (before.get(itemId) !== zoneKey) {
         movedCount++;
       }
     }
@@ -116,10 +140,18 @@ export class CommitPlacementCommand extends Command<
       }
     }
 
-    // Copy, don't alias — assigning the same array to both fields would make
-    // the next edit to `draft` silently mutate what was just committed, and
-    // `hasUncommittedChanges` would never read true again.
-    board.placements = draft.map((p) => p);
+    // Fresh rows, not shared ones: a later edit to a draft row must not
+    // change what was committed, or `hasUncommittedChanges` would stay false.
+    board.placements = draft.map(
+      (p) =>
+        new PlacementField({
+          itemId: p.itemId,
+          zoneKey: p.zoneKey,
+          seq: p.seq,
+          placedAt: p.placedAt,
+          note: p.note,
+        }),
+    );
 
     await new SaveCardCommand(this.commandContext).execute({
       card: board,
@@ -134,9 +166,10 @@ export class CommitPlacementCommand extends Command<
 
     return new CommitPlacementResult({
       placedCount,
+      addedCount,
       movedCount,
       removedCount,
-      message: `Placement committed${who}: ${movedCount} moved, ${removedCount} removed, ${placedCount} placed in total.${override}`,
+      message: `Placement committed${who}: ${addedCount} added, ${movedCount} moved, ${removedCount} removed, ${placedCount} placed in total.${override}`,
     });
   }
 }

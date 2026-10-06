@@ -2,8 +2,9 @@ import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { gt, eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { Menu } from '@cardstack/pretui/components/menu';
 
 import type {
   PlacementZoneField,
@@ -16,7 +17,17 @@ import {
 import {
   PLACEMENT_DRAG_TYPE,
   type PlacementItem,
+  type PlacementMenuItems,
 } from '@cardstack/catalog/components/placement-palette';
+
+// The placed chip being dragged, if the drag started in a zone. DataTransfer
+// payloads are unreadable until the drop, so this is how a full zone can
+// still take its own chips back for a reorder.
+let draggingPlaced: { itemId: string; zoneKey: string } | undefined;
+
+function isPlacementDrag(event: DragEvent): boolean {
+  return Boolean(event.dataTransfer?.types.includes(PLACEMENT_DRAG_TYPE));
+}
 
 interface DropZoneSignature {
   Args: {
@@ -35,6 +46,10 @@ interface DropZoneSignature {
     onReorder?: (itemId: string, beforeItemId: string, zoneKey: string) => void;
     onRemove?: (itemId: string, zoneKey: string) => void;
     onSelect?: (item: PlacementItem) => void;
+    // Keyboard-operable actions for a placed item (move up / down, move to
+    // another zone, remove), shown as a menu beside its chip. Takes the place
+    // of the bare remove button.
+    menuFor?: (item: PlacementItem) => PlacementMenuItems;
     // Refuse drops entirely (a locked table, a closed shift). The zone greys
     // and the drop is a no-op; the chip snaps back and nothing is written.
     isLocked?: boolean;
@@ -78,11 +93,15 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
       .filter(Boolean) as PlacementItem[];
   }
 
-  get accepts(): boolean {
-    if (this.args.isLocked) {
+  accepts(event: DragEvent): boolean {
+    if (this.args.isLocked || !isPlacementDrag(event)) {
       return false;
     }
-    return !(this.args.enforceCapacity && this.occupancy.isFull);
+    if (!(this.args.enforceCapacity && this.occupancy.isFull)) {
+      return true;
+    }
+    // A reorder inside a full zone does not change its occupancy.
+    return draggingPlaced?.zoneKey === this.zoneKey;
   }
 
   // Shown only when there is a ceiling — an unlimited zone with "3" next to
@@ -92,17 +111,9 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
     return capacity == null ? `${count}` : `${count} / ${capacity}`;
   }
 
-  private readDraggedId(event: DragEvent): string | undefined {
-    return (
-      event.dataTransfer?.getData(PLACEMENT_DRAG_TYPE) ||
-      event.dataTransfer?.getData('text/plain') ||
-      undefined
-    );
-  }
-
   dragEnter = (e: Event) => {
     let event = e as DragEvent;
-    if (!this.accepts) {
+    if (!this.accepts(event)) {
       return;
     }
     event.preventDefault();
@@ -111,13 +122,19 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
 
   dragOver = (e: Event) => {
     let event = e as DragEvent;
-    if (!this.accepts) {
+    if (!this.accepts(event)) {
       return;
     }
     event.preventDefault();
   };
 
-  dragLeave = () => {
+  dragLeave = (e: Event) => {
+    let event = e as DragEvent;
+    // Moving between the zone's own children also fires dragleave on it.
+    let to = event.relatedTarget as Node | null;
+    if (to && (event.currentTarget as HTMLElement).contains(to)) {
+      return;
+    }
     this.isDragOver = false;
     this.dropBeforeId = undefined;
   };
@@ -127,15 +144,17 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
     this.isDragOver = false;
     let before = this.dropBeforeId;
     this.dropBeforeId = undefined;
-    if (!this.accepts) {
+    let accepted = this.accepts(event);
+    draggingPlaced = undefined;
+    if (!accepted) {
       return;
     }
     event.preventDefault();
-    let itemId = this.readDraggedId(event);
-    if (!itemId) {
+    let itemId = event.dataTransfer?.getData(PLACEMENT_DRAG_TYPE);
+    if (!itemId || before === itemId) {
       return;
     }
-    if (before && before !== itemId && this.args.onReorder) {
+    if (before && this.args.onReorder) {
       this.args.onReorder(itemId, before, this.zoneKey);
       return;
     }
@@ -145,7 +164,7 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
   // Chip-level targets. The handler stops propagation so the zone underneath
   // does not also treat the drop as a plain "append to this zone".
   dragOverChip = (target: PlacementItem, event: DragEvent) => {
-    if (!this.accepts || !this.args.onReorder) {
+    if (!this.accepts(event) || !this.args.onReorder) {
       return;
     }
     event.preventDefault();
@@ -166,11 +185,20 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
   // writes — that is what makes zone→zone a single drag instead of
   // "remove, find it again in the rail, drag it back".
   startDragPlaced = (item: PlacementItem, event: DragEvent) => {
+    if (this.args.isLocked) {
+      event.preventDefault();
+      return;
+    }
+    draggingPlaced = { itemId: item.id, zoneKey: this.zoneKey };
     event.dataTransfer?.setData(PLACEMENT_DRAG_TYPE, item.id);
     event.dataTransfer?.setData('text/plain', item.title ?? item.id);
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
     }
+  };
+
+  endDragPlaced = () => {
+    draggingPlaced = undefined;
   };
 
   remove = (itemId: string) => {
@@ -220,8 +248,9 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
               type='button'
               class='placed-open'
               title={{item.title}}
-              draggable='true'
+              draggable={{if @isLocked 'false' 'true'}}
               {{on 'dragstart' (fn this.startDragPlaced item)}}
+              {{on 'dragend' this.endDragPlaced}}
               {{on 'click' (fn this.select item)}}
             >
               {{#if (has-block 'chip')}}
@@ -230,7 +259,25 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
                 {{item.title}}
               {{/if}}
             </button>
-            {{#if @onRemove}}
+            {{#if @isLocked}}
+              {{! A locked zone keeps what it holds. }}
+            {{else if @menuFor}}
+              <Menu
+                @items={{@menuFor item}}
+                @label='Move {{item.title}}'
+                @align='end'
+              >
+                <:trigger as |_open toggle|>
+                  <IconButton
+                    class='placed-menu'
+                    @label='Move {{item.title}}'
+                    @variant='ghost'
+                    @size='xs'
+                    {{on 'click' toggle}}
+                  >⋯</IconButton>
+                </:trigger>
+              </Menu>
+            {{else if @onRemove}}
               <IconButton
                 class='placed-remove'
                 @label='Remove {{item.title}}'
@@ -249,7 +296,7 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
         </p>
       {{/if}}
 
-      {{#if (gt this.occupancy.count (if @zone.capacity @zone.capacity 99999))}}
+      {{#if this.occupancy.isOver}}
         <p class='zone-warning' role='status'>Over capacity</p>
       {{/if}}
     </section>
@@ -370,6 +417,7 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
         outline: 0.125rem solid var(--ring);
         outline-offset: -0.125rem;
       }
+      .placed-menu,
       .placed-remove {
         flex: none;
         color: var(--muted-foreground);
