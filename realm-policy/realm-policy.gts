@@ -169,10 +169,10 @@ export class OperationGrant extends FieldDef {
         >
           <@fields.anonymous />
           <p class='hint'>
-            Off, this grant only admits callers who are signed in. Only a grant
-            on a base operation under its own name, such as read or update, can
-            allow callers who aren't signed in, and a condition that uses
-            actor() never admits them.
+            When this is off, the grant admits only callers who are signed in.
+            Only a grant on a base operation under its own name, such as read or
+            update, can allow callers who aren't signed in, and a condition that
+            uses actor() never admits them.
           </p>
         </FieldContainer>
         {{#if @model.anonymous}}
