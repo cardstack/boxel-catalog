@@ -144,6 +144,66 @@ export class OperationGrant extends FieldDef {
 
   static embedded = OperationGrantView;
   static atom = OperationGrantView;
+
+  static edit = class Edit extends Component<typeof OperationGrant> {
+    <template>
+      <div class='operation-grant-edit'>
+        <FieldContainer
+          @label='Operation'
+          @vertical={{true}}
+          data-test-field='operation'
+        >
+          <@fields.operation />
+        </FieldContainer>
+        <FieldContainer
+          @label='Condition'
+          @vertical={{true}}
+          data-test-field='where'
+        >
+          <@fields.where />
+        </FieldContainer>
+        <FieldContainer
+          @label="Also allow callers who aren't signed in"
+          @vertical={{true}}
+          data-test-field='anonymous'
+        >
+          <@fields.anonymous />
+          <p class='hint'>
+            Off, this grant only admits callers who are signed in. Only a grant
+            on a base operation under its own name, such as read or update, can
+            allow callers who aren't signed in, and a condition that uses
+            actor() never admits them.
+          </p>
+        </FieldContainer>
+        {{#if @model.anonymous}}
+          <FieldContainer
+            @label='Write as the user named by this realm.json setting'
+            @vertical={{true}}
+            data-test-field='actingUser'
+          >
+            <@fields.actingUser />
+            <p class='hint'>
+              The name of a setting in the governed realm's realm.json config,
+              not a user. The realm's config maps it to the user a write by a
+              caller who isn't signed in is made as, and that user must be able
+              to write the realm. Only a create, update or delete needs it.
+            </p>
+          </FieldContainer>
+        {{/if}}
+      </div>
+      <style scoped>
+        .operation-grant-edit {
+          display: grid;
+          gap: var(--boxel-sp);
+        }
+        .hint {
+          margin: var(--boxel-sp-xxs) 0 0;
+          font-size: var(--boxel-font-size-sm);
+          color: var(--muted-foreground, var(--boxel-450));
+        }
+      </style>
+    </template>
+  };
 }
 
 export class PolicyRule extends FieldDef {
