@@ -392,9 +392,13 @@ export class PolicyRule extends FieldDef {
 }
 
 // What each reason an explanation gives means, in the words a policy author
-// reads it in. `reads-actor` is named here as well as through the explanation
-// type, so the map covers it whichever platform version this realm runs on.
-const REASONS: Record<PolicyExplanation['reason'] | 'reads-actor', string> = {
+// reads it in. `reads-actor` and `blocklist-invalid` are named here as well as
+// through the explanation type, so the map covers them whichever platform
+// version this realm runs on.
+const REASONS: Record<
+  PolicyExplanation['reason'] | 'reads-actor' | 'blocklist-invalid',
+  string
+> = {
   acl: "The realm's own permissions already allow this, so the policy isn't needed.",
   granted: 'A grant in this policy allows it.',
   'no-grant': "No rule for this card's type grants this operation.",
@@ -414,6 +418,8 @@ const REASONS: Record<PolicyExplanation['reason'] | 'reads-actor', string> = {
     "Someone who isn't signed in is turned away before the policy is checked.",
   'reads-actor':
     "This operation depends on who is asking, and someone who isn't signed in can't be identified, so a grant that opens it to them doesn't apply.",
+  'blocklist-invalid':
+    "This realm's blocklist has an entry that isn't an address or a range, so it turns away everyone who isn't signed in before the policy is checked.",
   'policy-unloadable': "The realm's policy couldn't be loaded.",
 };
 
@@ -731,6 +737,45 @@ interface ExplanationViewSignature {
   Args: { explanation: PolicyExplanation };
 }
 
+// What an explanation reports about callers who aren't signed in: how the
+// realm limits and blocks them, and for a grant that opts in to them, the
+// user its writes are made as. Read where present, so the panel answers the
+// same on a platform that doesn't report them.
+interface AnonymousAccessDetail {
+  limit: { requests: number; windowSeconds: number };
+  limitFrom: 'realm' | 'platform';
+  invalidBlocklistEntries: string[];
+}
+interface GrantAnonymousDetail {
+  actingUserKey?: string;
+  actingUser?: string;
+  actingUserFailure?: 'key-missing' | 'not-a-matrix-id' | 'no-write';
+}
+type ExplainedGrantDetail =
+  PolicyExplanation['rules'][number]['grants'][number] & {
+    anonymous?: GrantAnonymousDetail;
+    issues?: DraftIssue[];
+  };
+
+// `1 request`, `2 requests`.
+function counted(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`;
+}
+
+// Why an acting-user key names no one a write may be made as, in the words a
+// policy author reads it in.
+const ACTING_USER_FAILURES: Record<
+  NonNullable<GrantAnonymousDetail['actingUserFailure']>,
+  (key: string) => string
+> = {
+  'key-missing': (key) =>
+    `this realm's settings have no "${key}", so this grant admits none of them.`,
+  'not-a-matrix-id': (key) =>
+    `this realm's "${key}" setting isn't a user ID, so this grant admits none of them.`,
+  'no-write': (key) =>
+    `the user this realm's "${key}" setting names can't write to the realm, so this grant admits none of them.`,
+};
+
 class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
   get explanation() {
     return this.args.explanation;
@@ -740,6 +785,60 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
     let { reason, search } = this.explanation;
     return (search ? SEARCH_REASONS[reason] : undefined) ?? REASONS[reason];
   }
+
+  get anonymousAccess(): AnonymousAccessDetail | undefined {
+    return (
+      this.explanation as PolicyExplanation & {
+        anonymous?: AnonymousAccessDetail;
+      }
+    ).anonymous;
+  }
+
+  get anonymousLimit(): string {
+    let access = this.anonymousAccess;
+    if (!access) {
+      return '';
+    }
+    let { requests, windowSeconds } = access.limit;
+    return `${counted(requests, 'request')} per ${counted(
+      windowSeconds,
+      'second',
+    )} from one address, ${
+      access.limitFrom === 'realm'
+        ? 'set by this realm'
+        : 'the platform default'
+    }`;
+  }
+
+  get invalidBlocklist(): string {
+    return (this.anonymousAccess?.invalidBlocklistEntries ?? [])
+      .map((entry) => `"${entry}"`)
+      .join(', ');
+  }
+
+  grantDetail = (
+    grant: PolicyExplanation['rules'][number]['grants'][number],
+  ): ExplainedGrantDetail => grant as ExplainedGrantDetail;
+
+  // Who a grant opened to callers who aren't signed in makes their writes
+  // as, or why it admits none of them.
+  // The line says whose writes it means, since an explanation about a
+  // signed-in caller lists these grants too, and that caller's own writes are
+  // made as themselves.
+  actingUserLine = (anonymous: GrantAnonymousDetail): string => {
+    let opened = "Open to people who aren't signed in";
+    let key = anonymous.actingUserKey;
+    if (!key) {
+      return `${opened}.`;
+    }
+    if (anonymous.actingUserFailure) {
+      return `${opened}, but ${ACTING_USER_FAILURES[anonymous.actingUserFailure](key)}`;
+    }
+    if (!anonymous.actingUser) {
+      return `${opened}; their writes are made as whoever this realm's "${key}" setting names.`;
+    }
+    return `${opened}; their writes are made as ${anonymous.actingUser} (this realm's "${key}" setting).`;
+  };
 
   // What the realm's own permissions let the actor do. Write without read
   // is a shape the realm accepts, so it is named rather than read as both.
@@ -853,6 +952,24 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
             <code>{{this.explanation.refusal.code}}</code>
           </dd>
         {{/if}}
+        {{#if this.anonymousAccess}}
+          <dt>Limit</dt>
+          <dd data-test-explanation-anonymous-limit>{{this.anonymousLimit}}</dd>
+          {{#if this.anonymousAccess.invalidBlocklistEntries.length}}
+            <dt>Blocklist</dt>
+            <dd class='blocklist' data-test-explanation-anonymous-blocklist>
+              <Pill
+                @tag='span'
+                @pillBackgroundColor='var(--warning, var(--boxel-warning))'
+                @pillBorderColor='var(--warning, var(--boxel-warning))'
+                @pillFontColor='var(--warning-foreground, var(--boxel-dark))'
+              >warning</Pill>
+              Some entries aren't an address or a range ({{this.invalidBlocklist}}),
+              so this realm turns away everyone who isn't signed in until
+              they're fixed.
+            </dd>
+          {{/if}}
+        {{/if}}
       </dl>
       {{#if this.explanation.search}}
         <dl class='facts search' data-test-explanation-search>
@@ -929,6 +1046,28 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
                           data-test-explanation-admitting
                         >allowed it</Pill>
                       {{/if}}
+                      {{#let (this.grantDetail grant) as |detail|}}
+                        {{#if detail.anonymous}}
+                          <p
+                            class='grant-note'
+                            data-test-explanation-grant-anonymous
+                          >{{this.actingUserLine detail.anonymous}}</p>
+                        {{/if}}
+                        {{#each detail.issues as |issue|}}
+                          <div
+                            class='grant-issue'
+                            data-test-explanation-grant-issue={{issue.code}}
+                          >
+                            <span class='issue-label'><Pill
+                                @tag='span'
+                                @pillBackgroundColor='var(--warning, var(--boxel-warning))'
+                                @pillBorderColor='var(--warning, var(--boxel-warning))'
+                                @pillFontColor='var(--warning-foreground, var(--boxel-dark))'
+                              >{{issue.severity}}</Pill></span>
+                            <MessageText @message={{issue.message}} />
+                          </div>
+                        {{/each}}
+                      {{/let}}
                     </li>
                   {{/each}}
                 </ul>
@@ -1002,6 +1141,25 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
       }
       .matched-grant.admitting {
         font-weight: 600;
+      }
+      .grant-note,
+      .grant-issue {
+        flex-basis: 100%;
+        margin: 0;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: normal;
+      }
+      .grant-note {
+        color: var(--muted-foreground, var(--boxel-450));
+      }
+      .grant-issue {
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+      }
+      .issue-label {
+        flex-shrink: 0;
+        white-space: nowrap;
       }
       .type-name {
         font-weight: 600;
