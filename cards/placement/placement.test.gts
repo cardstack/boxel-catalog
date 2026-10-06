@@ -8,9 +8,6 @@ import {
 } from '@cardstack/host/tests/helpers/render-component';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
-import { CardDef, contains, field } from '@cardstack/base/card-api';
-import StringField from '@cardstack/base/string';
-
 import {
   PlacementField,
   PlacementZoneField,
@@ -19,17 +16,9 @@ import {
 import type { PlacementItem } from '../../components/placement-palette';
 import { getLoader } from '../../tests/helpers/field-test-helpers';
 
+import { PersonBase } from '../people/person-base';
 import { PlacementBoard } from './placement-board';
 import { PlacementDropZone } from './components/placement-drop-zone';
-
-class Tech extends CardDef {
-  @field name = contains(StringField);
-  @field cardTitle = contains(StringField, {
-    computeVia: function (this: Tech) {
-      return this.name;
-    },
-  });
-}
 
 const ITEMS: Record<string, PlacementItem> = {
   'Tech/a': { id: 'Tech/a', title: 'A' },
@@ -139,8 +128,8 @@ export function runTests() {
           new PlacementZoneField({ key: 'b', label: 'Bench' }),
         ],
         pool: [
-          new Tech({ id: 'https://example.test/Tech/a', name: 'A' }),
-          new Tech({ id: 'https://example.test/Tech/b', name: 'B' }),
+          new PersonBase({ id: 'https://example.test/Tech/a', name: 'A' }),
+          new PersonBase({ id: 'https://example.test/Tech/b', name: 'B' }),
         ],
         draft: [],
         placements: [],

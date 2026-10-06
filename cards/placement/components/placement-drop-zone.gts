@@ -248,7 +248,7 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
               type='button'
               class='placed-open'
               title={{item.title}}
-              draggable={{if @isLocked 'false' 'true'}}
+              draggable={{if @isLocked false true}}
               {{on 'dragstart' (fn this.startDragPlaced item)}}
               {{on 'dragend' this.endDragPlaced}}
               {{on 'click' (fn this.select item)}}
