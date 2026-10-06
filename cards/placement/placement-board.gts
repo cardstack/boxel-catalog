@@ -10,7 +10,7 @@ import {
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
-import { Pill } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { gt } from '@cardstack/boxel-ui/helpers';
 
 import {
@@ -29,6 +29,8 @@ import {
   type PlacementItem,
 } from '@cardstack/catalog/components/placement-palette';
 import { PlacementDropZone } from './components/placement-drop-zone';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 /**
  * A plan for putting things in places.
@@ -248,6 +250,13 @@ export class PlacementBoard extends CardDef {
       return 'Committed';
     }
 
+    get statusHue(): Hue {
+      if ((this.args.model.conflictCount ?? 0) > 0) {
+        return 'red';
+      }
+      return this.args.model.hasUncommittedChanges ? 'amber' : 'green';
+    }
+
     <template>
       <main class='board'>
         <header class='board-head'>
@@ -260,11 +269,7 @@ export class PlacementBoard extends CardDef {
               to go
             </p>
           </div>
-          <Pill
-            class='board-status
-              {{if (gt @model.conflictCount 0) "conflict"}}
-              {{if @model.hasUncommittedChanges "dirty"}}'
-          >{{this.statusLabel}}</Pill>
+          <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
         </header>
 
         <div class='board-body'>
@@ -301,8 +306,8 @@ export class PlacementBoard extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
+          background: var(--background);
+          color: var(--foreground);
         }
         .board-head {
           display: flex;
@@ -320,26 +325,11 @@ export class PlacementBoard extends CardDef {
           margin: var(--boxel-sp-xxxs) 0 0;
           font: var(--boxel-font-sm);
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .board-status.dirty {
-          --pill-background-color: color-mix(
-            in oklch,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-        }
-        .board-status.conflict {
-          --pill-background-color: color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          --pill-font-color: var(--destructive, var(--boxel-danger));
+          color: var(--muted-foreground);
         }
         .board-body {
           display: grid;
-          grid-template-columns: minmax(180px, 240px) 1fr;
+          grid-template-columns: minmax(11.25rem, 15rem) 1fr;
           gap: var(--boxel-sp);
           align-items: start;
         }
@@ -349,7 +339,7 @@ export class PlacementBoard extends CardDef {
         }
         .zone-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(11.25rem, 1fr));
           gap: var(--boxel-sp-sm);
         }
         /* The rail goes on top rather than shrinking: a search box and a
@@ -368,11 +358,6 @@ export class PlacementBoard extends CardDef {
   };
 
   static edit = class Edit extends Component<typeof this> {
-    // A board has five distinct editing jobs and they are not interchangeable:
-    // naming it, declaring where things can go, choosing who is in play, and
-    // the two arrangement arrays. Without a rail the form is one long scroll
-    // of containsMany editors and the author loses their place after every
-    // row they add.
     sections = [
       { id: 'board', label: 'Board' },
       { id: 'zones', label: 'Zones' },
@@ -381,174 +366,68 @@ export class PlacementBoard extends CardDef {
       { id: 'committed', label: 'Committed' },
     ];
 
+    get draftHint(): string {
+      return `${this.args.model.placedCount ?? 0} placed · ${
+        this.args.model.unplacedCount ?? 0
+      } to go`;
+    }
+
     <template>
-      <form class='edit' aria-label='Edit placement board'>
-        <nav class='rail' aria-label='Form sections'>
-          <ul>
-            {{#each this.sections key='id' as |s|}}
-              <li><a href='#pb-{{s.id}}'>{{s.label}}</a></li>
-            {{/each}}
-          </ul>
-        </nav>
+      <SectionedEdit
+        @sections={{this.sections}}
+        @ariaLabel='Placement board sections'
+        as |e|
+      >
+        <e.Section @id='board' @title='Board'>
+          <FieldContainer @label='Item noun' @vertical={{true}}>
+            <@fields.noun />
+          </FieldContainer>
+          <p class='hint'>What one item is called here — “Guest”, “Technician”,
+            “Box”. Used as the palette heading and in empty states.</p>
+        </e.Section>
 
-        <div class='panes'>
-          <section id='pb-board' aria-label='Board'>
-            <h3>Board</h3>
-            <label class='f'>
-              <span>Item noun</span>
-              <@fields.noun />
-              <small>What one item is called here — “Guest”, “Technician”,
-                “Box”. Used as the palette heading and in empty states.</small>
-            </label>
-          </section>
+        <e.Section @id='zones' @title='Zones'>
+          <p class='hint'>Where things can go.
+            <strong>A zone's key is permanent</strong>
+            — placements point at it, so renaming one orphans every placement
+            that used it. Change the label instead. Leave capacity blank for
+            unlimited.</p>
+          <@fields.zones />
+        </e.Section>
 
-          <section id='pb-zones' aria-label='Zones'>
-            <h3>Zones</h3>
-            <p class='hint'>Where things can go.
-              <strong>`key` is permanent</strong>
-              — placements point at it, so renaming one orphans every placement
-              that used it. Change `label` instead. Leave `capacity` blank for
-              unlimited.</p>
-            <@fields.zones />
-          </section>
+        <e.Section @id='pool' @title='Pool'>
+          <p class='hint'>The candidates. A curated set, not a live query: a
+            board that silently gained a row would invalidate a plan that was
+            already half made.</p>
+          <@fields.pool />
+        </e.Section>
 
-          <section id='pb-pool' aria-label='Pool'>
-            <h3>Pool</h3>
-            <p class='hint'>The candidates. A curated set, not a live query: a
-              board that silently gained a row would invalidate a plan that was
-              already half made.</p>
-            <@fields.pool />
-          </section>
+        <e.Section @id='draft' @title='Draft' @hint={{this.draftHint}}>
+          <p class='hint'>The proposed arrangement. Normally you edit this by
+            dragging on the board, not here — this form is for bulk fixes and
+            for seeding a board from an import.</p>
+          <@fields.draft />
+        </e.Section>
 
-          <section id='pb-draft' aria-label='Draft'>
-            <h3>Draft
-              <span class='badge'>{{@model.placedCount}}
-                placed ·
-                {{@model.unplacedCount}}
-                to go</span>
-            </h3>
-            <p class='hint'>The proposed arrangement. Normally you edit this by
-              dragging on the board, not here — this form is for bulk fixes and
-              for seeding a board from an import.</p>
-            <@fields.draft />
-          </section>
-
-          <section id='pb-committed' aria-label='Committed'>
-            <h3>Committed
-              {{#if @model.hasUncommittedChanges}}
-                <span class='badge warn'>differs from draft</span>
-              {{/if}}
-            </h3>
-            <p class='hint'><strong>Commit Placement is the single writer for
-                this field.</strong>
-              Editing it by hand bypasses the capacity gate and the movement
-              record. Do it only to repair a board, never as the normal way to
-              publish an arrangement.</p>
-            <@fields.placements />
-          </section>
-        </div>
-      </form>
+        <e.Section @id='committed' @title='Committed'>
+          {{#if @model.hasUncommittedChanges}}
+            <StatePill @label='Differs from draft' @hue='amber' />
+          {{/if}}
+          <p class='hint'><strong>Commit Placement is the single writer for this
+              field.</strong>
+            Editing it by hand bypasses the capacity gate and the movement
+            record. Do it only to repair a board, never as the normal way to
+            publish an arrangement.</p>
+          <@fields.placements />
+        </e.Section>
+      </SectionedEdit>
 
       <style scoped>
-        .edit {
-          container-type: inline-size;
-          display: grid;
-          grid-template-columns: 140px 1fr;
-          gap: var(--boxel-sp-lg);
-          padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-        }
-        .rail {
-          position: sticky;
-          top: var(--boxel-sp);
-          align-self: start;
-        }
-        .rail ul {
-          list-style: none;
+        .hint {
           margin: 0;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-        .rail a {
-          display: block;
-          padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-          font: 500 var(--boxel-font-sm);
-          color: var(--muted-foreground, var(--boxel-450));
-          text-decoration: none;
-          border-left: 2px solid transparent;
-          border-radius: var(--radius-sm, var(--boxel-border-radius-sm));
-        }
-        .rail a:hover,
-        .rail a:focus-visible {
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--muted, var(--boxel-100));
-          border-left-color: var(--primary, var(--boxel-highlight));
-        }
-        .panes {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-lg);
-          min-width: 0;
-        }
-        .panes section {
-          scroll-margin-top: var(--boxel-sp);
-        }
-        .panes h3 {
-          margin: 0 0 var(--boxel-sp-xxs);
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          font: 600 var(--boxel-font);
-        }
-        .badge {
-          font: var(--boxel-font-xs);
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .badge.warn {
-          color: var(--primary, var(--boxel-highlight));
-          font-weight: 600;
-        }
-        .hint,
-        .f small {
-          margin: 0 0 var(--boxel-sp-xs);
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .f {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xxxs);
-          max-width: 28rem;
-        }
-        .f > span {
-          font: 500 var(--boxel-font-sm);
-        }
-        /* The rail becomes a horizontal strip rather than shrinking: five
-           labels stacked in a 60px column are unreadable. */
-        @container (width < 560px) {
-          .edit {
-            grid-template-columns: 1fr;
-          }
-          .rail {
-            position: static;
-          }
-          .rail ul {
-            flex-direction: row;
-            flex-wrap: wrap;
-          }
-          .rail a {
-            border-left: 0;
-            border-bottom: 2px solid transparent;
-          }
-          .rail a:hover,
-          .rail a:focus-visible {
-            border-bottom-color: var(--primary, var(--boxel-highlight));
-          }
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -571,20 +450,20 @@ export class PlacementBoard extends CardDef {
       <style scoped>
         .board-embedded {
           padding: var(--boxel-sp-xs);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .t {
           margin: 0;
           font: 600 var(--boxel-font-sm);
         }
         .m {
-          margin: 2px 0 0;
+          margin: 0.125rem 0 0;
           font: var(--boxel-font-xs);
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .c {
-          color: var(--destructive, var(--boxel-danger));
+          color: var(--destructive-ink);
           font-weight: 600;
         }
       </style>

@@ -3,7 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { gt, eq } from '@cardstack/boxel-ui/helpers';
-import { IconButton } from '@cardstack/boxel-ui/components';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
 
 import type {
   PlacementZoneField,
@@ -233,9 +233,9 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
             {{#if @onRemove}}
               <IconButton
                 class='placed-remove'
-                @width='14px'
-                @height='14px'
-                aria-label='Remove {{item.title}}'
+                @label='Remove {{item.title}}'
+                @variant='ghost'
+                @size='xs'
                 {{on 'click' (fn this.remove item.id)}}
               >×</IconButton>
             {{/if}}
@@ -262,12 +262,12 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
         gap: var(--boxel-sp-xxs);
         min-width: 0;
         padding: var(--boxel-sp-xs);
-        background: var(--card, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background: var(--card);
+        color: var(--foreground);
         /* Dashed until something is in it: an empty zone should read as an
            invitation, not as a finished container. */
-        border: 1px dashed var(--border, var(--boxel-300));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
         transition:
           border-color 120ms ease-out,
           background 120ms ease-out;
@@ -276,27 +276,19 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
         border-style: solid;
       }
       .zone.drag-over {
-        border-color: var(--ring, var(--boxel-highlight));
+        border-color: var(--ring);
         border-style: solid;
-        background: color-mix(
-          in oklch,
-          var(--ring, var(--boxel-highlight)) 8%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklch, var(--ring) 8%, var(--card));
       }
       .zone.locked {
         opacity: 0.6;
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       /* Over capacity is a data state, consumed diluted so it tints the zone
          without shouting over the content inside it. */
       .zone.over {
-        border-color: var(--destructive, var(--boxel-danger));
-        background: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 6%,
-          var(--card, var(--boxel-light))
-        );
+        border-color: var(--destructive);
+        background: color-mix(in oklch, var(--destructive) 6%, var(--card));
       }
       .zone-head {
         display: flex;
@@ -315,10 +307,10 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
         flex: none;
         font: var(--boxel-font-xs);
         font-variant-numeric: tabular-nums;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .zone.over .zone-count {
-        color: var(--destructive, var(--boxel-danger));
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .zone-note,
@@ -326,14 +318,14 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
       .zone-warning {
         margin: 0;
         font: var(--boxel-font-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .zone-empty {
         padding: var(--boxel-sp-xs) 0;
         text-align: center;
       }
       .zone-warning {
-        color: var(--destructive, var(--boxel-danger));
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .zone-items {
@@ -342,19 +334,19 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0.125rem;
       }
       .placed-chip {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xxxs);
-        border-radius: var(--radius-sm, var(--boxel-border-radius-sm));
-        background: var(--muted, var(--boxel-100));
+        border-radius: var(--radius-sm);
+        background: var(--muted);
       }
       /* The insertion line for a within-zone reorder. A top border rather
          than a moving placeholder, so the list never reflows mid-drag. */
       .placed-chip.drop-before {
-        box-shadow: inset 0 2px 0 0 var(--ring, var(--boxel-highlight));
+        box-shadow: inset 0 0.125rem 0 0 var(--ring);
       }
       .placed-open {
         flex: 1;
@@ -375,15 +367,15 @@ export class PlacementDropZone extends GlimmerComponent<DropZoneSignature> {
         cursor: grabbing;
       }
       .placed-open:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: -2px;
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
       }
       .placed-remove {
-        --icon-color: var(--muted-foreground, var(--boxel-450));
         flex: none;
+        color: var(--muted-foreground);
       }
       .placed-remove:hover {
-        --icon-color: var(--destructive, var(--boxel-danger));
+        color: var(--destructive-ink);
       }
       /* A compact zone (a seat, a locker) has room for the label and the
          count and nothing else. */
