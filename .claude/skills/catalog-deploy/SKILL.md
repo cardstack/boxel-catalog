@@ -19,7 +19,7 @@ Pull requests closed without merging don't count, and a boxel pull request merge
 
 ## The pin is the whole catalog
 
-Boxel's production deploy ships this whole repo at the revision boxel pins, so boxel lints the whole repo at the pin against every boxel change, not only the files its test subset lists. A boxel change that breaks a file here pins the head of the pull request here that fixes it. That pull request says `Merges after:` the boxel one, and merges right after it with a merge commit, so the pinned commit is on `main` when production deploys it. A squash or a rebase leaves the pinned commit off `main`, and the deploy refuses with "isn't an ancestor of": re-pin boxel to a `main` commit that has the fix (`pnpm --dir packages/catalog catalog:test-subset --bump`), then deploy again.
+Boxel's production deploy ships this whole repo at the revision boxel pins, so boxel lints the whole repo at the pin against every boxel change, not only the files its test subset lists. A boxel change that breaks a file here pins the head of the pull request here that fixes it. That pull request says `Merges after:` the boxel one and merges right after it. A merge commit keeps the pinned head on `main`. After a squash or a rebase it isn't on `main`, so boxel's production deploy deploys that pull request's merge commit in its place. A by-hand deploy of a revision off `main` fails with "<sha> isn't on catalog main. Deploy a revision on main." Deploy `main`'s head instead, which already has the fix.
 
 ## Declare what you need from boxel
 
