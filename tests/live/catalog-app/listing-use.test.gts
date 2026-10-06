@@ -24,6 +24,7 @@ import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 import {
   makeMockCatalogContents,
+  makeLinkEdgeCaseListingContents,
   makeDestinationRealmContents,
 } from '../../helpers/test-fixtures';
 
@@ -61,6 +62,7 @@ export function runTests() {
         contents: {
           ...SYSTEM_CARD_FIXTURE_CONTENTS,
           ...makeMockCatalogContents(mockCatalogURL, catalogRealmURL),
+          ...makeLinkEdgeCaseListingContents(mockCatalogURL, catalogRealmURL),
         },
       });
       await setupAcceptanceTestRealm({
@@ -118,6 +120,19 @@ export function runTests() {
         let instanceFolder = `${outerFolder}Author/`;
         await openDir(assert, instanceFolder);
         await verifyJSONWithUUIDInFolder(assert, instanceFolder);
+      });
+
+      test('"use": a broken spec link fails with an error naming the spec', async function (assert) {
+        const listingId = mockCatalogURL + 'Listing/broken-spec';
+        await assert.rejects(
+          executeCommand(ListingUseCommand, listingId, testDestinationRealmURL),
+          (e: Error) =>
+            !(e instanceof TypeError) &&
+            e.message.includes(
+              `Listing spec "${mockCatalogURL}Spec/does-not-exist"`,
+            ),
+          'the error names the broken spec, not a TypeError',
+        );
       });
 
       test('"use" is successful even if target realm does not have a trailing slash', async function (assert) {

@@ -22,6 +22,7 @@ import UpdatePlaygroundSelectionCommand from '@cardstack/boxel-host/commands/upd
 import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
 
 import ListingInstallCommand from './listing-install';
+import { loadListingInput } from './listing-links';
 
 import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
@@ -113,13 +114,12 @@ export default class RemixCommand extends Command<
   protected async run(
     input: BaseCommandModule.ListingInstallInput,
   ): Promise<undefined> {
-    let { realm, listing: listingInput } = input;
+    let { realm } = input;
     let { realmIdentifier: realmUrl } = await new ValidateRealmCommand(
       this.commandContext,
     ).execute({ realmIdentifier: realm });
 
-    // this is intentionally to type because base command cannot interpret Listing type from catalog
-    const listing = listingInput as Listing;
+    const listing = await loadListingInput(input);
 
     const { selectedCodeRef, exampleCardId, skillCardId } =
       await new ListingInstallCommand(this.commandContext).execute({
