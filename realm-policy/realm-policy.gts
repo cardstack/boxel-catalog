@@ -750,6 +750,11 @@ type ExplainedGrantDetail = PolicyExplanation['rules'][number]['grants'][number]
   issues?: DraftIssue[];
 };
 
+// `1 request`, `2 requests`.
+function counted(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`;
+}
+
 // Why an acting-user key names no one a write may be made as, in the words a
 // policy author reads it in.
 const ACTING_USER_FAILURES: Record<
@@ -757,11 +762,11 @@ const ACTING_USER_FAILURES: Record<
   (key: string) => string
 > = {
   'key-missing': (key) =>
-    `this realm's settings have no "${key}", so it admits none of them.`,
+    `this realm's settings have no "${key}", so this grant admits none of them.`,
   'not-a-matrix-id': (key) =>
-    `this realm's "${key}" setting isn't a user ID, so it admits none of them.`,
+    `this realm's "${key}" setting isn't a user ID, so this grant admits none of them.`,
   'no-write': (key) =>
-    `the user this realm's "${key}" setting names can't write to the realm, so it admits none of them.`,
+    `the user this realm's "${key}" setting names can't write to the realm, so this grant admits none of them.`,
 };
 
 class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
@@ -788,7 +793,10 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
       return '';
     }
     let { requests, windowSeconds } = access.limit;
-    return `${requests} requests per ${windowSeconds} seconds from one address, ${
+    return `${counted(requests, 'request')} per ${counted(
+      windowSeconds,
+      'second',
+    )} from one address, ${
       access.limitFrom === 'realm' ? 'set by this realm' : 'the platform default'
     }`;
   }
@@ -805,6 +813,9 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
 
   // Who a grant opened to callers who aren't signed in makes their writes
   // as, or why it admits none of them.
+  // The line says whose writes it means, since an explanation about a
+  // signed-in caller lists these grants too, and that caller's own writes are
+  // made as themselves.
   actingUserLine = (anonymous: GrantAnonymousDetail): string => {
     let opened = "Open to people who aren't signed in";
     let key = anonymous.actingUserKey;
@@ -814,7 +825,10 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
     if (anonymous.actingUserFailure) {
       return `${opened}, but ${ACTING_USER_FAILURES[anonymous.actingUserFailure](key)}`;
     }
-    return `${opened}, writing as ${anonymous.actingUser} (the realm's "${key}" setting).`;
+    if (!anonymous.actingUser) {
+      return `${opened}; their writes are made as whoever this realm's "${key}" setting names.`;
+    }
+    return `${opened}; their writes are made as ${anonymous.actingUser} (this realm's "${key}" setting).`;
   };
 
   // What the realm's own permissions let the actor do. Write without read
@@ -934,7 +948,13 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
           <dd data-test-explanation-anonymous-limit>{{this.anonymousLimit}}</dd>
           {{#if this.anonymousAccess.invalidBlocklistEntries.length}}
             <dt>Blocklist</dt>
-            <dd class='warning' data-test-explanation-anonymous-blocklist>
+            <dd class='blocklist' data-test-explanation-anonymous-blocklist>
+              <Pill
+                @tag='span'
+                @pillBackgroundColor='var(--warning, var(--boxel-warning))'
+                @pillBorderColor='var(--warning, var(--boxel-warning))'
+                @pillFontColor='var(--warning-foreground, var(--boxel-dark))'
+              >warning</Pill>
               Some entries aren't an address or a range ({{this.invalidBlocklist}}),
               so this realm turns away everyone who isn't signed in until
               they're fixed.
@@ -1119,15 +1139,14 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: normal;
+      }
+      .grant-note {
         color: var(--muted-foreground, var(--boxel-450));
       }
       .grant-issue {
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
-      }
-      .facts .warning {
-        color: var(--warning-foreground, var(--boxel-dark));
       }
       .type-name {
         font-weight: 600;
