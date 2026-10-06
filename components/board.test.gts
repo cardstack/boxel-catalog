@@ -1,5 +1,5 @@
 import { module, test } from 'qunit';
-import { triggerKeyEvent } from '@ember/test-helpers';
+import { settled, triggerKeyEvent } from '@ember/test-helpers';
 
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { renderComponent } from '@cardstack/host/tests/helpers/render-component';
@@ -112,6 +112,8 @@ export function runTests() {
       items[0].status = 'doing';
       save.resolve();
       await drop;
+      await new Promise((r) => setTimeout(r, 0));
+      await settled();
       assert.strictEqual(columnOf('A'), 'doing', 'the saved column agrees');
       assert.dom('.board.saving').doesNotExist();
     });
@@ -187,7 +189,14 @@ export function runTests() {
       );
       assert
         .dom('[data-kanban-column="todo"]')
-        .hasAttribute('data-test-column-is-over-wip', 'true');
+        .hasAttribute(
+          'data-test-column-is-over-wip',
+          '',
+          'two cards over a limit of one',
+        );
+      assert
+        .dom('[data-kanban-column="doing"]')
+        .doesNotHaveAttribute('data-test-column-is-over-wip');
     });
   });
 }
