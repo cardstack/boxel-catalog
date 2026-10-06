@@ -1378,7 +1378,9 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
     {{/if}}
 
     {{#if this.answeredAgainstDraft}}
-      <DraftIssues @issues={{this.draftIssueList}} />
+      <div class='answer'>
+        <DraftIssues @issues={{this.draftIssueList}} />
+      </div>
     {{/if}}
 
     {{#if this.explanation}}
@@ -1434,9 +1436,19 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
         justify-items: start;
       }
       .explain > :deep(.boxel-field),
-      .explain > :deep(.boxel-radio-fieldset),
       .type-fields {
         width: 100%;
+      }
+      /* The checked option's highlight ring is drawn outside the option's
+         box. Padding the fieldset by the ring's width keeps the whole ring
+         inside the fieldset, and the matching negative margin keeps the
+         options aligned with the fields below. */
+      .explain > :deep(.boxel-radio-fieldset) {
+        --explain-mode-ring: var(--boxel-outline-width, 2px);
+        box-sizing: border-box;
+        width: calc(100% + 2 * var(--explain-mode-ring));
+        margin: calc(-1 * var(--explain-mode-ring));
+        padding: var(--explain-mode-ring);
       }
       .type-fields {
         display: grid;
