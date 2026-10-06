@@ -751,10 +751,11 @@ interface GrantAnonymousDetail {
   actingUser?: string;
   actingUserFailure?: 'key-missing' | 'not-a-matrix-id' | 'no-write';
 }
-type ExplainedGrantDetail = PolicyExplanation['rules'][number]['grants'][number] & {
-  anonymous?: GrantAnonymousDetail;
-  issues?: DraftIssue[];
-};
+type ExplainedGrantDetail =
+  PolicyExplanation['rules'][number]['grants'][number] & {
+    anonymous?: GrantAnonymousDetail;
+    issues?: DraftIssue[];
+  };
 
 // `1 request`, `2 requests`.
 function counted(count: number, noun: string): string {
