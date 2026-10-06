@@ -1439,10 +1439,14 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
       .type-fields {
         width: 100%;
       }
-      /* The checked option's highlight ring is drawn outside the option's
-         box. Padding the fieldset by the ring's width keeps the whole ring
-         inside the fieldset, and the matching negative margin keeps the
-         options aligned with the fields below. */
+      /* The checked option's highlight ring is a box-shadow drawn outside
+         the option's box, so the first row's ring overhangs the fieldset's
+         edge. No ancestor near the panel clips, yet the ring has been seen
+         cut off at that edge, intermittently and without a reliable repro.
+         This is a guard: padding the fieldset by the ring's width keeps the
+         ring inside the fieldset's own box, and the matching negative
+         margin leaves the options where they were, aligned with the fields
+         below. */
       .explain > :deep(.boxel-radio-fieldset) {
         --explain-mode-ring: var(--boxel-outline-width, 2px);
         box-sizing: border-box;
