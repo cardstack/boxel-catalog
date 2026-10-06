@@ -392,9 +392,13 @@ export class PolicyRule extends FieldDef {
 }
 
 // What each reason an explanation gives means, in the words a policy author
-// reads it in. `reads-actor` is named here as well as through the explanation
-// type, so the map covers it whichever platform version this realm runs on.
-const REASONS: Record<PolicyExplanation['reason'] | 'reads-actor', string> = {
+// reads it in. `reads-actor` and `blocklist-invalid` are named here as well as
+// through the explanation type, so the map covers them whichever platform
+// version this realm runs on.
+const REASONS: Record<
+  PolicyExplanation['reason'] | 'reads-actor' | 'blocklist-invalid',
+  string
+> = {
   acl: "The realm's own permissions already allow this, so the policy isn't needed.",
   granted: 'A grant in this policy allows it.',
   'no-grant': "No rule for this card's type grants this operation.",
@@ -414,6 +418,8 @@ const REASONS: Record<PolicyExplanation['reason'] | 'reads-actor', string> = {
     "Someone who isn't signed in is turned away before the policy is checked.",
   'reads-actor':
     "This operation depends on who is asking, and someone who isn't signed in can't be identified, so a grant that opens it to them doesn't apply.",
+  'blocklist-invalid':
+    "This realm's blocklist has an entry that isn't an address or a range, so it turns away everyone who isn't signed in before the policy is checked.",
   'policy-unloadable': "The realm's policy couldn't be loaded.",
 };
 
