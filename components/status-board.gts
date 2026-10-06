@@ -63,8 +63,9 @@ export class StatusBoard extends GlimmerComponent<Signature> {
     return (card.constructor as typeof CardDef).getComponent(card);
   };
 
-  handleMove = (item: CardDef, columnKey: string) => {
-    let from = this.args.statusOf(item);
+  // `from` is the column the card is shown in, which differs from the stored
+  // status while an earlier move of the same card is still saving.
+  handleMove = (item: CardDef, columnKey: string, from: string) => {
     if (from === columnKey) {
       return false;
     }

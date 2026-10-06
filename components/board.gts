@@ -1,6 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
 import type {
   KanbanColumnConfig,
@@ -19,8 +20,11 @@ export interface BoardColumn {
 }
 
 interface PendingMove {
+  /** The item's stored column when the drag landed. */
   from: string | undefined;
   to: string;
+  /** Set once the stored column moves off `from`; a retired hold never returns. */
+  retired: boolean;
 }
 
 function itemAt(items: CardDef[], index: number): CardDef | undefined {
@@ -31,23 +35,43 @@ function isThenable(value: unknown): value is PromiseLike<unknown> {
   return typeof (value as PromiseLike<unknown>)?.then === 'function';
 }
 
+function cardComponent(card: CardDef) {
+  return (card.constructor as typeof CardDef).getComponent(card);
+}
+
+const FittedCard: TemplateOnlyComponent<{ Args: { card: CardDef } }> =
+  <template>
+    {{#let (cardComponent @card) as |C|}}
+      <C @format='fitted' />
+    {{/let}}
+  </template>;
+
 interface BoardSignature {
   Args: {
     boardLabel?: string;
     cardSize?: FittedFormatId;
     columnKeyFor: (item: CardDef) => string | undefined;
     columns: BoardColumn[];
-    /** Replaces the board when no card sits in any column. */
+    /**
+     * Shown in place of the board when there are no items. Ignored when
+     * `onAddCard` is set, since the columns' add buttons are the way in.
+     */
     emptyMessage?: string;
     hideEmpty?: boolean;
     items: CardDef[];
     onAddCard?: (columnKey: string | null) => void;
     /**
-     * Return `false`, or a promise that rejects or resolves `false`, to refuse
-     * the move; the card goes back to its column. Otherwise the card stays
-     * where it was dropped until the item's own column changes.
+     * Called when a drag crosses columns, with the column the card was dragged
+     * from as shown on the board. The card holds its new column until the
+     * item's own column changes. Returning `false`, throwing, or a promise
+     * that rejects or resolves `false` refuses the move and the card goes
+     * back. Without `onMove` the board is read-only and a drag snaps back.
      */
-    onMove?: (item: CardDef, columnKey: string) => unknown;
+    onMove?: (
+      item: CardDef,
+      columnKey: string,
+      fromColumnKey: string,
+    ) => unknown;
     onOpen?: (item: CardDef) => void;
     onSelect?: (item: CardDef | undefined) => void;
   };
@@ -66,12 +90,23 @@ export class Board extends GlimmerComponent<BoardSignature> {
   @tracked private pending = new Map<CardDef, PendingMove>();
   @tracked private saving = 0;
 
+  storedColumn(item: CardDef): string | undefined {
+    return this.args.columnKeyFor(item) ?? this.args.columns[0]?.key;
+  }
+
   columnOf(item: CardDef): string | undefined {
-    let actual = this.args.columnKeyFor(item) ?? this.args.columns[0]?.key;
+    let stored = this.storedColumn(item);
     let move = this.pending.get(item);
-    // A pending move holds only until the item's own column changes, so a
-    // save that lands, or a change from elsewhere, always wins.
-    return move && move.from === actual ? move.to : actual;
+    if (!move || move.retired) {
+      return stored;
+    }
+    if (stored !== move.from) {
+      // The save landed, or something else moved the item: the stored column
+      // wins from here on, even if it later returns to `from`.
+      move.retired = true;
+      return stored;
+    }
+    return move.to;
   }
 
   get placements(): KanbanPlacement[] {
@@ -107,29 +142,49 @@ export class Board extends GlimmerComponent<BoardSignature> {
   }
 
   get emptyMessage(): string | undefined {
-    return this.placements.length === 0 ? this.args.emptyMessage : undefined;
+    if (this.args.onAddCard || this.args.items.some(Boolean)) {
+      return undefined;
+    }
+    return this.args.emptyMessage;
   }
 
-  cardComponent = (card: CardDef) => {
-    return (card.constructor as typeof CardDef).getComponent(card);
-  };
-
-  private setPending(item: CardDef, move: PendingMove | undefined) {
-    let next = new Map(this.pending);
-    if (move) {
-      next.set(item, move);
-    } else {
-      next.delete(item);
-    }
+  private hold(item: CardDef, move: PendingMove) {
+    let next = new Map([...this.pending].filter(([, m]) => !m.retired));
+    next.set(item, move);
     this.pending = next;
   }
 
-  private async move(item: CardDef, to: string) {
-    let from = this.args.columnKeyFor(item) ?? this.args.columns[0]?.key;
-    this.setPending(item, { from, to });
-    let result = this.args.onMove?.(item, to);
+  /** Drops the hold only if it is still the one this move set. */
+  private release(item: CardDef, move: PendingMove) {
+    if (this.pending.get(item) !== move) {
+      return;
+    }
+    let next = new Map(this.pending);
+    next.delete(item);
+    this.pending = next;
+  }
+
+  private async move(item: CardDef, to: string, shownFrom: string) {
+    let onMove = this.args.onMove;
+    if (!onMove) {
+      return;
+    }
+    let move: PendingMove = {
+      from: this.storedColumn(item),
+      to,
+      retired: false,
+    };
+    this.hold(item, move);
+    let result: unknown;
+    try {
+      result = onMove(item, to, shownFrom);
+    } catch (e) {
+      console.error('Board move failed; reverting', e);
+      this.release(item, move);
+      return;
+    }
     if (result === false) {
-      this.setPending(item, undefined);
+      this.release(item, move);
       return;
     }
     if (!isThenable(result)) {
@@ -137,20 +192,23 @@ export class Board extends GlimmerComponent<BoardSignature> {
     }
     this.saving++;
     try {
-      await result;
+      if ((await result) === false) {
+        this.release(item, move);
+      }
     } catch (e) {
       console.error('Board move failed; reverting', e);
+      this.release(item, move);
     } finally {
       this.saving--;
-      this.setPending(item, undefined);
     }
   }
 
   @action handleChange(next: KanbanPlacement[]) {
     for (let placement of next) {
       let item = this.args.items[placement.index];
-      if (item && this.columnOf(item) !== placement.columnId) {
-        this.move(item, placement.columnId);
+      let shownFrom = item ? this.columnOf(item) : undefined;
+      if (item && shownFrom !== undefined && shownFrom !== placement.columnId) {
+        void this.move(item, placement.columnId, shownFrom);
       }
     }
   }
@@ -192,9 +250,7 @@ export class Board extends GlimmerComponent<BoardSignature> {
                 {{#if (has-block 'card')}}
                   {{yield item to='card'}}
                 {{else}}
-                  {{#let (this.cardComponent item) as |C|}}
-                    <C @format='fitted' />
-                  {{/let}}
+                  <FittedCard @card={{item}} />
                 {{/if}}
               {{/if}}
             {{/let}}
@@ -205,9 +261,7 @@ export class Board extends GlimmerComponent<BoardSignature> {
                 {{#if (has-block 'card')}}
                   {{yield item to='card'}}
                 {{else}}
-                  {{#let (this.cardComponent item) as |C|}}
-                    <C @format='fitted' />
-                  {{/let}}
+                  <FittedCard @card={{item}} />
                 {{/if}}
               {{/if}}
             {{/let}}

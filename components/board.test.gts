@@ -30,9 +30,15 @@ async function moveRight(index: number) {
   await triggerKeyEvent(card, 'keydown', ' ');
 }
 
+async function flush() {
+  await new Promise((r) => setTimeout(r, 0));
+  await settled();
+}
+
+// Scoped to the columns, so the drag preview's copy of a card never matches.
 function columnOf(name: string) {
   return document
-    .querySelector(`[data-ticket="${name}"]`)
+    .querySelector(`[data-kanban-column] [data-ticket="${name}"]`)
     ?.closest('[data-kanban-column]')
     ?.getAttribute('data-kanban-column');
 }
@@ -112,8 +118,7 @@ export function runTests() {
       items[0].status = 'doing';
       save.resolve();
       await drop;
-      await new Promise((r) => setTimeout(r, 0));
-      await settled();
+      await flush();
       assert.strictEqual(columnOf('A'), 'doing', 'the saved column agrees');
       assert.dom('.board.saving').doesNotExist();
     });
@@ -167,6 +172,195 @@ export function runTests() {
       );
       await moveRight(0);
       assert.strictEqual(columnOf('A'), 'todo');
+    });
+
+    test('a board without onMove snaps a dragged card back', async function (assert) {
+      const items = [new Ticket({ name: 'A', status: 'todo' })];
+      await renderComponent(
+        <template>
+          <Board
+            @items={{items}}
+            @columns={{COLUMNS}}
+            @columnKeyFor={{statusOf}}
+          >
+            <:card as |item|><span data-ticket={{nameOf item}}>{{nameOf
+                  item
+                }}</span></:card>
+          </Board>
+        </template>,
+      );
+      await moveRight(0);
+      await flush();
+      assert.strictEqual(columnOf('A'), 'todo');
+    });
+
+    test('a synchronous save moves the card, and a later change back is not overridden', async function (assert) {
+      const items = [new Ticket({ name: 'A', status: 'todo' })];
+      const onMove = (item: CardDef, key: string) => {
+        (item as Ticket).status = key;
+      };
+      await renderComponent(
+        <template>
+          <Board
+            @items={{items}}
+            @columns={{COLUMNS}}
+            @columnKeyFor={{statusOf}}
+            @onMove={{onMove}}
+          >
+            <:card as |item|><span data-ticket={{nameOf item}}>{{nameOf
+                  item
+                }}</span></:card>
+          </Board>
+        </template>,
+      );
+      await moveRight(0);
+      await flush();
+      assert.strictEqual(columnOf('A'), 'doing', 'the saved column shows');
+      items[0].status = 'todo';
+      await flush();
+      assert.strictEqual(
+        columnOf('A'),
+        'todo',
+        'a change from elsewhere back to the old column wins',
+      );
+    });
+
+    test('a throw in onMove sends the card back', async function (assert) {
+      const items = [new Ticket({ name: 'A', status: 'todo' })];
+      const onMove = () => {
+        throw new Error('broken handler');
+      };
+      await renderComponent(
+        <template>
+          <Board
+            @items={{items}}
+            @columns={{COLUMNS}}
+            @columnKeyFor={{statusOf}}
+            @onMove={{onMove}}
+          >
+            <:card as |item|><span data-ticket={{nameOf item}}>{{nameOf
+                  item
+                }}</span></:card>
+          </Board>
+        </template>,
+      );
+      await moveRight(0);
+      await flush();
+      assert.strictEqual(columnOf('A'), 'todo');
+    });
+
+    test('a save resolving false sends the card back', async function (assert) {
+      const items = [new Ticket({ name: 'A', status: 'todo' })];
+      const onMove = () => Promise.resolve(false);
+      await renderComponent(
+        <template>
+          <Board
+            @items={{items}}
+            @columns={{COLUMNS}}
+            @columnKeyFor={{statusOf}}
+            @onMove={{onMove}}
+          >
+            <:card as |item|><span data-ticket={{nameOf item}}>{{nameOf
+                  item
+                }}</span></:card>
+          </Board>
+        </template>,
+      );
+      await moveRight(0);
+      await flush();
+      assert.strictEqual(columnOf('A'), 'todo');
+    });
+
+    test('a save that settles before the item updates keeps the card in place', async function (assert) {
+      const items = [new Ticket({ name: 'A', status: 'todo' })];
+      const onMove = () => Promise.resolve();
+      await renderComponent(
+        <template>
+          <Board
+            @items={{items}}
+            @columns={{COLUMNS}}
+            @columnKeyFor={{statusOf}}
+            @onMove={{onMove}}
+          >
+            <:card as |item|><span data-ticket={{nameOf item}}>{{nameOf
+                  item
+                }}</span></:card>
+          </Board>
+        </template>,
+      );
+      await moveRight(0);
+      await flush();
+      assert.strictEqual(columnOf('A'), 'doing', 'no flicker back to todo');
+      assert.dom('.board.saving').doesNotExist();
+      items[0].status = 'doing';
+      await flush();
+      assert.strictEqual(columnOf('A'), 'doing');
+    });
+
+    test('an earlier save settling does not undo a newer move', async function (assert) {
+      const items = [new Ticket({ name: 'A', status: 'todo' })];
+      const columns: BoardColumn[] = [
+        { key: 'todo', label: 'To do' },
+        { key: 'doing', label: 'Doing' },
+        { key: 'done', label: 'Done' },
+      ];
+      const saves: { reject: (e: Error) => void }[] = [];
+      const froms: string[] = [];
+      const onMove = (_item: CardDef, _key: string, from: string) => {
+        froms.push(from);
+        return new Promise<void>((_resolve, reject) => {
+          saves.push({ reject });
+        });
+      };
+      await renderComponent(
+        <template>
+          <Board
+            @items={{items}}
+            @columns={{columns}}
+            @columnKeyFor={{statusOf}}
+            @onMove={{onMove}}
+          >
+            <:card as |item|><span data-ticket={{nameOf item}}>{{nameOf
+                  item
+                }}</span></:card>
+          </Board>
+        </template>,
+      );
+      await moveRight(0);
+      await flush();
+      await moveRight(0);
+      await flush();
+      assert.strictEqual(columnOf('A'), 'done', 'the second drop holds');
+      saves[0].reject(new Error('first save failed'));
+      await flush();
+      assert.strictEqual(
+        columnOf('A'),
+        'done',
+        'the first save failing does not drop the newer hold',
+      );
+      assert.deepEqual(
+        froms,
+        ['todo', 'doing'],
+        'onMove gets the column the card was shown in',
+      );
+    });
+
+    test('with onAddCard an empty board keeps its columns', async function (assert) {
+      const items: CardDef[] = [];
+      const onAddCard = () => {};
+      await renderComponent(
+        <template>
+          <Board
+            @items={{items}}
+            @columns={{COLUMNS}}
+            @columnKeyFor={{statusOf}}
+            @emptyMessage='No tickets yet'
+            @onAddCard={{onAddCard}}
+          />
+        </template>,
+      );
+      assert.dom('[data-test-pretui-board]').exists();
+      assert.dom('[data-test-column-add-button="todo"]').exists();
     });
 
     test('a column wipLimit reaches the plane', async function (assert) {
