@@ -204,8 +204,9 @@ export class PolicyRule extends FieldDef {
 }
 
 // What each reason an explanation gives means, in the words a policy author
-// reads it in.
-const REASONS: Record<PolicyExplanation['reason'], string> = {
+// reads it in. `reads-actor` is named here as well as through the explanation
+// type, so the map covers it whichever platform version this realm runs on.
+const REASONS: Record<PolicyExplanation['reason'] | 'reads-actor', string> = {
   acl: "The realm's own permissions already allow this, so the policy isn't needed.",
   granted: 'A grant in this policy allows it.',
   'no-grant': "No rule for this card's type grants this operation.",
@@ -223,6 +224,8 @@ const REASONS: Record<PolicyExplanation['reason'], string> = {
   'not-resolved': "This card doesn't have this operation.",
   'actor-required':
     "Someone who isn't signed in is turned away before the policy is checked.",
+  'reads-actor':
+    "This operation depends on who is asking, and someone who isn't signed in can't be identified, so a grant that opens it to them doesn't apply.",
   'policy-unloadable': "The realm's policy couldn't be loaded.",
 };
 
@@ -1215,6 +1218,9 @@ class ExplainPanel extends GlimmerComponent<ExplainPanelSignature> {
           data-test-explain-actor
         />
       </FieldContainer>
+      <p class='hint' data-test-explain-actor-hint>
+        Leave this empty to check what someone who isn't signed in can do.
+      </p>
       {{#if this.isCard}}
         <FieldContainer
           @label='Card (URL)'
