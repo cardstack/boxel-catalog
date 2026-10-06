@@ -17,6 +17,10 @@ Before it changes anything, the deploy checks every pull request merged since pr
 
 Pull requests closed without merging don't count, and a boxel pull request merged into a branch other than `main` holds until it reaches `main`. A `Merges after:` line naming a closed boxel pull request holds nothing back, and the deploy only warns about it.
 
+## The pin is the whole catalog
+
+Boxel's production deploy ships this whole repo at the revision boxel pins, so boxel lints the whole repo at the pin against every boxel change, not only the files its test subset lists. A boxel change that breaks a file here pins the head of the pull request here that fixes it. That pull request says `Merges after:` the boxel one, and merges right after it with a merge commit, so the pinned commit is on `main` when production deploys it. A squash or a rebase leaves the pinned commit off `main`, and the deploy refuses with "isn't an ancestor of": re-pin boxel to a `main` commit that has the fix (`pnpm --dir packages/catalog catalog:test-subset --bump`), then deploy again.
+
 ## Declare what you need from boxel
 
 The check sees a dependency only through a `Merges after: cardstack/boxel#N` line in the pull request's description. Prose doesn't count. Add the line whenever the change needs boxel code production may not run yet, even if boxel's Lint Catalog passes without it: a runtime dependency, such as a declaration option only new platform code accepts, lints clean.
