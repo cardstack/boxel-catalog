@@ -1,33 +1,53 @@
 import GlimmerComponent from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import type { CardDef } from 'https://cardstack.com/base/card-api';
-import {
-  KanbanPlane,
-  type KanbanColumnConfig,
-  type KanbanPlacement,
+import type {
+  KanbanColumnConfig,
+  KanbanPlacement,
 } from '@cardstack/boxel-ui/components';
+import type { FittedFormatId } from '@cardstack/boxel-ui/helpers';
+import { Board as PretBoard } from '@cardstack/pretui/components/board';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from './pretui-helpers';
 
 export interface BoardColumn {
   key: string;
   label?: string;
   color?: string;
+  wipLimit?: number;
+}
+
+interface PendingMove {
+  from: string | undefined;
+  to: string;
 }
 
 function itemAt(items: CardDef[], index: number): CardDef | undefined {
   return items[index];
 }
 
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return typeof (value as PromiseLike<unknown>)?.then === 'function';
+}
+
 interface BoardSignature {
   Args: {
     boardLabel?: string;
+    cardSize?: FittedFormatId;
     columnKeyFor: (item: CardDef) => string | undefined;
     columns: BoardColumn[];
+    /** Replaces the board when no card sits in any column. */
+    emptyMessage?: string;
     hideEmpty?: boolean;
     items: CardDef[];
-    // KanbanPlane already tells a click apart from a drag; these hand that
-    // through in card terms so a consumer never reasons about placements.
     onAddCard?: (columnKey: string | null) => void;
-    onMove?: (item: CardDef, columnKey: string) => void;
+    /**
+     * Return `false`, or a promise that rejects or resolves `false`, to refuse
+     * the move; the card goes back to its column. Otherwise the card stays
+     * where it was dropped until the item's own column changes.
+     */
+    onMove?: (item: CardDef, columnKey: string) => unknown;
     onOpen?: (item: CardDef) => void;
     onSelect?: (item: CardDef | undefined) => void;
   };
@@ -38,12 +58,39 @@ interface BoardSignature {
 }
 
 /**
- * A kanban over any cards. The drag engine, columns and WIP limits are
- * boxel-ui's `KanbanPlane`; this block adds the card-level contract: which
- * column a card sits in (`columnKeyFor`) and what to do when a drag crosses
- * columns (`onMove`).
+ * A kanban over any cards, on Pret UI `Board`. Pret UI's board places
+ * positions; this block adds the card-level contract: which column a card sits
+ * in (`columnKeyFor`) and what to do when a drag crosses columns (`onMove`).
  */
 export class Board extends GlimmerComponent<BoardSignature> {
+  @tracked private pending = new Map<CardDef, PendingMove>();
+  @tracked private saving = 0;
+
+  columnOf(item: CardDef): string | undefined {
+    let actual = this.args.columnKeyFor(item) ?? this.args.columns[0]?.key;
+    let move = this.pending.get(item);
+    // A pending move holds only until the item's own column changes, so a
+    // save that lands, or a change from elsewhere, always wins.
+    return move && move.from === actual ? move.to : actual;
+  }
+
+  get placements(): KanbanPlacement[] {
+    let known = new Set(this.args.columns.map((c) => c.key));
+    let counters = new Map<string, number>();
+    let result: KanbanPlacement[] = [];
+    this.args.items.forEach((item, index) => {
+      if (!item) return;
+      let columnId = this.columnOf(item);
+      // A card whose column is not on this board is not drawn: placing it in
+      // the first column would misreport where it is.
+      if (columnId === undefined || !known.has(columnId)) return;
+      let sortOrder = (counters.get(columnId) ?? 0) + 1;
+      counters.set(columnId, sortOrder);
+      result.push({ columnId, index, sortOrder });
+    });
+    return result;
+  }
+
   get kanbanColumns(): KanbanColumnConfig[] {
     let counts = new Map<string, number>();
     for (let p of this.placements) {
@@ -55,38 +102,55 @@ export class Board extends GlimmerComponent<BoardSignature> {
       color: c.color ?? null,
       collapsed: this.args.hideEmpty && !(counts.get(c.key) ?? 0) ? true : null,
       sortOrder: i,
-      wipLimit: null,
+      wipLimit: c.wipLimit ?? null,
     }));
   }
 
-  get placements(): KanbanPlacement[] {
-    // No columns means nowhere to place a card; an empty board is the truthful
-    // render, not a card under a column id the plane does not know.
-    let fallback = this.args.columns[0]?.key;
-    if (fallback === undefined) {
-      return [];
-    }
-    let counters = new Map<string, number>();
-    let result: KanbanPlacement[] = [];
-    this.args.items.forEach((item, index) => {
-      if (!item) return;
-      let columnId = this.args.columnKeyFor(item) ?? fallback;
-      let sortOrder = (counters.get(columnId) ?? 0) + 1;
-      counters.set(columnId, sortOrder);
-      result.push({ columnId, index, sortOrder });
-    });
-    return result;
+  get emptyMessage(): string | undefined {
+    return this.placements.length === 0 ? this.args.emptyMessage : undefined;
   }
 
   cardComponent = (card: CardDef) => {
     return (card.constructor as typeof CardDef).getComponent(card);
   };
 
+  private setPending(item: CardDef, move: PendingMove | undefined) {
+    let next = new Map(this.pending);
+    if (move) {
+      next.set(item, move);
+    } else {
+      next.delete(item);
+    }
+    this.pending = next;
+  }
+
+  private async move(item: CardDef, to: string) {
+    let from = this.args.columnKeyFor(item) ?? this.args.columns[0]?.key;
+    this.setPending(item, { from, to });
+    let result = this.args.onMove?.(item, to);
+    if (result === false) {
+      this.setPending(item, undefined);
+      return;
+    }
+    if (!isThenable(result)) {
+      return;
+    }
+    this.saving++;
+    try {
+      await result;
+    } catch (e) {
+      console.error('Board move failed; reverting', e);
+    } finally {
+      this.saving--;
+      this.setPending(item, undefined);
+    }
+  }
+
   @action handleChange(next: KanbanPlacement[]) {
     for (let placement of next) {
       let item = this.args.items[placement.index];
-      if (item && this.args.columnKeyFor(item) !== placement.columnId) {
-        this.args.onMove?.(item, placement.columnId);
+      if (item && this.columnOf(item) !== placement.columnId) {
+        this.move(item, placement.columnId);
       }
     }
   }
@@ -101,46 +165,64 @@ export class Board extends GlimmerComponent<BoardSignature> {
   }
 
   <template>
-    <div class='board' ...attributes>
-      <KanbanPlane
-        @boardLabel={{@boardLabel}}
-        @columns={{this.kanbanColumns}}
-        @hideEmpty={{@hideEmpty}}
-        @placements={{this.placements}}
-        @onChange={{this.handleChange}}
-        @onOpen={{this.handleOpen}}
-        @onSelect={{this.handleSelect}}
-        @onAddCard={{@onAddCard}}
-      >
-        <:card as |placement|>
-          {{#let (itemAt @items placement.index) as |item|}}
-            {{#if item}}
-              {{#if (has-block 'card')}}
-                {{yield item to='card'}}
-              {{else}}
-                {{#let (this.cardComponent item) as |C|}}
-                  <C @format='fitted' />
-                {{/let}}
+    <div class='board {{if this.saving "saving"}}' ...attributes>
+      {{#if this.emptyMessage}}
+        <EmptyState
+          @title={{this.emptyMessage}}
+          @texture={{false}}
+          @size='s'
+          style={{COMPACT_EMPTY_STYLE}}
+        />
+      {{else}}
+        <PretBoard
+          class='plane'
+          @boardLabel={{@boardLabel}}
+          @cardSize={{@cardSize}}
+          @columns={{this.kanbanColumns}}
+          @hideEmpty={{@hideEmpty}}
+          @placements={{this.placements}}
+          @onChange={{this.handleChange}}
+          @onOpen={{this.handleOpen}}
+          @onSelect={{this.handleSelect}}
+          @onAddCard={{@onAddCard}}
+        >
+          <:card as |placement|>
+            {{#let (itemAt @items placement.index) as |item|}}
+              {{#if item}}
+                {{#if (has-block 'card')}}
+                  {{yield item to='card'}}
+                {{else}}
+                  {{#let (this.cardComponent item) as |C|}}
+                    <C @format='fitted' />
+                  {{/let}}
+                {{/if}}
               {{/if}}
-            {{/if}}
-          {{/let}}
-        </:card>
-        <:ghost as |index|>
-          {{#let (itemAt @items index) as |item|}}
-            {{#if item}}
-              {{#let (this.cardComponent item) as |C|}}
-                <C @format='fitted' />
-              {{/let}}
-            {{/if}}
-          {{/let}}
-        </:ghost>
-      </KanbanPlane>
+            {{/let}}
+          </:card>
+          <:ghost as |index|>
+            {{#let (itemAt @items index) as |item|}}
+              {{#if item}}
+                {{#if (has-block 'card')}}
+                  {{yield item to='card'}}
+                {{else}}
+                  {{#let (this.cardComponent item) as |C|}}
+                    <C @format='fitted' />
+                  {{/let}}
+                {{/if}}
+              {{/if}}
+            {{/let}}
+          </:ghost>
+        </PretBoard>
+      {{/if}}
     </div>
     <style scoped>
       .board {
         width: 100%;
         height: 100%;
         overflow-x: auto;
+      }
+      .saving .plane {
+        opacity: 0.75;
       }
     </style>
   </template>

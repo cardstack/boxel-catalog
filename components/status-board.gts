@@ -19,9 +19,10 @@ interface Signature {
     statusOf: (item: CardDef) => string | undefined;
     /**
      * Called only for drags the field's transition graph allows; an illegal
-     * drop is refused here so no consumer forgets to check.
+     * drop is refused here so no consumer forgets to check. Same return
+     * contract as Board's `onMove`.
      */
-    onMove?: (item: CardDef, statusValue: string) => void;
+    onMove?: (item: CardDef, statusValue: string) => unknown;
     /** An illegal drag, if the consumer wants to explain instead of ignore. */
     onRejected?: (item: CardDef, from: string | undefined, to: string) => void;
     onOpen?: (item: CardDef) => void;
@@ -65,13 +66,13 @@ export class StatusBoard extends GlimmerComponent<Signature> {
   handleMove = (item: CardDef, columnKey: string) => {
     let from = this.args.statusOf(item);
     if (from === columnKey) {
-      return;
+      return false;
     }
     if (canTransition(this.args.statusField, from, columnKey)) {
-      this.args.onMove?.(item, columnKey);
-    } else {
-      this.args.onRejected?.(item, from, columnKey);
+      return this.args.onMove?.(item, columnKey);
     }
+    this.args.onRejected?.(item, from, columnKey);
+    return false;
   };
 
   <template>
