@@ -165,9 +165,20 @@ export class PolicyRule extends FieldDef {
       this.args.model.grants?.splice(index, 1);
     };
 
+    // Each remove button names the grant it removes, by its position and
+    // operation.
+    private removeGrantLabel = (index: number) => {
+      let operation = this.args.model.grants?.[index]?.operation;
+      return `Remove grant ${index + 1}${operation ? ` (${operation})` : ''}`;
+    };
+
     <template>
       <div class='policy-rule-edit' data-test-policy-rule-edit>
-        <FieldContainer @label='Target Type' @vertical={{true}}>
+        <FieldContainer
+          @label='Target Type'
+          @vertical={{true}}
+          data-test-policy-rule-target-type
+        >
           <@fields.targetType />
         </FieldContainer>
         <FieldContainer @label='Grants' @vertical={{true}}>
@@ -184,6 +195,7 @@ export class PolicyRule extends FieldDef {
                           @kind='text-only'
                           @size='extra-small'
                           {{on 'click' (fn this.removeGrant index)}}
+                          aria-label={{this.removeGrantLabel index}}
                           data-test-policy-rule-remove-grant={{index}}
                         >
                           Remove grant
