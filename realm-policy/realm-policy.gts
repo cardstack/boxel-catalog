@@ -804,7 +804,9 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
       windowSeconds,
       'second',
     )} from one address, ${
-      access.limitFrom === 'realm' ? 'set by this realm' : 'the platform default'
+      access.limitFrom === 'realm'
+        ? 'set by this realm'
+        : 'the platform default'
     }`;
   }
 
@@ -1056,12 +1058,12 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
                             class='grant-issue'
                             data-test-explanation-grant-issue={{issue.code}}
                           >
-                            <Pill
-                              @tag='span'
-                              @pillBackgroundColor='var(--warning, var(--boxel-warning))'
-                              @pillBorderColor='var(--warning, var(--boxel-warning))'
-                              @pillFontColor='var(--warning-foreground, var(--boxel-dark))'
-                            >{{issue.severity}}</Pill>
+                            <span class='issue-label'><Pill
+                                @tag='span'
+                                @pillBackgroundColor='var(--warning, var(--boxel-warning))'
+                                @pillBorderColor='var(--warning, var(--boxel-warning))'
+                                @pillFontColor='var(--warning-foreground, var(--boxel-dark))'
+                              >{{issue.severity}}</Pill></span>
                             <MessageText @message={{issue.message}} />
                           </div>
                         {{/each}}
@@ -1154,6 +1156,10 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
+      }
+      .issue-label {
+        flex-shrink: 0;
+        white-space: nowrap;
       }
       .type-name {
         font-weight: 600;
