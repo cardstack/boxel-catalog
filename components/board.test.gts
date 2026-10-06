@@ -1,5 +1,5 @@
 import { module, test } from 'qunit';
-import { settled, triggerKeyEvent } from '@ember/test-helpers';
+import { triggerKeyEvent } from '@ember/test-helpers';
 
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { renderComponent } from '@cardstack/host/tests/helpers/render-component';
@@ -28,7 +28,6 @@ async function moveRight(index: number) {
   await triggerKeyEvent(card, 'keydown', ' ');
   await triggerKeyEvent(card, 'keydown', 'ArrowRight');
   await triggerKeyEvent(card, 'keydown', ' ');
-  await settled();
 }
 
 function columnOf(name: string) {
@@ -44,7 +43,7 @@ export function runTests() {
     setupBaseRealm(hooks);
 
     test('a card whose column is not on the board is not drawn', async function (assert) {
-      let items = [
+      const items = [
         new Ticket({ name: 'A', status: 'todo' }),
         new Ticket({ name: 'B', status: 'archived' }),
       ];
@@ -66,7 +65,7 @@ export function runTests() {
     });
 
     test('an empty board shows the empty message instead of columns', async function (assert) {
-      let items: CardDef[] = [];
+      const items: CardDef[] = [];
       await renderComponent(
         <template>
           <Board
@@ -82,11 +81,11 @@ export function runTests() {
     });
 
     test('a moved card stays in its new column while the save is pending', async function (assert) {
-      let items = [new Ticket({ name: 'A', status: 'todo' })];
-      let resolveSave: () => void = () => {};
-      let onMove = () =>
+      const items = [new Ticket({ name: 'A', status: 'todo' })];
+      const save = { resolve: () => {} };
+      const onMove = () =>
         new Promise<void>((resolve) => {
-          resolveSave = resolve;
+          save.resolve = resolve;
         });
       await renderComponent(
         <template>
@@ -111,16 +110,16 @@ export function runTests() {
       );
       assert.dom('.board.saving').exists('the board shows the save in flight');
       items[0].status = 'doing';
-      resolveSave();
+      save.resolve();
       await drop;
       assert.strictEqual(columnOf('A'), 'doing', 'the saved column agrees');
       assert.dom('.board.saving').doesNotExist();
     });
 
     test('a refused move sends the card back', async function (assert) {
-      let items = [new Ticket({ name: 'A', status: 'todo' })];
-      let moves: string[] = [];
-      let onMove = (_item: CardDef, key: string) => {
+      const items = [new Ticket({ name: 'A', status: 'todo' })];
+      const moves: string[] = [];
+      const onMove = (_item: CardDef, key: string) => {
         moves.push(key);
         return false;
       };
@@ -148,8 +147,8 @@ export function runTests() {
     });
 
     test('a failed save sends the card back', async function (assert) {
-      let items = [new Ticket({ name: 'A', status: 'todo' })];
-      let onMove = () => Promise.reject(new Error('write failed'));
+      const items = [new Ticket({ name: 'A', status: 'todo' })];
+      const onMove = () => Promise.reject(new Error('write failed'));
       await renderComponent(
         <template>
           <Board
@@ -169,11 +168,11 @@ export function runTests() {
     });
 
     test('a column wipLimit reaches the plane', async function (assert) {
-      let items = [
+      const items = [
         new Ticket({ name: 'A', status: 'todo' }),
         new Ticket({ name: 'B', status: 'todo' }),
       ];
-      let columns: BoardColumn[] = [
+      const columns: BoardColumn[] = [
         { key: 'todo', label: 'To do', wipLimit: 1 },
         { key: 'doing', label: 'Doing' },
       ];

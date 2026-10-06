@@ -83,7 +83,7 @@ jobs:
           content_only=true
           while IFS= read -r changed; do
             case "$changed" in
-              catalog-app/*|commands/*|fields/*|tests/*|.github/*) content_only=false ;;
+              catalog-app/*|commands/*|components/*|fields/*|tests/*|.github/*|*.test.gts|*.test.ts) content_only=false ;;
               */*) ;;
               *) content_only=false ;;
             esac
