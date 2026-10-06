@@ -1,3 +1,4 @@
+import { cached } from '@glimmer/tracking';
 import {
   CardDef,
   Component,
@@ -32,6 +33,300 @@ import {
 import { PlacementDropZone } from './components/placement-drop-zone';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
+
+class PlacementBoardIsolated extends Component<typeof PlacementBoard> {
+  get items(): PlacementItem[] {
+    return (this.args.model.pool ?? [])
+      .filter((c) => c?.id)
+      .map((c) => ({
+        id: c.id!,
+        // `cardTitle`, not `title`: CardDef has no `title` field — the
+        // display name is computed from `cardInfo.name`, and reading the
+        // old name silently yields undefined, so every chip renders
+        // "Untitled" with no error anywhere.
+        title: c.cardTitle || c.cardInfo?.name || 'Untitled',
+        detail: c.cardInfo?.summary ?? undefined,
+      }));
+  }
+
+  // Every zone looks up each of its placements here on every render, so the
+  // map is built once per change to the pool, including its links loading.
+  @cached
+  get itemsByKey(): Map<string, PlacementItem> {
+    return new Map(this.items.map((i) => [itemKey(i.id), i]));
+  }
+
+  itemFor = (itemId: string): PlacementItem | undefined => {
+    return this.itemsByKey.get(itemKey(itemId));
+  };
+
+  // Clicking a chip — in the rail or in a zone — opens the real card.
+  // `viewCard` is a top-level component arg, not `context.actions`: the
+  // latter is not present in every format the board renders in.
+  openItem = (item: PlacementItem) => {
+    let card = (this.args.model.pool ?? []).find((c) =>
+      sameItem(c?.id, item.id),
+    );
+    if (card) {
+      this.args.viewCard?.(card, 'isolated');
+    }
+  };
+
+  // ── Draft mutation ──────────────────────────────────────────────────
+  // Every handler writes a NEW array onto `draft` rather than mutating the
+  // existing one in place: a containsMany only re-renders (and only
+  // serializes) when the field is reassigned, so an in-place `push` would
+  // update the data and leave the screen stale.
+  //
+  // All of these touch `draft` and never `placements`. The committed field
+  // has exactly one writer — CommitPlacementCommand — which is what makes
+  // it safe to leave a half-finished plan open.
+
+  get draft(): PlacementField[] {
+    return this.args.model.draft ?? [];
+  }
+
+  // Drop an item into a zone. An item lives in at most one zone, so this
+  // removes any existing placement first — that is what makes a drag
+  // between zones a *move* rather than a copy, with no separate "remove
+  // from the old zone" step for the user to forget.
+  place = (itemId: string, zoneKey: string) => {
+    let key = itemKey(itemId);
+    let existing = this.draft.find((p) => itemKey(p.itemId) === key);
+    let rest = this.draft.filter((p) => itemKey(p.itemId) !== key);
+    this.args.model.draft = [
+      ...rest,
+      new PlacementField({
+        itemId: key,
+        zoneKey,
+        seq: nextSeq(zoneKey, rest),
+        placedAt: new Date(),
+        note: existing?.note,
+      }),
+    ];
+  };
+
+  // Dropped ON another placement: land immediately before it. Sequences are
+  // renumbered densely from 0 across the whole target zone afterwards, so
+  // repeated reorders cannot drift into fractional or colliding values.
+  reorder = (itemId: string, beforeItemId: string, zoneKey: string) => {
+    let key = itemKey(itemId);
+    let beforeKey = itemKey(beforeItemId);
+    if (key === beforeKey) {
+      return;
+    }
+    let existing = this.draft.find((p) => itemKey(p.itemId) === key);
+    let others = this.draft.filter((p) => itemKey(p.itemId) !== key);
+    let zoneRows = placementsIn(zoneKey, others);
+    let index = zoneRows.findIndex((p) => itemKey(p.itemId) === beforeKey);
+    if (index === -1) {
+      this.place(itemId, zoneKey);
+      return;
+    }
+    let moved = new PlacementField({
+      itemId: key,
+      zoneKey,
+      seq: 0,
+      placedAt: new Date(),
+      note: existing?.note,
+    });
+    zoneRows.splice(index, 0, moved);
+    let renumbered = zoneRows.map(
+      (p, i) =>
+        new PlacementField({
+          itemId: itemKey(p.itemId),
+          zoneKey,
+          seq: i,
+          placedAt: p.placedAt,
+          note: p.note,
+        }),
+    );
+    let elsewhere = others.filter((p) => p.zoneKey !== zoneKey);
+    this.args.model.draft = [...elsewhere, ...renumbered];
+  };
+
+  // Back to the palette. Deliberately does not renumber what is left: the
+  // remaining sequences stay strictly increasing, which is all the sort
+  // needs, and leaving them alone keeps the diff the commit reports small.
+  unplace = (itemId: string) => {
+    let key = itemKey(itemId);
+    this.args.model.draft = this.draft.filter((p) => itemKey(p.itemId) !== key);
+  };
+
+  // ── Keyboard placement ──────────────────────────────────────────────
+  // Every drag has a menu equivalent, so placing never needs a pointer.
+
+  zoneLabel(zone: PlacementZoneField): string {
+    return zone.displayLabel || zone.label || zone.key || 'Untitled zone';
+  }
+
+  get placeableZones(): PlacementZoneField[] {
+    return (this.args.model.zones ?? []).filter((z) => z?.key);
+  }
+
+  paletteMenu = (item: PlacementItem): PlacementMenuItems =>
+    this.placeableZones.map((zone) => ({
+      label: `Place in ${this.zoneLabel(zone)}`,
+      onSelect: () => this.place(item.id, zone.key!),
+    }));
+
+  placedMenu = (item: PlacementItem): PlacementMenuItems => {
+    let key = itemKey(item.id);
+    let zoneKey =
+      this.draft.find((p) => itemKey(p.itemId) === key)?.zoneKey ?? '';
+    let rows = placementsIn(zoneKey, this.draft);
+    let index = rows.findIndex((p) => itemKey(p.itemId) === key);
+    let previous = rows[index - 1]?.itemId;
+    let next = rows[index + 1]?.itemId;
+    return [
+      {
+        label: 'Move up',
+        disabled: !previous,
+        onSelect: () => previous && this.reorder(item.id, previous, zoneKey),
+      },
+      {
+        label: 'Move down',
+        disabled: !next,
+        onSelect: () => next && this.reorder(next, item.id, zoneKey),
+      },
+      {
+        kind: 'submenu',
+        label: 'Move to',
+        items: this.placeableZones
+          .filter((zone) => zone.key !== zoneKey)
+          .map((zone) => ({
+            label: this.zoneLabel(zone),
+            onSelect: () => this.place(item.id, zone.key!),
+          })),
+      },
+      '---',
+      {
+        label: 'Remove',
+        destructive: true,
+        onSelect: () => this.unplace(item.id),
+      },
+    ];
+  };
+
+  get statusLabel(): string {
+    let n = this.args.model.conflictCount ?? 0;
+    if (n > 0) {
+      return `${n} zone${n === 1 ? '' : 's'} over capacity`;
+    }
+    if (this.args.model.hasUncommittedChanges) {
+      return 'Uncommitted changes';
+    }
+    return 'Committed';
+  }
+
+  get statusHue(): Hue {
+    if ((this.args.model.conflictCount ?? 0) > 0) {
+      return 'red';
+    }
+    return this.args.model.hasUncommittedChanges ? 'amber' : 'green';
+  }
+
+  <template>
+    <main class='board'>
+      <header class='board-head'>
+        <div class='board-heading'>
+          <h1 class='board-title'><@fields.cardTitle /></h1>
+          <p class='board-sub'>
+            {{@model.placedCount}}
+            placed ·
+            {{@model.unplacedCount}}
+            to go
+          </p>
+        </div>
+        <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
+      </header>
+
+      <div class='board-body'>
+        <PlacementPalette
+          class='board-rail'
+          @items={{this.items}}
+          @placements={{this.draft}}
+          @searchable={{true}}
+          @heading={{if @model.noun @model.noun 'To place'}}
+          @onSelect={{this.openItem}}
+          @menuFor={{this.paletteMenu}}
+        />
+
+        <div class='zone-grid'>
+          {{#each @model.zones key='key' as |zone|}}
+            <PlacementDropZone
+              @zone={{zone}}
+              @placements={{this.draft}}
+              @itemFor={{this.itemFor}}
+              @onDropItem={{this.place}}
+              @onReorder={{this.reorder}}
+              @onRemove={{this.unplace}}
+              @onSelect={{this.openItem}}
+              @menuFor={{this.placedMenu}}
+            />
+          {{/each}}
+        </div>
+      </div>
+    </main>
+
+    <style scoped>
+      .board {
+        container-type: inline-size;
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+        padding: var(--boxel-sp-lg);
+        min-height: 100%;
+        background: var(--background);
+        color: var(--foreground);
+      }
+      .board-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--boxel-sp);
+        flex-wrap: wrap;
+      }
+      .board-title {
+        margin: 0;
+        font: 700 var(--boxel-font-lg);
+        letter-spacing: var(--boxel-lsp-xs);
+      }
+      .board-sub {
+        margin: var(--boxel-sp-xxxs) 0 0;
+        font: var(--boxel-font-sm);
+        font-variant-numeric: tabular-nums;
+        color: var(--muted-foreground);
+      }
+      .board-body {
+        display: grid;
+        grid-template-columns: minmax(11.25rem, 15rem) 1fr;
+        gap: var(--boxel-sp);
+        align-items: start;
+      }
+      .board-rail {
+        position: sticky;
+        top: var(--boxel-sp);
+      }
+      .zone-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(11.25rem, 1fr));
+        gap: var(--boxel-sp-sm);
+      }
+      /* The rail goes on top rather than shrinking: a search box and a
+         list of names below ~180px stops being usable, and a horizontal
+         rail reads fine when the zones own the rest of the height. */
+      @container (width < 640px) {
+        .board-body {
+          grid-template-columns: 1fr;
+        }
+        .board-rail {
+          position: static;
+        }
+      }
+    </style>
+  </template>
+}
 
 /**
  * A plan for putting things in places.
@@ -130,308 +425,7 @@ export class PlacementBoard extends CardDef {
     },
   });
 
-  static isolated = class Isolated extends Component<typeof this> {
-    get items(): PlacementItem[] {
-      return (this.args.model.pool ?? [])
-        .filter((c) => c?.id)
-        .map((c) => ({
-          id: c.id!,
-          // `cardTitle`, not `title`: CardDef has no `title` field — the
-          // display name is computed from `cardInfo.name`, and reading the
-          // old name silently yields undefined, so every chip renders
-          // "Untitled" with no error anywhere.
-          title: c.cardTitle || c.cardInfo?.name || 'Untitled',
-          detail: c.cardInfo?.summary ?? undefined,
-        }));
-    }
-
-    // Built once per pool: every zone looks up each of its placements here
-    // on every render.
-    private itemCache:
-      | { pool: unknown; byKey: Map<string, PlacementItem> }
-      | undefined;
-
-    itemFor = (itemId: string): PlacementItem | undefined => {
-      let pool = this.args.model.pool;
-      let cache = this.itemCache;
-      if (!cache || cache.pool !== pool) {
-        cache = this.itemCache = {
-          pool,
-          byKey: new Map(this.items.map((i) => [itemKey(i.id), i])),
-        };
-      }
-      return cache.byKey.get(itemKey(itemId));
-    };
-
-    // Clicking a chip — in the rail or in a zone — opens the real card.
-    // `viewCard` is a top-level component arg, not `context.actions`: the
-    // latter is not present in every format the board renders in.
-    openItem = (item: PlacementItem) => {
-      let card = (this.args.model.pool ?? []).find((c) =>
-        sameItem(c?.id, item.id),
-      );
-      if (card) {
-        this.args.viewCard?.(card, 'isolated');
-      }
-    };
-
-    // ── Draft mutation ──────────────────────────────────────────────────
-    // Every handler writes a NEW array onto `draft` rather than mutating the
-    // existing one in place: a containsMany only re-renders (and only
-    // serializes) when the field is reassigned, so an in-place `push` would
-    // update the data and leave the screen stale.
-    //
-    // All of these touch `draft` and never `placements`. The committed field
-    // has exactly one writer — CommitPlacementCommand — which is what makes
-    // it safe to leave a half-finished plan open.
-
-    get draft(): PlacementField[] {
-      return this.args.model.draft ?? [];
-    }
-
-    // Drop an item into a zone. An item lives in at most one zone, so this
-    // removes any existing placement first — that is what makes a drag
-    // between zones a *move* rather than a copy, with no separate "remove
-    // from the old zone" step for the user to forget.
-    place = (itemId: string, zoneKey: string) => {
-      let key = itemKey(itemId);
-      let existing = this.draft.find((p) => itemKey(p.itemId) === key);
-      let rest = this.draft.filter((p) => itemKey(p.itemId) !== key);
-      this.args.model.draft = [
-        ...rest,
-        new PlacementField({
-          itemId: key,
-          zoneKey,
-          seq: nextSeq(zoneKey, rest),
-          placedAt: new Date(),
-          note: existing?.note,
-        }),
-      ];
-    };
-
-    // Dropped ON another placement: land immediately before it. Sequences are
-    // renumbered densely from 0 across the whole target zone afterwards, so
-    // repeated reorders cannot drift into fractional or colliding values.
-    reorder = (itemId: string, beforeItemId: string, zoneKey: string) => {
-      let key = itemKey(itemId);
-      let beforeKey = itemKey(beforeItemId);
-      if (key === beforeKey) {
-        return;
-      }
-      let existing = this.draft.find((p) => itemKey(p.itemId) === key);
-      let others = this.draft.filter((p) => itemKey(p.itemId) !== key);
-      let zoneRows = placementsIn(zoneKey, others);
-      let index = zoneRows.findIndex((p) => itemKey(p.itemId) === beforeKey);
-      if (index === -1) {
-        this.place(itemId, zoneKey);
-        return;
-      }
-      let moved = new PlacementField({
-        itemId: key,
-        zoneKey,
-        seq: 0,
-        placedAt: new Date(),
-        note: existing?.note,
-      });
-      zoneRows.splice(index, 0, moved);
-      let renumbered = zoneRows.map(
-        (p, i) =>
-          new PlacementField({
-            itemId: itemKey(p.itemId),
-            zoneKey,
-            seq: i,
-            placedAt: p.placedAt,
-            note: p.note,
-          }),
-      );
-      let elsewhere = others.filter((p) => p.zoneKey !== zoneKey);
-      this.args.model.draft = [...elsewhere, ...renumbered];
-    };
-
-    // Back to the palette. Deliberately does not renumber what is left: the
-    // remaining sequences stay strictly increasing, which is all the sort
-    // needs, and leaving them alone keeps the diff the commit reports small.
-    unplace = (itemId: string) => {
-      let key = itemKey(itemId);
-      this.args.model.draft = this.draft.filter(
-        (p) => itemKey(p.itemId) !== key,
-      );
-    };
-
-    // ── Keyboard placement ──────────────────────────────────────────────
-    // Every drag has a menu equivalent, so placing never needs a pointer.
-
-    zoneLabel(zone: PlacementZoneField): string {
-      return zone.displayLabel || zone.label || zone.key || 'Untitled zone';
-    }
-
-    get placeableZones(): PlacementZoneField[] {
-      return (this.args.model.zones ?? []).filter((z) => z?.key);
-    }
-
-    paletteMenu = (item: PlacementItem): PlacementMenuItems =>
-      this.placeableZones.map((zone) => ({
-        label: `Place in ${this.zoneLabel(zone)}`,
-        onSelect: () => this.place(item.id, zone.key!),
-      }));
-
-    placedMenu = (item: PlacementItem): PlacementMenuItems => {
-      let key = itemKey(item.id);
-      let zoneKey =
-        this.draft.find((p) => itemKey(p.itemId) === key)?.zoneKey ?? '';
-      let rows = placementsIn(zoneKey, this.draft);
-      let index = rows.findIndex((p) => itemKey(p.itemId) === key);
-      let previous = rows[index - 1]?.itemId;
-      let next = rows[index + 1]?.itemId;
-      return [
-        {
-          label: 'Move up',
-          disabled: !previous,
-          onSelect: () => previous && this.reorder(item.id, previous, zoneKey),
-        },
-        {
-          label: 'Move down',
-          disabled: !next,
-          onSelect: () => next && this.reorder(next, item.id, zoneKey),
-        },
-        {
-          kind: 'submenu',
-          label: 'Move to',
-          items: this.placeableZones
-            .filter((zone) => zone.key !== zoneKey)
-            .map((zone) => ({
-              label: this.zoneLabel(zone),
-              onSelect: () => this.place(item.id, zone.key!),
-            })),
-        },
-        '---',
-        {
-          label: 'Remove',
-          destructive: true,
-          onSelect: () => this.unplace(item.id),
-        },
-      ];
-    };
-
-    get statusLabel(): string {
-      let n = this.args.model.conflictCount ?? 0;
-      if (n > 0) {
-        return `${n} zone${n === 1 ? '' : 's'} over capacity`;
-      }
-      if (this.args.model.hasUncommittedChanges) {
-        return 'Uncommitted changes';
-      }
-      return 'Committed';
-    }
-
-    get statusHue(): Hue {
-      if ((this.args.model.conflictCount ?? 0) > 0) {
-        return 'red';
-      }
-      return this.args.model.hasUncommittedChanges ? 'amber' : 'green';
-    }
-
-    <template>
-      <main class='board'>
-        <header class='board-head'>
-          <div class='board-heading'>
-            <h1 class='board-title'><@fields.cardTitle /></h1>
-            <p class='board-sub'>
-              {{@model.placedCount}}
-              placed ·
-              {{@model.unplacedCount}}
-              to go
-            </p>
-          </div>
-          <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
-        </header>
-
-        <div class='board-body'>
-          <PlacementPalette
-            class='board-rail'
-            @items={{this.items}}
-            @placements={{this.draft}}
-            @searchable={{true}}
-            @heading={{if @model.noun @model.noun 'To place'}}
-            @onSelect={{this.openItem}}
-            @menuFor={{this.paletteMenu}}
-          />
-
-          <div class='zone-grid'>
-            {{#each @model.zones key='key' as |zone|}}
-              <PlacementDropZone
-                @zone={{zone}}
-                @placements={{this.draft}}
-                @itemFor={{this.itemFor}}
-                @onDropItem={{this.place}}
-                @onReorder={{this.reorder}}
-                @onRemove={{this.unplace}}
-                @onSelect={{this.openItem}}
-                @menuFor={{this.placedMenu}}
-              />
-            {{/each}}
-          </div>
-        </div>
-      </main>
-
-      <style scoped>
-        .board {
-          container-type: inline-size;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          padding: var(--boxel-sp-lg);
-          min-height: 100%;
-          background: var(--background);
-          color: var(--foreground);
-        }
-        .board-head {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: var(--boxel-sp);
-          flex-wrap: wrap;
-        }
-        .board-title {
-          margin: 0;
-          font: 700 var(--boxel-font-lg);
-          letter-spacing: var(--boxel-lsp-xs);
-        }
-        .board-sub {
-          margin: var(--boxel-sp-xxxs) 0 0;
-          font: var(--boxel-font-sm);
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
-        }
-        .board-body {
-          display: grid;
-          grid-template-columns: minmax(11.25rem, 15rem) 1fr;
-          gap: var(--boxel-sp);
-          align-items: start;
-        }
-        .board-rail {
-          position: sticky;
-          top: var(--boxel-sp);
-        }
-        .zone-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(11.25rem, 1fr));
-          gap: var(--boxel-sp-sm);
-        }
-        /* The rail goes on top rather than shrinking: a search box and a
-           list of names below ~180px stops being usable, and a horizontal
-           rail reads fine when the zones own the rest of the height. */
-        @container (width < 640px) {
-          .board-body {
-            grid-template-columns: 1fr;
-          }
-          .board-rail {
-            position: static;
-          }
-        }
-      </style>
-    </template>
-  };
+  static isolated = PlacementBoardIsolated;
 
   static edit = class Edit extends Component<typeof this> {
     sections = [
