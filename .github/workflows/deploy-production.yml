@@ -51,6 +51,15 @@ jobs:
   deploy:
     name: Deploy to production
     runs-on: ubuntu-latest
+    # The production Matrix credentials are secrets of this environment, and
+    # its deployment-branch policy admits only main. A run dispatched from any
+    # other branch runs that branch's copy of this file, where "Resolve the
+    # revision" may say anything; the environment refuses that job before any
+    # step runs. It isn't named `production`: GitHub records a deployment
+    # for every job that names an environment, and catalog-deploy-check.ts
+    # reads the newest successful `production` deployment as the revision
+    # production last got, which the "Record the deployment" step sets.
+    environment: catalog-production
 
     steps:
       - name: Resolve the revision
