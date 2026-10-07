@@ -9,7 +9,15 @@ import {
 import DateField from '@cardstack/base/date';
 import enumField from '@cardstack/base/enum';
 import FolderKanbanIcon from '@cardstack/boxel-icons/folder-kanban';
-import { or } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import {
+  StepList,
+  type StepItem,
+} from '@cardstack/pretui/components/step-list';
 
 import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
@@ -123,13 +131,20 @@ export class Project extends CardDef {
       return scheduleFacts(this.args.model ?? {});
     }
 
-    get statusSteps() {
+    // Done is the last stage, so a finished project shows every step
+    // complete rather than one still current.
+    get statusSteps(): StepItem[] {
       let current = this.args.model?.status;
-      let currentIndex = PROJECT_STATUSES.indexOf(current ?? '');
-      return PROJECT_STATUSES.map((status, index) => ({
-        status,
-        isCurrent: index === currentIndex,
-        isPast: currentIndex >= 0 && index < currentIndex,
+      let index = PROJECT_STATUSES.indexOf(current ?? '');
+      let finished = current === 'done';
+      return PROJECT_STATUSES.map((label, i) => ({
+        label,
+        state:
+          index < 0 || i > index
+            ? 'upcoming'
+            : i < index || finished
+              ? 'complete'
+              : 'current',
       }));
     }
 
@@ -149,11 +164,18 @@ export class Project extends CardDef {
       return pct == null ? undefined : `${pct}% of estimate elapsed`;
     }
 
-    get stepTrail() {
-      return this.statusSteps
-        .map((s) => (s.isPast ? `${s.status} ✓` : s.status))
-        .join(' → ');
-    }
+    scheduleRows: KeyValueItem[] = [
+      { key: 'Starts', value: 'start' },
+      { key: 'Estimate', value: 'estimate' },
+      { key: 'Projected end', value: 'end' },
+      { key: 'Elapsed', value: 'elapsed' },
+    ];
+
+    ownershipRows: KeyValueItem[] = [
+      { key: 'Lead', value: 'lead' },
+      { key: 'Team', value: 'team' },
+      { key: 'Vendor', value: 'vendor' },
+    ];
 
     <template>
       <article class='project-isolated'>
@@ -177,21 +199,19 @@ export class Project extends CardDef {
                 />
               {{/if}}
               {{#if @model.teamName}}
-                <span class='pill neutral'>{{@model.teamName}}</span>
+                <StatePill @label={{@model.teamName}} @hue='slate' />
               {{/if}}
               {{#if this.elapsedLabel}}
-                <span class='pill neutral'>{{this.elapsedLabel}}</span>
+                <StatePill @label={{this.elapsedLabel}} @hue='slate' />
               {{/if}}
             </div>
           </div>
-          <div class='hero-track'>
-            <div class='steps'>
-              {{#each this.statusSteps as |s|}}
-                <i class='{{if (or s.isPast s.isCurrent) "on"}}'></i>
-              {{/each}}
-            </div>
-            <span class='steps-label'>{{this.stepTrail}}</span>
-          </div>
+          <StepList
+            class='hero-track'
+            @steps={{this.statusSteps}}
+            @variant='track'
+            @label='Project status'
+          />
         </header>
 
         <div class='body'>
@@ -201,45 +221,52 @@ export class Project extends CardDef {
               <p class='prose'>{{@model.description}}</p>
             {{/if}}
             <h2 class='panel-title spaced'>Schedule</h2>
-            <dl class='facts'>
-              <dt>Starts</dt>
-              <dd>{{#if @model.startDate}}<@fields.startDate
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Estimate</dt>
-              <dd>{{#if
-                  @model.estimatedEffort.label
-                }}{{@model.estimatedEffort.label}}{{else}}&mdash;{{/if}}</dd>
-              <dt>Projected end</dt>
-              <dd>{{if this.endLabel this.endLabel '—'}}</dd>
-              <dt>Elapsed</dt>
-              <dd>{{if this.elapsedLabel this.elapsedLabel '—'}}</dd>
-            </dl>
+            <KeyValue @items={{this.scheduleRows}} @labelStyle='eyebrow'>
+              <:value as |row|>
+                {{#if (eq row.value 'start')}}
+                  {{#if @model.startDate}}<@fields.startDate
+                    />{{else}}&mdash;{{/if}}
+                {{else if (eq row.value 'estimate')}}
+                  {{if
+                    @model.estimatedEffort.label
+                    @model.estimatedEffort.label
+                    '—'
+                  }}
+                {{else if (eq row.value 'end')}}
+                  {{if this.endLabel this.endLabel '—'}}
+                {{else}}
+                  {{if this.elapsedLabel this.elapsedLabel '—'}}
+                {{/if}}
+              </:value>
+            </KeyValue>
           </div>
 
           <aside class='side'>
             <h2 class='panel-title'>Ownership</h2>
-            <dl class='facts stacked'>
-              <dt>Lead</dt>
-              <dd>{{#if @model.lead}}<@fields.lead
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Team</dt>
-              <dd>{{#if @model.team}}<@fields.team
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Vendor</dt>
-              <dd>{{#if @model.vendor}}<@fields.vendor
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}&mdash; internal only{{/if}}</dd>
-            </dl>
-            <h2 class='panel-title spaced'>Status</h2>
-            <dl class='facts stacked'>
-              <dt>Current</dt>
-              <dd>{{if @model.status @model.status '—'}}</dd>
-            </dl>
+            <KeyValue
+              @items={{this.ownershipRows}}
+              @layout='stacked'
+              @labelStyle='eyebrow'
+            >
+              <:value as |row|>
+                {{#if (eq row.value 'lead')}}
+                  {{#if @model.lead}}<@fields.lead
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}&mdash;{{/if}}
+                {{else if (eq row.value 'team')}}
+                  {{#if @model.team}}<@fields.team
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}&mdash;{{/if}}
+                {{else}}
+                  {{#if @model.vendor}}<@fields.vendor
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}&mdash; internal only{{/if}}
+                {{/if}}
+              </:value>
+            </KeyValue>
           </aside>
         </div>
       </article>
@@ -251,15 +278,9 @@ export class Project extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --proj-id: var(--primary, var(--boxel-highlight));
-          --proj-strong: color-mix(
-            in oklch,
-            var(--proj-id) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .hero {
           flex: none;
@@ -267,7 +288,7 @@ export class Project extends CardDef {
           align-items: flex-start;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .hero-text {
           flex: 1;
@@ -284,7 +305,7 @@ export class Project extends CardDef {
         .byline {
           margin: var(--boxel-sp-5xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sep-dot {
           margin: 0 0.25rem;
@@ -295,43 +316,9 @@ export class Project extends CardDef {
           gap: var(--boxel-sp-5xs);
           margin-top: var(--boxel-sp-xs);
         }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill.neutral {
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
-        }
         .hero-track {
           flex: none;
-          width: 12rem;
-          text-align: right;
-        }
-        .steps {
-          display: flex;
-          gap: 3px;
-        }
-        .steps i {
-          height: 5px;
-          flex: 1;
-          border-radius: 2px;
-          background: var(--border, var(--boxel-200));
-        }
-        .steps i.on {
-          background: var(--proj-id);
-        }
-        .steps-label {
-          display: block;
-          margin-top: 0.25rem;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 14rem;
         }
         .body {
           display: grid;
@@ -349,8 +336,8 @@ export class Project extends CardDef {
         }
         .side {
           padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border, var(--boxel-200));
-          background: var(--muted, var(--boxel-100));
+          border-left: 1px solid var(--border);
+          background: var(--muted);
         }
         .panel-title {
           margin: 0 0 var(--boxel-sp-xs);
@@ -366,51 +353,19 @@ export class Project extends CardDef {
           line-height: 1.65;
           max-width: 56ch;
         }
-        .facts {
-          margin: 0;
-          display: grid;
-          grid-template-columns: 9rem 1fr;
-        }
-        .facts.stacked {
-          grid-template-columns: 1fr;
-        }
-        .facts dt {
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
-          padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-        }
-        .facts.stacked dt {
-          border-bottom: 0;
-          padding-bottom: 0;
-        }
-        .facts dd {
-          margin: 0;
-          padding: 0.45rem 0;
-          font-size: var(--boxel-font-size-sm);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-          overflow-wrap: anywhere;
-          font-variant-numeric: tabular-nums;
-        }
-        .facts.stacked dd {
-          padding-top: 0.1rem;
-        }
         @container iso (max-width: 40rem) {
           .body {
             grid-template-columns: 1fr;
           }
           .side {
             border-left: 0;
-            border-top: 1px solid var(--border, var(--boxel-200));
+            border-top: 1px solid var(--border);
           }
           .hero {
             flex-wrap: wrap;
           }
           .hero-track {
             width: 100%;
-            text-align: left;
           }
         }
       </style>
@@ -420,6 +375,17 @@ export class Project extends CardDef {
   static embedded = class Embedded extends Component<typeof this> {
     get statusHue() {
       return statusHueOf(this.args.model?.status);
+    }
+
+    get rows(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [
+        { key: 'Start', value: 'start' },
+        { key: 'Effort', value: 'effort' },
+      ];
+      if (m?.lead) rows.push({ key: 'Lead', value: 'lead' });
+      if (m?.vendor) rows.push({ key: 'Vendor', value: 'vendor' });
+      return rows;
     }
 
     <template>
@@ -433,29 +399,31 @@ export class Project extends CardDef {
         {{#if @model.description}}
           <p class='description'>{{@model.description}}</p>
         {{/if}}
-        <dl class='facts'>
-          <div><dt>Start</dt><dd><@fields.startDate /></dd></div>
-          <div><dt>Effort</dt><dd><@fields.estimatedEffort /></dd></div>
-          {{#if @model.lead}}
-            <div><dt>Lead</dt><dd><@fields.lead
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></dd></div>
-          {{/if}}
-          {{#if @model.vendor}}
-            <div><dt>Vendor</dt><dd><@fields.vendor
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></dd></div>
-          {{/if}}
-        </dl>
+        <KeyValue
+          class='facts'
+          @items={{this.rows}}
+          @layout='inline'
+          @labelStyle='eyebrow'
+        >
+          <:value as |row|>
+            {{#if (eq row.value 'start')}}
+              <@fields.startDate />
+            {{else if (eq row.value 'effort')}}
+              <@fields.estimatedEffort />
+            {{else if (eq row.value 'lead')}}
+              <@fields.lead @format='atom' @displayContainer={{false}} />
+            {{else}}
+              <@fields.vendor @format='atom' @displayContainer={{false}} />
+            {{/if}}
+          </:value>
+        </KeyValue>
       </div>
       <style scoped>
         .project-embedded {
           padding: var(--boxel-sp);
-          background: var(--card, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           transition: box-shadow 0.15s ease-out;
         }
         header {
@@ -471,27 +439,10 @@ export class Project extends CardDef {
         .description {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .facts {
-          margin: var(--boxel-sp-xs) 0 0;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: var(--boxel-sp-xs);
-        }
-        .facts > div {
-          min-width: 0;
-        }
-        .facts dt {
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .facts dd {
-          margin: var(--boxel-sp-5xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          overflow-wrap: anywhere;
+          margin-top: var(--boxel-sp-xs);
         }
       </style>
     </template>
@@ -510,12 +461,12 @@ export class Project extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .project-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .project-atom-name {
@@ -613,7 +564,7 @@ export class Project extends CardDef {
         </dl>
       </article>
       <style scoped>
-        /* Four tiers; each larger one ADDS fields. 11px floor throughout. */
+        /* Four tiers; each larger one ADDS fields. 0.6875rem floor throughout. */
         .fit {
           height: 100%;
           display: flex;
@@ -621,17 +572,12 @@ export class Project extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --proj-id: var(--primary, var(--boxel-highlight));
-          --proj-strong: color-mix(
-            in oklch,
-            var(--proj-id) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          --proj-id: var(--primary);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit > * {
           min-height: 0;
@@ -662,7 +608,7 @@ export class Project extends CardDef {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -677,13 +623,13 @@ export class Project extends CardDef {
         }
         .steps {
           display: flex;
-          gap: 3px;
+          gap: 0.1875rem;
         }
         .steps i {
-          height: 4px;
+          height: 0.25rem;
           flex: 1;
           border-radius: 2px;
-          background: var(--border, var(--boxel-200));
+          background: var(--border);
         }
         .steps i.on {
           background: var(--proj-id);
@@ -692,14 +638,14 @@ export class Project extends CardDef {
           display: block;
           margin-top: 0.15rem;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-prose {
           display: none;
           margin: 0;
           font-size: var(--fit-small);
           line-height: 1.5;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -709,7 +655,7 @@ export class Project extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -721,7 +667,7 @@ export class Project extends CardDef {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;
@@ -734,18 +680,18 @@ export class Project extends CardDef {
         }
 
         /* TIER 2 — add lead + team. No `or` in container queries, so two rules. */
-        @container fitted-card (height > 80px) {
+        @container fitted-card (height > 5rem) {
           .fit-eb {
             display: block;
           }
         }
-        @container fitted-card (width > 240px) {
+        @container fitted-card (width > 15rem) {
           .fit-eb {
             display: block;
           }
         }
         /* TIER 3 — add the progress track and elapsed share. */
-        @container fitted-card (height > 130px) and (width > 180px) {
+        @container fitted-card (height > 8.125rem) and (width > 11.25rem) {
           .fit-track {
             display: block;
           }
@@ -754,20 +700,20 @@ export class Project extends CardDef {
           }
         }
         /* TIER 4 — width-driven facts. */
-        @container fitted-card (height > 150px) and (width > 180px) {
+        @container fitted-card (height > 9.375rem) and (width > 11.25rem) {
           .fit-add {
             display: grid;
             grid-template-columns: 1fr;
           }
         }
-        @container fitted-card (width > 340px) and (height > 130px) {
+        @container fitted-card (width > 21.25rem) and (height > 8.125rem) {
           .fit-add {
             display: grid;
             grid-template-columns: 1fr 1fr;
           }
         }
         /* Short strip. */
-        @container fitted-card (height <= 90px) {
+        @container fitted-card (height <= 5.625rem) {
           .fit {
             grid-template-rows: 1fr;
             align-content: center;
@@ -784,7 +730,7 @@ export class Project extends CardDef {
           }
         }
         /* Smallest — the status pill stays. */
-        @container fitted-card (height <= 50px) {
+        @container fitted-card (height <= 3.125rem) {
           .fit-eb {
             display: none;
           }
