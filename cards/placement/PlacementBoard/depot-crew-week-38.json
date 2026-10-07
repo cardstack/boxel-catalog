@@ -1,0 +1,139 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "noun": "Technician",
+      "zones": [
+        {
+          "key": "mechanical",
+          "label": "Mechanical",
+          "capacity": 3,
+          "hue": "blue",
+          "note": "Pumps, drives, conveyors. Three is the supervision ceiling."
+        },
+        {
+          "key": "electrical",
+          "label": "Electrical",
+          "capacity": 3,
+          "hue": "green",
+          "note": "Switchgear and controls. Requires a current LV ticket."
+        },
+        {
+          "key": "oncall",
+          "label": "On-call",
+          "capacity": 1,
+          "hue": "amber",
+          "note": "Exactly one. A second name here means nobody owns the pager."
+        },
+        {
+          "key": "bench",
+          "label": "Bench",
+          "hue": "slate",
+          "note": "Unlimited \u2014 rostered this week, not assigned to a trade."
+        }
+      ],
+      "placements": [
+        {
+          "itemId": "Employee/dana-kim",
+          "zoneKey": "mechanical",
+          "seq": 0
+        },
+        {
+          "itemId": "Employee/leo-park",
+          "zoneKey": "mechanical",
+          "seq": 1
+        },
+        {
+          "itemId": "Employee/priya-nair",
+          "zoneKey": "electrical",
+          "seq": 0
+        },
+        {
+          "itemId": "Employee/marcus-webb",
+          "zoneKey": "oncall",
+          "seq": 0
+        }
+      ],
+      "draft": [
+        {
+          "itemId": "Employee/dana-kim",
+          "zoneKey": "mechanical",
+          "seq": 0
+        },
+        {
+          "itemId": "Employee/leo-park",
+          "zoneKey": "mechanical",
+          "seq": 1
+        },
+        {
+          "itemId": "Employee/sofia-reyes",
+          "zoneKey": "mechanical",
+          "seq": 2,
+          "note": "Pulled off the bench \u2014 conveyor overhaul needs a third pair of hands."
+        },
+        {
+          "itemId": "Employee/priya-nair",
+          "zoneKey": "electrical",
+          "seq": 0
+        },
+        {
+          "itemId": "Employee/marcus-webb",
+          "zoneKey": "oncall",
+          "seq": 0
+        },
+        {
+          "itemId": "Employee/mara-lindqvist",
+          "zoneKey": "bench",
+          "seq": 0
+        }
+      ],
+      "cardInfo": {
+        "name": "Depot Crew \u2014 Week 38",
+        "summary": "Seven technicians across four trades. Mechanical sits at 3/3 and On-call at 1/1, so the next drag into either turns the zone red and blocks the commit \u2014 the fastest way to see the whole gate work."
+      }
+    },
+    "relationships": {
+      "pool.0": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "pool.1": {
+        "links": {
+          "self": "../../hr/Employee/leo-park"
+        }
+      },
+      "pool.2": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
+        }
+      },
+      "pool.3": {
+        "links": {
+          "self": "../../hr/Employee/marcus-webb"
+        }
+      },
+      "pool.4": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "pool.5": {
+        "links": {
+          "self": "../../hr/Employee/mara-lindqvist"
+        }
+      },
+      "pool.6": {
+        "links": {
+          "self": "../../hr/Employee/jane-realtor"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../placement-board",
+        "name": "PlacementBoard"
+      }
+    }
+  }
+}

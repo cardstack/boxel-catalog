@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CommitPlacementCommand",
+        "module": "../commands/commit-placement-command"
+      },
+      "specType": "command",
+      "readMe": "## Commit Placement (CP)\n\nPromote a Placement Board's `draft` to its committed `placements`.\n\n```ts\nnew CommitPlacementCommand(commandContext).execute({\n  board,                    // linksTo PlacementBoard, required\n  allowOverCapacity: false,\n  committedByName: 'Alice',\n})\n```\n\nReturns `{ placedCount, addedCount, movedCount, removedCount, message }`.\n\n### The single writer\n\nThis command is the **only** thing that writes `placements`. The board's UI touches `draft` and nothing else; no component in the family writes the committed field. That is what makes it safe to leave a half-finished plan open \u2014 the live arrangement cannot drift while someone is still dragging.\n\nIf a second writer is ever added, this guarantee is gone and the draft/commit split stops meaning anything.\n\n### Three refusals\n\n**Over capacity.** Refuses while any zone exceeds its ceiling, naming each one (`feature (3/2)`). The gate calls the same `overCapacityZones()` the board's header badge calls, so the UI can never promise a commit this will reject.\n\n`allowOverCapacity` overrides it, because real arrangements do get squeezed \u2014 one extra chair at the family table. The override is opt-in and is written into the result message, so a commit that broke a stated ceiling is never silent.\n\n**Not one arrangement.** Refuses when the draft places the same item twice, or places an item in a zone the board no longer has. A duplicate would also count twice toward capacity.\n\n**No-op.** Refuses when `draft` already matches `placements`, rather than writing an identical array and bumping the instance's index generation for nothing.\n\n### The message describes the change, not the end state\n\n`addedCount`, `movedCount` and `removedCount` are computed from a before/after map built **before** the write. An item placed for the first time is added, not moved. \"12 placed\" tells a reader nothing about what this commit did; \"2 added, 3 moved, 1 removed, 12 placed in total\" does.\n\n### Copy, don't alias\n\nThe committed rows are fresh `PlacementField`s copied from the draft rows. Sharing the array, or the rows inside it, would make the next edit to the draft silently mutate what was just committed, and `hasUncommittedChanges` would never read true again. The board would look permanently clean while diverging from reality \u2014 a bug that is invisible until someone notices the plan on screen is not the plan that shipped.\n\n### Comparison is normalised\n\nEvery item comparison goes through `itemKey()` (last two path segments), so a hand-authored board using `../Author/jane-doe` and a runtime card id of `https://\u2026/my-realm/Author/jane-doe` are the same item. Without it the dirty check would fire on every load and every item would count as both moved and removed. The dirty check also compares each placement's `note`, so a note-only edit is committable.\n\n### Non-goals\n\nDoes not write to the placed items themselves \u2014 committing a seating plan does not stamp a `table` field onto each guest. If the arrangement needs to land on the records, that is a second command the host writes, and it should read `placements` after this one succeeds.\n\nDoes not check permissions, does not notify, does not snapshot the previous arrangement. A board that needs an undo history should keep its own.",
+      "cardInfo": {
+        "name": "Commit Placement",
+        "summary": "The single writer for a board's committed arrangement; refuses over-capacity and no-op commits."
+      },
+      "containedExamples": [],
+      "cardTitle": "Commit Placement",
+      "cardDescription": "Promotes a Placement Board draft to its committed arrangement, refusing over-capacity zones unless the override is set."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PlacementBoard/depot-crew-week-38"
+        }
+      }
+    }
+  }
+}
