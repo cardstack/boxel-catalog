@@ -197,7 +197,7 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
           {{this.toleranceLabel}}</span>
         {{#unless this.approved}}
           <Button
-            @variant='primary'
+            @variant={{if this.openCount 'secondary' 'primary'}}
             @size='s'
             @busy={{if this.openCount false this.busy}}
             @disabled={{if this.openCount true this.busy}}

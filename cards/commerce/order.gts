@@ -617,6 +617,16 @@ export class Order extends CardDef {
           font-size: 1.125rem;
           font-weight: 700;
         }
+        /* The rule runs across both columns: both cells fill the row, and the
+           value cell reaches back across the column gap. */
+        .totals :deep(dt:last-of-type) {
+          align-self: stretch;
+        }
+        .totals :deep(dd:last-of-type) {
+          align-self: stretch;
+          margin-inline-start: calc(-1 * var(--space-6));
+          padding-inline-start: var(--space-6);
+        }
         .ship {
           border: 1px solid var(--border);
           border-radius: 0.5rem;

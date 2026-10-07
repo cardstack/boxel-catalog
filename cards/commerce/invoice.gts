@@ -988,6 +988,16 @@ export class Invoice extends CardDef {
           font-size: 1.125rem;
           font-weight: 700;
         }
+        /* The rule runs across both columns: both cells fill the row, and the
+           value cell reaches back across the column gap. */
+        .totals :deep(dt:first-of-type) {
+          align-self: stretch;
+        }
+        .totals :deep(dd:first-of-type) {
+          align-self: stretch;
+          margin-inline-start: calc(-1 * var(--space-6));
+          padding-inline-start: var(--space-6);
+        }
         .totals :deep(dd:nth-of-type(3)) {
           font-weight: 600;
         }

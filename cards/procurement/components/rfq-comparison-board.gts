@@ -347,7 +347,7 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
                 {{#each this.columns as |col|}}
                   <td>
                     <Button
-                      @variant='primary'
+                      @variant={{if col.blocked 'secondary' 'primary'}}
                       @size='s'
                       @disabled={{if col.blocked true @busy}}
                       class='award-btn'
@@ -410,8 +410,13 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       td {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
+      /* The Table header is mono uppercase; a vendor column holds a name
+         and status pills, which keep the body face. */
       .vendor {
         min-width: 10rem;
+        font-family: var(--font-sans);
+        text-transform: none;
+        letter-spacing: normal;
       }
       .vendor-name {
         display: block;

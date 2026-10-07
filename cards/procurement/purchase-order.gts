@@ -696,7 +696,7 @@ export class PurchaseOrder extends CardDef {
     }
     <template>
       <div class='row'>
-        <@fields.poNumber @format='atom' />
+        <span class='po'><@fields.poNumber @format='atom' /></span>
         <Money class='amount' @amount={{this.total}} @code='USD' />
         <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
       </div>
@@ -707,6 +707,12 @@ export class PurchaseOrder extends CardDef {
           gap: var(--boxel-sp-sm);
           align-items: center;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        }
+        /* The number keeps its own width; the grid's first column only takes
+           the slack. */
+        .po {
+          justify-self: start;
+          min-width: 0;
         }
         .amount {
           font-weight: 600;
