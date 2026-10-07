@@ -125,7 +125,7 @@ export class PaymentClause extends Clause {
         .hint {
           margin: 0.25rem 0 0;
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .row {
           display: grid;
@@ -198,7 +198,7 @@ export class PaymentClause extends Clause {
         }
         .meta {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>

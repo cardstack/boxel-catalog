@@ -2,6 +2,10 @@ import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { ContractClause } from '@cardstack/catalog/cards/legal/contract-clause';
 import { CLAUSE_TYPE_LABELS } from '@cardstack/catalog/cards/legal/clause';
@@ -94,7 +98,11 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
           </section>
         {{/each}}
       {{else}}
-        <p class='empty'>No clauses recorded for this contract yet.</p>
+        <EmptyState
+          @title='No clauses recorded for this contract yet.'
+          @texture={{false}}
+          style={{COMPACT_EMPTY_STYLE}}
+        />
       {{/if}}
     </nav>
     <style scoped>
@@ -105,7 +113,7 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
       }
       .summary {
         margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-size: 0.8125rem;
         font-variant-numeric: tabular-nums;
       }
@@ -114,7 +122,7 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
         font-size: 0.75rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       ul {
         list-style: none;
@@ -131,7 +139,7 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
         width: 100%;
         text-align: left;
         border: none;
-        border-radius: calc(var(--radius, var(--boxel-border-radius)) / 1.5);
+        border-radius: calc(var(--radius) / 1.5);
         background: transparent;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         cursor: pointer;
@@ -139,17 +147,12 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
         color: inherit;
       }
       .clause-row:hover {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .clause-name {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-      }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
       }
     </style>
   </template>

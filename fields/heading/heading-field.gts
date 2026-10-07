@@ -79,13 +79,13 @@ export class HeadingField extends FieldDef {
           display: flex;
           align-items: baseline;
           gap: var(--boxel-sp-xxs);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .lvl {
           flex: none;
           font: 600 var(--boxel-font-xs);
-          font-family: var(--font-mono, monospace);
-          color: var(--muted-foreground, var(--boxel-450));
+          font-family: var(--font-mono);
+          color: var(--muted-foreground);
         }
         .txt {
           flex: 1;
@@ -98,8 +98,8 @@ export class HeadingField extends FieldDef {
         .slug {
           flex: none;
           font: var(--boxel-font-xs);
-          font-family: var(--font-mono, monospace);
-          color: var(--muted-foreground, var(--boxel-450));
+          font-family: var(--font-mono);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

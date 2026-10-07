@@ -15,6 +15,7 @@ import FileTextIcon from '@cardstack/boxel-icons/file-text';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-check';
 import ScrollTextIcon from '@cardstack/boxel-icons/scroll-text';
 import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 import {
   ContractTypeField,
@@ -22,6 +23,7 @@ import {
 } from '@cardstack/catalog/cards/legal/contract-type';
 import { Clause } from '@cardstack/catalog/cards/legal/clause';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
@@ -147,7 +149,7 @@ export class ContractTemplate extends CardDef {
         .hint {
           margin: 0.25rem 0 0;
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .row {
           display: grid;
@@ -223,8 +225,12 @@ export class ContractTemplate extends CardDef {
               {{#each this.inputs as |i|}}<li>{{i}}</li>{{/each}}
             </ul>
           {{else}}
-            <p class='empty'>Nothing recorded. A template with no stated inputs
-              usually means they live in the drafter's head — write them down.</p>
+            <EmptyState
+              @title='No inputs recorded'
+              @message="A template with no stated inputs usually means they live in the drafter's head. Write them down."
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -233,9 +239,12 @@ export class ContractTemplate extends CardDef {
           {{#if @model.standardClauses.length}}
             <@fields.standardClauses @format='fitted' />
           {{else}}
-            <p class='empty'>No clauses linked. The template will still open,
-              but nothing connects its language back to the approved library —
-              so a change to a standard clause will not reach it.</p>
+            <EmptyState
+              @title='No clauses linked'
+              @message='The template still opens, but a change to a standard clause will not reach it.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -251,26 +260,22 @@ export class ContractTemplate extends CardDef {
         .ct-page {
           container-type: inline-size;
           container-name: ct-page;
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #111) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
-          color: var(--foreground, #111);
-          font-family: var(--font-sans, inherit);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .hero {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: var(--boxel-sp-lg);
-          border-bottom: 2px solid var(--foreground, #111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: var(--boxel-sp);
         }
         .hero-id {
@@ -292,7 +297,7 @@ export class ContractTemplate extends CardDef {
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .kicker :deep(svg) {
           width: max(14px, 1em);
@@ -315,7 +320,7 @@ export class ContractTemplate extends CardDef {
         }
         .fig-n {
           display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 1.45rem;
           font-weight: 600;
@@ -327,7 +332,7 @@ export class ContractTemplate extends CardDef {
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
           letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .lede {
           margin: 0;
@@ -337,7 +342,7 @@ export class ContractTemplate extends CardDef {
         }
         .panel {
           padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: var(--radius, 8px);
+          border-radius: var(--radius);
           background: var(--panel-bg);
         }
         .panel h2 {
@@ -353,7 +358,7 @@ export class ContractTemplate extends CardDef {
         .panel h2 :deep(svg) {
           width: max(14px, 1em);
           height: max(14px, 1em);
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .inputs {
           list-style: none;
@@ -368,21 +373,10 @@ export class ContractTemplate extends CardDef {
           font-weight: 600;
           padding: 3px 10px;
           border-radius: 4px;
-          background: color-mix(
-            in oklch,
-            var(--foreground, #111) 7%,
-            transparent
-          );
+          background: color-mix(in oklch, var(--foreground) 7%, transparent);
         }
-        .guidance,
-        .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.55;
-          max-width: 68ch;
-        }
-        .empty {
-          color: var(--muted-foreground, #6b7280);
+        .guidance {
+          color: var(--muted-foreground);
         }
         @container ct-page (width < 560px) {
           .hero {
@@ -421,7 +415,7 @@ export class ContractTemplate extends CardDef {
           gap: 2px;
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
           overflow: hidden;
-          font-family: var(--font-sans, inherit);
+          font-family: var(--font-sans);
           --type-base: clamp(10px, min(calc(3px + 2.1cqi + 1cqb), 10cqb), 15px);
         }
         .r-head,
@@ -441,7 +435,7 @@ export class ContractTemplate extends CardDef {
         .r-meta {
           font-size: var(--type-base);
           line-height: 1.25;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

@@ -5,6 +5,10 @@ import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Stat } from '@cardstack/pretui/components/stat';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Contract } from '@cardstack/catalog/cards/legal/contract';
 import {
@@ -158,6 +162,10 @@ export class LegalHome extends GlimmerComponent<Signature> {
       count: this.contracts.filter((c) => c.status === stage).length,
       last: i === CONTRACT_PIPELINE.length - 1,
     }));
+  }
+
+  get noticeEmptyTitle(): string {
+    return `No notice deadline inside ${this.noticeWindow} days.`;
   }
 
   // ---- hero + stat tiles ---------------------------------------------------
@@ -316,8 +324,12 @@ export class LegalHome extends GlimmerComponent<Signature> {
           </div>
           <div class='tiles'>
             <div class='tile'>
-              <span class='tile-label'>Executed</span>
-              <span class='tile-value'>{{this.executedCount}}</span>
+              {{! Fed from a live query, so the digits do not roll. }}
+              <Stat
+                @label='Executed'
+                @value={{this.executedCount}}
+                @roll={{false}}
+              />
               <span class='tile-sub'>signed and in force</span>
             </div>
             <div
@@ -327,16 +339,24 @@ export class LegalHome extends GlimmerComponent<Signature> {
                   (concat "u-" this.worstDeadline.urgency)
                 }}'
             >
-              <span class='tile-label'>Notice deadlines</span>
-              <span class='tile-value'>{{this.deadlinesInWindow.length}}</span>
+              {{! Fed from a live query, so the digits do not roll. }}
+              <Stat
+                @label='Notice deadlines'
+                @value={{this.deadlinesInWindow.length}}
+                @roll={{false}}
+              />
               <span class='tile-sub'>{{#if this.worstDeadline}}nearest
                   {{this.worstDeadline.daysLabel}}{{else}}none inside
                   {{this.noticeWindow}}
                   days{{/if}}</span>
             </div>
             <div class='tile'>
-              <span class='tile-label'>Open deviations</span>
-              <span class='tile-value'>{{this.openDeviations.length}}</span>
+              {{! Fed from a live query, so the digits do not roll. }}
+              <Stat
+                @label='Open deviations'
+                @value={{this.openDeviations.length}}
+                @roll={{false}}
+              />
               <span class='tile-sub'>{{#if this.highestSeverity}}worst is
                   {{this.severityLabel this.highestSeverity}}{{else}}every
                   clause on playbook{{/if}}</span>
@@ -404,8 +424,11 @@ export class LegalHome extends GlimmerComponent<Signature> {
                 end of term
               </p>
             {{else}}
-              <p class='empty'>No in-force contract ends inside the next twelve
-                months.</p>
+              <EmptyState
+                @title='No in-force contract ends inside the next twelve months.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
           </section>
 
@@ -456,9 +479,11 @@ export class LegalHome extends GlimmerComponent<Signature> {
                 <span class='row-days'>{{row.daysLabel}}</span>
               </button>
             {{else}}
-              <p class='empty'>No notice deadline inside
-                {{this.noticeWindow}}
-                days.</p>
+              <EmptyState
+                @title={{this.noticeEmptyTitle}}
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/each}}
           </section>
 
@@ -483,7 +508,11 @@ export class LegalHome extends GlimmerComponent<Signature> {
                 <StatePill @label='pending' @hue='amber' @dot={{true}} />
               </button>
             {{else}}
-              <p class='empty'>Nothing waiting on a counterparty.</p>
+              <EmptyState
+                @title='Nothing waiting on a counterparty.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/each}}
           </section>
 
@@ -509,7 +538,11 @@ export class LegalHome extends GlimmerComponent<Signature> {
                 />
               </button>
             {{else}}
-              <p class='empty'>Every clause in play is on playbook.</p>
+              <EmptyState
+                @title='Every clause in play is on playbook.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/each}}
           </section>
         </aside>
@@ -517,18 +550,17 @@ export class LegalHome extends GlimmerComponent<Signature> {
     </div>
     <style scoped>
       .home {
-        /* adapter block (boxel-theming §1a): the card namespace forwards the
-           semantic set once; status hues are data, mixed toward the card's own
-           ink so the pair survives a linked theme (§2). No literal colours. */
-        --lh-ink: var(--foreground, var(--boxel-dark));
-        --lh-muted: var(--muted-foreground, var(--boxel-450));
-        --lh-surface: var(--card, var(--background, var(--boxel-light)));
-        --lh-line: var(--border, var(--boxel-200));
+        /* Status hues are the theme's -ink tokens, so text and marks in them
+           hold contrast on the card in both schemes. */
+        --lh-ink: var(--foreground);
+        --lh-muted: var(--muted-foreground);
+        --lh-surface: var(--card);
+        --lh-line: var(--border);
         --lh-band: color-mix(in oklch, var(--lh-ink) 3%, transparent);
-        --lh-warn: color-mix(in oklch, var(--boxel-warning) 65%, var(--lh-ink));
-        --lh-late: color-mix(in oklch, var(--boxel-danger) 70%, var(--lh-ink));
+        --lh-warn: var(--attention-ink);
+        --lh-late: var(--destructive-ink);
         --lh-late-bg: color-mix(in oklch, var(--lh-late) 8%, var(--lh-surface));
-        --lh-soon: color-mix(in oklch, var(--boxel-warning) 40%, var(--lh-ink));
+        --lh-soon: color-mix(in oklch, var(--attention-ink) 60%, var(--lh-ink));
         display: grid;
         gap: var(--boxel-sp);
         font-size: 0.875rem;
@@ -542,7 +574,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-sm);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
         border: 1px solid var(--lh-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border-radius: var(--radius);
         background: var(--lh-surface);
       }
       .sec-head {
@@ -590,8 +622,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
         display: grid;
         gap: 0.2rem;
       }
-      .hero-label,
-      .tile-label {
+      .hero-label {
         font-size: 0.6875rem;
         letter-spacing: 0.1em;
         text-transform: uppercase;
@@ -624,12 +655,6 @@ export class LegalHome extends GlimmerComponent<Signature> {
       .tile.u-late {
         border-left-color: var(--lh-late);
       }
-      .tile-value {
-        font-size: 1.75rem;
-        line-height: 1.05;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-      }
       .tile-sub {
         font-size: 0.75rem;
         color: var(--lh-muted);
@@ -659,7 +684,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
         border: 1px solid var(--lh-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border-radius: var(--radius);
         background: var(--lh-band);
         min-width: 0;
       }
@@ -708,7 +733,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
         min-height: 44px;
         padding: 0.35rem 0.5rem;
         border: 0;
-        border-radius: var(--radius, 4px);
+        border-radius: var(--radius);
         background: transparent;
         color: inherit;
         font: inherit;
@@ -795,7 +820,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
       }
       .rw-days,
       .row-days {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
         font-size: 0.75rem;
         color: var(--lh-muted);
@@ -912,7 +937,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
         min-height: 44px;
         text-align: left;
         border: 1px solid var(--lh-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border-radius: var(--radius);
         background: var(--lh-surface);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         cursor: pointer;
@@ -948,12 +973,6 @@ export class LegalHome extends GlimmerComponent<Signature> {
       .row-days,
       .row-open > :last-child {
         flex: none;
-      }
-      .empty {
-        margin: 0;
-        font-size: 0.8125rem;
-        color: var(--lh-muted);
-        font-style: italic;
       }
 
       @container (max-width: 900px) {

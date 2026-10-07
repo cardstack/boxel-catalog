@@ -6,6 +6,9 @@ import {
   type getCards,
 } from '@cardstack/runtime-common';
 
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { ClauseNavigator } from './clause-navigator';
 import type { Contract } from '@cardstack/catalog/cards/legal/contract';
@@ -178,7 +181,12 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
               <span class='mini-meta'>{{v.summary}}</span>
             </div>
           {{else}}
-            <p class='empty'>Not executed yet — no versions.</p>
+            <EmptyState
+              @title='Not executed yet'
+              @message='No versions until it is signed.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/each}}
 
           <h3 class='mt'>Modifications</h3>
@@ -201,7 +209,11 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
             </div>
           {{/each}}
           {{#unless this.hasModifications}}
-            <p class='empty'>No amendments, addenda, or waivers.</p>
+            <EmptyState
+              @title='No amendments, addenda or waivers'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/unless}}
         </section>
       </div>
@@ -219,7 +231,7 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
         flex-wrap: wrap;
       }
       .counts {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-size: 0.8125rem;
         font-variant-numeric: tabular-nums;
       }
@@ -236,7 +248,7 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
         font-size: 0.8125rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       h3.mt {
         margin-top: var(--boxel-sp);
@@ -247,23 +259,18 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
         align-items: baseline;
         padding: var(--boxel-sp-4xs) 0;
-        border-bottom: 1px solid var(--border, var(--boxel-100));
+        border-bottom: 1px solid var(--border);
       }
       .mini-name {
         font-weight: 600;
         white-space: nowrap;
       }
       .mini-meta {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-size: 0.8125rem;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-      }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
       }
       @container (max-width: 560px) {
         .cols {

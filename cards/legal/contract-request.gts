@@ -23,11 +23,15 @@ import {
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { Account } from '@cardstack/catalog/cards/crm/account';
 import { Contract } from '@cardstack/catalog/cards/legal/contract';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Alert } from '@cardstack/pretui/components/alert';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 /**
@@ -185,7 +189,7 @@ export class ContractRequest extends CardDef {
         .hint {
           margin: 0.25rem 0 0;
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .row {
           display: grid;
@@ -216,6 +220,18 @@ export class ContractRequest extends CardDef {
     get declined() {
       return this.args.model?.status === 'declined';
     }
+    get glance() {
+      let m = this.args.model;
+      return [
+        { key: 'Estimated value', value: this.money },
+        { key: 'Requested by', value: m.requestedBy?.cardTitle ?? '—' },
+        {
+          key: 'Counterparty',
+          value: m.counterparty?.cardTitle ?? 'Not named yet',
+        },
+      ];
+    }
+
     get money(): string {
       return (
         formatMoney(
@@ -261,27 +277,28 @@ export class ContractRequest extends CardDef {
             {{#if @model.decisionNote}}
               <p class='prose'>{{@model.decisionNote}}</p>
             {{else}}
-              <p class='empty'>No reason recorded. A decline without a reason
-                cannot be appealed or learned from — write one.</p>
+              <Alert
+                @tone='attention'
+                @title='No reason recorded'
+                style={{ALERT_STYLE.attention}}
+              >A decline without a reason cannot be appealed or learned from.
+                Write one.</Alert>
             {{/if}}
           </section>
         {{/if}}
 
-        <dl class='glance'>
-          <div><dt>Estimated value</dt><dd
-              class='is-money'
-            >{{this.money}}</dd></div>
-          <div><dt>Requested by</dt><dd>{{if
-                @model.requestedBy
-                @model.requestedBy.cardTitle
-                '—'
-              }}</dd></div>
-          <div><dt>Counterparty</dt><dd>{{if
-                @model.counterparty
-                @model.counterparty.cardTitle
-                'Not named yet'
-              }}</dd></div>
-        </dl>
+        <KeyValue
+          class='glance'
+          @items={{this.glance}}
+          @layout='inline'
+          @labelStyle='eyebrow'
+        >
+          <:value as |item|>
+            <span
+              class={{if (eq item.key 'Estimated value') 'is-money'}}
+            >{{item.value}}</span>
+          </:value>
+        </KeyValue>
 
         {{#if @model.background}}
           <section class='panel'>
@@ -305,26 +322,22 @@ export class ContractRequest extends CardDef {
         .cr-page {
           container-type: inline-size;
           container-name: cr-page;
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #111) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
-          color: var(--foreground, #111);
-          font-family: var(--font-sans, inherit);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .hero {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: var(--boxel-sp-lg);
-          border-bottom: 2px solid var(--foreground, #111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: var(--boxel-sp);
         }
         .hero-id {
@@ -347,7 +360,7 @@ export class ContractRequest extends CardDef {
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .kicker :deep(svg) {
           width: max(14px, 1em);
@@ -371,7 +384,7 @@ export class ContractRequest extends CardDef {
         }
         .fig-n {
           display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 1.45rem;
           font-weight: 600;
@@ -384,36 +397,19 @@ export class ContractRequest extends CardDef {
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
           letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .glance {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-          gap: var(--boxel-sp);
-          margin: 0;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-lg);
         }
-        .glance div {
-          min-width: 0;
-        }
-        .glance dt {
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .glance dd {
-          margin: 3px 0 0;
-          font-size: var(--boxel-font-size);
-          font-weight: 550;
-        }
-        .glance dd.is-money {
-          font-family: var(--font-mono, ui-monospace, monospace);
+        .is-money {
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
         .panel {
           padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: var(--radius, 8px);
+          border-radius: var(--radius);
           background: var(--panel-bg);
         }
         /* Tint differs to mark a different KIND of block; padding and radius
@@ -421,7 +417,7 @@ export class ContractRequest extends CardDef {
         .panel.is-declined {
           background: color-mix(
             in oklch,
-            var(--boxel-danger, #b3261e) 8%,
+            var(--destructive-ink) 8%,
             transparent
           );
         }
@@ -438,7 +434,7 @@ export class ContractRequest extends CardDef {
         .panel h2 :deep(svg) {
           width: max(14px, 1em);
           height: max(14px, 1em);
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .prose {
           margin: 0;
@@ -446,12 +442,11 @@ export class ContractRequest extends CardDef {
           line-height: 1.6;
           max-width: 68ch;
         }
-        .empty,
         .caveat {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           max-width: 68ch;
         }
         @container cr-page (width < 560px) {
@@ -462,9 +457,6 @@ export class ContractRequest extends CardDef {
           }
           .hero-figure {
             text-align: left;
-          }
-          .glance {
-            grid-template-columns: 1fr;
           }
         }
       </style>
@@ -494,7 +486,7 @@ export class ContractRequest extends CardDef {
           gap: 2px;
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
           overflow: hidden;
-          font-family: var(--font-sans, inherit);
+          font-family: var(--font-sans);
           --type-base: clamp(10px, min(calc(3px + 2.1cqi + 1cqb), 10cqb), 15px);
         }
         .r-head,
@@ -513,7 +505,7 @@ export class ContractRequest extends CardDef {
         }
         .r-meta {
           font-size: var(--type-base);
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

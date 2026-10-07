@@ -13,6 +13,8 @@ import enumField from '@cardstack/base/enum';
 
 import { Contract } from '@cardstack/catalog/cards/legal/contract';
 import { LegalEntity } from '@cardstack/catalog/cards/legal/legal-entity';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
@@ -106,17 +108,20 @@ export class Waiver extends CardDef {
           </section>
         {{/if}}
         {{#if (isOngoing @model.scope)}}
-          <p class='caution'>⚠ Ongoing waiver — without an expiry this can read
-            as abandoning the right entirely.</p>
+          <Alert
+            @tone='attention'
+            @title='Ongoing waiver'
+            style={{ALERT_STYLE.attention}}
+          >Without an expiry this can read as abandoning the right entirely.</Alert>
         {{/if}}
       </article>
       <style scoped>
         .doc {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           display: grid;
           gap: var(--boxel-sp);
         }
@@ -125,7 +130,7 @@ export class Waiver extends CardDef {
           justify-content: space-between;
           align-items: flex-start;
           gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           padding-bottom: var(--boxel-sp);
         }
         .kicker {
@@ -133,16 +138,16 @@ export class Waiver extends CardDef {
           font-size: 0.6875rem;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-family: var(--font-heading, inherit);
+          font-family: var(--font-heading);
           font-size: 1.5rem;
         }
         .sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .grid {
           display: grid;
@@ -150,34 +155,22 @@ export class Waiver extends CardDef {
           gap: var(--boxel-sp);
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp);
-          background: var(--card, transparent);
+          background: var(--card);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: 0.8125rem;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .reason {
           margin: 0;
           font-size: 0.875rem;
           white-space: pre-wrap;
-        }
-        .caution {
-          margin: 0;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: color-mix(
-            in oklch,
-            var(--state-amber-fg, #b45309) 10%,
-            transparent
-          );
-          color: var(--state-amber-fg, #b45309);
-          font-size: 0.875rem;
         }
         @container (max-width: 480px) {
           .grid {
@@ -245,9 +238,9 @@ export class Waiver extends CardDef {
           gap: 2px;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
         }
         .r-head,
         .r-body,
@@ -264,13 +257,13 @@ export class Waiver extends CardDef {
           width: var(--glyph);
           height: var(--glyph);
           flex: none;
-          color: var(--accent, var(--boxel-highlight));
+          color: var(--accent);
         }
         .eyebrow {
           font-size: max(9px, calc(var(--meta-size) * 0.85));
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -299,7 +292,7 @@ export class Waiver extends CardDef {
           margin: 0;
           font-size: var(--meta-size);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -311,14 +304,14 @@ export class Waiver extends CardDef {
           gap: 6px;
           font-size: var(--meta-size);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .val {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 600;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
         }
         .tail {
           margin-left: auto;

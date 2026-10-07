@@ -1,4 +1,8 @@
 import GlimmerComponent from '@glimmer/component';
+import { guidFor } from '@ember/object/internals';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Table } from '@cardstack/pretui/components/table';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
 
 interface DiffRow {
@@ -77,6 +81,8 @@ export class VersionDiff extends GlimmerComponent<Signature> {
     return Boolean(this.args.before && this.args.after);
   }
 
+  sumId = `${guidFor(this)}-sum`;
+
   get changedCount(): number {
     return this.rows.filter((r) => r.changed).length;
   }
@@ -84,7 +90,7 @@ export class VersionDiff extends GlimmerComponent<Signature> {
   <template>
     <div class='vd' ...attributes>
       {{#if this.hasBoth}}
-        <p class='vd-sum'>
+        <p class='vd-sum' id={{this.sumId}}>
           {{#if this.changedCount}}
             {{this.changedCount}}
             of
@@ -94,89 +100,64 @@ export class VersionDiff extends GlimmerComponent<Signature> {
             No tracked field changed between these versions.
           {{/if}}
         </p>
-        <table class='vd-t'>
-          <thead>
+        <Table @labelledBy={{this.sumId}}>
+          <:head>
             <tr>
               <th scope='col'>Field</th>
               <th scope='col'>Before</th>
               <th scope='col'>After</th>
             </tr>
-          </thead>
-          <tbody>
+          </:head>
+          <:body>
             {{#each this.rows as |r|}}
               <tr class='{{if r.changed "is-changed"}}'>
-                <th scope='row'>{{r.label}}</th>
+                <th scope='row'>{{r.label}}{{#if r.changed}}<span
+                      class='vd-mark'
+                    >changed</span>{{/if}}</th>
                 <td class='vd-was'>{{r.before}}</td>
                 <td class='vd-now'>{{r.after}}</td>
               </tr>
             {{/each}}
-          </tbody>
-        </table>
+          </:body>
+        </Table>
       {{else}}
-        <p class='vd-empty'>Pick two versions to compare.</p>
+        <EmptyState
+          @title='Pick two versions to compare.'
+          @texture={{false}}
+          style={{COMPACT_EMPTY_STYLE}}
+        />
       {{/if}}
     </div>
 
     <style scoped>
       .vd {
         container-type: inline-size;
-        font-family: var(--font-sans, inherit);
       }
       .vd-sum {
         margin: 0 0 var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
-      .vd-t {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .vd-t th[scope='col'] {
-        text-align: left;
-        font-family: var(--font-mono, ui-monospace, monospace);
-        font-size: 10px;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted-foreground, #6b7280);
-        padding: 6px 8px;
-        border-bottom: 1px solid var(--border, #dde2df);
-      }
-      .vd-t th[scope='row'] {
-        text-align: left;
-        font-weight: 550;
-        padding: 8px;
-      }
-      .vd-t td {
-        padding: 8px;
-        font-family: var(--font-mono, ui-monospace, monospace);
+      .vd-was,
+      .vd-now {
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
-      .vd-t tbody tr {
-        border-bottom: 1px solid var(--border, #dde2df);
-      }
-      /* A change is marked by weight and a rule, not by colour alone. */
-      .is-changed th[scope='row']::after {
-        content: ' changed';
-        font-family: var(--font-mono, ui-monospace, monospace);
-        font-size: 9px;
+      /* A change is marked by weight and a word, not by colour alone. */
+      .vd-mark {
+        margin-inline-start: var(--boxel-sp-4xs);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--boxel-warning, #9a6a12);
-        margin-left: 6px;
+        color: var(--attention-ink);
       }
       .is-changed .vd-was {
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         text-decoration: line-through;
       }
       .is-changed .vd-now {
         font-weight: 700;
-      }
-      .vd-empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, #6b7280);
       }
     </style>
   </template>
