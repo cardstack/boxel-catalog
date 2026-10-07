@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../realm-policy",
+        "name": "RealmPolicy"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "cardTitle": "Realm Policy",
+      "cardDescription": "Which callers may invoke which operations on which card types in a realm, beyond what the realm's own read and write permissions allow.",
+      "cardInfo": {
+        "name": "Realm Policy",
+        "summary": "A union of grants that widens a realm's permissions, operation by operation and card type by card type."
+      },
+      "readMe": "## What it is\n\nA realm's own permissions are coarse: a user may read the whole realm, or write the whole realm, or neither. A Realm Policy widens them for particular operations on particular card types. It holds a list of rules (`PolicyRule`), each naming a card type and the grants (`OperationGrant`) that apply to cards of that type and its subtypes.\n\nA policy only ever widens access. A caller may invoke an operation on a card if the realm's permissions already allow it, or if any rule whose target type matches the card's type (or one of its ancestors) holds a grant for that operation whose condition is true or absent. Rule order carries no meaning, and nothing in a policy can take away access the realm already gives.\n\n## Putting a policy in force\n\nA policy card on its own does nothing. A realm adopts one by naming it, by URL or realm-prefixed id, in the `policy` attribute of its `realm.json` settings card (`RealmConfig`). The policy card can live in the realm it governs or in another realm, so one policy can govern several realms. The realm, not the card, evaluates the policy: these definitions only describe it.\n\n```json\n{\n  \"data\": {\n    \"type\": \"card\",\n    \"attributes\": {\n      \"cardInfo\": { \"name\": \"Newsroom\" },\n      \"policy\": \"https://app.example/org/policies/newsroom\"\n    },\n    \"meta\": { \"adoptsFrom\": { \"module\": \"https://cardstack.com/base/realm-config\", \"name\": \"RealmConfig\" } }\n  }\n}\n```\n\n## The linked example\n\n`RealmPolicy/blog-publishing` governs a blog built from the Blog App cards. Visitors who aren't signed in may open published posts and every category, and find categories in a search; any signed-in user may also read drafts, even one the realm's own permissions don't let read it.\n\nA search is its own operation, `query`: a `read` grant opens a card by its URL only, so categories get a `query` grant beside their `read`. Posts don't. A `query` grant's condition also has to work as a search filter, and a search filter can't test a yes/no field such as `published`: the index stores an empty one as `false` while the saved card leaves it empty. Searching published posts would take a stored text field that says so, such as a status.\n\nOpen it to see what `validate` reports. A `read` sends each post with the cards it links to, so the post's authors (email address included), and any card or file its body links to, reach everyone a `read` grant on posts admits, visitors included, whatever their own type's rules say. `validate` warns about each, for each of the two `read` grants. Before publishing a blog under this policy, have `BlogPost` declare its `read` with `links: 'ids'`, so a read names linked cards without sending them, or accept what the warnings list.\n\n```ts\nimport { RealmPolicy } from '@cardstack/catalog/realm-policy/realm-policy';\n```\n\n## Asking what a policy decides\n\nThe isolated view shows each rule and grant, the issues compiling the policy records (`validate`), and an explain panel that asks the realm what it decides for one caller, one card and one operation (`explain`), without invoking anything. Explain can also answer against an unsaved draft of the rules, for a search, or for a page of a realm's cards. The realm answers only for a card whose realm names this policy, and only to a caller who can read both realms.\n\n## Non-goals\n\n* **Not a deny list.** A policy can't refuse what the realm's permissions already allow.\n* **Not self-governing.** A policy card is authorization infrastructure, so no grant reaches one, or the realm's settings card, for any operation: reading, writing or creating one. Only a caller the realm's own permissions let write may change a policy, and no grant may admit `explain` or `validate`.\n* **Not rate limiting or address blocking.** How hard callers who aren't signed in may use a realm, and which addresses it refuses, are the governed realm's own settings in its `realm.json`, not the policy's.\n"
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../RealmPolicy/blog-publishing"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

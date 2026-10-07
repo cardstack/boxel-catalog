@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rules": [
+        {
+          "targetType": {
+            "module": "../../7af9aa-blog-app/blog-post",
+            "name": "BlogPost"
+          },
+          "grants": [
+            {
+              "operation": "read",
+              "anonymous": true,
+              "where": ".published == true"
+            },
+            {
+              "operation": "read"
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../../7af9aa-blog-app/blog-category",
+            "name": "BlogCategory"
+          },
+          "grants": [
+            {
+              "operation": "read",
+              "anonymous": true
+            },
+            {
+              "operation": "query",
+              "anonymous": true
+            }
+          ]
+        }
+      ],
+      "cardInfo": {
+        "name": "Blog publishing",
+        "summary": "Visitors open published posts and open and search every category; any signed-in user may also read drafts."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../realm-policy",
+        "name": "RealmPolicy"
+      }
+    }
+  }
+}
