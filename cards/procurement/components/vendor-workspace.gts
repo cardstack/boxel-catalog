@@ -6,11 +6,20 @@ import {
   type getCards,
 } from '@cardstack/runtime-common';
 
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Stat } from '@cardstack/pretui/components/stat';
+
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { Money } from '@cardstack/catalog/cards/crm/money';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
 import type { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
 import { VendorQuote } from '../vendor-quote';
-import { PurchaseOrder, PO_STATUS_LABELS } from '../purchase-order';
+import {
+  PurchaseOrder,
+  PO_STATUS_LABELS,
+  PO_STATUS_HUES,
+} from '../purchase-order';
 import { VendorProfile } from '../vendor-profile';
 
 // Vendor Workspace — the buyer's 360° dossier ON one vendor (single-persona
@@ -152,26 +161,34 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
   poStatusLabel = (po: PurchaseOrder) =>
     PO_STATUS_LABELS[po.status ?? ''] ?? 'Draft';
 
-  poTotalLabel = (po: PurchaseOrder) => formatMoney(po.totalAmount ?? 0, 'USD');
+  poStatusHue = (po: PurchaseOrder) =>
+    PO_STATUS_HUES[po.status ?? 'draft'] ?? 'slate';
 
-  quoteTotalLabel = (q: VendorQuote) => formatMoney(q.totalAmount ?? 0, 'USD');
+  totalOf = (record: PurchaseOrder | VendorQuote) => record.totalAmount ?? 0;
 
   <template>
     <div class='workspace' ...attributes>
       <div class='stats'>
-        <div class='stat'>
-          <span class='stat-value'>{{this.quotes.length}}</span>
-          <span class='stat-label'>quotes recorded</span>
-        </div>
-        <div class='stat'>
-          <span class='stat-value'>{{this.winRate}}</span>
-          <span class='stat-label'>win rate</span>
-        </div>
-        <div class='stat'>
-          <span class='stat-value'>{{this.spend}}</span>
-          <span class='stat-label'>committed + spent</span>
-        </div>
-        <div class='stat'>
+        <Stat
+          class='stat'
+          @label='Quotes recorded'
+          @value={{this.quotes.length}}
+          @roll={{false}}
+        />
+        <Stat
+          class='stat'
+          @label='Win rate'
+          @value={{this.winRate}}
+          @roll={{false}}
+        />
+        <Stat
+          class='stat'
+          @label='Committed + spent'
+          @value={{this.spend}}
+          @roll={{false}}
+        />
+        <div class='stat compliance'>
+          <span class='stat-label'>Compliance</span>
           {{#if this.complianceKnown}}
             <StatePill
               @label={{if this.complianceOk 'current' 'lapsed'}}
@@ -181,7 +198,6 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
           {{else}}
             <StatePill @label='no profile' @hue='slate' @chrome={{true}} />
           {{/if}}
-          <span class='stat-label'>compliance</span>
         </div>
       </div>
 
@@ -191,11 +207,20 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
           {{#each this.pos as |po|}}
             <div class='mini-row'>
               <span class='mini-name'>{{po.poNumber}}</span>
-              <span class='mini-num'>{{this.poTotalLabel po}}</span>
-              <span class='mini-status'>{{this.poStatusLabel po}}</span>
+              <Money class='mini-num' @amount={{this.totalOf po}} @code='USD' />
+              <StatePill
+                class='mini-status'
+                @label={{this.poStatusLabel po}}
+                @hue={{this.poStatusHue po}}
+              />
             </div>
           {{else}}
-            <p class='empty'>No POs yet.</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='No POs yet'
+              @message='Purchase orders raised to this vendor appear here.'
+            />
           {{/each}}
         </section>
         <section class='col'>
@@ -203,10 +228,15 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
           {{#each this.quotes as |q|}}
             <div class='mini-row'>
               <span class='mini-name'>{{q.title}}</span>
-              <span class='mini-num'>{{this.quoteTotalLabel q}}</span>
+              <Money class='mini-num' @amount={{this.totalOf q}} @code='USD' />
             </div>
           {{else}}
-            <p class='empty'>No quotes recorded.</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='No quotes recorded'
+              @message='Quotes this vendor sends against an RFQ appear here.'
+            />
           {{/each}}
         </section>
       </div>
@@ -215,7 +245,7 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
       .workspace {
         display: grid;
         gap: var(--boxel-sp);
-        font-size: 0.875rem;
+        font-size: var(--boxel-font-size-sm);
       }
       .stats {
         display: grid;
@@ -223,24 +253,26 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .stat {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        --text-stat: 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp-sm);
+      }
+      .compliance {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-5xs);
         align-items: flex-start;
       }
-      .stat-value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .stat-label {
-        font-size: 0.6875rem;
+      .stat-label,
+      h3 {
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .cols {
         display: grid;
@@ -252,10 +284,6 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
       }
       h3 {
         margin: 0 0 var(--boxel-sp-xs);
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
       }
       .mini-row {
         display: grid;
@@ -263,27 +291,21 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
         align-items: baseline;
         padding: var(--boxel-sp-4xs) 0;
-        border-bottom: 1px solid var(--border, var(--boxel-100));
+        border-bottom: 1px solid var(--border);
       }
       .mini-name {
         font-weight: 600;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 0.8125rem;
       }
       .mini-num {
         font-variant-numeric: tabular-nums;
       }
       .mini-status {
-        font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
+        justify-self: end;
       }
       @container (max-width: 560px) {
         .cols {

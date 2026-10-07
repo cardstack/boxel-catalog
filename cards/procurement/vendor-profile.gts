@@ -18,20 +18,33 @@ import { realmURL } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { gt, eq } from '@cardstack/boxel-ui/helpers';
-import { Button, FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Token } from '@cardstack/pretui/components/token';
 
 import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
-import { statusField } from '@cardstack/catalog/fields/status/status';
+import {
+  statusField,
+  statusHue,
+} from '@cardstack/catalog/fields/status/status';
 import { PaymentTermsField } from '../commerce/payment-terms-field';
 import { LifecycleDatesField } from '@cardstack/catalog/fields/lifecycle-dates/lifecycle-dates-field';
 import OnboardVendorCommand from './commands/onboard-vendor-command';
 import { VendorWorkspace } from './components/vendor-workspace';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import {
+  StatePill,
   stateColor,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+  ID_TOKEN_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 // A calendar-day comparison: a certification that expires today is still
 // valid today. Compares Y/M/D locally, never via toISOString (UTC skew).
@@ -102,7 +115,7 @@ export class CertificationField extends FieldDef {
           font-weight: 600;
         }
         .cert-issuer {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -131,21 +144,27 @@ export class BankDetailsField extends FieldDef {
     <template>
       <div class='bank'>
         <span class='bank-name'>{{@model.bankName}}</span>
-        <span class='account'>{{@model.accountName}}
-          {{@model.maskedAccountNumber}}</span>
+        <span class='account'>{{@model.accountName}}</span>
+        {{#if @model.maskedAccountNumber}}
+          <Token
+            @value={{@model.maskedAccountNumber}}
+            style={{ID_TOKEN_STYLE.xs}}
+          />
+        {{/if}}
       </div>
       <style scoped>
         .bank {
           display: flex;
-          gap: var(--boxel-sp-sm);
-          align-items: baseline;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          align-items: center;
           font-size: 0.875rem;
         }
         .bank-name {
           font-weight: 600;
         }
         .account {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -188,17 +207,6 @@ export const VENDOR_PROFILE_STATUS_COLORS: Record<string, StateColor> = {
   approved: stateColor('blue'),
   onboarded: stateColor('green'),
   rejected: stateColor('red'),
-};
-
-const STATUS_HUES: Record<
-  string,
-  'slate' | 'amber' | 'blue' | 'green' | 'red'
-> = {
-  intake: 'slate',
-  'under-review': 'amber',
-  approved: 'blue',
-  onboarded: 'green',
-  rejected: 'red',
 };
 
 // A statusField (not a plain enum) so the vetting pipeline has a real
@@ -251,6 +259,22 @@ export const VendorProfileStatusField = statusField({
   },
   displayName: 'Vendor Profile Status',
 });
+
+const CONTACT_FACTS = [
+  { key: 'Contact', value: 'contactName' },
+  { key: 'Email', value: 'email' },
+  { key: 'Phone', value: 'phone' },
+  { key: 'Address', value: 'address' },
+];
+
+const REMITTANCE_FACTS = [
+  { key: 'Tax ID', value: 'taxId' },
+  { key: 'Bank', value: 'bank' },
+  { key: 'Terms', value: 'terms' },
+  { key: 'Lifecycle', value: 'lifecycle' },
+];
+
+const COMPLIANCE_FACTS = [{ key: 'Insurance', value: 'insurance' }];
 
 class VendorProfileEdit extends Component<typeof VendorProfile> {
   // Left section nav: clicking anchors that section to the top of the
@@ -387,12 +411,12 @@ class VendorProfileEdit extends Component<typeof VendorProfile> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
         /* the procurement family's brand ink, declared once — a linked
            Theme overrides it via --procurement-ink */
-        --vp-ink: var(--procurement-ink, #27306b);
-        --vp-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+        --vp-ink: var(--procurement-ink, var(--primary-ink));
+        --vp-ink-fg: var(--procurement-ink-fg, var(--card));
       }
       .edit-body {
         display: grid;
@@ -414,33 +438,36 @@ class VendorProfileEdit extends Component<typeof VendorProfile> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       /* the section the rail points at mirrors the rail's active state:
          same pinned brand ink, diluted for the halo */
       .sect.focused {
         outline-color: var(--vp-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--vp-ink) 12%, transparent);
       }
       .sect.compliance {
-        border-left: 3px solid var(--vp-ink);
+        border-left: 0.1875rem solid var(--vp-ink);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -531,7 +558,7 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
   };
 
   get statusHue() {
-    return STATUS_HUES[this.args.model?.status ?? 'intake'] ?? 'slate';
+    return statusHue(VendorProfileStatusField, this.args.model?.status);
   }
   get statusLabel() {
     return (
@@ -585,8 +612,9 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
           />
           {{#if this.canOnboard}}
             <Button
-              @kind='primary'
-              @size='small'
+              @variant='primary'
+              @size='s'
+              @busy={{this.busy}}
               @disabled={{this.busy}}
               {{on 'click' this.onboard}}
             >Onboard as Vendor</Button>
@@ -594,66 +622,97 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
         </div>
       </header>
 
-      {{#if this.error}}<div class='flash error'>{{this.error}}</div>{{/if}}
-      {{#if this.message}}<div class='flash ok'>{{this.message}}</div>{{/if}}
+      {{#if this.error}}
+        <Alert
+          class='flash'
+          @tone='danger'
+          @title='Could not onboard this vendor'
+          style={{ALERT_STYLE.danger}}
+        >
+          <:default>{{this.error}}</:default>
+        </Alert>
+      {{/if}}
+      {{#if this.message}}
+        <Alert
+          class='flash'
+          @tone='success'
+          role='status'
+          style={{ALERT_STYLE.success}}
+        >
+          <:default>{{this.message}}</:default>
+        </Alert>
+      {{/if}}
 
       <div class='grid'>
         <section class='panel'>
           <h2>Contact</h2>
-          <dl>
-            <div><dt>Contact</dt><dd>{{@model.contactName}}</dd></div>
-            <div><dt>Email</dt><dd>{{#if @model.email}}<@fields.email
-                  />{{/if}}</dd></div>
-            <div><dt>Phone</dt><dd>{{#if @model.phone}}<@fields.phone
-                    @format='atom'
-                  />{{/if}}</dd></div>
-            <div><dt>Address</dt><dd>{{@model.address.fullAddress}}</dd></div>
-          </dl>
+          <KeyValue class='facts' @items={{CONTACT_FACTS}}>
+            <:value as |row|>
+              {{#if (eq row.value 'contactName')}}
+                {{@model.contactName}}
+              {{else if (eq row.value 'email')}}
+                {{#if @model.email}}<@fields.email />{{/if}}
+              {{else if (eq row.value 'phone')}}
+                {{#if @model.phone}}<@fields.phone @format='atom' />{{/if}}
+              {{else}}
+                {{@model.address.fullAddress}}
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
 
         <section class='panel'>
           <h2>Tax &amp; Remittance</h2>
-          <dl>
-            <div><dt>Tax ID</dt><dd
-                class='mono'
-              >{{@model.maskedTaxId}}</dd></div>
-            <div><dt>Bank</dt><dd><@fields.bankDetails /></dd></div>
-            <div><dt>Terms</dt><dd>{{#if @model.paymentTerms.shorthand}}
+          <KeyValue class='facts' @items={{REMITTANCE_FACTS}}>
+            <:value as |row|>
+              {{#if (eq row.value 'taxId')}}
+                {{#if @model.maskedTaxId}}
+                  <Token
+                    @value={{@model.maskedTaxId}}
+                    style={{ID_TOKEN_STYLE.sm}}
+                  />
+                {{/if}}
+              {{else if (eq row.value 'bank')}}
+                <@fields.bankDetails />
+              {{else if (eq row.value 'terms')}}
+                {{#if @model.paymentTerms.shorthand}}
                   <@fields.paymentTerms @format='embedded' />
-                {{else}}not negotiated yet{{/if}}</dd></div>
-            <div><dt>Lifecycle</dt><dd><@fields.lifecycle
-                  @format='embedded'
-                /></dd></div>
-          </dl>
+                {{else}}not negotiated yet{{/if}}
+              {{else}}
+                <@fields.lifecycle @format='embedded' />
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
 
         <section class='panel span'>
           <h2>Compliance</h2>
-          <dl>
-            <div>
-              <dt>Insurance</dt>
-              <dd>
-                {{#if @model.insuranceExpiry}}
-                  <StatePill
-                    @label='{{if
-                      this.insuranceExpired
-                      "expired"
-                      "valid to"
-                    }} {{this.insuranceDateLabel}}'
-                    @hue={{if this.insuranceExpired 'red' 'green'}}
-                    @dot={{true}}
-                  />
-                {{else}}
-                  <StatePill @label='not on file' @hue='amber' @dot={{true}} />
-                {{/if}}
-              </dd>
-            </div>
-          </dl>
+          <KeyValue class='facts' @items={{COMPLIANCE_FACTS}}>
+            <:value>
+              {{#if @model.insuranceExpiry}}
+                <StatePill
+                  @label='{{if
+                    this.insuranceExpired
+                    "expired"
+                    "valid to"
+                  }} {{this.insuranceDateLabel}}'
+                  @hue={{if this.insuranceExpired 'red' 'green'}}
+                  @dot={{true}}
+                />
+              {{else}}
+                <StatePill @label='not on file' @hue='amber' @dot={{true}} />
+              {{/if}}
+            </:value>
+          </KeyValue>
           <div class='certs'>
             {{#each @fields.certifications as |Cert|}}
               <Cert />
             {{else}}
-              <p class='empty'>No certifications recorded yet.</p>
+              <EmptyState
+                style={{COMPACT_EMPTY_STYLE}}
+                @texture={{false}}
+                @title='No certifications recorded yet'
+              />
             {{/each}}
           </div>
         </section>
@@ -686,35 +745,34 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
       .profile {
         container-type: inline-size;
         padding: var(--boxel-sp-lg);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, inherit);
       }
       .head {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: var(--boxel-sp);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
         padding-bottom: var(--boxel-sp);
         margin-bottom: var(--boxel-sp-lg);
       }
       .kicker {
         margin: 0;
-        font-size: 0.6875rem;
-        letter-spacing: 0.12em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       h1 {
         margin: var(--boxel-sp-5xs) 0 var(--boxel-sp-5xs);
-        font-family: var(--font-heading, inherit);
         font-size: 1.75rem;
         line-height: 1.15;
       }
       .sub {
         margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .head-pills {
         display: flex;
@@ -723,26 +781,7 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
         gap: var(--boxel-sp-xxs);
       }
       .flash {
-        border-radius: var(--radius, var(--boxel-border-radius));
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         margin-bottom: var(--boxel-sp);
-        font-size: 0.875rem;
-      }
-      .flash.error {
-        background: color-mix(
-          in oklch,
-          var(--state-red-fg, #b91c1c) 10%,
-          transparent
-        );
-        color: var(--state-red-fg, #b91c1c);
-      }
-      .flash.ok {
-        background: color-mix(
-          in oklch,
-          var(--state-green-fg, #15803d) 10%,
-          transparent
-        );
-        color: var(--state-green-fg, #15803d);
       }
       .grid {
         display: grid;
@@ -750,54 +789,36 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
         gap: var(--boxel-sp);
       }
       .panel {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
-        background: var(--card, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       .panel.span {
         grid-column: 1 / -1;
       }
       h2 {
         margin: 0 0 var(--boxel-sp-xs);
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
-      dl {
-        margin: 0;
-        display: grid;
-        gap: var(--boxel-sp-xxs);
-      }
-      dl > div {
-        display: grid;
-        grid-template-columns: 7rem 1fr;
-        gap: var(--boxel-sp-xs);
+      /* Pret UI KeyValue at the panel's text size and column gap */
+      .facts {
+        --text-ui: 0.8125rem;
+        --text-ui-md: 0.875rem;
+        --space-6: var(--boxel-sp-xs);
         align-items: baseline;
-      }
-      dt {
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: 0.8125rem;
-      }
-      dd {
-        margin: 0;
-        font-size: 0.875rem;
-      }
-      .mono {
-        font-family: var(--font-mono, ui-monospace, monospace);
-        font-variant-numeric: tabular-nums;
       }
       .certs {
         margin-top: var(--boxel-sp-xs);
         display: grid;
         gap: var(--boxel-sp-5xs);
-      }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: 0.875rem;
-        font-style: italic;
       }
       .notes {
         margin: 0;
@@ -890,7 +911,7 @@ export class VendorProfile extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'intake'] ?? 'slate';
+      return statusHue(VendorProfileStatusField, this.args.model?.status);
     }
     get statusLabel() {
       return (
@@ -921,7 +942,7 @@ export class VendorProfile extends CardDef {
         .who {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .name {
@@ -933,7 +954,7 @@ export class VendorProfile extends CardDef {
         }
         .cat {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -953,21 +974,27 @@ export class VendorProfile extends CardDef {
           font-size: 0.8125rem;
         }
         .dot {
-          width: 7px;
-          height: 7px;
+          width: 0.4375rem;
+          height: 0.4375rem;
           border-radius: 50%;
         }
         .dot.ok {
-          background: var(--state-green-fg, #15803d);
+          background-color: var(--success-ink);
         }
         .dot.bad {
-          background: var(--state-red-fg, #b91c1c);
+          background-color: var(--destructive-ink);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get statusHue() {
+      return statusHue(VendorProfileStatusField, this.args.model?.status);
+    }
+    get moreCertsLabel() {
+      return `+${this.certCount}`;
+    }
     get statusLabel() {
       return (
         VENDOR_PROFILE_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Intake'
@@ -1012,18 +1039,20 @@ export class VendorProfile extends CardDef {
           {{#if (gt this.certCount 0)}}
             <div class='fit-cert-pills'>
               {{#each this.topCerts as |cert|}}
-                <span
-                  class='fit-cert-pill {{if cert.isExpired "expired"}}'
-                >{{cert.name}}</span>
+                <StatePill
+                  class={{if cert.isExpired 'expired'}}
+                  @label={{cert.name}}
+                  @hue={{if cert.isExpired 'red' 'slate'}}
+                />
               {{/each}}
               {{#if (gt this.certCount 2)}}
-                <span class='fit-cert-pill more'>+{{this.certCount}}</span>
+                <StatePill @label={{this.moreCertsLabel}} @chrome={{true}} />
               {{/if}}
             </div>
           {{/if}}
         </div>
         <div class='fit-more'>
-          <span class='fit-status'>{{this.statusLabel}}</span>
+          <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
           {{#if @model.contactName}}
             <span class='fit-contact'>{{@model.contactName}}</span>
           {{/if}}
@@ -1054,14 +1083,14 @@ export class VendorProfile extends CardDef {
           -webkit-box-orient: vertical;
         }
         .fit-flag.ok {
-          color: var(--state-green-fg, #15803d);
+          color: var(--success-ink);
         }
         .fit-flag.bad {
-          color: var(--state-red-fg, #b91c1c);
+          color: var(--destructive-ink);
         }
         .fit-cat {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -1073,54 +1102,28 @@ export class VendorProfile extends CardDef {
           font-size: 0.75rem;
         }
         .fit-insurance {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-insurance.bad {
-          color: var(--state-red-fg, #b91c1c);
+          color: var(--destructive-ink);
           font-weight: 600;
         }
         .fit-cert-pills {
           display: flex;
           flex-wrap: wrap;
-          gap: 4px;
+          gap: 0.25rem;
         }
-        .fit-cert-pill {
-          font-size: 0.6875rem;
-          padding: 1px 8px;
-          border-radius: 999px;
-          background: color-mix(
-            in oklch,
-            var(--procurement-ink, var(--primary, var(--boxel-dark))) 9%,
-            transparent
-          );
-          color: var(--procurement-ink, var(--primary, var(--boxel-dark)));
-          white-space: nowrap;
-        }
-        .fit-cert-pill.expired {
-          background: color-mix(
-            in oklch,
-            var(--state-red-fg, #b91c1c) 10%,
-            transparent
-          );
-          color: var(--state-red-fg, #b91c1c);
+        .expired {
           text-decoration: line-through;
-        }
-        .fit-cert-pill.more {
-          background: transparent;
-          color: var(--muted-foreground, var(--boxel-450));
         }
         .fit-more {
           display: none;
           margin-top: auto;
           gap: var(--boxel-sp-xs);
           justify-content: space-between;
+          align-items: center;
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-status {
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          font-size: 0.6875rem;
+          color: var(--muted-foreground);
         }
         @container fitted-card (height > 120px) {
           .fit-more {

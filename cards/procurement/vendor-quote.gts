@@ -22,9 +22,16 @@ import {
   sumLineItems,
 } from '@cardstack/catalog/cards/commerce/line-item-totals';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
+
+const DELIVERY_FACTS = [{ key: 'Lead time', value: 'leadTimeDays' }];
 
 function isPastDay(d?: Date | null): boolean {
   if (!d) {
@@ -125,12 +132,12 @@ class VendorQuoteEdit extends Component<typeof VendorQuote> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
         /* the procurement family's brand ink, declared ONCE — a linked
            Theme overrides via --procurement-ink */
-        --vq-ink: var(--procurement-ink, #27306b);
-        --vq-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+        --vq-ink: var(--procurement-ink, var(--primary-ink));
+        --vq-ink-fg: var(--procurement-ink-fg, var(--card));
       }
       .edit-body {
         display: grid;
@@ -151,31 +158,34 @@ class VendorQuoteEdit extends Component<typeof VendorQuote> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
         outline-color: var(--vq-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--vq-ink) 12%, transparent);
       }
       .sect.lines {
-        border-left: 3px solid var(--vq-ink);
+        border-left: 0.1875rem solid var(--vq-ink);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -284,7 +294,12 @@ export class VendorQuote extends CardDef {
             {{/if}}
           </div>
           <div class='head-right'>
-            <span class='total'>{{this.totalLabel}}</span>
+            <Stat
+              class='total'
+              @label='Quote total'
+              @value={{this.totalLabel}}
+              @roll={{false}}
+            />
             <StatePill
               @label={{this.validityLabel}}
               @hue={{if @model.isStale 'red' 'green'}}
@@ -300,16 +315,21 @@ export class VendorQuote extends CardDef {
               {{#each @fields.lineItems as |Line|}}
                 <Line />
               {{else}}
-                <p class='empty'>No lines recorded.</p>
+                <EmptyState
+                  style={{COMPACT_EMPTY_STYLE}}
+                  @texture={{false}}
+                  @title='No lines recorded'
+                  @message='The quote total is computed from its pricing lines.'
+                />
               {{/each}}
             </div>
           </section>
 
           <section class='panel'>
             <h2>Delivery</h2>
-            <dl>
-              <div><dt>Lead time</dt><dd>{{@model.leadTimeDays}} days</dd></div>
-            </dl>
+            <KeyValue class='facts' @items={{DELIVERY_FACTS}}>
+              <:value>{{@model.leadTimeDays}} days</:value>
+            </KeyValue>
           </section>
 
           <section class='panel'>
@@ -336,45 +356,42 @@ export class VendorQuote extends CardDef {
         .quote {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         .head {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
           gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           padding-bottom: var(--boxel-sp);
           margin-bottom: var(--boxel-sp-lg);
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
-          letter-spacing: 0.12em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-family: var(--font-heading, inherit);
           font-size: 1.5rem;
         }
         .sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .head-right {
           display: flex;
           flex-direction: column;
           align-items: flex-end;
-          gap: var(--boxel-sp-5xs);
+          gap: var(--boxel-sp-xs);
         }
         .total {
-          font-size: 1.375rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
         }
         .grid {
           display: grid;
@@ -382,47 +399,35 @@ export class VendorQuote extends CardDef {
           gap: var(--boxel-sp);
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp);
-          background: var(--card, transparent);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .panel.span {
           grid-column: 1 / -1;
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-        }
-        dl > div {
-          display: grid;
-          grid-template-columns: 7rem 1fr;
-          gap: var(--boxel-sp-xs);
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: 0.8125rem;
-        }
-        dd {
-          margin: 0;
-          font-size: 0.875rem;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .facts {
+          --text-ui: 0.8125rem;
+          --text-ui-md: 0.875rem;
+          --space-6: var(--boxel-sp-xs);
           font-variant-numeric: tabular-nums;
         }
         .lines {
           display: grid;
           gap: var(--boxel-sp-5xs);
-        }
-        .empty {
-          margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
-          font-style: italic;
-          font-size: 0.875rem;
         }
         .notes {
           margin: 0;
@@ -448,14 +453,14 @@ export class VendorQuote extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get totalLabel() {
-      return formatMoney(this.args.model?.totalAmount ?? 0, 'USD');
+    get total() {
+      return this.args.model?.totalAmount ?? 0;
     }
     <template>
       <div class='row'>
         <span class='name'>{{@model.title}}</span>
         <span class='lead'>{{@model.leadTimeDays}}d lead</span>
-        <span class='amount'>{{this.totalLabel}}</span>
+        <Money class='amount' @amount={{this.total}} @code='USD' />
         <StatePill
           @label={{if @model.isStale 'expired' 'valid'}}
           @hue={{if @model.isStale 'red' 'green'}}
@@ -479,7 +484,7 @@ export class VendorQuote extends CardDef {
         }
         .lead {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .amount {
@@ -493,11 +498,13 @@ export class VendorQuote extends CardDef {
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get totalLabel() {
-      return formatMoney(this.args.model?.totalAmount ?? 0, 'USD');
+    get total() {
+      return this.args.model?.totalAmount ?? 0;
     }
     <template>
-      <span class='atom'>{{@model.title}} · {{this.totalLabel}}</span>
+      <span class='atom'>{{@model.title}}
+        ·
+        <Money @amount={{this.total}} @code='USD' /></span>
       <style scoped>
         .atom {
           font-size: 0.8125rem;
@@ -508,14 +515,14 @@ export class VendorQuote extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get totalLabel() {
-      return formatMoney(this.args.model?.totalAmount ?? 0, 'USD');
+    get total() {
+      return this.args.model?.totalAmount ?? 0;
     }
     <template>
       <div class='fit'>
         <span class='fit-name'>{{@model.title}}</span>
         <div class='fit-foot'>
-          <span class='fit-total'>{{this.totalLabel}}</span>
+          <Money class='fit-total' @amount={{this.total}} @code='USD' />
           <span class='fit-lead'>{{@model.leadTimeDays}}d</span>
         </div>
       </div>
@@ -549,7 +556,7 @@ export class VendorQuote extends CardDef {
         }
         .fit-lead {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 65px) {
           .fit {

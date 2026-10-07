@@ -13,8 +13,11 @@ import enumField from '@cardstack/base/enum';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { Button, FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
 import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
@@ -22,11 +25,13 @@ import { Rfq } from './rfq';
 import { ProcurementBudget } from './procurement-budget';
 import { PONumberField } from './po-number-field';
 import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
-import {
-  formatMoney,
-  sumLineItems,
-} from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { sumLineItems } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Money } from '@cardstack/catalog/cards/crm/money';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import ApprovePurchaseOrderCommand from './commands/approve-purchase-order-command';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import {
@@ -67,7 +72,7 @@ export const PO_STATUS_COLORS: Record<string, StateColor> = {
   rejected: stateColor('red'),
 };
 
-const STATUS_HUES: Record<
+export const PO_STATUS_HUES: Record<
   string,
   'slate' | 'amber' | 'blue' | 'green' | 'red'
 > = {
@@ -248,12 +253,12 @@ class PurchaseOrderEdit extends Component<typeof PurchaseOrder> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background: var(--background);
+        color: var(--foreground);
         /* the procurement family's brand ink, declared ONCE — a linked
            Theme overrides via --procurement-ink */
-        --po-ink: var(--procurement-ink, #27306b);
-        --po-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+        --po-ink: var(--procurement-ink, var(--primary-ink));
+        --po-ink-fg: var(--procurement-ink-fg, var(--card));
       }
       .edit-body {
         display: grid;
@@ -275,33 +280,36 @@ class PurchaseOrderEdit extends Component<typeof PurchaseOrder> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       /* the section the rail points at mirrors the rail's active state:
          same pinned brand ink, diluted for the halo */
       .sect.focused {
         outline-color: var(--po-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--po-ink) 12%, transparent);
       }
       .sect.lines {
-        border-left: 3px solid var(--po-ink);
+        border-left: 0.1875rem solid var(--po-ink);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -310,6 +318,7 @@ class PurchaseOrderEdit extends Component<typeof PurchaseOrder> {
       .sect-hint {
         text-transform: none;
         letter-spacing: normal;
+        font-family: var(--font-sans);
         font-size: 0.75rem;
         font-weight: 400;
         font-style: italic;
@@ -357,13 +366,13 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
   @tracked message: string | undefined;
 
   get statusHue() {
-    return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+    return PO_STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
   }
   get statusLabel() {
     return PO_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft';
   }
-  get totalLabel() {
-    return formatMoney(this.args.model?.totalAmount ?? 0, 'USD');
+  get total() {
+    return this.args.model?.totalAmount ?? 0;
   }
   get routeLabel() {
     let route = this.args.model?.approvalRoute as PoApprovalRoute;
@@ -432,12 +441,20 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
             @hue={{this.statusHue}}
             @emphatic={{true}}
           />
-          <span class='total'>{{this.totalLabel}}</span>
+          <Money class='total' @amount={{this.total}} @code='USD' />
         </div>
       </header>
 
-      {{#if this.error}}<div class='flash error'>{{this.error}}</div>{{/if}}
-      {{#if this.message}}<div class='flash ok'>{{this.message}}</div>{{/if}}
+      {{#if this.error}}
+        <Alert class='flash' @tone='danger' style={{ALERT_STYLE.danger}}>
+          {{this.error}}
+        </Alert>
+      {{/if}}
+      {{#if this.message}}
+        <Alert class='flash' @tone='success' style={{ALERT_STYLE.success}}>
+          {{this.message}}
+        </Alert>
+      {{/if}}
 
       <div class='grid'>
         <section class='panel span'>
@@ -455,14 +472,14 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
           {{#if this.canDecide}}
             <div class='decide'>
               <Button
-                @kind='primary'
-                @size='small'
+                @variant='primary'
+                @size='s'
                 @disabled={{this.busy}}
                 {{on 'click' (fn this.decide 'approved')}}
               >Approve current step</Button>
               <Button
-                @kind='secondary-light'
-                @size='small'
+                @variant='secondary'
+                @size='s'
                 @disabled={{this.busy}}
                 {{on 'click' (fn this.decide 'rejected')}}
               >Reject</Button>
@@ -476,12 +493,16 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
             {{#each @fields.lineItems as |Line|}}
               <Line />
             {{else}}
-              <p class='empty'>No lines.</p>
+              <EmptyState
+                style={{COMPACT_EMPTY_STYLE}}
+                @texture={{false}}
+                @title='No lines on this order'
+              />
             {{/each}}
           </div>
           <div class='lines-total'>
             <span>Total</span>
-            <span class='lines-total-num'>{{this.totalLabel}}</span>
+            <Money class='lines-total-num' @amount={{this.total}} @code='USD' />
           </div>
         </section>
 
@@ -490,8 +511,12 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
           {{#if @model.budget}}
             <@fields.budget @format='embedded' />
           {{else}}
-            <p class='empty'>No budget linked — approving will not commit funds
-              anywhere.</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='No budget linked'
+              @message='Approving will not commit funds anywhere.'
+            />
           {{/if}}
         </section>
 
@@ -500,7 +525,12 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
           {{#if @model.rfq}}
             <@fields.rfq @format='embedded' />
           {{else}}
-            <p class='empty'>Direct PO (no RFQ).</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='Direct PO'
+              @message='Not sourced from an RFQ.'
+            />
           {{/if}}
         </section>
       </div>
@@ -509,35 +539,34 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       .po {
         container-type: inline-size;
         padding: var(--boxel-sp-lg);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, inherit);
       }
       .head {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: var(--boxel-sp);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
         padding-bottom: var(--boxel-sp);
         margin-bottom: var(--boxel-sp);
       }
       .kicker {
         margin: 0;
-        font-size: 0.6875rem;
-        letter-spacing: 0.12em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       h1 {
         margin: var(--boxel-sp-5xs) 0;
-        font-family: var(--font-heading, inherit);
         font-size: 1.625rem;
         line-height: 1.15;
       }
       .sub {
         margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .head-right {
         display: flex;
@@ -551,26 +580,7 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         font-variant-numeric: tabular-nums;
       }
       .flash {
-        border-radius: var(--radius, var(--boxel-border-radius));
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         margin-bottom: var(--boxel-sp);
-        font-size: 0.875rem;
-      }
-      .flash.error {
-        background: color-mix(
-          in oklch,
-          var(--state-red-fg, #b91c1c) 10%,
-          transparent
-        );
-        color: var(--state-red-fg, #b91c1c);
-      }
-      .flash.ok {
-        background: color-mix(
-          in oklch,
-          var(--state-green-fg, #15803d) 10%,
-          transparent
-        );
-        color: var(--state-green-fg, #15803d);
       }
       .grid {
         display: grid;
@@ -578,10 +588,10 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         gap: var(--boxel-sp);
       }
       .panel {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
-        background: var(--card, transparent);
+        background: var(--card);
       }
       .panel.span {
         grid-column: 1 / -1;
@@ -594,10 +604,13 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       }
       h2 {
         margin: 0 0 var(--boxel-sp-xs);
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .decide {
         margin-top: var(--boxel-sp-sm);
@@ -611,19 +624,13 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       .lines-total {
         display: flex;
         justify-content: space-between;
-        border-top: 2px solid var(--foreground, var(--boxel-dark));
+        border-top: 0.125rem solid var(--foreground);
         margin-top: var(--boxel-sp-xs);
         padding-top: var(--boxel-sp-xs);
         font-weight: 600;
       }
       .lines-total-num {
         font-variant-numeric: tabular-nums;
-      }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: 0.875rem;
-        font-style: italic;
       }
       @container (max-width: 640px) {
         .grid {
@@ -679,18 +686,18 @@ export class PurchaseOrder extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+      return PO_STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
     }
     get statusLabel() {
       return PO_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft';
     }
-    get totalLabel() {
-      return formatMoney(this.args.model?.totalAmount ?? 0, 'USD');
+    get total() {
+      return this.args.model?.totalAmount ?? 0;
     }
     <template>
       <div class='row'>
         <@fields.poNumber @format='atom' />
-        <span class='amount'>{{this.totalLabel}}</span>
+        <Money class='amount' @amount={{this.total}} @code='USD' />
         <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
       </div>
       <style scoped>
@@ -723,11 +730,14 @@ export class PurchaseOrder extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get statusHue() {
+      return PO_STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+    }
     get statusLabel() {
       return PO_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft';
     }
-    get totalLabel() {
-      return formatMoney(this.args.model?.totalAmount ?? 0, 'USD');
+    get total() {
+      return this.args.model?.totalAmount ?? 0;
     }
     get deliveryLabel() {
       let d = this.args.model?.expectedDelivery;
@@ -744,13 +754,19 @@ export class PurchaseOrder extends CardDef {
       <div class='fit'>
         <div class='fit-head'>
           <span class='fit-name'>{{@model.title}}</span>
-          <span class='fit-status'>{{this.statusLabel}}</span>
+          <StatePill
+            class='fit-status'
+            @label={{this.statusLabel}}
+            @hue={{this.statusHue}}
+          />
         </div>
-        <span class='fit-total'>{{this.totalLabel}}</span>
+        <Money class='fit-total' @amount={{this.total}} @code='USD' />
         <div class='fit-mid'>
-          {{#if this.routeLabel}}<span
+          {{#if this.routeLabel}}<StatePill
               class='fit-route'
-            >{{this.routeLabel}}</span>{{/if}}
+              @label={{this.routeLabel}}
+              @hue='slate'
+            />{{/if}}
           {{#if this.deliveryLabel}}<span class='fit-due'>due
               {{this.deliveryLabel}}</span>{{/if}}
         </div>
@@ -774,19 +790,11 @@ export class PurchaseOrder extends CardDef {
           display: none;
           margin-top: auto;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-route {
-          padding: 1px 8px;
-          border-radius: 999px;
-          background: color-mix(
-            in oklch,
-            var(--procurement-ink, var(--primary, var(--boxel-dark))) 9%,
-            transparent
-          );
-          color: var(--procurement-ink, var(--primary, var(--boxel-dark)));
           width: fit-content;
         }
         @container fitted-card (height > 120px) {
@@ -796,7 +804,7 @@ export class PurchaseOrder extends CardDef {
         }
         .fit-name {
           font-weight: 700;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.9375rem;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -808,11 +816,7 @@ export class PurchaseOrder extends CardDef {
           font-size: 1.0625rem;
         }
         .fit-status {
-          font-size: 0.6875rem;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
-          white-space: nowrap;
+          flex-shrink: 0;
         }
         @container fitted-card (height <= 65px) {
           .fit {

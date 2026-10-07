@@ -1,9 +1,12 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { Button } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Table } from '@cardstack/pretui/components/table';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import {
   formatMoney,
   lineTotal,
@@ -226,52 +229,40 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
           <p class='insight'><span class='insight-mark'>◆</span>
             {{this.insight}}</p>
         {{/if}}
-        <div class='matrix-scroll'>
-          <table class='matrix'>
-            <thead>
-              <tr>
-                <th class='row-label'></th>
-                {{#each this.columns as |col|}}
-                  <th
-                    class='vendor
-                      {{if col.awarded "awarded-col"}}
-                      {{if col.blocked "blocked-col"}}'
-                  >
-                    <span class='vendor-name'>{{col.vendorName}}</span>
-                    {{#if col.awarded}}
-                      <StatePill
-                        @label='AWARDED'
-                        @hue='green'
-                        @emphatic={{true}}
-                      />
-                    {{else if col.blocked}}
-                      <StatePill
-                        @label={{col.blockedReason}}
-                        @hue='red'
-                        @dot={{true}}
-                      />
-                    {{/if}}
-                  </th>
-                {{/each}}
-              </tr>
-            </thead>
-            <tbody>
-              {{#each this.lineRows as |row|}}
-                <tr class='data-row'>
-                  <td class='row-label'>{{row.label}}</td>
-                  {{#each row.values as |cell|}}
-                    <td class='num {{if cell.best "best"}}'>
-                      <span class='cell-inner'>{{cell.display}}
-                        {{#if cell.best}}<span
-                            class='best-mark'
-                          >◄</span>{{/if}}</span>
-                    </td>
-                  {{/each}}
-                </tr>
+        <Table class='matrix' @label='Quote comparison'>
+          <:head>
+            <tr>
+              <th class='row-label'></th>
+              {{#each this.columns as |col|}}
+                <th
+                  scope='col'
+                  class='vendor
+                    {{if col.awarded "awarded-col"}}
+                    {{if col.blocked "blocked-col"}}'
+                >
+                  <span class='vendor-name'>{{col.vendorName}}</span>
+                  {{#if col.awarded}}
+                    <StatePill
+                      @label='AWARDED'
+                      @hue='green'
+                      @emphatic={{true}}
+                    />
+                  {{else if col.blocked}}
+                    <StatePill
+                      @label={{col.blockedReason}}
+                      @hue='red'
+                      @dot={{true}}
+                    />
+                  {{/if}}
+                </th>
               {{/each}}
-              <tr class='total-row data-row'>
-                <td class='row-label'>{{this.totalRow.label}}</td>
-                {{#each this.totalRow.values as |cell|}}
+            </tr>
+          </:head>
+          <:body>
+            {{#each this.lineRows as |row|}}
+              <tr class='data-row'>
+                <td class='row-label'>{{row.label}}</td>
+                {{#each row.values as |cell|}}
                   <td class='num {{if cell.best "best"}}'>
                     <span class='cell-inner'>{{cell.display}}
                       {{#if cell.best}}<span
@@ -280,173 +271,176 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
                   </td>
                 {{/each}}
               </tr>
-              <tr class='data-row'>
-                <td class='row-label'>{{this.leadRow.label}}</td>
-                {{#each this.leadRow.values as |cell|}}
-                  <td class='num {{if cell.best "best"}}'>
-                    <span class='cell-inner'>{{cell.display}}
-                      {{#if cell.best}}<span
-                          class='best-mark'
-                        >◄</span>{{/if}}</span>
-                  </td>
-                {{/each}}
-              </tr>
-              <tr class='data-row'>
-                <td class='row-label'>Valid until</td>
-                {{#each this.validityValues as |cell|}}
-                  <td class='num {{if cell.stale "stale"}}'>
-                    {{cell.display}}
-                  </td>
-                {{/each}}
-              </tr>
-              <tr class='data-row'>
-                <td class='row-label'>Compliance</td>
-                {{#each this.columns as |col|}}
-                  <td>
-                    {{#if col.complianceKnown}}
-                      {{#if @onOpenProfile}}
-                        <button
-                          type='button'
-                          class='compliance-link'
-                          title='Open vendor profile'
-                          {{on 'click' (fn this.openProfile col.profile)}}
-                        >
-                          <StatePill
-                            @label={{if col.complianceOk 'current' 'lapsed'}}
-                            @hue={{if col.complianceOk 'green' 'red'}}
-                            @dot={{true}}
-                          />
-                          <span
-                            class='compliance-arrow'
-                            aria-hidden='true'
-                          >→</span>
-                        </button>
-                      {{else}}
+            {{/each}}
+            <tr class='total-row data-row'>
+              <td class='row-label'>{{this.totalRow.label}}</td>
+              {{#each this.totalRow.values as |cell|}}
+                <td class='num {{if cell.best "best"}}'>
+                  <span class='cell-inner'>{{cell.display}}
+                    {{#if cell.best}}<span
+                        class='best-mark'
+                      >◄</span>{{/if}}</span>
+                </td>
+              {{/each}}
+            </tr>
+            <tr class='data-row'>
+              <td class='row-label'>{{this.leadRow.label}}</td>
+              {{#each this.leadRow.values as |cell|}}
+                <td class='num {{if cell.best "best"}}'>
+                  <span class='cell-inner'>{{cell.display}}
+                    {{#if cell.best}}<span
+                        class='best-mark'
+                      >◄</span>{{/if}}</span>
+                </td>
+              {{/each}}
+            </tr>
+            <tr class='data-row'>
+              <td class='row-label'>Valid until</td>
+              {{#each this.validityValues as |cell|}}
+                <td class='num {{if cell.stale "stale"}}'>
+                  {{cell.display}}
+                </td>
+              {{/each}}
+            </tr>
+            <tr class='data-row'>
+              <td class='row-label'>Compliance</td>
+              {{#each this.columns as |col|}}
+                <td>
+                  {{#if col.complianceKnown}}
+                    {{#if @onOpenProfile}}
+                      <button
+                        type='button'
+                        class='compliance-link'
+                        title='Open vendor profile'
+                        {{on 'click' (fn this.openProfile col.profile)}}
+                      >
                         <StatePill
                           @label={{if col.complianceOk 'current' 'lapsed'}}
                           @hue={{if col.complianceOk 'green' 'red'}}
                           @dot={{true}}
                         />
-                      {{/if}}
+                        <span
+                          class='compliance-arrow'
+                          aria-hidden='true'
+                        >→</span>
+                      </button>
                     {{else}}
                       <StatePill
-                        @label='no profile — link one to see the gate'
-                        @hue='slate'
-                        @chrome={{true}}
+                        @label={{if col.complianceOk 'current' 'lapsed'}}
+                        @hue={{if col.complianceOk 'green' 'red'}}
+                        @dot={{true}}
                       />
                     {{/if}}
+                  {{else}}
+                    <StatePill
+                      @label='no profile — link one to see the gate'
+                      @hue='slate'
+                      @chrome={{true}}
+                    />
+                  {{/if}}
+                </td>
+              {{/each}}
+            </tr>
+            {{#unless @decided}}
+              <tr class='action-row'>
+                <td class='row-label'></td>
+                {{#each this.columns as |col|}}
+                  <td>
+                    <Button
+                      @variant='primary'
+                      @size='s'
+                      @disabled={{if col.blocked true @busy}}
+                      class='award-btn'
+                      {{on 'click' (fn this.award col.quote)}}
+                    >
+                      {{if col.blocked 'Blocked' 'Award'}}
+                    </Button>
                   </td>
                 {{/each}}
               </tr>
-              {{#unless @decided}}
-                <tr class='action-row'>
-                  <td class='row-label'></td>
-                  {{#each this.columns as |col|}}
-                    <td>
-                      <Button
-                        @kind='primary'
-                        @size='small'
-                        @disabled={{if col.blocked true @busy}}
-                        class='award-btn'
-                        {{on 'click' (fn this.award col.quote)}}
-                      >
-                        {{if col.blocked 'Blocked' 'Award'}}
-                      </Button>
-                    </td>
-                  {{/each}}
-                </tr>
-              {{/unless}}
-            </tbody>
-          </table>
-        </div>
+            {{/unless}}
+          </:body>
+        </Table>
       {{else}}
-        <div class='board-empty'>
-          <span class='board-empty-glyph' aria-hidden='true'>⚖</span>
-          <p class='board-empty-title'>The comparison starts with the first
-            quote</p>
-          <p class='board-empty-sub'>Record each vendor's inbound quote and
-            they'll line up here, column against column, best value highlighted.</p>
-        </div>
+        <EmptyState
+          style={{COMPACT_EMPTY_STYLE}}
+          @texture={{false}}
+          @title='The comparison starts with the first quote'
+          @message="Record each vendor's inbound quote and they'll line up here, column against column, best value highlighted."
+        />
       {{/if}}
     </div>
     <style scoped>
       .board {
-        /* command-console adapter: structure navy, action mint, signal amber/red */
-        --console-ink: var(
-          --procurement-ink,
-          var(--primary, var(--boxel-dark))
-        );
-        --console-ink-soft: color-mix(
-          in oklch,
-          var(--console-ink) 72%,
-          transparent
-        );
+        /* command-console adapter: structure in the procurement ink, signal amber/red */
+        --console-ink: var(--procurement-ink, var(--primary-ink));
         overflow: hidden;
       }
       .insight {
         margin: 0 0 var(--boxel-sp-sm);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-left: 3px solid var(--console-ink);
-        background: color-mix(in oklch, var(--console-ink) 6%, transparent);
-        border-radius: 0 var(--radius, var(--boxel-border-radius))
-          var(--radius, var(--boxel-border-radius)) 0;
+        border-left: 0.1875rem solid var(--console-ink);
+        background-color: color-mix(
+          in oklab,
+          var(--console-ink) 6%,
+          transparent
+        );
+        border-radius: 0 var(--radius) var(--radius) 0;
         font-size: 0.9375rem;
         line-height: 1.4;
       }
       .insight-mark {
         color: var(--console-ink);
-        margin-right: 4px;
-        font-size: 0.75rem;
-      }
-      .matrix-scroll {
-        overflow-x: auto;
+        margin-right: 0.25rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .matrix {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
+        font-size: var(--boxel-font-size-sm);
       }
       th,
       td {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        text-align: left;
-        border-bottom: 1px solid var(--border, var(--boxel-200));
         vertical-align: middle;
       }
       thead th {
-        border-bottom: 2px solid var(--console-ink);
-        padding-bottom: var(--boxel-sp-sm);
+        height: auto;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm) var(--boxel-sp-sm);
+        box-shadow: inset 0 -0.125rem 0 var(--console-ink);
+        white-space: normal;
+      }
+      td {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .vendor {
         min-width: 10rem;
       }
       .vendor-name {
         display: block;
+        font-family: var(--font-sans);
         font-weight: 700;
         font-size: 1.0625rem;
         letter-spacing: -0.01em;
+        text-transform: none;
         margin-bottom: var(--boxel-sp-5xs);
         color: var(--console-ink);
       }
       .awarded-col {
-        background: color-mix(
-          in oklch,
-          var(--state-green-fg, #15803d) 8%,
-          transparent
-        );
+        background-color: color-mix(in oklab, var(--success) 12%, var(--inset));
       }
       .blocked-col .vendor-name {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       tbody td:nth-child(n + 2) {
         border-inline: 1px solid
-          color-mix(in oklch, var(--border, var(--boxel-200)) 55%, transparent);
+          color-mix(in oklab, var(--border) 55%, transparent);
       }
       .row-label {
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: 0.75rem;
-        letter-spacing: 0.06em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .num {
@@ -463,50 +457,58 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       }
       .num.best .cell-inner {
         position: relative;
-        padding: 2px 8px;
-        margin: -2px -8px;
-        border-radius: 6px;
-        background: color-mix(in oklch, var(--console-ink) 9%, transparent);
+        padding: 0.125rem 0.5rem;
+        margin: -0.125rem -0.5rem;
+        border-radius: var(--radius);
+        background-color: color-mix(
+          in oklab,
+          var(--console-ink) 9%,
+          transparent
+        );
       }
       .best-mark {
-        margin-left: 4px;
+        margin-left: 0.25rem;
         font-size: 0.6875rem;
       }
       .num.stale {
-        color: var(--state-red-fg, #b91c1c);
+        color: var(--destructive-ink);
       }
       .compliance-link {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 0.25rem;
         border: none;
         background: none;
-        padding: 2px;
-        margin: -2px;
-        border-radius: 6px;
+        padding: 0.125rem;
+        margin: -0.125rem;
+        border-radius: var(--radius);
         cursor: pointer;
         font: inherit;
       }
       .compliance-link:hover,
       .compliance-link:focus-visible {
-        background: color-mix(in oklch, var(--console-ink) 8%, transparent);
+        background-color: color-mix(
+          in oklab,
+          var(--console-ink) 8%,
+          transparent
+        );
       }
       .compliance-arrow {
-        font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
         transition: transform 140ms ease;
       }
       .compliance-link:hover .compliance-arrow {
-        transform: translateX(2px);
+        transform: translateX(0.125rem);
         color: var(--console-ink);
       }
       .total-row td {
-        border-top: 2px solid var(--console-ink);
+        box-shadow: inset 0 0.125rem 0 var(--console-ink);
         font-weight: 600;
         font-size: 1.0625rem;
       }
       .action-row td {
-        border-bottom: none;
+        box-shadow: none;
         padding-top: var(--boxel-sp-sm);
       }
       .award-btn {
@@ -514,32 +516,10 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
         transition: transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1);
       }
       .award-btn:not(:disabled):hover {
-        transform: translateY(-1px) scale(1.03);
+        transform: translateY(-0.0625rem) scale(1.03);
       }
       .award-btn:not(:disabled):active {
         transform: translateY(0) scale(0.98);
-      }
-      .board-empty {
-        border: 1px dashed var(--border, var(--boxel-300));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        padding: var(--boxel-sp-xl);
-        text-align: center;
-      }
-      .board-empty-glyph {
-        display: block;
-        font-size: 1.75rem;
-        margin-bottom: var(--boxel-sp-xs);
-        color: var(--console-ink-soft);
-      }
-      .board-empty-title {
-        margin: 0 0 var(--boxel-sp-5xs);
-        font-weight: 600;
-      }
-      .board-empty-sub {
-        margin: 0 auto;
-        max-width: 34rem;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: 0.875rem;
       }
       /* choreography: rows arrive as a considered sequence, best cells settle */
       @media (prefers-reduced-motion: no-preference) {
@@ -586,7 +566,7 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       @keyframes board-slide-in {
         from {
           opacity: 0;
-          transform: translateY(10px);
+          transform: translateY(0.625rem);
         }
         to {
           opacity: 1;
@@ -596,7 +576,11 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       @keyframes best-settle {
         0% {
           transform: scale(0.92);
-          background: color-mix(in oklch, var(--console-ink) 24%, transparent);
+          background-color: color-mix(
+            in oklab,
+            var(--console-ink) 24%,
+            transparent
+          );
         }
         100% {
           transform: scale(1);
@@ -604,10 +588,10 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       }
       @keyframes awarded-wash {
         from {
-          background: color-mix(
-            in oklch,
-            var(--state-green-fg, #15803d) 22%,
-            transparent
+          background-color: color-mix(
+            in oklab,
+            var(--success) 30%,
+            var(--inset)
           );
         }
       }

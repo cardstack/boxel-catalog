@@ -13,7 +13,14 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { Button, FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 import { PurchaseOrder } from './purchase-order';
 import ReceiveGoodsCommand from './commands/receive-goods-command';
@@ -107,12 +114,12 @@ export class ReceiptLineField extends FieldDef {
         }
         .qty {
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .note {
           grid-column: 1 / -1;
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -204,12 +211,12 @@ class GoodsReceiptEdit extends Component<typeof GoodsReceipt> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background: var(--background);
+        color: var(--foreground);
         /* the procurement family's brand ink, declared ONCE — a linked
            Theme overrides via --procurement-ink */
-        --gr-ink: var(--procurement-ink, #27306b);
-        --gr-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+        --gr-ink: var(--procurement-ink, var(--primary-ink));
+        --gr-ink-fg: var(--procurement-ink-fg, var(--card));
       }
       .edit-body {
         display: grid;
@@ -230,31 +237,34 @@ class GoodsReceiptEdit extends Component<typeof GoodsReceipt> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
         outline-color: var(--gr-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--gr-ink) 12%, transparent);
       }
       .sect.lines {
-        border-left: 3px solid var(--gr-ink);
+        border-left: 0.1875rem solid var(--gr-ink);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -263,6 +273,7 @@ class GoodsReceiptEdit extends Component<typeof GoodsReceipt> {
       .sect-hint {
         text-transform: none;
         letter-spacing: normal;
+        font-family: var(--font-sans);
         font-size: 0.75rem;
         font-weight: 400;
         font-style: italic;
@@ -378,8 +389,8 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
             <StatePill @label='POSTED' @hue='green' @dot={{true}} />
           {{else}}
             <Button
-              @kind='primary'
-              @size='small'
+              @variant='primary'
+              @size='s'
               @disabled={{this.busy}}
               {{on 'click' this.post}}
             >Post receipt</Button>
@@ -387,8 +398,16 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         </div>
       </header>
 
-      {{#if this.error}}<div class='flash error'>{{this.error}}</div>{{/if}}
-      {{#if this.message}}<div class='flash ok'>{{this.message}}</div>{{/if}}
+      {{#if this.error}}
+        <Alert @tone='danger' style={{ALERT_STYLE.danger}}>
+          {{this.error}}
+        </Alert>
+      {{/if}}
+      {{#if this.message}}
+        <Alert @tone='success' style={{ALERT_STYLE.success}}>
+          {{this.message}}
+        </Alert>
+      {{/if}}
 
       <section class='panel'>
         <h2>Lines · received / ordered</h2>
@@ -396,7 +415,11 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
           {{#each @fields.lines as |Line|}}
             <Line />
           {{else}}
-            <p class='empty'>No lines recorded.</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='No lines recorded'
+            />
           {{/each}}
         </div>
       </section>
@@ -412,9 +435,6 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
       .gr {
         container-type: inline-size;
         padding: var(--boxel-sp-lg);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, inherit);
         display: grid;
         gap: var(--boxel-sp);
       }
@@ -423,24 +443,26 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         justify-content: space-between;
         align-items: flex-start;
         gap: var(--boxel-sp);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
         padding-bottom: var(--boxel-sp);
       }
       .kicker {
         margin: 0;
-        font-size: 0.6875rem;
-        letter-spacing: 0.12em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       h1 {
         margin: var(--boxel-sp-5xs) 0;
-        font-family: var(--font-heading, inherit);
         font-size: 1.5rem;
       }
       .sub {
         margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .head-right {
         display: flex;
@@ -448,49 +470,25 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         align-items: flex-end;
         gap: var(--boxel-sp-xxs);
       }
-      .flash {
-        border-radius: var(--radius, var(--boxel-border-radius));
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.875rem;
-      }
-      .flash.error {
-        background: color-mix(
-          in oklch,
-          var(--state-red-fg, #b91c1c) 10%,
-          transparent
-        );
-        color: var(--state-red-fg, #b91c1c);
-      }
-      .flash.ok {
-        background: color-mix(
-          in oklch,
-          var(--state-green-fg, #15803d) 10%,
-          transparent
-        );
-        color: var(--state-green-fg, #15803d);
-      }
       .panel {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
-        background: var(--card, transparent);
+        background: var(--card);
       }
       h2 {
         margin: 0 0 var(--boxel-sp-xs);
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .lines {
         display: grid;
         gap: var(--boxel-sp-5xs);
-      }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: 0.875rem;
-        font-style: italic;
       }
       @container (max-width: 560px) {
         .head {
@@ -587,7 +585,7 @@ export class GoodsReceipt extends CardDef {
         }
         .count {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -634,7 +632,7 @@ export class GoodsReceipt extends CardDef {
         }
         .fit-sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 65px) {
           .fit {

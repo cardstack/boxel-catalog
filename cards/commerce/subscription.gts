@@ -10,9 +10,16 @@ import DateField from '@cardstack/base/date';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import enumField from '@cardstack/base/enum';
 import RefreshIcon from '@cardstack/boxel-icons/refresh';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
 import { Account } from '@cardstack/catalog/cards/crm/account';
 import { Contract } from '@cardstack/catalog/cards/legal/contract';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 
 const BillingCycleField = enumField(StringField, {
   options: ['monthly', 'yearly'],
@@ -23,6 +30,17 @@ const SubscriptionStatusField = enumField(StringField, {
   options: ['trial', 'active', 'paused', 'canceled'],
   displayName: 'Subscription Status',
 });
+
+const STATUS_HUE: Record<string, Hue> = {
+  trial: 'blue',
+  active: 'green',
+  paused: 'amber',
+  canceled: 'red',
+};
+
+function statusHue(status: string | null | undefined): Hue {
+  return (status && STATUS_HUE[status]) || 'slate';
+}
 
 export class Subscription extends CardDef {
   static displayName = 'Subscription';
@@ -66,18 +84,23 @@ export class Subscription extends CardDef {
   });
 
   static embedded = class Embedded extends Component<typeof Subscription> {
-    get price() {
-      return formatMoney(
-        this.args.model?.price?.amount,
-        this.args.model?.price?.currency?.code,
-      );
-    }
     <template>
       <div class='subscription'>
         <RefreshIcon class='icon' />
         <span class='plan'>{{@model.cardTitle}}</span>
-        <span class='status status-{{@model.status}}'>{{@model.status}}</span>
-        <span class='price'>{{this.price}} / {{@model.billingCycle}}</span>
+        {{#if @model.status}}
+          <StatePill
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+            @dot={{true}}
+          />
+        {{/if}}
+        <span class='price'><Money
+            @amount={{@model.price.amount}}
+            @code={{@model.price.currency.code}}
+          />
+          /
+          {{@model.billingCycle}}</span>
       </div>
       <style scoped>
         .subscription {
@@ -88,36 +111,18 @@ export class Subscription extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .plan {
           font-weight: 600;
         }
-        .status {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-        }
-        .status-active {
-          background: #d1fae5;
-          color: #065f46;
-        }
-        .status-canceled {
-          background: #fee2e2;
-          color: #991b1b;
-        }
         .price {
           margin-left: auto;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -136,12 +141,12 @@ export class Subscription extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .sa-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .sa-name {
@@ -154,15 +159,8 @@ export class Subscription extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Subscription> {
-    get price() {
-      let p = formatMoney(
-        this.args.model?.price?.amount,
-        this.args.model?.price?.currency?.code,
-      );
-      if (!p) return '—';
-      return this.args.model?.billingCycle
-        ? `${p} / ${this.args.model.billingCycle}`
-        : p;
+    get hasPrice() {
+      return hasNumber(this.args.model?.price?.amount);
     }
     <template>
       <div class='fitted'>
@@ -170,9 +168,11 @@ export class Subscription extends CardDef {
           <RefreshIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
           {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
+            <StatePill
+              class='status'
+              @label={{@model.status}}
+              @hue={{statusHue @model.status}}
+            />
           {{/if}}
         </div>
         <div class='fmt strip'>
@@ -180,24 +180,38 @@ export class Subscription extends CardDef {
           <div class='info'>
             <span class='name'>{{@model.cardTitle}}</span>
             {{#if @model.status}}
-              <span
-                class='status status-{{@model.status}}'
-              >{{@model.status}}</span>
+              <StatePill
+                class='status'
+                @label={{@model.status}}
+                @hue={{statusHue @model.status}}
+              />
             {{/if}}
           </div>
-          <span class='figure'>{{this.price}}</span>
+          <span class='figure'>{{#if this.hasPrice}}<Money
+                @amount={{@model.price.amount}}
+                @code={{@model.price.currency.code}}
+              />{{#if @model.billingCycle}}
+                /
+                {{@model.billingCycle}}{{/if}}{{else}}—{{/if}}</span>
         </div>
         <div class='fmt tile'>
           <div class='row'>
             <RefreshIcon class='doc-icon' />
             {{#if @model.status}}
-              <span
-                class='status status-{{@model.status}}'
-              >{{@model.status}}</span>
+              <StatePill
+                class='status'
+                @label={{@model.status}}
+                @hue={{statusHue @model.status}}
+              />
             {{/if}}
           </div>
           <span class='name'>{{@model.cardTitle}}</span>
-          <span class='figure figure-lg'>{{this.price}}</span>
+          <span class='figure figure-lg'>{{#if this.hasPrice}}<Money
+                @amount={{@model.price.amount}}
+                @code={{@model.price.currency.code}}
+              />{{#if @model.billingCycle}}
+                /
+                {{@model.billingCycle}}{{/if}}{{else}}—{{/if}}</span>
           {{#if @model.startDate}}
             <span class='meta'>Since <@fields.startDate /></span>
           {{/if}}
@@ -208,9 +222,11 @@ export class Subscription extends CardDef {
               <RefreshIcon class='doc-icon' />
               <span class='name name-lg'>{{@model.cardTitle}}</span>
               {{#if @model.status}}
-                <span
-                  class='status status-{{@model.status}}'
-                >{{@model.status}}</span>
+                <StatePill
+                  class='status'
+                  @label={{@model.status}}
+                  @hue={{statusHue @model.status}}
+                />
               {{/if}}
             </div>
             {{#if @model.account.name}}
@@ -223,14 +239,19 @@ export class Subscription extends CardDef {
               <span class='meta'>Renews <@fields.renewalDate /></span>
             {{/if}}
           </div>
-          <span class='figure figure-lg'>{{this.price}}</span>
+          <span class='figure figure-lg'>{{#if this.hasPrice}}<Money
+                @amount={{@model.price.amount}}
+                @code={{@model.price.currency.code}}
+              />{{#if @model.billingCycle}}
+                /
+                {{@model.billingCycle}}{{/if}}{{else}}—{{/if}}</span>
         </div>
       </div>
       <style scoped>
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -240,9 +261,9 @@ export class Subscription extends CardDef {
           overflow: hidden;
         }
         .doc-icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -267,30 +288,14 @@ export class Subscription extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           max-width: 100%;
         }
         .status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-        }
-        .status-active {
-          background: #d1fae5;
-          color: #065f46;
-        }
-        .status-canceled {
-          background: #fee2e2;
-          color: #991b1b;
+          flex-shrink: 0;
         }
         .row {
           display: flex;
@@ -359,13 +364,13 @@ export class Subscription extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof Subscription> {
-    get price() {
-      return (
-        formatMoney(
-          this.args.model?.price?.amount,
-          this.args.model?.price?.currency?.code,
-        ) || '\u2014'
-      );
+    get facts(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.startDate) rows.push({ key: 'Started', value: 'startDate' });
+      if (m?.renewalDate) rows.push({ key: 'Renews', value: 'renewalDate' });
+      if (m?.account) rows.push({ key: 'Account', value: 'account' });
+      return rows;
     }
     <template>
       <article class='sub-page'>
@@ -375,35 +380,41 @@ export class Subscription extends CardDef {
             <h1>{{@model.cardTitle}}</h1>
           </div>
           {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
+            <StatePill
+              class='status'
+              @label={{@model.status}}
+              @hue={{statusHue @model.status}}
+              @dot={{true}}
+            />
           {{/if}}
         </header>
 
         <section class='price-hero'>
-          <span class='ph-amount'>{{this.price}}</span>
+          <Money
+            class='ph-amount'
+            @amount={{@model.price.amount}}
+            @code={{@model.price.currency.code}}
+          />
           {{#if @model.billingCycle}}
             <span class='ph-cycle'>/ {{@model.billingCycle}}</span>
           {{/if}}
         </section>
 
-        <section class='facts-panel'>
-          <dl>
-            {{#if @model.startDate}}
-              <dt>Started</dt>
-              <dd><@fields.startDate /></dd>
-            {{/if}}
-            {{#if @model.renewalDate}}
-              <dt>Renews</dt>
-              <dd><@fields.renewalDate /></dd>
-            {{/if}}
-            {{#if @model.account}}
-              <dt>Account</dt>
-              <dd class='cust'><@fields.account @format='embedded' /></dd>
-            {{/if}}
-          </dl>
-        </section>
+        {{#if this.facts.length}}
+          <section class='facts-panel'>
+            <KeyValue class='facts' @items={{this.facts}}>
+              <:value as |row|>
+                {{#if (eq row.value 'startDate')}}
+                  <@fields.startDate />
+                {{else if (eq row.value 'renewalDate')}}
+                  <@fields.renewalDate />
+                {{else}}
+                  <div class='cust'><@fields.account @format='embedded' /></div>
+                {{/if}}
+              </:value>
+            </KeyValue>
+          </section>
+        {{/if}}
       </article>
       <style scoped>
         .sub-page {
@@ -419,41 +430,27 @@ export class Subscription extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1rem;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
           font-size: 1.75rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .status {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          flex-shrink: 0;
           margin-bottom: 0.25rem;
-        }
-        .status-active {
-          background: #d1fae5;
-          color: #065f46;
-        }
-        .status-canceled {
-          background: #fee2e2;
-          color: #991b1b;
         }
         .price-hero {
           display: flex;
@@ -461,41 +458,39 @@ export class Subscription extends CardDef {
           justify-content: center;
           gap: 0.5rem;
           padding: 2rem 1.5rem;
-          background: var(--card, #ffffff);
-          border: 1px solid var(--border, #e5e7eb);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
-          box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.05));
+          box-shadow: var(--shadow-xs);
         }
         .ph-amount {
           font-size: 2.5rem;
           font-weight: 700;
           line-height: 1;
           font-variant-numeric: tabular-nums;
-          font-family: var(--font-heading, inherit);
+          font-family: var(--boxel-heading-font-family);
         }
         .ph-cycle {
           font-size: 1rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .facts-panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.625rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .facts {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
+        .cust {
+          flex: 1;
+          min-width: 0;
         }
         .cust :deep(.account) {
           padding: 0;

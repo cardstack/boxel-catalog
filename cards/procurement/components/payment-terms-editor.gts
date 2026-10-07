@@ -57,11 +57,13 @@ export class PaymentTermsEditor extends GlimmerComponent<Signature> {
         font-size: 1.0625rem;
       }
       .preview-label {
-        font-weight: 400;
-        font-size: 0.75rem;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         margin-right: var(--boxel-sp-xs);
       }
       .row {
@@ -71,17 +73,20 @@ export class PaymentTermsEditor extends GlimmerComponent<Signature> {
         align-items: start;
       }
       .discount {
-        border: 1px dashed var(--border, var(--boxel-300));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp-sm);
         display: grid;
         gap: var(--boxel-sp-xs);
       }
       .discount-label {
-        font-size: 0.75rem;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
     </style>
   </template>

@@ -16,15 +16,41 @@ import { Account } from '@cardstack/catalog/cards/crm/account';
 import { Contract } from '@cardstack/catalog/cards/legal/contract';
 import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
 import {
-  formatMoney,
   lineTotal,
   orderTotals,
 } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import {
+  StepList,
+  type StepItem,
+  type StepState,
+} from '@cardstack/pretui/components/step-list';
+import { Table } from '@cardstack/pretui/components/table';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 const OrderStatusField = enumField(StringField, {
   options: ['pending', 'paid', 'shipped', 'delivered', 'canceled'],
   displayName: 'Order Status',
 });
+
+const STATUS_HUE: Record<string, Hue> = {
+  pending: 'amber',
+  paid: 'blue',
+  shipped: 'blue',
+  delivered: 'green',
+  canceled: 'red',
+};
+
+function statusHue(status: string | null | undefined): Hue {
+  return (status && STATUS_HUE[status]) || 'slate';
+}
 
 export class Order extends CardDef {
   static displayName = 'Order';
@@ -49,19 +75,25 @@ export class Order extends CardDef {
   });
 
   static embedded = class Embedded extends Component<typeof Order> {
-    get total() {
-      const { total, code } = orderTotals(
-        this.args.model?.lineItems,
-        this.args.model?.taxRate,
-      );
-      return formatMoney(total, code);
+    get totals() {
+      return orderTotals(this.args.model?.lineItems, this.args.model?.taxRate);
     }
     <template>
       <div class='order-row'>
         <PackageIcon class='icon' />
         <span class='number'>{{@model.cardTitle}}</span>
-        <span class='status status-{{@model.status}}'>{{@model.status}}</span>
-        <span class='total'>{{this.total}}</span>
+        {{#if @model.status}}
+          <StatePill
+            @label={{@model.status}}
+            @hue={{statusHue @model.status}}
+            @dot={{true}}
+          />
+        {{/if}}
+        <Money
+          class='total'
+          @amount={{this.totals.total}}
+          @code={{this.totals.code}}
+        />
       </div>
       <style scoped>
         .order-row {
@@ -72,31 +104,13 @@ export class Order extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .number {
           font-weight: 600;
-        }
-        .status {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-        }
-        .status-delivered {
-          background: #d1fae5;
-          color: #065f46;
-        }
-        .status-canceled {
-          background: #fee2e2;
-          color: #991b1b;
         }
         .total {
           margin-left: auto;
@@ -120,12 +134,12 @@ export class Order extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .oa-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .oa-name {
@@ -138,12 +152,8 @@ export class Order extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Order> {
-    get total() {
-      const { total, code } = orderTotals(
-        this.args.model?.lineItems,
-        this.args.model?.taxRate,
-      );
-      return formatMoney(total, code) || '—';
+    get totals() {
+      return orderTotals(this.args.model?.lineItems, this.args.model?.taxRate);
     }
     get destination() {
       let a = this.args.model?.shippingAddress;
@@ -155,9 +165,11 @@ export class Order extends CardDef {
           <PackageIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
           {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
+            <StatePill
+              class='status'
+              @label={{@model.status}}
+              @hue={{statusHue @model.status}}
+            />
           {{/if}}
         </div>
         <div class='fmt strip'>
@@ -165,24 +177,36 @@ export class Order extends CardDef {
           <div class='info'>
             <span class='name'>{{@model.cardTitle}}</span>
             {{#if @model.status}}
-              <span
-                class='status status-{{@model.status}}'
-              >{{@model.status}}</span>
+              <StatePill
+                class='status'
+                @label={{@model.status}}
+                @hue={{statusHue @model.status}}
+              />
             {{/if}}
           </div>
-          <span class='figure'>{{this.total}}</span>
+          <Money
+            class='figure'
+            @amount={{this.totals.total}}
+            @code={{this.totals.code}}
+          />
         </div>
         <div class='fmt tile'>
           <div class='row'>
             <PackageIcon class='doc-icon' />
             {{#if @model.status}}
-              <span
-                class='status status-{{@model.status}}'
-              >{{@model.status}}</span>
+              <StatePill
+                class='status'
+                @label={{@model.status}}
+                @hue={{statusHue @model.status}}
+              />
             {{/if}}
           </div>
           <span class='name'>{{@model.cardTitle}}</span>
-          <span class='figure figure-lg'>{{this.total}}</span>
+          <Money
+            class='figure figure-lg'
+            @amount={{this.totals.total}}
+            @code={{this.totals.code}}
+          />
           {{#if this.destination}}
             <span class='meta'>To {{this.destination}}</span>
           {{/if}}
@@ -193,9 +217,11 @@ export class Order extends CardDef {
               <PackageIcon class='doc-icon' />
               <span class='name name-lg'>{{@model.cardTitle}}</span>
               {{#if @model.status}}
-                <span
-                  class='status status-{{@model.status}}'
-                >{{@model.status}}</span>
+                <StatePill
+                  class='status'
+                  @label={{@model.status}}
+                  @hue={{statusHue @model.status}}
+                />
               {{/if}}
             </div>
             {{#if @model.account.name}}
@@ -205,14 +231,18 @@ export class Order extends CardDef {
               <span class='meta'>To {{this.destination}}</span>
             {{/if}}
           </div>
-          <span class='figure figure-lg'>{{this.total}}</span>
+          <Money
+            class='figure figure-lg'
+            @amount={{this.totals.total}}
+            @code={{this.totals.code}}
+          />
         </div>
       </div>
       <style scoped>
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -222,9 +252,9 @@ export class Order extends CardDef {
           overflow: hidden;
         }
         .doc-icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -249,30 +279,14 @@ export class Order extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           max-width: 100%;
         }
         .status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-        }
-        .status-delivered {
-          background: #d1fae5;
-          color: #065f46;
-        }
-        .status-canceled {
-          background: #fee2e2;
-          color: #991b1b;
+          flex-shrink: 0;
         }
         .row {
           display: flex;
@@ -342,40 +356,32 @@ export class Order extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Order> {
     fulfilmentSteps = ['pending', 'paid', 'shipped', 'delivered'];
-    get steps() {
+    // Reaching the last stage completes the whole run; a status off the path
+    // leaves every stage upcoming.
+    get steps(): StepItem[] {
       let current = this.fulfilmentSteps.indexOf(this.args.model?.status ?? '');
-      return this.fulfilmentSteps.map((label, i) => ({
-        label,
-        state:
-          current < 0
-            ? 'todo'
-            : i < current
-              ? 'done'
-              : i === current
-                ? 'current'
-                : 'todo',
-      }));
+      let last = this.fulfilmentSteps.length - 1;
+      return this.fulfilmentSteps.map((label, i) => {
+        let state: StepState =
+          current < 0 || i > current
+            ? 'upcoming'
+            : i < current || current === last
+              ? 'complete'
+              : 'current';
+        return { label, state };
+      });
     }
     get isCanceled() {
       return this.args.model?.status === 'canceled';
     }
     get rows() {
       return (this.args.model?.lineItems ?? []).map((item) => ({
-        description: item?.description || '\u2014',
+        description: item?.description || '—',
         quantity: item?.quantity ?? 0,
-        unit: formatMoney(
-          item?.unitPrice?.amount,
-          item?.unitPrice?.currency?.code,
-        ),
-        total: formatMoney(lineTotal(item), item?.unitPrice?.currency?.code),
+        unit: item?.unitPrice?.amount ?? undefined,
+        total: lineTotal(item),
+        code: item?.unitPrice?.currency?.code ?? undefined,
       }));
-    }
-    get total() {
-      const { total, code } = orderTotals(
-        this.args.model?.lineItems,
-        this.args.model?.taxRate,
-      );
-      return formatMoney(total, code) || '\u2014';
     }
     get number() {
       return this.args.model?.orderNumber?.trim() || 'Draft';
@@ -383,13 +389,19 @@ export class Order extends CardDef {
     get totals() {
       return orderTotals(this.args.model?.lineItems, this.args.model?.taxRate);
     }
-    get subtotalDisplay() {
-      return formatMoney(this.totals.subtotal, this.totals.code);
+    // The totals block as KeyValue rows; each value names the figure the
+    // <:value> block renders.
+    get totalsFacts(): KeyValueItem[] {
+      let rows: KeyValueItem[] = [];
+      if (this.totals.tax) {
+        rows.push({ key: 'Subtotal', value: 'subtotal' });
+        rows.push({ key: `Tax (${this.args.model?.taxRate}%)`, value: 'tax' });
+      }
+      rows.push({ key: 'Total', value: 'total' });
+      return rows;
     }
-    get taxDisplay() {
-      return this.totals.tax
-        ? formatMoney(this.totals.tax, this.totals.code)
-        : '';
+    get facts(): KeyValueItem[] {
+      return [{ key: 'Ordered', value: 'orderDate' }];
     }
     <template>
       <article class='order-doc'>
@@ -399,19 +411,22 @@ export class Order extends CardDef {
             <h1>{{this.number}}</h1>
           </div>
           {{#if this.isCanceled}}
-            <span class='status status-canceled'>canceled</span>
+            <StatePill
+              class='status'
+              @label='canceled'
+              @hue='red'
+              @dot={{true}}
+            />
           {{/if}}
         </header>
 
         {{#unless this.isCanceled}}
-          <ol class='stepper'>
-            {{#each this.steps as |step|}}
-              <li class='step step-{{step.state}}'>
-                <span class='dot'></span>
-                <span class='step-label'>{{step.label}}</span>
-              </li>
-            {{/each}}
-          </ol>
+          <StepList
+            class='stepper'
+            @steps={{this.steps}}
+            @variant='track'
+            @label='Order progress'
+          />
         {{/unless}}
 
         <section class='doc-meta'>
@@ -419,54 +434,67 @@ export class Order extends CardDef {
             <span class='label'>Account</span>
             <@fields.account @format='embedded' />
           </div>
-          <dl class='facts'>
-            <dt>Ordered</dt>
-            <dd><@fields.orderDate /></dd>
-          </dl>
+          <KeyValue class='facts' @items={{this.facts}}>
+            <:value>
+              <@fields.orderDate />
+            </:value>
+          </KeyValue>
         </section>
 
         <section class='items'>
           {{#if this.rows.length}}
-            <div class='table-scroll'>
-              <table>
-                <thead>
+            <Table class='lines' @label='Line items'>
+              <:head>
+                <tr>
+                  <th scope='col'>Item</th>
+                  <th scope='col' class='t-num'>Qty</th>
+                  <th scope='col' class='t-num'>Unit</th>
+                  <th scope='col' class='t-num'>Amount</th>
+                </tr>
+              </:head>
+              <:body>
+                {{#each this.rows as |row|}}
                   <tr>
-                    <th class='t-desc'>Item</th>
-                    <th class='t-num'>Qty</th>
-                    <th class='t-num'>Unit</th>
-                    <th class='t-num'>Amount</th>
+                    <td>{{row.description}}</td>
+                    <td class='t-num'>{{row.quantity}}</td>
+                    <td class='t-num'><Money
+                        @amount={{row.unit}}
+                        @code={{row.code}}
+                      /></td>
+                    <td class='t-num t-strong'><Money
+                        @amount={{row.total}}
+                        @code={{row.code}}
+                      /></td>
                   </tr>
-                </thead>
-                <tbody>
-                  {{#each this.rows as |row|}}
-                    <tr>
-                      <td class='t-desc'>{{row.description}}</td>
-                      <td class='t-num'>{{row.quantity}}</td>
-                      <td class='t-num'>{{row.unit}}</td>
-                      <td class='t-num t-strong'>{{row.total}}</td>
-                    </tr>
-                  {{/each}}
-                </tbody>
-                <tfoot>
-                  {{#if this.taxDisplay}}
-                    <tr class='sub-row'>
-                      <td class='t-desc' colspan='3'>Subtotal</td>
-                      <td class='t-num'>{{this.subtotalDisplay}}</td>
-                    </tr>
-                    <tr class='sub-row'>
-                      <td class='t-desc' colspan='3'>Tax ({{@model.taxRate}}%)</td>
-                      <td class='t-num'>{{this.taxDisplay}}</td>
-                    </tr>
-                  {{/if}}
-                  <tr>
-                    <td class='t-desc' colspan='3'>Total</td>
-                    <td class='t-num t-total'>{{this.total}}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+                {{/each}}
+              </:body>
+            </Table>
+            <KeyValue class='totals' @items={{this.totalsFacts}}>
+              <:value as |row|>
+                {{#if (eq row.value 'subtotal')}}
+                  <Money
+                    @amount={{this.totals.subtotal}}
+                    @code={{this.totals.code}}
+                  />
+                {{else if (eq row.value 'tax')}}
+                  <Money
+                    @amount={{this.totals.tax}}
+                    @code={{this.totals.code}}
+                  />
+                {{else}}
+                  <Money
+                    @amount={{this.totals.total}}
+                    @code={{this.totals.code}}
+                  />
+                {{/if}}
+              </:value>
+            </KeyValue>
           {{else}}
-            <p class='empty'>No items yet</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='No items yet'
+            />
           {{/if}}
         </section>
 
@@ -489,92 +517,38 @@ export class Order extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1rem;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
           font-size: 1.75rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .status {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          flex-shrink: 0;
           margin-bottom: 0.25rem;
         }
-        .status-canceled {
-          background: #fee2e2;
-          color: #991b1b;
-        }
+        /* Pret UI StepList, track variant. The knobs put every mark on a
+           guaranteed pair with the page: the current step's number takes
+           --foreground, and its bar and the complete check take ink tokens.
+           The defaults (--primary-foreground with no disc behind it, a
+           --primary bar) fall below 4.5:1 on one scheme or the other. */
         .stepper {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-        }
-        .step {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.375rem;
-          position: relative;
-        }
-        .step:not(:first-child)::before {
-          content: '';
-          position: absolute;
-          top: 0.4375rem;
-          right: 50%;
-          width: 100%;
-          height: 2px;
-          background: var(--border, #e5e7eb);
-        }
-        .step-done:not(:first-child)::before,
-        .step-current:not(:first-child)::before {
-          background: var(--primary, #111111);
-        }
-        .dot {
-          width: 0.9375rem;
-          height: 0.9375rem;
-          border-radius: 50%;
-          background: var(--card, #ffffff);
-          border: 2px solid var(--border, #e5e7eb);
-          position: relative;
-          z-index: 1;
-        }
-        .step-done .dot {
-          background: var(--primary, #111111);
-          border-color: var(--primary, #111111);
-        }
-        .step-current .dot {
-          border-color: var(--primary, #111111);
-          box-shadow: 0 0 0 3px
-            color-mix(in srgb, var(--primary, #111111) 20%, transparent);
-        }
-        .step-label {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .step-current .step-label {
-          color: var(--foreground, #111111);
+          --pretui-step-current-marker-fg: var(--foreground);
+          --pretui-step-current-bar: var(--primary-ink);
+          --pretui-step-complete-marker-fg: var(--success-ink);
+          text-transform: capitalize;
         }
         .doc-meta {
           display: flex;
@@ -590,97 +564,65 @@ export class Order extends CardDef {
         }
         .label {
           display: block;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           margin-bottom: 0.375rem;
         }
+        /* Pret UI KeyValue at the document's text size */
         .facts {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto auto;
-          gap: 0.375rem 1rem;
-          font-size: 0.875rem;
-          text-align: right;
-          align-items: center;
-        }
-        .facts dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        .facts dd {
-          margin: 0;
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1rem;
           font-weight: 500;
         }
-        .table-scroll {
-          overflow-x: auto;
+        .items {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
         }
-        table {
-          width: 100%;
-          border-collapse: collapse;
+        .lines {
           font-size: 0.875rem;
         }
-        th {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground, #6b7280);
-          padding: 0 0.5rem 0.5rem;
-          border-bottom: 1px solid var(--border, #e5e7eb);
-        }
-        td {
-          padding: 0.625rem 0.5rem;
-          border-bottom: 1px solid var(--border, #e5e7eb);
-          vertical-align: baseline;
-        }
-        .t-desc {
-          text-align: left;
-        }
-        .t-num {
+        .lines :deep(.t-num) {
           text-align: right;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
-        .t-strong {
+        .lines :deep(.t-strong) {
           font-weight: 600;
         }
-        tbody tr:last-child td {
-          border-bottom: none;
+        /* Pret UI KeyValue for the totals, right-aligned under the lines with
+           the grand total set heavier above a rule. */
+        .totals {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.5rem;
+          justify-content: end;
+          font-variant-numeric: tabular-nums;
         }
-        tfoot td {
-          border-bottom: none;
-          border-top: 2px solid var(--foreground, #111111);
-          padding-top: 0.75rem;
-          font-weight: 700;
-        }
-        .t-total {
-          font-size: 1.125rem;
-        }
-        .sub-row td {
-          border-top: none;
-          padding-top: 0.25rem;
+        .totals :deep(dd) {
+          justify-content: flex-end;
           font-weight: 500;
         }
-        tfoot .sub-row:first-child td {
-          border-top: 2px solid var(--foreground, #111111);
-          padding-top: 0.75rem;
-        }
-        .empty {
-          margin: 0;
-          padding: 1.5rem;
-          text-align: center;
-          border: 1px dashed var(--border, #e5e7eb);
-          border-radius: 0.5rem;
-          color: var(--muted-foreground, #6b7280);
-          font-size: 0.8125rem;
+        .totals :deep(dt:last-of-type),
+        .totals :deep(dd:last-of-type) {
+          padding-top: 0.5rem;
+          border-top: 0.125rem solid var(--foreground);
+          color: var(--foreground);
+          font-size: 1.125rem;
+          font-weight: 700;
         }
         .ship {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
           padding: 1rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
       </style>
     </template>

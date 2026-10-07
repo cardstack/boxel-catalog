@@ -18,8 +18,15 @@ import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
 import { VendorQuote } from './vendor-quote';
 import { PurchaseRequisition } from './purchase-requisition';
 import { on } from '@ember/modifier';
-import { Button, FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
@@ -167,12 +174,12 @@ class RfqEdit extends Component<typeof Rfq> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background: var(--background);
+        color: var(--foreground);
         /* the procurement family's brand ink, declared ONCE — a linked
            Theme overrides via --procurement-ink */
-        --rq-ink: var(--procurement-ink, #27306b);
-        --rq-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+        --rq-ink: var(--procurement-ink, var(--primary-ink));
+        --rq-ink-fg: var(--procurement-ink-fg, var(--card));
       }
       .edit-body {
         display: grid;
@@ -193,31 +200,34 @@ class RfqEdit extends Component<typeof Rfq> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
         outline-color: var(--rq-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--rq-ink) 12%, transparent);
       }
       .sect.lines {
-        border-left: 3px solid var(--rq-ink);
+        border-left: 0.1875rem solid var(--rq-ink);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -226,6 +236,7 @@ class RfqEdit extends Component<typeof Rfq> {
       .sect-hint {
         text-transform: none;
         letter-spacing: normal;
+        font-family: var(--font-sans);
         font-size: 0.75rem;
         font-weight: 400;
         font-style: italic;
@@ -388,8 +399,9 @@ class RfqIsolated extends Component<typeof Rfq> {
           />
           {{#if this.isDraft}}
             <Button
-              @kind='primary'
-              @size='small'
+              class='send'
+              @variant='primary'
+              @size='s'
               @disabled={{this.awardBusy}}
               {{on 'click' this.send}}
             >Send RFQ</Button>
@@ -398,10 +410,14 @@ class RfqIsolated extends Component<typeof Rfq> {
       </header>
 
       {{#if this.awardError}}
-        <div class='flash error'>{{this.awardError}}</div>
+        <Alert class='flash' @tone='danger' style={{ALERT_STYLE.danger}}>
+          {{this.awardError}}
+        </Alert>
       {{/if}}
       {{#if this.awardMessage}}
-        <div class='flash ok'>{{this.awardMessage}}</div>
+        <Alert class='flash' @tone='success' style={{ALERT_STYLE.success}}>
+          {{this.awardMessage}}
+        </Alert>
       {{/if}}
 
       <section class='panel board-panel'>
@@ -423,7 +439,12 @@ class RfqIsolated extends Component<typeof Rfq> {
             {{#each @fields.lineItems as |Line|}}
               <Line />
             {{else}}
-              <p class='empty'>No lines yet — copy them from the requisition.</p>
+              <EmptyState
+                style={{COMPACT_EMPTY_STYLE}}
+                @texture={{false}}
+                @title='No lines yet'
+                @message='Copy them from the requisition.'
+              />
             {{/each}}
           </div>
         </section>
@@ -433,7 +454,12 @@ class RfqIsolated extends Component<typeof Rfq> {
           {{#if @model.requisition}}
             <@fields.requisition @format='embedded' />
           {{else}}
-            <p class='empty'>No requisition linked (direct RFQ).</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='Direct RFQ'
+              @message='No requisition linked.'
+            />
           {{/if}}
           {{#if @model.invitedVendors.length}}
             <h2 class='mt'>Invited Vendors</h2>
@@ -449,32 +475,24 @@ class RfqIsolated extends Component<typeof Rfq> {
     <style scoped>
       .rfq {
         /* command-console adapter tokens */
-        --console-ink: var(
-          --procurement-ink,
-          var(--primary, var(--boxel-dark))
-        );
-        --console-ink-fg: var(
-          --procurement-ink-fg,
-          var(--primary-foreground, var(--boxel-light))
-        );
+        --console-ink: var(--procurement-ink, var(--primary-ink));
+        --console-ink-fg: var(--procurement-ink-fg, var(--card));
         container-type: inline-size;
         padding: 0 var(--boxel-sp-lg) var(--boxel-sp-lg);
         background:
           radial-gradient(
-            1200px 380px at 18% -8%,
+            75rem 23.75rem at 18% -8%,
             color-mix(in oklch, var(--console-ink) 7%, transparent),
             transparent 65%
           ),
-          var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, inherit);
+          var(--background);
       }
       .command-band {
         background: linear-gradient(
           120deg,
           color-mix(in oklch, var(--console-ink) 96%, black),
           var(--console-ink) 55%,
-          color-mix(in oklch, var(--console-ink) 82%, #4a5bc4)
+          color-mix(in oklch, var(--console-ink) 82%, var(--console-ink-fg))
         );
         color: var(--console-ink-fg);
         margin: 0 calc(-1 * var(--boxel-sp-lg)) var(--boxel-sp);
@@ -497,7 +515,7 @@ class RfqIsolated extends Component<typeof Rfq> {
             color-mix(in oklch, var(--console-ink-fg) 7%, transparent) 1px,
             transparent 1px
           );
-        background-size: 28px 28px;
+        background-size: 1.75rem 1.75rem;
         mask-image: linear-gradient(to bottom, black, transparent 90%);
         pointer-events: none;
       }
@@ -509,14 +527,16 @@ class RfqIsolated extends Component<typeof Rfq> {
       }
       .kicker {
         margin: 0;
-        font-size: 0.6875rem;
-        letter-spacing: 0.14em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: color-mix(in oklch, var(--console-ink-fg) 65%, transparent);
       }
       h1 {
         margin: var(--boxel-sp-5xs) 0;
-        font-family: var(--font-heading, inherit);
         font-size: 1.75rem;
         line-height: 1.15;
         letter-spacing: -0.015em;
@@ -532,43 +552,32 @@ class RfqIsolated extends Component<typeof Rfq> {
         align-items: flex-end;
         gap: var(--boxel-sp-xxs);
       }
+      /* the band is the console ink, so the primary action inverts onto it */
+      .send {
+        --pretui-button-bg: var(--console-ink-fg);
+        --pretui-button-fg: var(--console-ink);
+      }
       .flash {
-        border-radius: var(--radius, var(--boxel-border-radius));
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         margin-bottom: var(--boxel-sp);
-        font-size: 0.875rem;
-      }
-      .flash.error {
-        background: color-mix(
-          in oklch,
-          var(--state-red-fg, #b91c1c) 10%,
-          transparent
-        );
-        color: var(--state-red-fg, #b91c1c);
-      }
-      .flash.ok {
-        background: color-mix(
-          in oklch,
-          var(--state-green-fg, #15803d) 10%,
-          transparent
-        );
-        color: var(--state-green-fg, #15803d);
       }
       .panel {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
-        background: var(--card, transparent);
+        background: var(--card);
       }
       .board-panel {
         margin-bottom: var(--boxel-sp);
       }
       h2 {
         margin: 0 0 var(--boxel-sp-xs);
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       h2.mt {
         margin-top: var(--boxel-sp);
@@ -586,12 +595,6 @@ class RfqIsolated extends Component<typeof Rfq> {
         display: flex;
         flex-wrap: wrap;
         gap: var(--boxel-sp-xs);
-      }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: 0.875rem;
-        font-style: italic;
       }
       @media (prefers-reduced-motion: no-preference) {
         .command-band {
@@ -614,7 +617,7 @@ class RfqIsolated extends Component<typeof Rfq> {
       @keyframes rfq-band-in {
         from {
           opacity: 0;
-          transform: translateY(-8px);
+          transform: translateY(-0.5rem);
         }
         to {
           opacity: 1;
@@ -624,7 +627,7 @@ class RfqIsolated extends Component<typeof Rfq> {
       @keyframes rfq-rise {
         from {
           opacity: 0;
-          transform: translateY(12px);
+          transform: translateY(0.75rem);
         }
         to {
           opacity: 1;
@@ -700,7 +703,7 @@ export class Rfq extends CardDef {
         }
         .count {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -719,6 +722,9 @@ export class Rfq extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get statusHue() {
+      return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+    }
     get statusLabel() {
       return RFQ_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft';
     }
@@ -738,7 +744,11 @@ export class Rfq extends CardDef {
           lines{{#if this.deadlineLabel}}
             · quotes due
             {{this.deadlineLabel}}{{/if}}</span>
-        <span class='fit-status'>{{this.statusLabel}}</span>
+        <StatePill
+          class='fit-status'
+          @label={{this.statusLabel}}
+          @hue={{this.statusHue}}
+        />
       </div>
       <style scoped>
         .fit {
@@ -760,14 +770,11 @@ export class Rfq extends CardDef {
         }
         .fit-sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-status {
           margin-top: auto;
-          font-size: 0.6875rem;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          flex-shrink: 0;
         }
         @container fitted-card (height <= 65px) {
           .fit {

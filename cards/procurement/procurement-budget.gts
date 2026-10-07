@@ -7,13 +7,12 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 
-import {
-  BudgetUtilizationField,
-  UTILIZATION_BAND_COLORS,
-  type UtilizationBand,
-} from './budget-utilization-field';
+import { BudgetUtilizationField } from './budget-utilization-field';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Stat } from '@cardstack/pretui/components/stat';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { tracked } from '@glimmer/tracking';
@@ -96,11 +95,11 @@ class ProcurementBudgetEdit extends Component<typeof ProcurementBudget> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        /* family ink, declared ONCE */
-        --pb-ink: var(--procurement-ink, #27306b);
-        --pb-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+        background-color: var(--background);
+        color: var(--foreground);
+        /* family ink, declared ONCE; a linked Theme sets --procurement-ink */
+        --pb-ink: var(--procurement-ink, var(--primary-ink));
+        --pb-ink-fg: var(--procurement-ink-fg, var(--card));
       }
       .edit-body {
         display: grid;
@@ -120,31 +119,34 @@ class ProcurementBudgetEdit extends Component<typeof ProcurementBudget> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
         outline-color: var(--pb-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--pb-ink) 12%, transparent);
       }
       .sect.ledger {
-        border-left: 3px solid var(--pb-ink);
+        border-left: 0.1875rem solid var(--pb-ink);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -231,11 +233,6 @@ export class ProcurementBudget extends CardDef {
     get budgetLabel() {
       return formatMoney(this.args.model?.budgetAmount ?? 0, 'USD');
     }
-    get bandHue() {
-      let band = (this.args.model?.utilization?.band ??
-        'healthy') as UtilizationBand;
-      return UTILIZATION_BAND_COLORS[band] ? band : 'healthy';
-    }
     get overCommitted() {
       return (this.args.model?.utilization?.percent ?? 0) > 100;
     }
@@ -247,20 +244,23 @@ export class ProcurementBudget extends CardDef {
             <h1>{{@model.department}}</h1>
             <p class='sub'>{{@model.period}}</p>
           </div>
-          <div class='amount'>
-            <span class='amount-value'>{{this.budgetLabel}}</span>
-            <span class='amount-label'>period budget</span>
-          </div>
+          <Stat
+            class='amount'
+            @label='Period budget'
+            @value={{this.budgetLabel}}
+            @roll={{false}}
+          />
         </header>
 
         {{#if this.overCommitted}}
-          <div class='over-banner'>
-            <StatePill
-              @label='OVER BUDGET — commitments exceed the envelope'
-              @hue='red'
-              @emphatic={{true}}
-            />
-          </div>
+          <Alert
+            class='over-banner'
+            @tone='danger'
+            @title='Over budget'
+            style={{ALERT_STYLE.danger}}
+          >
+            <:default>Commitments exceed the envelope.</:default>
+          </Alert>
         {{/if}}
 
         <section class='panel'>
@@ -271,65 +271,53 @@ export class ProcurementBudget extends CardDef {
         .budget {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         .head {
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
           gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           padding-bottom: var(--boxel-sp);
           margin-bottom: var(--boxel-sp);
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
-          letter-spacing: 0.12em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-family: var(--font-heading, inherit);
           font-size: 1.75rem;
           line-height: 1.15;
         }
         .sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .amount {
-          text-align: right;
-        }
-        .amount-value {
-          display: block;
-          font-size: 1.5rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        .amount-label {
-          font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          flex: none;
+          white-space: nowrap;
         }
         .over-banner {
           margin-bottom: var(--boxel-sp);
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp);
-          background: var(--card, transparent);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         @container (max-width: 480px) {
           .head {
             flex-direction: column;
             align-items: flex-start;
-          }
-          .amount {
-            text-align: left;
           }
         }
       </style>
@@ -337,8 +325,8 @@ export class ProcurementBudget extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get budgetLabel() {
-      return formatMoney(this.args.model?.budgetAmount ?? 0, 'USD');
+    get budgetAmount() {
+      return this.args.model?.budgetAmount ?? 0;
     }
     <template>
       <div class='row'>
@@ -346,7 +334,7 @@ export class ProcurementBudget extends CardDef {
           <span class='name'>{{@model.department}}</span>
           <span class='period'>{{@model.period}}
             ·
-            {{this.budgetLabel}}</span>
+            <Money @amount={{this.budgetAmount}} @code='USD' /></span>
         </div>
         <div class='bar-cell'>
           <@fields.utilization @format='embedded' />
@@ -363,7 +351,7 @@ export class ProcurementBudget extends CardDef {
         .who {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .name {
@@ -372,7 +360,7 @@ export class ProcurementBudget extends CardDef {
         }
         .period {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .bar-cell {
@@ -403,8 +391,8 @@ export class ProcurementBudget extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get budgetLabel() {
-      return formatMoney(this.args.model?.budgetAmount ?? 0, 'USD');
+    get budgetAmount() {
+      return this.args.model?.budgetAmount ?? 0;
     }
     <template>
       <div class='fit'>
@@ -412,7 +400,9 @@ export class ProcurementBudget extends CardDef {
           <span class='fit-name'>{{@model.department}}</span>
           <@fields.utilization @format='atom' />
         </div>
-        <span class='fit-sub'>{{@model.period}} · {{this.budgetLabel}}</span>
+        <span class='fit-sub'>{{@model.period}}
+          ·
+          <Money @amount={{this.budgetAmount}} @code='USD' /></span>
         <div class='fit-bar'>
           <@fields.utilization @format='embedded' />
         </div>
@@ -441,7 +431,7 @@ export class ProcurementBudget extends CardDef {
         }
         .fit-sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           overflow: hidden;
           text-overflow: ellipsis;

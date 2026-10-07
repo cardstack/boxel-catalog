@@ -67,12 +67,12 @@ export class PaymentTermsField extends FieldDef {
           font-variant-numeric: tabular-nums;
         }
         .method {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .notes {
           flex-basis: 100%;
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

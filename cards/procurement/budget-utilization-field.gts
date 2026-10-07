@@ -6,12 +6,18 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
+import { htmlSafe } from '@ember/template';
 
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Money } from '@cardstack/catalog/cards/crm/money';
 import {
+  StatePill,
   stateColor,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { nameProgress } from '@cardstack/catalog/components/pretui-helpers';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 
 // Commitment-accounting utilization: money splits into `actual` (received)
 // and `committed` (approved POs not yet received). Utilization counts BOTH —
@@ -30,6 +36,14 @@ export const UTILIZATION_BAND_COLORS: Record<UtilizationBand, StateColor> = {
   warning: stateColor('amber'),
   critical: stateColor('red'),
   over: stateColor('red'),
+};
+
+/** The StatePill hue for each band; the same table as `UTILIZATION_BAND_COLORS`. */
+export const UTILIZATION_BAND_HUES: Record<UtilizationBand, Hue> = {
+  healthy: 'green',
+  warning: 'amber',
+  critical: 'red',
+  over: 'red',
 };
 
 export function utilizationBandOf(percent: number): UtilizationBand {
@@ -91,50 +105,69 @@ export class BudgetUtilizationField extends FieldDef {
       let pct = ((this.args.model?.committed ?? 0) / budget) * 100;
       return Math.min(100 - this.actualPct, pct);
     }
-    get bandColors() {
-      return UTILIZATION_BAND_COLORS[
-        (this.args.model?.band as UtilizationBand) ?? 'healthy'
-      ];
+    get bandHue(): Hue {
+      return (
+        UTILIZATION_BAND_HUES[this.args.model?.band as UtilizationBand] ??
+        'green'
+      );
     }
     get bandLabel() {
       switch (this.args.model?.band) {
         case 'over':
-          return 'OVER BUDGET';
+          return 'Over budget';
         case 'critical':
-          return 'CRITICAL';
+          return 'Critical';
         case 'warning':
-          return 'WARNING';
+          return 'Warning';
         default:
-          return 'HEALTHY';
+          return 'Healthy';
       }
     }
-    get actualLabel() {
-      return formatMoney(this.args.model?.actual ?? 0, 'USD');
+    // Absent figures read as zero, as the ledger does.
+    get actualAmount() {
+      return this.args.model?.actual ?? 0;
     }
-    get committedLabel() {
-      return formatMoney(this.args.model?.committed ?? 0, 'USD');
+    get committedAmount() {
+      return this.args.model?.committed ?? 0;
     }
-    get availableLabel() {
-      return formatMoney(this.args.model?.available ?? 0, 'USD');
+    get availableAmount() {
+      return this.args.model?.available ?? 0;
+    }
+    get usedPct() {
+      return this.actualPct + this.committedPct;
+    }
+    // The share of the filled length that is actual spend; the rest of the
+    // fill is committed and drawn hatched.
+    get actualShare() {
+      return this.usedPct > 0 ? (this.actualPct / this.usedPct) * 100 : 0;
     }
     get barStyle() {
-      return `--actual-w: ${this.actualPct}%; --committed-w: ${this.committedPct}%;`;
+      return htmlSafe(`--actual-share: ${this.actualShare}%`);
+    }
+    get valueText() {
+      return `${this.args.model?.percent ?? 0}% used: ${formatMoney(this.actualAmount, 'USD')} actual, ${formatMoney(this.committedAmount, 'USD')} committed`;
     }
     <template>
       <div class='util'>
         <div class='meta'>
           <span class='pct band-{{@model.band}}'>{{@model.percent}}%</span>
-          <span class='band band-{{@model.band}}'>{{this.bandLabel}}</span>
+          <StatePill @label={{this.bandLabel}} @hue={{this.bandHue}} />
         </div>
-        <div class='bar' style={{this.barStyle}}>
-          <div class='seg actual'></div>
-          <div class='seg committed'></div>
-        </div>
+        <ProgressBar
+          class='bar'
+          style={{this.barStyle}}
+          @value={{this.usedPct}}
+          @max={{100}}
+          @steps={{false}}
+          {{nameProgress 'Budget utilization' this.valueText}}
+        />
         <div class='legend'>
-          <span><i class='swatch solid'></i>actual {{this.actualLabel}}</span>
+          <span><i class='swatch solid'></i>actual
+            <Money @amount={{this.actualAmount}} @code='USD' /></span>
           <span><i class='swatch hatch'></i>committed
-            {{this.committedLabel}}</span>
-          <span class='avail'>available {{this.availableLabel}}</span>
+            <Money @amount={{this.committedAmount}} @code='USD' /></span>
+          <span class='avail'>available
+            <Money @amount={{this.availableAmount}} @code='USD' /></span>
         </div>
       </div>
       <style scoped>
@@ -146,80 +179,82 @@ export class BudgetUtilizationField extends FieldDef {
         .meta {
           display: flex;
           justify-content: space-between;
-          align-items: baseline;
+          align-items: center;
         }
         .pct {
           font-weight: 700;
           font-size: 1rem;
           font-variant-numeric: tabular-nums;
         }
-        .band {
-          font-size: 0.6875rem;
-          letter-spacing: 0.1em;
-          font-weight: 600;
-        }
         .band-healthy {
-          color: var(--state-green-fg, #15803d);
+          color: var(--success-ink);
         }
         .band-warning {
-          color: var(--state-amber-fg, #b45309);
+          color: var(--warning-ink);
         }
         .band-critical,
         .band-over {
-          color: var(--state-red-fg, #b91c1c);
+          color: var(--destructive-ink);
         }
+        /* Pret UI ProgressBar fills from --primary, which measures 1.20:1
+           against the track on a light page, so the bar takes the ink token.
+           Its fill is the used share (actual + committed); a second
+           background splits it so actual stays solid and committed reads
+           hatched. The track is raised from 4px so the hatch stays legible. */
         .bar {
-          display: flex;
-          height: 10px;
-          border-radius: 5px;
-          overflow: hidden;
-          background: var(--muted, var(--boxel-100));
+          --primary: var(--primary-ink);
         }
-        .seg.actual {
-          width: var(--actual-w, 0%);
-          background: var(--primary, var(--boxel-highlight));
+        .bar :deep(.pretui-progress) {
+          height: 0.5rem;
+          border-radius: 0.25rem;
         }
-        .seg.committed {
-          width: var(--committed-w, 0%);
-          background: repeating-linear-gradient(
-            45deg,
-            var(--primary, var(--boxel-highlight)),
-            var(--primary, var(--boxel-highlight)) 3px,
-            transparent 3px,
-            transparent 6px
-          );
-          opacity: 0.75;
+        .bar :deep(.pretui-progress-fill) {
+          border-radius: 0;
+          background-color: transparent;
+          background-image:
+            linear-gradient(
+              to right,
+              var(--primary) var(--actual-share),
+              transparent var(--actual-share)
+            ),
+            repeating-linear-gradient(
+              45deg,
+              var(--primary),
+              var(--primary) 0.1875rem,
+              transparent 0.1875rem,
+              transparent 0.375rem
+            );
         }
         .legend {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .legend .avail {
           margin-left: auto;
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .swatch {
           display: inline-block;
-          width: 10px;
-          height: 10px;
-          border-radius: 2px;
-          margin-right: 4px;
-          vertical-align: -1px;
+          width: 0.625rem;
+          height: 0.625rem;
+          border-radius: 0.125rem;
+          margin-right: 0.25rem;
+          vertical-align: -0.0625rem;
         }
         .swatch.solid {
-          background: var(--primary, var(--boxel-highlight));
+          background-color: var(--primary-ink);
         }
         .swatch.hatch {
-          background: repeating-linear-gradient(
+          background-image: repeating-linear-gradient(
             45deg,
-            var(--primary, var(--boxel-highlight)),
-            var(--primary, var(--boxel-highlight)) 2px,
-            transparent 2px,
-            transparent 4px
+            var(--primary-ink),
+            var(--primary-ink) 0.125rem,
+            transparent 0.125rem,
+            transparent 0.25rem
           );
         }
       </style>
@@ -236,14 +271,14 @@ export class BudgetUtilizationField extends FieldDef {
           font-size: 0.8125rem;
         }
         .band-healthy {
-          color: var(--state-green-fg, #15803d);
+          color: var(--success-ink);
         }
         .band-warning {
-          color: var(--state-amber-fg, #b45309);
+          color: var(--warning-ink);
         }
         .band-critical,
         .band-over {
-          color: var(--state-red-fg, #b91c1c);
+          color: var(--destructive-ink);
         }
       </style>
     </template>

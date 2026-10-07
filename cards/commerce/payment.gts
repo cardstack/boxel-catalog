@@ -13,8 +13,17 @@ import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { Token } from '@cardstack/pretui/components/token';
 import { Invoice } from './invoice';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Payment Method lives in payment-method-field.gts (Payment Terms reuses it as
 // the preferred rail) and is re-exported here; defining it in this module put
@@ -91,11 +100,11 @@ class PaymentEdit extends Component<typeof Payment> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
         /* family ink, declared ONCE */
-        --pay-ink: var(--procurement-ink, #27306b);
-        --pay-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+        --pay-ink: var(--procurement-ink, var(--primary-ink));
+        --pay-ink-fg: var(--procurement-ink-fg, var(--card));
       }
       .edit-body {
         display: grid;
@@ -115,31 +124,34 @@ class PaymentEdit extends Component<typeof Payment> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
         outline-color: var(--pay-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--pay-ink) 12%, transparent);
       }
       .sect.details {
-        border-left: 3px solid var(--pay-ink);
+        border-left: 0.1875rem solid var(--pay-ink);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -202,7 +214,9 @@ export class Payment extends CardDef {
       <div class='payment'>
         <CreditCardIcon class='icon' />
         <span class='title'>{{@model.cardTitle}}</span>
-        <span class='method'>{{@model.method}}</span>
+        {{#if @model.method}}
+          <StatePill class='method' @label={{@model.method}} />
+        {{/if}}
         <span class='when'><@fields.paidAt /></span>
       </div>
       <style scoped>
@@ -214,27 +228,20 @@ export class Payment extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .title {
           font-weight: 600;
         }
         .method {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          flex-shrink: 0;
         }
         .when {
           margin-left: auto;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           font-size: 0.75rem;
         }
       </style>
@@ -254,12 +261,12 @@ export class Payment extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .pa-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .pa-name {
@@ -272,29 +279,29 @@ export class Payment extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Payment> {
-    get amount() {
-      return (
-        formatMoney(
-          this.args.model?.amount?.amount,
-          this.args.model?.amount?.currency?.code,
-        ) || '—'
-      );
-    }
     <template>
       <div class='fitted'>
         <div class='fmt badge'>
           <CreditCardIcon class='doc-icon' />
-          <span class='figure'>{{this.amount}}</span>
+          <Money
+            class='figure'
+            @amount={{@model.amount.amount}}
+            @code={{@model.amount.currency.code}}
+          />
           {{#if @model.method}}
-            <span class='chip'>{{@model.method}}</span>
+            <StatePill class='chip' @label={{@model.method}} />
           {{/if}}
         </div>
         <div class='fmt strip'>
           <CreditCardIcon class='doc-icon' />
           <div class='info'>
-            <span class='figure'>{{this.amount}}</span>
+            <Money
+              class='figure'
+              @amount={{@model.amount.amount}}
+              @code={{@model.amount.currency.code}}
+            />
             {{#if @model.method}}
-              <span class='chip'>{{@model.method}}</span>
+              <StatePill class='chip' @label={{@model.method}} />
             {{/if}}
           </div>
           {{#if @model.paidAt}}
@@ -303,9 +310,13 @@ export class Payment extends CardDef {
         </div>
         <div class='fmt tile'>
           <CreditCardIcon class='doc-icon' />
-          <span class='figure figure-lg'>{{this.amount}}</span>
+          <Money
+            class='figure figure-lg'
+            @amount={{@model.amount.amount}}
+            @code={{@model.amount.currency.code}}
+          />
           {{#if @model.method}}
-            <span class='chip'>{{@model.method}}</span>
+            <StatePill class='chip' @label={{@model.method}} />
           {{/if}}
           {{#if @model.paidAt}}
             <span class='meta'><@fields.paidAt /></span>
@@ -315,9 +326,13 @@ export class Payment extends CardDef {
           <div class='col'>
             <div class='row'>
               <CreditCardIcon class='doc-icon' />
-              <span class='figure figure-lg'>{{this.amount}}</span>
+              <Money
+                class='figure figure-lg'
+                @amount={{@model.amount.amount}}
+                @code={{@model.amount.currency.code}}
+              />
               {{#if @model.method}}
-                <span class='chip'>{{@model.method}}</span>
+                <StatePill class='chip' @label={{@model.method}} />
               {{/if}}
             </div>
             {{#if @model.invoice.cardTitle}}
@@ -336,7 +351,7 @@ export class Payment extends CardDef {
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -346,9 +361,9 @@ export class Payment extends CardDef {
           overflow: hidden;
         }
         .doc-icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .figure {
@@ -361,19 +376,11 @@ export class Payment extends CardDef {
           font-size: 1.25rem;
         }
         .chip {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
+          flex-shrink: 0;
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -442,39 +449,44 @@ export class Payment extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof Payment> {
-    get amount() {
-      return (
-        formatMoney(
-          this.args.model?.amount?.amount,
-          this.args.model?.amount?.currency?.code,
-        ) || '\u2014'
-      );
+    get rows(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.paidAt) rows.push({ key: 'Paid at', value: 'paidAt' });
+      if (m?.reference) rows.push({ key: 'Reference', value: 'reference' });
+      if (m?.invoice) rows.push({ key: 'Applied to', value: 'invoice' });
+      return rows;
     }
     <template>
       <article class='receipt-wrap'>
         <div class='receipt'>
           <header class='r-head'>
             <p class='r-label'>Payment received</p>
-            <h1 class='r-amount'>{{this.amount}}</h1>
+            <h1 class='r-amount'>{{#if (hasNumber @model.amount.amount)}}<Money
+                  @amount={{@model.amount.amount}}
+                  @code={{@model.amount.currency.code}}
+                />{{else}}—{{/if}}</h1>
             {{#if @model.method}}
-              <span class='chip'>{{@model.method}}</span>
+              <StatePill @label={{@model.method}} />
             {{/if}}
           </header>
           <div class='tear' aria-hidden='true'></div>
-          <dl class='r-rows'>
-            {{#if @model.paidAt}}
-              <dt>Paid at</dt>
-              <dd><@fields.paidAt /></dd>
-            {{/if}}
-            {{#if @model.reference}}
-              <dt>Reference</dt>
-              <dd class='mono'>{{@model.reference}}</dd>
-            {{/if}}
-            {{#if @model.invoice}}
-              <dt>Applied to</dt>
-              <dd class='r-invoice'><@fields.invoice @format='atom' /></dd>
-            {{/if}}
-          </dl>
+          {{#if this.rows.length}}
+            <KeyValue class='r-rows' @items={{this.rows}}>
+              <:value as |row|>
+                {{#if (eq row.value 'paidAt')}}
+                  <@fields.paidAt />
+                {{else if (eq row.value 'reference')}}
+                  <Token
+                    @value={{@model.reference}}
+                    style={{ID_TOKEN_STYLE.sm}}
+                  />
+                {{else}}
+                  <@fields.invoice @format='atom' />
+                {{/if}}
+              </:value>
+            </KeyValue>
+          {{/if}}
         </div>
       </article>
       <style scoped>
@@ -486,10 +498,11 @@ export class Payment extends CardDef {
         .receipt {
           width: 100%;
           max-width: 24rem;
-          background: var(--card, #ffffff);
-          border: 1px solid var(--border, #e5e7eb);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
-          box-shadow: var(--shadow-md, 0 4px 14px rgba(0, 0, 0, 0.08));
+          box-shadow: var(--shadow-md);
           overflow: hidden;
         }
         .r-head {
@@ -502,31 +515,23 @@ export class Payment extends CardDef {
         }
         .r-label {
           margin: 0;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .r-amount {
           margin: 0;
           font-size: 2.25rem;
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
-          font-family: var(--font-heading, inherit);
-        }
-        .chip {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          font-family: var(--boxel-heading-font-family);
         }
         .tear {
-          border-top: 2px dashed var(--border, #e5e7eb);
+          border-top: 0.125rem dashed var(--border);
           margin: 0 1rem;
           position: relative;
         }
@@ -538,8 +543,8 @@ export class Payment extends CardDef {
           width: 1rem;
           height: 1rem;
           border-radius: 50%;
-          background: var(--background, #f4f4f4);
-          border: 1px solid var(--border, #e5e7eb);
+          background-color: var(--background);
+          border: 1px solid var(--border);
         }
         .tear::before {
           left: -1.5rem;
@@ -547,30 +552,19 @@ export class Payment extends CardDef {
         .tear::after {
           right: -1.5rem;
         }
+        /* Pret UI KeyValue at the receipt's text size and column gap, with
+           the values set against the receipt's right edge. */
         .r-rows {
-          margin: 0;
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
+          row-gap: 0.625rem;
           padding: 1.25rem 1.5rem 1.75rem;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.625rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
         }
-        .r-rows dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        .r-rows dd {
-          margin: 0;
-          text-align: right;
-          font-weight: 500;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: 0.8125rem;
-        }
-        .r-invoice {
-          display: flex;
+        .r-rows :deep(dd) {
           justify-content: flex-end;
+          min-width: 0;
+          font-weight: 500;
         }
       </style>
     </template>

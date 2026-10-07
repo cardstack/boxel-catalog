@@ -274,13 +274,13 @@ export class VarianceResolutionField extends FieldDef {
         }
         .res-line {
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .res-action {
           font-weight: 600;
         }
         .res-reason {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

@@ -27,10 +27,19 @@ import { Order } from './order';
 import { Subscription } from './subscription';
 import { Payment } from './payment';
 import {
-  formatMoney,
   lineTotal,
   sumLineItems,
 } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { Table } from '@cardstack/pretui/components/table';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { statusHue } from '@cardstack/catalog/fields/status/status';
 import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 // ---- AP (buy-side) leg.
 import { PurchaseOrder } from '../procurement/purchase-order';
@@ -55,6 +64,12 @@ function plainDate(value: Date | null | undefined): string {
 
 function isTerminal(status: string | null | undefined): boolean {
   return ['paid', 'void'].includes(status ?? '');
+}
+
+// The pill hue for what an invoice displays: the status field's own hue, and
+// red for the derived `overdue`, which is not one of the field's options.
+function displayHue(status: string | null | undefined): Hue {
+  return status === 'overdue' ? 'red' : statusHue(InvoiceStatusField, status);
 }
 
 // Overdue is not a state anyone sets — it is what being unpaid past the due
@@ -198,12 +213,12 @@ class InvoiceEdit extends Component<typeof Invoice> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
         /* family ink, declared ONCE — a linked Theme overrides via
            --procurement-ink */
-        --inv-ink: var(--procurement-ink, #27306b);
-        --inv-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+        --inv-ink: var(--procurement-ink, var(--primary-ink));
+        --inv-ink-fg: var(--procurement-ink-fg, var(--card));
       }
       .edit-body {
         display: grid;
@@ -224,31 +239,34 @@ class InvoiceEdit extends Component<typeof Invoice> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
         outline-color: var(--inv-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--inv-ink) 12%, transparent);
       }
       .sect.matching {
-        border-left: 3px solid var(--inv-ink);
+        border-left: 0.1875rem solid var(--inv-ink);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -265,7 +283,7 @@ class InvoiceEdit extends Component<typeof Invoice> {
         margin: 0;
         font-size: 0.75rem;
         font-style: italic;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .row {
         display: grid;
@@ -411,18 +429,25 @@ export class Invoice extends CardDef {
   });
 
   static embedded = class Embedded extends Component<typeof Invoice> {
-    get total() {
-      const { total, code } = invoiceAmounts(this.args.model as any);
-      return formatMoney(total, code);
+    get amounts() {
+      return invoiceAmounts(this.args.model as any);
     }
     <template>
       <div class='invoice-row'>
         <FileInvoiceIcon class='icon' />
         <span class='number'>{{@model.cardTitle}}</span>
-        <span
-          class='status status-{{@model.displayStatus}}'
-        >{{@model.displayStatus}}</span>
-        <span class='total'>{{this.total}}</span>
+        {{#if @model.displayStatus}}
+          <StatePill
+            @label={{@model.displayStatus}}
+            @hue={{displayHue @model.displayStatus}}
+            @dot={{true}}
+          />
+        {{/if}}
+        <Money
+          class='total'
+          @amount={{this.amounts.total}}
+          @code={{this.amounts.code}}
+        />
       </div>
       <style scoped>
         .invoice-row {
@@ -433,35 +458,13 @@ export class Invoice extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .number {
           font-weight: 600;
-        }
-        .status {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-        }
-        .status-paid {
-          background: var(--state-paid-bg, #d1fae5);
-          color: var(--state-paid-fg, #065f46);
-        }
-        .status-partial {
-          background: var(--state-partial-bg, #fef3c7);
-          color: var(--state-partial-fg, #92400e);
-        }
-        .status-overdue {
-          background: var(--state-overdue-bg, #fee2e2);
-          color: var(--state-overdue-fg, #991b1b);
         }
         .total {
           margin-left: auto;
@@ -485,12 +488,12 @@ export class Invoice extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .ia-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .ia-name {
@@ -503,9 +506,8 @@ export class Invoice extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Invoice> {
-    get total() {
-      const { total, code } = invoiceAmounts(this.args.model as any);
-      return formatMoney(total, code) || '—';
+    get amounts() {
+      return invoiceAmounts(this.args.model as any);
     }
     get itemCount() {
       return this.args.model?.lineItems?.length ?? 0;
@@ -519,9 +521,11 @@ export class Invoice extends CardDef {
           <FileInvoiceIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
           {{#if @model.displayStatus}}
-            <span
-              class='status status-{{@model.displayStatus}}'
-            >{{@model.displayStatus}}</span>
+            <StatePill
+              class='status'
+              @label={{@model.displayStatus}}
+              @hue={{displayHue @model.displayStatus}}
+            />
           {{/if}}
         </div>
         <div class='fmt strip'>
@@ -529,24 +533,36 @@ export class Invoice extends CardDef {
           <div class='info'>
             <span class='name'>{{@model.cardTitle}}</span>
             {{#if @model.displayStatus}}
-              <span
-                class='status status-{{@model.displayStatus}}'
-              >{{@model.displayStatus}}</span>
+              <StatePill
+                class='status'
+                @label={{@model.displayStatus}}
+                @hue={{displayHue @model.displayStatus}}
+              />
             {{/if}}
           </div>
-          <span class='figure'>{{this.total}}</span>
+          <Money
+            class='figure'
+            @amount={{this.amounts.total}}
+            @code={{this.amounts.code}}
+          />
         </div>
         <div class='fmt tile'>
           <div class='row'>
             <FileInvoiceIcon class='doc-icon' />
             {{#if @model.displayStatus}}
-              <span
-                class='status status-{{@model.displayStatus}}'
-              >{{@model.displayStatus}}</span>
+              <StatePill
+                class='status'
+                @label={{@model.displayStatus}}
+                @hue={{displayHue @model.displayStatus}}
+              />
             {{/if}}
           </div>
           <span class='name'>{{@model.cardTitle}}</span>
-          <span class='figure figure-lg'>{{this.total}}</span>
+          <Money
+            class='figure figure-lg'
+            @amount={{this.amounts.total}}
+            @code={{this.amounts.code}}
+          />
           {{#if @model.dueDate}}
             <span class='meta'>Due {{this.dueLabel}}</span>
           {{/if}}
@@ -557,9 +573,11 @@ export class Invoice extends CardDef {
               <FileInvoiceIcon class='doc-icon' />
               <span class='name name-lg'>{{@model.cardTitle}}</span>
               {{#if @model.displayStatus}}
-                <span
-                  class='status status-{{@model.displayStatus}}'
-                >{{@model.displayStatus}}</span>
+                <StatePill
+                  class='status'
+                  @label={{@model.displayStatus}}
+                  @hue={{displayHue @model.displayStatus}}
+                />
               {{/if}}
             </div>
             {{#if @model.account.name}}
@@ -570,14 +588,18 @@ export class Invoice extends CardDef {
                 · due
                 {{this.dueLabel}}{{/if}}</span>
           </div>
-          <span class='figure figure-lg'>{{this.total}}</span>
+          <Money
+            class='figure figure-lg'
+            @amount={{this.amounts.total}}
+            @code={{this.amounts.code}}
+          />
         </div>
       </div>
       <style scoped>
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -587,9 +609,9 @@ export class Invoice extends CardDef {
           overflow: hidden;
         }
         .doc-icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -614,34 +636,14 @@ export class Invoice extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           max-width: 100%;
         }
         .status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-        }
-        .status-paid {
-          background: var(--state-paid-bg, #d1fae5);
-          color: var(--state-paid-fg, #065f46);
-        }
-        .status-partial {
-          background: var(--state-partial-bg, #fef3c7);
-          color: var(--state-partial-fg, #92400e);
-        }
-        .status-overdue {
-          background: var(--state-overdue-bg, #fee2e2);
-          color: var(--state-overdue-fg, #991b1b);
+          flex-shrink: 0;
         }
         .row {
           display: flex;
@@ -718,18 +720,15 @@ export class Invoice extends CardDef {
     }
     get rows() {
       return (this.args.model?.lineItems ?? []).map((item) => ({
-        description: item?.description || '\u2014',
+        description: item?.description || '—',
         quantity: item?.quantity ?? 0,
-        unit: formatMoney(
-          item?.unitPrice?.amount,
-          item?.unitPrice?.currency?.code,
-        ),
-        total: formatMoney(lineTotal(item), item?.unitPrice?.currency?.code),
+        unit: item?.unitPrice?.amount ?? undefined,
+        total: lineTotal(item),
+        code: item?.unitPrice?.currency?.code ?? undefined,
       }));
     }
-    get total() {
-      const { total, code } = invoiceAmounts(this.args.model as any);
-      return formatMoney(total, code) || '\u2014';
+    get amounts() {
+      return invoiceAmounts(this.args.model as any);
     }
     get number() {
       return this.args.model?.invoiceNumber?.trim() || 'Draft';
@@ -743,14 +742,34 @@ export class Invoice extends CardDef {
       }
       return { sum, code };
     }
-    get amountPaid() {
-      let { sum, code } = this.paidSum;
-      return sum ? formatMoney(sum, code) : '';
-    }
     get balance() {
-      const { total, code } = invoiceAmounts(this.args.model as any);
-      let due = total - this.paidSum.sum;
-      return formatMoney(due > 0 ? due : 0, this.paidSum.code ?? code);
+      let due = this.amounts.total - this.paidSum.sum;
+      return due > 0 ? due : 0;
+    }
+    get balanceCode() {
+      return this.paidSum.code ?? this.amounts.code;
+    }
+    get facts(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [{ key: 'Issued', value: 'issueDate' }];
+      if (m?.sentDate) rows.push({ key: 'Sent', value: 'sentDate' });
+      rows.push({ key: 'Due', value: 'dueDate' });
+      if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
+      if (m?.order) rows.push({ key: 'Order', value: 'order' });
+      if (m?.subscription) {
+        rows.push({ key: 'Subscription', value: 'subscription' });
+      }
+      return rows;
+    }
+    // The totals block as KeyValue rows; each value names the figure the
+    // <:value> block renders.
+    get totalsFacts(): KeyValueItem[] {
+      let rows: KeyValueItem[] = [{ key: 'Total', value: 'total' }];
+      if (this.paidSum.sum) {
+        rows.push({ key: 'Paid', value: 'paid' });
+        rows.push({ key: 'Balance due', value: 'balance' });
+      }
+      return rows;
     }
     <template>
       <article class='invoice-doc'>
@@ -760,9 +779,12 @@ export class Invoice extends CardDef {
             <h1>{{this.number}}</h1>
           </div>
           {{#if @model.displayStatus}}
-            <span
-              class='status status-{{@model.displayStatus}}'
-            >{{@model.displayStatus}}</span>
+            <StatePill
+              class='status'
+              @label={{@model.displayStatus}}
+              @hue={{displayHue @model.displayStatus}}
+              @dot={{true}}
+            />
           {{/if}}
         </header>
 
@@ -771,76 +793,80 @@ export class Invoice extends CardDef {
             <span class='label'>Billed to</span>
             <@fields.account @format='embedded' />
           </div>
-          <dl class='dates'>
-            <dt>Issued</dt>
-            <dd><@fields.issueDate /></dd>
-            {{#if @model.sentDate}}
-              <dt>Sent</dt>
-              <dd><@fields.sentDate /></dd>
-            {{/if}}
-            <dt>Due</dt>
-            {{#if this.showDueness}}
-              <dd><@fields.dueDate /></dd>
-            {{else}}
-              <dd>{{this.dueLabel}}</dd>
-            {{/if}}
-            {{#if @model.owner}}
-              <dt>Owner</dt>
-              <dd><@fields.owner @format='atom' /></dd>
-            {{/if}}
-            {{#if @model.order}}
-              <dt>Order</dt>
-              <dd><@fields.order @format='atom' /></dd>
-            {{/if}}
-            {{#if @model.subscription}}
-              <dt>Subscription</dt>
-              <dd><@fields.subscription @format='atom' /></dd>
-            {{/if}}
-          </dl>
+          <KeyValue class='dates' @items={{this.facts}}>
+            <:value as |row|>
+              {{#if (eq row.value 'issueDate')}}
+                <@fields.issueDate />
+              {{else if (eq row.value 'sentDate')}}
+                <@fields.sentDate />
+              {{else if (eq row.value 'dueDate')}}
+                {{#if this.showDueness}}
+                  <@fields.dueDate />
+                {{else}}
+                  {{this.dueLabel}}
+                {{/if}}
+              {{else if (eq row.value 'owner')}}
+                <@fields.owner @format='atom' />
+              {{else if (eq row.value 'order')}}
+                <@fields.order @format='atom' />
+              {{else}}
+                <@fields.subscription @format='atom' />
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
 
         <section class='items'>
           {{#if this.rows.length}}
-            <div class='table-scroll'>
-              <table>
-                <thead>
+            <Table class='lines' @label='Line items'>
+              <:head>
+                <tr>
+                  <th scope='col'>Description</th>
+                  <th scope='col' class='t-num'>Qty</th>
+                  <th scope='col' class='t-num'>Unit</th>
+                  <th scope='col' class='t-num'>Amount</th>
+                </tr>
+              </:head>
+              <:body>
+                {{#each this.rows as |row|}}
                   <tr>
-                    <th class='t-desc'>Description</th>
-                    <th class='t-num'>Qty</th>
-                    <th class='t-num'>Unit</th>
-                    <th class='t-num'>Amount</th>
+                    <td>{{row.description}}</td>
+                    <td class='t-num'>{{row.quantity}}</td>
+                    <td class='t-num'><Money
+                        @amount={{row.unit}}
+                        @code={{row.code}}
+                      /></td>
+                    <td class='t-num t-strong'><Money
+                        @amount={{row.total}}
+                        @code={{row.code}}
+                      /></td>
                   </tr>
-                </thead>
-                <tbody>
-                  {{#each this.rows as |row|}}
-                    <tr>
-                      <td class='t-desc'>{{row.description}}</td>
-                      <td class='t-num'>{{row.quantity}}</td>
-                      <td class='t-num'>{{row.unit}}</td>
-                      <td class='t-num t-strong'>{{row.total}}</td>
-                    </tr>
-                  {{/each}}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td class='t-desc' colspan='3'>Total</td>
-                    <td class='t-num t-total'>{{this.total}}</td>
-                  </tr>
-                  {{#if this.amountPaid}}
-                    <tr class='sub-row'>
-                      <td class='t-desc' colspan='3'>Paid</td>
-                      <td class='t-num'>{{this.amountPaid}}</td>
-                    </tr>
-                    <tr class='sub-row'>
-                      <td class='t-desc' colspan='3'>Balance due</td>
-                      <td class='t-num t-strong'>{{this.balance}}</td>
-                    </tr>
-                  {{/if}}
-                </tfoot>
-              </table>
-            </div>
+                {{/each}}
+              </:body>
+            </Table>
+            <KeyValue class='totals' @items={{this.totalsFacts}}>
+              <:value as |row|>
+                {{#if (eq row.value 'total')}}
+                  <Money
+                    @amount={{this.amounts.total}}
+                    @code={{this.amounts.code}}
+                  />
+                {{else if (eq row.value 'paid')}}
+                  <Money
+                    @amount={{this.paidSum.sum}}
+                    @code={{this.paidSum.code}}
+                  />
+                {{else}}
+                  <Money @amount={{this.balance}} @code={{this.balanceCode}} />
+                {{/if}}
+              </:value>
+            </KeyValue>
           {{else}}
-            <p class='empty'>No line items yet</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='No line items yet'
+            />
           {{/if}}
         </section>
 
@@ -873,45 +899,27 @@ export class Invoice extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1rem;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
           font-size: 1.75rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .status {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          flex-shrink: 0;
           margin-bottom: 0.25rem;
-        }
-        .status-paid {
-          background: var(--state-paid-bg, #d1fae5);
-          color: var(--state-paid-fg, #065f46);
-        }
-        .status-partial {
-          background: var(--state-partial-bg, #fef3c7);
-          color: var(--state-partial-fg, #92400e);
-        }
-        .status-overdue {
-          background: var(--state-overdue-bg, #fee2e2);
-          color: var(--state-overdue-fg, #991b1b);
         }
         .doc-meta {
           display: flex;
@@ -927,89 +935,61 @@ export class Invoice extends CardDef {
         }
         .label {
           display: block;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           margin-bottom: 0.375rem;
         }
+        /* Pret UI KeyValue at the document's text size */
         .dates {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto auto;
-          gap: 0.375rem 1rem;
-          font-size: 0.875rem;
-          text-align: right;
-        }
-        .dates dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        .dates dd {
-          margin: 0;
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1rem;
           font-weight: 500;
         }
-        .table-scroll {
-          overflow-x: auto;
+        .items {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
         }
-        table {
-          width: 100%;
-          border-collapse: collapse;
+        .lines {
           font-size: 0.875rem;
         }
-        th {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground, #6b7280);
-          padding: 0 0.5rem 0.5rem;
-          border-bottom: 1px solid var(--border, #e5e7eb);
-        }
-        td {
-          padding: 0.625rem 0.5rem;
-          border-bottom: 1px solid var(--border, #e5e7eb);
-          vertical-align: baseline;
-        }
-        .t-desc {
-          text-align: left;
-        }
-        .t-num {
+        .lines :deep(.t-num) {
           text-align: right;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
-        .t-strong {
+        .lines :deep(.t-strong) {
           font-weight: 600;
         }
-        tbody tr:last-child td {
-          border-bottom: none;
+        /* Pret UI KeyValue for the totals, right-aligned under the lines with
+           the grand total set heavier above a rule. */
+        .totals {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.5rem;
+          justify-content: end;
+          font-variant-numeric: tabular-nums;
         }
-        tfoot td {
-          border-bottom: none;
-          border-top: 2px solid var(--foreground, #111111);
-          padding-top: 0.75rem;
-          font-weight: 700;
-        }
-        .t-total {
-          font-size: 1.125rem;
-        }
-        .sub-row td {
-          border-top: none;
-          padding-top: 0.25rem;
+        .totals :deep(dd) {
+          justify-content: flex-end;
           font-weight: 500;
         }
-        .payments .label {
-          margin-bottom: 0.375rem;
+        .totals :deep(dt:first-of-type),
+        .totals :deep(dd:first-of-type) {
+          padding-top: 0.5rem;
+          border-top: 0.125rem solid var(--foreground);
+          color: var(--foreground);
+          font-size: 1.125rem;
+          font-weight: 700;
         }
-        .empty {
-          margin: 0;
-          padding: 1.5rem;
-          text-align: center;
-          border: 1px dashed var(--border, #e5e7eb);
-          border-radius: 0.5rem;
-          color: var(--muted-foreground, #6b7280);
-          font-size: 0.8125rem;
+        .totals :deep(dd:nth-of-type(3)) {
+          font-weight: 600;
         }
       </style>
     </template>

@@ -7,7 +7,7 @@ import {
   NumberField,
 } from '@cardstack/base/card-api';
 import { TaxJurisdiction } from '@cardstack/catalog/cards/commerce/tax-jurisdiction';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Money } from '@cardstack/catalog/cards/crm/money';
 
 // Tax Breakdown — a compound field capturing the taxable amount, the tax
 // amount, and the rate ACTUALLY APPLIED at calculation time.
@@ -28,20 +28,17 @@ export class TaxBreakdownField extends FieldDef {
   @field rateApplied = contains(NumberField);
 
   static embedded = class Embedded extends Component<typeof TaxBreakdownField> {
-    get taxDisplay() {
-      return formatMoney(this.args.model?.taxAmount, undefined);
-    }
     <template>
       {{#if @model.taxAmount}}
         <span class='tax-breakdown'>
           Tax ({{@model.rateApplied}}%):
-          {{this.taxDisplay}}
+          <Money @amount={{@model.taxAmount}} />
         </span>
       {{/if}}
       <style scoped>
         .tax-breakdown {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

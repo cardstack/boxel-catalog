@@ -15,11 +15,15 @@ import { FieldContainer } from '@cardstack/boxel-ui/components';
 
 import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
 import { ProcurementBudget } from './procurement-budget';
-import {
-  formatMoney,
-  sumLineItems,
-} from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { sumLineItems } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Money } from '@cardstack/catalog/cards/crm/money';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
 import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import {
   stateColor,
@@ -153,12 +157,12 @@ class PurchaseRequisitionEdit extends Component<typeof PurchaseRequisition> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background: var(--background);
+        color: var(--foreground);
         /* the procurement family's brand ink, declared ONCE — a linked
            Theme overrides via --procurement-ink */
-        --pr-ink: var(--procurement-ink, #27306b);
-        --pr-ink-fg: var(--procurement-ink-fg, var(--boxel-light));
+        --pr-ink: var(--procurement-ink, var(--primary-ink));
+        --pr-ink-fg: var(--procurement-ink-fg, var(--card));
       }
       .edit-body {
         display: grid;
@@ -179,31 +183,34 @@ class PurchaseRequisitionEdit extends Component<typeof PurchaseRequisition> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
         outline-color: var(--pr-ink);
-        box-shadow: 0 0 0 4px
+        box-shadow: 0 0 0 0.25rem
           color-mix(in oklch, var(--pr-ink) 12%, transparent);
       }
       .sect.items {
-        border-left: 3px solid var(--pr-ink);
+        border-left: 0.1875rem solid var(--pr-ink);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -212,6 +219,7 @@ class PurchaseRequisitionEdit extends Component<typeof PurchaseRequisition> {
       .sect-hint {
         text-transform: none;
         letter-spacing: normal;
+        font-family: var(--font-sans);
         font-size: 0.75rem;
         font-weight: 400;
         font-style: italic;
@@ -287,8 +295,11 @@ export class PurchaseRequisition extends CardDef {
         REQUISITION_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft'
       );
     }
-    get totalLabel() {
-      return formatMoney(this.args.model?.estimatedTotal ?? 0, 'USD');
+    get total() {
+      return this.args.model?.estimatedTotal ?? 0;
+    }
+    get timeline(): KeyValueItem[] {
+      return [{ key: 'Needed by', value: this.neededByLabel }];
     }
     get neededByLabel() {
       let d = this.args.model?.neededBy;
@@ -314,7 +325,7 @@ export class PurchaseRequisition extends CardDef {
               @hue={{this.statusHue}}
               @emphatic={{true}}
             />
-            <span class='total'>{{this.totalLabel}}</span>
+            <Money class='total' @amount={{this.total}} @code='USD' />
             <span class='total-label'>estimated</span>
           </div>
         </header>
@@ -326,16 +337,18 @@ export class PurchaseRequisition extends CardDef {
               {{#each @fields.lineItems as |Line|}}
                 <Line />
               {{else}}
-                <p class='empty'>No items added yet.</p>
+                <EmptyState
+                  style={{COMPACT_EMPTY_STYLE}}
+                  @texture={{false}}
+                  @title='No items added yet'
+                />
               {{/each}}
             </div>
           </section>
 
           <section class='panel'>
             <h2>Timeline</h2>
-            <dl>
-              <div><dt>Needed by</dt><dd>{{this.neededByLabel}}</dd></div>
-            </dl>
+            <KeyValue class='facts' @items={{this.timeline}} />
           </section>
 
           <section class='panel'>
@@ -343,7 +356,11 @@ export class PurchaseRequisition extends CardDef {
             {{#if @model.budget}}
               <@fields.budget @format='atom' />
             {{else}}
-              <p class='empty'>No budget linked.</p>
+              <EmptyState
+                style={{COMPACT_EMPTY_STYLE}}
+                @texture={{false}}
+                @title='No budget linked'
+              />
             {{/if}}
           </section>
 
@@ -359,35 +376,34 @@ export class PurchaseRequisition extends CardDef {
         .pr {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         .head {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
           gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           padding-bottom: var(--boxel-sp);
           margin-bottom: var(--boxel-sp-lg);
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
-          letter-spacing: 0.12em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-family: var(--font-heading, inherit);
           font-size: 1.5rem;
           line-height: 1.2;
         }
         .sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .head-right {
           display: flex;
@@ -401,10 +417,13 @@ export class PurchaseRequisition extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .total-label {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.08em;
+          color: var(--muted-foreground);
         }
         .grid {
           display: grid;
@@ -412,46 +431,32 @@ export class PurchaseRequisition extends CardDef {
           gap: var(--boxel-sp);
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp);
-          background: var(--card, transparent);
+          background: var(--card);
         }
         .panel.span {
           grid-column: 1 / -1;
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-        }
-        dl > div {
-          display: grid;
-          grid-template-columns: 7rem 1fr;
-          gap: var(--boxel-sp-xs);
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: 0.8125rem;
-        }
-        dd {
-          margin: 0;
-          font-size: 0.875rem;
+        /* Pret UI KeyValue at the panel's key and value sizes */
+        .facts {
+          --text-ui: 0.8125rem;
+          --text-ui-md: 0.875rem;
         }
         .lines {
           display: grid;
           gap: var(--boxel-sp-5xs);
-        }
-        .empty {
-          margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: 0.875rem;
-          font-style: italic;
         }
         .just {
           margin: 0;
@@ -482,8 +487,8 @@ export class PurchaseRequisition extends CardDef {
         REQUISITION_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft'
       );
     }
-    get totalLabel() {
-      return formatMoney(this.args.model?.estimatedTotal ?? 0, 'USD');
+    get total() {
+      return this.args.model?.estimatedTotal ?? 0;
     }
     <template>
       <div class='row'>
@@ -493,7 +498,7 @@ export class PurchaseRequisition extends CardDef {
             ·
             {{@model.department}}</span>
         </div>
-        <span class='amount'>{{this.totalLabel}}</span>
+        <Money class='amount' @amount={{this.total}} @code='USD' />
         <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
       </div>
       <style scoped>
@@ -507,7 +512,7 @@ export class PurchaseRequisition extends CardDef {
         .who {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .name {
@@ -519,7 +524,7 @@ export class PurchaseRequisition extends CardDef {
         }
         .meta {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .amount {
           font-weight: 600;
@@ -543,13 +548,16 @@ export class PurchaseRequisition extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get statusHue() {
+      return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+    }
     get statusLabel() {
       return (
         REQUISITION_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft'
       );
     }
-    get totalLabel() {
-      return formatMoney(this.args.model?.estimatedTotal ?? 0, 'USD');
+    get total() {
+      return this.args.model?.estimatedTotal ?? 0;
     }
     get itemCount() {
       return (this.args.model?.lineItems ?? []).length;
@@ -562,8 +570,12 @@ export class PurchaseRequisition extends CardDef {
           {{this.itemCount}}
           items</span>
         <div class='fit-foot'>
-          <span class='fit-total'>{{this.totalLabel}}</span>
-          <span class='fit-status'>{{this.statusLabel}}</span>
+          <Money class='fit-total' @amount={{this.total}} @code='USD' />
+          <StatePill
+            class='fit-status'
+            @label={{this.statusLabel}}
+            @hue={{this.statusHue}}
+          />
         </div>
       </div>
       <style scoped>
@@ -586,7 +598,7 @@ export class PurchaseRequisition extends CardDef {
         }
         .fit-sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -595,7 +607,8 @@ export class PurchaseRequisition extends CardDef {
           margin-top: auto;
           display: none;
           justify-content: space-between;
-          align-items: baseline;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
           font-size: 0.8125rem;
         }
         .fit-total {
@@ -603,10 +616,7 @@ export class PurchaseRequisition extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .fit-status {
-          font-size: 0.6875rem;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          min-width: 0;
         }
         @container fitted-card (height > 110px) {
           .fit-foot {
