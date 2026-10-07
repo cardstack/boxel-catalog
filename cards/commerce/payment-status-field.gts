@@ -6,7 +6,8 @@ import {
 
 // Payment Status — where an invoice's money stands, built on the catalog's
 // `statusField` so the graph below says which moves are legal. Invoice also
-// exports it under the invoice-side name `InvoiceStatusField`. `overdue` is deliberately NOT one of the stored options — it stays
+// exports it under the invoice-side name `InvoiceStatusField`. `overdue` is
+// deliberately NOT one of the stored options — it stays
 // a derived field on Invoice (`isOverdue`/`displayStatus`), because overdue
 // is what "unpaid past the due date" looks like, not a state anyone sets.
 // Storing it would let a stored flag disagree with the dates it is derived
@@ -37,11 +38,9 @@ export const PaymentStatusField = statusField({
       holds: true,
       meaning: 'Cancelled. A correction is a new invoice, not an edit.',
     },
-    // ---- AP (buy-side) leg — the one deliberate widening the Invoice
-    // Status Spec documents. A VENDOR invoice arrives 'received' rather
+    // ---- AP (buy-side) leg. A vendor invoice arrives 'received' rather
     // than being drafted, runs the three-way match, and only a clean or
-    // fully-resolved match can reach payment. Sell-side values and
-    // transitions above are untouched.
+    // fully resolved match can reach payment.
     {
       value: 'received',
       hue: 'slate',
@@ -83,3 +82,43 @@ export const PaymentStatusField = statusField({
 });
 
 export { canTransition, nextStatuses };
+
+/**
+ * The shortest legal walk from one status to another through the graph above,
+ * excluding the start: `['matching', 'matched']` from 'received' to
+ * 'matched'. `undefined` when the graph has no way there. Commands walk it
+ * rather than restating the graph.
+ */
+export function statusPath(
+  from: string | undefined | null,
+  to: string,
+): string[] | undefined {
+  if (!from) {
+    return undefined;
+  }
+  if (from === to) {
+    return [];
+  }
+  let previous = new Map<string, string>([[from, '']]);
+  let queue = [from];
+  while (queue.length) {
+    let at = queue.shift()!;
+    // The graph itself, not nextStatuses: a status with no edges (paid, void)
+    // has nowhere to go.
+    for (let next of PaymentStatusField.statusTransitions?.[at] ?? []) {
+      if (previous.has(next)) {
+        continue;
+      }
+      previous.set(next, at);
+      if (next === to) {
+        let path = [next];
+        for (let p = at; p !== from; p = previous.get(p)!) {
+          path.unshift(p);
+        }
+        return path;
+      }
+      queue.push(next);
+    }
+  }
+  return undefined;
+}

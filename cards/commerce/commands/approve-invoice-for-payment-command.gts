@@ -10,6 +10,7 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
 import { Invoice } from '../invoice';
+import { statusPath } from '../payment-status-field';
 import {
   matchLines,
   openVarianceCount,
@@ -59,36 +60,36 @@ export default class ApproveInvoiceForPaymentCommand extends Command<
         'This invoice names no purchase order — a vendor invoice cannot be approved without the match',
       );
     }
-    // Only a vendor invoice in the match flow can be approved: the status
-    // graph moves matching / exception → matched → approved-for-payment, and
-    // a draft, sent, paid or void invoice has no path there.
+    // Only a vendor invoice in the match flow can be approved: approval has
+    // to pass through 'matched', and a draft, sent, paid or void invoice has
+    // no path there.
     let status = invoice.status ?? '';
-    if (!['matching', 'exception', 'matched'].includes(status)) {
+    let path = statusPath(status, 'approved-for-payment');
+    if (!path?.includes('matched') && status !== 'matched') {
       throw new Error(
-        `A "${status || 'unset'}" invoice cannot be approved for payment — only one in matching, exception or matched`,
+        `A "${status || 'unset'}" invoice cannot be approved for payment — only a vendor invoice in the match flow`,
       );
     }
 
     // Re-run the match here — the guard trusts the documents, not the UI.
-    let resolved = new Set<number>(
-      (invoice.varianceResolutions ?? [])
-        .filter(Boolean)
-        .map((r) => r.lineNumber as number),
-    );
     let rows = matchLines(
       po.lineItems ?? [],
       po.receivedQuantities ?? [],
       invoice.lineItems ?? [],
-      resolved,
+      invoice.varianceResolutions ?? [],
     );
     let open = openVarianceCount(rows);
-    if (open > 0 && status === 'matching') {
-      await new PatchCardInstanceCommand(this.commandContext, {
-        cardType: Invoice,
-      }).execute({
-        cardId: invoice.id,
-        patch: { attributes: { status: 'exception' } },
-      });
+    if (open > 0) {
+      // Record the exception where the graph allows it; an invoice already in
+      // exception stays there.
+      for (let next of statusPath(status, 'exception') ?? []) {
+        await new PatchCardInstanceCommand(this.commandContext, {
+          cardType: Invoice,
+        }).execute({
+          cardId: invoice.id,
+          patch: { attributes: { status: next } },
+        });
+      }
     }
     if (open > 0) {
       throw new Error(
@@ -97,13 +98,7 @@ export default class ApproveInvoiceForPaymentCommand extends Command<
     }
 
     // Walk the status graph rather than jumping to the end of it.
-    let path =
-      status === 'exception'
-        ? ['matching', 'matched', 'approved-for-payment']
-        : status === 'matching'
-          ? ['matched', 'approved-for-payment']
-          : ['approved-for-payment'];
-    for (let next of path) {
+    for (let next of path ?? []) {
       await new PatchCardInstanceCommand(this.commandContext, {
         cardType: Invoice,
       }).execute({
@@ -112,7 +107,7 @@ export default class ApproveInvoiceForPaymentCommand extends Command<
       });
     }
 
-    let resolvedCount = resolved.size;
+    let resolvedCount = rows.filter((r) => r.state === 'resolved').length;
     return new ApproveInvoiceForPaymentResult({
       message:
         resolvedCount > 0

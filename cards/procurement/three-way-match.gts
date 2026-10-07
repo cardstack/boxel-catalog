@@ -28,11 +28,14 @@ export type LineMatchState =
   | 'clean'
   | 'qty-variance'
   | 'price-variance'
+  | 'qty-and-price-variance'
   | 'not-on-po'
   | 'resolved';
 
 export interface LineMatch {
   lineNumber: number;
+  /** The invoice line's identity (its normalised description), stable when lines move. */
+  key: string;
   description: string;
   poQty?: number;
   poUnitPrice?: number;
@@ -55,7 +58,7 @@ interface LineItemish {
   } | null;
 }
 
-function lineKey(line?: LineItemish) {
+export function lineKey(line?: LineItemish) {
   return (line?.description ?? '').trim().toLowerCase();
 }
 
@@ -96,11 +99,37 @@ function pairLines(
   return pairs;
 }
 
+/**
+ * A stored decision about one failing line. `lineKey` and `variance` pin it to
+ * the line and the variance it accepted: it stops applying when the line is
+ * renamed or its variance changes. A resolution with only `lineNumber`
+ * matches by position.
+ */
+export interface ResolutionLike {
+  lineNumber?: number | null;
+  lineKey?: string | null;
+  variance?: string | null;
+  action?: string | null;
+}
+
+export function resolutionFor<R extends ResolutionLike>(
+  row: LineMatch,
+  resolutions: (R | undefined)[],
+): R | undefined {
+  return resolutions.find((r) => {
+    if (!r) return false;
+    let sameLine = r.lineKey
+      ? r.lineKey === row.key
+      : r.lineNumber === row.lineNumber;
+    return sameLine && (!r.variance || r.variance === row.detail);
+  });
+}
+
 export function matchLines(
   poLines: (LineItemish | undefined)[],
   receivedQuantities: (number | undefined)[],
   invoiceLines: (LineItemish | undefined)[],
-  resolvedLineNumbers: Set<number>,
+  resolutions: (ResolutionLike | undefined)[] = [],
 ): LineMatch[] {
   let pairs = pairLines(poLines, invoiceLines);
   let rows: LineMatch[] = [];
@@ -113,6 +142,7 @@ export function matchLines(
     let invUnit = inv?.unitPrice?.amount ?? undefined;
     let row: LineMatch = {
       lineNumber,
+      key: lineKey(inv ?? po),
       description: inv?.description ?? po?.description ?? `Line ${lineNumber}`,
       poQty: po?.quantity ?? undefined,
       poUnitPrice: poUnit,
@@ -133,32 +163,49 @@ export function matchLines(
       // PO line the vendor did not invoice — not a variance; simply unpaid.
       row.detail = 'not invoiced';
     } else if (po && inv) {
+      // Quantity and price are checked independently: a line can be wrong on
+      // both, and a decision about one must not hide the other.
       let invQty = inv.quantity ?? 0;
       let poQty = po.quantity ?? undefined;
-      if (poQty != null && invQty > poQty) {
-        // Over the ordered quantity is a variance even when it was received:
-        // the extra was never approved.
-        row.state = 'qty-variance';
-        row.varianceAmount = (invQty - poQty) * (invUnit ?? 0);
-        row.detail = `invoiced ${invQty}, ordered ${poQty}`;
-      } else if (invQty > received) {
-        row.state = 'qty-variance';
-        row.varianceAmount = (invQty - received) * (invUnit ?? 0);
-        row.detail = `invoiced ${invQty}, received ${received}`;
-      } else if (poUnit != null && invUnit != null) {
+      let problems: string[] = [];
+      // Over the ordered quantity is a variance even when it was received:
+      // the extra was never approved.
+      let allowedQty = Math.min(invQty, received, poQty ?? Infinity);
+      let qtyOff = invQty > allowedQty;
+      if (qtyOff) {
+        problems.push(
+          poQty != null && invQty > poQty
+            ? `invoiced ${invQty}, ordered ${poQty}`
+            : `invoiced ${invQty}, received ${received}`,
+        );
+      }
+      let priceOff = false;
+      if (poUnit != null && invUnit != null) {
         let diff = Math.abs(invUnit - poUnit);
         let tolerance = Math.max(
           (PRICE_TOLERANCE_PCT / 100) * poUnit,
           PRICE_TOLERANCE_ABS / Math.max(1, invQty),
         );
-        if (diff > tolerance) {
-          row.state = 'price-variance';
-          row.varianceAmount = (invUnit - poUnit) * invQty;
-          row.detail = `unit ${invUnit} vs PO ${poUnit}`;
+        priceOff = diff > tolerance;
+        if (priceOff) {
+          problems.push(`unit ${invUnit} vs PO ${poUnit}`);
         }
       }
+      if (qtyOff || priceOff) {
+        row.state =
+          qtyOff && priceOff
+            ? 'qty-and-price-variance'
+            : qtyOff
+              ? 'qty-variance'
+              : 'price-variance';
+        // What is billed beyond what is owed: the allowed quantity at the PO
+        // price when the price is off, at the invoiced price otherwise.
+        let allowedUnit = priceOff ? (poUnit ?? 0) : (invUnit ?? 0);
+        row.varianceAmount = (row.invTotal ?? 0) - allowedQty * allowedUnit;
+        row.detail = problems.join('; ');
+      }
     }
-    if (row.state !== 'clean' && resolvedLineNumbers.has(lineNumber)) {
+    if (row.state !== 'clean' && resolutionFor(row, resolutions)) {
       row.state = 'resolved';
     }
     rows.push(row);
@@ -199,6 +246,9 @@ export class VarianceResolutionField extends FieldDef {
   static displayName = 'Variance Resolution';
 
   @field lineNumber = contains(NumberField);
+  // The invoice line and the variance this decision was about; see ResolutionLike.
+  @field lineKey = contains(StringField);
+  @field variance = contains(StringField);
   @field action = contains(VarianceActionField);
   @field reason = contains(StringField);
   @field resolvedAt = contains(DateTimeField);

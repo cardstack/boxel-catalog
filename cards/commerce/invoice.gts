@@ -37,6 +37,8 @@ import { PurchaseOrder } from '../procurement/purchase-order';
 import {
   VarianceResolutionField,
   matchLines,
+  resolutionFor,
+  type ResolutionLike,
 } from '../procurement/three-way-match';
 import { ThreeWayMatchPanel } from '../procurement/components/three-way-match-panel';
 
@@ -304,10 +306,7 @@ interface InvoiceLike {
     lineItems?: any[];
     receivedQuantities?: (number | undefined)[];
   } | null;
-  varianceResolutions?: (
-    | { lineNumber?: number | null; action?: string | null }
-    | undefined
-  )[];
+  varianceResolutions?: (ResolutionLike | undefined)[];
 }
 
 /**
@@ -327,14 +326,13 @@ export function invoiceAmounts(invoice?: InvoiceLike | null) {
       po.lineItems ?? [],
       po.receivedQuantities ?? [],
       invoice?.lineItems ?? [],
-      new Set(),
     );
-    for (let r of resolutions) {
-      let row = rows.find((x) => x.lineNumber === r?.lineNumber);
-      if (!row) continue;
-      if (r?.action === 'short-pay')
+    for (let row of rows) {
+      let r = resolutionFor(row, resolutions);
+      if (!r || row.state === 'clean') continue;
+      if (r.action === 'short-pay')
         adjustment += Math.max(row.varianceAmount, 0);
-      if (r?.action === 'reject-line') adjustment += row.invTotal ?? 0;
+      if (r.action === 'reject-line') adjustment += row.invTotal ?? 0;
     }
   }
   let total = subtotal + tax - adjustment;

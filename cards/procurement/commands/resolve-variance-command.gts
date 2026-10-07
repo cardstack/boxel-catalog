@@ -11,10 +11,12 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
 import { Invoice } from '../../commerce/invoice';
+import { statusPath } from '../../commerce/payment-status-field';
 import {
   VarianceActionField,
   VARIANCE_ACTIONS,
   matchLines,
+  resolutionFor,
 } from '../three-way-match';
 
 // Resolve Variance — records one human decision about one failing match
@@ -68,10 +70,13 @@ export default class ResolveVarianceCommand extends Command<
         cardId: invoice.id,
       })) as Invoice;
     }
+    // A resolution puts the invoice (back) into matching, so only a status
+    // the graph lets reach matching can take one: received, matching or
+    // exception.
     let status = invoice.status ?? '';
-    if (!['matching', 'exception'].includes(status)) {
+    if (!statusPath(status, 'matching')) {
       throw new Error(
-        `A "${status || 'unset'}" invoice has no open match to resolve — only one in matching or exception`,
+        `A "${status || 'unset'}" invoice has no open match to resolve — only one received, matching or in exception`,
       );
     }
     let po = invoice.purchaseOrder;
@@ -80,14 +85,13 @@ export default class ResolveVarianceCommand extends Command<
           po.lineItems ?? [],
           po.receivedQuantities ?? [],
           invoice.lineItems ?? [],
-          new Set(),
         ).find((r) => r.lineNumber === lineNumber)
       : undefined;
     if (!row || row.state === 'clean') {
       throw new Error(`Line ${lineNumber} has no variance to resolve`);
     }
     let existing = (invoice.varianceResolutions ?? []).filter(Boolean);
-    if (existing.some((r) => r.lineNumber === lineNumber)) {
+    if (resolutionFor(row, existing)) {
       throw new Error(
         `Line ${lineNumber} already has a resolution — a change of mind is a new decision on the record, not an edit`,
       );
@@ -103,12 +107,16 @@ export default class ResolveVarianceCommand extends Command<
           varianceResolutions: [
             ...existing.map((r) => ({
               lineNumber: r.lineNumber,
+              lineKey: r.lineKey,
+              variance: r.variance,
               action: r.action,
               reason: r.reason,
               resolvedAt: r.resolvedAt,
             })),
             {
               lineNumber,
+              lineKey: row.key,
+              variance: row.detail,
               action,
               reason,
               resolvedAt: new Date().toISOString(),

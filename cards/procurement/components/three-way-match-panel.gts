@@ -56,16 +56,11 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
     if (!po) {
       return [];
     }
-    let resolved = new Set<number>(
-      (this.args.invoice?.varianceResolutions ?? [])
-        .filter(Boolean)
-        .map((r: any) => r.lineNumber),
-    );
     return matchLines(
       po.lineItems ?? [],
       po.receivedQuantities ?? [],
       this.args.invoice?.lineItems ?? [],
-      resolved,
+      this.args.invoice?.varianceResolutions ?? [],
     );
   }
 
@@ -95,12 +90,16 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
         return 'amber';
       case 'qty-variance':
       case 'price-variance':
+      case 'qty-and-price-variance':
       case 'not-on-po':
         return 'red';
       default:
         return 'slate';
     }
   };
+
+  isOpen = (row: LineMatch): boolean =>
+    row.state !== 'clean' && row.state !== 'resolved';
 
   labelFor = (row: LineMatch): string =>
     row.state === 'clean' && row.detail === 'not invoiced'
@@ -258,19 +257,7 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
                       @hue={{this.hueFor row.state}}
                       @dot={{true}}
                     />
-                    {{#if (eq row.state 'qty-variance')}}
-                      <button
-                        type='button'
-                        class='resolve-link'
-                        {{on 'click' (fn this.startResolve row.lineNumber)}}
-                      >resolve</button>
-                    {{else if (eq row.state 'price-variance')}}
-                      <button
-                        type='button'
-                        class='resolve-link'
-                        {{on 'click' (fn this.startResolve row.lineNumber)}}
-                      >resolve</button>
-                    {{else if (eq row.state 'not-on-po')}}
+                    {{#if (this.isOpen row)}}
                       <button
                         type='button'
                         class='resolve-link'
@@ -408,6 +395,7 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
       }
       tr.state-qty-variance,
       tr.state-price-variance,
+      tr.state-qty-and-price-variance,
       tr.state-not-on-po {
         background: color-mix(
           in oklch,
