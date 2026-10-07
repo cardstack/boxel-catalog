@@ -417,6 +417,12 @@ export class Subscription extends CardDef {
         {{/if}}
       </article>
       <style scoped>
+        /* A linked card sizes to its content. The card container's base
+           height: 100% would otherwise fill a stretched grid panel and spill
+           past the heading above it. */
+        .sub-page :deep(.field-component-card.embedded-format) {
+          height: auto;
+        }
         .sub-page {
           max-width: 40rem;
           margin: 0 auto;

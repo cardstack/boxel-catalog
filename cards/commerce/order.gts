@@ -504,6 +504,12 @@ export class Order extends CardDef {
         </section>
       </article>
       <style scoped>
+        /* A linked card sizes to its content. The card container's base
+           height: 100% would otherwise fill a stretched grid panel and spill
+           past the heading above it. */
+        .order-doc :deep(.field-component-card.embedded-format) {
+          height: auto;
+        }
         .order-doc {
           max-width: 46rem;
           margin: 0 auto;

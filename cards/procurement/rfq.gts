@@ -473,6 +473,12 @@ class RfqIsolated extends Component<typeof Rfq> {
       </div>
     </article>
     <style scoped>
+      /* A linked card sizes to its content. The card container's base
+         height: 100% would otherwise fill a stretched grid panel and spill
+         past the heading above it. */
+      .rfq :deep(.field-component-card.embedded-format) {
+        height: auto;
+      }
       .rfq {
         /* command-console adapter tokens */
         --console-ink: var(--procurement-ink, var(--primary-ink));

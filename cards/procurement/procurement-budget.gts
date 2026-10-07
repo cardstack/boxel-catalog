@@ -268,6 +268,12 @@ export class ProcurementBudget extends CardDef {
         </section>
       </article>
       <style scoped>
+        /* A linked card sizes to its content. The card container's base
+           height: 100% would otherwise fill a stretched grid panel and spill
+           past the heading above it. */
+        .budget :deep(.field-component-card.embedded-format) {
+          height: auto;
+        }
         .budget {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);

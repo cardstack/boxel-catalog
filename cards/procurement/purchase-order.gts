@@ -536,6 +536,12 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       </div>
     </article>
     <style scoped>
+      /* A linked card sizes to its content. The card container's base
+         height: 100% would otherwise fill a stretched grid panel and spill
+         past the heading above it. */
+      .po :deep(.field-component-card.embedded-format) {
+        height: auto;
+      }
       .po {
         container-type: inline-size;
         padding: var(--boxel-sp-lg);

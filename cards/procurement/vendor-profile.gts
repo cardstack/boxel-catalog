@@ -742,6 +742,12 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
       </div>
     </article>
     <style scoped>
+      /* A linked card sizes to its content. The card container's base
+         height: 100% would otherwise fill a stretched grid panel and spill
+         past the heading above it. */
+      .profile :deep(.field-component-card.embedded-format) {
+        height: auto;
+      }
       .profile {
         container-type: inline-size;
         padding: var(--boxel-sp-lg);

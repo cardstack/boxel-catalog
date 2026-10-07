@@ -490,6 +490,12 @@ export class Payment extends CardDef {
         </div>
       </article>
       <style scoped>
+        /* A linked card sizes to its content. The card container's base
+           height: 100% would otherwise fill a stretched grid panel and spill
+           past the heading above it. */
+        .receipt-wrap :deep(.field-component-card.embedded-format) {
+          height: auto;
+        }
         .receipt-wrap {
           padding: 2.5rem 1.5rem;
           display: flex;
