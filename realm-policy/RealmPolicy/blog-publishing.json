@@ -15,11 +15,6 @@
               "where": ".published == true"
             },
             {
-              "operation": "query",
-              "anonymous": true,
-              "where": ".published == true"
-            },
-            {
               "operation": "read"
             }
           ]
@@ -43,7 +38,7 @@
       ],
       "cardInfo": {
         "name": "Blog publishing",
-        "summary": "Visitors open and search published posts and every category; any signed-in user may also read drafts."
+        "summary": "Visitors open published posts and open and search every category; any signed-in user may also read drafts."
       }
     },
     "meta": {
