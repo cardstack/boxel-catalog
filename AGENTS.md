@@ -31,7 +31,7 @@ When a boxel change breaks this repo, such as a renamed host tool or a tightened
 1. Pair the two PRs in both descriptions: this PR says `Merges after: cardstack/boxel#N`, and the boxel PR says `Merges before: cardstack/boxel-catalog#M`.
 2. The boxel PR pins this PR's head. Re-pin it whenever this PR gets new commits.
 3. Boxel's Lint Catalog fails the boxel PR until this PR is open, ready for review and approved, and neither PR is stacked, because merging the boxel PR breaks this repo's `main` until this PR follows it. Once this PR is approved, re-run the boxel PR's Lint Catalog. Approving a PR here doesn't re-run it. If this PR also changes a file the manifest lists, boxel's Catalog Test Subset check holds the pin to the same terms, so re-run that one too.
-4. Merge the boxel PR, then this PR right after it. Any merge method works. After a squash or a rebase, the pinned head isn't on `main`, so boxel's production deploy deploys this PR's merge commit in its place.
+4. Merge the boxel PR, then this PR right after it. Any merge method works. Boxel's production deploy deploys this PR's merge commit in place of the pinned head, which branches off before production's catalog.
 
 Boxel's `catalog-pairing` skill (`.claude/skills/catalog-pairing/SKILL.md` in cardstack/boxel) has the full procedure and how to read each check's failure.
 
